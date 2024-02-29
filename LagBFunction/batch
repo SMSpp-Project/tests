@@ -1,22 +1,41 @@
-#/bin/bash
+#!/usr/bin/env bash
 
-what=31
-#what=1
-#iter=0
-nf=-4
-nt=2
+what=511
+#what=0
+#iter=3
 
-for size in 2 10 50 100
-do
-for dens in 3 1.1
-do
-for (( seed=0 ; seed<20 ; seed++ ))
-do
+for nf in -2 -11; do
 
-printf "$seed-$what-$size-$nf-$nt-$dens: "
+  if [ $nf -eq -2 ]; then
+    t=1
+  else
+    t=3
+  fi
 
-./LagBFunction_test $seed $what $size $nf $nt $dens $iter
+  # z = 1 is LagBFunction treated as non-easy, -1 is treated as easy
+  for z in 1 -1; do
+    let nt=t*z
 
-done
-done
+    #for size in 2 10 50 100
+    for size in 2 10 50; do
+      for dens in 3 1.1; do
+        for (( seed = 0 ; seed < 20 ; seed++ )); do
+
+          if [ -z "$iter" ]; then
+            printf "[$seed $what $size $nf $nt $dens]: "
+          else
+            printf "[$seed $what $size $nf $nt $dens $iter]: "
+          fi
+
+          ./LagBFunction_test $seed $what $size $nf $nt $dens $iter
+
+          retVal=$?
+          if [ $retVal -ne 0 ]; then
+            exit 1
+          fi
+
+        done
+      done
+    done
+  done
 done

@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+# loop 1: long-term t-strategy
+
+for LT in 0 4 8 12; do
+
+  # loop 2: double parameter for long-term t-strategy (if any)
+
+  if [ $LT == 0 ]; then
+    dtSP2_List=(1)
+  elif [ $LT == 12 ]; then
+    dtSP2_List=(1e-1 1e-2 1e-3)
+  else
+    dtSP2_List=(1e-1 1e-0 1e+1)
+  fi
+
+  for dtSP2 in "${dtSP2_List[@]}"; do
+
+    # loop 3: intMnSSC
+
+    for MnSSC in 0 1; do
+
+      # loop 4: intMnNSC
+
+      for MnNSC in 1 2; do
+
+        # loop 5: SS heuristic
+
+        for SSH in 0 1 65 129 193; do
+
+          # loop 6: NS heuristic
+
+          for NSH in 0 2 258 514 770; do
+
+            # loop 7: dbltSPar3 parameter for heuristic
+
+            if [[ ! $SSH -eq 0 ]] || [[ ! $NSH -eq 0 ]]; then
+              dTSP3_List=(0 1.5 -1.5)
+            else
+              dTSP3_List=("x")
+            fi
+
+            for dTSP3 in "${dTSP3_List[@]}"; do
+
+              # creating arglist and outlist
+
+              arglist="BSPar-orig.txt BSPar.txt "
+              outlist="$LT "
+              if [[ ! $LT -eq 0 ]]; then
+                arglist+="dbltSPar2 ${dtSP2} "
+                outlist+="${dtSP2} "
+              fi
+
+              if [ ! -z "$MnSSC" ]; then
+                arglist+="intMnSSC ${MnSSC} "
+                outlist+="${MnSSC} "
+              fi
+
+              if [ ! -z "$MnNSC" ]; then
+                arglist+="intMnNSC ${MnNSC} "
+                outlist+="${MnNSC} "
+              fi
+
+              arglist+="inttSPar1 "
+
+              if [ -z "$SSH" ]; then
+                if [ -z "$NSH" ]; then
+
+                  arglist+="$LT "
+
+                else
+
+                  arglist+="$(($LT | $NSH))"
+                  outlist+="${NSH} "
+
+                fi
+              elif [ -z "$NSH" ]; then
+
+                arglist+="$(($LT | $SSH))"
+                outlist+="${SSH} "
+
+              else
+
+                arglist+="$(($LT | $SSH | $NSH))"
+                outlist+="${SSH} ${NSH} "
+
+              fi
+
+              if [ ! $dTSP3 == "x" ]; then
+                arglist+="dbltSPar3 ${dTSP3}"
+                outlist+="${dTSP3}"
+              fi
+
+              # now finally run the stuff
+
+              printf "[$outlist]: "
+
+              echo $arglist
+              #./chgcfg $arglist
+
+              #time ./batch
+
+            done
+          done
+        done
+      done
+    done
+  done
+done

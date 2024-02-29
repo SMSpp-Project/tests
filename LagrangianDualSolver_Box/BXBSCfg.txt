@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BXBSCfg.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for any Block that can be solved
+# by a BoxSolver (with the quirks that this entails)
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver
+BoxSolver          # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intPDSol 1    # whether solutions are computed and written inside compute()
+              # bit 0: primal solution
+              # bit 1: dual solution
+# note: setting intPDSol == 1 speeds things up a bit but it creates problems
+#       when LagrangianDualSolver uses a BundleSolver with intFrcLstSS == 1,
+#       since by directly writing the solution inside compute() it can
+#       confuse LagBFunction during recomputation of linearizations constants
+#       into believing the right solution is already there while the values
+#       of the variables have been changed by the last computation of the
+#       LagBFunction without picking any linearization
+
+# note that we eof() the file here since the rest can only be empty:
+# BoxSolver only has one integer parameter
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BXBSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+

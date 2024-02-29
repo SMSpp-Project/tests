@@ -1,0 +1,83 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - RBlockConfig2.txt - - - - - - - - - - - - - - -
+#
+# A txt description of a RBlockConfig object for configuring a "complex"
+# Block. In particular, the RBlockConfig does nothing to the "root" Block,
+# but it applies a given set of sub-BlockConfig to its sons
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+RBlockConfig     # exact type of the Configuration object
+
+# first the (empty) configuration for the "root" Block- - - - - - - - - - - -
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+# static constraints Configuration
+* #none
+
+# dynamic constraints Configuration
+* #none
+
+# static variables Configuration
+* #none
+
+# dynamic variables Configuration
+* #none
+
+# objective Configuration
+* #none
+
+# is_feasible Configuration
+* #none
+
+# is_optimal Configuration
+* #none
+
+# solution Configuration
+* #none
+
+# extra Configuration
+* #none
+
+# now the BlockConfig for the sub-Block - - - - - - - - - - - - - - - - - - -
+
+10  # configure the first 10 sub-Block of the Block
+
+# the BlockConfig for the sub-Block 01
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 02
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 03
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 04
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 05
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 06
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 07
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 08
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 09
+*BlockConfig2.txt  # take it from the given file
+
+# the BlockConfig for the sub-Block 10
+*BlockConfig2.txt  # take it from the given file
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END RBlockConfig2.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

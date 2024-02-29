@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# Batch file for generating MMCF problems with the mnetgen random generator
+#
+# For each n in {64, 128, 256} generates 12 instances for each pair (n, k)
+# with k in {4, 8, 16 , ... , n}, using as input the parameters found
+# in pr{n}.{k}/{n}-{k}-{h}.inp for h in {1, ... , 12}. The instances
+# are left in the directory pr{n}.{k}
+#
+# In a *nix environment, simply type "source batch" or "./batch"
+
+MnetgenDir=../../data/Mnetgen
+mkdir -p $MnetgenDir
+
+for i in 64; do
+  for j in 4 8 16 32 64; do
+    for (( h = 1 ; h < 13 ; h++ )); do
+
+      ./mnetgen pr$i.$j/$i-$j-$h.inp pr$i.$j/$i-$j-$h
+      mv pr$i.$j/$i-$j-$h.arc $MnetgenDir/$i-$j-$h.arc
+      mv pr$i.$j/$i-$j-$h.mut $MnetgenDir/$i-$j-$h.mut
+      mv pr$i.$j/$i-$j-$h.nod $MnetgenDir/$i-$j-$h.nod
+      mv pr$i.$j/$i-$j-$h.sup $MnetgenDir/$i-$j-$h.sup
+
+    done
+  done
+done
+
+for i in 128; do
+  for j in 4 8 16 32 64 128; do
+    for (( h = 1 ; h < 13 ; h++ )); do
+
+      ./mnetgen pr$i.$j/$i-$j-$h.inp pr$i.$j/$i-$j-$h
+      mv pr$i.$j/$i-$j-$h.arc $MnetgenDir/$i-$j-$h.arc
+      mv pr$i.$j/$i-$j-$h.mut $MnetgenDir/$i-$j-$h.mut
+      mv pr$i.$j/$i-$j-$h.nod $MnetgenDir/$i-$j-$h.nod
+      mv pr$i.$j/$i-$j-$h.sup $MnetgenDir/$i-$j-$h.sup
+
+    done
+  done
+done
+
+for i in 256; do
+  for j in 4 8 16 32 64 128 256; do
+    for (( h = 1 ; h < 13 ; h++ )); do
+
+      ./mnetgen pr$i.$j/$i-$j-$h.inp pr$i.$j/$i-$j-$h
+      mv pr$i.$j/$i-$j-$h.arc $MnetgenDir/$i-$j-$h.arc
+      mv pr$i.$j/$i-$j-$h.mut $MnetgenDir/$i-$j-$h.mut
+      mv pr$i.$j/$i-$j-$h.nod $MnetgenDir/$i-$j-$h.nod
+      mv pr$i.$j/$i-$j-$h.sup $MnetgenDir/$i-$j-$h.sup
+
+    done
+  done
+done

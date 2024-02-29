@@ -1,0 +1,88 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - TPPar.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a Block containng the
+# "transportation subproblem" in the inner Block of the tester for
+# LagBFunction; this being a simple one-level LP (without inner Block), a
+# :MILPSolver (say, a CPXMILPSolver or a SCIPMILPSolver) is perfectly
+# adequate
+#
+#   version 1.0 , 28/11/2020
+#
+#   Enrico Gorgone, Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+0  # the BlockSolverConfig is not a "differential" one: values are being set
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver # name of 1st Solver
+#SCIPMILPSolver # name of 1st Solver
+GRBMILPSolver # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb     0     # LogVerb, log verbosity of the MILPSolver
+
+# [none]
+
+2 # number of double parameters
+# now all the double parameters
+
+## All specific Cplex parameter (uncomment based on 1st solver)
+# cranking to 11 Cplex LP (simplex) tolerance
+#CPXPARAM_Simplex_Tolerances_Optimality	1e-9
+#CPXPARAM_Simplex_Tolerances_Feasibility	1e-9
+
+## All specific Gurobi parameter (uncomment based on 1st solver)
+IntFeasTol 1e-9
+OptimalityTol 1e-9
+
+# note that we could eof() the file here since the rest is all empty
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END TPPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

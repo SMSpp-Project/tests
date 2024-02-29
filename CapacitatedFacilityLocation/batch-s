@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+DATADIR=../../CapacitatedFacilityLocationBlock/data
+
+# testing batch reduced to small instances only, so that solving them
+# to integer optimality is an option
+
+niter=0
+# everything, comprised abstract
+#wchg=511
+# everything, but not abstract
+#wchg=255
+# everything but fix-open, comprised abstract
+#wchg=447
+# everything but fix-open and change type, comprised abstract
+#wchg=319
+wchg=63
+rounds=40
+maxseed=1
+
+# ORLib - - - - - - - - - - - - - - - - - - - - -
+
+for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
+  64 81 93 111 122 134 51 71 82 94 112 123 41 61 72 84; do
+  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+    what=${DATADIR}/txt/ORLib/cap${f}.txt
+
+    printf "[$what c $niter $seed $wchg $rounds]: "
+
+    ./CFL_test $what c $niter $seed $wchg $rounds
+
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+      exit 1
+    fi
+
+  done
+done

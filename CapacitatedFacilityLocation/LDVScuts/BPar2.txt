@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BPar1.txt - - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockConfig for CapacitatedFacilityLocationBlock
+#
+# The CapacitatedFacilityLocationBlock is Configur-ed for being solved by a
+# LagrangianDualSolver (hence, the convexified relaxation is solved rather
+# than the original integer problem proper) with the Knapsack decomposition,
+# hence
+# - Knapsack configuration
+# - only customers demand (static) Constraint
+# - dynamic Constraint inactive
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the ComputeConfig object
+
+1  # the BlockConfig is a "differential" one
+
+# static_constraints
+SimpleConfiguration<int>
+1    # bit 0 = customers demand, bit 1 = facilities capacity
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+SimpleConfiguration<int>
+1    # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
+
+# note that we could eof() the file here since the rest is all empty
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BPar1.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

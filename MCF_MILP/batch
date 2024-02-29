@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+DATADIR=../../MCFBlock/data
+
+wchg=255
+#rounds=40
+
+for type in net goto; do
+
+  for (( seed = 0; seed < 3 ; seed++ )); do
+
+    #for sz in 8_8 8_32 10_8 10_64 12_8 14_8
+    for sz in 8_8 8_32 10_8 10_64 12_8; do
+      for h in 1 2 3 4 5; do
+
+        what=${DATADIR}/nc4/${type}${sz}_${h}.nc4
+
+        if [ -z "$wchg" ]; then
+          printf "[$what $seed]: "
+        else
+          if [ -z "$rounds" ]; then
+            printf "[$what $seed $wchg]: "
+          else
+            printf "[$what $seed $wchg $rounds]: "
+          fi
+        fi
+
+        ./MCF_MILP_test $what $seed $wchg $rounds
+
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+          exit 1
+        fi
+
+      done # h
+    done   # sz
+
+  done # seed
+done   # type

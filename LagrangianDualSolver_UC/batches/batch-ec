@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+par=BSPar-2S.txt
+
+for what in ../../UCBlock/netCDF_files/EC_Data/EC_CO_*.nc4 \
+            ../../UCBlock/netCDF_files/EC_Data/EC_NC_*.nc4; do
+
+  if [ -z "$par" ]; then
+    printf "[$what]: "
+  else
+    printf "[$what $par]: "
+  fi
+
+  ./LDS_UC_test $what $par
+
+  retVal=$?
+  if [ $retVal -ne 0 ]; then
+    exit 1
+  fi
+
+done
+
+# BSPar-CPX.txt with intRelaxIntVars 0
+# "../../UCBlock/netCDF_files/EC_Data/EC_CO_Test.nc4"        3.5077963e+06
+# "../../UCBlock/netCDF_files/EC_Data/EC_CO_Test_TUB.nc4"    3.4742840e+06
+# "../../UCBlock/netCDF_files/EC_Data/EC_NA_Test.nc4"        4.1773642e+06
+# "../../UCBlock/netCDF_files/EC_Data/EC_NC_Test.nc4"        3.7349463e+06
+# "../../UCBlock/netCDF_files/EC_Data/EC_NC_Test_TUB.nc4"    3.7016024e+06

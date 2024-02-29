@@ -8,16 +8,11 @@
  * design variables is iteratively modified to take into account the level
  * of utilization of each warehouse in the previous continuous solution.
  *
- * \version 2.10
- *
- * \date 24 - 03 - 2016
- *
  * \author Antonio Frangioni \n
- *         Operations Research Group \n
  *         Dipartimento di Informatica \n
- *         Università di Pisa \n
+ *         Universita' di Pisa \n
  *
- * Copyright &copy 2011 - 2016 by Antonio Frangioni.
+ * \copyright &copy; by Antonio Frangioni
  */
 
 /*--------------------------------------------------------------------------*/
@@ -35,7 +30,7 @@
      +1    the Auction() initialization is used (if available)
 
      32    the MCFCplex solver
-     +k    a value of k betweek 1 and 3 set the pricing rule used by the
+     +k    a value of k between 1 and 3 set the pricing rule used by the
            network simplex; 0 means automatic (the default)
 
      48    the MCFZIB solver
@@ -114,9 +109,7 @@
 /*-------------------------------- USING -----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#if( OPT_USE_NAMESPACES )
- using namespace MCFClass_di_unipi_it;
-#endif
+using namespace MCFClass_di_unipi_it;
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------- TYPES ------------------------------------*/
@@ -130,10 +123,10 @@
 /*----------------------------- FUNCTIONS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-template<class T>
+template< class T >
 static inline void str2val( const char* const str , T &sthg )
 {
- istringstream( str ) >> sthg;
+ std::istringstream( str ) >> sthg;
  }
 
 /*--------------------------------------------------------------------------*/
@@ -164,15 +157,15 @@ double cwl_mcf( std::string file_name )
 
   case( 2 ): break;
 
-  default:   cerr << "Usage: " << argv[ 0 ]
+  default:   std::cerr << "Usage: " << argv[ 0 ]
 		  << " file_name [slp_sclng_it prn_y_var prn_rd_cst]"
-		  << endl
+		  << std::endl
 		  << "       slp_sclng_it = 0 (default) max slope scaling iter"
-		  << endl
+		  << std::endl
 		  << "       prn_y_var = 0 (default) print y variables"
-		  << endl
+		  << std::endl
 		  << "       prn_rd_cst = 0 (default) print y's reduced costs"
-		  << endl;
+		  << std::endl;
              return( 1 );
   }
  */
@@ -181,7 +174,7 @@ double cwl_mcf( std::string file_name )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- double LB = - MCFClass::Inf<double>();     // correct lower bound
+ double LB = -Inf< double >();     // correct lower bound
 
  try {
 
@@ -190,7 +183,7 @@ double cwl_mcf( std::string file_name )
 
   ifstream ProbFile( file_name );
   if( ! ProbFile.is_open() ) {
-   cerr << "Error: cannot open file " << file_name << endl;
+   std::cerr << "Error: cannot open file " << file_name << std::endl;
    return( 1 );
    }
 
@@ -200,24 +193,24 @@ double cwl_mcf( std::string file_name )
   int m;
   ProbFile >> m;
   if( ProbFile.fail() ) {
-   cerr << "Error reading from file " << file_name << endl;
+   std::cerr << "Error reading from file " << file_name << std::endl;
    return( 1 );
    }
 
   if( m <= 0 ) {
-   cerr << "Error: number of warehouses must be positive" << endl;
+   std::cerr << "Error: number of warehouses must be positive" << std::endl;
    return( 1 );
    }
 
   int n;
   ProbFile >> n;
   if( ProbFile.fail() ) {
-   cerr << "Error reading from file " << file_name << endl;
+   std::cerr << "Error reading from file " << file_name << std::endl;
    return( 1 );
    }
 
   if( n <= 0 ) {
-   cerr << "Error: number of customers must be positive" << endl;
+   std::cerr << "Error: number of customers must be positive" << std::endl;
    return( 1 );
    }
 
@@ -227,13 +220,13 @@ double cwl_mcf( std::string file_name )
   for( int i = 0 ; i < m ; i++ ) {  // for( each warehouse )
    ProbFile >> Q[ i ];
    if( ProbFile.fail() ) {
-    cerr << "Error reading from file " << file_name << endl;
+    std::cerr << "Error reading from file " << file_name << std::endl;
     return( 1 );
     }
 
    ProbFile >> F[ i ];
    if( ProbFile.fail() ) {
-    cerr << "Error reading from file " << file_name << endl;
+    std::cerr << "Error reading from file " << file_name << std::endl;
     return( 1 );
     }
    }  // end( for( each warehouse ) )
@@ -245,22 +238,22 @@ double cwl_mcf( std::string file_name )
   for( int j = 0 ; j < n ; j++ ) {  // for( each customer )
    ProbFile >> D[ j ];
    if( ProbFile.fail() ) {
-    cerr << "Error reading from file " << file_name << endl;
+    std::cerr << "Error reading from file " << file_name << std::endl;
     return( 1 );
     }
 
    for( int i = 0 ; i < m ; i++ ) {  // for( each warehouse )
     ProbFile >> C[ j * m + i ];
     if( ProbFile.fail() ) {
-     cerr << "Error reading from file " << file_name << endl;
+     std::cerr << "Error reading from file " << file_name << std::endl;
      return( 1 );
      }
     }  // end( for( each warehouse ) )
    }  // end( for( each customer ) )
 
   if( print )
-   cout << "Solving instance " << file_name << " with " << m
-        << " warehouses and " << n << " customers" << endl;
+   std::cout << "Solving instance " << file_name << " with " << m
+        << " warehouses and " << n << " customers" << std::endl;
 
   // create solver and pass it the instance - - - - - - - - - - - - - - - - -
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -336,7 +329,7 @@ double cwl_mcf( std::string file_name )
   // but not all, because some are needed in the heuristic
 
   if( print )
-   cout << "Model construction time " << timer.Read();
+   std::cout << "Model construction time " << timer.Read();
 
   // choose algorithmic parameters, if any- - - - - - - - - - - - - - - - - -
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -376,9 +369,9 @@ double cwl_mcf( std::string file_name )
   #if LOOP_SIZE
    double oldFO[ LOOP_SIZE ];                // o.f. value at previous rounds
    for( int l = 0 ; l < LOOP_SIZE ; l++ )
-    oldFO[ l ] = MCFClass::Inf<double>();    // ... currently undefined
+    oldFO[ l ] = Inf< double >();    // ... currently undefined
   #endif
-  double bestUB = MCFClass::Inf<double>();   // best UB value found
+  double bestUB = Inf< double >();   // best UB value found
   MCFClass::FRow X = new MCFClass::FNumber[ NArcs ];  // flow solution
 
   for( int itr = 0 ; ; itr++ ) {
@@ -391,19 +384,19 @@ double cwl_mcf( std::string file_name )
    if( print && MCF->MCFGetStatus() != MCFClass::kOK ) {
     switch( MCF->MCFGetStatus() ) {
      case( MCFClass::kUnfeasible ):
-      cout << "MCF problem unfeasible" << endl;
+      std::cout << "MCF problem unfeasible" << std::endl;
       break;
      case( MCFClass::kUnbounded ):
-      cout << "MCF problem unbounded (what ?!?)" << endl;
+      std::cout << "MCF problem unbounded (what ?!?)" << std::endl;
       break;
      case( MCFClass::kUnSolved ):
-      cout << "MCF solver not called (what ?!?)" << endl;
+      std::cout << "MCF solver not called (what ?!?)" << std::endl;
       break;
      case( MCFClass::kStopped ):
-      cout << "MCF problem stopped (what ?!?)" << endl;
+      std::cout << "MCF problem stopped (what ?!?)" << std::endl;
       break;
      default:  // that'd be MCFClass::kError for you, sir
-      cout << "error in the MCF solver" << endl;
+      std::cout << "error in the MCF solver" << std::endl;
      }
     break;
     }
@@ -435,12 +428,12 @@ double cwl_mcf( std::string file_name )
    if( print ) {
 
    // print y variables - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   cout << setprecision( 6 );
+   std::cout << setprecision( 6 );
 
    if( prn_y_var )
     for( int i = 0 ; i < m ; i++ )
      if( X[ i ] > 1e-6 )
-      cout << "y[ " << i + 1 << " ] = " << X[ i ] / Q[ i ] << endl;
+      std::cout << "y[ " << i + 1 << " ] = " << X[ i ] / Q[ i ] << std::endl;
 
    // print reduced costs - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -451,7 +444,7 @@ double cwl_mcf( std::string file_name )
 
     for( int i = 0 ; i < m ; i++ )
      if( ( RC[ i ] > 1e-6 ) || ( RC[ i ] < - 1e-6 ) )
-      cout << "RC y[ " << i + 1 << " ] = " << RC[ i ] << endl;
+      std::cout << "RC y[ " << i + 1 << " ] = " << RC[ i ] << std::endl;
 
     delete[] RC;
     }
@@ -466,10 +459,10 @@ double cwl_mcf( std::string file_name )
    // a few printouts - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
    if( print && slp_sclng_it )
-    cout << itr << ": flow value = " << setprecision( 12 ) << FO
+    std::cout << itr << ": flow value = " << setprecision( 12 ) << FO
 	 << ", heuristic value = " << setprecision( 12 ) << FUB + CUB
-	 << endl << "    (" << FUB << " + " << CUB << "), gap = "
-	 << setprecision( 4 ) << ( FUB + CUB - LB ) / LB << endl;
+	 << std::endl << "    (" << FUB << " + " << CUB << "), gap = "
+	 << setprecision( 4 ) << ( FUB + CUB - LB ) / LB << std::endl;
 
    // check termination - - - - - - - - - - - - - - - - - - - - - - - - - - -
    // look back LOOP_SIZE iterations: if you find the same value of the
@@ -477,7 +470,7 @@ double cwl_mcf( std::string file_name )
 
    #if LOOP_SIZE
     for( int l = 0 ; l < LOOP_SIZE ; l++ )
-      if( oldFO[ l ] < MCFClass::Inf<double>() )
+      if( oldFO[ l ] < Inf< double >() )
        if( std::abs( FO - oldFO[ l ] ) <= 1e-6 * max( FO , double( 1 ) ) ) {
        itr = slp_sclng_it;
        break;
@@ -529,17 +522,17 @@ double cwl_mcf( std::string file_name )
 
   if( print ) {
 
-  if( LB > - MCFClass::Inf<double>() )
-   cout << "Relaxation value = " << setprecision( 12 ) << LB << " ~ ";
-  if( bestUB < MCFClass::Inf<double>() )
-   cout << "heuristic value = " << setprecision( 12 ) << bestUB << endl;
-  if( ( LB > - MCFClass::Inf<double>() ) &&
-      ( bestUB < MCFClass::Inf<double>() ) )
-   cout << "gap = " << setprecision( 4 ) << ( bestUB - LB ) / LB;
+  if( LB > -Inf< double >() )
+   std::cout << "Relaxation value = " << setprecision( 12 ) << LB << " ~ ";
+  if( bestUB < Inf< double >() )
+   std::cout << "heuristic value = " << setprecision( 12 ) << bestUB << std::endl;
+  if( ( LB > -Inf< double >() ) &&
+      ( bestUB < Inf< double >() ) )
+   std::cout << "gap = " << setprecision( 4 ) << ( bestUB - LB ) / LB;
 
   double tu , ts;
   MCF->TimeMCF( tu , ts );
-  cout << " ~ time = " << tu + ts << endl;
+  std::cout << " ~ time = " << tu + ts << std::endl;
 
   }
 
@@ -548,7 +541,7 @@ double cwl_mcf( std::string file_name )
 
   delete[] X;
 
-  delete MCF;
+  delete( MCF );
 
   delete[] C;
   delete[] D;
@@ -562,11 +555,11 @@ double cwl_mcf( std::string file_name )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  catch( exception &e ) {
-  cerr << e.what() << endl;
+  std::cerr << e.what() << std::endl;
   return( 1 );
   }
  catch(...) {
-  cerr << "Error: unknown exception thrown" << endl;
+  std::cerr << "Error: unknown exception thrown" << std::endl;
   return( 1 );
   }
 
@@ -575,7 +568,7 @@ double cwl_mcf( std::string file_name )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  // return( 0 );
- return LB;
+ return( LB );
 
  }  // end( main )
 

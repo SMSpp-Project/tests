@@ -1,0 +1,135 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a MCFBlock to be solved by
+# both a MCFSolver<*> and a *MILPSolver
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#MCFSolver<MCFSimplex>  # name of 1st Solver
+#MCFSolver<RelaxIV>     # name of 1st Solver
+MCFSolver<MCFCplex>     # name of 1st Solver
+CPXMILPSolver           # name of 2nd Solver
+#GRBMILPSolver           # name of 2nd Solver
+
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the MCFSolver<*>
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0 # number of integer parameters
+
+# now all the integer parameters
+#kReopt      1    # whether or not to reoptimize
+
+0 # number of double parameters
+
+# now all the double parameters
+# the following two parameters may need to be manually set for
+# MCFSimplex, RelaxIV is SET_EPS is not > 0 in test.cpp
+#dblAbsAcc   1e-8   # primal feasibility
+#dblAAccDSol 1e-8   # dual feasibility
+
+0 # number of string parameters
+
+# now all the string parameters
+#strDMXFile	MCFC.dmx
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the *MILPSolver
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0    # log verbosity of the MILPSolver
+#intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
+
+## All specific Cplex parameter (uncomment based on 2nd solver)
+#CPXPARAM_Threads 1   # avoid parallel
+#CPXPARAM_MIP_Display 3  # more verbose log
+#CPXPARAM_ScreenOutput   1       # output on screen
+#CPXPARAM_LPMethod 3  # network algorithm
+
+## All specific Gurobi parameter (uncomment based on 2nd solver)
+#Threads 1   # avoid parallel
+
+# note that we could eof() the file here since the rest is all empty
+
+0 # number of double parameters
+
+# now all the double parameters
+#dblRelAcc 1e-7   #relative accuracy for the solver
+
+0 # number of string parameters
+
+# now all the string parameters
+#strOutputFile	mcf.lp
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

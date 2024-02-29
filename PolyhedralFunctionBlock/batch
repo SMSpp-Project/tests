@@ -1,27 +1,29 @@
-#/bin/bash
+#!/usr/bin/env bash
 
-#what=159
-#what=143
-what=31
-#what=1
+what=639
+#nf=-10
 #iter=0
-nf=-10
 
-for size in 2 10 50 100
-do
-for dens in 3 1.1
-do
-for (( seed=0 ; seed<20 ; seed++ ))
-do
+for nf in 0 1 -1 10 -10; do
+  #for size in 2 10 50 100
+  for size in 2 10 50; do
+    for dens in 3 1.1; do
+      for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-if [ -z "$nf" ]; then
-printf "$seed-$what-$size-$dens: "
-else
-printf "$seed-$what-$size-$dens-$nf: "
-fi
+        if [ -z "$iter" ]; then
+          printf "[$seed $what $size $dens $nf]: "
+        else
+          printf "[$seed $what $size $dens $nf $iter]: "
+        fi
 
-./PolyhedralFunctionBlock_test $seed $what $size $dens $nf $iter
+        ./PolyhedralFunctionBlock_test $seed $what $size $dens $nf $iter
 
-done
-done
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+          exit 1
+        fi
+
+      done
+    done
+  done
 done

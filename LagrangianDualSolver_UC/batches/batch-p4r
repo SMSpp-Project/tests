@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# correct value of tStar: 1e-2
+# correct value of dblCtOff: 0.1
+
+#1D_1Z_DP_1SS_10TU
+#1D_1Z_DP_1SS_151TU
+#1D_1Z_DP_3SS_151TU
+#1D_19Z_D_1230TU_11SS_12STS_52RES
+#1D_19Z_DP_1230TU_11SS_12STS_52RES
+#1W_1Z_DP_1SS_10TU
+#1W_1Z_DP_1SS_151TU
+#1W_1Z_DP_3SS_151TU
+#1W_3Z_D_4SS_383TU_2STS_9RES
+#1W_3Z_DP_4SS_383TU_2STS_9RES
+#1W_19Z_DP_1230TU_11SS_12STS_52RES
+#1W_19Z_D_1230TU_11SS_12STS_52RES
+
+for what in ../../UCBlock/netCDF_files/plan4res-data/FirstSetofInstances/*.nc4 \
+            ../../UCBlock/netCDF_files/plan4res-data/SecondSetofInstances/*.nc4 \
+            ../../UCBlock/netCDF_files/plan4res-data/TestUC/1D_1Z_DP_1SS_10TU/*.nc4; do
+
+  printf "[$what]: "
+
+  ./LDS_UC_test $what
+
+  retVal=$?
+  if [ $retVal -ne 0 ]; then
+    exit 1
+  fi
+
+done

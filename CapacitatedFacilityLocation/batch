@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+DATADIR=../../CapacitatedFacilityLocationBlock/data
+
+niter=0
+# everything, comprised abstract
+#wchg=511
+# everything, but not abstract
+#wchg=255
+# everything but fix-open & change type, comprised abstract
+wchg=319
+# everything but change type, comprised abstract
+#wchg=383
+rounds=40
+maxseed=2
+
+# ORLib - - - - - - - - - - - - - - - - - - - - -
+
+for what in ${DATADIR}/txt/ORLib/*.txt; do
+  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+    printf "[$what c $niter $seed $wchg $rounds]: "
+
+    ./CFL_test $what c $niter $seed $wchg $rounds
+
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+      exit 1
+    fi
+
+  done
+done
+
+# Yang- - - - - - - - - - - - - - - - - - - - - -
+
+for i in 30-200 60-200 60-300 80-400; do
+  for (( h = 1 ; h <= 5 ; h++ )); do
+    for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+      what=${DATADIR}/txt/Yang/${i}/${i}-${h}.txt
+
+      printf "[$what l $niter $seed $wchg $rounds]: "
+
+      ./CFL_test $what l $niter $seed $wchg $rounds
+
+      retVal=$?
+      if [ $retVal -ne 0 ]; then
+        exit 1
+      fi
+
+    done
+  done
+done
+
+# TBED- - - - - - - - - - - - - - - - - - - - - -
+
+for i in 300; do            # 300_1500 500 700 1000
+  for h in 1 6 11 16 19; do #for (( h = 1 ; h <= 10 ; h++ ))
+    for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+      what=${DATADIR}/txt/TBED/${i}/i${i}_${h}.txt
+
+      printf "[$what f $niter $seed $wchg $rounds]: "
+
+      ./CFL_test $what f $niter $seed $wchg $rounds
+
+      retVal=$?
+      if [ $retVal -ne 0 ]; then
+        exit 1
+      fi
+
+    done
+  done
+done

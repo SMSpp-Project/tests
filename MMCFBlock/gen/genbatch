@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+mkdir -p ../data
+
+# Fetch and extract Canad and JLF problems
+# http://groups.di.unipi.it/optimize/Data/MMCF.html#Canad
+#
+tar -zxvf Canad.tgz -C ../data
+curl -SsL http://groups.di.unipi.it/optimize/Data/MMCF/CanadN.tgz | tar -zxvC ../data/Canad
+curl -SsL http://groups.di.unipi.it/optimize/Data/MMCF/JLF.tgz | tar -zxvC ../data
+
+# Use Mnetgen to generate other MMCF problems
+cd Mnetgen || exit
+make
+./batch
+make clean

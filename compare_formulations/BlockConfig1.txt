@@ -1,0 +1,47 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BlockConfig1.txt- - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockConfig object for configuring the static
+# (abstract) Variable of "any" Block only, taking the corresponding
+# Configuration form SimpleConfig1.txt 
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig     # exact type of the Configuration object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+# static constraints Configuration
+* #none
+
+# dynamic constraints Configuration
+* #none
+
+# static variables Configuration
+*SimpleConfig1.txt  # take it from the given file
+
+# dynamic variables Configuration
+* #none
+
+# objective Configuration
+* #none
+
+# is_feasible Configuration
+* #none
+
+# is_optimal Configuration
+* #none
+
+# solution Configuration
+* #none
+
+# extra Configuration
+* #none
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BlockConfig1.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

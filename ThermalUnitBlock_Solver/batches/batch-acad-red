@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+DATADIR=../../UCBlock/netCDF_files/1UC_Data
+
+wchg=133
+#iter=0
+
+# ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
+
+for wf in 0 1 2 3 4 5; do
+  i=24
+  #for i in 24 96; do
+    # skip DP, pt, SU and SD formulations for 96 problems
+    #if [ $wf -ge 2 ] && [ $i -eq 96 ]; then
+      #continue
+    #fi
+    j=1
+    #for j in 1 12 16 23; do
+      for (( h = 1 ; h <= 100 ; h++ )); do
+        for (( seed = 0 ; seed < 20 ; seed++ )); do
+          #seed=0
+
+          what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
+
+          if [ -z "$iter" ]; then
+            printf "[$what $seed $wchg $wf]: "
+          else
+            printf "[$what $seed $wchg $wf $iter]: "
+          fi
+
+          ./TUDPS_test $what $seed $wchg $wf $iter
+
+          retVal=$?
+          if [ $retVal -ne 0 ]; then
+            exit 1
+          fi
+
+        done
+      done
+    #done
+  #done
+done

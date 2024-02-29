@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+#what=15
+what=4
+#iter=10
+
+#for nvar in 2 10 50 100
+for nvar in 2 10 50; do
+  for nson in 2 9 20; do
+    for dens in 0.05 0.1; do
+      for (( seed = 0 ; seed < 20 ; seed++ )); do
+
+        if [ -z "$iter" ]; then
+          printf "[$seed $what $nvar $nson $dens]: "
+        else
+          printf "[$seed $what $nvar $nson $dens $iter]: "
+        fi
+
+        ./LDS_Box_test $seed $what $nvar $nson $dens $iter
+
+        # ordinarily one would stop with any error, but experience shows that
+        # a few errors arise from numerical difficulties in Cplex, which is
+        # why we print stuff in the tester but leave the batch running
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+          exit 1
+        fi
+
+      done
+    done
+  done
+done

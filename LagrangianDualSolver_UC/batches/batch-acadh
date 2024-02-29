@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+DATADIR=../../UCBlock/netCDF_files/UC_Data/HT-Ramp
+
+# correct value of tStar: 1e+0
+par=BSPar-2S.txt
+
+for size in 20_10 50_20 75_35 100_50 150_75 200_100; do
+  for (( seed = 1 ; seed < 3 ; seed++ )); do
+
+    what=${DATADIR}/${size}_${seed}_w.nc4
+
+    if [ -z "$par" ]; then
+      printf "[$what]: "
+    else
+      printf "[$what $par]: "
+    fi
+
+    ./LDS_UC_test $what $par
+
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+      exit 1
+    fi
+
+  done
+done

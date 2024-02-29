@@ -1,20 +1,19 @@
 /*--------------------------------------------------------------------------*/
-/*---------------------- File CWLAbstractBlockBuilder ----------------------*/
+/*---------------------- File CWLAbstractBlockBuilder -------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
  * Reads an instance of the Capacitated Warehouse Location problem and
  * produces an AbstractBlock associated with that instance.
  *
- * \version 0.10
- *
- * \date 26 - 11 - 2019
- *
  * \author Rafael Durbano Lobato \n
- *         Operations Research Group \n
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
+ * 
+ * \author Enrico Calandrini \n
+ *         Dipartimento di Matematica \n
+ *         Universita' di Pisa \n
  *
- * Copyright &copy; by Rafael Durbano Lobato
+ * \copyright &copy; by Rafael Durbano Lobato
  */
 
 /*--------------------------------------------------------------------------*/
@@ -109,7 +108,7 @@ CWLInstance read_cwl_instance( std::filesystem::path file_path ) {
   }
  }
 
- return instance;
+ return( instance );
 }
 
 /*--------------------------------------------------------------------------*/
@@ -190,7 +189,7 @@ AbstractBlock * build_CWL_block( std::filesystem::path file_path ,
   block->set_objective( objective );
  }
 
- return block;
+ return( block );
 }
 
 
@@ -232,7 +231,7 @@ AbstractBlock * build_customer_Block( const CWLInstance & instance , int j ) {
   block->set_objective( objective );
  }
 
- return block;
+ return( block );
 
 }
 
@@ -247,8 +246,23 @@ BendersBFunction * build_decomposition_by_customer
  nested_Blocks.reserve( instance.num_customers );
  for( int j = 0 ; j < instance.num_customers ; ++j ) {
   auto customer_block = build_customer_Block( instance , j );
-  customer_block->register_Solver( new CPXMILPSolver() );
-  nested_Blocks.push_back( customer_block );
+
+  // Add a *MILPSolver to customer_block
+  BlockSolverConfig * lpbsc;
+  {
+   auto c = Configuration::deserialize( "LPPar_AbstractBlock.txt" );
+   lpbsc = dynamic_cast< BlockSolverConfig * >( c );
+   if( ! lpbsc ) {
+    std::cerr << "Error: LPPar_AbstractBlock.txt does not contain a BlockSolverConfig" << std::endl;
+    delete( c );
+    exit( 1 );
+    }
+   }
+
+ lpbsc->apply( customer_block );
+ lpbsc->clear();
+
+ nested_Blocks.push_back( customer_block );
  }
 
  // Constraints
@@ -285,7 +299,7 @@ BendersBFunction * build_decomposition_by_customer
   }
  }
 
- return benders_function;
+ return( benders_function );
 }
 
 /*--------------------------------------------------------------------------*/
@@ -326,7 +340,7 @@ AbstractBlock * build_location_Block( const CWLInstance & instance , int i ) {
   block->set_objective( objective );
  }
 
- return block;
+ return( block );
 
 }
 
@@ -341,7 +355,21 @@ BendersBFunction * build_decomposition_by_location
  nested_Blocks.reserve( instance.num_locations );
  for( int i = 0 ; i < instance.num_locations ; ++i ) {
   auto location_block = build_location_Block( instance , i );
-  location_block->register_Solver( new CPXMILPSolver() );
+
+  // Add a *MILPSolver to location_block
+  BlockSolverConfig * lpbsc;
+  {
+   auto c = Configuration::deserialize( "LPPar_AbstractBlock.txt" );
+   lpbsc = dynamic_cast< BlockSolverConfig * >( c );
+   if( ! lpbsc ) {
+    std::cerr << "Error: LPPar_AbstractBlock.txt does not contain a BlockSolverConfig" << std::endl;
+    delete( c );
+    exit( 1 );
+    }
+   }
+
+  lpbsc->apply( location_block );
+  lpbsc->clear();
   nested_Blocks.push_back( location_block );
  }
 
@@ -380,7 +408,7 @@ BendersBFunction * build_decomposition_by_location
   }
  }
 
- return benders_function;
+ return( benders_function );
 }
 
 /*--------------------------------------------------------------------------*/
@@ -388,6 +416,10 @@ BendersBFunction * build_decomposition_by_location
 BendersBFunction * build_Benders_function( const CWLInstance & instance ,
                                            std::vector< ColVariable * > && y ,
                                            Solver * solver ) {
+
+ const bool use_capacity_slack = false;
+ const double capacity_slack_cost = 1.0e+5;
+ ColVariable * capacity_slack;
 
  auto block = new AbstractBlock();
 
@@ -404,8 +436,13 @@ BendersBFunction * build_Benders_function( const CWLInstance & instance ,
 
  block->add_static_variable( * x );
 
- // Constraints
+ if( use_capacity_slack ) {
+  capacity_slack = new ColVariable();
+  capacity_slack->is_positive( true );
+  block->add_static_variable( * capacity_slack );
+ }
 
+ // Constraints
  {
   auto demand_fulfillment =
    new std::vector< FRowConstraint >( instance.num_customers );
@@ -428,8 +465,10 @@ BendersBFunction * build_Benders_function( const CWLInstance & instance ,
    for( int j = 0 ; j < instance.num_customers ; ++j ) {
     function->add_variable( & ( * x )[ i ][ j ] , instance.demand[ j ] );
    }
+   if( use_capacity_slack )
+    function->add_variable( capacity_slack , - 1.0 );
    ( * capacity_constraints )[ i ].set_function( function );
-   ( * capacity_constraints )[ i ].set_lhs( -Inf<double>() );
+   ( * capacity_constraints )[ i ].set_lhs( -Inf< double >() );
    ( * capacity_constraints )[ i ].set_rhs( 0 );
   }
   block->add_static_constraint( * capacity_constraints );
@@ -439,6 +478,8 @@ BendersBFunction * build_Benders_function( const CWLInstance & instance ,
 
  {
   auto function = new LinearFunction();
+  if( use_capacity_slack )
+   function->add_variable( capacity_slack , capacity_slack_cost );
   for( int i = 0 ; i < instance.num_locations ; ++i )
    for( int j = 0 ; j < instance.num_customers ; ++j )
     function->add_variable( & ( * x )[ i ][ j ] , instance.cost[ i ][ j ] );
@@ -466,7 +507,7 @@ BendersBFunction * build_Benders_function( const CWLInstance & instance ,
   }
  }
 
- return benders_function;
+ return( benders_function );
 }
 
 /*--------------------------------------------------------------------------*/
@@ -476,17 +517,17 @@ BendersBFunction * build_Benders_function
   Solver * solver , DecompositionType decomposition_type ) {
 
  if( decomposition_type == eNone ) {
-  return build_Benders_function( instance , std::move( y ) , solver );
+  return( build_Benders_function( instance , std::move( y ) , solver ) );
  }
  else if( decomposition_type == eCustomer ) {
-  return build_decomposition_by_customer( instance , std::move( y ) );
+  return( build_decomposition_by_customer( instance , std::move( y ) ) );
  }
  else if( decomposition_type == eLocation ) {
-  return build_decomposition_by_location( instance , std::move( y ) );
+  return( build_decomposition_by_location( instance , std::move( y ) ) );
  }
  else {
-  throw std::invalid_argument( "build_Benders_function: invalid decomposition "
-                               "type: " + std::to_string( decomposition_type ) );
+  throw( std::invalid_argument( "build_Benders_function: invalid decomposition "
+                                "type: " + std::to_string( decomposition_type) ) );
  }
 }
 
@@ -524,7 +565,7 @@ AbstractBlock * build_Benders_master_block
   block->set_objective( objective );
  }
 
- return block;
+ return( block );
 }
 
 /*--------------------------------------------------------------------------*/
@@ -546,7 +587,7 @@ AbstractBlock * build_CWL_block_with_Benders_decomposition
  objective->set_sense( Objective::eMin );
  nested_blocks[ 0 ]->set_objective( objective );
 
- return master_block;
+ return( master_block );
 }
 
 } }   // end( namespace SMSpp_di_unipi_it )

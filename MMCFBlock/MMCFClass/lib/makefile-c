@@ -1,0 +1,54 @@
+##############################################################################
+################################ makefile-c ##################################
+##############################################################################
+#                                                                            #
+#   complete makefile of libMMCF                                             #
+#                                                                            #
+#   The makefile defines internally all external libraries required by       #
+#   the libMMCF library. Accordingly, all necessary OBJ, H, -I directives,   #
+#   and external libraries + -L< libdirs > are added to the corresponding    #
+#   libMMCF* macros.                                                         #
+#                                                                            #
+#   Input:  $(CC)         = compiler command                                 #
+#           $(SW)         = compiler options                                 #
+#           $(libMMCFSDR) = the (base) directory where the libMMCF source is #
+#                                                                            #
+#   Output: $(libMMCFOBJ)     = the final objects                            #
+#           $(libMMCFH)       = the .h files to include for libMMCF          #
+#           $(libMMCFINC)     = all the -I$( include dirs ) of libMMCF       #
+#           $(libMMCFLIBMMCF) = the external libraries + -L< libdirs >       #
+#                                                                            #
+#                              Antonio Frangioni                             #
+#                         Dipartimento di Informatica                        #
+#                             Universita' di Pisa                            #
+#                                                                            #
+##############################################################################
+
+# define & include the necessary modules- - - - - - - - - - - - - - - - - - -
+# if a module is not used in the current configuration, just comment out the
+# corresponding include line
+# each module outputs some macros to be used here:
+# *INC are the -I< include directories >
+# *LIB are the external libraries + -L< libdirs >
+
+# OPT*** stuff
+OPTUxH = $(libMMCFSDR)/OPTUtils/OPTUtils.h \
+	$(libMMCFSDR)/OPTUtils/OPTtypes.h \
+	$(libMMCFSDR)/OPTUtils/OPTvect.h
+OPTUxINC = -I$(libMMCFSDR)/OPTUtils
+
+# include the libMMCF makefile requiring all external modules in input
+include $(libMMCFSDR)/lib/makefile
+
+# macros to be exported - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# external -I directives for the core libMMCF
+libMMCFINC := $(libMMCFINC) $(OPTUxINC) $(libCPLEXINC)
+
+# external libraries for the core libMMCF
+libMMCFLIB := $(libMMCFLIB) $(libCPLEXLIB)
+
+# external headers for libMMCF
+libMMCFH := $(libMMCFH) $(libNDOH) $(OPTUxH)
+
+########################### End of makefile-c ################################

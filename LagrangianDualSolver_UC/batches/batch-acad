@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+DATADIR=../../UCBlock/netCDF_files/UC_Data/T-Ramp
+
+# runs all the academic instances: intended for being used when the
+# ThermalUnitBlock subproblems are solved as their continuous relaxation
+
+#cp ./TUBCfg-LP.txt ./TUBCfg.txt
+#cp ./TUBSCfg-CLP.txt ./TUBSCfg.txt
+
+# correct value of tStar: 1e+0
+par=BSPar-2S.txt
+#mlf=log.txt
+
+for size in 10 20 50 75 100 200; do
+  for (( seed = 1 ; seed < 6 ; seed++ )); do
+
+    what=${DATADIR}/${size}_0_${seed}_w.nc4
+
+    if [ -z "$par" ]; then
+      if [ -z "$mlf" ]; then
+        printf "[$what]: "
+      else
+        printf "[$what]: " >> $mlf
+      fi
+    else
+      if [ -z "$mlf" ]; then
+        printf "[$what $par]: "
+      else
+        printf "[$what $par]: " >> $mlf
+      fi
+    fi
+
+    if [ -z "$mlf" ]; then
+      ./LDS_UC_test $what $par
+    else
+      ./LDS_UC_test $what $par >> $mlf
+    fi
+
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+      exit 1
+    fi
+
+  done
+done
