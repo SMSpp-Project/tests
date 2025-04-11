@@ -76,11 +76,6 @@ if (NOT hasParent)
 endif ()
 
 # ----- Subdirectories ------------------------------------------------------ #
-<<<<<<< HEAD
-#add_subdirectory(BendersBFunction)
-add_subdirectory(CPXMILPSolver)
-add_subdirectory(MCFMILP)
-=======
 add_subdirectory(BendersBFunction)
 add_subdirectory(BinaryKnapsackBlock)
 add_subdirectory(BoxSolver)
@@ -91,7 +86,6 @@ add_subdirectory(LagrangianDualSolver_MMCF)
 add_subdirectory(LagrangianDualSolver_UC)
 add_subdirectory(MCF_MILP)
 add_subdirectory(MMCFBlock)
->>>>>>> release/0.5.4
 add_subdirectory(PolyhedralFunction)
 add_subdirectory(PolyhedralFunctionBlock)
 add_subdirectory(ThermalUnitBlock_Solver)
