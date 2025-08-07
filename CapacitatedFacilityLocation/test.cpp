@@ -622,6 +622,8 @@ int main( int argc , char **argv )
 		  << endl
 		  << "            9 (+512) = set eps & no negative design"
 		  << endl
+		  << "            10 (+1024) = change max facilities constraint"
+		  << endl
 		  << "      #rounds: number of changing rounds [40]"
 		  << endl
 		  << "      #chng: average number of elements to change [10]"
@@ -654,6 +656,10 @@ int main( int argc , char **argv )
 
  m = B1->get_NFacilities();  // record number of facilities
  n = B1->get_NCustomers();   // record number of customers
+
+ // Check current Max Facilities constraint value
+ Index max_fac = B1->get_NMaxFacilities();
+ LOG1( "Current max facilities: " << max_fac << " (total facilities: " << m << ")" << endl );
 
  // read the R3Block Configuration
  r3bc = Configuration::deserialize( "R3BCfg.txt" );
@@ -1297,6 +1303,25 @@ int main( int argc , char **argv )
    LOG1( "change problem type ~ " );
 
    B1->chg_UnSplittable( dis( rg ) < 0.5  );
+   }
+
+  // change max facilities constraint - - - - - - - - - - - - - - - - - - - - -
+  if( ( wchg & 1024 ) && ( dis( rg ) <= 0.33 ) ) {
+   LOG1( "changed max facilities constraint ~ " );
+
+   // Use similar probability distribution as other random factors
+   // 30% chance of unlimited (iInf), 70% chance of limited value [1, m]
+   Index new_max_fac;
+   if( dis( rg ) < 0.3 ) {
+    new_max_fac = CapacitatedFacilityLocationBlock::iInf;  // unlimited facilities
+    LOG1( "set to unlimited - " );
+   } else {
+    std::uniform_int_distribution< Index > dist( 1 , m );
+    new_max_fac = dist( rg );
+    LOG1( "set to " << new_max_fac << " - " );
+   }
+   
+   B1->chg_max_facilities( new_max_fac );
    }
 
   // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -
