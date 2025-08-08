@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DATADIR=../../CapacitatedFacilityLocationBlock/data
+DATADIR=../../../CapacitatedFacilityLocationBlock/data
 
 # remember that +512 is always needed since the R3B is a MCFBlock
 # solved by a MCFSolver
