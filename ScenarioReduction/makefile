@@ -42,13 +42,17 @@ include $(MILPSSDR)/makefile-c
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
-# object files
+# object files for our test
+TEST_OBJ = $(DIR)/test.o $(DIR)/CFL_DSS.o
+
+# object files from modules
 MOBJ =  $(StcBlkOBJ) $(CFLBkOBJ) $(MILPSOBJ) $(SMS++OBJ) $(MCFBkOBJ)
 
 # libraries
 MLIB =  $(StcBlkLIB) $(CFLBkLIB) $(MILPSLIB) $(SMS++LIB) $(MCFBkLIB)
 
-$(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
+# main target
+$(DIR)/$(NAME): $(MOBJ) $(TEST_OBJ)
 	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
 
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
@@ -59,9 +63,16 @@ MINC =  $(SMS++INC) $(StcBlkINC) $(CFLBkINC) $(MILPSINC) $(MCFBkINC)
 # includes
 MH =    $(SMS++H) $(StcBlkH) $(CFLBkH) $(MILPSH) $(MCFBkH)
 
-# compile command
+# compile commands
 
-$(DIR)/test.o: $(DIR)/test.cpp $(MH)
+$(DIR)/test.o: $(DIR)/test.cpp $(DIR)/CFL_DSS.h $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)
+
+$(DIR)/CFL_DSS.o: $(DIR)/CFL_DSS.cpp $(DIR)/CFL_DSS.h $(MH)
+	$(CC) -c $(DIR)/CFL_DSS.cpp -o $@ $(MINC) $(SW)
+
+# clean target
+clean::
+	rm -f $(DIR)/*.o $(DIR)/$(NAME)
 
 ############################ End of makefile #################################

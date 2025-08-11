@@ -1,0 +1,28 @@
+# Configuration for HiGHSMILPSolver to test CFL feasibility
+BlockSolverConfig
+
+1  # differential configuration
+
+1  # number of solvers
+HiGHSMILPSolver  # name of Solver
+
+1  # number of ComputeConfig
+
+# HiGHSMILPSolver ComputeConfig
+ComputeConfig
+
+1  # differential
+
+2  # number of integer parameters
+intLogVerb                              0  # no log verbosity (silent)
+intRelaxIntVars                         0  # solve integer problem (not continuous relaxation)
+
+1  # number of double parameters
+dblMaxTime                              30 # max time: 30 seconds
+
+0  # number of string parameters
+0  # number of vector-of-int parameters
+0  # number of vector-of-double parameters  
+0  # number of vector-of-string parameters
+
+* # no extra configuration
