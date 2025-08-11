@@ -15,8 +15,6 @@
 /*--------------------------------------------------------------------------*/
 
 #include "CFL_DSS.h"
-#include "CapacitatedFacilityLocationBlock.h"
-#include "BlockSolverConfig.h"
 #include "StochasticBlock.h"
 #include "DataMapping.h"
 #include <iostream>
