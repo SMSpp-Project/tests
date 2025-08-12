@@ -47,12 +47,12 @@ bool test_feasibility(CapacitatedFacilityLocationBlock* cfl_block) {
     bool feasible = (result != Solver::kInfeasible);
     
     if (feasible && result == Solver::kOK) {
-        cout << "    ✓ Feasible! Optimal value: " << fixed << setprecision(2) 
+        cout << "     Feasible! Optimal value: " << fixed << setprecision(2) 
              << solver->get_lb() << endl;
     } else if (feasible) {
-        cout << "    ✓ Feasible (result code: " << result << ")" << endl;
+        cout << "     Feasible (result code: " << result << ")" << endl;
     } else {
-        cout << "    ✗ Infeasible" << endl;
+        cout << "     Infeasible" << endl;
     }
     
     // Cleanup
@@ -78,7 +78,7 @@ int main() {
         auto* cfl = dynamic_cast<CapacitatedFacilityLocationBlock*>(block);
         
         if (!cfl) {
-            cerr << "✗ Failed to load CFL instance" << endl;
+            cerr << " Failed to load CFL instance" << endl;
             delete block;
             return 1;
         }
@@ -91,15 +91,15 @@ int main() {
         if (!cfl->get_UnSplittable()) {
             cout << "  Converting from splittable to single-sourcing..." << endl;
             cfl->chg_UnSplittable(true);
-            cout << "  ✓ Successfully converted!" << endl;
+            cout << "   Successfully converted!" << endl;
         } else {
-            cout << "  ✓ Already single-sourcing" << endl;
+            cout << "   Already single-sourcing" << endl;
         }
         
         // Test feasibility
         cout << "\n3. Verifying feasibility:" << endl;
         if (!test_feasibility(cfl)) {
-            cout << "✗ Instance is infeasible after conversion" << endl;
+            cout << " Instance is infeasible after conversion" << endl;
             delete cfl;
             return 1;
         }
@@ -139,9 +139,9 @@ int main() {
         if (!inner_cfl->get_UnSplittable()) {
             cout << "  Warning: Inner CFL block is not single-sourcing, fixing..." << endl;
             inner_cfl->chg_UnSplittable(true);
-            cout << "  ✓ Inner CFL block now single-sourcing" << endl;
+            cout << "   Inner CFL block now single-sourcing" << endl;
         } else {
-            cout << "  ✓ Inner CFL block is single-sourcing" << endl;
+            cout << "   Inner CFL block is single-sourcing" << endl;
         }
         
         // Setup DataMapping for demand changes
@@ -177,7 +177,6 @@ int main() {
                 }
                 
                 generated_scenarios.push_back(scenario);
-                stochastic_block->set_data(scenario);
                 
                 // Show 5 highest demands of this scenario
                 auto inner = dynamic_cast<CapacitatedFacilityLocationBlock*>(
@@ -198,8 +197,8 @@ int main() {
                 }
                 cout << endl;
             }
-            
-            cout << "  ✓ Successfully generated and applied 3 stochastic scenarios" << endl;
+
+            cout << "   Successfully generated and applied 3 stochastic scenarios" << endl;
             
             // Test 5: CFL_DSS integration
             cout << "\n5. Testing CFL_DSS integration:" << endl;
@@ -211,7 +210,7 @@ int main() {
             
             // Set the StochasticBlock in CFL_DSS
             cfl_dss->set_Block(stochastic_block.get());
-            cout << "  ✓ CFL_DSS successfully configured with StochasticBlock" << endl;
+            cout << "   CFL_DSS successfully configured with StochasticBlock" << endl;
             
             // Test scenario distance computation
             cout << "  Testing scenario distance computation..." << endl;
@@ -220,7 +219,7 @@ int main() {
             scenario2 << 2.0, 3.0, 4.0;
             
             double distance = cfl_dss->compute_scenario_distance(scenario1, scenario2, 2.0);
-            cout << "  ✓ Distance between test scenarios: " << distance << endl;
+            cout << "   Distance between test scenarios: " << distance << endl;
             
             // Test transport cost matrix computation
             cout << "  Testing transport cost matrix computation..." << endl;
@@ -229,11 +228,11 @@ int main() {
             float ell = 2.0;
             
             auto cost_matrix = cfl_dss->compute_transport_cost_matrix(n_scenarios, scenario_size, ell);
-            cout << "  ✓ Transport cost matrix computed successfully" << endl;
-            cout << "  ✓ Matrix dimensions: " << cost_matrix.shape()[0] << "x" << cost_matrix.shape()[1] << endl;
+            cout << "   Transport cost matrix computed successfully" << endl;
+            cout << "   Matrix dimensions: " << cost_matrix.shape()[0] << "x" << cost_matrix.shape()[1] << endl;
             
         } else {
-            cout << "  ✗ Could not setup DataMapping for demand changes" << endl;
+            cout << "   Could not setup DataMapping for demand changes" << endl;
         }
         
         cout << "\n=== All tests passed! ===" << endl;
