@@ -16,7 +16,6 @@
 
 #include "CFL_DSS.h"
 #include "StochasticBlock.h"
-#include "DataMapping.h"
 #include <iostream>
 #include <iomanip>
 #include <random>
