@@ -36,9 +36,13 @@ include $(StcBlkSDR)/makefile
 CFLBkSDR = ../../CapacitatedFacilityLocationBlock
 include $(CFLBkSDR)/makefile-s
 
-# MILPSolver (needed for scenario reduction)
+# MILPSolver (needed for scenario reduction and two-stage solving)
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-c
+
+# TwoStageStochasticBlock
+TSSBkSDR = ../../twostagestochasticblock
+include $(TSSBkSDR)/makefile
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -46,7 +50,7 @@ include $(MILPSSDR)/makefile-c
 TEST_OBJ = $(DIR)/test.o $(DIR)/CFL_DSS.o
 
 # object files from modules
-MOBJ =  $(StcBlkOBJ) $(CFLBkOBJ) $(MILPSOBJ) $(SMS++OBJ) $(MCFBkOBJ)
+MOBJ =  $(StcBlkOBJ) $(CFLBkOBJ) $(MILPSOBJ) $(SMS++OBJ) $(MCFBkOBJ) $(TSSBkOBJ)
 
 # libraries
 MLIB =  $(StcBlkLIB) $(CFLBkLIB) $(MILPSLIB) $(SMS++LIB) $(MCFBkLIB)
@@ -58,10 +62,10 @@ $(DIR)/$(NAME): $(MOBJ) $(TEST_OBJ)
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(StcBlkINC) $(CFLBkINC) $(MILPSINC) $(MCFBkINC)
+MINC =  $(SMS++INC) $(StcBlkINC) $(CFLBkINC) $(MILPSINC) $(MCFBkINC) $(TSSBkINC)
 
 # includes
-MH =    $(SMS++H) $(StcBlkH) $(CFLBkH) $(MILPSH) $(MCFBkH)
+MH =    $(SMS++H) $(StcBlkH) $(CFLBkH) $(MILPSH) $(MCFBkH) $(TSSBkH)
 
 # compile commands
 

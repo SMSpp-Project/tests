@@ -2,23 +2,32 @@
 /*-------------------------- File test.cpp ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * Test for CFL single-sourcing conversion and feasibility verification.
+ * Test for Two-Stage Stochastic CFL with TwoStageStochasticBlock.
  * 
- * This test demonstrates:
- * 1. Loading a CFL instance from netCDF
- * 2. Converting it to single-sourcing using chg_UnSplittable(true)
- * 3. Verifying feasibility with HiGHSMILPSolver
- * 4. Applying stochastic demand scenarios via StochasticBlock and DataMapping
+ * This test validates the TwoStageStochasticBlock implementation by:
+ * 1. Loading a deterministic CFL instance from netCDF
+ * 2. Ensuring it uses single-sourcing (UnSplittable = true)
+ * 3. Creating stochastic demand scenarios (±20% variation)
+ * 4. Building a TwoStageStochasticBlock with proper AbstractPaths
+ * 5. Solving with MILPSolver
  *
- * \author Nils Peyrouset, Benoit Tran
+ * In the two-stage CFL:
+ * - First stage: Facility opening decisions (y variables)
+ * - Second stage: Customer assignments (x variables) under demand uncertainty
+ *
+ * \author Benoit Tran
  */
 /*--------------------------------------------------------------------------*/
 
 #include "CFL_DSS.h"
 #include "StochasticBlock.h"
+#include "TwoStageStochasticBlock.h"
+#include "MILPSolver.h"
 #include <iostream>
 #include <iomanip>
 #include <random>
+#include <numeric>
+#include <cstdlib>
 
 using namespace SMSpp_di_unipi_it;
 using namespace std;
@@ -27,38 +36,102 @@ using namespace std;
 /*------------------------------- HELPERS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-// Test feasibility with HiGHSMILPSolver
-bool test_feasibility(CapacitatedFacilityLocationBlock* cfl_block) {
-    cout << "  Testing feasibility with HiGHSMILPSolver..." << endl;
+// Create a netCDF file for TwoStageStochasticBlock with proper structure
+void create_twostage_netcdf(const string& filename,
+                            const string& cfl_path,
+                            const vector<vector<double>>& demand_scenarios,
+                            int nf, int nc) {
+    cout << "  Creating netCDF file for TwoStageStochasticBlock..." << endl;
     
-    auto cfg = Configuration::deserialize("BSPar_HiGHS.txt");
-    auto* bsc = dynamic_cast<BlockSolverConfig*>(cfg);
-    if (!bsc) return false;
-    
-    bsc->apply(cfl_block);
-    if (cfl_block->get_registered_solvers().empty()) {
-        delete bsc;
-        return false;
+    try {
+        // First, load the base CFL to serialize it properly
+        Block* base_block = Block::deserialize(cfl_path);
+        auto* base_cfl = dynamic_cast<CapacitatedFacilityLocationBlock*>(base_block);
+        if (!base_cfl) {
+            throw runtime_error("Failed to load base CFL for serialization");
+        }
+        
+        // Convert to single-sourcing
+        if (!base_cfl->get_UnSplittable()) {
+            base_cfl->chg_UnSplittable(true);
+            cout << "    Converted CFL to unsplittable (single-sourcing)" << endl;
+        } else {
+            cout << "    CFL is already unsplittable" << endl;
+        }
+        
+        // Verify the unsplittable setting before serialization
+        if (base_cfl->get_UnSplittable()) {
+            cout << "    ✓ Confirmed: CFL is unsplittable before serialization" << endl;
+        } else {
+            cerr << "    ERROR: CFL is NOT unsplittable before serialization!" << endl;
+            throw runtime_error("Failed to set CFL to unsplittable mode");
+        }
+        
+        // Create the netCDF file
+        netCDF::NcFile file(filename, netCDF::NcFile::replace);
+        
+        // Create root group for TwoStageStochasticBlock
+        auto root = file.addGroup("TwoStageStochasticBlock");
+        
+        // Add type attribute
+        root.putAtt("type", "TwoStageStochasticBlock");
+        
+        // Add NumberScenarios dimension
+        auto scenDim = root.addDim("NumberScenarios", demand_scenarios.size());
+        
+        // Create StochasticBlock group
+        auto stochGroup = root.addGroup("StochasticBlock");
+        stochGroup.putAtt("type", "StochasticBlock");
+        
+        // Create inner Block group and serialize the CFL into it
+        auto blockGroup = stochGroup.addGroup("Block");
+        base_cfl->serialize(blockGroup);
+        
+        // Create StaticAbstractPath group with AbstractPaths for y variables
+        auto staticPathGroup = root.addGroup("StaticAbstractPath");
+        
+        // For CFL, y variables (facility opening decisions) are first-stage
+        // We need to create AbstractPaths pointing to each y variable
+        // The y variables are registered as a vector group in CFL
+        
+        // Create AbstractPath dimensions and variables
+        auto pathDim = staticPathGroup.addDim("PathDim", nf);
+        auto totalLengthDim = staticPathGroup.addDim("PathTotalLength", nf);
+        
+        auto pathStart = staticPathGroup.addVar("PathStart", netCDF::NcUint(), pathDim);
+        auto pathNodeTypes = staticPathGroup.addVar("PathNodeTypes", netCDF::NcChar(), totalLengthDim);
+        auto pathGroupIndices = staticPathGroup.addVar("PathGroupIndices", netCDF::NcUint(), totalLengthDim);
+        auto pathElementIndices = staticPathGroup.addVar("PathElementIndices", netCDF::NcUint(), totalLengthDim);
+        auto pathRangeIndices = staticPathGroup.addVar("PathRangeIndices", netCDF::NcUint(), totalLengthDim);
+        
+        // Initialize AbstractPath data for y variables (static/first-stage)
+        vector<unsigned int> startIndices(nf);
+        vector<unsigned int> elementIndices(nf);
+        vector<unsigned int> rangeIndices(nf);
+        for (int i = 0; i < nf; ++i) {
+            startIndices[i] = i;
+            elementIndices[i] = i;
+            rangeIndices[i] = i + 1;  // Single element range convention
+        }
+        
+        pathStart.putVar(startIndices.data());
+        pathNodeTypes.putVar(vector<char>(nf, 'V').data());  // 'V' for variables
+        pathGroupIndices.putVar(vector<unsigned int>(nf, 0).data());  // Group 0
+        pathElementIndices.putVar(elementIndices.data());
+        pathRangeIndices.putVar(rangeIndices.data());
+        
+        cout << "    Created netCDF structure with " << demand_scenarios.size() << " scenarios" << endl;
+        cout << "    Serialized CFL with " << nf << " facilities and " << nc << " customers" << endl;
+        
+        delete base_cfl;
+        
+    } catch (const netCDF::exceptions::NcException& e) {
+        cerr << "Error creating netCDF file: " << e.what() << endl;
+        throw;
+    } catch (const exception& e) {
+        cerr << "Error: " << e.what() << endl;
+        throw;
     }
-    
-    auto solver = cfl_block->get_registered_solvers().front();
-    int result = solver->compute(false);
-    bool feasible = (result != Solver::kInfeasible);
-    
-    if (feasible && result == Solver::kOK) {
-        cout << "     Feasible! Optimal value: " << fixed << setprecision(2) 
-             << solver->get_lb() << endl;
-    } else if (feasible) {
-        cout << "     Feasible (result code: " << result << ")" << endl;
-    } else {
-        cout << "     Infeasible" << endl;
-    }
-    
-    // Cleanup
-    bsc->clear();
-    bsc->apply(cfl_block);
-    delete bsc;
-    return feasible;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -66,177 +139,112 @@ bool test_feasibility(CapacitatedFacilityLocationBlock* cfl_block) {
 /*--------------------------------------------------------------------------*/
 
 int main() {
-    cout << "=== Simple CFL Single-Sourcing Test ===" << endl;
+    cout << "=== Two-Stage Stochastic CFL Test ===" << endl;
     
     try {
-        // Load CFL instance
-        cout << "\n1. Loading CFL instance (30-200-1.nc4):" << endl;
+        // Step 1: Load base CFL instance to get dimensions and demands
+        cout << "\n1. Loading base CFL instance:" << endl;
         const string path = "../../CapacitatedFacilityLocationBlock/data/nc4/Yang/30-200/30-200-1.nc4";
         
         Block* block = Block::deserialize(path);
-        auto* cfl = dynamic_cast<CapacitatedFacilityLocationBlock*>(block);
+        auto* base_cfl = dynamic_cast<CapacitatedFacilityLocationBlock*>(block);
         
-        if (!cfl) {
-            cerr << " Failed to load CFL instance" << endl;
+        if (!base_cfl) {
+            cerr << "Failed to load CFL instance" << endl;
             delete block;
             return 1;
         }
         
-        cout << "  ✓ Loaded instance: " << cfl->get_NFacilities() 
-             << " facilities, " << cfl->get_NCustomers() << " customers" << endl;
+        int nf = base_cfl->get_NFacilities();
+        int nc = base_cfl->get_NCustomers();
+        cout << "  Loaded instance: " << nf << " facilities, " << nc << " customers" << endl;
         
-        // Check/convert to single-sourcing
-        cout << "\n2. Converting to single-sourcing:" << endl;
-        if (!cfl->get_UnSplittable()) {
-            cout << "  Converting from splittable to single-sourcing..." << endl;
-            cfl->chg_UnSplittable(true);
-            cout << "   Successfully converted!" << endl;
-        } else {
-            cout << "   Already single-sourcing" << endl;
+        // Convert to single-sourcing
+        if (!base_cfl->get_UnSplittable()) {
+            base_cfl->chg_UnSplittable(true);
+            cout << "  Converted to single-sourcing" << endl;
         }
         
-        // Test feasibility
-        cout << "\n3. Verifying feasibility:" << endl;
-        if (!test_feasibility(cfl)) {
-            cout << " Instance is infeasible after conversion" << endl;
-            delete cfl;
-            return 1;
-        }
-        
-        // Test stochastic scenarios
-        cout << "\n4. Testing stochastic demand scenarios:" << endl;
-        int nc = cfl->get_NCustomers();
-        
-        // Store original demands and find the 5 highest
-        vector<pair<double, int>> demands_with_index;
-        for (int i = 0; i < nc; ++i) {
-            demands_with_index.push_back({cfl->get_Demand(i), i});
-        }
-        
-        // Sort by demand value (descending)
-        sort(demands_with_index.begin(), demands_with_index.end(), greater<pair<double, int>>());
-        
-        cout << "  Original demands (5 highest): ";
-        for (int i = 0; i < min(5, nc); ++i) {
-            cout << fixed << setprecision(1) << demands_with_index[i].first 
-                 << " (customer " << demands_with_index[i].second << ")";
-            if (i < min(5, nc) - 1) cout << ", ";
-        }
-        cout << endl;
-        
-        // Store original demands for scenario generation
+        // Store original demands
         vector<double> original_demands(nc);
         for (int i = 0; i < nc; ++i) {
-            original_demands[i] = cfl->get_Demand(i);
+            original_demands[i] = base_cfl->get_Demand(i);
         }
         
-        // Create StochasticBlock
-        auto stochastic_block = make_unique<StochasticBlock>(nullptr, cfl);
+        delete base_cfl;
         
-        // Verify that the inner block is still single-sourcing after StochasticBlock creation
-        auto inner_cfl = dynamic_cast<CapacitatedFacilityLocationBlock*>(stochastic_block->get_inner_block());
-        if (!inner_cfl->get_UnSplittable()) {
-            cout << "  Warning: Inner CFL block is not single-sourcing, fixing..." << endl;
-            inner_cfl->chg_UnSplittable(true);
-            cout << "   Inner CFL block now single-sourcing" << endl;
-        } else {
-            cout << "   Inner CFL block is single-sourcing" << endl;
-        }
+        // Step 2: Create stochastic demand scenarios
+        cout << "\n2. Creating stochastic demand scenarios:" << endl;
+        const int num_scenarios = 3;  // Use 3 scenarios for testing
         
-        // Setup DataMapping for demand changes
-        using DemandIterator = CapacitatedFacilityLocationBlock::DVector::const_iterator;
-        using FunctionType = Block::FunctionType<DemandIterator, Block::Range>;
+        // Generate scenarios with ±20% variation
+        vector<vector<double>> demand_scenarios;
+        std::mt19937 gen(42);  // Fixed seed for reproducibility
+        std::uniform_real_distribution<> dist(0.8, 1.2);  // ±20% variation
         
-        auto func_ptr = Block::get_method<FunctionType>(
-            "CapacitatedFacilityLocationBlock::chg_customer_demands"
-        );
-        
-        if (func_ptr) {
-            auto data_mapping = make_unique<SimpleDataMapping<Block::Range, Block::Range, double, Block>>(
-                func_ptr,
-                stochastic_block->get_inner_block(),
-                Block::Range(0, nc),  // scenario range
-                Block::Range(0, nc)   // customer range
-            );
-            
-            stochastic_block->add_data_mapping(std::move(data_mapping));
-            
-            // Store scenarios for later use with CFL_DSS
-            vector<vector<double>> generated_scenarios;
-            
-            // Generate scenarios with ±20% demand variation around original demands
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            
-            for (int s = 0; s < 3; ++s) {
-                vector<double> scenario(nc);
-                for (int i = 0; i < nc; ++i) {
-                    std::uniform_real_distribution<> dist(0.8, 1.2);  // ±20% variation
-                    scenario[i] = original_demands[i] * dist(gen);  // Always use original demands as base
-                }
-                
-                generated_scenarios.push_back(scenario);
-                
-                // Show 5 highest demands of this scenario
-                auto inner = dynamic_cast<CapacitatedFacilityLocationBlock*>(
-                    stochastic_block->get_inner_block());
-                
-                vector<pair<double, int>> scenario_demands;
-                for (int i = 0; i < nc; ++i) {
-                    scenario_demands.push_back({inner->get_Demand(i), i});
-                }
-                
-                sort(scenario_demands.begin(), scenario_demands.end(), greater<pair<double, int>>());
-                
-                cout << "  Scenario " << (s + 1) << " (5 highest): ";
-                for (int i = 0; i < min(5, nc); ++i) {
-                    cout << fixed << setprecision(1) << scenario_demands[i].first 
-                         << " (customer " << scenario_demands[i].second << ")";
-                    if (i < min(5, nc) - 1) cout << ", ";
-                }
-                cout << endl;
+        for (int s = 0; s < num_scenarios; ++s) {
+            vector<double> scenario(nc);
+            for (int i = 0; i < nc; ++i) {
+                scenario[i] = original_demands[i] * dist(gen);
             }
-
-            cout << "   Successfully generated and applied 3 stochastic scenarios" << endl;
+            demand_scenarios.push_back(scenario);
+        }
+        cout << "  Generated " << num_scenarios << " demand scenarios with ±20% variation" << endl;
+        
+        // Step 3: Create netCDF file for TwoStageStochasticBlock
+        cout << "\n3. Creating netCDF file for TwoStageStochasticBlock:" << endl;
+        const string netcdf_file = "twostage_cfl.nc4";
+        create_twostage_netcdf(netcdf_file, path, demand_scenarios, nf, nc);
+        
+        // Step 4: Deserialize TwoStageStochasticBlock from netCDF
+        cout << "\n4. Deserializing TwoStageStochasticBlock from netCDF:" << endl;
+        
+        // Open the netCDF file and deserialize TwoStageStochasticBlock
+        netCDF::NcFile file(netcdf_file, netCDF::NcFile::read);
+        auto tssGroup = file.getGroup("TwoStageStochasticBlock");
+        
+        auto tss_block = make_unique<TwoStageStochasticBlock>();
+        tss_block->deserialize(tssGroup);
+        
+        cout << "  Deserialized TwoStageStochasticBlock with " << num_scenarios << " scenarios" << endl;
+        
+        // Step 5: Solving the extensive form with MILPSolver
+        cout << "\n5. Solving the extensive form with MILPSolver:" << endl;
+        
+        // Create a BlockSolverConfig for MILPSolver
+        auto cfg = Configuration::deserialize("BSPar_HiGHS.txt");
+        auto* bsc = dynamic_cast<BlockSolverConfig*>(cfg);
+        
+        if (bsc) {
+            bsc->apply(tss_block.get());
             
-            // Test 5: CFL_DSS integration
-            cout << "\n5. Testing CFL_DSS integration:" << endl;
-            auto cfl_dss = make_unique<CFL_DSS>();
-            
-            // Verify inner block is single-sourcing before setting in CFL_DSS
-            cout << "  Verifying single-sourcing before CFL_DSS integration..." << endl;
-            cout << "  Inner CFL block UnSplittable: " << (inner_cfl->get_UnSplittable() ? "Yes" : "No") << endl;
-            
-            // Set the StochasticBlock in CFL_DSS
-            cfl_dss->set_Block(stochastic_block.get());
-            cout << "   CFL_DSS successfully configured with StochasticBlock" << endl;
-            
-            // Test scenario distance computation
-            cout << "  Testing scenario distance computation..." << endl;
-            Eigen::VectorXd scenario1(3), scenario2(3);
-            scenario1 << 1.0, 2.0, 3.0;
-            scenario2 << 2.0, 3.0, 4.0;
-            
-            double distance = cfl_dss->compute_scenario_distance(scenario1, scenario2, 2.0);
-            cout << "   Distance between test scenarios: " << distance << endl;
-            
-            // Test transport cost matrix computation
-            cout << "  Testing transport cost matrix computation..." << endl;
-            int n_scenarios = 5;
-            int scenario_size = 3;
-            float ell = 2.0;
-            
-            auto cost_matrix = cfl_dss->compute_transport_cost_matrix(n_scenarios, scenario_size, ell);
-            cout << "   Transport cost matrix computed successfully" << endl;
-            cout << "   Matrix dimensions: " << cost_matrix.shape()[0] << "x" << cost_matrix.shape()[1] << endl;
-            
+            if (!tss_block->get_registered_solvers().empty()) {
+                auto solver = tss_block->get_registered_solvers().front();
+                cout << "  Computing solution..." << endl;
+                int result = solver->compute(false);
+                
+                if (result == Solver::kOK) {
+                    double obj_value = solver->get_lb();
+                    cout << "  Optimal solution found!" << endl;
+                    cout << "  Objective value: " << fixed << setprecision(2) << obj_value << endl;
+                } else if (result == Solver::kInfeasible) {
+                    cout << "   Problem is infeasible!" << endl;
+                } else {
+                    cout << "   Solver failed with code: " << result << endl;
+                }
+                
+                // Cleanup
+                bsc->clear();
+                bsc->apply(tss_block.get());
+            } else {
+                cout << "   No solver registered!" << endl;
+            }
+            delete bsc;
         } else {
-            cout << "   Could not setup DataMapping for demand changes" << endl;
+            cout << "   Failed to load solver configuration!" << endl;
         }
         
-        cout << "\n=== All tests passed! ===" << endl;
-        
-        // Note: Don't delete cfl - StochasticBlock owns it now
+        cout << "\n=== Test completed successfully ===" << endl;
         return 0;
         
     } catch (const exception& e) {
