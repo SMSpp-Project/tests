@@ -26,6 +26,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include "CapacitatedFacilityLocationBlock.h"
 #include "DiscreteScenarioSet.h"
 #include "StochasticBlock.h"
 

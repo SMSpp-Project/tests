@@ -12,8 +12,28 @@ NAME = ScenarioReduction_test
 # basic directory
 DIR = .
 
-# common stuff
-include ../makefile_common
+# compiler
+CC = clang++
+
+# common flags
+COMMON_SW = -std=c++20 -ferror-limit=1 -Wno-enum-compare -DCLANG_1200_0_32_27_PATCH
+
+# debug switches
+SW_DEBUG = -g3 -glldb -fno-inline $(COMMON_SW)
+
+# production switches
+SW_RELEASE = -O3 $(COMMON_SW) -DNDEBUG
+
+# default target
+default: release
+
+# debug target
+debug: SW = $(SW_DEBUG)
+debug: $(DIR)/$(NAME)
+
+# release target
+release: SW = $(SW_RELEASE)
+release: $(DIR)/$(NAME)
 
 # define & include the necessary modules- - - - - - - - - - - - - - - - - - -
 # if a module is not used in the current configuration, just comment out the
@@ -77,6 +97,9 @@ $(DIR)/CFL_DSS.o: $(DIR)/CFL_DSS.cpp $(DIR)/CFL_DSS.h $(MH)
 
 # clean target
 clean::
-	rm -f $(DIR)/*.o $(DIR)/$(NAME)
+	rm -f $(DIR)/*.o $(DIR)/*~ $(DIR)/$(NAME)
+
+# phony targets
+.PHONY: debug release clean
 
 ############################ End of makefile #################################
