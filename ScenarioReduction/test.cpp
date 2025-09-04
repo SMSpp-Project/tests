@@ -192,6 +192,167 @@ pair<double, vector<double>> compute_anticipative_with_stochastic_block(
 }
 
 /**
+ * @brief Loads a CFL instance and extracts its parameters
+ * 
+ * Loads a CapacitatedFacilityLocationBlock from a file, ensures it's in
+ * single-sourcing mode, and extracts dimensions and original demands.
+ * 
+ * @param path Path to the CFL instance file
+ * @param verbose Whether to print detailed output
+ * @return Tuple of (number of facilities, number of customers, original demands)
+ * @throw runtime_error If the CFL instance cannot be loaded
+ */
+tuple<int, int, vector<double>> load_cfl_instance(
+    const string& path,
+    bool verbose = false) {
+    
+    if (verbose) cout << "  Loading base CFL instance..." << endl;
+    
+    Block* block = Block::deserialize(path);
+    auto* base_cfl = dynamic_cast<CapacitatedFacilityLocationBlock*>(block);
+    
+    if (!base_cfl) {
+        delete block;
+        throw runtime_error("Failed to load CFL instance from " + path);
+    }
+    
+    int nf = base_cfl->get_NFacilities();
+    int nc = base_cfl->get_NCustomers();
+    if (verbose) cout << "  Loaded instance: " << nf << " facilities, " << nc << " customers" << endl;
+    
+    // Convert to single-sourcing if needed
+    if (!base_cfl->get_UnSplittable()) {
+        base_cfl->chg_UnSplittable(true);
+        if (verbose) cout << "  Converted to single-sourcing" << endl;
+    }
+    
+    // Store original demands
+    vector<double> original_demands(nc);
+    for (int i = 0; i < nc; ++i) {
+        original_demands[i] = base_cfl->get_Demand(i);
+    }
+    
+    delete base_cfl;
+    
+    return make_tuple(nf, nc, original_demands);
+}
+
+/**
+ * @brief Generates demand scenarios for testing
+ * 
+ * Creates a set of demand scenarios with the first being the original demands
+ * and the rest having random variations within a specified range.
+ * 
+ * @param original_demands The base demand values
+ * @param num_scenarios Total number of scenarios to generate
+ * @param variation_range The range of variation (e.g., 0.2 for ±20%)
+ * @param seed Random seed for reproducibility
+ * @param verbose Whether to print detailed output
+ * @return Vector of demand scenarios
+ */
+vector<vector<double>> generate_demand_scenarios(
+    const vector<double>& original_demands,
+    int num_scenarios,
+    double variation_range = 0.2,
+    unsigned int seed = 42,
+    bool verbose = false) {
+    
+    if (verbose) cout << "  Creating stochastic demand scenarios..." << endl;
+    
+    int nc = original_demands.size();
+    vector<vector<double>> demand_scenarios;
+    
+    // First scenario is the base (unchanged demands)
+    demand_scenarios.push_back(original_demands);
+    
+    // Generate remaining scenarios with variation
+    std::mt19937 gen(seed);  // Fixed seed for reproducibility
+    double min_factor = 1.0 - variation_range;
+    double max_factor = 1.0 + variation_range;
+    std::uniform_real_distribution<> dist(min_factor, max_factor);
+    
+    for (int s = 1; s < num_scenarios; ++s) {
+        vector<double> scenario(nc);
+        for (int i = 0; i < nc; ++i) {
+            scenario[i] = original_demands[i] * dist(gen);
+        }
+        demand_scenarios.push_back(scenario);
+    }
+    
+    if (verbose) {
+        cout << "  Generated " << num_scenarios << " scenarios: 1 base + " 
+             << (num_scenarios - 1) << " with ±" << (variation_range * 100) 
+             << "% variation" << endl;
+    }
+    
+    return demand_scenarios;
+}
+
+/**
+ * @brief Computes the extensive form (stochastic) solution
+ * 
+ * This function solves the extensive form of the stochastic problem using MILPSolver.
+ * 
+ * @param tss_block The TwoStageStochasticBlock to solve
+ * @param num_scenarios Number of scenarios (for scaling the objective)
+ * @param verbose Whether to print detailed output
+ * @return Pair of (stochastic objective value, success flag)
+ */
+pair<double, bool> compute_extensive_form_solution(
+    TwoStageStochasticBlock* tss_block,
+    int num_scenarios,
+    bool verbose = false) {
+    
+    if (verbose) cout << "  Solving the extensive form with MILPSolver..." << endl;
+    
+    // Create a BlockSolverConfig for MILPSolver
+    auto cfg = Configuration::deserialize("BSPar_HiGHS.txt");
+    auto* bsc = dynamic_cast<BlockSolverConfig*>(cfg);
+    
+    double stochastic_obj = 0.0;
+    bool success = false;
+    
+    if (bsc) {
+        bsc->apply(tss_block);
+        
+        if (!tss_block->get_registered_solvers().empty()) {
+            auto solver = tss_block->get_registered_solvers().front();
+            if (verbose) cout << "  Computing solution..." << endl;
+            int result = solver->compute(false);
+            
+            if (result == Solver::kOK) {
+                stochastic_obj = solver->get_ub();
+                // TODO: When scale() method is implemented in Objective class,
+                // remove this division as scenarios will be pre-scaled by their probabilities
+                // For now, assuming uniform probabilities (1/num_scenarios)
+                stochastic_obj = stochastic_obj / num_scenarios;
+                success = true;
+                
+                if (verbose) {
+                    cout << "  Optimal solution found!" << endl;
+                    cout << "  Stochastic objective value (scaled): " << fixed << setprecision(2) << stochastic_obj << endl;
+                }
+            } else if (result == Solver::kInfeasible) {
+                cerr << "Problem is infeasible!" << endl;
+            } else {
+                cerr << "Solver failed with code: " << result << endl;
+            }
+            
+            // Cleanup
+            bsc->clear();
+            bsc->apply(tss_block);
+        } else {
+            cerr << "No solver registered!" << endl;
+        }
+        delete bsc;
+    } else {
+        cerr << "Failed to load solver configuration!" << endl;
+    }
+    
+    return {stochastic_obj, success};
+}
+
+/**
  * @brief Computes the anticipative (perfect information) solution
  * 
  * This function solves each scenario independently as a deterministic problem
@@ -318,13 +479,13 @@ void print_solution_comparison(double stochastic_obj, double anticipative_obj,
 }
 
 /**
- * @brief Apply scenario data to a Block using programmatic DataMappings
+ * @brief Apply scenario data using TwoStageStochasticBlock's new apply_scenario_data() method
  * 
- * This function creates DataMappings programmatically (without netCDF deserialization)
- * and applies scenario data to the block copies in TwoStageStochasticBlock.
+ * This function uses the new apply_scenario_data() method of TwoStageStochasticBlock
+ * to apply scenario-specific demand data to each scenario block. It first tries the
+ * new method, and falls back to manual application if needed.
  * 
  * @param tss_block The TwoStageStochasticBlock containing the scenario blocks
- * @param stochastic_block The StochasticBlock with DataMapping information
  * @param demand_scenarios Vector of demand scenarios
  * @param nc Number of customers
  * @param verbose If true, prints detailed progress information
@@ -334,44 +495,57 @@ void apply_scenario_data_programmatically(
     const vector<vector<double>>& demand_scenarios,
     int nc, bool verbose = false) {
     
-    if (verbose) cout << "  Applying scenario data programmatically..." << endl;
+    if (verbose) cout << "  Applying scenario data using new apply_scenario_data() method..." << endl;
     
-    // Get the method for changing customer demands
-    // Using the correct function signature: iterator, Range, ModParam, ModParam
-    using FunctionType = Block::FunctionType<Block::MF_dbl_it, Block::Range>;
-    auto method = Block::get_method<FunctionType>(
-        "CapacitatedFacilityLocationBlock::chg_customer_demands");
-    
-    if (!method) {
-        throw runtime_error("Failed to get method for chg_customer_demands");
-    }
-    
-    // Apply each scenario to its corresponding block
-    for (size_t i = 0; i < demand_scenarios.size() && i < tss_block->get_number_scenarios(); ++i) {
-        // Get the block for this scenario (note: might need adjustment based on actual API)
-        // The sub-blocks are in v_Block which is protected, so we need to use the proper accessor
-        auto* scenario_block = tss_block->get_nested_Block(i);
-        
-        if (auto* cfl_block = dynamic_cast<CapacitatedFacilityLocationBlock*>(scenario_block)) {
-            // Apply the scenario demands directly
-            // Create an iterator from the scenario data
-            auto demands_it = demand_scenarios[i].begin();
-            
-            // Apply to all customers using Range(0, nc)
-            // method is a pointer to function, need to dereference it
-            (*method)(cfl_block, demands_it, Block::Range(0, nc), eNoBlck, eNoBlck);
+    try {
+        // Try using the new apply_scenario_data() method
+        for (size_t i = 0; i < demand_scenarios.size() && i < tss_block->get_number_scenarios(); ++i) {
+            // Apply the scenario data using the new method
+            tss_block->apply_scenario_data(i, demand_scenarios[i], eNoBlck, eNoBlck);
             
             if (verbose) {
-                cout << "    Applied scenario " << i << " demands to block " << i << endl;
-            }
-        } else {
-            if (verbose) {
-                cout << "    Warning: Block " << i << " is not a CFL block" << endl;
+                cout << "    Applied scenario " << i << " demands using apply_scenario_data()" << endl;
             }
         }
+        
+        if (verbose) cout << "  Successfully applied all scenario data using new method" << endl;
+        
+    } catch (const exception& e) {
+        // If the new method fails, fall back to manual application
+        if (verbose) {
+            cout << "  Warning: apply_scenario_data() failed: " << e.what() << endl;
+            cout << "  Falling back to manual scenario application..." << endl;
+        }
+        
+        // Get the method for changing customer demands
+        using FunctionType = Block::FunctionType<Block::MF_dbl_it, Block::Range>;
+        auto method = Block::get_method<FunctionType>(
+            "CapacitatedFacilityLocationBlock::chg_customer_demands");
+        
+        if (!method) {
+            throw runtime_error("Failed to get method for chg_customer_demands");
+        }
+        
+        // Apply each scenario to its corresponding block manually
+        for (size_t i = 0; i < demand_scenarios.size() && i < tss_block->get_number_scenarios(); ++i) {
+            auto* scenario_block = tss_block->get_nested_Block(i);
+            
+            if (auto* cfl_block = dynamic_cast<CapacitatedFacilityLocationBlock*>(scenario_block)) {
+                auto demands_it = demand_scenarios[i].begin();
+                (*method)(cfl_block, demands_it, Block::Range(0, nc), eNoBlck, eNoBlck);
+                
+                if (verbose) {
+                    cout << "    Applied scenario " << i << " demands manually to block " << i << endl;
+                }
+            } else {
+                if (verbose) {
+                    cout << "    Warning: Block " << i << " is not a CFL block" << endl;
+                }
+            }
+        }
+        
+        if (verbose) cout << "  Successfully applied all scenario data manually" << endl;
     }
-    
-    if (verbose) cout << "  Successfully applied all scenario data" << endl;
 }
 
 /**
@@ -614,59 +788,15 @@ int main(int argc, char* argv[]) {
         // Step 1: Load base CFL instance to get dimensions and demands
         if (verbose) cout << "\n1. Loading base CFL instance:" << endl;
         const string path = "../../CapacitatedFacilityLocationBlock/data/nc4/Yang/30-200/30-200-1.nc4";
-        
-        Block* block = Block::deserialize(path);
-        auto* base_cfl = dynamic_cast<CapacitatedFacilityLocationBlock*>(block);
-        
-        if (!base_cfl) {
-            cerr << "Failed to load CFL instance" << endl;
-            delete block;
-            return 1;
-        }
-        
-        int nf = base_cfl->get_NFacilities();
-        int nc = base_cfl->get_NCustomers();
-        if (verbose) cout << "  Loaded instance: " << nf << " facilities, " << nc << " customers" << endl;
-        
-        // Convert to single-sourcing
-        if (!base_cfl->get_UnSplittable()) {
-            base_cfl->chg_UnSplittable(true);
-            if (verbose) cout << "  Converted to single-sourcing" << endl;
-        }
-        
-        // Store original demands
-        vector<double> original_demands(nc);
-        for (int i = 0; i < nc; ++i) {
-            original_demands[i] = base_cfl->get_Demand(i);
-        }
-        
-        delete base_cfl;
+        auto [nf, nc, original_demands] = load_cfl_instance(path, verbose);
         
         // Step 2: Create stochastic demand scenarios
         if (verbose) cout << "\n2. Creating stochastic demand scenarios:" << endl;
         const int num_scenarios = 4;  // Base scenario + 3 variations
+        auto demand_scenarios = generate_demand_scenarios(
+            original_demands, num_scenarios, 0.2, 42, verbose);
         
-        // Generate scenarios: first is base, others have ±20% variation
-        vector<vector<double>> demand_scenarios;
-        
-        // First scenario is the base (unchanged demands)
-        demand_scenarios.push_back(original_demands);
-        
-        // Generate remaining scenarios with ±20% variation
-        std::mt19937 gen(42);  // Fixed seed for reproducibility
-        std::uniform_real_distribution<> dist(0.8, 1.2);  // ±20% variation
-        
-        for (int s = 1; s < num_scenarios; ++s) {
-            vector<double> scenario(nc);
-            for (int i = 0; i < nc; ++i) {
-                scenario[i] = original_demands[i] * dist(gen);
-            }
-            demand_scenarios.push_back(scenario);
-        }
-        if (verbose) cout << "  Generated " << num_scenarios << " scenarios: 1 base + " 
-                          << (num_scenarios - 1) << " with ±20% variation" << endl;
-        
-        // Step 3: Create netCDF file for TwoStageStochasticBlock
+        // Step 3: Create netCDF file for TwoStageStochasticBlock with our helper
         if (verbose) cout << "\n3. Creating netCDF file for TwoStageStochasticBlock:" << endl;
         const string netcdf_file = "twostage_cfl.nc4";
         create_twostage_netcdf(netcdf_file, path, demand_scenarios, nf, nc, verbose);
@@ -683,89 +813,38 @@ int main(int argc, char* argv[]) {
         
         if (verbose) cout << "  Deserialized TwoStageStochasticBlock with " << num_scenarios << " scenarios" << endl;
         
-        // Apply scenario data programmatically to avoid deserialization issues
+        // Apply scenario data using the new apply_scenario_data() method
         apply_scenario_data_programmatically(tss_block.get(), demand_scenarios, nc, verbose);
         
-        // Generate the variables and constraints for the extensive form
-        if (verbose) cout << "  Generating variables for extensive form..." << endl;
-        tss_block->generate_abstract_variables();
+        // // Generate the variables and constraints for the extensive form
+        // if (verbose) cout << "  Generating variables for extensive form..." << endl;
+        // tss_block->generate_abstract_variables();
         
-        if (verbose) cout << "  Generating constraints for extensive form..." << endl;
-        tss_block->generate_abstract_constraints();
-        // TODO: this should be useless for MILPSolver which should do it automatically.
+        // if (verbose) cout << "  Generating constraints for extensive form..." << endl;
+        // tss_block->generate_abstract_constraints();
+        // // This should be useless for MILPSolver which should do it automatically.
 
 
-        // Step 5: Computing anticipative solution using StochasticBlock
-        if (verbose) cout << "\n5. Computing anticipative solution using StochasticBlock:" << endl;
+        // Step 5: Solving the extensive form with MILPSolver
+        if (verbose) cout << "\n5. Solving the extensive form with MILPSolver:" << endl;
+        auto [stochastic_obj, stochastic_solved] = 
+            compute_extensive_form_solution(tss_block.get(), num_scenarios, verbose);
         
-        auto [anticipative_obj_stoch, scenario_objectives_stoch] = 
-            compute_anticipative_with_stochastic_block(netcdf_file, verbose);
+        // Step 6: Compute anticipative solution (perfect information) - manual approach
+        if (verbose) cout << "\n6. Computing anticipative solution (perfect information) - manual approach:" << endl;
+        auto [anticipative_obj, scenario_objectives] = 
+            compute_anticipative_solution(path, demand_scenarios, nf, nc, verbose);
         
-        if (verbose && !scenario_objectives_stoch.empty()) {
-            cout << "  Average anticipative objective: " 
-                 << fixed << setprecision(2) << anticipative_obj_stoch << endl;
-            cout << "  Individual objectives: ";
-            for (size_t i = 0; i < scenario_objectives_stoch.size(); ++i) {
-                cout << scenario_objectives_stoch[i];
-                if (i < scenario_objectives_stoch.size() - 1) cout << ", ";
-            }
-            cout << endl;
-        }
-        
-        // Step 6: Solving the extensive form with MILPSolver
-        if (verbose) cout << "\n6. Solving the extensive form with MILPSolver:" << endl;
-        
-        // Create a BlockSolverConfig for MILPSolver
-        auto cfg = Configuration::deserialize("BSPar_HiGHS.txt");
-        auto* bsc = dynamic_cast<BlockSolverConfig*>(cfg);
-        
-        if (bsc) {
-            bsc->apply(tss_block.get());
-            
-            if (!tss_block->get_registered_solvers().empty()) {
-                auto solver = tss_block->get_registered_solvers().front();
-                if (verbose) cout << "  Computing solution..." << endl;
-                int result = solver->compute(false);
-                
-                if (result == Solver::kOK) {
-                    double stochastic_obj = solver->get_ub();
-                    // TODO: When scale() method is implemented in Objective class,
-                    // remove this division as scenarios will be pre-scaled by their probabilities
-                    // For now, assuming uniform probabilities (1/num_scenarios)
-                    stochastic_obj = stochastic_obj / num_scenarios;
-                    
-                    if (verbose) {
-                        cout << "  Optimal solution found!" << endl;
-                        cout << "  Stochastic objective value (scaled): " << fixed << setprecision(2) << stochastic_obj << endl;
-                    }
-                    
-                    // Step 7: Compute anticipative solution (perfect information) - manual approach
-                    if (verbose) cout << "\n7. Computing anticipative solution (perfect information) - manual approach:" << endl;
-                    
-                    // Use the helper function to compute anticipative solution
-                    auto [anticipative_obj, scenario_objectives] = 
-                        compute_anticipative_solution(path, demand_scenarios, nf, nc, verbose);
-                    
-                    // Print final comparison
-                    if (verbose) cout << "\n8. Final Results:" << endl;
-                    print_solution_comparison(stochastic_obj, anticipative_obj, 
-                                             scenario_objectives, verbose);
-                    
-                } else if (result == Solver::kInfeasible) {
-                    cerr << "Problem is infeasible!" << endl;
-                } else {
-                    cerr << "Solver failed with code: " << result << endl;
-                }
-                
-                // Cleanup
-                bsc->clear();
-                bsc->apply(tss_block.get());
-            } else {
-                cerr << "No solver registered!" << endl;
-            }
-            delete bsc;
+        // Step 7: Print final comparison
+        if (stochastic_solved) {
+            if (verbose) cout << "\n7. Final Results:" << endl;
+            print_solution_comparison(stochastic_obj, anticipative_obj, 
+                                     scenario_objectives, verbose);
         } else {
-            cerr << "Failed to load solver configuration!" << endl;
+            if (verbose) {
+                cout << "\n7. Anticipative Results Only (stochastic solve failed):" << endl;
+                cout << "  Anticipative objective value: " << fixed << setprecision(2) << anticipative_obj << endl;
+            }
         }
         
         // Cleanup
@@ -781,7 +860,7 @@ int main(int argc, char* argv[]) {
     } catch (const exception& e) {
         cerr << "Error: " << e.what() << endl;
         
-        // Try to cleanup even on error
+        // cleanup even on error
         const string netcdf_file = "twostage_cfl.nc4";
         remove(netcdf_file.c_str());
         
