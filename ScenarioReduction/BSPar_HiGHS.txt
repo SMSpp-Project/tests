@@ -18,7 +18,7 @@ intLogVerb                              0  # no log verbosity (silent)
 intRelaxIntVars                         0  # solve integer problem (not continuous relaxation)
 
 1  # number of double parameters
-dblMaxTime                              30 # max time: 30 seconds
+dblMaxTime                              300 # max time: 300 seconds (5 minutes)
 
 0  # number of string parameters
 0  # number of vector-of-int parameters

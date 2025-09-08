@@ -2,28 +2,32 @@
 /*-------------------------- File test.cpp ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * Test for Two-Stage Stochastic CFL with scenario reduction and anticipative solution.
+ * Test for Two-Stage Stochastic CFL with scenario reduction and Value of Perfect Information.
  * 
  * This test validates the TwoStageStochasticBlock implementation and demonstrates
- * the value of stochastic optimization by:
+ * scenario reduction techniques and the Value of Perfect Information (VPI) by:
  * 
  * 1. Loading a deterministic CFL instance from netCDF
  * 2. Ensuring it uses single-sourcing (UnSplittable = true)
  * 3. Creating stochastic demand scenarios with ±20% variation
- * 4. Building a TwoStageStochasticBlock with proper scenario application
- * 5. Solving the extensive form with MILPSolver
- * 6. Computing the anticipative (perfect information) solution
- * 7. Comparing stochastic vs. anticipative solutions to show VSS
+ * 4. Performing scenario reduction using DiscreteScenarioSet's Wasserstein-based method
+ * 5. Solving both full and reduced extensive forms with MILPSolver
+ * 6. Computing anticipative (perfect information) solutions for comparison
+ * 7. Comparing results to show reduction quality, speedup, and VPI
  *
  * In the two-stage CFL:
  * - First stage: Facility opening decisions (y variables)
  * - Second stage: Customer assignments (x variables) under demand uncertainty
  * 
- * @note The test demonstrates that TwoStageStochasticBlock now correctly applies
- *       different scenario data to each sub-problem, fixing the previous issue
- *       where all scenarios were identical.
- *
- * @todo When Objective::scale() is implemented, remove manual probability scaling
+ * Command-line options:
+ * - -v or --verbose: Enable verbose output
+ * - t<seconds>: Set solver time limit (e.g., t300 for 300 seconds)
+ * - -n_scen=<number>: Set total number of scenarios (default: 20)
+ * - -n_reduced=<number>: Set number of reduced scenarios (default: 3)
+ * 
+ * Example usage:
+ * - ./ScenarioReduction_test -n_scen=50 -n_reduced=5 t60 -v
+ *   Creates 50 scenarios, reduces to 5, with 60s time limit and verbose output
  *
  * \author Benoit Tran
  */
@@ -33,15 +37,31 @@
 #include "StochasticBlock.h"
 #include "TwoStageStochasticBlock.h"
 #include "MILPSolver.h"
+#include "DiscreteScenarioSet.h"
 #include <iostream>
 #include <iomanip>
 #include <random>
 #include <numeric>
 #include <cstdlib>
 #include <cstdio>
+#include <chrono>
 
 using namespace SMSpp_di_unipi_it;
 using namespace std;
+
+/*--------------------------------------------------------------------------*/
+/*--------------------------- RESULT STRUCTURES ----------------------------*/
+/*--------------------------------------------------------------------------*/
+
+/**
+ * @brief Structure to hold solution results with timing information
+ */
+struct SolutionResult {
+    double objective = 0.0;
+    bool solved = false;
+    long long time_ms = 0;
+    vector<double> scenario_objectives;  // For anticipative solutions
+};
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------- HELPERS ----------------------------------*/
@@ -150,10 +170,11 @@ vector<vector<double>> generate_demand_scenarios(
  * Helper function that loads solver configuration, applies it to a block, and solves.
  * 
  * @param block The block to solve
+ * @param time_limit Time limit in seconds (-1 to use default from config file)
  * @param verbose Whether to print detailed output
  * @return Pair of (objective value, success flag)
  */
-pair<double, bool> solve_with_config(Block* block, bool verbose = false) {
+pair<double, bool> solve_with_config(Block* block, double time_limit = -1, bool verbose = false) {
     auto cfg = Configuration::deserialize("BSPar_HiGHS.txt");
     auto* bsc = dynamic_cast<BlockSolverConfig*>(cfg);
     
@@ -165,13 +186,42 @@ pair<double, bool> solve_with_config(Block* block, bool verbose = false) {
         
         if (!block->get_registered_solvers().empty()) {
             auto solver = block->get_registered_solvers().front();
+            
+            // If time limit is specified, override the configuration
+            if (time_limit > 0) {
+                solver->set_par(Solver::dblMaxTime, time_limit);
+                if (verbose) {
+                    cout << "  Setting solver time limit to " << time_limit << " seconds" << endl;
+                }
+            }
+            
             int result = solver->compute(false);
             
             if (result == Solver::kOK) {
                 obj = solver->get_ub();
                 success = true;
             } else if (verbose) {
-                cerr << "Solver failed with code: " << result << endl;
+                // Provide meaningful error messages based on return code
+                cerr << "Solver failed: ";
+                switch(result) {
+                    case Solver::kInfeasible:
+                        cerr << "Problem is infeasible (no solution exists)" << endl;
+                        break;
+                    case Solver::kUnbounded:
+                        cerr << "Problem is unbounded" << endl;
+                        break;
+                    case 11:  // kStopTime = kOK + 1
+                        cerr << "Time limit reached (increase dblMaxTime in BSPar_HiGHS.txt)" << endl;
+                        break;
+                    case 12:  // kStopIter = kOK + 2
+                        cerr << "Iteration limit reached" << endl;
+                        break;
+                    case Solver::kError:
+                        cerr << "Unrecoverable error occurred" << endl;
+                        break;
+                    default:
+                        cerr << "Unknown error (code " << result << ")" << endl;
+                }
             }
             
             bsc->clear();
@@ -184,41 +234,51 @@ pair<double, bool> solve_with_config(Block* block, bool verbose = false) {
 }
 
 /**
- * @brief Computes the extensive form (stochastic) solution
+ * @brief Computes the extensive form (stochastic) solution with timing
  * 
  * This function solves the extensive form of the stochastic problem using MILPSolver.
  * 
  * @param tss_block The TwoStageStochasticBlock to solve
  * @param num_scenarios Number of scenarios (for scaling the objective)
+ * @param time_limit Time limit in seconds (-1 to use default)
  * @param verbose Whether to print detailed output
- * @return Pair of (stochastic objective value, success flag)
+ * @return SolutionResult with objective, success flag, and timing
  */
-pair<double, bool> compute_extensive_form_solution(
+SolutionResult compute_extensive_form_solution(
     TwoStageStochasticBlock* tss_block,
     int num_scenarios,
+    double time_limit = -1,
     bool verbose = false) {
     
     if (verbose) cout << "  Solving the extensive form with MILPSolver..." << endl;
     
-    auto [obj, success] = solve_with_config(tss_block, verbose);
+    auto start = chrono::high_resolution_clock::now();
+    auto [obj, success] = solve_with_config(tss_block, time_limit, verbose);
+    auto end = chrono::high_resolution_clock::now();
+    
+    SolutionResult result;
+    result.time_ms = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    result.solved = success;
     
     if (success) {
-        // TODO: When scale() method is implemented in Objective class,
-        // remove this division as scenarios will be pre-scaled by their probabilities
-        obj = obj / num_scenarios;
+        // The TwoStageStochasticBlock returns the sum of all scenario objectives
+        // We always need to divide by the number of scenarios to get the expected value
+        result.objective = obj / num_scenarios;
         
         if (verbose) {
-            cout << "  Stochastic objective value (scaled): " << fixed << setprecision(2) << obj << endl;
+            cout << "  Stochastic objective value (expected): " << fixed << setprecision(2) 
+                 << result.objective << endl;
+            cout << "  Solution time: " << result.time_ms << " ms" << endl;
         }
     } else if (verbose) {
         cerr << "Problem could not be solved" << endl;
     }
     
-    return {obj, success};
+    return result;
 }
 
 /**
- * @brief Computes the anticipative (perfect information) solution
+ * @brief Computes the anticipative (perfect information) solution with timing
  * 
  * This function solves each scenario independently as a deterministic problem
  * and returns the weighted average objective. It serves as the baseline for
@@ -228,21 +288,26 @@ pair<double, bool> compute_extensive_form_solution(
  * @param demand_scenarios Vector of demand scenarios
  * @param nf Number of facilities
  * @param nc Number of customers
+ * @param time_limit Time limit in seconds (-1 to use default)
  * @param verbose If true, prints detailed progress information
- * @return Pair of (average_objective, vector_of_individual_objectives)
+ * @return SolutionResult with average objective and individual scenario objectives
  */
-pair<double, vector<double>> compute_anticipative_solution(
+SolutionResult compute_anticipative_solution(
     const string& cfl_path,
     const vector<vector<double>>& demand_scenarios,
-    int nf, int nc, bool verbose = false) {
+    int nf, int nc, 
+    double time_limit = -1,
+    bool verbose = false) {
+    
+    SolutionResult result;
+    result.solved = true;
+    
+    auto start = chrono::high_resolution_clock::now();
     
     double anticipative_obj = 0.0;
-    vector<double> scenario_objectives;
     int num_scenarios = demand_scenarios.size();
     
     for (int s = 0; s < num_scenarios; ++s) {
-        if (verbose) cout << "  Solving scenario " << s+1 << "..." << endl;
-        
         // Load fresh CFL instance
         Block* scenario_block = Block::deserialize(cfl_path);
         auto* scenario_cfl = dynamic_cast<CapacitatedFacilityLocationBlock*>(scenario_block);
@@ -259,10 +324,10 @@ pair<double, vector<double>> compute_anticipative_solution(
             }
             
             // Solve this scenario
-            auto [scenario_obj, solved] = solve_with_config(scenario_cfl, verbose);
+            auto [scenario_obj, solved] = solve_with_config(scenario_cfl, time_limit, verbose);
             
             if (solved) {
-                scenario_objectives.push_back(scenario_obj);
+                result.scenario_objectives.push_back(scenario_obj);
                 anticipative_obj += scenario_obj / num_scenarios; // Equal probabilities
                 
                 if (verbose) {
@@ -271,20 +336,29 @@ pair<double, vector<double>> compute_anticipative_solution(
                 }
             } else {
                 if (verbose) cerr << "    Failed to solve scenario " << s+1 << endl;
-                scenario_objectives.push_back(0);
+                result.scenario_objectives.push_back(0);
+                result.solved = false;
             }
             delete scenario_cfl;
         }
     }
     
-    return make_pair(anticipative_obj, scenario_objectives);
+    auto end = chrono::high_resolution_clock::now();
+    result.time_ms = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    result.objective = anticipative_obj;
+    
+    if (verbose) {
+        cout << "  Total anticipative solution time: " << result.time_ms << " ms" << endl;
+    }
+    
+    return result;
 }
 
 /**
  * @brief Prints comparison between different solution approaches
  * 
- * The Value of Stochastic Solution (VSS) represents the cost of uncertainty:
- * VSS = Stochastic Solution - Anticipative Solution
+ * The Value of Perfect Information (VPI) represents the cost of uncertainty:
+ * VPI = Stochastic Solution - Anticipative Solution
  * This should always be >= 0 since the stochastic solution must hedge against
  * uncertainty while the anticipative solution has perfect information.
  * 
@@ -307,19 +381,212 @@ void print_solution_comparison(double stochastic_obj, double anticipative_obj,
     cout << "  Stochastic solution (here-and-now): " 
          << fixed << setprecision(2) << stochastic_obj << endl;
     
-    double vss = stochastic_obj - anticipative_obj;
-    cout << "  Value of Stochastic Solution (VSS): " 
-         << fixed << setprecision(2) << vss << endl;
+    double vpi = stochastic_obj - anticipative_obj;
+    cout << "  Value of Perfect Information (VPI): " 
+         << fixed << setprecision(2) << vpi << endl;
     
-    if (vss < 0) {
-        cout << "  VSS is negative! This should not happen." << endl;
+    if (vpi < 0) {
+        cout << "  VPI is negative! This should not happen." << endl;
         cout << "      The stochastic solution should have higher cost than anticipative." << endl;
-    } else if (vss == 0) {
-        cout << "  VSS is zero - the problem has no uncertainty impact (unusual)." << endl;
+    } else if (vpi == 0) {
+        cout << "  VPI is zero - the problem has no uncertainty impact (unusual)." << endl;
     } else {
-        cout << "  VSS = " << vss << " (cost of uncertainty, as expected)." << endl;
-        cout << "  The stochastic solution costs " << (vss/anticipative_obj * 100) 
+        cout << "  VPI = " << vpi << " (cost of uncertainty, as expected)." << endl;
+        cout << "  The stochastic solution costs " << (vpi/anticipative_obj * 100) 
              << "% more than perfect information." << endl;
+    }
+}
+
+/**
+ * @brief Performs scenario reduction using DiscreteScenarioSet
+ * 
+ * Takes a set of demand scenarios and uses DiscreteScenarioSet's
+ * init_representative_pool to select a representative subset.
+ * 
+ * @param all_scenarios Vector of all demand scenarios
+ * @param target_size Number of representative scenarios to select
+ * @param nc Number of customers
+ * @param verbose Whether to print detailed output
+ * @return Pair of (selected scenarios, their adjusted probabilities)
+ */
+pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
+    const vector<vector<double>>& all_scenarios,
+    int target_size,
+    int nc,
+    bool verbose = false) {
+    
+    if (verbose) {
+        cout << "  Performing scenario reduction from " << all_scenarios.size() 
+             << " to " << target_size << " scenarios..." << endl;
+    }
+    
+    // Create a temporary netCDF file for DiscreteScenarioSet
+    const string temp_dss_file = "temp_dss.nc4";
+    
+    try {
+        // Create netCDF file with scenario data
+        netCDF::NcFile file(temp_dss_file, netCDF::NcFile::replace);
+        
+        // Add dimensions
+        auto scenDim = file.addDim("NumberScenarios", all_scenarios.size());
+        auto sizeDim = file.addDim("ScenarioSize", nc);
+        
+        // Add scenario data (must be named "Scenarios" for DiscreteScenarioSet)
+        auto scenVar = file.addVar("Scenarios", netCDF::NcDouble(), {scenDim, sizeDim});
+        for (size_t s = 0; s < all_scenarios.size(); ++s) {
+            scenVar.putVar({s, 0}, {1, static_cast<size_t>(nc)}, all_scenarios[s].data());
+        }
+        
+        // Add uniform probabilities
+        auto probVar = file.addVar("Probabilities", netCDF::NcDouble(), scenDim);
+        vector<double> probs(all_scenarios.size(), 1.0 / all_scenarios.size());
+        probVar.putVar(probs.data());
+        
+        file.close();
+        
+        // Now load and use DiscreteScenarioSet
+        netCDF::NcFile inFile(temp_dss_file, netCDF::NcFile::read);
+        DiscreteScenarioSet dss;
+        dss.deserialize(inFile);
+        
+        // Perform scenario reduction
+        dss.init_representative_pool(target_size);
+        
+        // Get the indices of selected scenarios
+        auto selected_indices = dss.get_selected_scenarios();
+        if (verbose) {
+            cout << "    Selected scenario indices from original pool: ";
+            for (size_t i = 0; i < selected_indices.size(); ++i) {
+                cout << selected_indices[i];
+                if (i < selected_indices.size() - 1) cout << ", ";
+            }
+            cout << endl;
+        }
+        
+        // Extract the selected scenarios
+        vector<vector<double>> selected_scenarios;
+        vector<double> adjusted_probabilities;
+        
+        // Iterate through the representative pool
+        // After init_representative_pool(), we're positioned before the first scenario
+        // so we need to get it first, then call next_scenario() for subsequent ones
+        int scenario_num = 0;
+        do {
+            auto scenario_span = dss.get_current_scenario();
+            vector<double> scenario_vec(scenario_span.begin(), scenario_span.end());
+            selected_scenarios.push_back(scenario_vec);
+            adjusted_probabilities.push_back(dss.get_current_scenario_probability());
+            
+            if (verbose) {
+                cout << "    Representative scenario " << scenario_num+1 
+                     << " (original index " << selected_indices[scenario_num] << ")"
+                     << " with probability " << adjusted_probabilities.back();
+                // Print sample demand values for verification
+                if (scenario_vec.size() >= 3) {
+                    cout << " [sample demands: ";
+                    // Print a few demands from different parts of the vector
+                    cout << scenario_vec[0] << ", " 
+                         << scenario_vec[scenario_vec.size()/2] << ", " 
+                         << scenario_vec[scenario_vec.size()-1] << "]";
+                }
+                cout << endl;
+            }
+            scenario_num++;
+        } while (scenario_num < target_size && dss.next_scenario());
+        
+        // Cleanup
+        inFile.close();
+        remove(temp_dss_file.c_str());
+        
+        return {selected_scenarios, adjusted_probabilities};
+        
+    } catch (const exception& e) {
+        // Cleanup on error
+        remove(temp_dss_file.c_str());
+        throw;
+    }
+}
+
+/**
+ * @brief Print scenario reduction results comparison
+ * 
+ * @param full_result Results from full scenario set
+ * @param reduced_result Results from reduced scenario set
+ * @param anticipative_full Anticipative solution for full scenario set
+ * @param anticipative_reduced Anticipative solution for reduced scenario set
+ * @param full_num_scenarios Number of scenarios in full set
+ * @param reduced_num_scenarios Number of scenarios in reduced set
+ */
+void print_scenario_reduction_results(
+    const SolutionResult& full_result,
+    const SolutionResult& reduced_result,
+    const SolutionResult& anticipative_full,
+    const SolutionResult& anticipative_reduced,
+    int full_num_scenarios,
+    int reduced_num_scenarios) {
+    
+    cout << "\nScenario Reduction Results:" << endl;
+    
+    // Full problem results
+    cout << "  Full problem (" << full_num_scenarios << " scenarios):" << endl;
+    if (full_result.solved) {
+        cout << "    Objective: " << fixed << setprecision(2) << full_result.objective << endl;
+        cout << "    Solution time: " << full_result.time_ms << " ms" << endl;
+    } else {
+        cout << "    Failed to solve" << endl;
+    }
+    
+    // Reduced problem results
+    cout << "  Reduced problem (" << reduced_num_scenarios << " scenarios):" << endl;
+    if (reduced_result.solved) {
+        cout << "    Objective: " << fixed << setprecision(2) << reduced_result.objective << endl;
+        cout << "    Solution time: " << reduced_result.time_ms << " ms" << endl;
+    } else {
+        cout << "    Failed to solve" << endl;
+    }
+    
+    // Performance metrics
+    if (full_result.solved && reduced_result.solved) {
+        double approximation_error = abs(full_result.objective - reduced_result.objective);
+        double relative_error = approximation_error / full_result.objective * 100;
+        double speedup = static_cast<double>(full_result.time_ms) / reduced_result.time_ms;
+        
+        cout << "\n  Scenario reduction performance:" << endl;
+        cout << "    Approximation error: " << fixed << setprecision(2) << approximation_error 
+             << " (" << relative_error << "%)" << endl;
+        cout << "    Speedup: " << fixed << setprecision(1) << speedup << "x" << endl;
+        cout << "    Scenarios reduced: " << full_num_scenarios << " → " << reduced_num_scenarios 
+             << " (" << (100.0 * reduced_num_scenarios / full_num_scenarios) << "% retained)" << endl;
+    }
+    
+    // Value of Perfect Information comparison
+    cout << "\n  Comparison with perfect information:" << endl;
+    cout << "    Full problem anticipative (" << full_num_scenarios << " scenarios): " 
+         << fixed << setprecision(2) << anticipative_full.objective << endl;
+    cout << "    Reduced problem anticipative (" << reduced_num_scenarios << " scenarios): " 
+         << fixed << setprecision(2) << anticipative_reduced.objective << endl;
+    
+    if (full_result.solved && anticipative_full.solved) {
+        double vpi_full = full_result.objective - anticipative_full.objective;
+        cout << "    VPI (full, " << full_num_scenarios << " vs " << full_num_scenarios << "): " 
+             << fixed << setprecision(2) << vpi_full 
+             << " (" << (vpi_full/anticipative_full.objective * 100) << "% cost of uncertainty)" << endl;
+    }
+    
+    if (reduced_result.solved && anticipative_reduced.solved) {
+        double vpi_reduced = reduced_result.objective - anticipative_reduced.objective;
+        cout << "    VPI (reduced, " << reduced_num_scenarios << " vs " << reduced_num_scenarios << "): " 
+             << fixed << setprecision(2) << vpi_reduced 
+             << " (" << (vpi_reduced/anticipative_reduced.objective * 100) << "% cost of uncertainty)" << endl;
+    }
+    
+    // Cross-comparison
+    if (reduced_result.solved && anticipative_full.solved) {
+        cout << "\n  Cross-comparison:" << endl;
+        cout << "    Reduced stochastic vs full anticipative: " 
+             << fixed << setprecision(2) << (reduced_result.objective - anticipative_full.objective)
+             << " (" << ((reduced_result.objective - anticipative_full.objective)/anticipative_full.objective * 100) 
+             << "% difference)" << endl;
     }
 }
 
@@ -342,7 +609,6 @@ void apply_scenario_data_programmatically(
         // Try using the apply_scenario_data() method
         for (size_t i = 0; i < demand_scenarios.size() && i < tss_block->get_number_scenarios(); ++i) {
             tss_block->apply_scenario_data(i, demand_scenarios[i], eNoBlck, eNoBlck);
-            if (verbose) cout << "    Applied scenario " << i << endl;
         }
         
         if (verbose) cout << "  Successfully applied all scenario data" << endl;
@@ -383,12 +649,15 @@ void apply_scenario_data_programmatically(
  * @param demand_scenarios Vector of demand scenarios
  * @param nf Number of facilities
  * @param nc Number of customers
+ * @param scenario_probs Optional scenario probabilities (if empty, uses uniform)
  * @param verbose If true, prints detailed progress information
  */
 void create_twostage_netcdf(const string& filename,
                             const string& cfl_path,
                             const vector<vector<double>>& demand_scenarios,
-                            int nf, int nc, bool verbose = false) {
+                            int nf, int nc, 
+                            const vector<double>& scenario_probs = {},
+                            bool verbose = false) {
     if (verbose) cout << "  Creating netCDF file for TwoStageStochasticBlock..." << endl;
     
     // Load and prepare base CFL
@@ -479,7 +748,20 @@ void create_twostage_netcdf(const string& filename,
         scenarioDataVar.putVar({s, 0}, {1, static_cast<size_t>(nc)}, demand_scenarios[s].data());
     }
     
-    vector<double> probs(demand_scenarios.size(), 1.0 / demand_scenarios.size());
+    // Use provided probabilities or uniform if not provided
+    vector<double> probs;
+    if (!scenario_probs.empty() && scenario_probs.size() == demand_scenarios.size()) {
+        probs = scenario_probs;
+        if (verbose) {
+            cout << "    Using provided probabilities (sum=" 
+                 << accumulate(probs.begin(), probs.end(), 0.0) << ")" << endl;
+        }
+    } else {
+        probs.assign(demand_scenarios.size(), 1.0 / demand_scenarios.size());
+        if (verbose) {
+            cout << "    Using uniform probabilities" << endl;
+        }
+    }
     scenarioGenGroup.addVar("Probabilities", netCDF::NcDouble(), scenarioDim).putVar(probs.data());
     
     if (verbose) {
@@ -500,19 +782,80 @@ void create_twostage_netcdf(const string& filename,
  * - Tests proper scenario application (each scenario gets different data)
  * - Validates stochastic optimization by solving the extensive form
  * - Computes anticipative solution for comparison
- * - Demonstrates the Value of Stochastic Solution (VSS)
+ * - Demonstrates the Value of Perfect Information (VPI)
+ * 
+ * Command line options:
+ * - -v or --verbose: Enable verbose output
+ * - t<seconds>: Set solver time limit (e.g., t300 for 300 seconds)
+ * - -n_scen=<number>: Set total number of scenarios (default: 20)
+ * - -n_reduced=<number>: Set number of reduced scenarios (default: 3)
  * 
  * @param argc Number of command-line arguments
- * @param argv Command-line arguments (use -v or --verbose for detailed output)
+ * @param argv Command-line arguments
  * @return 0 on success, 1 on failure
  */
 int main(int argc, char* argv[]) {
-    // Parse command line arguments for verbose flag
+    // Parse command line arguments
     bool verbose = false;
+    double time_limit = -1;  // -1 means use default from BSPar_HiGHS.txt
+    int full_num_scenarios = 20;  // Default: 20 scenarios
+    int reduced_num_scenarios = 3;  // Default: reduce to 3 scenarios
+    
     for (int i = 1; i < argc; ++i) {
-        if (string(argv[i]) == "-v" || string(argv[i]) == "--verbose") {
+        string arg = argv[i];
+        if (arg == "-v" || arg == "--verbose") {
             verbose = true;
-            break;
+        } else if (arg[0] == 't' && arg.length() > 1) {
+            // Parse time limit: t300 means 300 seconds
+            try {
+                time_limit = stod(arg.substr(1));
+                if (verbose) {
+                    cout << "Time limit set to " << time_limit << " seconds" << endl;
+                }
+            } catch (const exception& e) {
+                cerr << "Invalid time limit format: " << arg << " (use t<seconds>, e.g., t300)" << endl;
+                return 1;
+            }
+        } else if (arg.find("-n_scen=") == 0) {
+            // Parse number of scenarios: -n_scen=10
+            try {
+                full_num_scenarios = stoi(arg.substr(8));
+                if (full_num_scenarios <= 0) {
+                    cerr << "Number of scenarios must be positive: " << arg << endl;
+                    return 1;
+                }
+            } catch (const exception& e) {
+                cerr << "Invalid number of scenarios format: " << arg << " (use -n_scen=<number>, e.g., -n_scen=10)" << endl;
+                return 1;
+            }
+        } else if (arg.find("-n_reduced=") == 0) {
+            // Parse number of reduced scenarios: -n_reduced=3
+            try {
+                reduced_num_scenarios = stoi(arg.substr(11));
+                if (reduced_num_scenarios <= 0) {
+                    cerr << "Number of reduced scenarios must be positive: " << arg << endl;
+                    return 1;
+                }
+            } catch (const exception& e) {
+                cerr << "Invalid reduced scenarios format: " << arg << " (use -n_reduced=<number>, e.g., -n_reduced=3)" << endl;
+                return 1;
+            }
+        }
+    }
+    
+    // Validate scenario counts
+    if (reduced_num_scenarios > full_num_scenarios) {
+        cerr << "Error: Number of reduced scenarios (" << reduced_num_scenarios 
+             << ") cannot exceed total scenarios (" << full_num_scenarios << ")" << endl;
+        return 1;
+    }
+    
+    if (verbose) {
+        cout << "Configuration:" << endl;
+        cout << "  Full scenarios: " << full_num_scenarios << endl;
+        cout << "  Reduced scenarios: " << reduced_num_scenarios << endl;
+        if (time_limit > 0) {
+            cout << "  Time limit: " << time_limit << " seconds" << endl;
         }
     }
     
@@ -530,51 +873,67 @@ int main(int argc, char* argv[]) {
         
         // Step 2: Create stochastic demand scenarios
         if (verbose) cout << "\n2. Creating stochastic demand scenarios:" << endl;
-        const int num_scenarios = 4;  // Base scenario + 3 variations
-        auto demand_scenarios = generate_demand_scenarios(
-            original_demands, num_scenarios, 0.2, 42, verbose);
+        auto all_demand_scenarios = generate_demand_scenarios(
+            original_demands, full_num_scenarios, 0.2, 42, verbose);
         
-        // Step 3: Create netCDF file for TwoStageStochasticBlock with our helper
-        if (verbose) cout << "\n3. Creating netCDF file for TwoStageStochasticBlock:" << endl;
-        const string netcdf_file = "twostage_cfl.nc4";
-        create_twostage_netcdf(netcdf_file, path, demand_scenarios, nf, nc, verbose);
+        // Step 3: Perform scenario reduction
+        if (verbose) cout << "\n3. Performing scenario reduction:" << endl;
+        auto [reduced_scenarios, reduced_probs] = 
+            perform_scenario_reduction(all_demand_scenarios, reduced_num_scenarios, nc, verbose);
         
-        // Step 4: Deserialize TwoStageStochasticBlock from netCDF
-        if (verbose) cout << "\n4. Deserializing TwoStageStochasticBlock from netCDF:" << endl;
+        // Step 4A: Create and solve FULL problem (20 scenarios)
+        if (verbose) cout << "\n4A. Creating and solving FULL problem (" << full_num_scenarios << " scenarios):" << endl;
+        const string full_netcdf = "full_twostage.nc4";
+        create_twostage_netcdf(full_netcdf, path, all_demand_scenarios, nf, nc, {}, verbose);  // Empty probs = uniform
         
-        // Open the netCDF file and deserialize TwoStageStochasticBlock
-        netCDF::NcFile file(netcdf_file, netCDF::NcFile::read);
-        auto tssGroup = file.getGroup("TwoStageStochasticBlock");
+        // Deserialize and solve full problem
+        netCDF::NcFile fullFile(full_netcdf, netCDF::NcFile::read);
+        auto fullTssGroup = fullFile.getGroup("TwoStageStochasticBlock");
+        auto full_tss_block = make_unique<TwoStageStochasticBlock>();
+        full_tss_block->deserialize(fullTssGroup);
         
-        auto tss_block = make_unique<TwoStageStochasticBlock>();
-        tss_block->deserialize(tssGroup);
+        apply_scenario_data_programmatically(full_tss_block.get(), all_demand_scenarios, nc, verbose);
         
-        if (verbose) cout << "  Deserialized TwoStageStochasticBlock with " << num_scenarios << " scenarios" << endl;
+        auto full_result = compute_extensive_form_solution(
+            full_tss_block.get(), full_num_scenarios, time_limit, verbose);
         
-        // Apply scenario data using the new apply_scenario_data() method
-        apply_scenario_data_programmatically(tss_block.get(), demand_scenarios, nc, verbose);
-
-        // Step 5: Solving the extensive form with MILPSolver
-        if (verbose) cout << "\n5. Solving the extensive form with MILPSolver:" << endl;
-        auto [stochastic_obj, stochastic_solved] = 
-            compute_extensive_form_solution(tss_block.get(), num_scenarios, verbose);
+        // Step 4B: Create and solve REDUCED problem (3 scenarios)
+        if (verbose) cout << "\n4B. Creating and solving REDUCED problem (" << reduced_num_scenarios << " scenarios):" << endl;
+        const string reduced_netcdf = "reduced_twostage.nc4";
+        create_twostage_netcdf(reduced_netcdf, path, reduced_scenarios, nf, nc, reduced_probs, verbose);  // Use adjusted probs
         
-        // Step 6: Compute anticipative solution (perfect information) - manual approach
-        if (verbose) cout << "\n6. Computing anticipative solution (perfect information) - manual approach:" << endl;
-        auto [anticipative_obj, scenario_objectives] = 
-            compute_anticipative_solution(path, demand_scenarios, nf, nc, verbose);
+        // Deserialize and solve reduced problem
+        netCDF::NcFile reducedFile(reduced_netcdf, netCDF::NcFile::read);
+        auto reducedTssGroup = reducedFile.getGroup("TwoStageStochasticBlock");
+        auto reduced_tss_block = make_unique<TwoStageStochasticBlock>();
+        reduced_tss_block->deserialize(reducedTssGroup);
         
-        // Step 7: Print final comparison
-        if (stochastic_solved) {
-            if (verbose) cout << "\n7. Final Results:" << endl;
-            print_solution_comparison(stochastic_obj, anticipative_obj, scenario_objectives);
-        } else if (verbose) {
-            cout << "\n7. Anticipative Results Only (stochastic solve failed):" << endl;
-            cout << "  Anticipative objective value: " << fixed << setprecision(2) << anticipative_obj << endl;
-        }
+        apply_scenario_data_programmatically(reduced_tss_block.get(), reduced_scenarios, nc, verbose);
+        
+        auto reduced_result = compute_extensive_form_solution(
+            reduced_tss_block.get(), reduced_num_scenarios, time_limit, verbose);
+        
+        // Step 5A: Compute anticipative solution (perfect information) - for all scenarios
+        if (verbose) cout << "\n5A. Computing anticipative solution (perfect information) for all scenarios:" << endl;
+        auto anticipative_full = compute_anticipative_solution(
+            path, all_demand_scenarios, nf, nc, time_limit, verbose);
+        
+        // Step 5B: Compute anticipative solution (perfect information) - for reduced scenarios only
+        if (verbose) cout << "\n5B. Computing anticipative solution (perfect information) for reduced scenarios:" << endl;
+        auto anticipative_reduced = compute_anticipative_solution(
+            path, reduced_scenarios, nf, nc, time_limit, verbose);
+        
+        // Step 6: Print final comparison
+        if (verbose) cout << "\n6. Final Results:" << endl;
+        
+        print_scenario_reduction_results(
+            full_result, reduced_result,
+            anticipative_full, anticipative_reduced,
+            full_num_scenarios, reduced_num_scenarios);
         
         // Cleanup
-        remove(netcdf_file.c_str());
+        remove(full_netcdf.c_str());
+        remove(reduced_netcdf.c_str());
         
         if (verbose) {
             cout << "\n=== Test completed successfully ===" << endl;
