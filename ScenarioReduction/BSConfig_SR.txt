@@ -1,0 +1,36 @@
+# Configuration for ScenarioReductionSolver
+# This config file sets up the ScenarioReductionSolver for use with DiscreteScenarioSet
+# The solver interprets a CapacitatedFacilityLocationBlock as a scenario reduction problem
+BlockSolverConfig
+
+1  # differential configuration
+
+1  # number of solvers
+ScenarioReductionSolver  # name of Solver
+
+1  # number of ComputeConfig
+
+# ScenarioReductionSolver ComputeConfig
+ComputeConfig
+
+1  # differential
+
+4  # number of integer parameters
+# Algorithm selection - uncomment the desired method:
+# intAlgorithm                            0  # Baseline: highest probability selection
+# intAlgorithm                            1  # Dupacova: forward selection (default)
+# intAlgorithm                            2  # BestFit: local search with best improvement
+intAlgorithm                            3  # FirstFit: local search with first improvement
+intUseWarmstart                         0  # Use warm start for local search (0=false, 1=true)
+intShuffle                              0  # Enable shuffling for FirstFit (0=false, 1=true)
+intRandomSeed                           0  # Random seed for shuffling (0=default seed)
+
+1  # number of double parameters
+dblRho                                  0.0  # Minimum improvement threshold for local search
+
+0  # number of string parameters
+0  # number of vector-of-int parameters
+0  # number of vector-of-double parameters  
+0  # number of vector-of-string parameters
+
+* # no extra configuration

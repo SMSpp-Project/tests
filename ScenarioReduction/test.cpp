@@ -25,6 +25,7 @@
  * - -time=<seconds>: Set solver time limit (e.g., -time=300 for 300 seconds)
  * - -n_scen=<number>: Set total number of scenarios (default: 20)
  * - -n_reduced=<number>: Set number of reduced scenarios (default: 3)
+ * - -method=<name>: Scenario reduction method (baseline, dupacova (default), bestfit, firstfit)
  * - --save-cache: Save scenarios and results to cache files
  * - --load-cache: Load scenarios from cache files
  * - --load-results: Load pre-computed results from cache
@@ -49,8 +50,11 @@
 #include "TwoStageStochasticBlock.h"
 #include "MILPSolver.h"
 #include "DiscreteScenarioSet.h"
+#include "BlockSolverConfig.h"
+#include "ScenarioReductionSolver.h"
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <random>
 #include <numeric>
 #include <cstdlib>
@@ -584,6 +588,105 @@ void print_solution_comparison(double stochastic_obj, double anticipative_obj,
 }
 
 /**
+ * @brief Updates the BSConfig_SR.txt file to use the specified algorithm
+ * 
+ * This helper function modifies the BSConfig_SR.txt file by commenting out
+ * all intAlgorithm lines and uncommenting the one for the selected method.
+ * 
+ * @param method The reduction method to use ("baseline", "dupacova", "bestfit", "firstfit")
+ * @param verbose Whether to print detailed output
+ * @return true if successful, false otherwise
+ */
+bool update_scenario_reduction_config(const string& method, int verbose = 0) {
+    // Determine which algorithm line to uncomment
+    int algorithm = 1;  // Default to Dupacova
+    if (method == "baseline") {
+        // Baseline doesn't use the config, but set it anyway
+        algorithm = 0;
+    } else if (method == "dupacova") {
+        algorithm = 1;
+    } else if (method == "bestfit") {
+        algorithm = 2;
+    } else if (method == "firstfit") {
+        algorithm = 3;
+    } else {
+        if (verbose >= 1) {
+            cerr << "Unknown method: " << method << ", using Dupacova" << endl;
+        }
+        algorithm = 1;
+    }
+    
+    // Read the original config file
+    std::ifstream infile("BSConfig_SR.txt");
+    if (!infile.is_open()) {
+        if (verbose >= 1) {
+            cerr << "Failed to open BSConfig_SR.txt for reading" << endl;
+        }
+        return false;
+    }
+    
+    vector<string> lines;
+    string line;
+    while (getline(infile, line)) {
+        lines.push_back(line);
+    }
+    infile.close();
+    
+    // Modify the lines: comment all intAlgorithm lines, uncomment the selected one
+    bool found_algorithm_section = false;
+    for (auto& l : lines) {
+        // Check if this is an intAlgorithm line
+        if (l.find("intAlgorithm") != string::npos && l.find("Algorithm selection") == string::npos) {
+            found_algorithm_section = true;
+            // Extract the algorithm value from the line
+            size_t pos = l.find_first_of("0123");
+            if (pos != string::npos) {
+                int line_algorithm = l[pos] - '0';
+                if (line_algorithm == algorithm) {
+                    // Uncomment this line if it's commented
+                    if (l[0] == '#') {
+                        l = l.substr(2);  // Remove "# "
+                    }
+                } else {
+                    // Comment this line if it's not commented
+                    if (l[0] != '#') {
+                        l = "# " + l;
+                    }
+                }
+            }
+        }
+    }
+    
+    if (!found_algorithm_section) {
+        if (verbose >= 1) {
+            cerr << "Failed to find intAlgorithm section in BSConfig_SR.txt" << endl;
+        }
+        return false;
+    }
+    
+    // Write the modified config back
+    std::ofstream outfile("BSConfig_SR.txt");
+    if (!outfile.is_open()) {
+        if (verbose >= 1) {
+            cerr << "Failed to open BSConfig_SR.txt for writing" << endl;
+        }
+        return false;
+    }
+    
+    for (const auto& l : lines) {
+        outfile << l << endl;
+    }
+    outfile.close();
+    
+    if (verbose >= 2) {
+        cout << "    Updated BSConfig_SR.txt to use algorithm " << algorithm 
+             << " (" << method << ")" << endl;
+    }
+    
+    return true;
+}
+
+/**
  * @brief Performs scenario reduction using DiscreteScenarioSet
  * 
  * Takes a set of demand scenarios and uses DiscreteScenarioSet's
@@ -592,6 +695,7 @@ void print_solution_comparison(double stochastic_obj, double anticipative_obj,
  * @param all_scenarios Vector of all demand scenarios
  * @param target_size Number of representative scenarios to select
  * @param nc Number of customers
+ * @param method Scenario reduction method to use ("baseline", "dupacova", "bestfit", "firstfit")
  * @param verbose Whether to print detailed output
  * @return Pair of (selected scenarios, their adjusted probabilities)
  */
@@ -599,11 +703,12 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
     const vector<vector<double>>& all_scenarios,
     int target_size,
     int nc,
+    const string& method = "dupacova",
     int verbose = 0) {
     
     if (verbose >= 1) {
         cout << "  Performing scenario reduction from " << all_scenarios.size() 
-             << " to " << target_size << " scenarios..." << endl;
+             << " to " << target_size << " scenarios using " << method << " method..." << endl;
     }
     
     // Create a temporary netCDF file for DiscreteScenarioSet
@@ -636,7 +741,40 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
         dss.deserialize(inFile);
         
         // Perform scenario reduction
-        dss.init_representative_pool(target_size);
+        if (method == "baseline") {
+            // Use default init_representative_pool (no config needed)
+            dss.init_representative_pool(target_size);
+            if (verbose >= 2) {
+                cout << "    Using default init_representative_pool (baseline method)" << endl;
+            }
+        } else {
+            // For non-baseline methods, update the config file and use ScenarioReductionSolver
+            
+            // Update the config file to use the selected method
+            if (!update_scenario_reduction_config(method, verbose)) {
+                cerr << "Failed to update BSConfig_SR.txt, falling back to default" << endl;
+                dss.init_representative_pool(target_size);
+            } else {
+                // Load the updated config
+                auto cfg = Configuration::deserialize("BSConfig_SR.txt");
+                auto* bsc = dynamic_cast<BlockSolverConfig*>(cfg);
+                
+                if (bsc) {
+                    if (verbose >= 2) {
+                        cout << "    Using ScenarioReductionSolver with " << method << " algorithm" << endl;
+                    }
+                    
+                    // Set the configuration
+                    dss.set_config(nullptr, bsc);
+                    // Then call init_representative_pool
+                    dss.init_representative_pool(target_size);
+                    // Note: Don't delete bsc here - ownership transferred to dss
+                } else {
+                    cerr << "Failed to load BSConfig_SR.txt, using default" << endl;
+                    dss.init_representative_pool(target_size);
+                }
+            }
+        }
         
         // Get the indices of selected scenarios
         auto selected_indices = dss.get_selected_scenarios();
@@ -764,15 +902,6 @@ void print_scenario_reduction_results(
         cout << "    VPI (reduced, " << reduced_num_scenarios << " vs " << reduced_num_scenarios << "): " 
              << fixed << setprecision(2) << vpi_reduced 
              << " (" << (vpi_reduced/anticipative_reduced.objective * 100) << "% cost of uncertainty)" << endl;
-    }
-    
-    // Cross-comparison
-    if (reduced_result.solved && anticipative_full.solved) {
-        cout << "\n  Cross-comparison:" << endl;
-        cout << "    Reduced stochastic vs full anticipative: " 
-             << fixed << setprecision(2) << (reduced_result.objective - anticipative_full.objective)
-             << " (" << ((reduced_result.objective - anticipative_full.objective)/anticipative_full.objective * 100) 
-             << "% difference)" << endl;
     }
 }
 
@@ -976,6 +1105,7 @@ void create_twostage_netcdf(const string& filename,
  * - -time=<seconds>: Set solver time limit (e.g., -time=300 for 300 seconds)
  * - -n_scen=<number>: Set total number of scenarios (default: 20)
  * - -n_reduced=<number>: Set number of reduced scenarios (default: 3)
+ * - -method=<name>: Scenario reduction method (baseline, dupacova (default), bestfit, firstfit)
  * - --save-cache: Save scenarios and results to cache files
  * - --load-cache: Load scenarios from cache files
  * - --load-results: Load pre-computed results from cache
@@ -991,6 +1121,7 @@ int main(int argc, char* argv[]) {
     double time_limit = -1;  // -1 means use default from BSPar_HiGHS.txt
     int full_num_scenarios = 20;  // Default: 20 scenarios
     int reduced_num_scenarios = 3;  // Default: reduce to 3 scenarios
+    string reduction_method = "dupacova";  // Default: Dupacova algorithm
     bool save_cache = false;
     bool load_cache = false;
     bool load_results = false;
@@ -1049,6 +1180,16 @@ int main(int argc, char* argv[]) {
                 cerr << "Invalid reduced scenarios format: " << arg << " (use -n_reduced=<number>, e.g., -n_reduced=3)" << endl;
                 return 1;
             }
+        } else if (arg.find("-method=") == 0) {
+            // Parse scenario reduction method: -method=dupacova
+            reduction_method = arg.substr(8);
+            // Validate method name
+            if (reduction_method != "baseline" && reduction_method != "dupacova" && 
+                reduction_method != "bestfit" && reduction_method != "firstfit") {
+                cerr << "Invalid method: " << reduction_method 
+                     << " (use baseline, dupacova, bestfit, or firstfit)" << endl;
+                return 1;
+            }
         } else if (arg == "--save-cache") {
             save_cache = true;
         } else if (arg == "--load-cache") {
@@ -1075,6 +1216,7 @@ int main(int argc, char* argv[]) {
         cout << "Configuration:" << endl;
         cout << "  Full scenarios: " << full_num_scenarios << endl;
         cout << "  Reduced scenarios: " << reduced_num_scenarios << endl;
+        cout << "  Reduction method: " << reduction_method << endl;
         cout << "  Verbose level: " << verbose << endl;
         if (time_limit > 0) {
             cout << "  Time limit: " << time_limit << " seconds" << endl;
@@ -1102,7 +1244,7 @@ int main(int argc, char* argv[]) {
         // Cache file names
         string scenarios_cache = cache_dir + "scenarios_" + to_string(full_num_scenarios) + ".nc4";
         string reduced_cache = cache_dir + "scenarios_" + to_string(full_num_scenarios) + 
-                              "_reduced_" + to_string(reduced_num_scenarios) + ".nc4";
+                              "_reduced_" + to_string(reduced_num_scenarios) + "_" + reduction_method + ".nc4";
         
         vector<vector<double>> all_demand_scenarios;
         vector<vector<double>> reduced_scenarios;
@@ -1148,7 +1290,7 @@ int main(int argc, char* argv[]) {
         // Step 3: Perform scenario reduction if not already loaded
         if (reduced_scenarios.empty()) {
             if (verbose >= 1) cout << "\n3. Performing scenario reduction:" << endl;
-            auto reduction_result = perform_scenario_reduction(all_demand_scenarios, reduced_num_scenarios, nc, verbose);
+            auto reduction_result = perform_scenario_reduction(all_demand_scenarios, reduced_num_scenarios, nc, reduction_method, verbose);
             reduced_scenarios = reduction_result.first;
             reduced_probs = reduction_result.second;
             
@@ -1162,9 +1304,9 @@ int main(int argc, char* argv[]) {
         
         // Cache file names for results
         string full_result_cache = cache_dir + "result_full_" + to_string(full_num_scenarios) + ".nc4";
-        string reduced_result_cache = cache_dir + "result_reduced_" + to_string(reduced_num_scenarios) + ".nc4";
+        string reduced_result_cache = cache_dir + "result_reduced_" + to_string(reduced_num_scenarios) + "_" + reduction_method + ".nc4";
         string anticipative_full_cache = cache_dir + "result_anticipative_" + to_string(full_num_scenarios) + ".nc4";
-        string anticipative_reduced_cache = cache_dir + "result_anticipative_" + to_string(reduced_num_scenarios) + ".nc4";
+        string anticipative_reduced_cache = cache_dir + "result_anticipative_reduced_" + to_string(reduced_num_scenarios) + "_" + reduction_method + ".nc4";
         
         SolutionResult full_result, reduced_result, anticipative_full, anticipative_reduced;
         
@@ -1200,8 +1342,20 @@ int main(int argc, char* argv[]) {
             }
             
             if (!full_loaded) {
-                const string full_netcdf = "full_twostage.nc4";
-                create_twostage_netcdf(full_netcdf, path, all_demand_scenarios, nf, nc, {}, verbose);
+                // Include number of scenarios in filename for proper caching
+                const string full_netcdf = cache_dir + "twostage_full_" + to_string(full_num_scenarios) + ".nc4";
+                
+                // Check if the cached file already exists
+                std::ifstream check_file(full_netcdf);
+                if (!check_file.good()) {
+                    // File doesn't exist, create it
+                    create_twostage_netcdf(full_netcdf, path, all_demand_scenarios, nf, nc, {}, verbose);
+                } else {
+                    check_file.close();
+                    if (verbose >= 1) {
+                        cout << "  Using cached TwoStageStochasticBlock from " << full_netcdf << endl;
+                    }
+                }
                 
                 netCDF::NcFile fullFile(full_netcdf, netCDF::NcFile::read);
                 auto fullTssGroup = fullFile.getGroup("TwoStageStochasticBlock");
@@ -1233,8 +1387,21 @@ int main(int argc, char* argv[]) {
             }
             
             if (!reduced_loaded) {
-                const string reduced_netcdf = "reduced_twostage.nc4";
-                create_twostage_netcdf(reduced_netcdf, path, reduced_scenarios, nf, nc, reduced_probs, verbose);
+                // Include both scenario counts and method in filename for proper caching
+                const string reduced_netcdf = cache_dir + "twostage_reduced_" + to_string(full_num_scenarios) + 
+                                              "_to_" + to_string(reduced_num_scenarios) + "_" + reduction_method + ".nc4";
+                
+                // Check if the cached file already exists
+                std::ifstream check_file(reduced_netcdf);
+                if (!check_file.good()) {
+                    // File doesn't exist, create it
+                    create_twostage_netcdf(reduced_netcdf, path, reduced_scenarios, nf, nc, reduced_probs, verbose);
+                } else {
+                    check_file.close();
+                    if (verbose >= 1) {
+                        cout << "  Using cached TwoStageStochasticBlock from " << reduced_netcdf << endl;
+                    }
+                }
                 
                 netCDF::NcFile reducedFile(reduced_netcdf, netCDF::NcFile::read);
                 auto reducedTssGroup = reducedFile.getGroup("TwoStageStochasticBlock");
