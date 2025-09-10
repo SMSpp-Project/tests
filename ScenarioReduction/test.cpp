@@ -25,17 +25,20 @@
  * - -time=<seconds>: Set solver time limit (e.g., -time=300 for 300 seconds)
  * - -n_scen=<number>: Set total number of scenarios (default: 20)
  * - -n_reduced=<number>: Set number of reduced scenarios (default: 3)
- * - -method=<name>: Scenario reduction method (baseline, dupacova (default), bestfit, firstfit)
+ * - -method=<name>: Scenario reduction method (baseline, dupacova (default), bestfit, firstfit, milp)
  * - --save-cache: Save scenarios and results to cache files
  * - --load-cache: Load scenarios from cache files
  * - --load-results: Load pre-computed results from cache
  * - --cache-dir=<path>: Specify cache directory (default: ./cache/)
+ * - --compute-vpi: Compute Value of Perfect Information (anticipative solutions)
  * 
  * Example usage:
  * - ./ScenarioReduction_test -n_scen=50 -n_reduced=5 -time=60 --verbose=2
  *   Creates 50 scenarios, reduces to 5, with 60s time limit and detailed output
  * - ./ScenarioReduction_test --load-cache --load-results -v
  *   Load cached scenarios and results with normal verbosity
+ * - ./ScenarioReduction_test -n_scen=20 -n_reduced=5 --compute-vpi -v
+ *   Run with VPI computation enabled
  *
  * \author Benoît Tran \n
  *         Dipartimento di Informatica \n
@@ -61,6 +64,7 @@
 #include <cstdio>
 #include <chrono>
 #include <filesystem>
+#include <algorithm>
 
 using namespace SMSpp_di_unipi_it;
 using namespace std;
@@ -306,12 +310,13 @@ tuple<int, int, vector<double>> load_cfl_instance(
 /**
  * @brief Generates demand scenarios for testing
  * 
- * Creates a set of demand scenarios with the first being the original demands
- * and the rest having random variations within a specified range.
+ * Creates a set of demand scenarios organized in 4 distinct clusters to better
+ * test scenario reduction algorithms. The clusters represent different market
+ * conditions: normal, high demand, low demand, and regional variations.
  * 
  * @param original_demands The base demand values
  * @param num_scenarios Total number of scenarios to generate
- * @param variation_range The range of variation (e.g., 0.2 for ±20%)
+ * @param variation_range Not used (kept for compatibility)
  * @param seed Random seed for reproducibility
  * @param verbose Whether to print detailed output
  * @return Vector of demand scenarios
@@ -323,32 +328,76 @@ vector<vector<double>> generate_demand_scenarios(
     unsigned int seed = 42,
     int verbose = 0) {
     
-    if (verbose >= 2) cout << "  Creating stochastic demand scenarios..." << endl;
+    if (verbose >= 2) cout << "  Creating stochastic demand scenarios in 4 clusters..." << endl;
     
     int nc = original_demands.size();
     vector<vector<double>> demand_scenarios;
     
-    // First scenario is the base (unchanged demands)
-    demand_scenarios.push_back(original_demands);
-    
-    // Generate remaining scenarios with variation
     std::mt19937 gen(seed);  // Fixed seed for reproducibility
-    double min_factor = 1.0 - variation_range;
-    double max_factor = 1.0 + variation_range;
-    std::uniform_real_distribution<> dist(min_factor, max_factor);
     
-    for (int s = 1; s < num_scenarios; ++s) {
+    // Determine scenarios per cluster
+    int scenarios_per_cluster = num_scenarios / 4;
+    int remaining = num_scenarios % 4;
+    
+    // Cluster 0: Around original (small variation ±10%)
+    std::uniform_real_distribution<> cluster0_dist(0.9, 1.1);
+    int cluster0_count = scenarios_per_cluster + (remaining > 0 ? 1 : 0);
+    for (int s = 0; s < cluster0_count; ++s) {
         vector<double> scenario(nc);
         for (int i = 0; i < nc; ++i) {
-            scenario[i] = original_demands[i] * dist(gen);
+            scenario[i] = original_demands[i] * cluster0_dist(gen);
+        }
+        demand_scenarios.push_back(scenario);
+    }
+    if (remaining > 0) remaining--;
+    
+    // Cluster 1: High demand (1.3x to 1.5x)
+    std::uniform_real_distribution<> cluster1_dist(1.3, 1.5);
+    int cluster1_count = scenarios_per_cluster + (remaining > 0 ? 1 : 0);
+    for (int s = 0; s < cluster1_count; ++s) {
+        vector<double> scenario(nc);
+        for (int i = 0; i < nc; ++i) {
+            scenario[i] = original_demands[i] * cluster1_dist(gen);
+        }
+        demand_scenarios.push_back(scenario);
+    }
+    if (remaining > 0) remaining--;
+    
+    // Cluster 2: Low demand (0.5x to 0.7x)
+    std::uniform_real_distribution<> cluster2_dist(0.5, 0.7);
+    int cluster2_count = scenarios_per_cluster + (remaining > 0 ? 1 : 0);
+    for (int s = 0; s < cluster2_count; ++s) {
+        vector<double> scenario(nc);
+        for (int i = 0; i < nc; ++i) {
+            scenario[i] = original_demands[i] * cluster2_dist(gen);
+        }
+        demand_scenarios.push_back(scenario);
+    }
+    if (remaining > 0) remaining--;
+    
+    // Cluster 3: Mixed/regional (half high, half low)
+    std::uniform_real_distribution<> high_dist(1.2, 1.4);
+    std::uniform_real_distribution<> low_dist(0.6, 0.8);
+    int cluster3_count = scenarios_per_cluster + remaining;
+    for (int s = 0; s < cluster3_count; ++s) {
+        vector<double> scenario(nc);
+        for (int i = 0; i < nc; ++i) {
+            // Alternate regions: first half high, second half low
+            if (i < nc / 2) {
+                scenario[i] = original_demands[i] * high_dist(gen);
+            } else {
+                scenario[i] = original_demands[i] * low_dist(gen);
+            }
         }
         demand_scenarios.push_back(scenario);
     }
     
     if (verbose >= 1) {
-        cout << "  Generated " << num_scenarios << " scenarios: 1 base + " 
-             << (num_scenarios - 1) << " with ±" << (variation_range * 100) 
-             << "% variation" << endl;
+        cout << "  Generated " << num_scenarios << " scenarios in 4 distinct clusters:" << endl;
+        cout << "    Cluster 0 (normal): " << cluster0_count << " scenarios around original (±10%)" << endl;
+        cout << "    Cluster 1 (high): " << cluster1_count << " scenarios with high demand (1.3x-1.5x)" << endl;
+        cout << "    Cluster 2 (low): " << cluster2_count << " scenarios with low demand (0.5x-0.7x)" << endl;
+        cout << "    Cluster 3 (mixed): " << cluster3_count << " scenarios with regional variation" << endl;
     }
     
     return demand_scenarios;
@@ -695,8 +744,10 @@ bool update_scenario_reduction_config(const string& method, int verbose = 0) {
  * @param all_scenarios Vector of all demand scenarios
  * @param target_size Number of representative scenarios to select
  * @param nc Number of customers
- * @param method Scenario reduction method to use ("baseline", "dupacova", "bestfit", "firstfit")
+ * @param method Scenario reduction method to use ("baseline", "dupacova", "bestfit", "firstfit", "milp")
  * @param verbose Whether to print detailed output
+ * @param reduction_time_ms Output parameter for reduction time in milliseconds
+ * @param selected_indices Output parameter for the indices of selected scenarios
  * @return Pair of (selected scenarios, their adjusted probabilities)
  */
 pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
@@ -704,7 +755,9 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
     int target_size,
     int nc,
     const string& method = "dupacova",
-    int verbose = 0) {
+    int verbose = 0,
+    long long* reduction_time_ms = nullptr,
+    vector<int>* selected_indices = nullptr) {
     
     if (verbose >= 1) {
         cout << "  Performing scenario reduction from " << all_scenarios.size() 
@@ -740,15 +793,38 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
         DiscreteScenarioSet dss;
         dss.deserialize(inFile);
         
-        // Perform scenario reduction
+        // Perform scenario reduction and measure time
+        auto reduction_start = chrono::high_resolution_clock::now();
+        
         if (method == "baseline") {
             // Use default init_representative_pool (no config needed)
             dss.init_representative_pool(target_size);
             if (verbose >= 2) {
                 cout << "    Using default init_representative_pool (baseline method)" << endl;
             }
+        } else if (method == "milp" || method == "optimal") {
+            // Use MILP solver for optimal scenario reduction
+            
+            // Load the MILP config
+            auto cfg = Configuration::deserialize("BSConfig_SR_HiGHS.txt");
+            auto* bsc = dynamic_cast<BlockSolverConfig*>(cfg);
+            
+            if (bsc) {
+                if (verbose >= 2) {
+                    cout << "    Using HiGHSMILPSolver for optimal scenario reduction" << endl;
+                }
+                
+                // Set the configuration
+                dss.set_config(nullptr, bsc);
+                // Then call init_representative_pool
+                dss.init_representative_pool(target_size);
+                // Note: Don't delete bsc here - ownership transferred to dss
+            } else {
+                cerr << "Failed to load BSConfig_SR_HiGHS.txt, using default" << endl;
+                dss.init_representative_pool(target_size);
+            }
         } else {
-            // For non-baseline methods, update the config file and use ScenarioReductionSolver
+            // For other methods (dupacova, bestfit, firstfit), use ScenarioReductionSolver
             
             // Update the config file to use the selected method
             if (!update_scenario_reduction_config(method, verbose)) {
@@ -776,13 +852,35 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
             }
         }
         
+        auto reduction_end = chrono::high_resolution_clock::now();
+        auto reduction_time = chrono::duration_cast<chrono::milliseconds>(reduction_end - reduction_start).count();
+        
+        if (reduction_time_ms) {
+            *reduction_time_ms = reduction_time;
+        }
+        
+        if (verbose >= 1) {
+            cout << "  Scenario reduction time: " << reduction_time << " ms" << endl;
+        }
+        
         // Get the indices of selected scenarios
-        auto selected_indices = dss.get_selected_scenarios();
+        auto selected_indices_span = dss.get_selected_scenarios();
+        
+        // Store indices if requested
+        if (selected_indices) {
+            selected_indices->clear();
+            for (auto idx : selected_indices_span) {
+                selected_indices->push_back(static_cast<int>(idx));
+            }
+            // Sort for consistency
+            std::sort(selected_indices->begin(), selected_indices->end());
+        }
+        
         if (verbose >= 2) {
             cout << "    Selected scenario indices from original pool: ";
-            for (size_t i = 0; i < selected_indices.size(); ++i) {
-                cout << selected_indices[i];
-                if (i < selected_indices.size() - 1) cout << ", ";
+            for (size_t i = 0; i < selected_indices_span.size(); ++i) {
+                cout << selected_indices_span[i];
+                if (i < selected_indices_span.size() - 1) cout << ", ";
             }
             cout << endl;
         }
@@ -803,7 +901,7 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
             
             if (verbose >= 2) {
                 cout << "    Representative scenario " << scenario_num+1 
-                     << " (original index " << selected_indices[scenario_num] << ")"
+                     << " (original index " << selected_indices_span[scenario_num] << ")"
                      << " with probability " << adjusted_probabilities.back();
                 // Print sample demand values for verification
                 if (scenario_vec.size() >= 3) {
@@ -840,6 +938,8 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
  * @param anticipative_reduced Anticipative solution for reduced scenario set
  * @param full_num_scenarios Number of scenarios in full set
  * @param reduced_num_scenarios Number of scenarios in reduced set
+ * @param scenario_reduction_time_ms Time taken for scenario reduction in milliseconds
+ * @param selected_indices Indices of selected scenarios (sorted)
  */
 void print_scenario_reduction_results(
     const SolutionResult& full_result,
@@ -847,9 +947,29 @@ void print_scenario_reduction_results(
     const SolutionResult& anticipative_full,
     const SolutionResult& anticipative_reduced,
     int full_num_scenarios,
-    int reduced_num_scenarios) {
+    int reduced_num_scenarios,
+    long long scenario_reduction_time_ms = 0,
+    const vector<int>& selected_indices = {}) {
     
     cout << "\nScenario Reduction Results:" << endl;
+    
+    // Scenario reduction time
+    if (scenario_reduction_time_ms > 0) {
+        cout << "  Scenario reduction time: " << scenario_reduction_time_ms << " ms" << endl;
+    }
+    
+    // Selected scenario indices (first 5, sorted)
+    if (!selected_indices.empty()) {
+        cout << "  Selected scenarios (first 5, sorted): ";
+        for (size_t i = 0; i < min(size_t(5), selected_indices.size()); ++i) {
+            cout << selected_indices[i];
+            if (i < min(size_t(5), selected_indices.size()) - 1) cout << ", ";
+        }
+        if (selected_indices.size() > 5) {
+            cout << ", ...";
+        }
+        cout << endl;
+    }
     
     // Full problem results
     cout << "  Full problem (" << full_num_scenarios << " scenarios):" << endl;
@@ -883,25 +1003,33 @@ void print_scenario_reduction_results(
              << " (" << (100.0 * reduced_num_scenarios / full_num_scenarios) << "% retained)" << endl;
     }
     
-    // Value of Perfect Information comparison
-    cout << "\n  Comparison with perfect information:" << endl;
-    cout << "    Full problem anticipative (" << full_num_scenarios << " scenarios): " 
-         << fixed << setprecision(2) << anticipative_full.objective << endl;
-    cout << "    Reduced problem anticipative (" << reduced_num_scenarios << " scenarios): " 
-         << fixed << setprecision(2) << anticipative_reduced.objective << endl;
-    
-    if (full_result.solved && anticipative_full.solved) {
-        double vpi_full = full_result.objective - anticipative_full.objective;
-        cout << "    VPI (full, " << full_num_scenarios << " vs " << full_num_scenarios << "): " 
-             << fixed << setprecision(2) << vpi_full 
-             << " (" << (vpi_full/anticipative_full.objective * 100) << "% cost of uncertainty)" << endl;
-    }
-    
-    if (reduced_result.solved && anticipative_reduced.solved) {
-        double vpi_reduced = reduced_result.objective - anticipative_reduced.objective;
-        cout << "    VPI (reduced, " << reduced_num_scenarios << " vs " << reduced_num_scenarios << "): " 
-             << fixed << setprecision(2) << vpi_reduced 
-             << " (" << (vpi_reduced/anticipative_reduced.objective * 100) << "% cost of uncertainty)" << endl;
+    // Value of Perfect Information comparison (only if computed)
+    if (anticipative_full.solved || anticipative_reduced.solved) {
+        cout << "\n  Comparison with perfect information:" << endl;
+        
+        if (anticipative_full.solved) {
+            cout << "    Full problem anticipative (" << full_num_scenarios << " scenarios): " 
+                 << fixed << setprecision(2) << anticipative_full.objective << endl;
+        }
+        
+        if (anticipative_reduced.solved) {
+            cout << "    Reduced problem anticipative (" << reduced_num_scenarios << " scenarios): " 
+                 << fixed << setprecision(2) << anticipative_reduced.objective << endl;
+        }
+        
+        if (full_result.solved && anticipative_full.solved) {
+            double vpi_full = full_result.objective - anticipative_full.objective;
+            cout << "    VPI (full, " << full_num_scenarios << " vs " << full_num_scenarios << "): " 
+                 << fixed << setprecision(2) << vpi_full 
+                 << " (" << (vpi_full/anticipative_full.objective * 100) << "% cost of uncertainty)" << endl;
+        }
+        
+        if (reduced_result.solved && anticipative_reduced.solved) {
+            double vpi_reduced = reduced_result.objective - anticipative_reduced.objective;
+            cout << "    VPI (reduced, " << reduced_num_scenarios << " vs " << reduced_num_scenarios << "): " 
+                 << fixed << setprecision(2) << vpi_reduced 
+                 << " (" << (vpi_reduced/anticipative_reduced.objective * 100) << "% cost of uncertainty)" << endl;
+        }
     }
 }
 
@@ -1105,11 +1233,12 @@ void create_twostage_netcdf(const string& filename,
  * - -time=<seconds>: Set solver time limit (e.g., -time=300 for 300 seconds)
  * - -n_scen=<number>: Set total number of scenarios (default: 20)
  * - -n_reduced=<number>: Set number of reduced scenarios (default: 3)
- * - -method=<name>: Scenario reduction method (baseline, dupacova (default), bestfit, firstfit)
+ * - -method=<name>: Scenario reduction method (baseline, dupacova (default), bestfit, firstfit, milp)
  * - --save-cache: Save scenarios and results to cache files
  * - --load-cache: Load scenarios from cache files
  * - --load-results: Load pre-computed results from cache
  * - --cache-dir=<path>: Specify cache directory (default: ./cache/)
+ * - --compute-vpi: Compute Value of Perfect Information (anticipative solutions)
  * 
  * @param argc Number of command-line arguments
  * @param argv Command-line arguments
@@ -1125,6 +1254,7 @@ int main(int argc, char* argv[]) {
     bool save_cache = false;
     bool load_cache = false;
     bool load_results = false;
+    bool compute_vpi = false;
     string cache_dir = "./cache/";
     
     for (int i = 1; i < argc; ++i) {
@@ -1185,9 +1315,10 @@ int main(int argc, char* argv[]) {
             reduction_method = arg.substr(8);
             // Validate method name
             if (reduction_method != "baseline" && reduction_method != "dupacova" && 
-                reduction_method != "bestfit" && reduction_method != "firstfit") {
+                reduction_method != "bestfit" && reduction_method != "firstfit" &&
+                reduction_method != "milp" && reduction_method != "optimal") {
                 cerr << "Invalid method: " << reduction_method 
-                     << " (use baseline, dupacova, bestfit, or firstfit)" << endl;
+                     << " (use baseline, dupacova, bestfit, firstfit, or milp)" << endl;
                 return 1;
             }
         } else if (arg == "--save-cache") {
@@ -1202,6 +1333,8 @@ int main(int argc, char* argv[]) {
             if (!cache_dir.empty() && cache_dir.back() != '/') {
                 cache_dir += '/';
             }
+        } else if (arg == "--compute-vpi") {
+            compute_vpi = true;
         }
     }
     
@@ -1227,6 +1360,9 @@ int main(int argc, char* argv[]) {
             if (load_cache) cout << "  Loading scenarios from cache: enabled" << endl;
             if (load_results) cout << "  Loading results from cache: enabled" << endl;
         }
+        if (compute_vpi) {
+            cout << "  Compute VPI: enabled" << endl;
+        }
     }
     
     if (verbose >= 2) {
@@ -1249,16 +1385,18 @@ int main(int argc, char* argv[]) {
         vector<vector<double>> all_demand_scenarios;
         vector<vector<double>> reduced_scenarios;
         vector<double> reduced_probs;
+        bool scenarios_loaded_from_cache = false;
         
         // Step 2: Create or load stochastic demand scenarios
+        // Try to load from cache first if enabled
         if (load_cache || load_results) {
-            // Try to load from cache
             try {
                 if (verbose >= 1) cout << "\n2. Loading stochastic demand scenarios from cache:" << endl;
                 auto [loaded_scenarios, loaded_probs] = load_scenarios_from_file(scenarios_cache, verbose);
                 all_demand_scenarios = loaded_scenarios;
+                scenarios_loaded_from_cache = true;
                 
-                // Also load reduced scenarios if they exist
+                // Also try to load reduced scenarios if they exist
                 try {
                     auto [loaded_reduced, loaded_reduced_probs] = load_scenarios_from_file(reduced_cache, verbose);
                     reduced_scenarios = loaded_reduced;
@@ -1269,28 +1407,31 @@ int main(int argc, char* argv[]) {
                     if (verbose >= 1) cout << "  Reduced scenarios not in cache, will compute" << endl;
                 }
             } catch (const exception& e) {
+                // Base scenarios not in cache, will generate below
                 if (verbose >= 1) {
-                    cout << "  Cache not found, generating scenarios..." << endl;
+                    cout << "  Base scenarios not in cache, will generate..." << endl;
                 }
-                all_demand_scenarios = generate_demand_scenarios(
-                    original_demands, full_num_scenarios, 0.2, 42, verbose);
             }
-        } else {
-            // Generate new scenarios
+        }
+        
+        // Generate scenarios if not loaded from cache
+        if (!scenarios_loaded_from_cache) {
             if (verbose >= 1) cout << "\n2. Creating stochastic demand scenarios:" << endl;
             all_demand_scenarios = generate_demand_scenarios(
                 original_demands, full_num_scenarios, 0.2, 42, verbose);
-        }
-        
-        // Save scenarios if requested
-        if (save_cache && !load_cache) {
-            save_scenarios_to_file(scenarios_cache, all_demand_scenarios, {}, verbose);
+            
+            // Save the generated scenarios if caching is enabled
+            if (save_cache) {
+                save_scenarios_to_file(scenarios_cache, all_demand_scenarios, {}, verbose);
+            }
         }
         
         // Step 3: Perform scenario reduction if not already loaded
+        long long reduction_time_ms = 0;
+        vector<int> selected_scenario_indices;
         if (reduced_scenarios.empty()) {
             if (verbose >= 1) cout << "\n3. Performing scenario reduction:" << endl;
-            auto reduction_result = perform_scenario_reduction(all_demand_scenarios, reduced_num_scenarios, nc, reduction_method, verbose);
+            auto reduction_result = perform_scenario_reduction(all_demand_scenarios, reduced_num_scenarios, nc, reduction_method, verbose, &reduction_time_ms, &selected_scenario_indices);
             reduced_scenarios = reduction_result.first;
             reduced_probs = reduction_result.second;
             
@@ -1420,56 +1561,66 @@ int main(int argc, char* argv[]) {
                 remove(reduced_netcdf.c_str());
             }
             
-            // Step 5A: Compute anticipative solution for all scenarios
-            if (verbose >= 1) cout << "\n5A. Computing anticipative solution (perfect information) for all scenarios:" << endl;
-            
-            bool anticipative_full_loaded = false;
-            if (load_cache) {
-                try {
-                    anticipative_full = load_solution_result(anticipative_full_cache, verbose);
-                    anticipative_full_loaded = true;
-                    if (verbose >= 1) cout << "  Loaded anticipative full result from cache" << endl;
-                } catch (...) {}
-            }
-            
-            if (!anticipative_full_loaded) {
-                anticipative_full = compute_anticipative_solution(
-                    path, all_demand_scenarios, nf, nc, time_limit, verbose);
+            // Step 5: Compute anticipative solutions if requested
+            if (compute_vpi) {
+                // Step 5A: Compute anticipative solution for all scenarios
+                if (verbose >= 1) cout << "\n5A. Computing anticipative solution (perfect information) for all scenarios:" << endl;
                 
-                if (save_cache && anticipative_full.solved) {
-                    save_solution_result(anticipative_full_cache, anticipative_full, verbose);
+                bool anticipative_full_loaded = false;
+                if (load_cache) {
+                    try {
+                        anticipative_full = load_solution_result(anticipative_full_cache, verbose);
+                        anticipative_full_loaded = true;
+                        if (verbose >= 1) cout << "  Loaded anticipative full result from cache" << endl;
+                    } catch (...) {}
                 }
-            }
-            
-            // Step 5B: Compute anticipative solution for reduced scenarios
-            if (verbose >= 1) cout << "\n5B. Computing anticipative solution (perfect information) for reduced scenarios:" << endl;
-            
-            bool anticipative_reduced_loaded = false;
-            if (load_cache) {
-                try {
-                    anticipative_reduced = load_solution_result(anticipative_reduced_cache, verbose);
-                    anticipative_reduced_loaded = true;
-                    if (verbose >= 1) cout << "  Loaded anticipative reduced result from cache" << endl;
-                } catch (...) {}
-            }
-            
-            if (!anticipative_reduced_loaded) {
-                anticipative_reduced = compute_anticipative_solution(
-                    path, reduced_scenarios, nf, nc, time_limit, verbose);
                 
-                if (save_cache && anticipative_reduced.solved) {
-                    save_solution_result(anticipative_reduced_cache, anticipative_reduced, verbose);
+                if (!anticipative_full_loaded) {
+                    anticipative_full = compute_anticipative_solution(
+                        path, all_demand_scenarios, nf, nc, time_limit, verbose);
+                    
+                    if (save_cache && anticipative_full.solved) {
+                        save_solution_result(anticipative_full_cache, anticipative_full, verbose);
+                    }
+                }
+                
+                // Step 5B: Compute anticipative solution for reduced scenarios
+                if (verbose >= 1) cout << "\n5B. Computing anticipative solution (perfect information) for reduced scenarios:" << endl;
+                
+                bool anticipative_reduced_loaded = false;
+                if (load_cache) {
+                    try {
+                        anticipative_reduced = load_solution_result(anticipative_reduced_cache, verbose);
+                        anticipative_reduced_loaded = true;
+                        if (verbose >= 1) cout << "  Loaded anticipative reduced result from cache" << endl;
+                    } catch (...) {}
+                }
+                
+                if (!anticipative_reduced_loaded) {
+                    anticipative_reduced = compute_anticipative_solution(
+                        path, reduced_scenarios, nf, nc, time_limit, verbose);
+                    
+                    if (save_cache && anticipative_reduced.solved) {
+                        save_solution_result(anticipative_reduced_cache, anticipative_reduced, verbose);
+                    }
                 }
             }
         }
         
         // Step 6: Print final comparison
-        if (verbose >= 1) cout << "\n6. Final Results:" << endl;
+        if (verbose >= 1) {
+            if (compute_vpi) {
+                cout << "\n6. Final Results (with VPI):" << endl;
+            } else {
+                cout << "\n6. Final Results:" << endl;
+            }
+        }
         
         print_scenario_reduction_results(
             full_result, reduced_result,
             anticipative_full, anticipative_reduced,
-            full_num_scenarios, reduced_num_scenarios);
+            full_num_scenarios, reduced_num_scenarios,
+            reduction_time_ms, selected_scenario_indices);
         
         if (verbose >= 2) {
             cout << "\n=== Test completed successfully ===" << endl;

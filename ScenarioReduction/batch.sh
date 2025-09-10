@@ -3,15 +3,15 @@
 # Usage: ./test_all_methods.sh [options]
 #   Options:
 #     -v, --verbose N    Set verbosity level (0=quiet, 1=normal, 2=detailed)
-#     -f, --full N       Number of full scenarios (default: 20)
-#     -r, --reduced N    Number of reduced scenarios (default: 5)
+#     -f, --full N       Number of full scenarios (default: 40)
+#     -r, --reduced N    Number of reduced scenarios (default: 4)
 #     -h, --help         Show this help message
 # Hurl your comments and insults at Benoît Tran in case of issues
 
 # Default parameters
 VERBOSE=1
-FULL_SCENARIOS=20
-REDUCED_SCENARIOS=5
+FULL_SCENARIOS=40
+REDUCED_SCENARIOS=4
 EXECUTABLE="./ScenarioReduction_test"
 CACHE_OPTS="--save-cache --load-cache"
 
@@ -35,8 +35,8 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: $0 [options]"
             echo "  Options:"
             echo "    -v, --verbose N    Set verbosity level (0=quiet, 1=normal, 2=detailed)"
-            echo "    -f, --full N       Number of full scenarios (default: 10)"
-            echo "    -r, --reduced N    Number of reduced scenarios (default: 5)"
+            echo "    -f, --full N       Number of full scenarios (default: 40)"
+            echo "    -r, --reduced N    Number of reduced scenarios (default: 3)"
             echo "    -h, --help         Show this help message"
             exit 0
             ;;
@@ -80,12 +80,13 @@ if [ ! -f "$EXECUTABLE" ]; then
 fi
 
 # Array of methods to test
-METHODS=("baseline" "dupacova" "bestfit" "firstfit")
+METHODS=("baseline" "dupacova" "bestfit" "firstfit" "milp")
 
 # Results storage
 declare -A RESULTS
 declare -A TIMES
 declare -A STATUS
+declare -A INDICES
 
 # Function to extract objective value from output
 extract_objective() {
@@ -98,15 +99,26 @@ extract_objective() {
     echo "$OBJ"
 }
 
-# Function to extract time from output (returns time in milliseconds)
-extract_time() {
-    # First try to extract from cached output format (after "Reduced problem", any number of scenarios)
-    TIME=$(echo "$1" | grep -E "Reduced problem \([0-9]+ scenarios\):" -A 3 | grep "Solution time:" | sed 's/.*Solution time: //' | awk '{print $1}')
-    if [ -z "$TIME" ]; then
-        # Fall back to non-cached output format
-        TIME=$(echo "$1" | grep -E "Solution time:|Total time:|Computation time:" | tail -1 | sed 's/.*time[: ]*//' | awk '{print $1}')
-    fi
+# Function to extract solution time from output for full problem
+extract_full_solution_time() {
+    # Extract full problem solution time
+    TIME=$(echo "$1" | grep -E "Full problem \([0-9]+ scenarios\):" -A 3 | grep "Solution time:" | sed 's/.*Solution time: //' | awk '{print $1}')
     echo "$TIME"
+}
+
+
+# Function to extract scenario reduction time from output (returns time in milliseconds)
+extract_time() {
+    # Extract the scenario reduction time (the important metric!)
+    TIME=$(echo "$1" | grep -E "Scenario reduction time:" | tail -1 | sed 's/.*Scenario reduction time: //' | awk '{print $1}')
+    echo "$TIME"
+}
+
+# Function to extract selected scenario indices from output
+extract_indices() {
+    # Extract the selected scenarios line
+    INDICES_LINE=$(echo "$1" | grep -E "Selected scenarios \(first 5, sorted\):" | tail -1 | sed 's/.*Selected scenarios (first 5, sorted): //')
+    echo "$INDICES_LINE"
 }
 
 # Test each method
@@ -119,10 +131,10 @@ for method in "${METHODS[@]}"; do
     
     # Build command with caching options
     if [ "$FIRST_METHOD" = true ]; then
-        # First method: use longer timeout (5 minutes)
-        TIMEOUT_CMD="timeout 300"
+        # First method: use longer timeout (10 minutes for 40 scenarios)
+        TIMEOUT_CMD="timeout 600"
         FIRST_METHOD=false
-        echo "  (First run - saving cache, timeout: 5 minutes)"
+        echo "  (First run - saving cache, timeout: 10 minutes)"
     else
         # Subsequent methods: use shorter timeout (2 minutes)
         TIMEOUT_CMD="timeout 120"
@@ -144,9 +156,10 @@ for method in "${METHODS[@]}"; do
     if [ $EXIT_CODE -eq 0 ]; then
         STATUS[$method]="PASS"
         
-        # Extract objective value and time
+        # Extract objective value, time, and indices
         OBJ=$(extract_objective "$OUTPUT")
         TIME=$(extract_time "$OUTPUT")
+        IND=$(extract_indices "$OUTPUT")
         
         if [ -n "$OBJ" ]; then
             RESULTS[$method]=$OBJ
@@ -155,27 +168,31 @@ for method in "${METHODS[@]}"; do
         fi
         
         if [ -n "$TIME" ]; then
-            # Convert milliseconds to seconds with 2 decimal places
-            if [[ "$TIME" =~ ^[0-9]+$ ]]; then
-                TIME_SEC=$(echo "scale=2; $TIME / 1000" | bc)
-                TIMES[$method]="${TIME_SEC}s"
-            else
-                TIMES[$method]=$TIME
-            fi
+            # Keep time in milliseconds as-is
+            TIMES[$method]="${TIME}ms"
         else
             TIMES[$method]="N/A"
+        fi
+        
+        
+        if [ -n "$IND" ]; then
+            INDICES[$method]=$IND
+        else
+            INDICES[$method]="N/A"
         fi
         
         if [ $VERBOSE -ge 1 ] && [ $VERBOSE -lt 2 ]; then
             echo -e "  ${GREEN}✓${NC} Status: PASS"
             echo "    Objective: ${RESULTS[$method]}"
-            echo "    Time: ${TIMES[$method]}"
+            echo "    Reduction Time: ${TIMES[$method]}"
+            echo "    Selected Indices: ${INDICES[$method]}"
         fi
     elif [ $EXIT_CODE -eq 124 ]; then
         # Timeout exit code
         STATUS[$method]="TIMEOUT"
         RESULTS[$method]="TIMEOUT"
         TIMES[$method]="TIMEOUT"
+        INDICES[$method]="TIMEOUT"
         
         if [ $VERBOSE -ge 1 ]; then
             echo -e "  ${YELLOW}⚠${NC} Status: TIMEOUT"
@@ -184,6 +201,7 @@ for method in "${METHODS[@]}"; do
         STATUS[$method]="FAIL"
         RESULTS[$method]="ERROR"
         TIMES[$method]="N/A"
+        INDICES[$method]="N/A"
         
         if [ $VERBOSE -ge 1 ]; then
             echo -e "  ${RED}✗${NC} Status: FAIL (exit code: $EXIT_CODE)"
@@ -202,24 +220,26 @@ echo "=========================================="
 echo "Summary of Results"
 echo "=========================================="
 
-# First, run just to get the full problem objective if we haven't already
+# First, run just to get the full problem objective and timing if we haven't already
 if [ -z "$FULL_OBJECTIVE" ]; then
     echo "Getting full problem objective ($FULL_SCENARIOS scenarios)..."
-    FULL_OUTPUT=$($EXECUTABLE -method=baseline -n_scen=$FULL_SCENARIOS -n_reduced=$FULL_SCENARIOS -test $CACHE_OPTS --verbose=0 2>&1)
-    # Try to extract from cached output format first
+    FULL_OUTPUT=$($EXECUTABLE -method=baseline -n_scen=$FULL_SCENARIOS -n_reduced=$REDUCED_SCENARIOS -test $CACHE_OPTS --verbose=0 2>&1)
+    # Extract from cached output format first
     FULL_OBJECTIVE=$(echo "$FULL_OUTPUT" | grep -E "Full problem \($FULL_SCENARIOS scenarios\):" -A 2 | grep "Objective:" | sed 's/.*Objective: //' | awk '{print $1}')
-    if [ -z "$FULL_OBJECTIVE" ]; then
-        # Fall back to non-cached output format
-        FULL_OBJECTIVE=$(echo "$FULL_OUTPUT" | grep -E "Stochastic objective value \(expected\):" | tail -1 | sed 's/.*: //' | awk '{print $1}')
-    fi
+    # Extract full problem solution time
+    FULL_SOLUTION_TIME=$(extract_full_solution_time "$FULL_OUTPUT")
     if [ -n "$FULL_OBJECTIVE" ]; then
         echo "Full stochastic problem objective: $FULL_OBJECTIVE"
+        if [ -n "$FULL_SOLUTION_TIME" ]; then
+            echo "Full problem solution time: ${FULL_SOLUTION_TIME}ms"
+        fi
     fi
 fi
 
 echo ""
-printf "%-12s %-10s %-15s %-10s\n" "Method" "Status" "Objective" "Time"
-printf "%-12s %-10s %-15s %-10s\n" "------" "------" "---------" "----"
+echo "Results Table:"
+printf "%-12s %-10s %-15s %-15s\n" "Method" "Status" "Objective" "Reduction Time"
+printf "%-12s %-10s %-15s %-15s\n" "------" "------" "---------" "--------------"
 
 TOTAL_PASS=0
 TOTAL_FAIL=0
@@ -239,7 +259,7 @@ for method in "${METHODS[@]}"; do
     
     printf "%-14s " "$method"
     printf "%-20b " "$STATUS_COLOR"
-    printf "%-12s %-10s\n" "${RESULTS[$method]}" "${TIMES[$method]}"
+    printf "%-25s %-15s\n" "${RESULTS[$method]}" "${TIMES[$method]}"
 done
 
 echo "------------------------------------------"
@@ -248,6 +268,13 @@ if [ $TOTAL_TIMEOUT -gt 0 ]; then
 else
     echo -e "Total: ${GREEN}$TOTAL_PASS passed${NC}, ${RED}$TOTAL_FAIL failed${NC}"
 fi
+
+echo ""
+echo "Selected Scenario Indices (first 5, sorted):"
+echo "------------------------------------------"
+for method in "${METHODS[@]}"; do
+    printf "%-12s: %s\n" "$method" "${INDICES[$method]}"
+done
 
 # Exit with appropriate status
 if [ $TOTAL_FAIL -gt 0 ]; then
