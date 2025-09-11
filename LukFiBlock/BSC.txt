@@ -46,7 +46,7 @@ intTrgtMng 0      # bit-wise encoding targets and accuracies management:
                   # bit 1: if upper/lower target is set to each convex/concave component
                   # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                   # bit 4: if Lipschitz constant is used to compute the upper model
-intMPName  15     # MP solver: 0 = QPP, 7 = Cplex with quadratic stabilization
+intMPName  15     # MP solver: 0 = QPP, 7 = Cplex/Gurobi with quadratic stabilization
                   # + 8 = check for duplicate linearizations
 
 # QPPenalty's parameters :- - - - - - - - - - - - - - - - - - - - - - - - - -

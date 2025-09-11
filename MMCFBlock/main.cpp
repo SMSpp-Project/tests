@@ -50,6 +50,19 @@ using namespace SMSpp_di_unipi_it;
 using namespace MMCFClass_di_unipi_it;
 
 /*--------------------------------------------------------------------------*/
+/*----------------------------- CONSTANTS ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+#define USECOLORS 1
+#if( USECOLORS )
+#define RED( x ) "\x1B[31m" #x "\033[0m"
+#define GREEN( x ) "\x1B[32m" #x "\033[0m"
+#else
+#define RED( x ) #x
+#define GREEN( x ) #x
+#endif
+
+/*--------------------------------------------------------------------------*/
 /*----------------------------- FUNCTIONS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -63,8 +76,7 @@ static inline void str2val( const char* const str , T &sthg )
 
 /*--------------------------------------------------------------------------*/
 
- static void PrintResults( int rtrn , double lb , double ub )
-{
+ static void PrintResults( int rtrn , double lb , double ub ) {
  cout << "MMCFB: ";
  if( ( rtrn >= Solver::kOK ) && ( rtrn < Solver::kError ) )
   cout << std::setprecision( 8 ) <<   lb << ", " << ub;
@@ -79,24 +91,30 @@ static inline void str2val( const char* const str , T &sthg )
  }
 
 /*--------------------------------------------------------------------------*/
-/*----------------------------- CONSTANTS ----------------------------------*/
-/*--------------------------------------------------------------------------*/
+ /// Custom terminate function to print the exception message
 
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
+ void smspp_terminate( void ) {
 
-/*--------------------------------------------------------------------------*/
-/*--------------------------------- Main -----------------------------------*/
+  std::cerr << "Uncaught exception in executing SMS++:\n";
+  try {
+   std::rethrow_exception( std::current_exception() );
+  }
+  catch( const std::exception & e ) {
+   std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+   std::cerr << "\tException message: " << e.what() << "\n";
+  } catch( ... ) {
+   std::cerr << "\tUnknown exception" << std::endl;
+  }
+  std::abort(); // or exit(1)
+ }
+
 /*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DATADIR=../../UCBlock/netCDF_files/UC_Data/T-Ramp
+DATADIR=../../UCBlock/data/nc4/UC_Data/T-Ramp
 
 # runs all the academic instances: intended for being used when the
 # ThermalUnitBlock subproblems are solved to integer optimality

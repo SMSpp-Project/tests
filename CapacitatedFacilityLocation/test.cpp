@@ -234,7 +234,7 @@ static double rndfctr( void )
 // is the same as the probability of being 1 / p < 1, while with the
 // remaining probability 1 / 3 returns a random number in [ - 2 , - 0.5 ]
 // with an analogous property; in other words, it tries to keep the
-// modified numbers, on average, of the the same order of magnitude of the
+// modified numbers, on average, of the same order of magnitude of the
 // original ones even after being modified very many times, while flipping
 // their sign once in three calls
 
@@ -575,9 +575,30 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

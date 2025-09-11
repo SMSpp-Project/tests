@@ -22,6 +22,8 @@ LukFiBlock/LukFi_test
 MCF_MILP/MCF_MILP_test
 MMCFBlock/MMCF_test
 MMCFBlock/gen/Mnetgen/mnetgen
+MMCFBlock/gen/Canad
+MMCFBlock/gen/JLF
 PolyhedralFunction/PolyhedralFunction_test
 PolyhedralFunctionBlock/PolyhedralFunctionBlock_test
 QuadraticTests/quad_test
@@ -30,7 +32,7 @@ Write-Read/writeandread_test
 
 # large data test files
 MMCFBlock/data/*
-LagrangianDualSolver_MMCF/data/*
+MMCFBlock/gen/Canad.tgz
 
 # BundleSolver log files
 *.bn

@@ -53,7 +53,7 @@ intFrcLstSS 0     # if all the components need be computed at the optimum
 
 # MPSolver parameters : - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-intMPName  15     # MP solver: 0 = QPP, 7 = Cplex with quadratic stabilization
+intMPName  15     # MP solver: 0 = QPP, 7 = Cplex/Gurobi with quadratic stabilization
                   # + 8 = check for duplicate linearizations
 
 # QPPenalty's parameters :- - - - - - - - - - - - - - - - - - - - - - - - - -

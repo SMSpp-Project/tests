@@ -55,7 +55,7 @@ intRstAlg   2     # parameter to handle the reset of the algorithm
 
 # MPSolver parameters : - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-intMPName  15     # MP solver: 0 = QPP, 7 = OSI with quadratic stabilization
+intMPName  15     # MP solver: 0 = QPP, 7 = Cplex/Gurobi with quadratic stabilization
                   # + 8 = check for duplicate linearizations
 intMPlvl   0      # log verbosity of Master Problem
 

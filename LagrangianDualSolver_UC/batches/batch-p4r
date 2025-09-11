@@ -26,9 +26,7 @@ fi
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../UCBlock/netCDF_files/plan4res-data/FirstSetofInstances/*.nc4; do # \
-            #../../UCBlock/netCDF_files/plan4res-data/TestUC/1D_1Z_DP_1SS_10TU/*.nc4; do # \
-            #../../UCBlock/netCDF_files/plan4res-data/SecondSetofInstances/*.nc4; do
+for what in ../../UCBlock/data/nc4/plan4res-data/FirstSetofInstances/*.nc4; do
 
     if [ -z "$par" ]; then
       if [ -z "$mlf" ]; then

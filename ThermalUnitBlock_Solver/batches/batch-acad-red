@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DATADIR=../../UCBlock/netCDF_files/1UC_Data
+DATADIR=../../UCBlock/data/nc4/1UC_Data
 
 wchg=133
 #iter=0

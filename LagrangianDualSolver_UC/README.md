@@ -29,7 +29,7 @@ http://groups.di.unipi.it/optimize/Data/UC.html
 repo). The layout assumes that the instances are in the sub-folder
 "data", that can be symlinked from the `UCBlock` repo such as in
 
-    ln -s ../../UCBlock/netCDF_files/UC_Data/T-Ramp data
+    ln -s ../../UCBlock/data/nc4/UC_Data/T-Ramp data
 
 A makefile is also provided that builds the executable including the
 `LagrangianDualSolver` module, the `BundleSolver` module and all its

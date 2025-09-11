@@ -25,7 +25,7 @@ fi
 
 #  pure thermal academic instances- - - - - - - - - - - - - - - - - - - - - -
 
-DATADIR=../../UCBlock/netCDF_files/UC_Data/T-Ramp
+DATADIR=../../UCBlock/data/nc4/UC_Data/T-Ramp
 
 for size in 10 20 50 75 100 200; do
   for (( seed = 1 ; seed < 6 ; seed++ )); do
@@ -62,7 +62,7 @@ done
 
 # hydrothermal academic instances - - - - - - - - - - - - - - - - - - - - - -
 
-DATADIR=../../UCBlock/netCDF_files/UC_Data/HT-Ramp
+DATADIR=../../UCBlock/data/nc4/UC_Data/HT-Ramp
 
 for size in 20_10 50_20 75_35 100_50 150_75 200_100; do
   for (( seed = 1 ; seed < 3 ; seed++ )); do

@@ -25,7 +25,8 @@ if (UNIX)
             COMMAND echo > ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
             COMMENT "Running mnetgen"
-            VERBATIM)
+            VERBATIM
+    )
 elseif (WIN32)
     add_custom_command(
             OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
@@ -35,7 +36,8 @@ elseif (WIN32)
             COMMAND echo > ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
             COMMENT "Running mnetgen"
-            VERBATIM)
+            VERBATIM
+    )
 endif ()
 
 # Create custom targets to run the nc4 generation

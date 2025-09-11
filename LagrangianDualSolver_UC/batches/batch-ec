@@ -22,8 +22,8 @@ fi
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../UCBlock/netCDF_files/EC_Data/EC_CO_*.nc4 \
-            ../../UCBlock/netCDF_files/EC_Data/EC_NC_*.nc4; do
+for what in ../../UCBlock/data/nc4/EC_Data/EC_CO_*.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/EC_NC_*.nc4; do
 
     if [ -z "$par" ]; then
       if [ -z "$mlf" ]; then

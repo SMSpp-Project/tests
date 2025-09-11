@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 
-DATADIR=../../../CapacitatedFacilityLocationBlock/data
-
-# remember that +512 is always needed since the R3B is a MCFBlock
-# solved by a MCFSolver
+DATADIR=../../CapacitatedFacilityLocationBlock/data
 
 niter=0
 # everything, comprised abstract
-#wchg=1023
+#wchg=511
 # everything, but not abstract
-#wchg=767
+#wchg=255
 # everything but fix-open & change type, comprised abstract
-wchg=831
+wchg=319
 # everything but change type, comprised abstract
-#wchg=895
+#wchg=383
 rounds=40
 maxseed=2
 
@@ -31,7 +28,7 @@ for what in ${DATADIR}/txt/ORLib/*.txt; do
 
     retVal=$?
     if [ $retVal -ne 0 ]; then
-       exit 1
+      exit 1
     fi
 
   done
@@ -51,7 +48,7 @@ for i in 30-200 60-200 60-300 80-400; do
 
       retVal=$?
       if [ $retVal -ne 0 ]; then
-         exit 1
+        exit 1
       fi
 
     done
@@ -60,8 +57,8 @@ done
 
 # TBED- - - - - - - - - - - - - - - - - - - - - -
 
-for i in 300; do
-  for (( h = 1 ; h <= 10 ; h++ )); do
+for i in 300; do            # 300_1500 500 700 1000
+  for h in 1 6 11 16 19; do #for (( h = 1 ; h <= 10 ; h++ ))
     for (( seed = 0 ; seed <= maxseed ; seed++ )); do
 
       what=${DATADIR}/txt/TBED/${i}/i${i}_${h}.txt
@@ -72,7 +69,7 @@ for i in 300; do
 
       retVal=$?
       if [ $retVal -ne 0 ]; then
-         exit 1
+        exit 1
       fi
 
     done

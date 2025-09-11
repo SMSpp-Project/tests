@@ -38,7 +38,9 @@ include(CTest)
 # may wrongly appear unused, and by default the linker does not include them,
 # so we have to force the linking.
 if (BUILD_SHARED_LIBS)
-    if (UNIX AND (NOT APPLE))
+    if (MSVC)
+        add_link_options("/OPT:NOREF")
+    elseif (UNIX AND (NOT APPLE))
         add_link_options("-Wl,--no-as-needed")
     endif ()
 else ()
