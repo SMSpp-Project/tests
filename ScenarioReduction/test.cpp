@@ -464,6 +464,8 @@ vector<vector<double>> generate_demand_scenarios(
     
     if (verbose >= 1) {
         cout << "  Generated " << num_scenarios << " scenarios in 4 distinct clusters:" << endl;
+    }
+    if (verbose >= 2){
         cout << "    Cluster 0 (normal): " << cluster0_count << " scenarios around original (±10%)" << endl;
         cout << "    Cluster 1 (high): " << cluster1_count << " scenarios with high demand (1.3x-1.5x)" << endl;
         cout << "    Cluster 2 (low): " << cluster2_count << " scenarios with low demand (0.5x-0.7x)" << endl;
@@ -509,6 +511,8 @@ pair<double, bool> solve_with_config(Block* block, double time_limit = -1, int v
             if (result == Solver::kOK) {
                 obj = solver->get_ub();
                 success = true;
+                // Write the solution to the variables
+                solver->get_var_solution(nullptr);
             } else if (verbose >= 1) {
                 // Provide meaningful error messages based on return code
                 cerr << "Solver failed: ";
@@ -543,9 +547,10 @@ pair<double, bool> solve_with_config(Block* block, double time_limit = -1, int v
 }
 
 /**
- * @brief Computes the extensive form (stochastic) solution with timing
+ * @brief Computes the extensive form (stochastic) problem with timing
  * 
  * This function solves the extensive form of the stochastic problem using MILPSolver.
+ * If verbose mode is enabled, it also displays which facilities were opened.
  * 
  * @param tss_block The TwoStageStochasticBlock to solve
  * @param num_scenarios Number of scenarios (for scaling the objective)
@@ -553,7 +558,7 @@ pair<double, bool> solve_with_config(Block* block, double time_limit = -1, int v
  * @param verbose Whether to print detailed output
  * @return SolutionResult with objective, success flag, and timing
  */
-SolutionResult compute_extensive_form_solution(
+SolutionResult compute_extensive_form(
     TwoStageStochasticBlock* tss_block,
     int num_scenarios,
     double time_limit = -1,
@@ -578,6 +583,52 @@ SolutionResult compute_extensive_form_solution(
             cout << "  Stochastic objective value (expected): " << fixed << setprecision(2) 
                  << result.objective << endl;
             cout << "  Solution time: " << result.time_ms << " ms" << endl;
+            
+            // Display which facilities were opened (first-stage decisions)
+            try {
+                auto first_stage_vars = tss_block->get_first_stage_variables();
+                if (verbose >= 2) {
+                    cout << "    Found " << first_stage_vars.size() << " first-stage variables" << endl;
+                }
+                if (!first_stage_vars.empty()) {
+                    vector<int> opened_facilities;
+                    
+                    for (size_t i = 0; i < first_stage_vars.size(); ++i) {
+                        if (first_stage_vars[i]) {
+                            // Get the solution value for this variable
+                            double value = first_stage_vars[i]->get_value();
+                            // Debug: print first few values if very verbose
+                            if (verbose >= 2 && i < 5) {
+                                cout << "    Facility " << i << " value: " << value << endl;
+                            }
+                            // A facility is considered open if its binary variable is > 0.5
+                            if (value > 0.5) {
+                                opened_facilities.push_back(i);
+                            }
+                        }
+                    }
+                    
+                    if (!opened_facilities.empty()) {
+                        cout << "  Opened facilities: " << opened_facilities.size() 
+                             << "/" << first_stage_vars.size() << endl;
+                        cout << "    Facility indices: ";
+                        for (size_t i = 0; i < opened_facilities.size(); ++i) {
+                            cout << opened_facilities[i];
+                            if (i < opened_facilities.size() - 1) cout << ", ";
+                        }
+                        cout << endl;
+                    } else {
+                        cout << "  Opened facilities: 0/" << first_stage_vars.size() 
+                             << " (unusual - check solution)" << endl;
+                    }
+                }
+            } catch (const exception& e) {
+                // If we can't get first-stage variables, silently continue
+                // This might happen if constraints haven't been generated
+                if (verbose >= 2) {
+                    cout << "  Could not retrieve facility information: " << e.what() << endl;
+                }
+            }
         }
     } else if (verbose >= 1) {
         cerr << "Problem could not be solved" << endl;
@@ -1045,11 +1096,20 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
                 double dist = 0.0;
                 for (size_t k = 0; k < nc; ++k) {
                     double diff = all_scenarios[i][k] - all_scenarios[j][k];
-                    dist += diff * diff;  // Euclidean distance squared
+                    dist += diff * diff;  // Sum of squared differences
                 }
-                dist = std::sqrt(dist);  // Euclidean distance
-                dist = std::pow(dist, ell);  // ell-th power
-                min_dist = std::min(min_dist, dist);
+                
+                // Optimize for the common case of ell=2
+                if (std::abs(ell - 2.0) < 1e-10) {
+                    // For ell=2, d^ell = (sqrt(sum_squared))^2 = sum_squared
+                    // So we can skip the sqrt and pow operations
+                    min_dist = std::min(min_dist, dist);
+                } else {
+                    // General case: compute d^ell where d is Euclidean distance
+                    dist = std::sqrt(dist);  // Euclidean distance
+                    dist = std::pow(dist, ell);  // ell-th power
+                    min_dist = std::min(min_dist, dist);
+                }
             }
             min_distances[i] = min_dist;
         }
@@ -1442,6 +1502,32 @@ void create_twostage_netcdf(const string& filename,
 /*--------------------------------------------------------------------------*/
 
 /**
+ * @brief Display help message for command-line usage
+ */
+void show_help(const char* program_name) {
+    cout << "Usage: " << program_name << " [options]" << endl;
+    cout << "\nOptions:" << endl;
+    cout << "  -v, --verbose <level>     Set verbosity level (0=silent, 1=normal, 2=detailed)" << endl;
+    cout << "  -t, --time <seconds>      Set solver time limit in seconds" << endl;
+    cout << "  -n, --scenarios <number>  Set total number of scenarios (default: 20)" << endl;
+    cout << "  -r, --reduced <number>    Set number of reduced scenarios (default: 3)" << endl;
+    cout << "  -m, --method <name>       Scenario reduction method:" << endl;
+    cout << "                            baseline, dupacova (default), bestfit, firstfit, milp" << endl;
+    cout << "  -w, --warmstart <0|1>     Use warm start for local search (0=false, 1=true)" << endl;
+    cout << "  -S, --shuffle <0|1>       Enable shuffling for FirstFit (0=false, 1=true)" << endl;
+    cout << "  -s, --save-cache          Save scenarios and results to cache files" << endl;
+    cout << "  -l, --load-cache          Load scenarios from cache files" << endl;
+    cout << "  -L, --load-results        Load pre-computed results from cache" << endl;
+    cout << "  -d, --cache-dir <path>    Specify cache directory (default: ./cache/)" << endl;
+    cout << "  -c, --compute-vpi         Compute Value of Perfect Information" << endl;
+    cout << "  -h, --help                Show this help message" << endl;
+    cout << "\nExamples:" << endl;
+    cout << "  " << program_name << " -v 1 -n 10 -r 5" << endl;
+    cout << "  " << program_name << " --verbose 2 --scenarios 20 --reduced 10 --method dupacova" << endl;
+    cout << "  " << program_name << " -t 300 -s -c" << endl;
+}
+
+/**
  * @brief Main test function for Two-Stage Stochastic CFL with scenario reduction
  * 
  * Executes a comprehensive test of the TwoStageStochasticBlock implementation:
@@ -1451,17 +1537,19 @@ void create_twostage_netcdf(const string& filename,
  * - Demonstrates the Value of Perfect Information (VPI)
  * 
  * Command line options:
- * - --verbose=<level>: Set verbosity level (0=silent, 1=normal, 2=detailed)
- * - -v: Set verbose level to 1, -vv: Set verbose level to 2
- * - -time=<seconds>: Set solver time limit (e.g., -time=300 for 300 seconds)
- * - -n_scen=<number>: Set total number of scenarios (default: 20)
- * - -n_reduced=<number>: Set number of reduced scenarios (default: 3)
- * - -method=<name>: Scenario reduction method (baseline, dupacova (default), bestfit, firstfit, milp)
- * - --save-cache: Save scenarios and results to cache files
- * - --load-cache: Load scenarios from cache files
- * - --load-results: Load pre-computed results from cache
- * - --cache-dir=<path>: Specify cache directory (default: ./cache/)
- * - --compute-vpi: Compute Value of Perfect Information (anticipative solutions)
+ * - -v <level> or --verbose <level>: Set verbosity level (0=silent, 1=normal, 2=detailed)
+ * - -t <seconds> or --time <seconds>: Set solver time limit (e.g., -t 300 for 300 seconds)
+ * - -n <number> or --scenarios <number>: Set total number of scenarios (default: 20)
+ * - -r <number> or --reduced <number>: Set number of reduced scenarios (default: 3)
+ * - -m <name> or --method <name>: Scenario reduction method (baseline, dupacova (default), bestfit, firstfit, milp)
+ * - -w <0|1> or --warmstart <0|1>: Use warm start for local search (0=false, 1=true, default: 0)
+ * - -S <0|1> or --shuffle <0|1>: Enable shuffling for FirstFit (0=false, 1=true, default: 0)
+ * - -s or --save-cache: Save scenarios and results to cache files
+ * - -l or --load-cache: Load scenarios from cache files
+ * - -L or --load-results: Load pre-computed results from cache
+ * - -d <path> or --cache-dir <path>: Specify cache directory (default: ./cache/)
+ * - -c or --compute-vpi: Compute Value of Perfect Information (anticipative solutions)
+ * - -h or --help: Show this help message
  * 
  * @param argc Number of command-line arguments
  * @param argv Command-line arguments
@@ -1484,98 +1572,163 @@ int main(int argc, char* argv[]) {
     
     for (int i = 1; i < argc; ++i) {
         string arg = argv[i];
-        if (arg == "-v") {
-            verbose = 1;
-        } else if (arg == "-vv") {
-            verbose = 2;
-        } else if (arg.find("--verbose=") == 0) {
-            try {
-                verbose = stoi(arg.substr(10));
-                if (verbose < 0 || verbose > 2) {
-                    cerr << "Verbose level must be 0, 1, or 2: " << arg << endl;
+        
+        // Help options
+        if (arg == "-h" || arg == "--help") {
+            show_help(argv[0]);
+            return 0;
+        }
+        // Verbose options
+        else if (arg == "-v" || arg == "--verbose") {
+            // -v <level> format
+            if (i + 1 < argc) {
+                try {
+                    verbose = stoi(argv[++i]);
+                    if (verbose < 0 || verbose > 2) {
+                        cerr << "Verbose level must be 0, 1, or 2" << endl;
+                        return 1;
+                    }
+                } catch (const exception& e) {
+                    cerr << "Invalid verbose level after -v: " << argv[i] << endl;
                     return 1;
                 }
-            } catch (const exception& e) {
-                cerr << "Invalid verbose level: " << arg << endl;
+            } else {
+                cerr << "Missing value after " << arg << endl;
                 return 1;
             }
-        } else if (arg.find("-time=") == 0) {
-            // Parse time limit: -time=300 means 300 seconds
-            try {
-                time_limit = stod(arg.substr(6));
-                if (time_limit <= 0) {
-                    cerr << "Time limit must be positive: " << arg << endl;
+        }
+        // Time options
+        else if (arg == "-t" || arg == "--time") {
+            // -t <seconds> format
+            if (i + 1 < argc) {
+                try {
+                    time_limit = stod(argv[++i]);
+                    if (time_limit <= 0) {
+                        cerr << "Time limit must be positive" << endl;
+                        return 1;
+                    }
+                } catch (const exception& e) {
+                    cerr << "Invalid time limit after -t: " << argv[i] << endl;
                     return 1;
                 }
-            } catch (const exception& e) {
-                cerr << "Invalid time limit format: " << arg << " (use -time=<seconds>, e.g., -time=300)" << endl;
+            } else {
+                cerr << "Missing value after " << arg << endl;
                 return 1;
             }
-        } else if (arg.find("-n_scen=") == 0) {
-            // Parse number of scenarios: -n_scen=10
-            try {
-                full_num_scenarios = stoi(arg.substr(8));
-                if (full_num_scenarios <= 0) {
-                    cerr << "Number of scenarios must be positive: " << arg << endl;
+        }
+        // Number of scenarios options
+        else if (arg == "-n" || arg == "--scenarios") {
+            if (i + 1 < argc) {
+                try {
+                    full_num_scenarios = stoi(argv[++i]);
+                    if (full_num_scenarios <= 0) {
+                        cerr << "Number of scenarios must be positive" << endl;
+                        return 1;
+                    }
+                } catch (const exception& e) {
+                    cerr << "Invalid number of scenarios: " << argv[i] << endl;
                     return 1;
                 }
-            } catch (const exception& e) {
-                cerr << "Invalid number of scenarios format: " << arg << " (use -n_scen=<number>, e.g., -n_scen=10)" << endl;
+            } else {
+                cerr << "Missing value after " << arg << endl;
                 return 1;
             }
-        } else if (arg.find("-n_reduced=") == 0) {
-            // Parse number of reduced scenarios: -n_reduced=3
-            try {
-                reduced_num_scenarios = stoi(arg.substr(11));
-                if (reduced_num_scenarios <= 0) {
-                    cerr << "Number of reduced scenarios must be positive: " << arg << endl;
+        }
+        // Number of reduced scenarios options
+        else if (arg == "-r" || arg == "--reduced") {
+            if (i + 1 < argc) {
+                try {
+                    reduced_num_scenarios = stoi(argv[++i]);
+                    if (reduced_num_scenarios <= 0) {
+                        cerr << "Number of reduced scenarios must be positive" << endl;
+                        return 1;
+                    }
+                } catch (const exception& e) {
+                    cerr << "Invalid number of reduced scenarios: " << argv[i] << endl;
                     return 1;
                 }
-            } catch (const exception& e) {
-                cerr << "Invalid reduced scenarios format: " << arg << " (use -n_reduced=<number>, e.g., -n_reduced=3)" << endl;
+            } else {
+                cerr << "Missing value after " << arg << endl;
                 return 1;
             }
-        } else if (arg.find("-method=") == 0) {
-            // Parse scenario reduction method: -method=dupacova
-            reduction_method = arg.substr(8);
-            // Validate method name
-            if (reduction_method != "baseline" && reduction_method != "dupacova" && 
-                reduction_method != "bestfit" && reduction_method != "firstfit" &&
-                reduction_method != "milp" && reduction_method != "optimal") {
-                cerr << "Invalid method: " << reduction_method 
-                     << " (use baseline, dupacova, bestfit, firstfit, or milp)" << endl;
+        }
+        // Method options
+        else if (arg == "-m" || arg == "--method") {
+            if (i + 1 < argc) {
+                reduction_method = argv[++i];
+                if (reduction_method != "baseline" &&
+                    reduction_method != "dupacova" &&
+                    reduction_method != "bestfit" &&
+                    reduction_method != "firstfit" &&
+                    reduction_method != "milp") {
+                    cerr << "Invalid reduction method: " << reduction_method << endl;
+                    cerr << "Valid options: baseline, dupacova, bestfit, firstfit, milp" << endl;
+                    return 1;
+                }
+            } else {
+                cerr << "Missing value after " << arg << endl;
                 return 1;
             }
-        } else if (arg == "--save-cache") {
+        }
+        // Cache options
+        else if (arg == "-s" || arg == "--save-cache") {
             save_cache = true;
-        } else if (arg == "--load-cache") {
+        }
+        else if (arg == "-l" || arg == "--load-cache") {
             load_cache = true;
-        } else if (arg == "--load-results") {
+        }
+        else if (arg == "-L" || arg == "--load-results") {
             load_results = true;
-        } else if (arg.find("--cache-dir=") == 0) {
-            cache_dir = arg.substr(12);
-            // Ensure cache_dir ends with slash
-            if (!cache_dir.empty() && cache_dir.back() != '/') {
-                cache_dir += '/';
+        }
+        // Cache directory options
+        else if (arg == "-d" || arg == "--cache-dir") {
+            if (i + 1 < argc) {
+                cache_dir = argv[++i];
+                if (cache_dir.back() != '/') {
+                    cache_dir += '/';
+                }
+            } else {
+                cerr << "Missing value after " << arg << endl;
+                return 1;
             }
-        } else if (arg == "--compute-vpi") {
+        }
+        // Warmstart option
+        else if (arg == "-w" || arg == "--warmstart") {
+            if (i + 1 < argc) {
+                try {
+                    use_warmstart = (stoi(argv[++i]) != 0);
+                } catch (const exception& e) {
+                    cerr << "Invalid warmstart value after " << arg << ": " << argv[i] << endl;
+                    return 1;
+                }
+            } else {
+                cerr << "Missing value after " << arg << endl;
+                return 1;
+            }
+        }
+        // Shuffle option
+        else if (arg == "-S" || arg == "--shuffle") {
+            if (i + 1 < argc) {
+                try {
+                    use_shuffle = (stoi(argv[++i]) != 0);
+                } catch (const exception& e) {
+                    cerr << "Invalid shuffle value after " << arg << ": " << argv[i] << endl;
+                    return 1;
+                }
+            } else {
+                cerr << "Missing value after " << arg << endl;
+                return 1;
+            }
+        }
+        // VPI option
+        else if (arg == "-c" || arg == "--compute-vpi") {
             compute_vpi = true;
-        } else if (arg.find("-warmstart=") == 0) {
-            // Parse warmstart flag: -warmstart=1 or -warmstart=0
-            try {
-                use_warmstart = (stoi(arg.substr(11)) != 0);
-            } catch (const exception& e) {
-                cerr << "Invalid warmstart value: " << arg << " (use -warmstart=0 or -warmstart=1)" << endl;
-                return 1;
-            }
-        } else if (arg.find("-shuffle=") == 0) {
-            // Parse shuffle flag: -shuffle=1 or -shuffle=0
-            try {
-                use_shuffle = (stoi(arg.substr(9)) != 0);
-            } catch (const exception& e) {
-                cerr << "Invalid shuffle value: " << arg << " (use -shuffle=0 or -shuffle=1)" << endl;
-                return 1;
-            }
+        }
+        // Unknown option
+        else {
+            cerr << "Unknown option: " << arg << endl;
+            cerr << "Use -h or --help for usage information" << endl;
+            return 1;
         }
     }
     
@@ -1837,7 +1990,7 @@ int main(int argc, char* argv[]) {
                 
                 apply_scenario_data_programmatically(full_tss_block.get(), all_demand_scenarios, nc, verbose);
                 
-                full_result = compute_extensive_form_solution(
+                full_result = compute_extensive_form(
                     full_tss_block.get(), full_num_scenarios, time_limit, verbose);
                 
                 if (save_cache && full_result.solved) {
@@ -1883,7 +2036,7 @@ int main(int argc, char* argv[]) {
                 
                 apply_scenario_data_programmatically(reduced_tss_block.get(), reduced_scenarios, nc, verbose);
                 
-                reduced_result = compute_extensive_form_solution(
+                reduced_result = compute_extensive_form(
                     reduced_tss_block.get(), reduced_num_scenarios, time_limit, verbose);
                 
                 if (save_cache && reduced_result.solved) {

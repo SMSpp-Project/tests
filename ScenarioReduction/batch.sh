@@ -80,19 +80,13 @@ if [ ! -f "$EXECUTABLE" ]; then
 fi
 
 # Array of methods to test
-# Format: "method:warmstart:shuffle:label"
+# Format: "method:label" (warmstart and shuffle are set via CLI now)
 METHODS=(
-    "baseline:0:0:baseline"
-    "dupacova:0:0:dupacova"
-    "bestfit:0:0:bestfit"
-    "bestfit:1:0:bestfit_warm"
-    "bestfit:0:1:bestfit_shuf"
-    "bestfit:1:1:bestfit_warm_shuf"
-    "firstfit:0:0:firstfit"
-    "firstfit:1:0:firstfit_warm"
-    "firstfit:0:1:firstfit_shuf"
-    "firstfit:1:1:firstfit_warm_shuf"
-    "milp:0:0:milp"
+    "baseline:baseline"
+    "dupacova:dupacova"
+    "bestfit:bestfit"
+    "firstfit:firstfit"
+    "milp:milp"
 )
 
 # Results storage
@@ -149,16 +143,10 @@ echo "------------------------------------------"
 
 FIRST_METHOD=true
 for method_config in "${METHODS[@]}"; do
-    # Parse the method configuration
-    IFS=':' read -r method warmstart shuffle label <<< "$method_config"
+    # Parse the method configuration (method:label format)
+    IFS=':' read -r method label <<< "$method_config"
     
     echo -e "${BLUE}Testing: $label${NC}"
-    if [ "$warmstart" = "1" ]; then
-        echo "  (with warmstart from Dupacova)"
-    fi
-    if [ "$shuffle" = "1" ]; then
-        echo "  (with shuffling enabled)"
-    fi
     
     # Build command with caching options
     if [ "$FIRST_METHOD" = true ]; then
@@ -175,11 +163,11 @@ for method_config in "${METHODS[@]}"; do
     # Run the test and capture output
     if [ $VERBOSE -ge 2 ]; then
         # Show full output for verbose mode 2
-        OUTPUT=$($TIMEOUT_CMD $EXECUTABLE -method=$method -warmstart=$warmstart -shuffle=$shuffle -n_scen=$FULL_SCENARIOS -n_reduced=$REDUCED_SCENARIOS -test $CACHE_OPTS --verbose=$VERBOSE 2>&1)
+        OUTPUT=$($TIMEOUT_CMD $EXECUTABLE -m $method -n $FULL_SCENARIOS -r $REDUCED_SCENARIOS -w 0 -S 0 $CACHE_OPTS -v $VERBOSE 2>&1)
         echo "$OUTPUT"
     else
         # Capture output silently for processing
-        OUTPUT=$($TIMEOUT_CMD $EXECUTABLE -method=$method -warmstart=$warmstart -shuffle=$shuffle -n_scen=$FULL_SCENARIOS -n_reduced=$REDUCED_SCENARIOS -test $CACHE_OPTS --verbose=$VERBOSE 2>&1)
+        OUTPUT=$($TIMEOUT_CMD $EXECUTABLE -m $method -n $FULL_SCENARIOS -r $REDUCED_SCENARIOS -w 0 -S 0 $CACHE_OPTS -v $VERBOSE 2>&1)
     fi
     
     # Check exit status
@@ -263,7 +251,7 @@ echo "=========================================="
 # First, run just to get the full problem objective and timing if we haven't already
 if [ -z "$FULL_OBJECTIVE" ]; then
     echo "Getting full problem objective ($FULL_SCENARIOS scenarios)..."
-    FULL_OUTPUT=$($EXECUTABLE -method=baseline -n_scen=$FULL_SCENARIOS -n_reduced=$REDUCED_SCENARIOS -test $CACHE_OPTS --verbose=0 2>&1)
+    FULL_OUTPUT=$($EXECUTABLE -m baseline -n $FULL_SCENARIOS -r $REDUCED_SCENARIOS $CACHE_OPTS -v 0 2>&1)
     # Extract from cached output format first
     FULL_OBJECTIVE=$(echo "$FULL_OUTPUT" | grep -E "Full problem \($FULL_SCENARIOS scenarios\):" -A 2 | grep "Objective:" | sed 's/.*Objective: //' | awk '{print $1}')
     # Extract full problem solution time
@@ -278,15 +266,15 @@ fi
 
 echo ""
 echo "Results Table:"
-printf "%-25s %-10s %-15s %-15s %-15s\n" "Method" "Status" "Objective" "Wasserstein" "Time" 
-printf "%-25s %-10s %-15s %-15s %-15s\n" "------" "------" "---------" "-----------" "----" 
+printf "%-25s %-10s %15s %15s %15s\n" "Method" "Status" "Objective" "Wasserstein" "Time" 
+printf "%-25s %-10s %15s %15s %15s\n" "------" "------" "---------" "-----------" "----" 
 
 TOTAL_PASS=0
 TOTAL_FAIL=0
 TOTAL_TIMEOUT=0
 
 for method_config in "${METHODS[@]}"; do
-    IFS=':' read -r method warmstart shuffle label <<< "$method_config"
+    IFS=':' read -r method label <<< "$method_config"
     
     if [ "${STATUS[$label]}" == "PASS" ]; then
         STATUS_COLOR="${GREEN}PASS${NC}"
@@ -299,9 +287,9 @@ for method_config in "${METHODS[@]}"; do
         ((TOTAL_FAIL++))
     fi
     
-    printf "%-27s " "$label"
-    printf "%-20b " "$STATUS_COLOR"
-    printf "%-22s %-8s %-15s\n" "${RESULTS[$label]}" "${WASSERSTEIN[$label]}" "${TIMES[$label]}" 
+    printf "%-25s " "$label"
+    printf "%-21b " "$STATUS_COLOR"
+    printf "%15s %15s %15s\n" "${RESULTS[$label]}" "${WASSERSTEIN[$label]}" "${TIMES[$label]}" 
 done
 
 echo "------------------------------------------"
@@ -315,8 +303,25 @@ echo ""
 echo "Selected Scenario Indices (first 5, sorted):"
 echo "------------------------------------------"
 for method_config in "${METHODS[@]}"; do
-    IFS=':' read -r method warmstart shuffle label <<< "$method_config"
-    printf "%-25s: %s\n" "$label" "${INDICES[$label]}"
+    IFS=':' read -r method label <<< "$method_config"
+    # Format indices with fixed width for proper alignment
+    if [ "${INDICES[$label]}" != "N/A" ] && [ "${INDICES[$label]}" != "TIMEOUT" ] && [ "${INDICES[$label]}" != "ERROR" ]; then
+        # Parse the comma-separated indices and format each with width 3
+        IFS=',' read -ra idx_array <<< "${INDICES[$label]}"
+        formatted_indices=""
+        for idx in "${idx_array[@]}"; do
+            # Trim whitespace and format with width 3
+            idx_trimmed=$(echo "$idx" | xargs)
+            if [ -n "$formatted_indices" ]; then
+                formatted_indices=$(printf "%s, %3s" "$formatted_indices" "$idx_trimmed")
+            else
+                formatted_indices=$(printf "%3s" "$idx_trimmed")
+            fi
+        done
+        printf "%-25s: %s\n" "$label" "$formatted_indices"
+    else
+        printf "%-25s: %s\n" "$label" "${INDICES[$label]}"
+    fi
 done
 
 
