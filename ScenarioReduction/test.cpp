@@ -65,6 +65,8 @@
 #include <chrono>
 #include <filesystem>
 #include <algorithm>
+#include <cmath>
+#include <limits>
 
 using namespace SMSpp_di_unipi_it;
 using namespace std;
@@ -88,17 +90,30 @@ struct SolutionResult {
 /*--------------------------------------------------------------------------*/
 
 /**
+ * @brief Structure to hold scenario reduction metrics
+ */
+struct ScenarioReductionMetrics {
+    double wasserstein_distance = 0.0;
+    double wasserstein_ell_power = 0.0;
+    double ell = 2.0;
+    long long reduction_time_ms = 0;
+    vector<int> selected_indices;
+};
+
+/**
  * @brief Save scenarios to a netCDF cache file
  * 
  * @param filename Output cache file path
  * @param scenarios Vector of demand scenarios
  * @param probabilities Optional scenario probabilities (empty for uniform)
  * @param verbose Verbosity level
+ * @param metrics Optional metrics to save (for reduced scenarios)
  */
 void save_scenarios_to_file(const string& filename,
                            const vector<vector<double>>& scenarios,
                            const vector<double>& probabilities = {},
-                           int verbose = 0) {
+                           int verbose = 0,
+                           const ScenarioReductionMetrics* metrics = nullptr) {
     if (verbose >= 2) cout << "  Saving scenarios to cache: " << filename << endl;
     
     // Create directory if it doesn't exist
@@ -126,6 +141,27 @@ void save_scenarios_to_file(const string& filename,
         probVar.putVar(uniform_probs.data());
     }
     
+    // Add metrics if provided (for reduced scenarios)
+    if (metrics != nullptr) {
+        // Save scalar metrics as attributes
+        file.putAtt("wasserstein_distance", netCDF::NcDouble(), metrics->wasserstein_distance);
+        file.putAtt("wasserstein_ell_power", netCDF::NcDouble(), metrics->wasserstein_ell_power);
+        file.putAtt("ell", netCDF::NcDouble(), metrics->ell);
+        file.putAtt("reduction_time_ms", netCDF::NcInt64(), metrics->reduction_time_ms);
+        
+        // Save selected indices as a variable
+        if (!metrics->selected_indices.empty()) {
+            auto indDim = file.addDim("NumberSelectedIndices", metrics->selected_indices.size());
+            auto indVar = file.addVar("SelectedIndices", netCDF::NcInt(), indDim);
+            indVar.putVar(metrics->selected_indices.data());
+        }
+        
+        if (verbose >= 2) {
+            cout << "    Saved metrics: Wasserstein-" << metrics->ell << " distance = " 
+                 << metrics->wasserstein_distance << endl;
+        }
+    }
+    
     if (verbose >= 2) {
         cout << "    Saved " << scenarios.size() << " scenarios to cache" << endl;
     }
@@ -136,11 +172,13 @@ void save_scenarios_to_file(const string& filename,
  * 
  * @param filename Input cache file path
  * @param verbose Verbosity level
+ * @param metrics Optional pointer to store loaded metrics (if present)
  * @return Pair of (scenarios, probabilities)
  */
 pair<vector<vector<double>>, vector<double>> load_scenarios_from_file(
     const string& filename,
-    int verbose = 0) {
+    int verbose = 0,
+    ScenarioReductionMetrics* metrics = nullptr) {
     
     if (verbose >= 2) cout << "  Loading scenarios from cache: " << filename << endl;
     
@@ -167,6 +205,38 @@ pair<vector<vector<double>>, vector<double>> load_scenarios_from_file(
     auto probVar = file.getVar("Probabilities");
     vector<double> probabilities(num_scenarios);
     probVar.getVar(probabilities.data());
+    
+    // Load metrics if requested and available
+    if (metrics != nullptr) {
+        try {
+            // Load scalar attributes
+            file.getAtt("wasserstein_distance").getValues(&metrics->wasserstein_distance);
+            file.getAtt("wasserstein_ell_power").getValues(&metrics->wasserstein_ell_power);
+            file.getAtt("ell").getValues(&metrics->ell);
+            file.getAtt("reduction_time_ms").getValues(&metrics->reduction_time_ms);
+            
+            // Load selected indices if present
+            try {
+                auto indVar = file.getVar("SelectedIndices");
+                auto indDim = file.getDim("NumberSelectedIndices");
+                size_t num_indices = indDim.getSize();
+                metrics->selected_indices.resize(num_indices);
+                indVar.getVar(metrics->selected_indices.data());
+                
+                if (verbose >= 2) {
+                    cout << "    Loaded metrics: Wasserstein-" << metrics->ell << " distance = " 
+                         << metrics->wasserstein_distance << endl;
+                }
+            } catch (...) {
+                // Selected indices might not be present
+            }
+        } catch (...) {
+            // Metrics not present in file (old cache format)
+            if (verbose >= 2) {
+                cout << "    No metrics found in cache (old format)" << endl;
+            }
+        }
+    }
     
     if (verbose >= 2) {
         cout << "    Loaded " << num_scenarios << " scenarios from cache" << endl;
@@ -641,12 +711,18 @@ void print_solution_comparison(double stochastic_obj, double anticipative_obj,
  * 
  * This helper function modifies the BSConfig_SR.txt file by commenting out
  * all intAlgorithm lines and uncommenting the one for the selected method.
+ * It also sets the warmstart and shuffle parameters.
  * 
  * @param method The reduction method to use ("baseline", "dupacova", "bestfit", "firstfit")
+ * @param use_warmstart Whether to enable warm start for local search
+ * @param use_shuffle Whether to enable shuffling for FirstFit
  * @param verbose Whether to print detailed output
  * @return true if successful, false otherwise
  */
-bool update_scenario_reduction_config(const string& method, int verbose = 0) {
+bool update_scenario_reduction_config(const string& method, 
+                                     bool use_warmstart = false,
+                                     bool use_shuffle = false,
+                                     int verbose = 0) {
     // Determine which algorithm line to uncomment
     int algorithm = 1;  // Default to Dupacova
     if (method == "baseline") {
@@ -682,6 +758,7 @@ bool update_scenario_reduction_config(const string& method, int verbose = 0) {
     infile.close();
     
     // Modify the lines: comment all intAlgorithm lines, uncomment the selected one
+    // Also update warmstart and shuffle parameters
     bool found_algorithm_section = false;
     for (auto& l : lines) {
         // Check if this is an intAlgorithm line
@@ -702,6 +779,22 @@ bool update_scenario_reduction_config(const string& method, int verbose = 0) {
                         l = "# " + l;
                     }
                 }
+            }
+        }
+        // Update intUseWarmstart parameter
+        else if (l.find("intUseWarmstart") != string::npos && l.find("intUseWarmstart") == 0) {
+            // Find the value position (skip spaces after parameter name)
+            size_t value_pos = l.find_first_of("01", l.find("intUseWarmstart") + strlen("intUseWarmstart"));
+            if (value_pos != string::npos) {
+                l[value_pos] = use_warmstart ? '1' : '0';
+            }
+        }
+        // Update intShuffle parameter
+        else if (l.find("intShuffle") != string::npos && l.find("intShuffle") == 0) {
+            // Find the value position (skip spaces after parameter name)
+            size_t value_pos = l.find_first_of("01", l.find("intShuffle") + strlen("intShuffle"));
+            if (value_pos != string::npos) {
+                l[value_pos] = use_shuffle ? '1' : '0';
             }
         }
     }
@@ -729,7 +822,9 @@ bool update_scenario_reduction_config(const string& method, int verbose = 0) {
     
     if (verbose >= 2) {
         cout << "    Updated BSConfig_SR.txt to use algorithm " << algorithm 
-             << " (" << method << ")" << endl;
+             << " (" << method << ")"
+             << ", warmstart=" << (use_warmstart ? "1" : "0")
+             << ", shuffle=" << (use_shuffle ? "1" : "0") << endl;
     }
     
     return true;
@@ -745,6 +840,8 @@ bool update_scenario_reduction_config(const string& method, int verbose = 0) {
  * @param target_size Number of representative scenarios to select
  * @param nc Number of customers
  * @param method Scenario reduction method to use ("baseline", "dupacova", "bestfit", "firstfit", "milp")
+ * @param use_warmstart Whether to enable warm start for local search
+ * @param use_shuffle Whether to enable shuffling for FirstFit
  * @param verbose Whether to print detailed output
  * @param reduction_time_ms Output parameter for reduction time in milliseconds
  * @param selected_indices Output parameter for the indices of selected scenarios
@@ -755,7 +852,10 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
     int target_size,
     int nc,
     const string& method = "dupacova",
+    bool use_warmstart = false,
+    bool use_shuffle = false,
     int verbose = 0,
+    const string& cache_dir = "./cache/",
     long long* reduction_time_ms = nullptr,
     vector<int>* selected_indices = nullptr) {
     
@@ -814,6 +914,29 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
                     cout << "    Using HiGHSMILPSolver for optimal scenario reduction" << endl;
                 }
                 
+                // Update the intLogVerb parameter for MILP solver based on CLI verbose level
+                if (verbose > 0 && !bsc->get_SolverConfigs().empty()) {
+                    // Get the ComputeConfig for the first (and only) solver
+                    auto* compute_config = bsc->get_SolverConfigs().front();
+                    if (compute_config) {
+                        // Add or update intLogVerb parameter
+                        bool found = false;
+                        for (auto& [name, value] : compute_config->int_pars) {
+                            if (name == "intLogVerb") {
+                                value = verbose;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            compute_config->int_pars.emplace_back("intLogVerb", verbose);
+                        }
+                        if (verbose >= 2) {
+                            cout << "    Set intLogVerb to " << verbose << " in MILP config" << endl;
+                        }
+                    }
+                }
+                
                 // Set the configuration
                 dss.set_config(nullptr, bsc);
                 // Then call init_representative_pool
@@ -827,7 +950,7 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
             // For other methods (dupacova, bestfit, firstfit), use ScenarioReductionSolver
             
             // Update the config file to use the selected method
-            if (!update_scenario_reduction_config(method, verbose)) {
+            if (!update_scenario_reduction_config(method, use_warmstart, use_shuffle, verbose)) {
                 cerr << "Failed to update BSConfig_SR.txt, falling back to default" << endl;
                 dss.init_representative_pool(target_size);
             } else {
@@ -838,6 +961,47 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
                 if (bsc) {
                     if (verbose >= 2) {
                         cout << "    Using ScenarioReductionSolver with " << method << " algorithm" << endl;
+                    }
+                    
+                    // Update the intLogVerb parameter based on CLI verbose level
+                    // The BlockSolverConfig should apply this to the ScenarioReductionSolver
+                    if (verbose > 0 && !bsc->get_SolverConfigs().empty()) {
+                        // Get the ComputeConfig for the first (and only) solver
+                        auto* compute_config = bsc->get_SolverConfigs().front();
+                        if (compute_config) {
+                            // Add or update intLogVerb parameter
+                            bool found = false;
+                            for (auto& [name, value] : compute_config->int_pars) {
+                                if (name == "intLogVerb") {
+                                    value = verbose;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                compute_config->int_pars.emplace_back("intLogVerb", verbose);
+                            }
+                            
+                            // Set log file name for ScenarioReductionSolver output
+                            // Using cache directory for consistency
+                            string log_filename = cache_dir + "scenario_reduction_" + method + ".log";
+                            found = false;
+                            for (auto& [name, value] : compute_config->str_pars) {
+                                if (name == "strLogFileName") {
+                                    value = log_filename;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                compute_config->str_pars.emplace_back("strLogFileName", log_filename);
+                            }
+                            
+                            if (verbose >= 2) {
+                                cout << "    Set intLogVerb to " << verbose << " in config" << endl;
+                                cout << "    Solver log will be written to: " << log_filename << endl;
+                            }
+                        }
                     }
                     
                     // Set the configuration
@@ -859,12 +1023,52 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
             *reduction_time_ms = reduction_time;
         }
         
-        if (verbose >= 1) {
-            cout << "  Scenario reduction time: " << reduction_time << " ms" << endl;
-        }
-        
         // Get the indices of selected scenarios
         auto selected_indices_span = dss.get_selected_scenarios();
+        
+        // Calculate Wasserstein distance between original and reduced distributions
+        // Note: The scenario reduction algorithms minimize the ell-th power of Wasserstein distance
+        // We need to compute this after reduction to report it
+        double ell = dss.get_ell();  // Get the ell parameter (default is 2.0)
+        
+        // Compute the ell-th power of Wasserstein distance
+        // This is the sum of (minimum distance to selected set)^ell weighted by probabilities
+        vector<double> min_distances(all_scenarios.size());
+        vector<int> selected_idx;
+        for (auto idx : selected_indices_span) {
+            selected_idx.push_back(static_cast<int>(idx));
+        }
+        
+        for (size_t i = 0; i < all_scenarios.size(); ++i) {
+            double min_dist = std::numeric_limits<double>::infinity();
+            for (int j : selected_idx) {
+                double dist = 0.0;
+                for (size_t k = 0; k < nc; ++k) {
+                    double diff = all_scenarios[i][k] - all_scenarios[j][k];
+                    dist += diff * diff;  // Euclidean distance squared
+                }
+                dist = std::sqrt(dist);  // Euclidean distance
+                dist = std::pow(dist, ell);  // ell-th power
+                min_dist = std::min(min_dist, dist);
+            }
+            min_distances[i] = min_dist;
+        }
+        
+        // Uniform weights for scenarios
+        double weight = 1.0 / all_scenarios.size();
+        double wasserstein_ell_power = 0.0;
+        for (double d : min_distances) {
+            wasserstein_ell_power += weight * d;
+        }
+        
+        // Compute actual Wasserstein distance (ell-th root)
+        double wasserstein_distance = std::pow(wasserstein_ell_power, 1.0 / ell);
+        
+        if (verbose >= 1) {
+            cout << "  Scenario reduction time: " << reduction_time << " ms" << endl;
+            cout << "  Wasserstein-" << ell << " distance: " << wasserstein_distance << endl;
+            cout << "  Wasserstein distance (ell-th power): " << wasserstein_ell_power << endl;
+        }
         
         // Store indices if requested
         if (selected_indices) {
@@ -919,6 +1123,25 @@ pair<vector<vector<double>>, vector<double>> perform_scenario_reduction(
         // Cleanup
         inFile.close();
         remove(temp_dss_file.c_str());
+        
+        // Display solver log if it exists and verbose is enabled
+        if (verbose >= 1) {
+            string log_filename = cache_dir + "scenario_reduction_" + method + ".log";
+            std::ifstream log_file(log_filename);
+            if (log_file.is_open()) {
+                if (verbose >= 2) {
+                    cout << "\n    === ScenarioReductionSolver Log ===" << endl;
+                }
+                string line;
+                while (getline(log_file, line)) {
+                    cout << "    [Solver] " << line << endl;
+                }
+                log_file.close();
+                if (verbose >= 2) {
+                    cout << "    === End of Solver Log ===\n" << endl;
+                }
+            }
+        }
         
         return {selected_scenarios, adjusted_probabilities};
         
@@ -1251,6 +1474,8 @@ int main(int argc, char* argv[]) {
     int full_num_scenarios = 20;  // Default: 20 scenarios
     int reduced_num_scenarios = 3;  // Default: reduce to 3 scenarios
     string reduction_method = "dupacova";  // Default: Dupacova algorithm
+    bool use_warmstart = false;  // Default: no warm start
+    bool use_shuffle = false;    // Default: no shuffling
     bool save_cache = false;
     bool load_cache = false;
     bool load_results = false;
@@ -1335,6 +1560,22 @@ int main(int argc, char* argv[]) {
             }
         } else if (arg == "--compute-vpi") {
             compute_vpi = true;
+        } else if (arg.find("-warmstart=") == 0) {
+            // Parse warmstart flag: -warmstart=1 or -warmstart=0
+            try {
+                use_warmstart = (stoi(arg.substr(11)) != 0);
+            } catch (const exception& e) {
+                cerr << "Invalid warmstart value: " << arg << " (use -warmstart=0 or -warmstart=1)" << endl;
+                return 1;
+            }
+        } else if (arg.find("-shuffle=") == 0) {
+            // Parse shuffle flag: -shuffle=1 or -shuffle=0
+            try {
+                use_shuffle = (stoi(arg.substr(9)) != 0);
+            } catch (const exception& e) {
+                cerr << "Invalid shuffle value: " << arg << " (use -shuffle=0 or -shuffle=1)" << endl;
+                return 1;
+            }
         }
     }
     
@@ -1377,10 +1618,42 @@ int main(int argc, char* argv[]) {
         const string path = "../../CapacitatedFacilityLocationBlock/data/nc4/Yang/30-200/30-200-1.nc4";
         auto [nf, nc, original_demands] = load_cfl_instance(path, verbose);
         
+        // Read warmstart and shuffle settings from BSConfig_SR.txt for cache naming
+        int warmstart_setting = 0;
+        int shuffle_setting = 0;
+        {
+            std::ifstream config_file("BSConfig_SR.txt");
+            if (config_file.is_open()) {
+                string line;
+                while (getline(config_file, line)) {
+                    // Look for intUseWarmstart line
+                    if (line.find("intUseWarmstart") != string::npos && line[0] != '#') {
+                        istringstream iss(line);
+                        string param_name;
+                        iss >> param_name >> warmstart_setting;
+                    }
+                    // Look for intShuffle line
+                    if (line.find("intShuffle") != string::npos && line[0] != '#') {
+                        istringstream iss(line);
+                        string param_name;
+                        iss >> param_name >> shuffle_setting;
+                    }
+                }
+                config_file.close();
+            }
+        }
+        
+        // Build cache filename suffix based on method and settings
+        string method_suffix = reduction_method;
+        if (reduction_method == "firstfit" || reduction_method == "bestfit") {
+            if (warmstart_setting == 1) method_suffix += "_warm";
+            if (shuffle_setting == 1) method_suffix += "_shuf";
+        }
+        
         // Cache file names
         string scenarios_cache = cache_dir + "scenarios_" + to_string(full_num_scenarios) + ".nc4";
         string reduced_cache = cache_dir + "scenarios_" + to_string(full_num_scenarios) + 
-                              "_reduced_" + to_string(reduced_num_scenarios) + "_" + reduction_method + ".nc4";
+                              "_reduced_" + to_string(reduced_num_scenarios) + "_" + method_suffix + ".nc4";
         
         vector<vector<double>> all_demand_scenarios;
         vector<vector<double>> reduced_scenarios;
@@ -1398,10 +1671,12 @@ int main(int argc, char* argv[]) {
                 
                 // Also try to load reduced scenarios if they exist
                 try {
-                    auto [loaded_reduced, loaded_reduced_probs] = load_scenarios_from_file(reduced_cache, verbose);
+                    ScenarioReductionMetrics temp_metrics;
+                    auto [loaded_reduced, loaded_reduced_probs] = load_scenarios_from_file(reduced_cache, verbose, &temp_metrics);
                     reduced_scenarios = loaded_reduced;
                     reduced_probs = loaded_reduced_probs;
                     if (verbose >= 1) cout << "  Loaded reduced scenarios from cache" << endl;
+                    // Note: metrics will be properly loaded later in the scenario reduction section
                 } catch (const exception& e) {
                     // Reduced scenarios not cached, will compute below
                     if (verbose >= 1) cout << "  Reduced scenarios not in cache, will compute" << endl;
@@ -1429,18 +1704,75 @@ int main(int argc, char* argv[]) {
         // Step 3: Perform scenario reduction if not already loaded
         long long reduction_time_ms = 0;
         vector<int> selected_scenario_indices;
+        ScenarioReductionMetrics reduction_metrics;
+        
         if (reduced_scenarios.empty()) {
             if (verbose >= 1) cout << "\n3. Performing scenario reduction:" << endl;
-            auto reduction_result = perform_scenario_reduction(all_demand_scenarios, reduced_num_scenarios, nc, reduction_method, verbose, &reduction_time_ms, &selected_scenario_indices);
+            auto reduction_result = perform_scenario_reduction(all_demand_scenarios, reduced_num_scenarios, nc, reduction_method, use_warmstart, use_shuffle, verbose, cache_dir, &reduction_time_ms, &selected_scenario_indices);
             reduced_scenarios = reduction_result.first;
             reduced_probs = reduction_result.second;
             
-            // Save reduced scenarios if requested
+            // The perform_scenario_reduction function already calculated metrics internally
+            // We need to extract them (for now, we'll recalculate - later we can refactor)
+            // Store the metrics
+            reduction_metrics.reduction_time_ms = reduction_time_ms;
+            reduction_metrics.selected_indices = selected_scenario_indices;
+            reduction_metrics.ell = 2.0; // Default value used in perform_scenario_reduction
+            
+            // Calculate Wasserstein distance (this duplicates code from perform_scenario_reduction, 
+            // but we need it here to save to cache)
+            vector<double> min_distances(all_demand_scenarios.size());
+            for (size_t i = 0; i < all_demand_scenarios.size(); ++i) {
+                double min_dist = std::numeric_limits<double>::infinity();
+                for (int j : selected_scenario_indices) {
+                    double dist = 0.0;
+                    for (size_t k = 0; k < nc; ++k) {
+                        double diff = all_demand_scenarios[i][k] - all_demand_scenarios[j][k];
+                        dist += diff * diff;
+                    }
+                    dist = std::sqrt(dist);
+                    dist = std::pow(dist, reduction_metrics.ell);
+                    min_dist = std::min(min_dist, dist);
+                }
+                min_distances[i] = min_dist;
+            }
+            
+            double weight = 1.0 / all_demand_scenarios.size();
+            reduction_metrics.wasserstein_ell_power = 0.0;
+            for (double d : min_distances) {
+                reduction_metrics.wasserstein_ell_power += weight * d;
+            }
+            reduction_metrics.wasserstein_distance = std::pow(reduction_metrics.wasserstein_ell_power, 1.0 / reduction_metrics.ell);
+            
+            // Save reduced scenarios with metrics if requested
             if (save_cache) {
-                save_scenarios_to_file(reduced_cache, reduced_scenarios, reduced_probs, verbose);
+                save_scenarios_to_file(reduced_cache, reduced_scenarios, reduced_probs, verbose, &reduction_metrics);
             }
         } else {
             if (verbose >= 1) cout << "\n3. Using cached reduced scenarios" << endl;
+            
+            // Try to load metrics from cache
+            ScenarioReductionMetrics loaded_metrics;
+            auto [loaded_scenarios, loaded_probs] = load_scenarios_from_file(reduced_cache, verbose, &loaded_metrics);
+            
+            // Use loaded metrics if available
+            if (loaded_metrics.wasserstein_distance > 0) {
+                reduction_metrics = loaded_metrics;
+                reduction_time_ms = loaded_metrics.reduction_time_ms;
+                selected_scenario_indices = loaded_metrics.selected_indices;
+                
+                if (verbose >= 1) {
+                    cout << "  Loaded metrics from cache:" << endl;
+                    cout << "    Scenario reduction time: " << reduction_time_ms << " ms" << endl;
+                    cout << "    Wasserstein-" << reduction_metrics.ell << " distance: " << reduction_metrics.wasserstein_distance << endl;
+                    cout << "    Selected indices: ";
+                    for (size_t i = 0; i < selected_scenario_indices.size(); ++i) {
+                        cout << selected_scenario_indices[i];
+                        if (i < selected_scenario_indices.size() - 1) cout << ", ";
+                    }
+                    cout << endl;
+                }
+            }
         }
         
         // Cache file names for results

@@ -98,6 +98,7 @@ $(DIR)/CFL_DSS.o: $(DIR)/CFL_DSS.cpp $(DIR)/CFL_DSS.h $(MH)
 # clean target
 clean::
 	rm -f $(DIR)/*.o $(DIR)/*~ $(DIR)/$(NAME)
+	rm -f $(DIR)/cache/*.nc4
 
 # phony targets
 .PHONY: debug release clean

@@ -15,7 +15,7 @@ ComputeConfig
 
 1  # differential
 
-4  # number of integer parameters
+5  # number of integer parameters
 # Algorithm selection - uncomment the desired method:
 # intAlgorithm                            0  # Baseline: highest probability selection
 # intAlgorithm                            1  # Dupacova: forward selection (default)
@@ -24,11 +24,13 @@ intAlgorithm                            3  # FirstFit: local search with first i
 intUseWarmstart                         0  # Use warm start for local search (0=false, 1=true)
 intShuffle                              0  # Enable shuffling for FirstFit (0=false, 1=true)
 intRandomSeed                           0  # Random seed for shuffling (0=default seed)
+intLogVerb                              0  # Verbosity level for the solver (0=silent, 1=normal, 2=detailed)
 
 1  # number of double parameters
 dblRho                                  0.0  # Minimum improvement threshold for local search
 
-0  # number of string parameters
+1  # number of string parameters
+strLogFileName                          ""   # Log file name (empty = no file logging)
 0  # number of vector-of-int parameters
 0  # number of vector-of-double parameters  
 0  # number of vector-of-string parameters

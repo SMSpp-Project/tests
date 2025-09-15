@@ -3,14 +3,14 @@
 # Usage: ./test_all_methods.sh [options]
 #   Options:
 #     -v, --verbose N    Set verbosity level (0=quiet, 1=normal, 2=detailed)
-#     -f, --full N       Number of full scenarios (default: 40)
+#     -f, --full N       Number of full scenarios (default: 20)
 #     -r, --reduced N    Number of reduced scenarios (default: 4)
 #     -h, --help         Show this help message
 # Hurl your comments and insults at Benoît Tran in case of issues
 
 # Default parameters
 VERBOSE=1
-FULL_SCENARIOS=40
+FULL_SCENARIOS=20
 REDUCED_SCENARIOS=4
 EXECUTABLE="./ScenarioReduction_test"
 CACHE_OPTS="--save-cache --load-cache"
@@ -80,13 +80,28 @@ if [ ! -f "$EXECUTABLE" ]; then
 fi
 
 # Array of methods to test
-METHODS=("baseline" "dupacova" "bestfit" "firstfit" "milp")
+# Format: "method:warmstart:shuffle:label"
+METHODS=(
+    "baseline:0:0:baseline"
+    "dupacova:0:0:dupacova"
+    "bestfit:0:0:bestfit"
+    "bestfit:1:0:bestfit_warm"
+    "bestfit:0:1:bestfit_shuf"
+    "bestfit:1:1:bestfit_warm_shuf"
+    "firstfit:0:0:firstfit"
+    "firstfit:1:0:firstfit_warm"
+    "firstfit:0:1:firstfit_shuf"
+    "firstfit:1:1:firstfit_warm_shuf"
+    "milp:0:0:milp"
+)
 
 # Results storage
 declare -A RESULTS
 declare -A TIMES
 declare -A STATUS
 declare -A INDICES
+declare -A WASSERSTEIN
+
 
 # Function to extract objective value from output
 extract_objective() {
@@ -114,6 +129,13 @@ extract_time() {
     echo "$TIME"
 }
 
+# Function to extract Wasserstein distance from output
+extract_wasserstein() {
+    # Extract the Wasserstein-ell distance value
+    WASS=$(echo "$1" | grep -E "Wasserstein-[0-9.]+ distance:" | tail -1 | sed 's/.*distance: //' | awk '{print $1}')
+    echo "$WASS"
+}
+
 # Function to extract selected scenario indices from output
 extract_indices() {
     # Extract the selected scenarios line
@@ -126,8 +148,17 @@ echo "Testing methods..."
 echo "------------------------------------------"
 
 FIRST_METHOD=true
-for method in "${METHODS[@]}"; do
-    echo -e "${BLUE}Testing method: $method${NC}"
+for method_config in "${METHODS[@]}"; do
+    # Parse the method configuration
+    IFS=':' read -r method warmstart shuffle label <<< "$method_config"
+    
+    echo -e "${BLUE}Testing: $label${NC}"
+    if [ "$warmstart" = "1" ]; then
+        echo "  (with warmstart from Dupacova)"
+    fi
+    if [ "$shuffle" = "1" ]; then
+        echo "  (with shuffling enabled)"
+    fi
     
     # Build command with caching options
     if [ "$FIRST_METHOD" = true ]; then
@@ -144,64 +175,73 @@ for method in "${METHODS[@]}"; do
     # Run the test and capture output
     if [ $VERBOSE -ge 2 ]; then
         # Show full output for verbose mode 2
-        OUTPUT=$($TIMEOUT_CMD $EXECUTABLE -method=$method -n_scen=$FULL_SCENARIOS -n_reduced=$REDUCED_SCENARIOS -test $CACHE_OPTS --verbose=$VERBOSE 2>&1)
+        OUTPUT=$($TIMEOUT_CMD $EXECUTABLE -method=$method -warmstart=$warmstart -shuffle=$shuffle -n_scen=$FULL_SCENARIOS -n_reduced=$REDUCED_SCENARIOS -test $CACHE_OPTS --verbose=$VERBOSE 2>&1)
         echo "$OUTPUT"
     else
         # Capture output silently for processing
-        OUTPUT=$($TIMEOUT_CMD $EXECUTABLE -method=$method -n_scen=$FULL_SCENARIOS -n_reduced=$REDUCED_SCENARIOS -test $CACHE_OPTS --verbose=$VERBOSE 2>&1)
+        OUTPUT=$($TIMEOUT_CMD $EXECUTABLE -method=$method -warmstart=$warmstart -shuffle=$shuffle -n_scen=$FULL_SCENARIOS -n_reduced=$REDUCED_SCENARIOS -test $CACHE_OPTS --verbose=$VERBOSE 2>&1)
     fi
     
     # Check exit status
     EXIT_CODE=$?
     if [ $EXIT_CODE -eq 0 ]; then
-        STATUS[$method]="PASS"
+        STATUS[$label]="PASS"
         
-        # Extract objective value, time, and indices
+        # Extract objective value, time, indices, and Wasserstein distance
         OBJ=$(extract_objective "$OUTPUT")
         TIME=$(extract_time "$OUTPUT")
         IND=$(extract_indices "$OUTPUT")
+        WASS=$(extract_wasserstein "$OUTPUT")
         
         if [ -n "$OBJ" ]; then
-            RESULTS[$method]=$OBJ
+            RESULTS[$label]=$OBJ
         else
-            RESULTS[$method]="N/A"
+            RESULTS[$label]="N/A"
         fi
         
         if [ -n "$TIME" ]; then
             # Keep time in milliseconds as-is
-            TIMES[$method]="${TIME}ms"
+            TIMES[$label]="${TIME}ms"
         else
-            TIMES[$method]="N/A"
+            TIMES[$label]="N/A"
         fi
         
-        
         if [ -n "$IND" ]; then
-            INDICES[$method]=$IND
+            INDICES[$label]=$IND
         else
-            INDICES[$method]="N/A"
+            INDICES[$label]="N/A"
+        fi
+        
+        if [ -n "$WASS" ]; then
+            WASSERSTEIN[$label]=$WASS
+        else
+            WASSERSTEIN[$label]="N/A"
         fi
         
         if [ $VERBOSE -ge 1 ] && [ $VERBOSE -lt 2 ]; then
             echo -e "  ${GREEN}✓${NC} Status: PASS"
-            echo "    Objective: ${RESULTS[$method]}"
-            echo "    Reduction Time: ${TIMES[$method]}"
-            echo "    Selected Indices: ${INDICES[$method]}"
+            echo "    Objective: ${RESULTS[$label]}"
+            echo "    Reduction Time: ${TIMES[$label]}"
+            echo "    Wasserstein Distance: ${WASSERSTEIN[$label]}"
+            echo "    Selected Indices: ${INDICES[$label]}"
         fi
     elif [ $EXIT_CODE -eq 124 ]; then
         # Timeout exit code
-        STATUS[$method]="TIMEOUT"
-        RESULTS[$method]="TIMEOUT"
-        TIMES[$method]="TIMEOUT"
-        INDICES[$method]="TIMEOUT"
+        STATUS[$label]="TIMEOUT"
+        RESULTS[$label]="TIMEOUT"
+        TIMES[$label]="TIMEOUT"
+        INDICES[$label]="TIMEOUT"
+        WASSERSTEIN[$label]="TIMEOUT"
         
         if [ $VERBOSE -ge 1 ]; then
             echo -e "  ${YELLOW}⚠${NC} Status: TIMEOUT"
         fi
     else
-        STATUS[$method]="FAIL"
-        RESULTS[$method]="ERROR"
-        TIMES[$method]="N/A"
-        INDICES[$method]="N/A"
+        STATUS[$label]="FAIL"
+        RESULTS[$label]="ERROR"
+        TIMES[$label]="N/A"
+        INDICES[$label]="N/A"
+        WASSERSTEIN[$label]="N/A"
         
         if [ $VERBOSE -ge 1 ]; then
             echo -e "  ${RED}✗${NC} Status: FAIL (exit code: $EXIT_CODE)"
@@ -238,18 +278,20 @@ fi
 
 echo ""
 echo "Results Table:"
-printf "%-12s %-10s %-15s %-15s\n" "Method" "Status" "Objective" "Reduction Time"
-printf "%-12s %-10s %-15s %-15s\n" "------" "------" "---------" "--------------"
+printf "%-25s %-10s %-15s %-15s %-15s\n" "Method" "Status" "Objective" "Wasserstein" "Time" 
+printf "%-25s %-10s %-15s %-15s %-15s\n" "------" "------" "---------" "-----------" "----" 
 
 TOTAL_PASS=0
 TOTAL_FAIL=0
 TOTAL_TIMEOUT=0
 
-for method in "${METHODS[@]}"; do
-    if [ "${STATUS[$method]}" == "PASS" ]; then
+for method_config in "${METHODS[@]}"; do
+    IFS=':' read -r method warmstart shuffle label <<< "$method_config"
+    
+    if [ "${STATUS[$label]}" == "PASS" ]; then
         STATUS_COLOR="${GREEN}PASS${NC}"
         ((TOTAL_PASS++))
-    elif [ "${STATUS[$method]}" == "TIMEOUT" ]; then
+    elif [ "${STATUS[$label]}" == "TIMEOUT" ]; then
         STATUS_COLOR="${YELLOW}TIMEOUT${NC}"
         ((TOTAL_TIMEOUT++))
     else
@@ -257,9 +299,9 @@ for method in "${METHODS[@]}"; do
         ((TOTAL_FAIL++))
     fi
     
-    printf "%-14s " "$method"
+    printf "%-27s " "$label"
     printf "%-20b " "$STATUS_COLOR"
-    printf "%-25s %-15s\n" "${RESULTS[$method]}" "${TIMES[$method]}"
+    printf "%-22s %-8s %-15s\n" "${RESULTS[$label]}" "${WASSERSTEIN[$label]}" "${TIMES[$label]}" 
 done
 
 echo "------------------------------------------"
@@ -272,9 +314,17 @@ fi
 echo ""
 echo "Selected Scenario Indices (first 5, sorted):"
 echo "------------------------------------------"
-for method in "${METHODS[@]}"; do
-    printf "%-12s: %s\n" "$method" "${INDICES[$method]}"
+for method_config in "${METHODS[@]}"; do
+    IFS=':' read -r method warmstart shuffle label <<< "$method_config"
+    printf "%-25s: %s\n" "$label" "${INDICES[$label]}"
 done
+
+
+echo ""
+echo "Legend:"
+echo "  _warm    = using warmstart from Dupacova's solution"
+echo "  _shuf    = using shuffling for randomized order"
+echo "  _warm_shuf = both warmstart and shuffling enabled"
 
 # Exit with appropriate status
 if [ $TOTAL_FAIL -gt 0 ]; then
