@@ -2,12 +2,15 @@
 ################################ makefile ####################################
 ##############################################################################
 #                                                                            #
-#   makefile of test (for ScenarioReduction)                                #
+#   makefile of test (for ScenarioReduction)                                 #
 #                                                                            #
 ##############################################################################
 
-# module name
-NAME = ScenarioReduction_test
+# Tests are built in subdirectories
+
+# scenario test subdirectories
+CFL_DIR = CFL
+UC_DIR = UCBlock
 
 # basic directory
 DIR = .
@@ -24,83 +27,27 @@ SW_DEBUG = -g3 -glldb -fno-inline $(COMMON_SW)
 # production switches
 SW_RELEASE = -O3 $(COMMON_SW) -DNDEBUG
 
-# default target
-default: release
+# default target - build all test executables in subdirectories (release mode)
+default:
+	$(MAKE) -C $(CFL_DIR)
+	$(MAKE) -C $(UC_DIR)
 
-# debug target
-debug: SW = $(SW_DEBUG)
-debug: $(DIR)/$(NAME)
+# debug target - build all test executables in debug mode
+debug:
+	$(MAKE) -C $(CFL_DIR) debug
+	$(MAKE) -C $(UC_DIR) debug
 
-# release target
-release: SW = $(SW_RELEASE)
-release: $(DIR)/$(NAME)
-
-# define & include the necessary modules- - - - - - - - - - - - - - - - - - -
-# if a module is not used in the current configuration, just comment out the
-# corresponding include line
-# each module outputs some macros to be used here:
-# *OBJ is the final object(s) / library
-# *LIB is the external libraries + -L< libdirs >
-# *H   is the list of all include files
-# *INC is the -I< include directories >
-
-# define input macros for SMS++ complete makefile, then include it
-SMS++SDR = ../../SMS++
-include $(SMS++SDR)/lib/makefile-inc
-
-# StochasticBlock (includes DiscreteScenarioSet)
-StcBlkSDR = ../../StochasticBlock
-include $(StcBlkSDR)/makefile
-
-# CapacitatedFacilityLocationBlock (includes ScenarioReductionSolver)
-CFLBkSDR = ../../CapacitatedFacilityLocationBlock
-include $(CFLBkSDR)/makefile-s
-
-# MILPSolver (needed for scenario reduction and two-stage solving)
-MILPSSDR = ../../MILPSolver
-include $(MILPSSDR)/makefile-c
-
-# TwoStageStochasticBlock
-TSSBkSDR = ../../twostagestochasticblock
-include $(TSSBkSDR)/makefile
-
-# main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
-
-# object files for our test
-TEST_OBJ = $(DIR)/test.o $(DIR)/CFL_DSS.o
-
-# object files from modules
-MOBJ =  $(StcBlkOBJ) $(CFLBkOBJ) $(MILPSOBJ) $(SMS++OBJ) $(MCFBkOBJ) $(TSSBkOBJ)
-
-# libraries
-MLIB =  $(StcBlkLIB) $(CFLBkLIB) $(MILPSLIB) $(SMS++LIB) $(MCFBkLIB)
-
-# main target
-$(DIR)/$(NAME): $(MOBJ) $(TEST_OBJ)
-	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
-
-# dependencies: every .o from its .cpp + every recursively included .h- - - -
-
-# include directives
-MINC =  $(SMS++INC) $(StcBlkINC) $(CFLBkINC) $(MILPSINC) $(MCFBkINC) $(TSSBkINC)
-
-# includes
-MH =    $(SMS++H) $(StcBlkH) $(CFLBkH) $(MILPSH) $(MCFBkH) $(TSSBkH)
-
-# compile commands
-
-$(DIR)/test.o: $(DIR)/test.cpp $(DIR)/CFL_DSS.h $(MH)
-	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)
-
-$(DIR)/CFL_DSS.o: $(DIR)/CFL_DSS.cpp $(DIR)/CFL_DSS.h $(MH)
-	$(CC) -c $(DIR)/CFL_DSS.cpp -o $@ $(MINC) $(SW)
+# No object files or linking in this directory - tests are built in subdirectories
 
 # clean target
 clean::
-	rm -f $(DIR)/*.o $(DIR)/*~ $(DIR)/$(NAME)
+	rm -f $(DIR)/src/*.o $(DIR)/src/*~
+	rm -f $(DIR)/include/*~
 	rm -f $(DIR)/cache/*.nc4
+	$(MAKE) -C $(CFL_DIR) clean
+	$(MAKE) -C $(UC_DIR) clean
 
 # phony targets
-.PHONY: debug release clean
+.PHONY: default debug clean
 
 ############################ End of makefile #################################

@@ -1,0 +1,31 @@
+# Configuration for HiGHSMILPSolver to solve scenario reduction optimally
+# This config file sets up the HiGHSMILPSolver for use with DiscreteScenarioSet
+# The solver will find the optimal solution to the scenario reduction problem
+# by solving the CapacitatedFacilityLocationBlock as a MILP
+BlockSolverConfig
+
+1  # differential configuration
+
+1  # number of solvers
+HiGHSMILPSolver  # name of Solver
+
+1  # number of ComputeConfig
+
+# HiGHSMILPSolver ComputeConfig
+ComputeConfig
+
+1  # differential
+
+2  # number of integer parameters
+intLogVerb                              0  # no log verbosity (silent)
+intRelaxIntVars                         0  # solve integer problem (not continuous relaxation)
+
+1  # number of double parameters
+dblMaxTime                              60 # max time: 60 seconds for scenario reduction
+
+0  # number of string parameters
+0  # number of vector-of-int parameters
+0  # number of vector-of-double parameters  
+0  # number of vector-of-string parameters
+
+* # no extra configuration
