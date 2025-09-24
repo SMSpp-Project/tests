@@ -78,12 +78,6 @@ namespace ScenarioReductionTesting {
   */
  std::string get_problem_type( ) const override { return "CFL"; }
 
- /** @brief Get the scenarios directory for CFL
-  * @return "../scenarios/CFL/" (centralized location)
-  */
- std::string get_scenarios_directory( ) const override {
-  return "../scenarios/CFL/";
- }
 
  /*--------------------------------------------------------------------------*/
  /*------------------------- PRIVATE METHODS --------------------------------*/

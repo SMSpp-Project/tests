@@ -17,6 +17,7 @@
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
+#include <sstream>
 
 #include "Configuration.h"
 #include "Solver.h"
@@ -558,6 +559,39 @@ void AbstractScenarioReductionTest::solve_scenario_reduction( ) {
        << get_str_config( "strReductionMethod" ) << " method..." << endl;
  }
 
+ // Try to load cached reduction solution if requested
+ if( get_int_config( "intLoadResults" )) {
+  try {
+   string reduction_cache_file = generate_reduction_cache_filename( );
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Attempting to load reduction solution from cache: "
+         << reduction_cache_file << endl;
+   }
+
+   reduction_metrics = load_reduction_solution( reduction_cache_file );
+
+   // Apply the loaded reduction solution to the scenario_set
+   if( ! reduction_metrics.selected_indices.empty( )) {
+    // For now, we can still use the metrics even if we can't set the exact indices
+    // The subsequent solve_stochastic_problem will need to recompute with same method
+    if( get_int_config( "intLogVerb" ) >= 1 ) {
+     cout << "  Loaded reduction solution metadata from cache" << endl;
+     cout << "  Selected " << reduction_metrics.selected_indices.size( ) << " scenarios" << endl;
+     cout << "  Wasserstein distance: " << reduction_metrics.wasserstein_distance << endl;
+     cout << "  Note: Will need to recompute reduction for exact indices" << endl;
+    }
+    // Don't return - continue to perform the actual reduction
+   }
+  } catch( const exception & e ) {
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Could not load reduction solution: " << e.what( ) << endl;
+   }
+   if( get_int_config( "intLogVerb" ) >= 1 ) {
+    cout << "  Computing scenario reduction..." << endl;
+   }
+  }
+ }
+
  // Perform scenario reduction IN-PLACE on scenario_set
  auto reduction_start = chrono::high_resolution_clock::now( );
 
@@ -614,14 +648,38 @@ void AbstractScenarioReductionTest::solve_scenario_reduction( ) {
   reduction_metrics.selected_indices.push_back( static_cast< int >(idx));
  }
 
+ // Get probabilities of selected scenarios
+ auto probabilities_span = scenario_set->get_pool_weights( );
+ reduction_metrics.probabilities.clear( );
+ for(auto prob : probabilities_span) {
+  reduction_metrics.probabilities.push_back( prob );
+ }
+
  // Compute metrics
  reduction_metrics.ell = scenario_set->get_ell( );
+ // Note: wasserstein_distance and wasserstein_ell_power would need to be computed
+ // by the scenario_set if available
 
  if( get_int_config( "intLogVerb" ) >= 1 ) {
   cout << "  Scenario reduction completed in "
        << reduction_metrics.reduction_time_ms << " ms" << endl;
   cout << "  Selected " << scenario_set->get_poolSize( ) << " scenarios" << endl
   ;
+ }
+
+ // Save reduction solution to cache if requested
+ if( get_int_config( "intSaveResults" )) {
+  try {
+   string reduction_cache_file = generate_reduction_cache_filename( );
+   save_reduction_solution( reduction_cache_file , reduction_metrics );
+   if( get_int_config( "intLogVerb" ) >= 1 ) {
+    cout << "  Saved reduction solution to cache" << endl;
+   }
+  } catch( const exception & e ) {
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Failed to save reduction solution: " << e.what( ) << endl;
+   }
+  }
  }
 }
 
@@ -636,20 +694,27 @@ void AbstractScenarioReductionTest::solve_stochastic_problem( ) {
  // Try to load cached results if requested
  if( get_int_config( "intLoadResults" )) {
   try {
-   if( current_scenarios == get_int_config( "intFullNumScenarios" )) {
-    full_result =
-      load_solution_cache( get_str_config( "strCacheDir" ) + "full_result.nc4" )
-    ;
+   bool is_full = (current_scenarios == get_int_config( "intFullNumScenarios" ));
+   string cache_file = generate_cache_filename( is_full , false );
+
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Attempting to load cache: " << cache_file << endl;
+   }
+
+   if( is_full ) {
+    full_result = load_solution_cache( cache_file );
    }
    else{
-    reduced_result = load_solution_cache(
-     get_str_config( "strCacheDir" ) + "reduced_result.nc4" );
+    reduced_result = load_solution_cache( cache_file );
    }
    if( get_int_config( "intLogVerb" ) >= 1 ) {
-    cout << "  Loaded pre-computed results from cache" << endl;
+    cout << "  Loaded pre-computed results from cache: " << cache_file << endl;
    }
    return;
   } catch( const exception & e ) {
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Cache load failed: " << e.what( ) << endl;
+   }
    if( get_int_config( "intLogVerb" ) >= 1 ) {
     cout << "  Could not load cached results, computing..." << endl;
    }
@@ -688,21 +753,58 @@ void AbstractScenarioReductionTest::solve_anticipative( ) {
 
  // Try to load cached anticipative results if requested
  if( get_int_config( "intLoadResults" )) {
+  bool loaded_full = false;
+  bool loaded_reduced = false;
+
+  if( get_int_config( "intLogVerb" ) >= 2 ) {
+   cout << "[DEBUG] Checking for cached anticipative solutions..." << endl;
+  }
+
+  // Try to load full anticipative solution
   try {
-   anticipative_full = load_solution_cache(
-    get_str_config( "strCacheDir" ) + "anticipative_full.nc4" );
-   anticipative_reduced = load_solution_cache(
-    get_str_config( "strCacheDir" ) + "anticipative_reduced.nc4" );
-   if( get_int_config( "intLogVerb" ) >= 1 ) {
-    cout << "  Loaded pre-computed anticipative solutions from cache" << endl;
+   string full_cache_file = generate_cache_filename( true , true );
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Trying to load: " << full_cache_file << endl;
+   }
+   anticipative_full = load_solution_cache( full_cache_file );
+   loaded_full = true;
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Successfully loaded anticipative full from cache" << endl;
    }
   } catch( const exception & e ) {
-   if( get_int_config( "intLogVerb" ) >= 1 ) {
-    cout << "  Could not load cached anticipative solutions, "
-     "computing..."
-         << endl;
+   // Full anticipative not available in cache
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Anticipative full not in cache: " << e.what( ) << endl;
    }
-   // Fall through to compute
+  }
+
+  // Try to load reduced anticipative solution
+  try {
+   string reduced_cache_file = generate_cache_filename( false , true );
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Trying to load: " << reduced_cache_file << endl;
+   }
+   anticipative_reduced = load_solution_cache( reduced_cache_file );
+   loaded_reduced = true;
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Successfully loaded anticipative reduced from cache" << endl;
+   }
+  } catch( const exception & e ) {
+   // Reduced anticipative not available in cache
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Anticipative reduced not in cache: " << e.what( ) << endl;
+   }
+  }
+
+  if( loaded_full || loaded_reduced ) {
+   if( get_int_config( "intLogVerb" ) >= 1 ) {
+    cout << "  Loaded pre-computed anticipative solutions from cache "
+         << "(full: " << (loaded_full ? "yes" : "no")
+         << ", reduced: " << (loaded_reduced ? "yes" : "no") << ")" << endl;
+   }
+  }
+  else if( get_int_config( "intLogVerb" ) >= 1 ) {
+   cout << "  Could not load cached anticipative solutions, computing..." << endl;
   }
  }
 
@@ -1180,6 +1282,83 @@ string AbstractScenarioReductionTest::get_scenario_file(
 
 /*--------------------------------------------------------------------------*/
 
+string AbstractScenarioReductionTest::extract_instance_name(
+  const string & instance_path ) const {
+ filesystem::path p( instance_path );
+ string filename = p.stem( ).string( ); // Get filename without extension
+
+ // Check if this is a Yang instance (contains "Yang" in the path)
+ if( instance_path.find( "Yang" ) != string::npos ) {
+  // For Yang instances, extract the directory name as well
+  // e.g., Yang/30-200/30-200-1.txt -> Yang30-200-1
+  filesystem::path parent = p.parent_path( );
+  if( parent.filename( ).string( ).find( "-" ) != string::npos ) {
+   // Parent directory contains size info (e.g., "30-200")
+   string result = "Yang" + filename;
+   if( get_int_config( "intLogVerb" ) >= 2 ) {
+    cout << "[DEBUG] Extracted instance name from Yang path: " << result
+         << " (from: " << instance_path << ")" << endl;
+   }
+   return result;
+  }
+ }
+
+ // For other instances (like cap*), just return the filename stem
+ if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Extracted instance name: " << filename
+       << " (from: " << instance_path << ")" << endl;
+ }
+ return filename;
+}
+
+/*--------------------------------------------------------------------------*/
+
+string AbstractScenarioReductionTest::generate_cache_filename(
+  bool is_full , bool is_anticipative ) const {
+
+ // Get the instance name
+ string instance_name = extract_instance_name( get_str_config( "strInstancePath" ));
+
+ // Get scenario counts
+ int n = get_int_config( "intFullNumScenarios" );
+ int m = get_int_config( "intReducedNumScenarios" );
+
+ // Get reduction method
+ string method = get_str_config( "strReductionMethod" );
+
+ // Build the filename based on the type
+ stringstream filename;
+ filename << get_str_config( "strCacheDir" ) << instance_name;
+
+ if( is_full ) {
+  // Full extensive or anticipative: instanceName_n[_anticipative].nc4
+  filename << "_" << n;
+  if( is_anticipative ) {
+   filename << "_anticipative";
+  }
+ }
+ else {
+  // Reduced extensive or anticipative: instanceName_n_m_method[_anticipative].nc4
+  filename << "_" << n << "_" << m << "_" << method;
+  if( is_anticipative ) {
+   filename << "_anticipative";
+  }
+ }
+
+ filename << ".nc4";
+
+ string result = filename.str( );
+
+ if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Generated cache filename: " << result
+       << " (full=" << is_full << ", anticipative=" << is_anticipative << ")" << endl;
+ }
+
+ return result;
+}
+
+/*--------------------------------------------------------------------------*/
+
 bool AbstractScenarioReductionTest::update_SR_config(
   const string & method ,
   bool warmstart ,
@@ -1275,18 +1454,57 @@ void AbstractScenarioReductionTest::save_solution_cache(
 void AbstractScenarioReductionTest::save_solutions_cache( ) {
  if( ! get_int_config( "intSaveResults" )) { return; }
 
- save_solution_cache(
-   get_str_config( "strCacheDir" ) + "full_result.nc4" ,
-   full_result );
- save_solution_cache(
-   get_str_config( "strCacheDir" ) + "reduced_result.nc4" ,
-   reduced_result );
- save_solution_cache(
-   get_str_config( "strCacheDir" ) + "anticipative_full.nc4" ,
-   anticipative_full );
- save_solution_cache(
-   get_str_config( "strCacheDir" ) + "anticipative_reduced.nc4" ,
-   anticipative_reduced );
+ if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Saving cache files..." << endl;
+ }
+
+ // Save full extensive result if it was computed
+ if( full_result.solved ) {
+  string filename = generate_cache_filename( true , false );
+  save_solution_cache( filename , full_result );
+  if( get_int_config( "intLogVerb" ) >= 2 ) {
+   cout << "[DEBUG] Saved full extensive: " << filename << endl;
+  }
+ }
+ else if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Skipping full extensive (not solved)" << endl;
+ }
+
+ // Save reduced extensive result if it was computed
+ if( reduced_result.solved ) {
+  string filename = generate_cache_filename( false , false );
+  save_solution_cache( filename , reduced_result );
+  if( get_int_config( "intLogVerb" ) >= 2 ) {
+   cout << "[DEBUG] Saved reduced extensive: " << filename << endl;
+  }
+ }
+ else if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Skipping reduced extensive (not solved)" << endl;
+ }
+
+ // Save anticipative full result if it was computed
+ if( anticipative_full.solved ) {
+  string filename = generate_cache_filename( true , true );
+  save_solution_cache( filename , anticipative_full );
+  if( get_int_config( "intLogVerb" ) >= 2 ) {
+   cout << "[DEBUG] Saved anticipative full: " << filename << endl;
+  }
+ }
+ else if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Skipping anticipative full (not solved)" << endl;
+ }
+
+ // Save anticipative reduced result if it was computed
+ if( anticipative_reduced.solved ) {
+  string filename = generate_cache_filename( false , true );
+  save_solution_cache( filename , anticipative_reduced );
+  if( get_int_config( "intLogVerb" ) >= 2 ) {
+   cout << "[DEBUG] Saved anticipative reduced: " << filename << endl;
+  }
+ }
+ else if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Skipping anticipative reduced (not solved)" << endl;
+ }
 
  if( get_int_config( "intLogVerb" ) >= 1 ) {
   cout << "  Saved results to cache" << endl;
@@ -1339,6 +1557,139 @@ SolutionResult AbstractScenarioReductionTest::load_solution_cache(
  }
 
  return result;
+}
+
+/*--------------------------------------------------------------------------*/
+
+string AbstractScenarioReductionTest::generate_reduction_cache_filename( ) const {
+ // Get the instance name
+ string instance_name = extract_instance_name( get_str_config( "strInstancePath" ));
+
+ // Get scenario counts
+ int n = get_int_config( "intFullNumScenarios" );
+ int m = get_int_config( "intReducedNumScenarios" );
+
+ // Get reduction method
+ string method = get_str_config( "strReductionMethod" );
+
+ // Build the filename: instanceName_n_m_method_reduction.nc4
+ stringstream filename;
+ filename << get_str_config( "strCacheDir" ) << instance_name
+          << "_" << n << "_" << m << "_" << method << "_reduction.nc4";
+
+ string result = filename.str( );
+
+ if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Generated reduction cache filename: " << result << endl;
+ }
+
+ return result;
+}
+
+/*--------------------------------------------------------------------------*/
+
+void AbstractScenarioReductionTest::save_reduction_solution(
+  const string & filename ,
+  const ScenarioReductionMetrics & metrics ) {
+
+ if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Saving reduction solution to cache: " << filename << endl;
+ }
+
+ try {
+  // Create directory if needed
+  filesystem::path filepath( filename );
+  if( filepath.has_parent_path( )) {
+   filesystem::create_directories( filepath.parent_path( ));
+  }
+
+  // Create netCDF file
+  netCDF::NcFile file( filename , netCDF::NcFile::replace );
+
+  // Save scalar values as attributes
+  file.putAtt( "reduction_time_ms" , netCDF::NcInt64( ) , metrics.reduction_time_ms );
+  file.putAtt( "ell" , netCDF::NcDouble( ) , metrics.ell );
+  file.putAtt( "wasserstein_distance" , netCDF::NcDouble( ) , metrics.wasserstein_distance );
+  file.putAtt( "wasserstein_ell_power" , netCDF::NcDouble( ) , metrics.wasserstein_ell_power );
+
+  // Save selected indices if present
+  if( ! metrics.selected_indices.empty( )) {
+   auto dim_indices = file.addDim( "NumSelected" , metrics.selected_indices.size( ));
+   auto var_indices = file.addVar( "SelectedIndices" , netCDF::NcInt( ) , dim_indices );
+   var_indices.putVar( metrics.selected_indices.data( ));
+
+   // Save probabilities for selected scenarios
+   if( ! metrics.probabilities.empty( )) {
+    auto var_probs = file.addVar( "Probabilities" , netCDF::NcDouble( ) , dim_indices );
+    var_probs.putVar( metrics.probabilities.data( ));
+   }
+  }
+
+  file.close( );
+
+  if( get_int_config( "intLogVerb" ) >= 2 ) {
+   cout << "[DEBUG] Saved reduction solution: "
+        << metrics.selected_indices.size( ) << " scenarios selected, "
+        << "Wasserstein distance=" << metrics.wasserstein_distance
+        << ", time=" << metrics.reduction_time_ms << "ms" << endl;
+  }
+ } catch( const exception & e ) {
+  cerr << "Warning: Failed to save reduction solution cache: " << e.what( ) << endl;
+ }
+}
+
+/*--------------------------------------------------------------------------*/
+
+ScenarioReductionMetrics AbstractScenarioReductionTest::load_reduction_solution(
+  const string & filename ) {
+
+ if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Loading reduction solution from cache: " << filename << endl;
+ }
+
+ if( ! filesystem::exists( filename )) {
+  throw runtime_error( "Reduction cache file not found: " + filename );
+ }
+
+ ScenarioReductionMetrics metrics;
+ netCDF::NcFile file( filename , netCDF::NcFile::read );
+
+ // Load scalar values from attributes
+ file.getAtt( "reduction_time_ms" ).getValues( & metrics.reduction_time_ms );
+ file.getAtt( "ell" ).getValues( & metrics.ell );
+ file.getAtt( "wasserstein_distance" ).getValues( & metrics.wasserstein_distance );
+ file.getAtt( "wasserstein_ell_power" ).getValues( & metrics.wasserstein_ell_power );
+
+ // Load selected indices if present
+ try {
+  auto var_indices = file.getVar( "SelectedIndices" );
+  if( ! var_indices.isNull( )) {
+   auto dim = file.getDim( "NumSelected" );
+   size_t num_selected = dim.getSize( );
+   metrics.selected_indices.resize( num_selected );
+   var_indices.getVar( metrics.selected_indices.data( ));
+
+   // Load probabilities
+   auto var_probs = file.getVar( "Probabilities" );
+   if( ! var_probs.isNull( )) {
+    metrics.probabilities.resize( num_selected );
+    var_probs.getVar( metrics.probabilities.data( ));
+   }
+  }
+ } catch( ... ) {
+  // No selected indices in file
+ }
+
+ file.close( );
+
+ if( get_int_config( "intLogVerb" ) >= 2 ) {
+  cout << "[DEBUG] Loaded reduction solution: "
+       << metrics.selected_indices.size( ) << " scenarios, "
+       << "Wasserstein distance=" << metrics.wasserstein_distance
+       << ", time=" << metrics.reduction_time_ms << "ms" << endl;
+ }
+
+ return metrics;
 }
 
 /*--------------------------------------------------------------------------*/

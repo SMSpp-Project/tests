@@ -6,19 +6,30 @@
  * Provides the common framework for testing scenario reduction algorithms
  * on different problem types.
  *
+ * *MEGA IMPORTANT: THIS ONLY WORKS WITH TwoStageStochasticBlock using the
+ * feature/ben branch. It will crash otherwise at some point. TODO: ask Antonio
+ * & Donato if I can merge.
+ *
  * ## Important Design Note
  *
  * This framework does NOT handle scenario generation. Scenarios must be
  * pre-generated using problem-specific generator tools and stored in the
- * appropriate directories before running tests. This separation ensures:
- * - Clean separation of concerns
- * - Reproducible test results
- * - Flexibility in scenario generation strategies
+ * appropriate directories before running tests. This separation ensures
+ * a separation of concerns.
  *
  * Each problem type should provide:
- * 1. A scenario generator tool (e.g., CFLScenarioGenerator)
- * 2. A test implementation inheriting from this class
- * 3. A scenarios directory (e.g., scenarios/CFL/)
+ * 1. A test implementation inheriting from this class (e.g.,
+ * CFLScenarioReductionTest)
+ * 2. A scenarios directory (e.g., scenarios/CFL/) with a serialized
+ * DiscreteScenarioSet (TODO: should be ScenarioGenerator, make sure it is ok,
+ * change everywhere else related.)
+ *
+ * If no scenarios data are available, you should provide a scenario generator
+ * tool (e.g., CFLScenarioGenerator).
+ *
+ * Note: This is still a work in progress, heavy cleaning has been done and will
+ * still be done at some point but if you already see things to complain about,
+ * feel free to send a message to the author (see below). TODO: remove this.
  *
  * \author Benoît Tran \n
  *         Dipartimento di Informatica \n
@@ -60,10 +71,20 @@ namespace ScenarioReductionTesting {
 /** @class AbstractScenarioReductionTest
  * @brief Abstract base class for scenario reduction tests
  *
+ * *MEGA IMPORTANT: THIS ONLY WORKS WITH TwoStageStochasticBlock using the
+ * feature/ben branch. It will crash otherwise at some point. TODO: fix that.
+ *
  * This class provides the common framework and workflow for testing
  * scenario reduction algorithms on various stochastic optimization problems.
  * Problem-specific implementations must inherit from this class and implement
  * the pure virtual methods.
+ *
+ * *TODO: FOR NOW WE ASSUME THAT WE WORK WITH A TWO-STAGE STOCHASTIC
+ * OPTIMIZATION PROBLEM WHOSE EXTENSIVE FORM HAS A LinearObjective.
+ *
+ * This limitation to LinearObjective is simply because *for now*, we can only
+ * scale LinearObjective and nothing else (I simply scaled every parameter of
+ * the function in TSSB). We'd need a scale method for more general Objective s.
  *
  * ## Design Philosophy
  *
@@ -74,7 +95,9 @@ namespace ScenarioReductionTesting {
  * - **Scenario Reduction Testing**: Handled by this framework, which assumes
  *      having at its disposal a (derived) DiscreteScenarioSet that gives
  *      scenarios that all individualy lead to a feasible two-stage stochastic
- *      problem.
+ *      problem (Relatively Complete Recourse). This ensures that the two-stage
+ * stochastic optimization problem using all the given scenarios (or any
+ * non-empty subset of them) has a solution.
  *
  * Scenarios must be pre-generated and stored in the appropriate directory
  * (specified by get_scenarios_directory()) before running tests. This ensures
@@ -185,7 +208,9 @@ namespace ScenarioReductionTesting {
   *
   * @return Path to the directory containing scenario files
   */
- virtual std::string get_scenarios_directory( ) const = 0;
+ virtual std::string get_scenarios_directory( ) const {
+  return "../scenarios/" + get_problem_type( ) + "/";
+ }
 
  /** @brief Get the scenario file for the current instance
   *
@@ -201,6 +226,12 @@ namespace ScenarioReductionTesting {
   */
  virtual std::string get_scenario_file( const std::string & instance_path )
  const;
+
+ /** @brief Parse command-line arguments */
+ virtual void parse_arguments( int argc , char * argv[] );
+
+ /** @brief Print help message */
+ virtual void print_help( const char * program_name );
 
  // ====================== Common Protected Methods =======================
 
@@ -225,12 +256,6 @@ namespace ScenarioReductionTesting {
   * @param scenario The scenario data to apply
   */
  void apply_scenario_to_block( const std::vector< double > & scenario );
-
- /** @brief Parse command-line arguments */
- void parse_arguments( int argc , char * argv[] );
-
- /** @brief Print help message */
- void print_help( const char * program_name );
 
  /** @brief Print configuration */
  void print_configuration( );
@@ -274,6 +299,38 @@ namespace ScenarioReductionTesting {
  std::vector< std::vector< double > > load_scenarios_from_file(
    const std::string & filename );
 
+ /** @brief Generate cache filename for a solution type
+  *
+  * Generates standardized cache filenames following the pattern:
+  * - Full extensive: instanceName_n.nc4
+  * - Reduced extensive: instanceName_n_m_method.nc4
+  * - Anticipative full: instanceName_n_anticipative.nc4
+  * - Anticipative reduced: instanceName_n_m_method_anticipative.nc4
+  *
+  * Where:
+  * - instanceName is extracted from the instance path (e.g., "cap41",
+  * "Yang30-200-1")
+  * - n is the number of scenarios in full distribution
+  * - m is the number of scenarios in reduced distribution
+  * - method is the reduction method used (e.g., "dupacova", "bestfit")
+  *
+  * @param is_full Whether this is for the full scenario set
+  * @param is_anticipative Whether this is for anticipative solution
+  * @return Generated cache filename
+  */
+ std::string generate_cache_filename( bool is_full , bool is_anticipative )
+ const;
+
+ /** @brief Extract instance name from instance path
+  *
+  * Extracts a clean instance name from the full path, handling different
+  * directory structures (e.g., Yang/30-200/30-200-1.txt -> Yang30-200-1)
+  *
+  * @param instance_path The full path to the instance file
+  * @return Clean instance name suitable for cache filenames
+  */
+ std::string extract_instance_name( const std::string & instance_path ) const;
+
  /** @brief Save solution results to cache */
  void save_solution_cache(
    const std::string & filename ,
@@ -288,6 +345,39 @@ namespace ScenarioReductionTesting {
   * config.save_results is true.
   */
  void save_solutions_cache( );
+
+ /** @brief Save scenario reduction solution to cache
+  *
+  * Saves the scenario reduction solution (selected indices and probabilities)
+  * to a cache file. The filename follows the pattern:
+  * instanceName_n_m_method_reduction.nc4
+  *
+  * @param filename Path to the cache file
+  * @param metrics The scenario reduction metrics to save
+  */
+ void save_reduction_solution(
+   const std::string & filename ,
+   const ScenarioReductionMetrics & metrics );
+
+ /** @brief Load scenario reduction solution from cache
+  *
+  * Loads the scenario reduction solution from a cache file.
+  *
+  * @param filename Path to the cache file
+  * @return Loaded scenario reduction metrics
+  * @throws runtime_error if file not found or invalid
+  */
+ ScenarioReductionMetrics load_reduction_solution( const std::string & filename
+   );
+
+ /** @brief Generate cache filename for reduction solution
+  *
+  * Generates the cache filename for the scenario reduction solution.
+  * Pattern: instanceName_n_m_method_reduction.nc4
+  *
+  * @return Generated cache filename
+  */
+ std::string generate_reduction_cache_filename( ) const;
 
  /** @brief Solve a block with configured solver
   * @param block The block to solve
@@ -323,7 +413,7 @@ namespace ScenarioReductionTesting {
  /*------------------------ PROTECTED MEMBERS -------------------------------*/
  /*--------------------------------------------------------------------------*/
  protected:
- // Configuration using SMS++ ComputeConfig with standard parameter names
+ // Configuration using SMS++ ComputeConfig
  ComputeConfig * config = nullptr;
 
  // Helper methods to access config parameters (read-only)
