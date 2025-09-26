@@ -72,6 +72,50 @@ Before running any tests, generate scenarios for your instances:
 # The test will automatically load scenarios from: scenarios/CFL/cap41_scenarios.nc4
 ```
 
+## Cache Management
+
+### Intelligent Cache Naming
+
+The test framework uses smart cache file naming to prevent conflicts:
+
+**File naming patterns:**
+- Full extensive: `cap41_20.nc4` (instance_nScenarios)
+- Reduced extensive: `cap41_20_5_dupacova.nc4` (instance_n_m_method)
+- Anticipative solutions add `_anticipative` suffix
+
+**Instance name extraction:**
+- ORLIB instances: `cap41.nc4` → `cap41`
+- Yang instances: `Yang/30-200/30-200-1.txt` → `Yang30-200-1`
+
+### Using the Cache
+
+```bash
+# Save results to cache
+./cfl_scenario_reduction_test -i cap41.nc4 -n 20 -r 5 --save --cache-dir ./my_cache/
+
+# Load from cache (skip computation)
+./cfl_scenario_reduction_test -i cap41.nc4 -n 20 -r 5 --load --cache-dir ./my_cache/
+
+# Debug cache operations (shows [DEBUG] messages)
+./cfl_scenario_reduction_test -i cap41.nc4 -n 20 -r 5 --load -v 2
+```
+
+### Partial Cache Support
+
+The framework handles partial cache gracefully:
+- Loads what's available from cache
+- Computes only missing results
+- Saves newly computed results
+
+Example workflow:
+```bash
+# First run: compute and save extensive forms only
+./cfl_scenario_reduction_test -i cap41.nc4 -n 20 -r 5 --save
+
+# Second run: load extensive, compute and save anticipative
+./cfl_scenario_reduction_test -i cap41.nc4 -n 20 -r 5 --compute-vpi --load --save
+```
+
 ## Usage Details
 
 ### Instance Validation

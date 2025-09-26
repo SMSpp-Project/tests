@@ -298,21 +298,24 @@ UCData load_uc_instance(
      throw runtime_error( "ActivePowerDemand has zero size" );
     }
 
-    // Read data in time-major order (as stored in file)
+    // Read data from file
     vector< double > temp_demand( total_size );
     demand_var.getVar( temp_demand.data( ));
 
-    // Transpose to node-major order for UCBlock
-    // File has [time][node], UCBlock expects [node][time]
+
+    // The file has data in [time][node] order (time-major)
+    // UCBlock expects [node][time] order (node-major)
+    // So we need to transpose
     data.demand_profile.resize( total_size );
-    for(size_t t = 0; t < data.num_periods; t++) {
-     for(size_t n = 0; n < data.num_nodes; n++) {
-      // Source: temp_demand[t * num_nodes + n]
-      // Dest: demand_profile[n * num_periods + t]
+    for(size_t n = 0; n < data.num_nodes; n++) {
+     for(size_t t = 0; t < data.num_periods; t++) {
+      // Source: temp_demand[t * num_nodes + n] (file: time-major)
+      // Dest: demand_profile[n * num_periods + t] (UCBlock: node-major)
       data.demand_profile[ n * data.num_periods + t ] =
         temp_demand[ t * data.num_nodes + n ];
      }
     }
+
 
 
     if( config.verbose >= 2 ) {
@@ -569,7 +572,7 @@ vector< vector< double > > combine_scenarios(
 /*--------------------------------------------------------------------------*/
 
 bool validate_scenario(
-  UCBlock * uc_block ,
+  const string & instance_path ,
   const UCData & original_data ,
   const vector< double > & scenario ,
   const UCGeneratorConfig & config ,
@@ -582,16 +585,28 @@ bool validate_scenario(
        << ", nodes=" << original_data.num_nodes << endl;
  }
 
- // Check UCBlock state
- if( config.verbose >= 3 ) {
-  cout << "  [DEBUG] UCBlock state check:" << endl;
-  cout << "    UCBlock address: " << uc_block << endl;
-  cout << "    Number of nodes: " << uc_block->get_number_nodes( ) << endl;
-  cout << "    Time horizon: " << uc_block->get_time_horizon( ) << endl;
- }
+ // Create a fresh UCBlock for each validation to avoid state corruption
+ UCBlock * uc_block = new UCBlock( );
 
- // If this is the base scenario validation, skip applying scenarios
- // since the UCBlock already has the correct base values
+ // Load the instance
+ netCDF::NcFile nc_file( instance_path , netCDF::NcFile::read );
+ auto block_group = nc_file.getGroup( "Block_0" );
+ if( block_group.isNull( )) {
+  delete uc_block;
+  return false;
+ }
+ uc_block->deserialize( block_group );
+
+ // Generate abstract representation (variables and constraints)
+ // This is needed before we can modify demand values
+ if( config.verbose >= 3 ) {
+  cout << "  [DEBUG] Generating abstract variables and constraints..." << endl;
+ }
+ uc_block->generate_abstract_variables();
+ uc_block->generate_abstract_constraints();
+
+
+ // If this is not the base scenario, apply the scenario modifications
  if( ! is_base_scenario ) {
   // Apply scenario to UCBlock
   // First, extract demand and renewable parts from the combined scenario
@@ -605,11 +620,20 @@ bool validate_scenario(
      scenario.begin( ) ,
      scenario.begin( ) + demand_size );
 
-
    // Pass all data (nodes * periods) with full range
-   uc_block->set_active_power_demand(
-     scenario_demand.begin( ) ,
-     Block::Range( 0 , demand_size ));
+   // UCBlock expects the range to cover all node-time pairs
+   try {
+    uc_block->set_active_power_demand(
+      scenario_demand.begin( ) ,
+      Block::Range( 0 , demand_size ));
+   } catch( const exception & e ) {
+    if( config.verbose >= 1 ) {
+     cerr << "    ERROR in set_active_power_demand: " << e.what() << endl;
+    }
+    delete uc_block;
+    return false;
+   }
+
 
   }
 
@@ -699,28 +723,8 @@ bool validate_scenario(
 
  delete bsc;
 
- // Restore original values (only if we modified them)
- if( ! is_base_scenario ) {
-  if( config.enable_demand ) {
-   uc_block->set_active_power_demand(
-     original_data.demand_profile.begin( ) ,
-     Block::Range( 0 , original_data.num_periods ));
-  }
-
-  if( config.enable_renewable && original_data.num_renewable_units > 0 ) {
-   // Restore using the correct unit indices
-   for(size_t idx = 0; idx < original_data.renewable_unit_indices.size(); ++idx) {
-    int unit_index = original_data.renewable_unit_indices[idx];
-    auto * unit_block = dynamic_cast< IntermittentUnitBlock * >(
-      uc_block->get_unit_block( unit_index ));
-    if( unit_block && idx < original_data.renewable_profiles.size( )) {
-     unit_block->set_maximum_power(
-       original_data.renewable_profiles[ idx ].begin( ) ,
-       Block::Range( 0 , original_data.num_periods ));
-    }
-   }
-  }
- }
+ // Clean up the UCBlock
+ delete uc_block;
 
  return success;
 }
@@ -929,25 +933,11 @@ int main( int argc , char * argv[] ) {
   // Load UC instance data
   UCData data = load_uc_instance( config.instance_path , config );
 
-  // Load UCBlock for validation if needed
-  UCBlock * uc_block = nullptr;
+  // Validate if needed
   if( config.validate ) {
    if( config.verbose >= 1 ) {
-    cout << "\nLoading UCBlock for validation..." << endl;
+    cout << "\nValidating base instance...";
    }
-
-   uc_block = new UCBlock( );
-
-   // Open the netCDF file and get the Block_0 group
-   netCDF::NcFile nc_file( config.instance_path , netCDF::NcFile::read );
-   auto block_group = nc_file.getGroup( "Block_0" );
-   if( block_group.isNull( )) {
-    throw runtime_error( "No Block_0 group found in " + config.instance_path );
-   }
-   uc_block->deserialize( block_group );
-
-   // Validate base instance
-   if( config.verbose >= 1 ) { cout << "Validating base instance..."; }
 
    // Create base scenario (just the original data)
    vector< double > base_scenario;
@@ -965,7 +955,7 @@ int main( int argc , char * argv[] ) {
    }
 
    bool valid = validate_scenario(
-    uc_block ,
+    config.instance_path ,
     data ,
     base_scenario ,
     config ,
@@ -980,7 +970,6 @@ int main( int argc , char * argv[] ) {
    }
 
    if( config.validate_only ) {
-    delete uc_block;
     return valid ? 0 : 1;
    }
   }
@@ -1030,7 +1019,7 @@ int main( int argc , char * argv[] ) {
   }
 
   // Validate scenarios if enabled
-  if( config.validate && uc_block ) {
+  if( config.validate ) {
    if( config.verbose >= 1 ) {
     cout << "\nValidating generated scenarios..." << endl;
    }
@@ -1042,7 +1031,7 @@ int main( int argc , char * argv[] ) {
     }
 
     bool valid =
-      validate_scenario( uc_block , data , combined_scenarios[ s ] , config ,
+      validate_scenario( config.instance_path , data , combined_scenarios[ s ] , config ,
      false );
 
     if( valid ) {
@@ -1075,7 +1064,7 @@ int main( int argc , char * argv[] ) {
          regenerate_scenario( data , cluster_assignment[ s ] , gen , config );
 
        valid = validate_scenario(
-        uc_block ,
+        config.instance_path ,
         data ,
         combined_scenarios[ s ] ,
         config ,
@@ -1125,9 +1114,6 @@ int main( int argc , char * argv[] ) {
     );
 
   if( config.verbose >= 1 ) { cout << "\nGeneration complete" << endl; }
-
-  // Clean up
-  if( uc_block ) { delete uc_block; }
 
  } catch( const exception & e ) {
   cerr << "Error: " << e.what( ) << endl;
