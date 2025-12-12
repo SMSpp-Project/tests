@@ -77,8 +77,8 @@ struct CWLInstance {
 CWLInstance read_cwl_instance( std::filesystem::path file_path ) {
  std::ifstream stream( file_path );
  if( ! stream.is_open() )
-  throw std::invalid_argument
-   ( "File " + file_path.string() + " could not be opened." );
+  throw( std::invalid_argument
+   ( "File " + file_path.string() + " could not be opened." ) );
 
  CWLInstance instance;
  int num_locations , num_customers;
@@ -86,25 +86,24 @@ CWLInstance read_cwl_instance( std::filesystem::path file_path ) {
  stream >> num_locations >> num_customers;
 
  if( stream.fail() || stream.bad() )
-  throw std::runtime_error( "Error while reading file " + file_path.string() );
+  throw( std::runtime_error( "Error while reading file " + file_path.string() ) );
 
  instance.set( num_locations , num_customers );
 
  for( int i = 0 ; i < num_locations ; ++i ) {
   stream >> instance.capacity[ i ] >> instance.fixed_cost[ i ];
   if( stream.fail() || stream.bad() )
-   throw std::runtime_error( "Error while reading file " + file_path.string() );
+   throw( std::runtime_error( "Error while reading file " + file_path.string() ) );
  }
 
  for( int j = 0 ; j < num_customers ; ++j ) {
   stream >> instance.demand[ j ];
   if( stream.fail() || stream.bad() )
-   throw std::runtime_error( "Error while reading file " + file_path.string() );
+   throw( std::runtime_error( "Error while reading file " + file_path.string() ) );
   for( int i = 0 ; i < num_locations ; ++i ) {
    stream >> instance.cost[ i ][ j ];
    if( stream.fail() || stream.bad() )
-    throw std::runtime_error( "Error while reading file " +
-                              file_path.string() );
+    throw( std::runtime_error( "Error while reading file " + file_path.string() ) );
   }
  }
 

@@ -4,6 +4,8 @@ what=31
 #what=1
 #iter=10
 
+PolyhedralFunction_test=${1:-./PolyhedralFunction_test}
+
 #for size in 2 10 50 100
 for size in 2 10 50; do
   for dens in 3 1.1; do
@@ -15,7 +17,7 @@ for size in 2 10 50; do
         printf "[$seed $what $size $dens $iter]: "
       fi
 
-      ./PolyhedralFunction_test $seed $what $size $dens $iter
+      "$PolyhedralFunction_test" $seed $what $size $dens $iter
 
       retVal=$?
       if [ $retVal -ne 0 ]; then

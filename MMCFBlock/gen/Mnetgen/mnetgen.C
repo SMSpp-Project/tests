@@ -4,10 +4,32 @@
 
 #include <fstream>
 #include <string.h>
-#include <stdlib.h>
 #include <iostream>
 
 using namespace std;
+
+#ifdef _MSC_VER
+ // custom implementation for MSVC
+ static unsigned long long seed = 1;  // initial seed
+
+ // function that simulates `drand48()`
+ double drand48() {
+  const unsigned long long a = 0x5DEECE66DULL;
+  const unsigned long long c = 0xBULL;
+  const unsigned long long mask = ( 1ULL << 48 ) - 1;
+
+  // update the seed
+  seed = ( a * seed + c ) & mask;
+
+  // returns a number in [0.0, 1.0)
+  return( static_cast< double >( seed ) / static_cast< double >( mask + 1 ) );
+ }
+
+ // function that simulates `srand48()` to set the seed
+ void srand48( long new_seed ) {
+  seed = ( static_cast< unsigned long long >( new_seed ) << 16 ) | 0x330E;
+ }
+#endif
 
 /*-------------------------------- MNETGEN -----------------------------------
 
@@ -138,9 +160,33 @@ inline long max( long x , long y )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+  std::cerr << "Uncaught exception in executing SMS++:\n";
+  try {
+   std::rethrow_exception( std::current_exception() );
+  }
+  catch( const std::exception & e ) {
+   std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+   std::cerr << "\tException message: " << e.what() << "\n";
+  } catch( ... ) {
+   std::cerr << "\tUnknown exception" << std::endl;
+  }
+  std::abort(); // or exit(1)
+ }
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
+ // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
+ // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
  if( argc < 3 ) {
   cerr << "Usage: mnetgen <input file> <output file>" << endl;
   exit( 1 );

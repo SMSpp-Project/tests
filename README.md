@@ -107,6 +107,11 @@ The following tests are provided:
   `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
   core library.
 
+- [`QuadraticTests`](QuadraticTests), a tester which provides very
+  comprehensive tests for any `CDASolver` able to handle Quadratic Programs
+  (such as `MILPSolver` and its derived classes`CPXMILPSolver` ,
+  `SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`).
+
 - [`ThermalUnitBlock_Solver`](ThermalUnitBlock_Solver), a tester for the
   `ThermalUnitDPSolver` specialised Dynamic Programming `:Solver` for
   `ThermalUnitBlock` as compared with a `:MILPSolver` on some of the (many)
@@ -119,7 +124,7 @@ The following tests are provided:
   `HiGHSMILPSolver`), as well as for some of the mechanics of the "core" 
   SMS++ library. A random MILP is constructed in an `AbstractBlock` and
   saved to a `.mps` file. A new `AbstractBlock` is created and read back
-  to the file, two `:Solver` are attached to the two `AbstractBlock` andù
+  to the file, two `:Solver` are attached to the two `AbstractBlock` andï¿½
   the results are compared. The first `AbstractBlock` is randomly chamged
   many times and the process is repeated.
 
@@ -145,7 +150,7 @@ Configure and build all the tests using CMake:
 mkdir build
 cd build
 cmake ..
-make
+cmake --build .
 ```
 
 ### Build and install with makefiles
@@ -182,6 +187,24 @@ if you use CMake); look at the `README.md` in the folder and/or run it for
 instructions. In several cases a (bash) batch is available to run
 a default sequence of tests (this may take a while).
 
+In case you use CMake, you can see all the (bash) batch tests available by
+running:
+
+```sh
+ctest -N
+```
+
+and run them all at one with:
+
+```shell
+ctest -V -C Release
+```
+
+or you can choose a specific one from the batch test list and run it with:
+
+```sh
+ctest -V -R <batch-test-name> -C Release
+```
 
 ## Getting help
 

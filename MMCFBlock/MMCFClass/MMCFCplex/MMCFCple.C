@@ -1722,7 +1722,7 @@ void MMCFCplex::ChgIntVar( cIndex k , bool IntVld , cIndex_Set nms ,
 void MMCFCplex::CloseArcs( cIndex_Set whch )
 {
  if( XtrVrs != NArcs )
- throw( MMCFException("MMCFCplex::CloseArcs: no extra variables" ) );
+ throw( MMCFException( "MMCFCplex::CloseArcs: no extra variables" ) );
 
  Index count = 0;
  for( Index j = 0 ; whch[ j++ ] < Inf< Index >() ; )

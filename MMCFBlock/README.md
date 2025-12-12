@@ -21,15 +21,13 @@ The usage of the executable is the following:
 A batch file is provided that runs the test on a largish set of
 MMCF instances (but not very large ones, so that the tests does end
 in reasonable time). These instances are supposed to be in the `data/`
-folder, but only a small subset of them is there in the repo (properly
-gzipped). The `gen/` folder contains a `genbatch` which curls some other
-sets of instances from
-
-http://groups.di.unipi.it/optimize/Data/MMCF.html
-
-and generates another set with the included Mnetgen random generator
+folder, but they need to be downloaded / generated before. The `gen/`
+folder contains a `genbatch` which curls the instances from the
+[COMMALAB site](https://commalab.di.unipi.it/datasets/mmcf) and
+generates another set with the included Mnetgen random generator
 (also available at that page with instructions for generating even
-larger ones if required).
+larger ones if required). The download (but not the generation) is
+also automatically done when installing the repo with CMake.
 
 All the tests passing confirms that `MMCFBlock` correctly loads the
 MMCF instances from file, and that no regressions have been done for

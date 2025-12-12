@@ -374,7 +374,7 @@ public:
 /*--------------------------------------------------------------------------*/
 
    Index GetNode( void );
-/**< Returns the number of nodes processed so far in the active branch-and-cut search.*/
+/**< Returns the number of nodes processed so far in the active branch-and-cut search. */
 
 
 /*--------------------------------------------------------------------------*/

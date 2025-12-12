@@ -88,7 +88,10 @@
 
 #include <fstream>
 #include <sstream>
+
 #include <iomanip>
+
+#include <chrono>
 
 #include <random>
 
@@ -212,23 +215,30 @@ static void PrintSol( CDASolver * slvr , bool first ,
  // start: reduced costs extraction
 
  if( wprnt & 1 ) {
-  slvr->get_dual_solution();
+  // for the second Solver only, read a Configuration for
+  // get_dual_solution( ) from file
+  Configuration * cfg = nullptr;
+  if( ! first )
+   cfg = Configuration::deserialize( "GetDualSolConfig.txt" );
 
-  ofstream solutionsFile( "./redCosts/" + name + "Sol-redCosts.dat" );
+  slvr->get_dual_solution( cfg );
+  delete cfg;
+
+  ofstream dualFile( "./redCosts/" + name + "-Dual.txt" );
   for( Index k = 0 ; k < TestBlock->get_NComm() ; ++k ) {
    for( Index i = 0 ; i < TestBlock->get_NNodes() ; ++i )
-    solutionsFile << TestBlock->get_potential( k , i ) << " ";
-   solutionsFile << "\n";
+    dualFile << TestBlock->get_potential( k , i ) << " ";
+   dualFile << "\n";
    }
 
-  solutionsFile.close();
+  dualFile.close();
   }
   
  // primal solution extraction 
  if( wprnt & 2 ) {
   slvr->get_var_solution();
 
-  ofstream primalFile( "./primals/" + name + "-Prim.dat" );
+  ofstream primalFile( "./primals/" + name + "-Prim.txt" );
   for( Index k = 0 ; k < TestBlock->get_NComm() ; ++k ) {
    for( Index i = 0 ; i < TestBlock->get_NArcs() ; ++i  )
     primalFile << TestBlock->get_flow( k , i ) << " ";
@@ -253,7 +263,7 @@ static bool SolveBoth( void )
 {
  try {
   // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  auto Slvr1 = dynamic_cast< CDASolver *>(
+  auto Slvr1 = dynamic_cast< CDASolver * >(
 			       TestBlock->get_registered_solvers().front() );
   if( ! Slvr1 ) {
    cout << "Error! First solver registred to TestBlock not a CDASolver";
@@ -296,7 +306,7 @@ static bool SolveBoth( void )
    }
 
   // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  auto Slvr2 = dynamic_cast< CDASolver *>(
+  auto Slvr2 = dynamic_cast< CDASolver * >(
 			       TestBlock->get_registered_solvers().back() );
   if( ! Slvr2 ) {
    cout << "Error! Last solver registred to TestBlock not a CDASolver";
@@ -366,9 +376,30 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  
@@ -378,7 +409,7 @@ int main( int argc , char **argv )
  char filetype = 's';  // type of the input file;
  
  switch( argc ) {
-  case( 4 ): wprnt = argv[ 3 ][ 0 ];  
+  case( 4 ): Str2Sthg( argv[ 3 ] , wprnt );
   case( 3 ): filetype = argv[ 2 ][ 0 ];
   case( 2 ): break;
   default:   cerr << "Usage: " << argv[ 0 ] << " file_name [typ wprnt]"
@@ -446,7 +477,7 @@ int main( int argc , char **argv )
 
  #if( LOG_LEVEL >= 2 )
   #if( LOG_ON_COUT )
-   ((TestBlock->get_registered_solvers()).back())->set_log( &cout );
+   ( ( TestBlock->get_registered_solvers() ).back() )->set_log( &cout );
   #else
    ofstream LOGFile( logF , ofstream::out );
    if( ! LOGFile.is_open() )
@@ -454,7 +485,7 @@ int main( int argc , char **argv )
    else {
     LOGFile.setf( ios::scientific, ios::floatfield );
     LOGFile << setprecision( 10 );
-    ((TestBlock->get_registered_solvers()).back())->set_log( &LOGFile );
+    ( ( TestBlock->get_registered_solvers() ).back() )->set_log( &LOGFile );
     }
   #endif
  #endif
@@ -511,7 +542,7 @@ int main( int argc , char **argv )
   // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -
 
   #if( LOG_LEVEL >= 3 )
-   ((LPBlock->get_registered_solvers()).front())->set_par(
+   ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
 		                     MILPSolver::strOutputFile , "LPBlock-" +
 		                     std::to_string( rep ) + ".lp" );
   #endif

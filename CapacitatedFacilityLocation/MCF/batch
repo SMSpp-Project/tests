@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DATADIR=../../../CapacitatedFacilityLocationBlock/data
+DATADIR=../../CapacitatedFacilityLocationBlock/data
 
 # remember that +512 is always needed since the R3B is a MCFBlock
 # solved by a MCFSolver
@@ -17,14 +17,17 @@ wchg=831
 rounds=40
 maxseed=2
 
+CFL_test=${1:-./CFL_test}
+
 # ORLib - - - - - - - - - - - - - - - - - - - - -
 
 for what in ${DATADIR}/txt/ORLib/*.txt; do
+
   for (( seed = 0 ; seed <= maxseed ; seed++ )); do
 
     printf "[$what c $niter $seed $wchg $rounds]: "
 
-    ./CFL_test $what c $niter $seed $wchg $rounds
+    "$CFL_test" $what c $niter $seed $wchg $rounds
 
     retVal=$?
     if [ $retVal -ne 0 ]; then
@@ -44,7 +47,7 @@ for i in 30-200 60-200 60-300 80-400; do
 
       printf "[$what l $niter $seed $wchg $rounds]: "
 
-      ./CFL_test $what l $niter $seed $wchg $rounds
+      "$CFL_test" $what l $niter $seed $wchg $rounds
 
       retVal=$?
       if [ $retVal -ne 0 ]; then
@@ -65,7 +68,7 @@ for i in 300; do
 
       printf "[$what f $niter $seed $wchg $rounds]: "
 
-      ./CFL_test $what f $niter $seed $wchg $rounds
+      "$CFL_test" $what f $niter $seed $wchg $rounds
 
       retVal=$?
       if [ $retVal -ne 0 ]; then

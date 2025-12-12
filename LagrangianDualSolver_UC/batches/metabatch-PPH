@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# usage: metabatch < par file > < log file >
+#        < par file > = BlockSolverConfig file, default PrimalProximal.txt
+#        < log file > = name of log file, default none
+#
+# runs all the instances for PrimalProximalHeur
+
+# command line parameter setup- - - - - - - - - - - - - - - - - - - - - - - -
+
+if [ $# -gt 0 ]; then
+   par=$1
+else
+   par=ProxHeur-2S.txt
+fi
+if [ $# -gt 1 ]; then
+   mlf=$2
+fi
+slv=1
+
+# run academic instances
+./batches/batch-acad $par $mlf $slv
+
+# run plan4res instances
+./batches/batch-p4r $par $mlf $slv
+
+# run energy community instances
+./batches/batch-ec $par $mlf $slv
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -4,6 +4,8 @@ what=511
 #what=0
 #iter=3
 
+LagBFunction_test=${1:-./LagBFunction_test}
+
 for nf in -2 -11; do
 
   if [ $nf -eq -2 ]; then
@@ -27,7 +29,7 @@ for nf in -2 -11; do
             printf "[$seed $what $size $nf $nt $dens $iter]: "
           fi
 
-          ./LagBFunction_test $seed $what $size $nf $nt $dens $iter
+          "$LagBFunction_test" $seed $what $size $nf $nt $dens $iter
 
           retVal=$?
           if [ $retVal -ne 0 ]; then

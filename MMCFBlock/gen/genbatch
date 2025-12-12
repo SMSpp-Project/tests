@@ -1,16 +1,31 @@
 #!/usr/bin/env bash
 
+mnetgen=${1:-./mnetgen}
+
 mkdir -p ../data
+mkdir -p ../data/Mnetgen
+
+wget https://gitlab.com/api/v4/projects/15602443/packages/generic/Canad/latest/Canad.tgz
+tar xzvf Canad.tgz
+rm Canad.tgz
 
 # Fetch and extract Canad and JLF problems
-# http://groups.di.unipi.it/optimize/Data/MMCF.html#Canad
-#
-tar -zxvf Canad.tgz -C ../data
-curl -SsL http://groups.di.unipi.it/optimize/Data/MMCF/CanadN.tgz | tar -zxvC ../data/Canad
-curl -SsL http://groups.di.unipi.it/optimize/Data/MMCF/JLF.tgz | tar -zxvC ../data
+# https://commalab.di.unipi.it/datasets/mmcf
+
+wget https://commalab.di.unipi.it/files/Data/MMCF/CanadN.tgz
+mv CanadN.tgz Canad
+cd Canad || exit
+tar xzvf CanadN.tgz
+rm CanadN.tgz
+cd ..
+mv Canad ../data
+
+wget https://commalab.di.unipi.it/files/Data/MMCF/JLF.tgz
+tar xzvf JLF.tgz
+mv JLF ../data
+rm JLF.tgz
 
 # Use Mnetgen to generate other MMCF problems
 cd Mnetgen || exit
-make
-./batch
-make clean
+command -v make >/dev/null 2>&1 && make
+./batch "$mnetgen"

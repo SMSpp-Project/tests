@@ -1,42 +1,52 @@
 #!/usr/bin/env bash
-
-DATADIR=../../UCBlock/netCDF_files/UC_Data/T-Ramp
-
-# runs all the academic instances: intended for being used when the
-# ThermalUnitBlock subproblems are solved to integer optimality
+#
+# usage: batch_acad < par file > < solver > < log file >
+#        < par file > = BlockSolverConfig file, default BSPar-2S.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs only "small" pure thermal academic instances, intended for being used
+# when the ThermalUnitBlock subproblems are solved to integer optimality
 # (typically using ThermalUnitDPSolver, although a :MILPSolver would
 # be a less efficient option)
-
-#cp ./TUBCfg-DP.txt ./TUBCfg.txt
-#cp ./TUBSCfg-DP.txt ./TUBSCfg.txt
-
+#
+# for LagranngianDualSolver + BundleSolver:
 # correct value of tStar: 1e+0
-par=BSPar-2S.txt
-#mlf=log.txt
+
+# command line parameter setup- - - - - - - - - - - - - - - - - - - - - - - -
+
+exe=${1:-./LDS_UC_test}
+
+if [ $# -gt 0 ]; then
+   par=$1
+else
+   par=BSPar-2S.txt
+fi
+if [ $# -gt 1 ]; then
+   slv=$2
+else
+   slv=0
+fi
+if [ $# -gt 2 ]; then
+   mlf=$4
+fi
+
+#  small thermal academic instances - - - - - - - - - - - - - - - - - - - - -
+#!/usr/bin/env bash
+
+LDS_UC_test=${1:-./LDS_UC_test}
 
 for size in 10 20 50; do
   for (( seed = 1 ; seed < 6 ; seed++ )); do
 
     what=${DATADIR}/${size}_0_${seed}_w.nc4
 
-    if [ -z "$par" ]; then
-      if [ -z "$mlf" ]; then
-        printf "[$what]: "
-      else
-        printf "[$what]: " >> $mlf
-      fi
-    else
-      if [ -z "$mlf" ]; then
-        printf "[$what $par]: "
-      else
-        printf "[$what $par]: " >> $mlf
-      fi
-    fi
-
     if [ -z "$mlf" ]; then
-      ./LDS_UC_test $what $par
+       printf "[$what $par $slv]: "
+       "$exe" $what $par $slv
     else
-      ./LDS_UC_test $what $par >> $mlf
+       printf "[$what $par $slv]: " >> $mlf
+       "$exe" $what $par $slv >> $mlf
     fi
 
     retVal=$?

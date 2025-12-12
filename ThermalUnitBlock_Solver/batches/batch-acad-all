@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 
-DATADIR=../../UCBlock/netCDF_files/1UC_Data
+DATADIR=../../UCBlock/data/nc4/1UC_Data
 
 wchg=7
 #iter=0
 
+TUDPS_test=${1:-./TUDPS_test}
+
 # ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
 
-for wf in 0 1 2 3 4 5; do
+for wf in 0 1 2 3 4 5; do #for wf in 0 1 2 3 4 5 6; do
   for i in 24 96; do
-    # skip DP, pt, SU and SD formulations for 96 problems
+    # skip DP, pt, SU, SD and SUSD formulations for 96 problems
     if [ $wf -ge 2 ] && [ $i -eq 96 ]; then
       continue
     fi
@@ -26,7 +28,7 @@ for wf in 0 1 2 3 4 5; do
             printf "[$what $seed $wchg $wf $iter]: "
           fi
 
-          ./TUDPS_test $what $seed $wchg $wf $iter
+          "$TUDPS_test" $what $seed $wchg $wf $iter
 
           retVal=$?
           if [ $retVal -ne 0 ]; then

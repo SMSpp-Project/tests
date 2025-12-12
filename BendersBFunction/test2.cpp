@@ -33,6 +33,9 @@
 #include <fstream>
 #include <string>
 
+#undef NDEBUG
+#include <cassert> 
+
 /*--------------------------------------------------------------------------*/
 /*--------------------------- NAMESPACE ------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -63,8 +66,8 @@ BlockSolverConfig * build_solver_config
 
  std::ifstream config_file( config_file_path );
  if( ! config_file.is_open() )
-  throw std::invalid_argument( "BendersBFunction test: Error: cannot open "
-                               "configuration file " + config_file_path );
+  throw( std::invalid_argument( "BendersBFunction test: Error: cannot open "
+                                "configuration file " + config_file_path ) );
 
  auto bsc = new BlockSolverConfig;
  config_file >> ( * bsc );
@@ -587,7 +590,7 @@ Solver * build_inner_block_solver() {
  lpbsc->apply( inner_block );
  lpbsc->clear();
 
- auto inner_block_solver = (inner_block->get_registered_solvers()).front();
+ auto inner_block_solver = ( inner_block->get_registered_solvers() ).front();
  
  return( inner_block_solver );
 }
@@ -643,7 +646,7 @@ void test( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -744,7 +747,7 @@ void test2( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -837,7 +840,7 @@ void test3( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -930,7 +933,7 @@ void test4( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -1020,7 +1023,7 @@ void test5( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -1115,7 +1118,7 @@ void test6( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -1206,7 +1209,7 @@ void test7( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -1293,7 +1296,7 @@ void test8( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -1392,7 +1395,7 @@ void test9( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -1492,7 +1495,7 @@ void test10( bool invert ) {
  lpbsc->apply( lp );
  lpbsc->clear();
 
- auto solver = ( lp->get_registered_solvers()).front();
+ auto solver = ( lp->get_registered_solvers() ).front();
  assert( solver->compute() == Solver::kOK );
  assert( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
@@ -1617,8 +1620,33 @@ void run( bool invert ) {
 }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
 
-int main( int argc, char ** argv ) {
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
+
+int main( int argc, char ** argv )
+{
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
+ // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
+ // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
  if( argc < 2 ) {
   std::cerr << "The path to the file containing the description of a "
    "BlockSolverConfig of the Solver for the master problem must be provided "

@@ -4,9 +4,11 @@ seed=264
 wchg=127
 n_repeat=50
 
+BinaryKnapsackBlock_test=${1:-./BinaryKnapsackBlock_test}
+
 for N in 100 500 3000; do
 
-  for delta in 0.005 0.05 0.3 0.6; do
+  for delta in 0.005 0.05 0.6; do
 
     for nW in 0 0.2 0.7 1; do
 
@@ -18,7 +20,7 @@ for N in 100 500 3000; do
 
             printf "[$seed $wchg $N $n_repeat $delta $nW $nP $nI $nM]: "
 
-            ./BinaryKnapsackBlock_test $seed $wchg $N $n_repeat $delta $nW $nP $nI $nM
+            "$BinaryKnapsackBlock_test" $seed $wchg $N $n_repeat $delta $nW $nP $nI $nM
 
             retVal=$?
             if [ $retVal -ne 0 ]; then

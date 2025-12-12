@@ -428,7 +428,7 @@ static bool SolveBoth( void )
 {
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrLP = (LPBlock->get_registered_solvers()).front();
+  Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
   #if DETACH_LP
    LPBlock->unregister_Solver( slvrLP );
    LPBlock->register_Solver( slvrLP , true );  // push it to the front
@@ -440,7 +440,7 @@ static bool SolveBoth( void )
                      : ( convex ? INF : -INF );
 
   // solve the NODBlock - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrNDO = (NDOBlock->get_registered_solvers()).front();
+  Solver * slvrNDO = ( NDOBlock->get_registered_solvers() ).front();
   #if DETACH_NDO
    NDOBlock->unregister_Solver( slvrNDO );
    NDOBlock->register_Solver( slvrNDO );
@@ -526,9 +526,30 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -956,7 +977,7 @@ int main( int argc , char **argv )
 
  #if( LOG_LEVEL >= 2 )
   #if( LOG_ON_COUT )
-   ((NDOBlock->get_registered_solvers()).front())->set_log( &cout );
+   ( ( NDOBlock->get_registered_solvers() ).front() )->set_log( &cout );
   #else
    ofstream LOGFile( logF , ofstream::out );
    if( ! LOGFile.is_open() )
@@ -964,12 +985,12 @@ int main( int argc , char **argv )
    else {
     LOGFile.setf( ios::scientific, ios::floatfield );
     LOGFile << setprecision( 10 );
-    ((NDOBlock->get_registered_solvers()).front())->set_log( &LOGFile );
+    ( ( NDOBlock->get_registered_solvers() ).front() )->set_log( &LOGFile );
     }
   #endif
 
   #if( LOG_LEVEL >= 3 )
-   ((LPBlock->get_registered_solvers()).front())->set_par(
+   ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
 	                          MILPSolver::strOutputFile , "LPBlock.lp" );
   #endif
  #endif
@@ -1565,7 +1586,7 @@ int main( int argc , char **argv )
   // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -
 
   #if( LOG_LEVEL >= 3 )
-   ((LPBlock->get_registered_solvers()).front())->set_par(
+   ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
 		                     MILPSolver::strOutputFile , "LPBlock-" +
 		                     std::to_string( rep ) + ".lp" );
    #if( LOG_LEVEL >= 4 )

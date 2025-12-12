@@ -1,27 +1,29 @@
 # test/Write-Read
 
-A tester which provides very comprehensive tests for the function
-`AbstractBlock::read_mps` and some tests for any  `CDASolver` able 
-to handle Linear Programs (such as `MILPSolver` and its derived classes
-`CPXMILPSolver` , `SCIPMILPSolver` , `GRBMILPSolver` and 
-`HiGHSMILPSolver`), as well as for some of the mechanics of the "core" 
-SMS++ library.
+A tester which provides very comprehensive tests for the functions
+`AbstractBlock::read_mps`and `AbstractBlock::read_lp`, along with 
+some tests for any  `CDASolver` able to handle Linear Programs 
+(such as `MILPSolver` and its derived classes`CPXMILPSolver` , 
+`SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`), as well 
+as for some of the mechanics of the "core" SMS++ library.
 
 This executable, given the input parameter n, constructs a "random"
-`PolyhedralFunction` and represents it as a Linear Program in
-an `AbstractBlock` (LPBlock) having n `ColVariable`, a
-"linear objective" (`FRealObjective` with a `LinearFunction` inside) and
-m "linear constraints" (`FRowConstraint` with a `LinearFunction` inside).
-The `ColVariable` can have simple bound constraints imposed on them.
+Linear Program with n `ColVariable`, a "linear objective" 
+(`FRealObjective` with a `LinearFunction` inside) and "linear constraints"
+(`FRowConstraint` with a `LinearFunction` inside) and represent it in an 
+`AbstractBlock` (LPBlock). Moreover, the built `ColVariable` can have simple
+bound constraints imposed on them.
 
 An appropriate `CDASolver` is attached to LPBlock, which
 can be any `Solver` capable of handling Linear Programs and print them out
-in a `.mps` format (say, some derived class of `MILPSolver` such as 
-`CPXMILPSolver`). The `.mps` file containing all the model data is then
-written and the model is solved.
+in a `.lp` or `.mps` format (say, some derived class of `MILPSolver` such as 
+`CPXMILPSolver`). The file containing all the model data is then
+written and the model is solved. Note that to choose which format you
+prefer to use, the global variable `TEST_FILE_TYPE` can be set inside
+the test.cpp file.
 
 At this point, a new `AbstractBlock` (SecondLPBlock) is created, 
-and the previously written `.mps` file is read and loaded. As before, an 
+and the previously written `.mps/.lp` file is read and loaded. As before, an 
 appropriate `CDASolver` is attached to this Block and the new Block
 is solved.
 
@@ -48,7 +50,7 @@ The usage of the executable is the following:
 A batch file is provided that runs a not-so-large set of tests with
 different sizes and seeds of the random generator; all these passing is a
 good sign that no regressions have been done for the tested modules, and
-in particular for `AbstractBlock::read_mps`.
+in particular for `AbstractBlock::read_mps` and `AbstractBlock::read_lp`.
 
 A makefile is also provided that builds the executable including 
 and all its dependencies, in particular `MILPSolver` (and, obviously, 

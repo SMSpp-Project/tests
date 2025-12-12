@@ -277,6 +277,8 @@
 
 #include <random>
 
+#include "MILPSolver.h"
+
 #include "BlockSolverConfig.h"
 
 #include "LagBFunction.h"
@@ -646,7 +648,7 @@ static bool SolveBoth( void )
 {
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrLP = (LPBlock->get_registered_solvers()).front();
+  Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
   #if DETACH_LP
    LPBlock->unregister_Solver( slvrLP );
    LPBlock->register_Solver( slvrLP , true );  // push it to the front
@@ -658,7 +660,7 @@ static bool SolveBoth( void )
                      : ( convex ? INF : -INF );
 
   // solve the NODBlock - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrNDO = (NDOBlock->get_registered_solvers()).front();
+  Solver * slvrNDO = ( NDOBlock->get_registered_solvers() ).front();
   #if DETACH_NDO
    NDOBlock->unregister_Solver( slvrNDO );
    NDOBlock->register_Solver( slvrNDO );
@@ -744,9 +746,30 @@ static bool SolveBoth( void )
  }  // end( SolveBoth )
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -976,21 +999,23 @@ int main( int argc , char **argv )
   // if LagBFunctions are treated as not-easy, load once and for all the
   // ComputeConfig containing the BlockSolverConfig that will be used to
   // have the appropriate Solver attached to them
-  ComputeConfig * hLBFC = nullptr;
-  if( nt && ( ! HasEasy ) ) {
-   auto cfg = Configuration::deserialize( "HardLBFTPPar.txt" );
-   if( ! ( hLBFC = dynamic_cast< ComputeConfig * >( cfg ) ) ) {
-    cout << "error loading Configuration file for hard LagBFunction" << endl;
-    delete( cfg );
-    exit( 1 );
-    }
+  auto cfg = Configuration::deserialize( ( nt && ( ! HasEasy ) ) ?
+					 "LBFTPPar-Hard.txt" :
+					 "LBFTPPar-Easy.txt" );
+  auto LBFC = dynamic_cast< ComputeConfig * >( cfg );
+  if( ! LBFC ) {
+   cout << "error loading Configuration file for "
+	<< ( ( nt && ( ! HasEasy ) ) ? "hard" : "easy" )
+	<< " LagBFunction" << endl;
+   delete( cfg );
+   exit( 1 );
    }
 
   for( Index p = 0 ; p < Index( nt ) ; ++p ) {
    // for all transportation sub-Block- - - - - - - - - - - - - - - - - - - -
-   Index nzc = GenerateCosts();        // generate random costs
-   GenerateSupplies();                 // generate random supplies == demands
-   Index nic = GenerateCapacities();   // generate random capacities
+   Index nzc = GenerateCosts();       // generate random costs
+   GenerateSupplies();                // generate random supplies == demands
+   Index nic = GenerateCapacities();  // generate random capacities
 
    #if( LOG_LEVEL >= 5 )
     cout << "T[ " << p << " ] = " << endl;
@@ -1211,12 +1236,7 @@ int main( int argc , char **argv )
    // construct the LagBFunction, passing it the inner Block
    auto LBF = new LagBFunction( IBNDOp );
 
-   // if appropriate, Configure it; note that the ComputeConfig has "no
-   // movable parts", i.e., it is not affected by being set (as opposed
-   // to what would happen if it contained a :BlockConfig), and therefore
-   // it can be re-used for all the LagBFunctions without clone()-ing
-   if( hLBFC )
-    LBF->set_ComputeConfig( hLBFC );
+   LBF->set_ComputeConfig( LBFC );  // ComputeConfig-ure it
 
    // construct the dual pairs
    LagBFunction::v_dual_pair lp( nvar );
@@ -1254,7 +1274,7 @@ int main( int argc , char **argv )
 
    }  // end( for( p ) )
 
-  delete( hLBFC );
+  delete( LBFC );
   }
 
  // define bound constraints- - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1401,8 +1421,8 @@ int main( int argc , char **argv )
 	LBF->get_nested_Block( 0 )->get_registered_solvers().front();
        slv->set_par( slv->str_par_str2idx( "strOutputFile" ) ,
 		     "TB-" + std::to_string( p - nf ) + "-" +
-		     std::to_string( slvr->get_elapsed_calls() ) + "-" +
-		     std::to_string( slvr->get_elapsed_iterations() ) +
+		     std::to_string( slv->get_elapsed_calls() ) + "-" +
+		     std::to_string( slv->get_elapsed_iterations() ) +
 		     ".lp" );
        }
 
@@ -1418,7 +1438,7 @@ int main( int argc , char **argv )
 
  #if( LOG_LEVEL >= 2 )
   #if( LOG_ON_COUT )
-   ((NDOBlock->get_registered_solvers()).front())->set_log( &cout );
+   ( ( NDOBlock->get_registered_solvers() ).front() )->set_log( &cout );
   #else
    ofstream LOGFile( logF , ofstream::out );
    if( ! LOGFile.is_open() )
@@ -1426,13 +1446,16 @@ int main( int argc , char **argv )
    else {
     LOGFile.setf( ios::scientific, ios::floatfield );
     LOGFile << setprecision( 10 );
-    ((NDOBlock->get_registered_solvers()).front())->set_log( &LOGFile );
+    ( ( NDOBlock->get_registered_solvers() ).front() )->set_log( &LOGFile );
     }
   #endif
 
   #if( LOG_LEVEL >= 3 )
-   ((LPBlock->get_registered_solvers()).front())->set_par(
-	                          MILPSolver::strOutputFile , "LPBlock.lp" );
+  {
+   auto LPslv = ( LPBlock->get_registered_solvers() ).front();
+   LPslv->set_par( LPslv->str_par_str2idx( "strOutputFile" ) ,
+		   "LPBlock.lp" );
+   }
   #endif
  #endif
 
@@ -1468,6 +1491,8 @@ int main( int argc , char **argv )
  // changed an arbitrary number of inner Blocks
 
  for( Index rep = 0 ; rep < n_repeat * ( SKIP_BEAT + 1 ) ; ) {
+  if( ! AllPassed )
+   break;
 
   p_AB LPTr = nullptr;
   p_AB NDOTr = nullptr;
@@ -2097,9 +2122,12 @@ int main( int argc , char **argv )
   // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -
 
   #if( LOG_LEVEL >= 3 )
-   ((LPBlock->get_registered_solvers()).front())->set_par(
-		                     MILPSolver::strOutputFile , "LPBlock-" +
-		                     std::to_string( rep ) + ".lp" );
+  {
+   auto LPslv = ( LPBlock->get_registered_solvers() ).front();
+   LPslv->set_par( LPslv->str_par_str2idx( "strOutputFile" ) ,
+		   "LPBlock-" + std::to_string( rep ) + ".lp" );
+   }
+
    #if( LOG_LEVEL >= 5 )
     if( bn < Index( nf ) ) {
      cout << endl << "LPBlock-PF: ";

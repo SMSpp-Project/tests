@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DATADIR=../../../CapacitatedFacilityLocationBlock/data
+DATADIR=../../CapacitatedFacilityLocationBlock/data
 
 # testing batch reduced to small instances only, so that solving them
 # is an option
@@ -20,6 +20,8 @@ wchg=1
 rounds=40
 maxseed=1
 
+CFL_test=${1:-./CFL_test}
+
 # ORLib - - - - - - - - - - - - - - - - - - - - -
 
 for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
@@ -30,7 +32,7 @@ for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
 
     printf "[$what c $niter $seed $wchg $rounds]: "
 
-    ./CFL_test $what c $niter $seed $wchg $rounds
+    "$CFL_test" $what c $niter $seed $wchg $rounds
 
     retVal=$?
     if [ $retVal -ne 0 ]; then

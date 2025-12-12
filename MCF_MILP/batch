@@ -5,6 +5,8 @@ DATADIR=../../MCFBlock/data
 wchg=255
 #rounds=40
 
+MCF_MILP_test=${1:-./MCF_MILP_test}
+
 for type in net goto; do
 
   for (( seed = 0; seed < 3 ; seed++ )); do
@@ -25,7 +27,7 @@ for type in net goto; do
           fi
         fi
 
-        ./MCF_MILP_test $what $seed $wchg $rounds
+        "$MCF_MILP_test" $what $seed $wchg $rounds
 
         retVal=$?
         if [ $retVal -ne 0 ]; then

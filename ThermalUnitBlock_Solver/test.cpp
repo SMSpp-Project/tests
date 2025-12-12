@@ -473,9 +473,30 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -511,7 +532,7 @@ int main( int argc , char **argv )
     << std::endl <<
     "             0 = 3bin, 1 = T, 2 = pt, 3 = DP"
     << std::endl <<
-    "             4 = SU, 5 = SD (formulation)"
+    "             4 = SU, 5 = SD, 6 = SUSD (formulation)"
     << std::endl <<
     "             +8 = also use perspective cuts"
     << std::endl <<

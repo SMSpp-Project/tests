@@ -1,8 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - LPBSCfg-F.txt - - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a MCFBlock solved by a
-# MCFSolver.
+# A txt description of a BlockSolverConfig for a MCFBlock solved by a :MCFSolver
 #
 #   Enrico Gorgone, Antonio Frangioni
 #
@@ -15,9 +14,11 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # the BlockSolverConfig is a "differential" one
 
 1  # number of (the names of) Solver in this BlockSolverConfig
-# now all the names of the Solver
-#MCFSolver<MCFSimplex>
-MCFSolver<MCFCplex>
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#MCFSolver<MCFSimplex>     # name of Solver
+#MCFSolver<RelaxIV>     # name of Solver
+MCFSolver<MCFCplex>     # name of Solver
+#MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>     # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 

@@ -19,7 +19,11 @@
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
  *
- * \copyright &copy; by Antonio Frangioni
+ * \author Luca Mencarelli \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
+ *
+ * \copyright &copy; by Antonio Frangioni, Luca Mencarelli
  */
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- MACROS ----------------------------------*/
@@ -148,6 +152,7 @@ static constexpr FunctionValue INF = Inf< RHSValue >();
 
 AbstractBlock * TestBlock;  // the AbstractBlock that is solved
 Index nvar = 10;            // number of variables
+Index wchg = 15;            // parameters of what is done
 
 bool minobj;                // whether min or max
 bool isquad;                // whether lin or quad
@@ -361,17 +366,33 @@ static bool SolveBoth( void )
                    && ( rtrn2nd != Solver::kInfeasible ) )
                  || ( rtrn2nd == Solver::kLowPrecision ) );
   // double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
-  // we assume the 2nd solver to be a Lagrangian-based one, which may have
-  // issues in producing accurate primal solutions but it should be able to
-  // produce accurate dual ones: hence, use the dual bound as the reference
-  // value (lower bound if you minimise, upper bound if you maximise)
+  /* we assume the 2nd solver to be a Lagrangian-based one, which may mean
+   * two different cases:
+   * - it solves a relaxation, which may mean it may have issues in
+   *   producing accurate primal solutions but it should be able to produce
+   *   accurate dual ones: hence, use the dual bound as the reference value
+   *   (lower bound if you minimise, upper bound if you maximise)
+   * - it is a Lagrangian heuristic, which means use the primal value as
+   *   the reference value (upper bound if you minimise, lower bound if you
+   *   maximise) which can be arbitrarily worse (larger if you minimize,
+   *   smaller if you maximise) than the optimal value) */
   double fo2nd = -INF;
-  if( hs2nd )
-   fo2nd = minobj ? Slvr2->get_lb() : Slvr2->get_ub();
+  bool OKfo;
+  if( hs2nd ) {
+   if( wchg & 32 ) {  // a Lagrangian heuristic 
+    fo2nd = minobj ? Slvr2->get_ub() : Slvr2->get_lb();
+    double diff = minobj ? ( fo2nd - fo1st ) : ( fo1st - fo2nd );
+    OKfo = diff >= -1e-4;
+    }
+   else {             // a Lagrangian bound
+    fo2nd = minobj ? Slvr2->get_lb() : Slvr2->get_ub();
+    OKfo = abs( fo1st - fo2nd ) <= 1e-5 *
+                                   max( double( 1 ) , max( abs( fo1st ) ,
+							   abs( fo2nd ) ) );
+    }
+   }
 
-  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 1e-5 *
-			  max( double( 1 ) , max( abs( fo1st ) ,
-						  abs( fo2nd ) ) ) ) ) {
+  if( hs1st && hs2nd && OKfo ) {
    LOG1( "OK(f)" << endl );
    return( true );
    }
@@ -410,53 +431,82 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void )
+{
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+  }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+  }
+ catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+  }
+ std::abort();  // or exit(1)
+ }
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  assert( SKIP_BEAT >= 0 );
 
  long int seed = 0;
- Index wchg = 15;
  Index nson = 2;
  double dens = 0.1;
  double p_change = 0.5;
  Index n_change = 10;
  Index n_repeat = 40;
+ std::string BSC = "BSPar.txt";
 
  switch( argc ) {
-  case( 9 ): Str2Sthg( argv[ 8 ] , p_change );
-  case( 8 ): Str2Sthg( argv[ 7 ] , n_change );
+  case( 10 ): Str2Sthg( argv[ 9 ] , p_change );
+  case( 9 ): Str2Sthg( argv[ 8 ] , n_change );
+  case( 8 ): BSC = std::string( argv[ 7 ] );
   case( 7 ): Str2Sthg( argv[ 6 ] , n_repeat );
   case( 6 ): Str2Sthg( argv[ 5 ] , dens );
   case( 5 ): Str2Sthg( argv[ 4 ] , nson );
   case( 4 ): Str2Sthg( argv[ 3 ] , nvar );
   case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-   break;
- default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar nson dens #rounds #chng %chng]"
- 	<< endl <<
+  break;
+  default: cerr << "Usage: " << argv[ 0 ] <<
+	   " seed [wchg nvar nson dens #rounds #chng %chng BSC]"
+		<< endl <<
            "       wchg: what to change, coded bit-wise [15]"
 		<< endl <<
            "             0 = bounds, 1 = objective"
 		<< endl <<
            "             2 = linking coefficients, 3 = linking lhs/rhs"
 		<< endl <<
+           "             4 = only consider a quadratic objective"
+		<< endl <<
+           "             5 = Lagrangian solver is a heuristic"
+		<< endl <<
            "       nvar: number of variables [10]"
 		<< endl <<
            "       nson: number of sub-Block [2]"
 		<< endl <<
            "       dens: number of constraints, fraction of nvar * nson [0.1]"
-	 << endl <<
+		<< endl <<
            "       #rounds: how many iterations [40]"
-	 << endl <<
+		<< endl <<
+           "       BSC: BlockSolverCOnfig to use [BSPar.txt]"
+		<< endl <<
            "       #chng: number changes [10]"
-	 << endl <<
+		<< endl <<
            "       %chng: probability of changing [0.5]"
-	 << endl;
+		<< endl;
 	   return( 1 );
   }
 
@@ -479,8 +529,8 @@ int main( int argc , char **argv )
  // choosing whether min or max: toss a(n unbiased, two-sided) coin
  minobj = ( dis( rg ) < 0.5 );
  // choosing whether lin or quad: toss a(n unbiased, two-sided) coin
- //!!isquad = false;
- isquad = ( dis( rg ) < 0.5 );
+ // unless one is forced with a quadratic term
+ isquad = ( wchg & 16 ) ? true : ( dis( rg ) < 0.5 );
 
  #if( LOG_LEVEL >= 1 )
   if( minobj ) cout << "min"; else cout << "max";
@@ -556,10 +606,10 @@ int main( int argc , char **argv )
 
  BlockSolverConfig * bsc;
  {
-  auto c = Configuration::deserialize( "BSPar.txt" );
+  auto c = Configuration::deserialize( BSC );
   bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
-   cerr << "Error: configuration file not a BlockSolverConfig" << endl;
+   cerr << "Error: " << BSC << " not a BlockSolverConfig" << endl;
    delete( c );
    exit( 1 );
    }
@@ -578,7 +628,7 @@ int main( int argc , char **argv )
 
  #if( LOG_LEVEL >= 2 )
   #if( LOG_ON_COUT )
-   ((TestBlock->get_registered_solvers()).back())->set_log( &cout );
+   ( ( TestBlock->get_registered_solvers() ).back() )->set_log( &cout );
   #else
    ofstream LOGFile( logF , ofstream::out );
    if( ! LOGFile.is_open() )
@@ -586,7 +636,7 @@ int main( int argc , char **argv )
    else {
     LOGFile.setf( ios::scientific, ios::floatfield );
     LOGFile << setprecision( 10 );
-    ((TestBlock->get_registered_solvers()).back())->set_log( &LOGFile );
+    ( ( TestBlock->get_registered_solvers() ).back() )->set_log( &LOGFile );
     }
   #endif
  #endif

@@ -2,9 +2,7 @@
 # - - - - - - - - - - - - - - - - LPCCfg.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a :MILPSolver solving is a simple
-# LP / QP (continuous, convex, separable) 
-#
-#   version 1.0 , 31/12/2020
+# LP / QP (continuous, convex, separable)
 #
 #   Enrico Gorgone, Antonio Frangioni
 #
@@ -16,13 +14,11 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0    # log verbosity of the MILPSolver
 intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
-
-# note that we could eof() the file here since the rest is all empty
 
 0 # number of double parameters
 
@@ -33,7 +29,6 @@ intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
 
 # now all the string parameters
 #strOutputFile	unit.lp
-# [none]
 
 0 # number of vector-of-int parameters
 

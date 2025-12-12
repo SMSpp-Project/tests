@@ -16,24 +16,8 @@ NAME = MCF_MILP_test
 # basic directory
 DIR = .
 
-# debug switches
-#SW = -g3 -glldb -fno-inline -std=c++17 -DCLANG_1200_0_32_27_PATCH -ferror-limit=1 -Wno-enum-compare
-# debug switches with address sanitizer and extra pedantic warning
-#SW = -g3 -glldb -fno-inline -std=c++17 -DCLANG_1200_0_32_27_PATCH -ferror-limit=1 -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -Wpedantic -Wextra -Wno-unused-parameter -Wno-enum-compare -Wno-deprecated-copy-with-user-provided-copy
-# production switches
-SW = -O3 -std=c++17 -DNDEBUG -DCLANG_1200_0_32_27_PATCH -Wno-enum-compare -ferror-limit=1
-
-# compiler
-CC = clang++
-
-# default target- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-default: $(DIR)/$(NAME)
-
-# clean - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-clean::
-	rm -f $(DIR)/*.o $(DIR)/*~ $(DIR)/$(NAME)
+# common stuff
+include ../makefile_common
 
 # define & include the necessary modules- - - - - - - - - - - - - - - - - - -
 # if a module is not used in the current configuration, just comment out the
@@ -53,28 +37,36 @@ clean::
 MCFBkSDR = ../../MCFBlock
 include $(MCFBkSDR)/makefile-c
 
+# LEMONSolver, assuming all dependencies (MCFBlock) are there already
+# (comment out if not required)
+# note: -std=c++20 is required if this is included
+MCFLESDR = ../../LEMONSolver
+include $(MCFLESDR)/makefile
+
 # MILPSolver
 MILPSSDR = ../../MILPSolver
-include $(MILPSSDR)/makefile-c
+include $(MILPSSDR)/makefile-s
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(MCFBkOBJ) $(MILPSOBJ)
+MOBJ =  $(MCFLEOBJ) $(MILPSOBJ) $(MCFBkOBJ)
 
 # libraries
-MLIB =  $(MCFBkLIB) $(MILPSLIB)
+MLIB =  $(MCFBkLIB) $(MCFLELIB) $(MILPSLIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $(DIR)/test.o $(MOBJ) $(MLIB) $(SW)
+#	-Wl,-ld_classic
+# emergency linker option for certain settings on macOS
 
-# dependencies: every .o from its .C + every recursively included .h- - - - -
+# dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(MCFBkINC) $(MILPSINC)
+MINC =  $(MCFBkINC) $(MCFLEINC) $(MILPSINC)
 
 # includes
-MH =    $(MCFBkH) $(MILPSH)
+MH =    $(MCFBkH) $(MCFLEH) $(MILPSH)
 
 # compile command
 

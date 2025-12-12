@@ -7,8 +7,6 @@
 #       0 Solver, in which case HydroSystemUnitBlock will be treated as
 #       "easy components" (this is a problem if the HydroSystemUnitBlock is
 #       modified by adding rows, but not for "one-shot" solutions)
-# 
-#   version 1.0 , 13/02/2021
 #
 #   Antonio Frangioni
 #
@@ -21,9 +19,10 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # the BlockSolverConfig is a "differential" one
 
 1  # number of (the names of) Solver in this BlockSolverConfig
-# now all the names of the Solver
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 CPXMILPSolver
 #SCIPMILPSolver
+#GRBMILPSolver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -33,13 +32,11 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0    # log verbosity of the MILPSolver
 intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
-
-# note that we could eof() the file here since the rest is all empty
 
 0 # number of double parameters
 
@@ -50,7 +47,6 @@ intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
 
 # now all the string parameters
 #strOutputFile	unit.lp
-# [none]
 
 0 # number of vector-of-int parameters
 

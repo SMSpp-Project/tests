@@ -1,22 +1,49 @@
 #!/usr/bin/env bash
-
-DATADIR=../../UCBlock/netCDF_files/UC_Data/HT-Ramp
-
+#
+# usage: batch_acadh < par file >  < solver > < log file >
+#        < par file > = BlockSolverConfig file, default BSPar-2S.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs the hydrothermal academic instances
+#
+# for LagranngianDualSolver + BundleSolver:
 # correct value of tStar: 1e+0
-par=BSPar-2S.txt
+
+# command line parameter setup- - - - - - - - - - - - - - - - - - - - - - - -
+
+exe=${1:-./LDS_UC_test}
+
+if [ $# -gt 0 ]; then
+   par=$1
+else
+   par=BSPar-2S.txt
+fi
+if [ $# -gt 1 ]; then
+   slv=$2
+else
+   slv=0
+fi
+if [ $# -gt 2 ]; then
+   mlf=$4
+fi
+
+# hydrothermal academic instances - - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/UC_Data/HT-Ramp
 
 for size in 20_10 50_20 75_35 100_50 150_75 200_100; do
   for (( seed = 1 ; seed < 3 ; seed++ )); do
 
     what=${DATADIR}/${size}_${seed}_w.nc4
 
-    if [ -z "$par" ]; then
-      printf "[$what]: "
+    if [ -z "$mlf" ]; then
+       printf "[$what $par $slv]: "
+       "$exe" $what $par $slv
     else
-      printf "[$what $par]: "
+       printf "[$what $par $slv]: " >> $mlf
+       "$exe" $what $par $slv >> $mlf
     fi
-
-    ./LDS_UC_test $what $par
 
     retVal=$?
     if [ $retVal -ne 0 ]; then
@@ -25,3 +52,6 @@ for size in 20_10 50_20 75_35 100_50 150_75 200_100; do
 
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+

@@ -4,6 +4,8 @@ what=639
 #nf=-10
 #iter=0
 
+PolyhedralFunctionBlock_test=${1:-./PolyhedralFunctionBlock_test}
+
 for nf in 0 1 -1 10 -10; do
   #for size in 2 10 50 100
   for size in 2 10 50; do
@@ -16,7 +18,7 @@ for nf in 0 1 -1 10 -10; do
           printf "[$seed $what $size $dens $nf $iter]: "
         fi
 
-        ./PolyhedralFunctionBlock_test $seed $what $size $dens $nf $iter
+        "$PolyhedralFunctionBlock_test" $seed $what $size $dens $nf $iter
 
         retVal=$?
         if [ $retVal -ne 0 ]; then

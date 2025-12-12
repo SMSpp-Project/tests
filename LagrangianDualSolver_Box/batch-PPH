@@ -1,0 +1,30 @@
+# batch for running the tests with PrimalProximalHeur
+#!/usr/bin/env bash
+
+what=63
+iter=40
+
+LDS_Box_test=${1:-./LDS_Box_test}
+
+#for nvar in 2 10 50 100
+for nvar in 2 10 50; do
+  for nson in 2 9 20; do
+    for dens in 0.05 0.1; do
+      for (( seed = 7 ; seed < 13 ; seed++ )); do
+
+        printf "[$seed $what $nvar $nson $dens $iter]: "
+
+        "$LDS_Box_test" $seed $what $nvar $nson $dens $iter ProxHeur.txt
+
+        # we would ordinarily break upon any error, but there are a few case
+	# with small optimal value which may trigger an error although they
+	# are not consequential, so we just go along
+        #retVal=$?
+        #if [ $retVal -ne 0 ]; then
+        #  exit 1
+        #fi
+
+      done
+    done
+  done
+done

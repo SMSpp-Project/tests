@@ -13,6 +13,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed 
 
+## [0.6.0] - 2025-12-12
+
+### Added 
+
+- tests comparing UCBlock solutions with expected values
+
+- tests for PrimalProximalHeur
+
+- ComputeConfig for "easy" case in LagBFunction
+
+- tests for duals in LDS_MMCF
+
+- [big] tests for Quadratic Problems
+
+- LEMON to tests/MCF_MILP
+
+- support for both LP and MPS fles in Write-Read
+
+### Changed 
+
+- MMCFBlock/gen and the README accordingly to account for the new way
+  of distributing the instances
+
+- all things that can be changed, and the common definitions, are
+  now in makefile\_common to reduce code duplication within makefiles
+  and to make adapting to one's environment quicker
+
+- adapted to new standard organization of makefiles
+
+
+### Fixed 
+
+- several fixes throughout the testers
+
 ## [0.5.4] - 2024-02-29
 
 ### Added
@@ -142,7 +176,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First test release.
 
-[Unreleased]: https://gitlab.com/smspp/tests/-/compare/0.5.4...develop
+[Unreleased]: https://gitlab.com/smspp/tests/-/compare/0.6.0...develop
+[0.6.0]: https://gitlab.com/smspp/tests/-/compare/0.5.4...0.6.0
 [0.5.4]: https://gitlab.com/smspp/tests/-/compare/0.5.3...0.5.4
 [0.5.3]: https://gitlab.com/smspp/tests/-/compare/0.5.2...0.5.3
 [0.5.2]: https://gitlab.com/smspp/tests/-/compare/0.5.1...0.5.2

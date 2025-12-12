@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+DATADIR=./ObjQ_ConsL
+TYPE=C
+
+quad_test=${1:-./quad_test}
+
+for what in "$DATADIR"/*; do
+
+  printf "[$what $TYPE]: "
+
+  "$quad_test" $what $TYPE
+
+  retVal=$?
+  if [ $retVal -ne 0 ]; then
+    exit 1
+  fi
+
+done

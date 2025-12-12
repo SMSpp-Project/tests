@@ -31,8 +31,6 @@ SimpleConfiguration<int>
 SimpleConfiguration<int>
 1    # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
 
-# note that we could eof() the file here since the rest is all empty
-
 # dynamic_variables
 *    # [none]
 

@@ -15,8 +15,8 @@
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-BundleSolver # name of 1st Solver
-#ParallelBundleSolver # name of 1st Solver
+BundleSolver # name of Solver
+#ParallelBundleSolver # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -34,7 +34,6 @@ ComputeConfig # exact type of the ComputeConfig object
 intMaxIter 100000   # MaxIter, max number of iterations for each call
 intMaxThread 0	   # MaxThread, max number of new tasks to spawn
 intLogVerb 4      # LogVerb, log verbosity of main Bundle algorithm
-
 intWZNorm   2     # which norm to use in the norm-based stopping condition
 intBPar1   20     # discard items when they have been useless for <this> iterations
 intBPar2  400     # max bundle size per component
@@ -45,38 +44,33 @@ intBPar7   11     # how to deal with the global pools
 intMnSSC    0     # min number of consecutive SS with the same t for a t increase
 intMnNSC    1     # min number of consecutive NS with the same t for a t decrease
 inttSPar1   0     # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
-
-intMaxNrEvls 2    # maximum number of function evaluations at each iteration 
-
+intMaxNrEvls 2    # maximum number of function evaluations at each iteration
 intFrcLstSS 0     # if all the components need be computed at the optimum
-
 intTrgtMng 16     # bit-wise encoding targets and accuracies management:
                   # bit 0: if lower/upper target is set to each convex/concave component
                   # bit 1: if upper/lower target is set to each convex/concave component
                   # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                   # bit 4: if Lipschitz constant is used to compute the upper model
-
 intRstAlg   2     # parameter to handle the reset of the algorithm
 
-# MPSolver parameters :- - - - - - - -
+# MPSolver parameters : - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-intMPName  15     # MP solver: 0 = QPP, 7 = OSI with quadratic stabilization
+intMPName  15     # MP solver: 0 = QPP, 7 = Cplex/Gurobi with quadratic stabilization
                   # + 8 = check for duplicate linearizations
-
 intMPlvl   0      # log verbosity of Master Problem
 
-# QPPenalty's parameters : - - - - - -
-                  
+# QPPenalty's parameters :- - - - - - - - - - - - - - - - - - - - - - - - - -
+
 intQPmp1   0	  # MxAdd, how many variables can be added to the base at each
       	          # iteration in BMinQuad (0 = at will)
 intQPmp2   0      # MxRmv, how many variables can be removed from the base at each
       	          # iteration in BMinQuad (0 = at will)
 
-# OSiMPSolver's parameters : - - - - - -
-intOSImp1  1      # CPLEX algorithm
+# OSIMPSolver's parameters :- - - - - - - - - - - - - - - - - - - - - - - - -
+
+intOSImp1  1      # Osi(Cpx/Grb)Solver algorithm (0 = auto (default), 1 = primal, 2 = dual, 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent)
 intOSImp2  0      # pre-processing (reduction)
 intOSImp3  1      # threads
-
 
 16 # number of double parameters
 
@@ -96,14 +90,10 @@ dbltMaior  1e+6   # maximum value for t
 dbltMinor  1e-8   # minimum value for t
 dbltInit   1      # initial value for t
 dbltSPar2  0.001  # parameter for the long-term t-strategy
-
-#dblMinNrEvls 2    # minimum number/fraction of function evaluations at each iteration 
-
+#dblMinNrEvls 2    # minimum number/fraction of function evaluations at each iteration
 dblCtOff   0.01   # cut-off factor for pricing in MinQuad
 
 #dblPoolingInt 1e-4  # frequency of pooling
-
-# note that we could eof() the file here since the rest is all empty
 
 0 # number of string parameters
 

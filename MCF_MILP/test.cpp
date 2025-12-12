@@ -38,6 +38,29 @@
 #define SET_EPS 0
 
 /*--------------------------------------------------------------------------*/
+// several MCFSolver won't work properly if costs and/or deficit/capacities
+// are not integer. this macro allows to ensure that newly generated random
+// costs and/or deficit/capacities are integer. It is coded bitwise:
+// - SET_INT & 1 > 0: costs are integer
+// - SET_INT & 2 > 0: deficit/capacities are integer
+// note that this will not be much helpful unless the original instance data
+// is integer to start with
+
+#define SET_INT 3
+
+#if SET_INT & 1
+ #define intcost( x ) std::round( x )
+#else
+ #define intcost( x ) x
+#endif
+
+#if SET_INT & 2
+ #define intflow( x ) std::round( x )
+#else
+ #define intflow( x ) x
+#endif
+
+/*--------------------------------------------------------------------------*/
 // if nonzero, the 1st Solver attached to the MCFBlock is detached and
 // re-attached to it at all iterations
 
@@ -294,9 +317,30 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -362,7 +406,7 @@ int main( int argc , char **argv )
  {
   auto c = Configuration::deserialize( "BSPar.txt" );
   bsc = dynamic_cast< BlockSolverConfig * >( c );
-  
+
   if( ! bsc ) {
    std::cerr << "Error: BSPar.txt does not contain a BlockSolverConfig"
 	     << std::endl;
@@ -477,7 +521,7 @@ int main( int argc , char **argv )
            ? LF( MCFB->get_objective() ) : nullptr;
 
    if( tochange == 1 ) {
-    CNumber newcst = c_min + CNumber( dis( rg ) * ( c_max - c_min ) );
+    CNumber newcst = intcost( c_min + CNumber( dis( rg ) * ( c_max - c_min ) ) );
     Index arc = Index( dis( rg ) * ( MCFB->get_NArcs() - 1 ) );
 
     if( lf ) {  // change via abstract representation
@@ -492,7 +536,7 @@ int main( int argc , char **argv )
    else {
     MCFBlock::Vec_CNumber newcsts( tochange );
     for( Index i = 0 ; i < tochange ; ++i )
-     newcsts[ i ] = c_min + CNumber( dis( rg ) * ( c_max - c_min ) );
+     newcsts[ i ] = intcost( c_min + CNumber( dis( rg ) * ( c_max - c_min ) ) );
 
     // in 50% of the cases do a ranged change, in the others a sparse change
     if( dis( rg ) <= 0.5 ) {
@@ -533,7 +577,7 @@ int main( int argc , char **argv )
 
    if( tochange == 1 ) {
     auto arc = Index( dis( rg ) * ( MCFB->get_NArcs() - 1 ) );
-    auto newcap = MCFB->get_U( arc ) * rndfctr();
+    auto newcap = intflow( MCFB->get_U( arc ) * rndfctr() );
 
     if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
      // change via abstract representation
@@ -553,7 +597,7 @@ int main( int argc , char **argv )
      Index strt = dis( rg ) * ( MCFB->get_NArcs() - tochange );
      Index stp = strt + tochange;
      for( Index i = 0 ; i < tochange ; ++i )
-      newcaps[ i ] = MCFB->get_U( i + strt ) * rndfctr();
+      newcaps[ i ] = intflow( MCFB->get_U( i + strt ) * rndfctr() );
 
      if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
       // change via abstract representation, sending to a new channel
@@ -574,7 +618,7 @@ int main( int argc , char **argv )
      auto nms = GenerateRand( MCFB->get_NArcs() , tochange , ord );
      auto ncit = newcaps.begin();
      for( auto i : nms )
-      *(ncit++) = MCFB->get_U( i ) * rndfctr();
+      *(ncit++) = intflow( MCFB->get_U( i ) * rndfctr() );
 
      if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
       // change via abstract representation, sending to a new channel
@@ -624,14 +668,14 @@ int main( int argc , char **argv )
     nzdfct = true;
     }
 
-   FNumber Dlt = u_avg * 2 * dis( rg );
+   FNumber Dlt = intflow( u_avg * 2 * dis( rg ) );
    if( dis( rg ) <= 0.5 ) {  // in 50% of cases up, in 50% of cases down
     posd += Dlt;
     negd -= Dlt;
     }
    else {
-    Dlt = std::min( Dlt , std::max( std::max( posd , - negd ) / 2 ,
-				    double( 1 ) ) );
+    Dlt = intflow( std::min( Dlt , std::max( std::max( posd , - negd ) / 2 ,
+					     double( 1 ) ) ) );
     posd -= Dlt;
     negd += Dlt;
     }
@@ -851,10 +895,10 @@ int main( int argc , char **argv )
      } while( sn == en );
 
     // random cost in [ - c_max , c_max ]
-    auto cst = c_max * ( 1 - 2 * dis( rg ) );
+    auto cst = intcost( c_max * ( 1 - 2 * dis( rg ) ) );
 
     // random capacity in [ u_min , 1.5 * ( u_avg - u_min ) ]
-    auto cap = 1.5 * ( u_avg - u_min ) * dis( rg ) + u_min;
+    auto cap = intflow( 1.5 * ( u_avg - u_min ) * dis( rg ) + u_min );
 
     auto arc = MCFB->add_arc( sn , en , cst , cap );  // try to add
     if( arc == IInf )  // there was no space

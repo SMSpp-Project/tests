@@ -2,9 +2,7 @@
 # - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MMCFBlock to be solved by a
-# a *MILPSolver
-#
-#   version 1.0 , 29/01/2021
+# a :MILPSolver
 #
 #   Enrico Gorgone, Antonio Frangioni
 #
@@ -17,31 +15,32 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-#CPXMILPSolver           # name of 1st Solver
-#SCIPMILPSolver           # name of 1st Solver
-GRBMILPSolver           # name of 1st Solver
-
+CPXMILPSolver    # name of Solver
+#GRBMILPSolver   # name of Solver
+#SCIPMILPSolver  # name of Solver
+#HiGHSMILPSolver # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the *MILPSolver
+# ComputeConfig of the :MILPSolver
 ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0    # log verbosity of the MILPSolver
 intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
 
-# All Cplex parameter (uncomment based on 1st solver)
-#CPXPARAM_LPMethod 3  # 0 = auto, 1 = p, 2 = d, 3 = n, 4 = b, 5 = s, 6 = conc
+## All specific CPLEX parameter (uncomment based on Solver)
+#CPXPARAM_LPMethod 3  # 0 = auto (default), 1 = primal, 2 = dual, 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
 
-# note that we could eof() the file here since the rest is all empty
+## All specific GUROBI parameter (uncomment based on Solver)
+#Method -1  # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier, 3 = barrier + crossover, 4 = network
 
 0 # number of double parameters
 
@@ -52,7 +51,6 @@ intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
 
 # now all the string parameters
 #strOutputFile	mmcf.lp
-# [none]
 
 0 # number of vector-of-int parameters
 

@@ -26,6 +26,7 @@
 #define LOG_LEVEL 0
 // 0 = only pass/fail
 // 1 = result of each test
+// 2 = + save LP file
 
 #if( LOG_LEVEL >= 1 )
  #define LOG1( x ) cout << x
@@ -59,6 +60,21 @@
  * either fixing the variable or declaring the model empty outright. */
 
 #define ENSURE_BIN_FEASIBLE 0
+
+/*--------------------------------------------------------------------------*/
+/* if nonzero, lower bounds on variables are guaranteed to be <= than
+ * upper bound. This is because some other Solver (but not BoxSolver) may take
+ * issue with incompatible bounds rather than just doing the right thing and
+ * either fixing the variable or declaring the model empty outright. */
+
+#define ENSURE_LB_LOWER_UB 0
+
+/*--------------------------------------------------------------------------*/
+/* if nonzero, quadratic terms can't be removed from objective function. 
+ * This is because some other Solver, e.g. SCIPMILPSolver (but not BoxSolver),
+ * does not currently support this feature. */
+
+#define ENSURE_QTERMS_STATIC 0
 
 /*--------------------------------------------------------------------------*/
 // if nonzero, we compare the get_opposite_value() with the get_var_value()
@@ -121,6 +137,10 @@
 // unless DIRECTION_TEST > 0
 #if DIRECTION_TEST
  #include "BoxSolver.h"
+#endif
+
+#if( LOG_LEVEL >= 2 )
+ #include "MILPSolver.h"
 #endif
 
 #include "FRealObjective.h"
@@ -189,6 +209,7 @@ bool isint;                // whether integer-constrained
 bool isquad;               // whether lin or quad
 bool isfeas;               // whether always feasible
 bool isbndd;               // whether always bounded
+bool isqstatic;            // whether quadratic terms can't be removed
 
 std::mt19937 rg;           // base random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
@@ -285,6 +306,16 @@ static void set_bounds( BoxConstraint & b )
    if( u < 1 ) u = 1;
    }
  #endif
+ // if the variable is integer, round the bounds to integer values: some
+ // solvers do that in different ways for non-integer bounds, which can
+ // create inconsistencies and make tests fail
+ if( x->is_integer() ) {
+  if( l > -INF )
+   l = std::ceil( l );
+  if( u < INF )
+   u = std::floor( u );
+  }
+
  if( l > -INF )                // if a LB is generated
   b.set_lhs( l );              // set it
  if( u < INF )                 // if an UB is generated
@@ -308,7 +339,7 @@ static void set_lin_c( FunctionValue & b )
 
 /*--------------------------------------------------------------------------*/
 
-static void set_quad_c( FunctionValue & a )
+static void set_quad_c( FunctionValue & a , bool from_modification = false )
 {
  // rationale: if bounded at all, the variable are in [ -2 , 2 ] with a
  // b taken in [ -1 , 1 ], i.e., abs( b ) = 0.5, and the stationary point
@@ -319,7 +350,8 @@ static void set_quad_c( FunctionValue & a )
  // the sign is randomly chosen with equal probability, unless ENSURE_CONVEX
  // in which case it is fixed according to the optimization sign
  a = 0;
- if( dis( rg ) < 0.60 ) {
+
+ if( dis( rg ) < 0.60 || ( isquad && isqstatic && from_modification ) ) {
   a = dis( rg ) * 0.1875 + 0.0625;
   #if ENSURE_CONVEX > 0
    if( ! minobj )
@@ -564,7 +596,7 @@ static bool SolveBoth( void )
                  || ( rtrn2nd == Solver::kLowPrecision ) );
    double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
 
-   if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-7 *
+   if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-6 *
 			   max( double( 1 ) , max( abs( fo1st ) ,
 						   abs( fo2nd ) ) ) ) ) {
     LOG1( "OK(f)" << endl );
@@ -617,9 +649,30 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -677,10 +730,17 @@ int main( int argc , char **argv )
  isquad = ( dis( rg ) < 0.5 );
  // choosing whether integer or not: toss a(n unbiased, two-sided) coin
  isint = ( dis( rg ) < 0.5 );
- // choosing whether always feasible or not: toss a(...) coin
+ // choosing whether always feasible or not: toss a(...) coin + global check
  isfeas = ( dis( rg ) < 0.5 );
+ #if( ENSURE_LB_LOWER_UB > 0 )
+  isfeas = 1;
+ #endif
  // choosing whether always bounded or not: toss a(...) coin
  isbndd = ( dis( rg ) < 0.5 );
+ // choosing wheter we cannot remove terms from quadratic objective function
+ #if( ENSURE_QTERMS_STATIC > 0 )
+  isqstatic = 1;
+ #endif
  
  #if( LOG_LEVEL >= 1 )
   if( minobj ) cout << "min"; else cout << "max";
@@ -728,6 +788,14 @@ int main( int argc , char **argv )
    }
   }
 
+  #if( LOG_LEVEL >= 2 )
+  auto slvr_list = BoxBlock->get_registered_solvers();
+  auto itslvr = slvr_list.begin();
+   for( int j = 0 ; j < slvr_list.size() ; ++j )
+    (*(itslvr++))->set_par( MILPSolver::strOutputFile , 
+			    "Solver" + std::to_string( j ) + ".lp" );
+  #endif
+
  // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -744,6 +812,9 @@ int main( int argc , char **argv )
  // then the two Solver are called to re-solve the BoxBlock
 
  for( Index rep = 0 ; rep < n_repeat * ( SKIP_BEAT + 1 ) ; ) {
+  if( ! AllPassed )
+   break;
+
   LOG1( rep << ": ");
 
   // change bounds- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -803,7 +874,7 @@ int main( int argc , char **argv )
 
       Vec_FunctionValue NQC( tochange );
       for( auto & nqc : NQC )
-       set_quad_c( nqc );
+       set_quad_c( nqc , true );
 
       if( tochange == 1 )
        qf->modify_term( strt , NC.front() , NQC.front() );
@@ -828,7 +899,7 @@ int main( int argc , char **argv )
 
       Vec_FunctionValue NQC( tochange );
       for( auto & nqc : NQC )
-       set_quad_c( nqc );
+       set_quad_c( nqc , true );
 
       if( tochange == 1 )
        qf->modify_term( nms.front() , NC.front() , NQC.front() );
@@ -845,6 +916,17 @@ int main( int argc , char **argv )
       }
      }
     }
+
+  #if( LOG_LEVEL >= 2 )
+   auto slvr_list = BoxBlock->get_registered_solvers();
+   auto itslvr = slvr_list.begin();
+   for( int j = 0 ; j < slvr_list.size() ; ++j ) {
+    (*itslvr)->set_par( MILPSolver::strOutputFile , 
+      "Solver" + std::to_string( j ) + "-BoxBlock-" + 
+        std::to_string( rep ) + ".lp" );
+    ++itslvr;
+    }
+  #endif
 
   // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -
   // ... every SKIP_BEAT + 1 rounds

@@ -1,12 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - BinaryKnapsackPar.txt - - - - - - - - - - - - - - 
 #
-# A txt description of a BlockSolverConfig for a BinaryKnapsackBlock having
-# two attached solvers:  
-# 
-#  - DPBinaryKnapsackSolver
+# A txt description of a BlockSolverConfig for a BinaryKnapsackBlock to be
+# solved by two different Solver: a DPBinaryKnapsackSolver and a :MILPSolver
 #
-#  - MILPSolver (CPXMILPSolver, SCIPMILPSolver or GRBMILPSolver)
+#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,13 +15,12 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
 2  # number of (the names of) Solver in this BlockSolverConfig
-
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-
-DPBinaryKnapsackSolver   	# name of 1st Solver
-#CPXMILPSolver 			# name of 2nd Solver
-#SCIPMILPSolver 		# name of 2nd Solver
-GRBMILPSolver 			# name of 2nd Solver
+DPBinaryKnapsackSolver  # name of 1st Solver
+CPXMILPSolver 			# name of 2nd Solver
+#GRBMILPSolver 			# name of 2nd Solver
+#SCIPMILPSolver 	    # name of 2nd Solver
+#HiGHSMILPSolver 		# name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -63,29 +60,38 @@ ComputeConfig # exact type of the ComputeConfig object
    # f_diff == 1 ==> all non-provided parameters are not changed
 
 1  # number of integer parameters
+
 # now all the integer parameters
 intLogVerb 0
 
 2  # number of double parameters
+
 # now all the double parameters
 dblRelAcc		1e-08
-#CPXPARAM_MIP_Tolerances_Integrality	1e-07	# Cplex parameter (uncomment based on 2nd solver)
-IntFeasTol  1e-07	# Gurobi parameter (uncomment based on 2nd solver)
+
+## All specific CPLEX parameter (uncomment based on 2nd Solver)
+CPXPARAM_MIP_Tolerances_Integrality	1e-07
+
+## All specific GUROBI parameter (uncomment based on 2nd Solver)
+#IntFeasTol  1e-07
 
 0  # number of string parameters
-# now all the double parameters
+
+# now all the string parameters
 #strOutputFile	bk.lp
-# [none]
 
 0  # number of vector-of-int parameters
+
 # now all the vector-of-int parameters
 # [none]
 
 0  # number of vector-of-double parameters
+
 # now all the vector-of-double parameters
 # [none]
 
 0  # number of vector-of-string parameters
+
 # now all the vector-of-string parameters
 # [none]
 

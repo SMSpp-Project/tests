@@ -1,19 +1,69 @@
-# ----- Test ---------------------------------------------------------------- #
-if (TARGET SMS++::MCFBlock AND
-    TARGET SMS++::BinaryKnapsackBlock AND
-    TARGET SMS++::BundleSolver AND
-    TARGET SMS++::LagrangianDualSolver AND
-    TARGET SMS++::CapacitatedFacilityLocationBlock AND
-    TARGET SMS++::MILPSolver)
+# ----- Requirements -------------------------------------------------------- #
+# If it's not being called by the umbrella, we need to
+# look for the system-installed libraries.
+if (NOT hasParent)
+    # Blocks
+    find_package(CapacitatedFacilityLocationBlock)
+    # Solvers
+    find_package(LagrangianDualSolver)
+    find_package(BundleSolver)
+    find_package(MILPSolver)
+    find_package(LEMONSolver)
+endif ()
+
+# ----- Tests --------------------------------------------------------------- #
+if (TARGET SMS++::CapacitatedFacilityLocationBlock)
 
     add_executable(CFL_test test.cpp)
     target_link_libraries(CFL_test PRIVATE
-                          SMS++::BundleSolver
-                          SMS++::LagrangianDualSolver
-                          SMS++::MCFBlock
-                          SMS++::MILPSolver
-                          SMS++::BinaryKnapsackBlock
                           SMS++::CapacitatedFacilityLocationBlock)
+
+    if (TARGET SMS++::LagrangianDualSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::LagrangianDualSolver)
+    endif ()
+
+    if (TARGET SMS++::BundleSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::BundleSolver)
+    endif ()
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    if (TARGET SMS++::LEMONSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::LEMONSolver)
+    endif ()
+
+    # Create a test fixture to generate .nc4 files by running run_txt2nc4.
+    # This test will build and run the run_txt2nc4 target
+    add_test(NAME run_txt2nc4
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_txt2nc4)
+    # Mark run_txt2nc4 as a fixture that sets up "txt2nc4_generated"
+    set_tests_properties(run_txt2nc4 PROPERTIES FIXTURES_SETUP txt2nc4_generated)
+
+    # Add a test for each batch file
+    file(GLOB BATCH_FILES #"${CMAKE_CURRENT_SOURCE_DIR}/batch" # TODO uncomment when it will be fixed
+                          #"${CMAKE_CURRENT_SOURCE_DIR}/batch-s" # TODO uncomment when it will be fixed
+                          "${CMAKE_CURRENT_SOURCE_DIR}/MCF/batch")
+                          #"${CMAKE_CURRENT_SOURCE_DIR}/LDVScuts/batch-s") # TODO uncomment when it will be fixed
+    foreach (BATCH_FILE ${BATCH_FILES})
+        # Remove the source directory prefix to get the batch name
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        if (UNIX)
+            add_test(NAME CFL_test/${BATCH_NAME}
+                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/CFL_test
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        elseif (WIN32)
+            add_test(NAME CFL_test/${BATCH_NAME}
+                     # using Git for Windows that includes Git Bash
+                     COMMAND "C:/Program Files/Git/bin/bash.exe"
+                             "${BATCH_FILE}" "$<TARGET_FILE:CFL_test>"
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        endif ()
+        # Make each batch test require the txt2nc4_generated fixture
+        set_tests_properties(CFL_test/${BATCH_NAME}
+                             PROPERTIES FIXTURES_REQUIRED txt2nc4_generated)
+    endforeach ()
 endif ()
 
 # --------------------------------------------------------------------------- #

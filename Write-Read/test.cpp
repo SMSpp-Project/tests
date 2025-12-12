@@ -4,14 +4,13 @@
 /** @file
  * Main for testing read_mps feature
  *
- * A "random" PolyhedralFunction is constructed and represented in terms
- * of linear inequalities for an otherwise "empty" AbstractBlock. The
- * Block is then solved by a CPXMILPSolver which also produce a .mps file with 
- * the data of the model. This file is then read again from another 
- * AbstractBlock and solved by a (possibly) different LP Solver. The results
- * are then compared to assess the equality between the written and read model. 
- * The first Block is then repeatedly randomly modified, and each time the 
- * same procedure is applied.
+ * A "random" a Linear Program is constructed and represented in an 
+ * AbstractBlock. The Block is then solved by a *MILPSolver which also produces
+ * a .lp/.mps file with the data of the model. This file is then read again 
+ * from another AbstractBlock and solved by a (possibly) different LP Solver.
+ * The results are then compared to assess the equality between the written 
+ * and read model. The first Block is then repeatedly randomly modified, 
+ * and each time the same procedure is applied.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -27,8 +26,17 @@
 /*-------------------------------- MACROS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#define LOG_LEVEL 0
+// 0 = only pass/fail
+// 1 = result of each test
+
+#if( LOG_LEVEL >= 1 )
 #define LOG1( x ) cout << x
 #define CLOG1( y , x ) if( y ) cout << x
+#else
+#define LOG1( x )
+#define CLOG1( y , x )
+#endif
 
 /*--------------------------------------------------------------------------*/
 
@@ -48,6 +56,20 @@
 #endif
 
 /*--------------------------------------------------------------------------*/
+
+// This option enable to write/read files in different formats.
+// if TEST_FILE_TYPE == 1, then after an LP model have been built, it is 
+// written by AbstractBlock in a .mps format. 
+// if TEST_FILE_TYPE == 2, then after an LP model have been built, it is 
+// written by AbstractBlock in a .lp format.
+// if TEST_FILE_TYPE == 3, then after an LP model have been built, it is 
+// written in an .lp format and stored by AbstractBlock in a .nc4 file. 
+// In particular, the model is put inside a netCDF::netVar contained in a 
+// netCDF::netGroup corresponding to an AbstractBlock.
+
+#define TEST_FILE_TYPE 1
+
+/*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -56,6 +78,7 @@
 #include <iomanip>
 
 #include <random>
+#include <netcdf>
 
 #include "AbstractBlock.h"
 
@@ -115,11 +138,6 @@ const FunctionValue INF = SMSpp_di_unipi_it::Inf< FunctionValue >();
 /*--------------------------------------------------------------------------*/
 /*------------------------------- GLOBALS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
-
-// Choose here the format of the output file:
-// L stands for LP-file
-// M stands for MPS-file
-char format = 'L';
 
 AbstractBlock * LPBlock;   // the problem expressed as an LP
 AbstractBlock * secondLPBlock;   // the problem expressed as an LP
@@ -347,7 +365,7 @@ static bool SolveFirst( void )
 {
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrLP = (LPBlock->get_registered_solvers()).front();
+  Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
   rtrnfirstLP = slvrLP->compute( false );
   hsfirstLP = ( ( rtrnfirstLP >= Solver::kOK ) && ( rtrnfirstLP < Solver::kError ) )
               || ( rtrnfirstLP == Solver::kLowPrecision );
@@ -390,7 +408,7 @@ static bool SolveSecond( void )
 {
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrLP = (secondLPBlock->get_registered_solvers()).front();
+  Solver * slvrLP = ( secondLPBlock->get_registered_solvers() ).front();
   rtrnsecondLP = slvrLP->compute( false );
   hssecondLP = ( ( rtrnsecondLP >= Solver::kOK ) && ( rtrnsecondLP < Solver::kError ) )
               || ( rtrnsecondLP == Solver::kLowPrecision );
@@ -403,12 +421,13 @@ static bool SolveSecond( void )
   ** the read one we need to take the inverse of the objective value 
   ** obtained. For this reason, if the starting model is not convex, we 
   ** consider as objective value of the read model: - slvrLP->get_lb() */
-  if( format == 'M' )
+  #if TEST_FILE_TYPE == 1
     fosecondLP = hssecondLP ? ( convex ? slvrLP->get_ub() : - slvrLP->get_lb() )
                      : ( convex ? INF : -INF );
-  else if( format == 'L' )
+  #else
     fosecondLP = hssecondLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
                      : ( convex ? INF : -INF );
+  #endif
 
   if( hssecondLP ) {
    LOG1( "OK(f) - " );
@@ -450,9 +469,30 @@ static bool SolveSecond( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -599,17 +639,27 @@ int main( int argc , char **argv )
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // write the .mps file which will be then read again from another AbstractBlock
- // and resolved
  
  std::string output_name = "LPBlock";
- if( format == 'L')
-  output_name = output_name + ".lp";
- else if( format == 'M' )
+ #if TEST_FILE_TYPE == 1
   output_name = output_name + ".mps";
+ #endif
+ 
+ #if TEST_FILE_TYPE == 2
+  output_name = output_name + ".lp";
+ #endif
+ 
+ // if we want to test netCDF files, then we also need to prepare a
+ // .nc4 extension.
+ #if TEST_FILE_TYPE == 3
+  std::string output_name_net = output_name + ".nc4";
+  output_name = output_name + ".lp";
+ #endif
 
- ((LPBlock->get_registered_solvers()).front())->set_par(
-	                         MILPSolver::strOutputFile , output_name );
+ // write the .mps / .lp file which will be then read again from another 
+ // AbstractBlock and resolved.
+ ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
+                            MILPSolver::strOutputFile , output_name );
 
  // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -617,13 +667,52 @@ int main( int argc , char **argv )
 
  SolveFirst();
 
+ // Write the .nc4 file. Here, the structure of the file is very simple:
+ // it is a SMS++_file_type composed by a single problem with a Block inside
+ // corresponding to an AbstractBlock. Within this Group, we use the Variable 
+ // "Model" to store the .lp representation of the model.
+ #if TEST_FILE_TYPE == 3
+ {
+  netCDF::NcFile f( output_name_net , netCDF::NcFile::replace );
+
+  f.putAtt( "SMS++_file_type" , netCDF::NcInt() , eProbFile );
+
+  const int idx = f.getGroupCount();
+  netCDF::NcGroup dg = f.addGroup( "Prob_" + std::to_string( idx ) );
+  netCDF::NcGroup bg = dg.addGroup( "Block" ); 
+  bg.putAtt( "type", "AbstractBlock" );
+
+  auto szb = bg.addDim( "size" , 1 );
+  auto Model = bg.addVar( "Model" , netCDF::NcString() , {szb});
+
+  std::ifstream t(output_name);
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+  Model.putVar( {0} , buffer.str() );
+  Model.putAtt( "ModelType" , "LP"  );
+ }
+
+ #endif
+
 // construct the second LP by simply reading the previous written model - - -
  {
   secondLPBlock = new AbstractBlock();
   
-  std::ifstream file;
-  file.open(output_name);
-  secondLPBlock->load( file , format );
+  #if TEST_FILE_TYPE == 1
+    std::ifstream file;
+    file.open(output_name);
+    secondLPBlock->load( file , 'M' );
+  #endif
+
+  #if TEST_FILE_TYPE == 2
+    std::ifstream file;
+    file.open(output_name);
+    secondLPBlock->load( file , 'L' );
+  #endif
+
+  #if TEST_FILE_TYPE == 3
+    secondLPBlock = dynamic_cast< AbstractBlock * >( Block::deserialize( output_name_net ));
+  #endif
  }
 
  // attach the Solver to the Block- - - - - - - - - - - - - - - - - - - - - -
@@ -647,8 +736,8 @@ int main( int argc , char **argv )
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // write the .mps file which will be then compared with the previous one
- ((secondLPBlock->get_registered_solvers()).front())->set_par(
+ // write the .lp file which can be then compared with the previous one
+ ( ( secondLPBlock->get_registered_solvers() ).front() )->set_par(
 	                         MILPSolver::strOutputFile , "SecondLPBlock.lp" );
 
  // second solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -839,29 +928,77 @@ int main( int argc , char **argv )
 
     // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // write the .mps file which will be then read again from another AbstractBlock
-    // and resolved
 
     std::string rep_name = "LPBlock-" + std::to_string( rep );
-    if( format == 'L')
-     rep_name = rep_name + ".lp";
-    else if( format == 'M' )
-     rep_name = rep_name + ".mps";
+    #if TEST_FILE_TYPE == 1
+      rep_name = rep_name + ".mps";
+    #endif
+    
+    #if TEST_FILE_TYPE == 2
+      rep_name = rep_name + ".lp";
+    #endif
+ 
+    // if we want to test netCDF files, then we also need to prepare a
+    // .nc4 extension.
+    #if TEST_FILE_TYPE == 3
+      std::string rep_name_net = rep_name + ".nc4";
+      rep_name = rep_name + ".lp";
+    #endif
 
-    ((LPBlock->get_registered_solvers()).front())->set_par(
+    // write the .mps / .lp file which will be then read again from another 
+    // AbstractBlock and resolved.
+    ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
                                 MILPSolver::strOutputFile , rep_name );
 
     // finally, re-solve the problems with the first solver - - - - - - - - - - -
     // ... every SKIP_BEAT + 1 rounds
     SolveFirst();
 
+    // Write the .nc4 file. Here, the structure of the file is very simple:
+    // it is a SMS++_file_type composed by a single problem with a Block inside
+    // corresponding to an AbstractBlock. Within this Group, we use the Variable 
+    // "Model" to store the .lp representation of the model.
+    #if TEST_FILE_TYPE == 3
+    {
+    netCDF::NcFile f( rep_name_net , netCDF::NcFile::replace );
+
+    f.putAtt( "SMS++_file_type" , netCDF::NcInt() , eProbFile );
+
+    const int idx = f.getGroupCount();
+    netCDF::NcGroup dg = f.addGroup( "Prob_" + std::to_string( idx ) );
+    netCDF::NcGroup bg = dg.addGroup( "Block" ); 
+    bg.putAtt( "type", "AbstractBlock" );
+
+    auto szb = bg.addDim( "size" , 1 );
+    auto Model = bg.addVar( "Model" , netCDF::NcString() , {szb});
+
+    std::ifstream t(rep_name);
+    std::stringstream buffer;
+    buffer << t.rdbuf();
+    Model.putVar( {0} , buffer.str() );
+    Model.putAtt( "ModelType" , "LP"  );
+    }
+    #endif
+
     // construct the second LP by simply reading the previous written model - - -
     {
     secondLPBlock = new AbstractBlock();
 
-    std::ifstream file;
-    file.open(rep_name);
-    secondLPBlock->load( file , format );
+    #if TEST_FILE_TYPE == 1
+      std::ifstream file;
+      file.open(rep_name);
+      secondLPBlock->load( file , 'M' );
+    #endif
+
+    #if TEST_FILE_TYPE == 2
+      std::ifstream file;
+      file.open(rep_name);
+      secondLPBlock->load( file , 'L' );
+    #endif
+
+    #if TEST_FILE_TYPE == 3
+      secondLPBlock = dynamic_cast< AbstractBlock * >( Block::deserialize( rep_name_net ));
+    #endif
     }
 
     // attach the Solver to the Block- - - - - - - - - - - - - - - - - - - - - -
@@ -873,9 +1010,10 @@ int main( int argc , char **argv )
 
     // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // write the .mps file which will be then compared with the previous one
-    ((secondLPBlock->get_registered_solvers()).front())->set_par(
-                                MILPSolver::strOutputFile , "Second" + rep_name );
+    // write the .lp file which can be then compared with the previous one
+    ( ( secondLPBlock->get_registered_solvers() ).front() )->set_par(
+                                MILPSolver::strOutputFile , "SecondLPBlock-" + 
+                                std::to_string( rep ) + ".lp" );
 
     // second solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -66,8 +66,8 @@ BlockSolverConfig * build_solver_config
 
  std::ifstream config_file( config_file_path );
  if( ! config_file.is_open() )
-  throw std::invalid_argument( "BendersBFunction test: Error: cannot open "
-                               "configuration file " + config_file_path );
+  throw( std::invalid_argument( "BendersBFunction test: Error: cannot open "
+                                "configuration file " + config_file_path ) );
 
  auto bsc = new BlockSolverConfig;
  config_file >> ( * bsc );
@@ -97,7 +97,7 @@ int solve_with_BundleSolver( std::filesystem::path file_path ,
  lpbsc->apply( inner_block );
  lpbsc->clear();
 
- auto inner_block_solver = (inner_block->get_registered_solvers()).front();
+ auto inner_block_solver = ( inner_block->get_registered_solvers() ).front();
  //inner_block_solver->set_par( MILPSolver::strOutputFile , "lp.txt" )
 
  auto block = build_CWL_block_with_Benders_decomposition
@@ -148,7 +148,7 @@ int solve_with_MILPSolver( std::filesystem::path file_path ,
  lpbsc->apply( block );
  lpbsc->clear();
 
- auto solver = (block->get_registered_solvers()).front();
+ auto solver = ( block->get_registered_solvers() ).front();
  auto status = solver->compute();
  if( solver->has_var_solution() )
   *solution_value = solver->get_var_value();
@@ -213,8 +213,32 @@ void compare( std::string data_dir_path ,
 }
 
 /*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
 
-int main( int argc, char ** argv ) {
+void smspp_terminate( void ) {
+
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+ }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+ } catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+ }
+ std::abort(); // or exit(1)
+}
+
+/*--------------------------------------------------------------------------*/
+
+int main( int argc, char ** argv )
+{
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
+ // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
+ // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  if( argc < 2 ) {
   std::cerr << "The path to the directory containing the instance files " <<

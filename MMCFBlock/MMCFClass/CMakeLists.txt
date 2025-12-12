@@ -13,4 +13,5 @@ if (CPLEX_FOUND)
     target_include_directories(MMCFClass PUBLIC MMCFCplex)
     target_link_libraries(MMCFClass PUBLIC CPLEX::Cplex)
 endif ()
+
 # --------------------------------------------------------------------------- #

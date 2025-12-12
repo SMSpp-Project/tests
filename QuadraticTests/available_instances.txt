@@ -1,0 +1,48 @@
+\ This file is supposed to be contained inside the test/QuadraticTests folder of SMS++.
+\ It contains a list of all the quadratic instances available in the folder, along with the 
+\ known optimal solution.
+\
+\ Author: Enrico Calandrini
+\
+\ Instance Name                               Optimal Solution                 Relaxation Solution
+
+./ObjC_ConsL/QPLib_3913.lp                    42.925                           32.540058932
+./ObjC_ConsL/QPLib_3980.lp                    6.325                            -2.8587119773
+./ObjC_ConsL/QPLib_4270.lp                    99.48264828                      97.600177965
+./ObjC_ConsL/QPLib_8559.lp                    74223239.83                      74221531.466
+./ObjC_ConsL/QPLib_8567.lp                    78965987.95                      78963997.461
+./ObjC_ConsL/QPLib_8792.lp                    3593.518355                      3593.518355 
+./ObjC_ConsL/QPLib_8845.lp                    10907992.49                      10907992.49
+./ObjC_ConsL/QPLib_8906.lp                    2699111.513                      2699111.513 
+./ObjC_ConsL/QPLib_8991.lp                    -0.00166787                      -0.00166787
+./ObjC_ConsL/QPLib_10050.lp                   -25.69766163                     -27.382331672
+./ObjC_ConsL/QPLib_10056.lp                   -33.85678866                     -35.324529149
+./ObjC_ConsL/QPLib_10069.lp                   0.0                              0.0
+./ObjL_ConsC/QPLib_10001.lp                   -25766.82                        -25799.323246
+./ObjL_ConsC/QPLib_10002.lp                   -21931.57                        -22501.573911
+./ObjL_ConsC/QPLib_10003.lp                   -21944.87                        -22529.894190
+./ObjL_ConsC/QPLib_10004.lp                   -2588.21                         -2620.5307610
+./ObjL_ConsC/QPLib_10005.lp                   -9820.91                         -9838.7573821
+./ObjL_ConsC/QPLib_10008.lp                   -23176.19                        -23443.403572
+./ObjL_ConsC/QPLib_10009.lp                   -23176.19                        -23443.403572
+./ObjL_ConsC/QPLib_10010.lp                   -23003.31                        -23301.342344
+./ObjL_ConsC/QPLib_10011.lp                   -23176.19                        -23464.989403
+./ObjL_ConsC/QPLib_10012.lp                   -23176.19                        -23464.989544
+./ObjQ_ConsL/QPLib_0018.lp                    -6.38601498                      -6.3860148333
+./ObjQ_ConsL/QPLib_0031.lp                    15.38637379                      15.20151
+./ObjQ_ConsL/QPLib_0032.lp                    10.12639121                      9.94651
+./ObjQ_ConsL/QPLib_0067.lp                    -110942.0                        -112205.35947
+./ObjQ_ConsL/QPLib_0343.lp                    -6.38601498                      -6.38601
+./ObjQ_ConsL/QPLib_0633.lp                    79.56070622                      79.57917
+./ObjQ_ConsL/QPLib_2315.lp                    -29432.0                         -25105.0
+./ObjQ_ConsL/QPLib_2353.lp                    -1674.0                          -1674.0
+./ObjQ_ConsL/QPLib_2357.lp                    -647.0                           -642.0
+./ObjQ_ConsL/QPLib_2359.lp                    -648.0                           -647.99998902
+./ObjQ_ConsL/QPLib_2492.lp                    2724.0                           2656.5535647
+./ObjQ_ConsL/QPLib_3762.lp                    -296.0                           -296.0
+./ObjQ_ConsL/QPLib_3815.lp                    -65.0                            -63.0
+./ObjQ_ConsL/QPLib_8777.lp                    -2238983072.0                    -2238983072.0
+./ObjQ_ConsL/QPLib_10057.lp                   0.0                              0.0
+./ObjQ_ConsL/QPLib_10065.lp                   -29.82242097                     -31.173823519
+./ObjQ_ConsL/QPLib_10072.lp                   0.0                              0.0
+END

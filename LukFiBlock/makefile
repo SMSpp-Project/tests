@@ -2,7 +2,7 @@
 ################################ makefile ####################################
 ##############################################################################
 #                                                                            #
-#   makefile of test (for core LukFiBlock)                                   #
+#   makefile of test (for LukFiBlock)                                        #
 #                                                                            #
 #                              Antonio Frangioni                             #
 #                          Dipartimento di Informatica                       #
@@ -16,24 +16,8 @@ NAME = LukFi_test
 # basic directory
 DIR = .
 
-# debug switches
-#SW = -g -glldb -fno-inline -std=c++17 -ferror-limit=1
-# debug switches with address sanitizer and extra pedantic warning
-SW = -g3 -glldb -fno-inline -std=c++17 -ferror-limit=1 -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -Wpedantic -Wextra -Wno-unused-parameter -Wno-enum-compare -DCLANG_1200_0_32_27_PATCH
-# production switches
-#SW = -O3 -DNDEBUG -std=c++17  
-
-# compiler
-CC = clang++
-
-# default target- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-all default: $(DIR)/$(NAME)
-
-# clean - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-clean::
-	rm -f $(DIR)/*.o $(DIR)/*~ $(DIR)/$(NAME)
+# common stuff
+include ../makefile_common
 
 # define & include the necessary modules- - - - - - - - - - - - - - - - - - -
 # if a module is not used in the current configuration, just comment out the
@@ -67,7 +51,7 @@ MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LukFiLIB)
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/main.o
 	$(CC) -o $(DIR)/$(NAME) $(DIR)/main.o $(MOBJ) $(MLIB) $(SW)
 
-# dependencies: every .o from its .C + every recursively included .h- - - - -
+# dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
 MINC =  $(SMS++INC) $(BNDSLVINC) $(LukFiINC)
@@ -81,4 +65,3 @@ $(DIR)/main.o: $(DIR)/main.cpp $(MH)
 	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)
 
 ############################ End of makefile ################################
-

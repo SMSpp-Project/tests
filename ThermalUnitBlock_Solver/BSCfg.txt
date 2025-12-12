@@ -3,7 +3,7 @@
 #
 # A txt description of a BlockSolverConfig for a "very simple" Block
 # containing only box constraints, so that it can be solved by a BoxSolver
-# as well as a :MILPSolver (say, a CPXMILPSolver or a SCIPMILPSolver)
+# as well as a :MILPSolver
 #
 #   Antonio Frangioni
 #
@@ -18,9 +18,10 @@ BlockSolverConfig     # exact type of the Configuration object
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 ThermalUnitDPSolver      # name of 1st Solver
-#CPXMILPSolver           # name of 2nd Solver
-#SCIPMILPSolver          # name of 2nd Solver
-GRBMILPSolver            # name of 2nd Solver
+CPXMILPSolver 			# name of 2nd Solver
+#GRBMILPSolver 			# name of 2nd Solver
+#SCIPMILPSolver 	    # name of 2nd Solver
+#HiGHSMILPSolver 		# name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -33,7 +34,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-0 # number of integer parameters
+0  # number of integer parameters
 
 # now all the integer parameters
 # [none]
@@ -73,24 +74,30 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-4 # number of integer parameters
+6  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb      	0    # log verbosity of the MILPSolver
-intRelaxIntVars 	0    # nonzero if the continuous relaxation is solved
-intCutSepPar        7    # separate user cuts + lazy constraints
-## CPLEX Parameter (based on the second solver)
+intLogVerb      	 0    # log verbosity of the MILPSolver
+intRelaxIntVars 	 0    # nonzero if the continuous relaxation is solved
+intCutSepPar         7    # separate user cuts + lazy constraints
+
+## All specific CPLEX parameter (uncomment based on 2nd Solver)
 #CPXPARAM_Threads    1
-#CPX_PARAM_NUMERICALEMPHASIS 1
-## GUROBI Parameter(based on the second solver)
-Threads  1
+CPX_PARAM_MIPCBREDLP 0
+CPX_PARAM_PRELINEAR  0
+CPX_PARAM_REDUCE     1
+
+## All specific GUROBI parameter (uncomment based on 2nd Solver)
+#Threads             1
 
 0 # number of double parameters
 
 # now all the double parameters
-## CPLEX Parameter (based on the second solver)
+
+## All specific CPLEX parameter (uncomment based on 2nd Solver)
 #CPXPARAM_Simplex_Tolerances_Feasibility 1e-9
-## GUROBI Parameter(based on the second solver)
+
+## All specific GUROBI parameter (uncomment based on 2nd Solver)
 #FeasibilityTol 1e-9
 
 0 # number of string parameters

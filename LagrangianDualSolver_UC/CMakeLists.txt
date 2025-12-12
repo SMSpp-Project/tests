@@ -1,24 +1,64 @@
-# ----- Test ---------------------------------------------------------------- #
-if (TARGET SMS++::UCBlock AND
-    TARGET SMS++::BundleSolver AND
-    TARGET SMS++::LagrangianDualSolver)
+# ----- Requirements -------------------------------------------------------- #
+# If it's not being called by the umbrella, we need to
+# look for the system-installed libraries.
+if (NOT hasParent)
+    # Blocks
+    find_package(UCBlock)
+    # Solvers
+    find_package(LagrangianDualSolver)
+    find_package(BundleSolver)
+    find_package(MILPSolver)
+endif ()
+
+# ----- Tests --------------------------------------------------------------- #
+if (TARGET SMS++::UCBlock)
 
     add_executable(LDS_UC_test test.cpp)
-    target_link_libraries(LDS_UC_test PRIVATE
-                          SMS++::UCBlock
-                          SMS++::LagrangianDualSolver
-                          SMS++::BundleSolver)
+    target_link_libraries(LDS_UC_test PRIVATE SMS++::UCBlock)
 
-    # This version replicates the batch file in CMake.
-    # This method was preferred because it allows to keep track
-    # of the single tests via the CTest application and also
-    # avoids copying all the auxiliary files.
-    foreach (size 10 20 50 75 100 200)
-        foreach (seed RANGE 1 5)
-            add_test(NAME "LDS_UC_test/[${size},${seed}]"
-                     COMMAND LDS_UC_test ../../UCBlock/netCDF_files/UC_Data/T-Ramp/${size}_0_${seed}_w.nc4
+    if (TARGET SMS++::LagrangianDualSolver)
+        target_link_libraries(LDS_UC_test PRIVATE SMS++::LagrangianDualSolver)
+    endif ()
+
+    if (TARGET SMS++::BundleSolver)
+        target_link_libraries(LDS_UC_test PRIVATE SMS++::BundleSolver)
+    endif ()
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(LDS_UC_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    # Create a test fixture to generate .nc4 files by running extract_nc4uc.
+    # This test will build and run the extract_nc4uc target
+    add_test(NAME extract_nc4uc
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target extract_nc4uc)
+    # Mark extract_nc4uc as a fixture that sets up "data_extracted"
+    set_tests_properties(extract_nc4uc PROPERTIES FIXTURES_SETUP data_extracted)
+
+    # Add a test for each batch file
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-acad"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-acad-s"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-acadh"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ec"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-p4r"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-resilient")
+    foreach (BATCH_FILE ${BATCH_FILES})
+        # Remove the source directory prefix to get the batch name
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        if (UNIX)
+            add_test(NAME LDS_UC_test/${BATCH_NAME}
+                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/LDS_UC_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endforeach ()
+        elseif (WIN32)
+            add_test(NAME LDS_UC_test/${BATCH_NAME}
+                     # using Git for Windows that includes Git Bash
+                     COMMAND "C:/Program Files/Git/bin/bash.exe"
+                             "${BATCH_FILE}" "$<TARGET_FILE:LDS_UC_test>"
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        endif ()
+        # Make each batch test require the data_extracted fixture
+        set_tests_properties(LDS_UC_test/${BATCH_NAME}
+                PROPERTIES FIXTURES_REQUIRED data_extracted)
     endforeach ()
 endif ()
 

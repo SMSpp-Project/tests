@@ -30,7 +30,7 @@
 /*-------------------------------- MACROS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#define LOG_LEVEL 1
+#define LOG_LEVEL 2
 // -1 = no log at all, not even pass/fail
 // 0 = only pass/fail
 // 1 = result of each test
@@ -54,11 +54,11 @@
 
 /*--------------------------------------------------------------------------*/
 // if nonzero, the 2nd Solver attached to the UCBlock is assumed to be a
-// LagrangianDualSolver using the BundleSolver as the "inner" solver;
-// parameters from the BlockSolverConfig are read and set so that, if
-// "easy components" are used, all UnitBlock that are ThermalUnitBlock or
-// HydroSystemUnitBlock are attached an appropriate Solver, whereas all
-// other inner Block are treated as "easy components"
+// LagrangianDualSolver (or PrimalProximalHeur) using [Parallel]BundleSolver
+// as the "inner" solver; parameters from the BlockSolverConfig are read and
+// set so that, if "easy components" are used, all UnitBlock that are
+// ThermalUnitBlock or HydroSystemUnitBlock are attached an appropriate
+// Solver, whereas all other inner Block are treated as "easy components"
 
 #define USE_BundleSolver 1
 
@@ -104,6 +104,8 @@
 #include <sstream>
 
 #include <iomanip>
+
+#include <chrono>
 
 #include <random>
 
@@ -153,6 +155,13 @@ Block * TestBlock;         // the [UC]Block that is solved
 std::mt19937 rg;           // base random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
+// if not-NaN, the objective value of the (only) Solver attached to the Block
+// is compared against a reference value passed on the command line
+
+double RefObjective = std::numeric_limits<double>::quiet_NaN();
+bool ProxHeur = false;     // false = LagrangianDualSolver
+                           // true = PrimalProximalHeur
+
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -178,7 +187,8 @@ static void Configure_HSUB( HydroSystemUnitBlock * hsub ) {
 
 /*--------------------------------------------------------------------------*/
 
-static double rndfctr( void ) {
+static double rndfctr( void )
+{
  // return a random number between 0.5 and 2, with 50% probability of being
  // < 1
  double fctr = dis( rg ) - 0.5;
@@ -187,7 +197,8 @@ static double rndfctr( void ) {
 
 /*--------------------------------------------------------------------------*/
 
-static Subset GenerateRand( Index m , Index k ) {
+static Subset GenerateRand( Index m , Index k )
+{
  // generate a sorted random k-vector of unique integers in 0 ... m - 1
 
  Subset rnd( m );
@@ -202,7 +213,8 @@ static Subset GenerateRand( Index m , Index k ) {
 /*--------------------------------------------------------------------------*/
 // set precision for long floats (7 digits) in scientific notation
 
-static inline std::ostream & def( std::ostream & os ) {
+static inline std::ostream & def( std::ostream & os )
+{
  os.setf( std::ios::scientific , std::ios::floatfield );
  os << std::setprecision( 7 );
  return( os );
@@ -211,7 +223,8 @@ static inline std::ostream & def( std::ostream & os ) {
 /*--------------------------------------------------------------------------*/
 // set precision for short floats (4 digits) in fixed notation
 
-static inline std::ostream & fixd( std::ostream & os ) {
+static inline std::ostream & fixd( std::ostream & os )
+{
  os.setf( std::ios::fixed , std::ios::floatfield );
  os << std::setprecision( 4 );
  return( os );
@@ -219,7 +232,8 @@ static inline std::ostream & fixd( std::ostream & os ) {
 
 /*--------------------------------------------------------------------------*/
 
-static void PrintResults( bool hs , int rtrn , double fo ) {
+static void PrintResults( bool hs , int rtrn , double fo )
+{
  if( hs ) {
   std::cout.setf( std::ios::scientific, std::ios::floatfield );
   std::cout << def << fo;
@@ -236,7 +250,8 @@ static void PrintResults( bool hs , int rtrn , double fo ) {
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) {
+static bool SolveBoth( void )
+{
  try {
   // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
   #if( LOG_LEVEL >= 1 )
@@ -257,13 +272,14 @@ static bool SolveBoth( void ) {
                    && ( rtrn1st != Solver::kUnbounded )
                    && ( rtrn1st != Solver::kInfeasible ) )
                  || ( rtrn1st == Solver::kLowPrecision ) );
+  
   // the Lagrangian Dual computes lower bounds, so that's what we compare
-  double fo1st = Slvr1->get_lb();
+  double fo1st = hs1st ? Slvr1->get_var_value() : -INF;
 
   if( TestBlock->get_registered_solvers().size() == 1 ) {
    #if( LOG_LEVEL >= 1 )
-    std::cout << "Solver1 (" << fixd << time1 << ", "
-	 << Slvr1->get_elapsed_iterations() << ") = ";
+    std::cout << fixd << time1 << "\t" << Slvr1->get_elapsed_iterations()
+	      << "\t";
     PrintResults( hs1st , rtrn1st , fo1st );
     std::cout << std::endl;
    #endif
@@ -291,14 +307,29 @@ static bool SolveBoth( void ) {
                    && ( rtrn2nd != Solver::kUnbounded )
                    && ( rtrn2nd != Solver::kInfeasible ) )
                  || ( rtrn2nd == Solver::kLowPrecision ) );
-  // the Lagrangian Dual computes lower bounds, so that's what we compare
-  double fo2nd = Slvr2->get_lb();
+  double fo2nd =  -INF;
 
-  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-6 *
-			  std::max( double( 1 ) , std::max( abs( fo1st ) ,
-						  abs( fo2nd ) ) ) ) ) {
-   LOG1( "OK(f)" << std::endl );
-   return( true );
+  if( hs1st && hs2nd ) {
+   bool OK;
+   if( ProxHeur ) {
+    // the PrimalProximal computes upper bounds, so that's what we compare;
+    // besides, the condition is "fo2nd >= fo1st"
+    fo2nd = Slvr1->get_ub();
+    OK = ( fo1st - fo2nd <= 1e-5 );
+    }
+   else {
+    // the Lagrangian Dual computes lower bounds, so that's what we compare;
+    // besides, the condition is "fo2nd == fo1st"
+    fo2nd = Slvr2->get_lb();
+    OK =  ( std::abs( fo1st - fo2nd ) <= 
+	    2e-6 * std::max( double( 1 ) , std::max( abs( fo1st ) ,
+						     abs( fo2nd ) ) ) );
+    }
+
+   if( OK ) {
+    LOG1( "OK(f)" << std::endl );
+    return( true );
+    }
    }
 
   if( ( rtrn1st == Solver::kInfeasible ) &&
@@ -336,7 +367,91 @@ static bool SolveBoth( void ) {
 
 /*--------------------------------------------------------------------------*/
 
-int main( int argc , char **argv ) {
+static bool SolveAndCheckRef( double ref )
+{
+ try {
+  // solve with the 1st (and only) Solver- - - - - - - - - - - - - - - - - - -
+  #if( LOG_LEVEL >= 1 )
+   auto start = std::chrono::system_clock::now();
+  #endif
+  Solver * Slvr1 = TestBlock->get_registered_solvers().front();
+  int rtrn1st = Slvr1->compute( false );
+  #if( LOG_LEVEL >= 1 )
+   auto end = std::chrono::system_clock::now();
+   std::chrono::duration< double > elapsed = end - start;
+   auto time1 = elapsed.count();
+  #endif
+  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
+                   && ( rtrn1st != Solver::kUnbounded )
+                   && ( rtrn1st != Solver::kInfeasible ) )
+                 || ( rtrn1st == Solver::kLowPrecision ) );
+
+  if( ! hs1st ) {
+   #if( LOG_LEVEL >= 1 )
+    std::cout << "Solver returned code " << rtrn1st << std::endl;
+   #endif
+   return( false );
+   }
+
+  // get the objective value- - - - - - - - - - - - - - - - - - - - - - - - -
+  double fo1st = Slvr1->get_lb();
+
+  // compare with reference objective- - - - - - - - - - - - - - - - - - - - -
+
+  double maxv = std::max( double( 1 ) ,
+                          std::max( std::abs( fo1st ) , std::abs( ref ) ) );
+  double diff = std::abs( fo1st - ref );
+  double tol  = 1e-3 * maxv;
+
+  bool OK = ( diff <= tol );
+
+  #if( LOG_LEVEL >= 1 )
+   std::cout << fixd << time1 << "\t" << Slvr1->get_elapsed_iterations()
+             << "\t";
+   PrintResults( hs1st , rtrn1st , fo1st );
+   std::cout << " ~ Ref = " << def << ref
+             << " (|diff| = " << def << diff
+             << ( OK ? ", OK" : ", KO" ) << ")" << std::endl;
+  #endif
+
+  return( OK );
+  }
+ catch( std::exception &e ) {
+  std::cerr << e.what() << std::endl;
+  exit( 1 );
+  }
+ catch(...) {
+  std::cerr << "Error: unknown exception thrown" << std::endl;
+  exit( 1 );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+/// Custom terminate function to print the exception message
+
+void smspp_terminate( void )
+{
+ std::cerr << "Uncaught exception in executing SMS++:\n";
+ try {
+  std::rethrow_exception( std::current_exception() );
+  }
+ catch( const std::exception & e ) {
+  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
+  std::cerr << "\tException message: " << e.what() << "\n";
+  }
+ catch( ... ) {
+  std::cerr << "\tUnknown exception" << std::endl;
+  }
+ std::abort();  // or exit(1)
+ }
+
+/*--------------------------------------------------------------------------*/
+
+int main( int argc , char **argv )
+{
+ // override the default terminate handler to print the exception message
+ std::set_terminate( smspp_terminate );
+
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -360,11 +475,17 @@ int main( int argc , char **argv ) {
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
              break;
 	     !!*/
-  case( 3 ): break;
+  case( 5 ): Str2Sthg( argv[ 4 ] , RefObjective );
+  case( 4 ): Str2Sthg( argv[ 3 ] , ProxHeur );
+  case( 3 ): 
   case( 2 ): break;
-  default: std::cerr << "Usage: " << argv[ 0 ] << "UC-file [BSC-file]"
-		<< std::endl <<
+  default: std::cerr << "Usage: " << argv[ 0 ] << " UC-file [BSC-file ws ref]"
+		     << std::endl <<
 	   "       BSC-file: BlockSolverConfig description [BSPar.txt]"
+		     << std::endl <<
+           "       ws: 0 = LagrangianDualSolver, 1 = PrimalProximalHeur [0]"
+		     << std::endl <<
+           "       ref: reference objective value to compare against [none]"
 	        << std::endl;
     /*!!
 	   " UC file [BSC file seed wchg #rounds #chng %chng]"
@@ -657,7 +778,7 @@ int main( int argc , char **argv ) {
 
  #if( LOG_LEVEL >= 2 )
   #if( LOG_ON_COUT )
-   ((TestBlock->get_registered_solvers()).back())->set_log( &std::cout );
+   ( ( TestBlock->get_registered_solvers() ).back() )->set_log( &std::cout );
   #else
    std::ofstream LOGFile( logF , std::ofstream::out );
    if( ! LOGFile.is_open() )
@@ -666,7 +787,7 @@ int main( int argc , char **argv ) {
    else {
     LOGFile.setf( std::ios::scientific, std::ios::floatfield );
     LOGFile << std::setprecision( 10 );
-    ((TestBlock->get_registered_solvers()).back())->set_log( &LOGFile );
+    ( ( TestBlock->get_registered_solvers() ).back() )->set_log( &LOGFile );
     }
   #endif
  #endif
@@ -676,7 +797,13 @@ int main( int argc , char **argv ) {
 
  LOG1( "First call: " );
 
- bool AllPassed = SolveBoth();
+ bool AllPassed;
+
+ if( std::isnan( RefObjective ) )
+  // standard behaviour: compare two Solvers, if present
+  AllPassed = SolveBoth();
+ else  // single Solver checked against reference objective
+  AllPassed = SolveAndCheckRef( RefObjective );
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -725,7 +852,7 @@ int main( int argc , char **argv ) {
   // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -
 
   #if( LOG_LEVEL >= 3 )
-   ((LPBlock->get_registered_solvers()).front())->set_par(
+   ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
 		                     MILPSolver::strOutputFile , "LPBlock-" +
 		                     std::to_string( rep ) + ".lp" );
   #endif
@@ -745,8 +872,10 @@ int main( int argc , char **argv ) {
      !!*/
 
  #if( LOG_LEVEL >= 0 )
-  if( TestBlock->get_registered_solvers().size() > 1 ) {
-   // tests only make sense if more than one Solver is attached
+  if( ! std::isnan( RefObjective ) ||
+      ( TestBlock->get_registered_solvers().size() > 1 ) ) {
+   // tests only make sense if more than one Solver is attached, unless
+   // a reference objective value is provided
    if( AllPassed )
     std::cout << GREEN( All tests passed!! ) << std::endl;
    else
@@ -758,7 +887,7 @@ int main( int argc , char **argv ) {
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- bsc->apply( TestBlock );
+ //!bsc->apply( TestBlock );
 
  // then delete the BlockSolverConfig
  delete( bsc );

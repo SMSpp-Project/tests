@@ -1,28 +1,48 @@
 #!/usr/bin/env bash
+#
+# usage: batch_ec < par file > < solver > < log file >
+#        < par file > = BlockSolverConfig file, default BSPar-2S.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs all the pure energy community instances
 
-par=BSPar-2S.txt
+# command line parameter setup- - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../UCBlock/netCDF_files/EC_Data/EC_CO_*.nc4 \
-            ../../UCBlock/netCDF_files/EC_Data/EC_NC_*.nc4; do
+exe=./LDS_UC_test
 
-  if [ -z "$par" ]; then
-    printf "[$what]: "
-  else
-    printf "[$what $par]: "
-  fi
+if [ $# -gt 0 ]; then
+   par=$1
+else
+   par=BSPar-2S.txt
+fi
+if [ $# -gt 1 ]; then
+   slv=$2
+else
+   slv=0
+fi
+if [ $# -gt 2 ]; then
+   mlf=$4
+fi
 
-  ./LDS_UC_test $what $par
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  retVal=$?
-  if [ $retVal -ne 0 ]; then
-    exit 1
-  fi
+for what in ../../UCBlock/data/nc4/EC_Data/EC_CO_*.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/EC_NC_*.nc4; do
+
+    if [ -z "$mlf" ]; then
+       printf "[$what $par $slv]: "
+       "$exe" $what $par $slv
+    else
+       printf "[$what $par $slv]: " >> $mlf
+       "$exe" $what $par $slv >> $mlf
+    fi
+
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+      exit 1
+    fi
 
 done
 
-# BSPar-CPX.txt with intRelaxIntVars 0
-# "../../UCBlock/netCDF_files/EC_Data/EC_CO_Test.nc4"        3.5077963e+06
-# "../../UCBlock/netCDF_files/EC_Data/EC_CO_Test_TUB.nc4"    3.4742840e+06
-# "../../UCBlock/netCDF_files/EC_Data/EC_NA_Test.nc4"        4.1773642e+06
-# "../../UCBlock/netCDF_files/EC_Data/EC_NC_Test.nc4"        3.7349463e+06
-# "../../UCBlock/netCDF_files/EC_Data/EC_NC_Test_TUB.nc4"    3.7016024e+06
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
