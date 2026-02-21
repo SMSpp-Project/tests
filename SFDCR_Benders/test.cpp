@@ -238,14 +238,14 @@ static bool SolveBoth( void )
    }
 
   if( hs1st && hs2nd && OKfo ) {
-   LOG1( "OK(f)" << endl );
-   //std::cout << fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl;
+   LOG1( "OK(f)" << std::endl);
+   //LOG1( fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl );
    return( true );
    }
 
-  if( ( ! hs1st ||  fo1stub <= 0.0 ) && ( fo2ndlb <= -1e200 || fo2ndub > 1e200 ) ) {
-   LOG1( "OK(e)" << endl );
-   //std::cout << fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl;
+  if( ! hs1st ||  fo1stub <= 0.0 ) {
+   LOG1( "OK(e)" << std::endl);
+   //LOG1( fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl);
    return( true );
    }
 
@@ -430,6 +430,18 @@ int main( int argc , char **argv )
    cout << endl << "no Solver registered to the Block!" << endl;
    exit( 1 );
    }
+
+  // load the BlockConfig for SigleFlowDCRBlock
+  auto dcrc = Configuration::deserialize( "DCRCfg.txt" );
+  auto dcrbc = dynamic_cast< BlockConfig * >( dcrc );
+  if( ! dcrbc ) {
+   std::cerr << "Error: DCRCfg.txt does not contain a BlockSolverConfig"
+             << std::endl;
+   delete( c );
+   delete( dcrc );
+   exit( 1 );
+   }
+   dcrbc->apply( TestBlock );
   }
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
