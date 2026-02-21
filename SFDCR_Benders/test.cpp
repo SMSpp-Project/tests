@@ -243,7 +243,7 @@ static bool SolveBoth( void )
    return( true );
    }
 
-  if( ! hs1st ||  fo1stub <= 0.0 ) {
+  if( ( ! hs1st ||  fo1stub <= 0.0 ) && fo2ndub <= 0) {
    LOG1( "OK(e)" << std::endl);
    //LOG1( fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl);
    return( true );
