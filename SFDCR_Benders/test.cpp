@@ -232,6 +232,13 @@ static bool SolveBoth( void )
   double fo2ndub = hs2nd ? Slvr2->get_ub() : INF;
   double fo1stval = Slvr1->get_var_value();
   bool OKfo;
+
+  if( fo2ndub == Inf<double>() && fo2ndlb == Inf<double>() )
+    rtrn2nd = Solver::kInfeasible;
+
+  if( fo1stub == 0 && fo1stlb > fo1stub )
+    rtrn1st = Solver::kInfeasible;
+
   if( hs1st ) {
     OKfo = ( ( fo1stval - fo2ndlb ) / fo1stval >= -1e-2 &&
       ( fo1stval - fo2ndub ) / fo1stval <= 1e-2 );
@@ -240,12 +247,6 @@ static bool SolveBoth( void )
   if( hs1st && hs2nd && OKfo ) {
    LOG1( "OK(f)" << std::endl);
    //LOG1( fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl );
-   return( true );
-   }
-
-  if( ( ! hs1st ||  fo1stub <= 0.0 ) && fo2ndub <= 0) {
-   LOG1( "OK(e)" << std::endl);
-   //LOG1( fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl);
    return( true );
    }
 
