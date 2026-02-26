@@ -336,9 +336,9 @@ int main( int argc , char **argv )
  double cap_max = 0.0;
  double cap_min = Inf<double>();
 
- ifstream iNode( fn.substr(0,fn.find_last_of('.'))+".nod" );
- ifstream iFile3( fn.substr(0,fn.find_last_of('.'))+".param" );
- ifstream iFile2( fn.substr(0,fn.find_last_of('.'))+".sup" );
+ ifstream iNode( fn.substr( 0 , fn.find_last_of( '.' ) ) + ".nod" );
+ ifstream iFile3( fn.substr( 0 ,fn.find_last_of( '.' ) ) + ".param" );
+ ifstream iFile2( fn.substr( 0 ,fn.find_last_of( '.' ) ) + ".sup" );
 
  iNode >> NComm; 
  iNode >> NNodes;
@@ -348,83 +348,94 @@ int main( int argc , char **argv )
  
  for(int j = 0; j < n_flow; j++){
 
-  ifstream iFile1( fn.substr(0,fn.find_last_of('.'))+".dcr" );
-  ifstream iArc( fn.substr(0,fn.find_last_of('.'))+".arc" );
+  ifstream netcdf_file( fn + "_" + std::to_string( j ) + ".nc4" );
 
-  ofstream foutdmx("output.dmx");
-  ofstream foutdcr("output.dcr");
+  if( netcdf_file.fail() ){
 
-  iFile2 >> source;
-  iFile2 >> commodity;
-  iFile2 >> rho;
-  iFile2 >> destination;
-  iFile2 >> commodity;
-  iFile2 >> rho1;
+    ifstream iFile1( fn.substr(0,fn.find_last_of('.')) + ".dcr" );
+    ifstream iArc( fn.substr(0,fn.find_last_of('.')) + ".arc" );
 
-  iFile3 >> FlowBursts >> FlowDeadline;
+    ofstream foutdmx("output.dmx");
+    ofstream foutdcr("output.dcr");
 
-  while (!iFile1.eof()) {
-   string buffer;
-   getline(iFile1, buffer);
-   foutdcr << buffer << '\n';
+    iFile2 >> source;
+    iFile2 >> commodity;
+    iFile2 >> rho;
+    iFile2 >> destination;
+    iFile2 >> commodity;
+    iFile2 >> rho1;
+
+    iFile3 >> FlowBursts >> FlowDeadline;
+
+    while (!iFile1.eof()) {
+    string buffer;
+    getline(iFile1, buffer);
+    foutdcr << buffer << '\n';
+    }
+    iFile1.close();
+    
+    foutdcr << FlowBursts << '\n';
+    foutdcr << FlowDeadline  << '\n';
+    foutdcr << mtu  << '\n';
+    foutdcr << rho  << '\n';
+    foutdcr.close();
+
+    foutdmx << "p min " << NNodes << " " << NArcs << "\n";
+    foutdmx << "n " << source << " 1\n";
+    foutdmx << "n " << destination << " -1\n";
+    
+    for(int i = 0; i < NArcs; i++){
+    iArc >> numberArc;
+    iArc >> SN;
+    iArc >> EN;
+    iArc >> numberComm;
+    iArc >> cost;
+    iArc >> capacity;
+    iArc >> numberArc;
+    foutdmx << "a " << SN << " " << EN << " -1 " << capacity << " " << cost << "\n";
+
+    cap_min = std::min(cap_min, capacity);
+    cap_max = std::max(cap_max, capacity);
+    }
+
+    std::uniform_int_distribution<> disCap(cap_min, cap_max);
+
+    foutdmx.close();
+    iArc.close();
+
+    TestBlockDS = dynamic_cast< SingleFlowDCRBlock * >( Block::new_Block( "SingleFlowDCRBlock" ) );
+
+    ifstream fndmx1("output.dmx");
+    ifstream fndcr1("output.dcr");
+    TestBlockDS->load( fndmx1 );
+    Index NNode = TestBlockDS->get_NNodes();
+    Index NArc = TestBlockDS->get_NArcs();
+    TestBlockDS->load_dcr( fndcr1 , NNode , NArc );
+    fndmx1.close();
+    fndcr1.close();
+
+    netCDF::NcFile dataFile( fn + "_" + std::to_string( j ) + ".nc4" , netCDF::NcFile::replace );
+    netCDF::NcGroup block = dataFile.addGroup( "Block_0" );
+    netCDF::NcAtt *att;
+    auto int_type = netCDF::NcInt();
+    dataFile.putAtt( "SMS++_file_type" , int_type , 1 );
+    TestBlockDS->serialize( block );
+    TestBlockDS->deserialize( block );
+    dataFile.close();
   }
-  iFile1.close();
-  
-  foutdcr << FlowBursts << '\n';
-  foutdcr << FlowDeadline  << '\n';
-  foutdcr << mtu  << '\n';
-  foutdcr << rho  << '\n';
-  foutdcr.close();
 
-  foutdmx << "p min " << NNodes << " " << NArcs << "\n";
-  foutdmx << "n " << source << " 1\n";
-  foutdmx << "n " << destination << " -1\n";
-  
-  for(int i = 0; i < NArcs; i++){
-   iArc >> numberArc;
-   iArc >> SN;
-   iArc >> EN;
-   iArc >> numberComm;
-   iArc >> cost;
-   iArc >> capacity;
-   iArc >> numberArc;
-   foutdmx << "a " << SN << " " << EN << " -1 " << capacity << " " << cost << "\n";
+  TestBlock = dynamic_cast< SingleFlowDCRBlock * >
+        ( Block::deserialize( fn + "_" + std::to_string( j ) + ".nc4" ) );
 
-   cap_min = std::min(cap_min, capacity);
-   cap_max = std::max(cap_max, capacity);
-  }
-
-  std::uniform_int_distribution<> disCap(cap_min, cap_max);
-
-  foutdmx.close();
-  iArc.close();
-
-  TestBlockDS = dynamic_cast< SingleFlowDCRBlock * >( Block::new_Block( "SingleFlowDCRBlock" ) );
-
-  ifstream fndmx1("output.dmx");
-  ifstream fndcr1("output.dcr");
-  TestBlockDS->load( fndmx1 );
-  Index NNodes = TestBlockDS->get_NNodes();
-  Index NArcs = TestBlockDS->get_NArcs();
-  TestBlockDS->load_dcr( fndcr1 , NNodes , NArcs );
-  fndmx1.close();
-  fndcr1.close();
-
-  netCDF::NcFile dataFile( "file.nc4" , netCDF::NcFile::replace );
-  netCDF::NcGroup block = dataFile.addGroup( "Block_0" );
-  netCDF::NcAtt *att;
-  auto int_type = netCDF::NcInt();
-  dataFile.putAtt( "SMS++_file_type" , int_type , 1 );
-  TestBlockDS->serialize( block );
-  TestBlockDS->deserialize( block );
-  dataFile.close();
-
-  TestBlock = dynamic_cast< SingleFlowDCRBlock * >( Block::deserialize( "file.nc4" ) );
+  Index NNodes = TestBlock->get_NNodes();
+  Index NArcs = TestBlock->get_NArcs();
   
   if( ! TestBlock ) {
     std::cout << "Block::deserialize() failed!" << std::endl;
   exit( 1 );
   }
+
+  //NArcs = TestBlock->get_NArcs();
 
  // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
