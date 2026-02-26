@@ -129,6 +129,7 @@ static constexpr FunctionValue INF = Inf< RHSValue >();
 /*------------------------------- GLOBALS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+SingleFlowDCRBlock * TestBlockDS = nullptr;  // the SingleFlowDCR that is solved
 SingleFlowDCRBlock * TestBlock = nullptr;  // the SingleFlowDCR that is solved
 
 Index wchg = 15;            // parameters of what is done
@@ -398,16 +399,32 @@ int main( int argc , char **argv )
   foutdmx.close();
   iArc.close();
 
-  TestBlock = dynamic_cast< SingleFlowDCRBlock * >( Block::new_Block( "SingleFlowDCRBlock" ) );
+  TestBlockDS = dynamic_cast< SingleFlowDCRBlock * >( Block::new_Block( "SingleFlowDCRBlock" ) );
 
   ifstream fndmx1("output.dmx");
   ifstream fndcr1("output.dcr");
-  TestBlock->load( fndmx1 );
-  Index NNodes = TestBlock->get_NNodes();
-  Index NArcs = TestBlock->get_NArcs();
-  TestBlock->load_dcr( fndcr1 , NNodes , NArcs );
+  TestBlockDS->load( fndmx1 );
+  Index NNodes = TestBlockDS->get_NNodes();
+  Index NArcs = TestBlockDS->get_NArcs();
+  TestBlockDS->load_dcr( fndcr1 , NNodes , NArcs );
   fndmx1.close();
   fndcr1.close();
+
+  netCDF::NcFile dataFile( "file.nc4" , netCDF::NcFile::replace );
+  netCDF::NcGroup block = dataFile.addGroup( "Block_0" );
+  netCDF::NcAtt *att;
+  auto int_type = netCDF::NcInt();
+  dataFile.putAtt( "SMS++_file_type" , int_type , 1 );
+  TestBlockDS->serialize( block );
+  TestBlockDS->deserialize( block );
+  dataFile.close();
+
+  TestBlock = dynamic_cast< SingleFlowDCRBlock * >( Block::deserialize( "file.nc4" ) );
+  
+  if( ! TestBlock ) {
+    std::cout << "Block::deserialize() failed!" << std::endl;
+  exit( 1 );
+  }
 
  // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
