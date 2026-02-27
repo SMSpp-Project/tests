@@ -190,6 +190,8 @@ static bool SolveBoth( void )
    TestBlock->register_Solver( Slvr1 , true );  // push it to the front
   #endif
   int rtrn1st = Slvr1->compute( false );
+  if( ! TestBlock->is_feasible_flow() )
+    rtrn1st = Solver::kInfeasible;
   bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
                    && ( rtrn1st != Solver::kUnbounded )
                    && ( rtrn1st != Solver::kInfeasible ) )
@@ -218,17 +220,7 @@ static bool SolveBoth( void )
                    && ( rtrn2nd != Solver::kUnbounded )
                    && ( rtrn2nd != Solver::kInfeasible ) )
                  || ( rtrn2nd == Solver::kLowPrecision ) );
-  // double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
-  /* we assume the 2nd solver to be a Lagrangian-based one, which may mean
-   * two different cases:
-   * - it solves a relaxation, which may mean it may have issues in
-   *   producing accurate primal solutions but it should be able to produce
-   *   accurate dual ones: hence, use the dual bound as the reference value
-   *   (lower bound if you minimise, upper bound if you maximise)
-   * - it is a Lagrangian heuristic, which means use the primal value as
-   *   the reference value (upper bound if you minimise, lower bound if you
-   *   maximise) which can be arbitrarily worse (larger if you minimize,
-   *   smaller if you maximise) than the optimal value) */
+
   double fo2ndlb = hs2nd ? Slvr2->get_lb() : -INF;
   double fo2ndub = hs2nd ? Slvr2->get_ub() : INF;
   double fo1stval = Slvr1->get_var_value();
@@ -241,13 +233,13 @@ static bool SolveBoth( void )
     rtrn1st = Solver::kInfeasible;
 
   if( hs1st ) {
-    OKfo = ( ( fo1stval - fo2ndlb ) / fo1stval >= -1e-2 &&
-      ( fo1stval - fo2ndub ) / fo1stval <= 1e-2 );
+    OKfo = ( ( fo1stub - fo2ndlb ) / fo1stub >= -1e-4 &&
+      ( fo1stlb - fo2ndub ) / fo1stlb <= 1e-4 );
    }
 
   if( hs1st && hs2nd && OKfo ) {
    LOG1( "OK(f)" << std::endl);
-   //LOG1( fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl );
+   ///LOG1( fo1stval << " " << fo2ndlb << " " << fo2ndub << std::endl );
    return( true );
    }
 
@@ -308,6 +300,10 @@ void smspp_terminate( void )
 int main( int argc , char **argv )
 {
 
+ Index n_flow = 5;
+ double p_change = 0.5;
+ Index n_repeat = 5;
+
  bool AllPassed = true;
  BlockSolverConfig * bsc;
 
@@ -319,22 +315,12 @@ int main( int argc , char **argv )
  
  assert( SKIP_BEAT >= 0 );
 
- long int seed = 0;
- Index nson = 3;
- double p_change = 0.5;
- Index n_change = 15;
- Index n_repeat = 10;
- Index n_flow = 10;
-
  int source, destination, commodity;
  int SN, EN, numberArc, numberComm;
  int NComm, NNodes, NArcs;
  double rho, rho1, mtu, FlowBursts, FlowDeadline;
  double capacity, cost;
  string fn = argv[ 1 ];
-
- double cap_max = 0.0;
- double cap_min = Inf<double>();
 
  ifstream iNode( fn.substr( 0 , fn.find_last_of( '.' ) ) + ".nod" );
  ifstream iFile3( fn.substr( 0 ,fn.find_last_of( '.' ) ) + ".param" );
@@ -393,12 +379,7 @@ int main( int argc , char **argv )
     iArc >> capacity;
     iArc >> numberArc;
     foutdmx << "a " << SN << " " << EN << " -1 " << capacity << " " << cost << "\n";
-
-    cap_min = std::min(cap_min, capacity);
-    cap_max = std::max(cap_max, capacity);
     }
-
-    std::uniform_int_distribution<> disCap(cap_min, cap_max);
 
     foutdmx.close();
     iArc.close();
@@ -435,7 +416,7 @@ int main( int argc , char **argv )
   exit( 1 );
   }
 
-  //NArcs = TestBlock->get_NArcs();
+  Index n_change = std::floor( dis( rg ) * NArcs );
 
  // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

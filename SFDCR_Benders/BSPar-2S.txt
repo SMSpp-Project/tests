@@ -16,8 +16,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver 			# name of 1st Solver
-#GRBMILPSolver 			# name of 1st Solver
+#CPXMILPSolver 			# name of 1st Solver
+GRBMILPSolver 			# name of 1st Solver
 #SCIPMILPSolver 	    # name of 1st Solver
 #HiGHSMILPSolver 		# name of 1st Solver
 SingleFlowDCRBendersSolver   # name of 2nd Solver
@@ -42,13 +42,15 @@ intCutSepPar        7    # separate user cuts + lazy constraints
 
 0 # number of double parameters
 
-#FeasibilityTol 1e-12
-#CPXPARAM_Simplex_Tolerances_Feasibility 1e-10
+#FeasibilityTol 1e-6
+#OptimalityTol 1e-6
+#CPXPARAM_Simplex_Tolerances_Feasibility 1e-6
 
 # now all the double parameters
 # [none]
 
 0 # number of string parameters
+#strOutputFile	DCR.lp
 
 # now all the string parameters
 # [none]

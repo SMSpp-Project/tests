@@ -23,7 +23,7 @@ SimpleConfiguration<std::pair<double,double>>
 
 # static_variables
 SimpleConfiguration<int>
-2    # 1 = PCuts, 2 = SOCP (Formulation)
+1    # 1 = PCuts, 2 = SOCP (Formulation)
 
 # dynamic_variables
 *    # [none]
