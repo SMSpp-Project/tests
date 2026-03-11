@@ -1,0 +1,19 @@
+#/usr/bin/env bash
+
+export DYLD_LIBRARY_PATH=/Users/frangio/Applications/SCIP-8.0.0/lib
+
+for f in data/Canad/*.dat
+do
+
+printf "[${f} s]: "
+
+./LDS_MMCF_test ${f} s
+
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    exit 1
+fi
+
+done
+
+# end batch

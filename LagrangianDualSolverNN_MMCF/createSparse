@@ -1,0 +1,46 @@
+for seed in 1:5
+for f in directory
+	ins, lab, feat = dataLoader(folder*f, cpuMCNDinstanceFactory())
+	ins = LearningPi.modify_instance(ins,seed,1)
+	m = create_modello(ins,true,true)
+	optimize!(m)
+	
+	
+	if termination_status(m)==MOI.OPTIMAL
+		z = -dual.(m.obj_dict[:flow])'
+	
+		demands=collect(1:sizeK(ins))
+		LRarcs = zeros(Float32, sizeE(ins))
+		x=zeros(Float32, sizeK(ins),sizeE(ins))
+		y=zeros(Float32, sizeE(ins))
+
+
+		for e in 1:sizeE(ins)
+                       LRarcs[e] = LearningPi.LR(ins, z, x, y, demands, e)
+ 		end
+		objLR = sum(LRarcs) - constantLagrangianBound(ins, z)
+
+		lab=createLabels(z, x, y, LRarcs, objLR, ins)	
+	
+		obj,z, μV, xCR, yCR, zSP, μSP, xRC, yRC=CR(ins)
+	
+	
+		xLR = zeros(sizeK(ins), sizeE(ins))	
+		yLR = zeros(sizeE(ins))
+		LRarcs = zeros(sizeE(ins))
+
+		demands = collect(1:sizeK(ins))
+
+		for e in 1:sizeE(ins)
+			LRarcs[e] = LearningPi.LR(ins, z, xLR, yLR, demands, e)
+		end
+
+		objLR = sum(LRarcs) - constantLagrangianBound(ins, z)
+	
+	
+		feat=LearningPi.featuresMCND(xCR, yCR, z, μV, xRC, yRC, zSP, μSP, obj, xLR, yLR, LRarcs, objLR)
+		LearningPi.print_json(ins,lab,feat,"/media/francesco/Kali/learning_pi_slim.jl/sparse50-new/"*split(f,".")[1]*"-"*string(seed)*".json")
+	end	
+end	
+end
+end

@@ -1,0 +1,14 @@
+#/usr/bin/env bash
+
+# export DYLD_LIBRARY_PATH=/Users/frangio/Applications/SCIP-8.0.0/lib
+
+# Canad - - - - - - - - - - - - - - - - - - - -
+
+for f in ~/MainDirectory/Instances/p38*.dat
+do
+
+printf "[${f} s]: "
+
+./LDS_MMCF_test ${f} s 7
+
+done

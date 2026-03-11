@@ -1,0 +1,463 @@
+
+{1-0-0-0.0021} t = 1.00e-06 ~ D*_1( z* ) = 8.26e+07 ~ Sigma = 0.00e+00
+            Fi undefined
+            Fi[ 0 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 0 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 0 (0)
+            Fi[ 1 ]: UB = -3.7327878265e+03, LB = -3.7327878265e+03 [0.0000] 
+            New subgradient for Fi[ 1 ] ~ Alfa1 = -3.73e+03 ~ gd = -0.00e+00 stored in 1 (0)
+            Fi[ 2 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 2 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 2 (0)
+            Fi[ 3 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 3 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 3 (0)
+            Fi[ 4 ]: UB = -1.1995775636e+04, LB = -1.1995775636e+04 [0.0000] 
+            New subgradient for Fi[ 4 ] ~ Alfa1 = -1.20e+04 ~ gd = -4.36e+00 stored in 4 (0)
+            Fi[ 5 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 5 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 5 (0)
+            Fi[ 6 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 6 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 6 (0)
+            Fi[ 7 ]: UB = -3.1614006508e+03, LB = -3.1614006508e+03 [0.0000] 
+            New subgradient for Fi[ 7 ] ~ Alfa1 = -3.16e+03 ~ gd = -8.67e-01 stored in 7 (0)
+            Fi[ 8 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 8 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 8 (0)
+            Fi[ 9 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 9 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 9 (0)
+            Fi[ 10 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 10 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 10 (0)
+            Fi[ 11 ]: UB = -1.4012316488e+02, LB = -1.4012316488e+02 [0.0000] 
+            New subgradient for Fi[ 11 ] ~ Alfa1 = -1.40e+02 ~ gd = -1.71e-01 stored in 11 (0)
+            Fi[ 12 ]: UB = -2.2011971313e+03, LB = -2.2011971313e+03 [0.0000] 
+            New subgradient for Fi[ 12 ] ~ Alfa1 = -2.20e+03 ~ gd = -9.66e-01 stored in 12 (0)
+            Fi[ 13 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 13 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 13 (0)
+            Fi[ 14 ]: UB = -7.5271131841e+03, LB = -7.5271131841e+03 [0.0000] 
+            New subgradient for Fi[ 14 ] ~ Alfa1 = -7.53e+03 ~ gd = -8.77e-01 stored in 14 (0)
+            Fi[ 15 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 15 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 15 (0)
+            Fi[ 16 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 16 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 16 (0)
+            Fi[ 17 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 17 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 17 (0)
+            Fi[ 18 ]: UB = -3.4098687567e+03, LB = -3.4098687567e+03 [0.0000] 
+            New subgradient for Fi[ 18 ] ~ Alfa1 = -3.41e+03 ~ gd = -1.69e+00 stored in 18 (0)
+            Fi[ 19 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 19 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 19 (0)
+            Fi[ 20 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 20 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 20 (0)
+            Fi[ 21 ]: UB = -2.1768349150e+03, LB = -2.1768349150e+03 [0.0000] 
+            New subgradient for Fi[ 21 ] ~ Alfa1 = -2.17e+03 ~ gd = -1.97e+00 stored in 21 (0)
+            Fi[ 22 ]: UB = -4.0291328157e+04, LB = -4.0291328157e+04 [0.0000] 
+            New subgradient for Fi[ 22 ] ~ Alfa1 = -4.03e+04 ~ gd = -1.08e+00 stored in 22 (0)
+            Fi[ 23 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 23 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 23 (0)
+            Fi[ 24 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 24 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 24 (0)
+            Fi[ 25 ]: UB = -9.3141180577e+03, LB = -9.3141180577e+03 [0.0000] 
+            New subgradient for Fi[ 25 ] ~ Alfa1 = -9.31e+03 ~ gd = -7.50e-01 stored in 25 (0)
+            Fi[ 26 ]: UB = -5.0017112870e+03, LB = -5.0017112870e+03 [0.0000] 
+            New subgradient for Fi[ 26 ] ~ Alfa1 = -5.00e+03 ~ gd = -1.48e+00 stored in 26 (0)
+            Fi[ 27 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 27 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 27 (0)
+            Fi[ 28 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 28 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 28 (0)
+            Fi[ 29 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 29 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 29 (0)
+            Fi[ 30 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 30 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 30 (0)
+            Fi[ 31 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 31 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 31 (0)
+            Fi[ 32 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 32 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 32 (0)
+            Fi[ 33 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 33 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 33 (0)
+            Fi[ 34 ]: UB = -1.6009373961e+03, LB = -1.6009373961e+03 [0.0000] 
+            New subgradient for Fi[ 34 ] ~ Alfa1 = -1.60e+03 ~ gd = -1.17e+00 stored in 34 (0)
+            Fi[ 35 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 35 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 35 (0)
+            Fi[ 36 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 36 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 36 (0)
+            Fi[ 37 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 37 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 37 (0)
+            Fi[ 38 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 38 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 38 (0)
+            Fi[ 39 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 39 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 39 (0)
+            Fi[ 40 ]: UB = -3.4098004376e+03, LB = -3.4098004376e+03 [0.0000] 
+            New subgradient for Fi[ 40 ] ~ Alfa1 = -3.41e+03 ~ gd = -1.43e+00 stored in 40 (0)
+            Fi[ 41 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 41 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 41 (0)
+            Fi[ 42 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 42 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 42 (0)
+            Fi[ 43 ]: UB = -6.3016084875e+03, LB = -6.3016084875e+03 [0.0000] 
+            New subgradient for Fi[ 43 ] ~ Alfa1 = -6.30e+03 ~ gd = -1.69e+00 stored in 43 (0)
+            Fi[ 44 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 44 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 44 (0)
+            Fi[ 45 ]: UB = -5.2594134409e+03, LB = -5.2594134409e+03 [0.0000] 
+            New subgradient for Fi[ 45 ] ~ Alfa1 = -5.26e+03 ~ gd = -7.22e-01 stored in 45 (0)
+            Fi[ 46 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 46 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 46 (0)
+            Fi[ 47 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 47 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 47 (0)
+            Fi[ 48 ]: UB = -1.3759307935e+03, LB = -1.3759307935e+03 [0.0000] 
+            New subgradient for Fi[ 48 ] ~ Alfa1 = -1.37e+03 ~ gd = -4.31e+00 stored in 48 (0)
+            Fi[ 49 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 49 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 49 (0)
+            Fi[ 50 ]: UB = -7.8524764572e+03, LB = -7.8524764572e+03 [0.0000] 
+            New subgradient for Fi[ 50 ] ~ Alfa1 = -7.85e+03 ~ gd = -2.19e+00 stored in 50 (0)
+            Fi[ 51 ]: UB = -2.1832426704e+04, LB = -2.1832426704e+04 [0.0000] 
+            New subgradient for Fi[ 51 ] ~ Alfa1 = -2.18e+04 ~ gd = -1.65e+00 stored in 51 (0)
+            Fi[ 52 ]: UB = -1.6936254956e+03, LB = -1.6936254956e+03 [0.0000] 
+            New subgradient for Fi[ 52 ] ~ Alfa1 = -1.69e+03 ~ gd = -4.31e+00 stored in 52 (0)
+            Fi[ 53 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 53 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 53 (0)
+            Fi[ 54 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 54 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 54 (0)
+            Fi[ 55 ]: UB = -1.0465597637e+03, LB = -1.0465597637e+03 [0.0000] 
+            New subgradient for Fi[ 55 ] ~ Alfa1 = -1.05e+03 ~ gd = -1.41e+00 stored in 55 (0)
+            Fi[ 56 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 56 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 56 (0)
+            Fi[ 57 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 57 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 57 (0)
+            Fi[ 58 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 58 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 58 (0)
+            Fi[ 59 ]: UB = -4.4091531293e+03, LB = -4.4091531293e+03 [0.0000] 
+            New subgradient for Fi[ 59 ] ~ Alfa1 = -4.40e+03 ~ gd = -4.31e+00 stored in 59 (0)
+            Fi[ 60 ]: UB = -2.0756467232e+02, LB = -2.0756467232e+02 [0.0001] 
+            New subgradient for Fi[ 60 ] ~ Alfa1 = -2.04e+02 ~ gd = -3.08e+00 stored in 60 (0)
+            Fi[ 61 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 61 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 61 (0)
+            Fi[ 62 ]: UB = -1.2365315155e+04, LB = -1.2365315155e+04 [0.0000] 
+            New subgradient for Fi[ 62 ] ~ Alfa1 = -1.24e+04 ~ gd = -1.29e+00 stored in 62 (0)
+            Fi[ 63 ]: UB = -9.9509146362e+03, LB = -9.9509146362e+03 [0.0000] 
+            New subgradient for Fi[ 63 ] ~ Alfa1 = -9.95e+03 ~ gd = -2.12e+00 stored in 63 (0)
+            Fi[ 64 ]: UB = -4.0863976103e+03, LB = -4.0863976103e+03 [0.0000] 
+            New subgradient for Fi[ 64 ] ~ Alfa1 = -4.08e+03 ~ gd = -4.49e+00 stored in 64 (0)
+            Fi[ 65 ]: UB = -8.1403894557e+02, LB = -8.1403894557e+02 [0.0000] 
+            New subgradient for Fi[ 65 ] ~ Alfa1 = -8.14e+02 ~ gd = -5.14e-01 stored in 65 (0)
+            Fi[ 66 ]: UB = -8.7145498715e+03, LB = -8.7145498715e+03 [0.0000] 
+            New subgradient for Fi[ 66 ] ~ Alfa1 = -8.71e+03 ~ gd = -1.47e+00 stored in 66 (0)
+            Fi[ 67 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 67 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 67 (0)
+            Fi[ 68 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 68 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 68 (0)
+            Fi[ 69 ]: UB = -5.3392074095e+02, LB = -5.3392074095e+02 [0.0000] 
+            New subgradient for Fi[ 69 ] ~ Alfa1 = -5.33e+02 ~ gd = -1.06e+00 stored in 69 (0)
+            Fi[ 70 ]: UB = -1.8916835022e+02, LB = -1.8916835022e+02 [0.0000] 
+            New subgradient for Fi[ 70 ] ~ Alfa1 = -1.89e+02 ~ gd = -0.00e+00 stored in 70 (0)
+            Fi[ 71 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 71 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 71 (0)
+            Fi[ 72 ]: UB = -1.7098048239e+03, LB = -1.7098048239e+03 [0.0000] 
+            New subgradient for Fi[ 72 ] ~ Alfa1 = -1.70e+03 ~ gd = -9.42e+00 stored in 72 (0)
+            Fi[ 73 ]: UB = -1.5275132675e+03, LB = -1.5275132675e+03 [0.0000] 
+            New subgradient for Fi[ 73 ] ~ Alfa1 = -1.53e+03 ~ gd = -0.00e+00 stored in 73 (0)
+            Fi[ 74 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 74 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 74 (0)
+            Fi[ 75 ]: UB = -5.3545256863e+03, LB = -5.3545256863e+03 [0.0000] 
+            New subgradient for Fi[ 75 ] ~ Alfa1 = -5.35e+03 ~ gd = -1.51e+00 stored in 75 (0)
+            Fi[ 76 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 76 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 76 (0)
+            Fi[ 77 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 77 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 77 (0)
+            Fi[ 78 ]: UB = -2.6179329433e+04, LB = -2.6179329433e+04 [0.0000] 
+            New subgradient for Fi[ 78 ] ~ Alfa1 = -2.62e+04 ~ gd = -0.00e+00 stored in 78 (0)
+            Fi[ 79 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 79 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 79 (0)
+            Fi[ 80 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 80 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 80 (0)
+            Fi[ 81 ]: UB = -1.5586676960e+03, LB = -1.5586676960e+03 [0.0000] 
+            New subgradient for Fi[ 81 ] ~ Alfa1 = -1.55e+03 ~ gd = -9.38e+00 stored in 81 (0)
+            Fi[ 82 ]: UB = -1.1057258203e+03, LB = -1.1057258203e+03 [0.0000] 
+            New subgradient for Fi[ 82 ] ~ Alfa1 = -1.11e+03 ~ gd = -7.02e-01 stored in 82 (0)
+            Fi[ 83 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 83 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 83 (0)
+            Fi[ 84 ]: UB = -3.9048232563e+03, LB = -3.9048232563e+03 [0.0000] 
+            New subgradient for Fi[ 84 ] ~ Alfa1 = -3.90e+03 ~ gd = -7.72e-01 stored in 84 (0)
+            Fi[ 85 ]: UB = -1.0467841192e+04, LB = -1.0467841192e+04 [0.0000] 
+            New subgradient for Fi[ 85 ] ~ Alfa1 = -1.05e+04 ~ gd = -9.26e+00 stored in 85 (0)
+            Fi[ 86 ]: UB = -1.0005028641e+04, LB = -1.0005028641e+04 [0.0000] 
+            New subgradient for Fi[ 86 ] ~ Alfa1 = -1.00e+04 ~ gd = -1.02e+00 stored in 86 (0)
+            Fi[ 87 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 87 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 87 (0)
+            Fi[ 88 ]: UB = -6.6282782830e+03, LB = -6.6282782830e+03 [0.0000] 
+            New subgradient for Fi[ 88 ] ~ Alfa1 = -6.63e+03 ~ gd = -1.12e+00 stored in 88 (0)
+            Fi[ 89 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 89 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 89 (0)
+            Fi[ 90 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 90 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 90 (0)
+            Fi[ 91 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 91 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 91 (0)
+            Fi[ 92 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 92 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 92 (0)
+            Fi[ 93 ]: UB = -4.3954917908e+01, LB = -4.3954917908e+01 [0.0000] 
+            New subgradient for Fi[ 93 ] ~ Alfa1 = -4.40e+01 ~ gd = -0.00e+00 stored in 93 (0)
+            Fi[ 94 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 94 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 94 (0)
+            Fi[ 95 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 95 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 95 (0)
+            Fi[ 96 ]: UB = -2.8327927698e+03, LB = -2.8327927698e+03 [0.0000] 
+            New subgradient for Fi[ 96 ] ~ Alfa1 = -2.83e+03 ~ gd = -2.45e-01 stored in 96 (0)
+            Fi[ 97 ]: UB = -7.3280946891e+02, LB = -7.3280946891e+02 [0.0000] 
+            New subgradient for Fi[ 97 ] ~ Alfa1 = -7.31e+02 ~ gd = -1.47e+00 stored in 97 (0)
+            Fi[ 98 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 98 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 98 (0)
+            Fi[ 99 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 99 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 99 (0)
+            Fi[ 100 ]: UB = -3.7083921583e+03, LB = -3.7083921583e+03 [0.0000] 
+            New subgradient for Fi[ 100 ] ~ Alfa1 = -3.71e+03 ~ gd = -6.85e-01 stored in 100 (0)
+            Fi[ 101 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 101 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 101 (0)
+            Fi[ 102 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 102 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 102 (0)
+            Fi[ 103 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 103 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 103 (0)
+            Fi[ 104 ]: UB = -1.4707515845e+03, LB = -1.4707515845e+03 [0.0000] 
+            New subgradient for Fi[ 104 ] ~ Alfa1 = -1.47e+03 ~ gd = -4.27e+00 stored in 104 (0)
+            Fi[ 105 ]: UB = -4.6051338114e+03, LB = -4.6051338114e+03 [0.0000] 
+            New subgradient for Fi[ 105 ] ~ Alfa1 = -4.60e+03 ~ gd = -5.85e+00 stored in 105 (0)
+            Fi[ 106 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 106 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 106 (0)
+            Fi[ 107 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 107 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 107 (0)
+            Fi[ 108 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 108 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 108 (0)
+            Fi[ 109 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 109 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 109 (0)
+            Fi[ 110 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 110 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 110 (0)
+            Fi[ 111 ]: UB = -1.3615848060e+03, LB = -1.3615848060e+03 [0.0000] 
+            New subgradient for Fi[ 111 ] ~ Alfa1 = -1.36e+03 ~ gd = -3.89e+00 stored in 111 (0)
+            Fi[ 112 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 112 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 112 (0)
+            Fi[ 113 ]: UB = -3.5850589629e+03, LB = -3.5850589629e+03 [0.0000] 
+            New subgradient for Fi[ 113 ] ~ Alfa1 = -3.58e+03 ~ gd = -1.17e+00 stored in 113 (0)
+            Fi[ 114 ]: UB = -1.0914741417e+03, LB = -1.0914741417e+03 [0.0000] 
+            New subgradient for Fi[ 114 ] ~ Alfa1 = -1.09e+03 ~ gd = -3.89e+00 stored in 114 (0)
+            Fi[ 115 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 115 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 115 (0)
+            Fi[ 116 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 116 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 116 (0)
+            Fi[ 117 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 117 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 117 (0)
+            Fi[ 118 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 118 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 118 (0)
+            Fi[ 119 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 119 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 119 (0)
+            Fi[ 120 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 120 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 120 (0)
+            Fi[ 121 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 121 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 121 (0)
+            Fi[ 122 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 122 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 122 (0)
+            Fi[ 123 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 123 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 123 (0)
+            Fi[ 124 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 124 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 124 (0)
+            Fi[ 125 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 125 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 125 (0)
+            Fi[ 126 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 126 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 126 (0)
+            Fi[ 127 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 127 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 127 (0)
+            Fi[ 128 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 128 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 128 (0)
+            Fi[ 129 ]: UB = -3.8572058526e+04, LB = -3.8572058526e+04 [0.0000] 
+            New subgradient for Fi[ 129 ] ~ Alfa1 = -3.86e+04 ~ gd = -1.94e+00 stored in 129 (0)
+            Fi[ 130 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 130 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 130 (0)
+            Fi[ 131 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 131 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 131 (0)
+            Fi[ 132 ]: UB = -1.2970854389e+04, LB = -1.2970854389e+04 [0.0000] 
+            New subgradient for Fi[ 132 ] ~ Alfa1 = -1.30e+04 ~ gd = -9.55e-01 stored in 132 (0)
+            Fi[ 133 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 133 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 133 (0)
+            Fi[ 134 ]: UB = -1.2306985218e+04, LB = -1.2306985218e+04 [0.0000] 
+            New subgradient for Fi[ 134 ] ~ Alfa1 = -1.23e+04 ~ gd = -7.05e-01 stored in 134 (0)
+            Fi[ 135 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 135 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 135 (0)
+            Fi[ 136 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 136 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 136 (0)
+            Fi[ 137 ]: UB = -2.1061918026e+03, LB = -2.1061918026e+03 [0.0000] 
+            New subgradient for Fi[ 137 ] ~ Alfa1 = -2.10e+03 ~ gd = -3.70e+00 stored in 137 (0)
+            Fi[ 138 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 138 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 138 (0)
+            Fi[ 139 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 139 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 139 (0)
+            Fi[ 140 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 140 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 140 (0)
+            Fi[ 141 ]: UB = -6.6425319735e+03, LB = -6.6425319735e+03 [0.0000] 
+            New subgradient for Fi[ 141 ] ~ Alfa1 = -6.64e+03 ~ gd = -9.66e-01 stored in 141 (0)
+            Fi[ 142 ]: UB = -3.7554197310e+03, LB = -3.7554197310e+03 [0.0000] 
+            New subgradient for Fi[ 142 ] ~ Alfa1 = -3.75e+03 ~ gd = -4.86e-01 stored in 142 (0)
+            Fi[ 143 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 143 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 143 (0)
+            Fi[ 144 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 144 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 144 (0)
+            Fi[ 145 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0001] 
+            New subgradient for Fi[ 145 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 145 (0)
+            Fi[ 146 ]: UB = -1.0213798212e+04, LB = -1.0213798212e+04 [0.0000] 
+            New subgradient for Fi[ 146 ] ~ Alfa1 = -1.02e+04 ~ gd = -8.36e+00 stored in 146 (0)
+            Fi[ 147 ]: UB = -3.3311373812e+04, LB = -3.3311373812e+04 [0.0000] 
+            New subgradient for Fi[ 147 ] ~ Alfa1 = -3.33e+04 ~ gd = -2.06e+00 stored in 147 (0)
+            Fi[ 148 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 148 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 148 (0)
+            Fi[ 149 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 149 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 149 (0)
+            Fi[ 150 ]: UB = -1.3636969110e+03, LB = -1.3636969110e+03 [0.0000] 
+            New subgradient for Fi[ 150 ] ~ Alfa1 = -1.36e+03 ~ gd = -6.22e+00 stored in 150 (0)
+            Fi[ 151 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 151 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 151 (0)
+            Fi[ 152 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 152 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 152 (0)
+            Fi[ 153 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 153 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 153 (0)
+            Fi[ 154 ]: UB = -2.7417670412e+03, LB = -2.7417670412e+03 [0.0000] 
+            New subgradient for Fi[ 154 ] ~ Alfa1 = -2.74e+03 ~ gd = -4.46e+00 stored in 154 (0)
+            Fi[ 155 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 155 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 155 (0)
+            Fi[ 156 ]: UB = -2.5543496732e+04, LB = -2.5543496732e+04 [0.0000] 
+            New subgradient for Fi[ 156 ] ~ Alfa1 = -2.55e+04 ~ gd = -2.12e+00 stored in 156 (0)
+            Fi[ 157 ]: UB = -2.2024490286e+03, LB = -2.2024490286e+03 [0.0000] 
+            New subgradient for Fi[ 157 ] ~ Alfa1 = -2.20e+03 ~ gd = -9.73e-02 stored in 157 (0)
+            Fi[ 158 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 158 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 158 (0)
+            Fi[ 159 ]: UB = -1.6616828267e+04, LB = -1.6616828267e+04 [0.0000] 
+            New subgradient for Fi[ 159 ] ~ Alfa1 = -1.66e+04 ~ gd = -2.91e+00 stored in 159 (0)
+            Fi[ 160 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 160 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 160 (0)
+            Fi[ 161 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 161 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 161 (0)
+            Fi[ 162 ]: UB = -1.7579862976e+02, LB = -1.7579862976e+02 [0.0000] 
+            New subgradient for Fi[ 162 ] ~ Alfa1 = -1.76e+02 ~ gd = -0.00e+00 stored in 162 (0)
+            Fi[ 163 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 163 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 163 (0)
+            Fi[ 164 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 164 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 164 (0)
+            Fi[ 165 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 165 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 165 (0)
+            Fi[ 166 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 166 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 166 (0)
+            Fi[ 167 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 167 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 167 (0)
+            Fi[ 168 ]: UB = -3.7918003657e+03, LB = -3.7918003657e+03 [0.0000] 
+            New subgradient for Fi[ 168 ] ~ Alfa1 = -3.79e+03 ~ gd = -1.98e+00 stored in 168 (0)
+            Fi[ 169 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 169 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 169 (0)
+            Fi[ 170 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 170 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 170 (0)
+            Fi[ 171 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 171 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 171 (0)
+            Fi[ 172 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 172 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 172 (0)
+            Fi[ 173 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 173 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 173 (0)
+            Fi[ 174 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 174 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 174 (0)
+            Fi[ 175 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 175 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 175 (0)
+            Fi[ 176 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 176 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 176 (0)
+            Fi[ 177 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 177 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 177 (0)
+            Fi[ 178 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 178 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 178 (0)
+            Fi[ 179 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 179 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 179 (0)
+            Fi[ 180 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 180 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 180 (0)
+            Fi[ 181 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 181 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 181 (0)
+            Fi[ 182 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 182 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 182 (0)
+            Fi[ 183 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 183 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 183 (0)
+            Fi[ 184 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 184 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 184 (0)
+            Fi[ 185 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 185 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 185 (0)
+            Fi[ 186 ]: UB = -4.6576258712e+03, LB = -4.6576258712e+03 [0.0000] 
+            New subgradient for Fi[ 186 ] ~ Alfa1 = -4.65e+03 ~ gd = -4.51e+00 stored in 186 (0)
+            Fi[ 187 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 187 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 187 (0)
+            Fi[ 188 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 188 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 188 (0)
+            Fi[ 189 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 189 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 189 (0)
+            Fi[ 190 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 190 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 190 (0)
+            Fi[ 191 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 191 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 191 (0)
+            Fi[ 192 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 192 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 192 (0)
+            Fi[ 193 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 193 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 193 (0)
+            Fi[ 194 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 194 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 194 (0)
+            Fi[ 195 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 195 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 195 (0)
+            Fi[ 196 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 196 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 196 (0)
+            Fi[ 197 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 197 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 197 (0)
+            Fi[ 198 ]: UB = -1.9807670915e+03, LB = -1.9807670915e+03 [0.0000] 
+            New subgradient for Fi[ 198 ] ~ Alfa1 = -1.98e+03 ~ gd = -1.71e-01 stored in 198 (0)
+            Fi[ 199 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 199 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 199 (0)
+            Fi[ 200 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 200 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 200 (0)
+            Fi[ 201 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 201 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 201 (0)
+            Fi[ 202 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 202 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 202 (0)
+            Fi[ 203 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 203 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 203 (0)
+            Fi[ 204 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 204 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 204 (0)
+            Fi[ 205 ]: UB = -3.8005472187e+04, LB = -3.8005472187e+04 [0.0000] 
+            New subgradient for Fi[ 205 ] ~ Alfa1 = -3.80e+04 ~ gd = -1.23e+00 stored in 205 (0)
+            Fi[ 206 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 206 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 206 (0)
+            Fi[ 207 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 207 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 207 (0)
+            Fi[ 208 ]: UB = -5.4752329636e+02, LB = -5.4752329636e+02 [0.0000] 
+            New subgradient for Fi[ 208 ] ~ Alfa1 = -5.48e+02 ~ gd = -0.00e+00 stored in 208 (0)
+            Fi[ 209 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 209 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 209 (0)
+            Fi[ 210 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 210 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 210 (0)
+            Fi[ 211 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 211 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 211 (0)
+            Fi[ 212 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 212 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 212 (0)
+            Fi[ 213 ]: UB = -5.0459543842e+03, LB = -5.0459543842e+03 [0.0000] 
+            New subgradient for Fi[ 213 ] ~ Alfa1 = -5.04e+03 ~ gd = -8.18e+00 stored in 213 (0)
+            Fi[ 214 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 214 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 214 (0)
+            Fi[ 215 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 215 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 215 (0)
+            Fi[ 216 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 216 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 216 (0)
+            Fi[ 217 ]: UB = -3.0865670318e+03, LB = -3.0865670318e+03 [0.0000] 
+            New subgradient for Fi[ 217 ] ~ Alfa1 = -3.08e+03 ~ gd = -4.74e+00 stored in 217 (0)
+            Fi[ 218 ]: UB = -3.6537292745e+03, LB = -3.6537292745e+03 [0.0000] 
+            New subgradient for Fi[ 218 ] ~ Alfa1 = -3.65e+03 ~ gd = -1.84e+00 stored in 218 (0)
+            Fi[ 219 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 219 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 219 (0)
+            Fi[ 220 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 220 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 220 (0)
+            Fi[ 221 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 221 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 221 (0)
+            Fi[ 222 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0001] 
+            New subgradient for Fi[ 222 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 222 (0)
+            Fi[ 223 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 223 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 223 (0)
+            Fi[ 224 ]: UB = -0.0000000000e+00, LB = -0.0000000000e+00 [0.0000] 
+            New subgradient for Fi[ 224 ] ~ Alfa1 = 0.00e+00 ~ gd = -0.00e+00 stored in 224 (0)
+            Fi[ 225 ]: UB = -1.0889026790e+04, LB = -1.0889026790e+04 [0.0000] 
+            New subgradient for Fi[ 225 ] ~ Alfa1 = -1.09e+04 ~ gd = -2.29e+00 stored in 225 (0)
+            [0.0216] Fi1 = 4.5095198787e+06
+            Fi1 defined ==> SS 
+
+Bundle::FormD: unrecoverable MP failure.
+{1-1-226-0.0280} t = 1.00e+01 ~ D*_1( z* ) = 8.26e+07 ~ Sigma = 0.00e+00
+            Fi = 4.5095198787e+06 ~ eU = 1.00e+00 ~ error in the MPSolver
+
+Call 1: 2 ~ 226 ~ 0.0280 ~ 0.0216 -> error ~ Fi* = 4.5095198787e+06
