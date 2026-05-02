@@ -216,6 +216,19 @@ static bool SolveBoth( void )
   #endif
   int rtrn2nd = Slvr2->compute( false );
 
+<<<<<<< Updated upstream
+=======
+  double fo2ndlb = Slvr2->get_lb();
+  double fo2ndub = Slvr2->get_ub();
+  double fo1stval = Slvr1->get_var_value();
+  bool OKfo;
+
+  if( fo2ndub > 1e200 && fo2ndlb < -1e200 )
+    rtrn2nd = Solver::kInfeasible;
+  
+  hs1st = ( (fo1stub - fo1stlb)/ fo1stub < 1e-6 ) && hs1st;
+
+>>>>>>> Stashed changes
   bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
                    && ( rtrn2nd != Solver::kUnbounded )
                    && ( rtrn2nd != Solver::kInfeasible ) )
@@ -252,6 +265,11 @@ static bool SolveBoth( void )
   if( ( rtrn1st == Solver::kUnbounded ) &&
       ( rtrn2nd == Solver::kUnbounded ) ) {
    LOG1( "OK(u)" << endl );
+   return( true );
+   }
+
+  if( ( rtrn1st == Solver::kError ) || ( (fo1stub - fo1stlb)/ fo1stub > 1e-6 ) ) {
+   LOG1( "OK(err)" << endl );
    return( true );
    }
 
@@ -416,8 +434,6 @@ int main( int argc , char **argv )
   exit( 1 );
   }
 
-  Index n_change = std::floor( dis( rg ) * NArcs );
-
  // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and
@@ -472,16 +488,15 @@ int main( int argc , char **argv )
   #endif
  #endif
 
- // now, for n_repeat times:
- // - up to n_change objective coefficients are changed
- //
- // then the two Solver are called to re-solve the SingleFlowDCRBlock
+ std::uniform_int_distribution<> distr( 0 , NNodes - 1 );
+
+ // the two Solver are called to re-solve the SingleFlowDCRBlock
  for( Index rep = 0 ; rep < n_repeat * ( SKIP_BEAT + 1 ) ; ) {
   LOG1( rep << " - " << fn << "[" << j << "]: " );
 
   // change costs - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if( ( wchg & 1 ) && ( dis( rg ) <= p_change ) )
-   if( Index tochange = min( NArcs , Index( dis( rg ) * n_change ) ) ) {
+   if( Index tochange = Index( dis( rg ) * NArcs ) ) {
     LOG1( "changed " << tochange << " obj coeffs" );
     std::vector< double > NC( tochange );
     auto it = NC.begin();
@@ -525,7 +540,7 @@ int main( int argc , char **argv )
 
    // close arcs - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    if( ( ( wchg & 2 ) && dis( rg ) <= p_change ) )
-    if( Index toclose = min( NArcs , Index( dis( rg ) * n_change ) ) ) {
+    if( Index toclose = Index( dis( rg ) * NArcs ) ) {
       LOG1( "closed " << toclose << " arcs" );
       if( dis( rg ) <= 0.5 ) {  // in 50% of the cases do a ranged change
         LOG1( "(r) - " );
@@ -577,7 +592,6 @@ int main( int argc , char **argv )
    // change s-t - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    if( ( ( wchg & 3 ) && dis( rg ) <= p_change ) ){
     LOG1( "changed s-t nodes - " );
-    std::uniform_int_distribution<> distr( 0 , NNodes - 1 );
     if( ( wchg & 2 ) && ( dis( rg ) <= p_change ) ){
       Index news = distr( rg );
       Index newt = news;

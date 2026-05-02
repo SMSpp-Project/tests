@@ -40,10 +40,20 @@ intLogVerb          0    # log verbosity of the MILPSolver
 intRelaxIntVars     0    # nonzero if the continuous relaxation is solved
 intCutSepPar        7    # separate user cuts + lazy constraints
 
+<<<<<<< Updated upstream
 0 # number of double parameters
 
 #FeasibilityTol 1e-6
 #OptimalityTol 1e-6
+=======
+#OutputFlag 1
+#LogToConsole 1
+
+0 # number of double parameters
+
+#FeasibilityTol 1e-8
+#OptimalityTol 1e-8
+>>>>>>> Stashed changes
 #CPXPARAM_Simplex_Tolerances_Feasibility 1e-6
 
 # now all the double parameters
