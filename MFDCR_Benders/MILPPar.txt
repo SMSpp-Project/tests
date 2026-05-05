@@ -33,13 +33,6 @@ ComputeConfig  # exact type of the ComputeConfig object
 # now all the integer parameters
 intCutSepPar   7     # separate valid inequalities everywhere + lazy constraints
 #intLogVerb     7     # LogVerb, log verbosity of the CPXMILPSolver
-#CPXPARAM_Threads 1
-#CPXPARAM_ScreenOutput 1
-#CPXPARAM_MIP_Display	5
-#CPXPARAM_Preprocessing_Presolve 0
-#CPXPARAM_MIP_Limits_CutsFactor	0
-#CPX_PARAM_CUTPASS 0
-#CPX_PARAM_PREIND 0
 
 #OutputFlag 1
 #LogToConsole 1
@@ -49,12 +42,11 @@ intCutSepPar   7     # separate valid inequalities everywhere + lazy constraints
 0 # number of double parameters
 
 # now all the double parameters
-#CPX_PARAM_TILIM 1800.0
 
-1 # number of string parameters
+0 # number of string parameters
 
 # now all the string parameters
-strOutputFile	DCR.lp
+#strOutputFile	DCR.lp
 #strLogFileName FileLogMILP
 
 0 # number of vector-of-int parameters
