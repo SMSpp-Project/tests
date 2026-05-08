@@ -168,6 +168,7 @@ using c_FunctionValue = Function::c_FunctionValue;
 
 using MultiVector = PolyhedralFunction::MultiVector;
 using RealVector = PolyhedralFunction::RealVector;
+using BoolVector = PolyhedralFunction::BoolVector;
 
 using p_LF = LinearFunction *;
 using p_PF = PolyhedralFunction *;
@@ -210,6 +211,42 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
 MultiVector A;
 RealVector b;
+BoolVector iV;             // per-row vertical flags for the rows being
+                           // generated/modified in the current step
+BoolVector cur_iV;         // shadow of the current PF's vertical flags
+                           // (kept in sync with all add/delete/modify ops);
+                           // used so that modify_rows preserves a row's
+                           // diagonal/vertical type (which the BundleSolver
+                           // does not always handle gracefully when it
+                           // changes between modifications)
+bool cur_bnd_finite = false; // whether the current PF's global bound is
+                             // finite. Together with cur_iV it lets the
+                             // tester enforce the BundleSolver invariant
+                             // "at least one diagonal row OR a finite
+                             // bound": with only verticals (domain
+                             // constraints) and no bound, f is +/-INF
+                             // inside the feasible domain, which is
+                             // logically inconsistent for the master
+
+double p_vert = 0.0;       // probability that a generated row is vertical
+
+// number of diagonal (non-vertical) rows currently in the PF
+static Index n_diagonal( void )
+{
+ Index n = 0;
+ for( auto v : cur_iV )
+  if( ! v ) ++n;
+ return( n );
+}
+
+// the BundleSolver invariant: at least one diagonal row OR a finite bound
+static bool block_well_defined( void )
+{
+ return( ( n_diagonal() > 0 ) || cur_bnd_finite );
+}
+
+static void GenerateBND( bool force_finite = false );
+
 
 ColVariable * vLP;                 // pointer to v LP variable
 
@@ -278,6 +315,37 @@ static void Generateb( Index nr )
 
 /*--------------------------------------------------------------------------*/
 
+static void GenerateiV( Index nr )
+{
+ // generate a BoolVector of size nr where each entry is true with probability
+ // p_vert. The result is left empty if p_vert == 0 (i.e., all rows diagonal),
+ // which exercises the "all-diagonal" backward-compatible path
+
+ if( p_vert <= 0 ) {
+  iV.clear();
+  return;
+  }
+
+ iV.resize( nr );
+ for( Index i = 0 ; i < nr ; ++i )
+  iV[ i ] = ( dis( rg ) < p_vert );
+ }
+
+// post-process iV to guarantee at least one diagonal entry. Used when these
+// rows will be installed as the *only* rows of a PolyhedralFunction whose
+// bound will be INF, so that the BundleSolver invariant "at least one
+// diagonal OR a finite bound" is preserved
+static void ensure_iV_has_diagonal( Index nr )
+{
+ if( iV.empty() ) return;     // empty iV already means "all diagonal"
+ for( auto v : iV )
+  if( ! v ) return;           // already has a diagonal
+ // all flags are true: flip a uniformly-random one to false
+ iV[ Index( dis( rg ) * nr ) ] = false;
+ }
+
+/*--------------------------------------------------------------------------*/
+
 static void GenerateAb( Index nr , Index nc )
 {
  // rationale: the solution x^* will be more or less the solution of some
@@ -288,11 +356,12 @@ static void GenerateAb( Index nr , Index nc )
 
  GenerateA( nr , nc );
  Generateb( nr );
+ GenerateiV( nr );
  }
 
 /*--------------------------------------------------------------------------*/
 
-static void GenerateBND( void )
+static void GenerateBND( bool force_finite )
 {
  // rationale: we expect the solution x^* to have entries ~= 1 (in absolute
  // value, and the coefficients of A are <= scale (in absolute value), so
@@ -300,9 +369,13 @@ static void GenerateBND( void )
  // a further - scale * nvar / 4, so we expect - (5/4) * scale * nvar to
  // be a "natural" LB. We therefore set the LB to a mean of 1/2 of that
  // (tight) 33% of the time, a mean of 2 times that (loose) 33% of the time,
- // and -INF the rest
+ // and -INF the rest. When force_finite is true the +/- INF outcome is
+ // never produced (the caller has determined that letting the bound become
+ // infinite would leave the PolyhedralFunction logically inconsistent --
+ // no diagonal linearization, no bound -- which the BundleSolver cannot
+ // handle)
 
- if( dis( rg ) <= 0.333 ) {   // "tight" bound
+ if( force_finite || dis( rg ) <= 0.333 ) {   // "tight" bound
   BND = rs( dis( rg ) * 5 * scale * nvar / 4 );
   return;
   }
@@ -313,6 +386,38 @@ static void GenerateBND( void )
   }
 
  BND = INF;
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static void SetGlobalBound( void );
+
+// if the current PF violates the BundleSolver invariant (no diagonal row
+// AND no finite bound), restore it by injecting a finite bound on both
+// the LP side (BoxConstraint on v) and the NDO side
+// (PolyhedralFunction::modify_bound). Invoked just before each SolveBoth
+// call so deletions and bound updates earlier in this round can never
+// leave the function unevaluable
+static void enforce_invariant( void )
+{
+ if( block_well_defined() )
+  return;
+ GenerateBND( true );
+
+ auto cnst = LPBlock->get_static_constraint< BoxConstraint >( "vbnd" );
+ if( convex )
+  cnst->set_lhs( -BND );
+ else
+  cnst->set_rhs( BND );
+
+ auto PF = static_cast< p_PF >(
+            NDOBlock->get_objective< FRealObjective >()->get_function() );
+ PF->modify_bound( rs( BND ) );
+
+ cur_bnd_finite = true;
+
+ SetGlobalBound();  // refresh the block's "valid bound" (hard or
+                    // conditional, depending on wchg) to match
  }
 
 /*--------------------------------------------------------------------------*/
@@ -337,18 +442,31 @@ static void ConstructLPConstraint( Index i , FRowConstraint & ci ,
 {
  // construct constraint ci out of A[ i ] and b[ i ]:
  //
- // in the convex case, the constraint is
+ // in the convex case, if the row is *diagonal*, the constraint is
  //
  //          b[ i ] <= vLP - \sum_j Ai[ j ] * xLP[ j ] <= INF
  //
- // in the concave case, the constraint is
+ // in the concave case, if the row is *diagonal*, the constraint is
  //
  //          -INF <= vLP - \sum_j Ai[ j ] * xLP[ j ] <= b[ i ]
+ //
+ // for *vertical* rows, the encoding is identical except that the
+ // coefficient of vLP is set to 0 instead of 1, so that
+ //
+ //  convex vertical:  b[ i ] <= - \sum_j Ai[ j ] * xLP[ j ] <= INF
+ //                   ( i.e.,  A[ i ] . x + b[ i ] <= 0  is required )
+ //  concave vertical: -INF  <= - \sum_j Ai[ j ] * xLP[ j ] <= b[ i ]
+ //                   ( i.e.,  A[ i ] . x + b[ i ] >= 0  is required )
+ //
+ // which corresponds to the "domain" interpretation of vertical
+ // linearizations in PolyhedralFunction.
  //
  // note: constraints are constructed dense (elements == 0, which are
  //       anyway quite unlikely, are ignored) to make things simpler
  //
  // note: variable x[ i ] is given index i + 1, variable v has index 0
+
+ const bool is_v = ( i < iV.size() ) ? iV[ i ] : false;
 
  if( convex ) {
   ci.set_lhs( b[ i ] );
@@ -361,8 +479,8 @@ static void ConstructLPConstraint( Index i , FRowConstraint & ci ,
  LinearFunction::v_coeff_pair vars( nvar + 1 );
  Index j = 0;
 
- // first, v
- vars[ j ] = std::make_pair( vLP , 1 );
+ // first, v: coef is 1 for diagonal rows, 0 for vertical rows
+ vars[ j ] = std::make_pair( vLP , is_v ? 0.0 : 1.0 );
 
  // then, static x
  for( ; j < nsvar ; ++j )
@@ -390,14 +508,18 @@ static void ChangeLPConstraint( Index i , FRowConstraint & ci , ModParam iAM )
  else
   ci.set_rhs( b[ i ] , iAM );
 
- // now change the coefficients, except that of v that is always 1
- LinearFunction::Vec_FunctionValue coeffs( nvar );
+ // now change all the coefficients, including that of v: it is 1 for
+ // diagonal rows and 0 for vertical rows, and a row may switch between
+ // diagonal and vertical when modified
+ const bool is_v = ( i < iV.size() ) ? iV[ i ] : false;
 
+ LinearFunction::Vec_FunctionValue coeffs( nvar + 1 );
+ coeffs[ 0 ] = is_v ? 0.0 : 1.0;
  for( Index j = 0 ; j < nvar ; ++j )
-  coeffs[ j ] = - A[ i ][ j ];
+  coeffs[ j + 1 ] = - A[ i ][ j ];
 
  auto f = static_cast< p_LF >( ci.get_function() );
- f->modify_coefficients( std::move( coeffs ) , Range( 1 , nvar + 1 ) , iAM );
+ f->modify_coefficients( std::move( coeffs ) , Range( 0 , nvar + 1 ) , iAM );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -663,7 +785,7 @@ static void RemoveFRow( AbstractBlock & AB , const Subset & sbst )
 /*--------------------------------------------------------------------------*/
 
 static void printAb( const MultiVector & tA , const RealVector & tb ,
-		     double bound )
+		     double bound , const BoolVector & tIV = {} )
 {
  PANIC( ( tA.size() == tb.size() ) || ( tA.size() + 1 == tb.size() ) );
  PANIC( tA.size() == m );
@@ -677,7 +799,10 @@ static void printAb( const MultiVector & tA , const RealVector & tb ,
   cout << ", bound = " << bound << endl;
 
  for( Index i = 0 ; i < m ; ++i ) {
-  cout << "A[ " << i << " ] = [ ";
+  // tag rows that are vertical, so they can be told apart from diagonal
+  // ones in the printout (and matched against the LP encoding)
+  bool is_v = ( i < tIV.size() ) && tIV[ i ];
+  cout << ( is_v ? "V" : "D" ) << " A[ " << i << " ] = [ ";
   for( Index j = 0 ; j < nvar ; ++j )
    cout << tA[ i ][ j ] << " ";
    cout << "], b[ " << i << " ] = " << tb[ i ] << endl;
@@ -719,19 +844,68 @@ static bool SolveBoth( void )
    return( true );
    }
 
+
+
   if( hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
    /* Weird case: the LP found an optimal solution but the NDO declared the
-    * problem unbounded below. This may be because the tentative lb is too
-    * high, check it this actually is the case and if so declare the
-    * run a success (but also decrease the lb). */
-   if( ( convex && ( foNDO <= bound * ( 1 + 1e-9 ) ) ) ||
-       ( ( ! convex ) && ( foNDO >= bound * ( 1 + 1e-9 ) ) ) ) {
+    * problem unbounded. This is the BundleSolver's heuristic
+    * unboundedness detection firing because the value of the function
+    * exceeded the "conditional" valid bound that the test installed via
+    * set_valid_(lower/upper)_bound() -- with no information about what
+    * "unbounded" really means for a PolyhedralFunction, the BundleSolver
+    * uses that bound as a "finite infinity" past which the function is
+    * considered unbounded. The trigger for that detection is one of:
+    *  (a) Bundle returned a finite reported value foNDO that has reached
+    *      (or gone past) the conditional bound, OR
+    *  (b) Bundle returned the unbounded sentinel ( foNDO = +/- INF ),
+    *      which happens when the bound was reached without a feasible
+    *      point being found, OR
+    *  (c) the LP optimum foLP itself is past the conditional bound (so
+    *      Bundle was right that the problem exceeds the bound, even if
+    *      it didn't see a finite foNDO at the bound).
+    * In any of these cases we declare the run a success but double the
+    * bound, so that next time around there is more headroom. */
+   bool fo_at_or_past_bound =
+       convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
+              : ( foNDO >= bound * ( 1 - 1e-9 ) );
+   bool fo_unbounded_sentinel =
+       ( foNDO == INF ) || ( foNDO == - INF );
+   bool foLP_past_bound =
+       convex ? ( foLP <= - bound * ( 1 - 1e-9 ) )
+              : ( foLP >= bound * ( 1 - 1e-9 ) );
+   if( fo_at_or_past_bound || fo_unbounded_sentinel || foLP_past_bound ) {
     LOG1( "OK(?bound?)" << endl );
     bound *= 2;
     if( convex )
      NDOBlock->set_valid_lower_bound( -bound );
     else
      NDOBlock->set_valid_upper_bound( bound );
+    return( true );
+    }
+   }
+
+  if( rtrnLP == Solver::kUnbounded ) {
+   /* Symmetric weird case: the LP says the problem is unbounded. The NDO
+    * may be reporting kUnbounded too (handled by the next branch); it may
+    * have stopped at the conditional valid bound (foNDO = -bound for
+    * convex / +bound for concave); or it may have returned no finite
+    * bound at all (foNDO = +/- INF -- either the default for hsNDO=false,
+    * or the bundle's get_*b() with no information). In all these subcases
+    * the LP being unbounded is a strong signal that the run is "OK
+    * modulo the bound": increase the bound and accept the result. */
+   bool foNDO_at_or_past_bound =
+       convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
+              : ( foNDO >= bound * ( 1 - 1e-9 ) );
+   bool foNDO_unbounded =
+       convex ? ( foNDO == INF || foNDO == - INF )
+              : ( foNDO == INF || foNDO == - INF );
+   if( foNDO_at_or_past_bound || foNDO_unbounded ) {
+    LOG1( "OK(?bound?)" << endl );
+    bound *= 2;
+    if( convex )
+     NDOBlock->set_valid_lower_bound( -bound , true );
+    else
+     NDOBlock->set_valid_upper_bound( bound , true );
     return( true );
     }
    }
@@ -824,6 +998,7 @@ int main( int argc , char **argv )
  Index n_repeat = 40;
 
  switch( argc ) {
+  case( 9 ): Str2Sthg( argv[ 8 ] , p_vert );
   case( 8 ): Str2Sthg( argv[ 7 ] , p_change );
   case( 7 ): Str2Sthg( argv[ 6 ] , n_change );
   case( 6 ): Str2Sthg( argv[ 5 ] , n_repeat );
@@ -833,7 +1008,7 @@ int main( int argc , char **argv )
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
              break;
   default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar dens #rounds #chng %chng]"
+	   " seed [wchg nvar dens #rounds #chng %chng %vert]"
  		<< endl <<
            "       wchg: what to change, coded bit-wise [127]"
 		<< endl <<
@@ -856,8 +1031,15 @@ int main( int argc , char **argv )
            "       #chng: number changes [10]"
 	        << endl <<
            "       %chng: probability of changing [0.5]"
+	        << endl <<
+           "       %vert: probability that a generated row is vertical [0]"
 	        << endl;
 	   return( 1 );
+  }
+
+ if( p_vert < 0 || p_vert > 1 ) {
+  cout << "error: p_vert out of [0, 1]";
+  exit( 1 );
   }
 
  if( nvar < 1 ) {
@@ -887,12 +1069,18 @@ int main( int argc , char **argv )
 
  GenerateAb( m , nvar );
  GenerateBND();
+ // enforce the BundleSolver invariant: at least one diagonal row OR a
+ // finite bound. If BND is INF, ensure iV has at least one diagonal
+ if( BND == INF )
+  ensure_iV_has_diagonal( m );
+ cur_bnd_finite = ( BND != INF );
 
  cout.setf( ios::scientific, ios::floatfield );
  cout << setprecision( 10 );
 
  #if( LOG_LEVEL >= 4 )
-  printAb( A , b , BND );
+  printAb( A , b , BND , iV );
+  cout << "convex = " << ( convex ? "true" : "false" ) << endl;
  #endif
 
  // construction and loading of the objects - - - - - - - - - - - - - - - - -
@@ -964,9 +1152,16 @@ int main( int argc , char **argv )
     *(vit++) = & xi;
   #endif
 
+  // record the initial vertical flags before iV is moved into the PF
+  cur_iV = iV;
+  if( cur_iV.size() != m )
+   cur_iV.assign( m , false );
+
   // construct the Objective
-  auto PF = new PolyhedralFunction( std::move( vars ) ,	std::move( A ) ,
-				    std::move( b ) );
+  auto PF = new PolyhedralFunction( std::move( vars ) , std::move( A ) ,
+				    std::move( b ) ,
+				    - Inf< FunctionValue >() ,
+				    true , nullptr , std::move( iV ) );
   if( BND != INF )
    PF->modify_bound( rs( BND ) );
   PF->set_is_convex( convex , eNoMod );
@@ -1102,10 +1297,14 @@ int main( int argc , char **argv )
   #endif
  #endif
 
- // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+ // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  LOG1( "First call: " );
+
+ // ensure the BundleSolver invariant before solving (random initial
+ // generation may have left only verticals with no bound)
+ enforce_invariant();
 
  bool AllPassed = SolveBoth();
  
@@ -1154,10 +1353,17 @@ int main( int argc , char **argv )
     auto PF = static_cast< p_PF >(
 	       NDOBlock->get_objective< FRealObjective >()->get_function() );
      
+    // append the freshly-generated flags to cur_iV (the PF's internal
+    // shadow), padding with false if iV was empty (i.e. p_vert == 0)
+    cur_iV.reserve( cur_iV.size() + tochange );
+    for( Index i = 0 ; i < tochange ; ++i )
+     cur_iV.push_back( ( i < iV.size() ) ? iV[ i ] : false );
+
     if( tochange == 1 )
-     PF->add_row( std::move( A[ 0 ] ) , b[ 0 ] );
+     PF->add_row( std::move( A[ 0 ] ) , b[ 0 ] , eModBlck ,
+		  ( ! iV.empty() ) && iV[ 0 ] );
     else
-     PF->add_rows( std::move( A ) , b );
+     PF->add_rows( std::move( A ) , b , eModBlck , std::move( iV ) );
 
     // update m
     m += tochange;
@@ -1185,16 +1391,20 @@ int main( int argc , char **argv )
 
      // remove them from the LP
      LPBlock->remove_dynamic_constraints( *cnst , Range( strt , stp ) );
- 
+
      // remove them from the NDO
      if( tochange == 1 )
       PF->delete_row( strt );
      else
       PF->delete_rows( Range( strt , stp ) );
+
+     // keep cur_iV in sync
+     cur_iV.erase( cur_iV.begin() + strt , cur_iV.begin() + stp );
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
      Subset nms( GenerateRand( m , tochange ) );
+     Subset nms_kept( nms );  // ordered copy retained for cur_iV erase
 
      // remove them from the LP
      if( tochange == 1 )
@@ -1202,12 +1412,17 @@ int main( int argc , char **argv )
 							     nms[ 0 ] ) );
      else
       LPBlock->remove_dynamic_constraints( *cnst , Subset( nms ) , true );
-    
+
      // remove them from the NDO
      if( tochange == 1 )
       PF->delete_row( nms[ 0 ] );
      else
       PF->delete_rows( std::move( nms ) , true );
+
+     // keep cur_iV in sync (iterate back-to-front so earlier indices
+     // stay valid as we erase)
+     for( auto it = nms_kept.rbegin() ; it != nms_kept.rend() ; ++it )
+      cur_iV.erase( cur_iV.begin() + *it );
      }
 
     // update m
@@ -1242,6 +1457,14 @@ int main( int argc , char **argv )
      Index strt = dis( rg ) * ( m - tochange );
      Index stp = strt + tochange;
 
+     // preserve the existing diagonal/vertical type of the modified rows
+     // (the BundleSolver handles modifications cleanly when the type does
+     //  not change, but type-switching via modify_row[s] can leave the
+     //  master in an inconsistent state)
+     iV.assign( tochange , false );
+     for( Index i = 0 ; i < tochange ; ++i )
+      iV[ i ] = cur_iV[ strt + i ];
+
      // send all the Modification to the same channel
      Observer::ChnlName chnl = LPBlock->open_channel();
      const auto iAM = Observer::make_par( eModBlck , chnl );
@@ -1255,13 +1478,21 @@ int main( int argc , char **argv )
 
      // modify them in the NDO
      if( tochange == 1 )
-      PF->modify_row( strt , std::move( A[ 0 ] ) , b[ 0 ] );
+      PF->modify_row( strt , std::move( A[ 0 ] ) , b[ 0 ] , eModBlck ,
+		      iV[ 0 ] );
      else
-      PF->modify_rows( std::move( A ) , b , Range( strt , stp ) );
+      PF->modify_rows( std::move( A ) , b , Range( strt , stp ) , eModBlck ,
+		       std::move( iV ) );
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
      Subset nms( GenerateRand( m , tochange ) );
+
+     // preserve the existing type of the modified rows (see comment in
+     // the ranged branch above)
+     iV.assign( tochange , false );
+     for( Index i = 0 ; i < tochange ; ++i )
+      iV[ i ] = cur_iV[ nms[ i ] ];
 
      // send all the Modification to the same channel
      Observer::ChnlName chnl = LPBlock->open_channel();
@@ -1280,9 +1511,11 @@ int main( int argc , char **argv )
 
      // modify them in the NDO
      if( tochange == 1 )
-      PF->modify_row( nms[ 0 ] , std::move( A[ 0 ] ) , b[ 0 ] );
+      PF->modify_row( nms[ 0 ] , std::move( A[ 0 ] ) , b[ 0 ] , eModBlck ,
+		      iV[ 0 ] );
      else
-      PF->modify_rows( std::move( A ) , b , std::move( nms ) , true );
+      PF->modify_rows( std::move( A ) , b , std::move( nms ) , true ,
+		       eModBlck , std::move( iV ) );
      }
     }
 
@@ -1353,7 +1586,10 @@ int main( int argc , char **argv )
   if( ( wchg & 16 ) && ( dis( rg ) <= p_change ) ) {
    LOG1( "modified bound - " );
 
-   GenerateBND();
+   // enforce the BundleSolver invariant: if there is no diagonal row, the
+   // new bound MUST be finite (otherwise the function value is +/-INF
+   // inside the feasible domain, which the BundleSolver cannot handle)
+   GenerateBND( /* force_finite = */ n_diagonal() == 0 );
 
    // change it in the LP
    auto cnst = LPBlock->get_static_constraint< BoxConstraint >( "vbnd" );
@@ -1367,6 +1603,8 @@ int main( int argc , char **argv )
 	       NDOBlock->get_objective< FRealObjective >()->get_function() );
 
    PF->modify_bound( rs( BND ) );
+
+   cur_bnd_finite = ( BND != INF );
 
    SetGlobalBound();  // set lower bound, be it "hard" or "conditional"
    }
@@ -1669,15 +1907,21 @@ int main( int argc , char **argv )
     PANIC( PF );
     printAb( PF->get_A() , PF->get_b() ,
 	     convex ? PF->get_global_lower_bound()
-	            : PF->get_global_upper_bound() );
+	            : PF->get_global_upper_bound() ,
+	     PF->get_is_vert() );
    #endif
   #endif
 
   // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -
   // ... every SKIP_BEAT + 1 rounds
 
-  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) )
+  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) ) {
+   // ensure the BundleSolver invariant before solving: deletions and bound
+   // updates earlier in this round may have left the function with only
+   // verticals and no bound, which would make the BundleSolver stall
+   enforce_invariant();
    AllPassed &= SolveBoth();
+   }
   #if( LOG_LEVEL >= 1 )
   else
    cout << endl;

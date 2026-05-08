@@ -1,30 +1,63 @@
 #!/usr/bin/env bash
+#
+# Tester batch for PolyhedralFunctionBlock. Sweeps over:
+#   - problem sizes (number of variables)
+#   - constraint densities
+#   - the number of nested PolyhedralFunctionBlock (nf): 0 = single block,
+#     positive = sub-blocks summed by an additional linear objective on the
+#     father block, negative = same but with no extra "linear" objective
+#   - what kinds of changes are exercised in each round
+#   - the *fraction of vertical linearizations* (the new feature added in
+#     this iteration of PolyhedralFunctionBlock): %vert = 0 exercises the
+#     "all-diagonal" code path that existed before, while non-zero values
+#     stress the new vertical-linearization machinery.
+#
+# Tunable via environment variables:
+#   - what:  bit-mask of changes (default: 319 = add/del/modify rows + modify
+#            constants + modify bound, etc.)
+#   - iter:  number of rounds (default: 4)
+#   - nchg:  upper bound on changes per round (default: 4)
+#   - pchg:  probability of each kind of change (default: 0.5)
+#   - sizes: list of sizes to test (default: "10 50")
+#   - denss: list of densities to test (default: "3")
+#   - nfs:   list of nf values (default: "0 1 -1 2 -2")
+#   - verts: list of %vert values (default: "0 0.1 0.3 0.5")
+#
+# Note: very small sizes (e.g. size=2) and very low densities (e.g.
+# dens=1.1) often produce LP-degenerate instances (unbounded /
+# near-infeasible) that mostly stress the test harness's handling of
+# corner cases rather than the PolyhedralFunctionBlock itself; they are
+# not included in the default sweep.
 
-what=639
-#nf=-10
-#iter=0
+what=${what:-319}
+iter=${iter:-20}
+nchg=${nchg:-5}
+pchg=${pchg:-0.5}
+
+sizes=${sizes:-"10 50"}
+denss=${denss:-"1.1 3"}
+nfs=${nfs:-"0 1 -1 2 -2"}
+verts=${verts:-"0 0.1 0.3 0.5"}
 
 PolyhedralFunctionBlock_test=${1:-./PolyhedralFunctionBlock_test}
 
-for nf in 0 1 -1 10 -10; do
-  #for size in 2 10 50 100
-  for size in 2 10 50; do
-    for dens in 3 1.1; do
-      for (( seed = 0 ; seed < 20 ; seed++ )); do
+for nf in $nfs; do
+  for size in $sizes; do
+    for dens in $denss; do
+      for vert in $verts; do
+        for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-        if [ -z "$iter" ]; then
-          printf "[$seed $what $size $dens $nf]: "
-        else
-          printf "[$seed $what $size $dens $nf $iter]: "
-        fi
+          printf "[$seed $what $size $dens $nf $iter $nchg $pchg $vert]: "
 
-        "$PolyhedralFunctionBlock_test" $seed $what $size $dens $nf $iter
+          "$PolyhedralFunctionBlock_test" $seed $what $size $dens $nf \
+              $iter $nchg $pchg $vert
 
-        retVal=$?
-        if [ $retVal -ne 0 ]; then
-          exit 1
-        fi
+          retVal=$?
+          if [ $retVal -ne 0 ]; then
+            exit 1
+          fi
 
+        done
       done
     done
   done

@@ -1,29 +1,57 @@
 #!/usr/bin/env bash
+#
+# Tester batch for PolyhedralFunction. Sweeps over:
+#   - problem sizes (number of variables)
+#   - constraint densities
+#   - what kinds of changes are exercised in each round
+#   - the *fraction of vertical linearizations* (the new feature added in
+#     this iteration of PolyhedralFunction): %vert = 0 exercises the
+#     "all-diagonal" code path that existed before, while non-zero values
+#     stress the new vertical-linearization machinery.
+#
+# Tunable via environment variables:
+#   - what:  bit-mask of changes (default: 31 = add/del/modify rows + modify
+#            constants + modify bound)
+#   - iter:  number of rounds (default: 40)
+#   - nchg:  upper bound on changes per round (default: 10)
+#   - pchg:  probability of each kind of change (default: 0.5)
+#   - sizes: list of sizes to test (default: "10 50")
+#   - denss: list of densities to test (default: "3")
+#   - verts: list of %vert values to test (default: "0 0.1 0.3 0.5")
+#
+# Note: very small sizes (e.g. size=2) and very low densities (e.g.
+# dens=1.1) often produce LP-degenerate instances (unbounded /
+# near-infeasible) that mostly stress the test harness's handling of
+# corner cases rather than the PolyhedralFunction itself; they are not
+# included in the default sweep.
 
-what=31
-#what=1
-#iter=10
+what=${what:-31}
+iter=${iter:-20}
+nchg=${nchg:-10}
+pchg=${pchg:-0.5}
+
+sizes=${sizes:-"10 50"}
+denss=${denss:-"1.2 3"}
+verts=${verts:-"0 0.1 0.3 0.5"}
 
 PolyhedralFunction_test=${1:-./PolyhedralFunction_test}
 
-#for size in 2 10 50 100
-for size in 2 10 50; do
-  for dens in 3 1.1; do
-    for (( seed = 0 ; seed < 20 ; seed++ )); do
+for size in $sizes; do
+  for dens in $denss; do
+    for vert in $verts; do
+      for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-      if [ -z "$iter" ]; then
-        printf "[$seed $what $size $dens]: "
-      else
-        printf "[$seed $what $size $dens $iter]: "
-      fi
+        printf "[$seed $what $size $dens $iter $nchg $pchg $vert]: "
 
-      "$PolyhedralFunction_test" $seed $what $size $dens $iter
+        "$PolyhedralFunction_test" $seed $what $size $dens \
+            $iter $nchg $pchg $vert
 
-      retVal=$?
-      if [ $retVal -ne 0 ]; then
-        exit 1
-      fi
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+          exit 1
+        fi
 
+      done
     done
   done
 done
