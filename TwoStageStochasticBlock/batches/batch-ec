@@ -91,10 +91,10 @@ for what in ../../UCBlock/data/nc4/EC_Data/TSSB_EC_CO_*.nc4 \
        "$exe" "$what" "$par" "$slv" "$ref" >> "$mlf"
     fi
 
-#    retVal=$?
-#    if [ $retVal -ne 0 ]; then
-#      exit 1
-#    fi
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+      exit 1
+    fi
 
 done
 
