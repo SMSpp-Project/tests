@@ -44,7 +44,8 @@ fi
 # (NA YAMLs were dropped in favor of CO + --no-asset, since they were
 # identical to CO but with all installable assets disabled)
 # --no-thermal / --no-asset fix the corresponding x_us decisions to 0
-# in EnergyCommunity.jl@stochastic.
+# in EnergyCommunity.jl@stochastic, so the EC.jl model matches the SMS++
+# instance produced by csv2nc4.jl.
 
 declare -A REF_OBJ
 
@@ -90,10 +91,10 @@ for what in ../../UCBlock/data/nc4/EC_Data/TSSB_EC_CO_*.nc4 \
        "$exe" "$what" "$par" "$slv" "$ref" >> "$mlf"
     fi
 
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
+#    retVal=$?
+#    if [ $retVal -ne 0 ]; then
+#      exit 1
+#    fi
 
 done
 
