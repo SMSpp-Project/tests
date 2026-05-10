@@ -35,28 +35,33 @@ fi
 # (see more at https://github.com/SPSUnipi/EnergyCommunity.jl, branch
 # `stochastic`).
 # The values come from the test harness in
-# UCBlock/tools/csv2netCDF/test_instance_with_EC_jl.jl run on the same
-# YAMLs csv2nc4.jl produced these .nc4 from. The "no thermal" and "no
-# asset" variants are obtained by passing --no-thermal / --no-asset to
-# that script, which fixes the corresponding x_us decisions to 0 in
-# EnergyCommunity.jl@stochastic.
+# UCBlock/tools/csv2netCDF/test_instance_with_EC_jl.jl run as follows:
+#   CO          --no-thermal  →  TSSB_EC_CO_Test{,_NB}.nc4
+#   CO          (no flag)     →  TSSB_EC_CO_Test_TUB{,_NB}.nc4
+#   CO          --no-asset    →  TSSB_EC_NA_Test{,_NB}.nc4
+#   NC          --no-thermal  →  TSSB_EC_NC_Test{,_NB}.nc4
+#   NC          (no flag)     →  TSSB_EC_NC_Test_TUB{,_NB}.nc4
+# (NA YAMLs were dropped in favor of CO + --no-asset, since they were
+# identical to CO but with all installable assets disabled)
+# --no-thermal / --no-asset fix the corresponding x_us decisions to 0
+# in EnergyCommunity.jl@stochastic.
 
 declare -A REF_OBJ
 
-REF_OBJ[TSSB_EC_CO_Test.nc4]=3.5846051e+06
-REF_OBJ[TSSB_EC_CO_Test_NB.nc4]=3.5846051e+06
+REF_OBJ[TSSB_EC_CO_Test.nc4]=3.552159243e+06
+REF_OBJ[TSSB_EC_CO_Test_NB.nc4]=3.552159243e+06
 
-REF_OBJ[TSSB_EC_CO_Test_TUB.nc4]=3.5517689e+06
-REF_OBJ[TSSB_EC_CO_Test_TUB_NB.nc4]=3.5517689e+06
+REF_OBJ[TSSB_EC_CO_Test_TUB.nc4]=3.518331636e+06
+REF_OBJ[TSSB_EC_CO_Test_TUB_NB.nc4]=3.518331636e+06
 
-REF_OBJ[TSSB_EC_NA_Test.nc4]=4.0280923e+06
-REF_OBJ[TSSB_EC_NA_Test_NB.nc4]=4.0280923e+06
+REF_OBJ[TSSB_EC_NA_Test.nc4]=3.996196889e+06
+REF_OBJ[TSSB_EC_NA_Test_NB.nc4]=3.996196889e+06
 
-REF_OBJ[TSSB_EC_NC_Test.nc4]=3.8131215e+06
-REF_OBJ[TSSB_EC_NC_Test_NB.nc4]=3.8131215e+06
+REF_OBJ[TSSB_EC_NC_Test.nc4]=3.794566011e+06
+REF_OBJ[TSSB_EC_NC_Test_NB.nc4]=3.794566011e+06
 
-REF_OBJ[TSSB_EC_NC_Test_TUB.nc4]=3.7765015e+06
-REF_OBJ[TSSB_EC_NC_Test_TUB_NB.nc4]=3.7765015e+06
+REF_OBJ[TSSB_EC_NC_Test_TUB.nc4]=3.753955378e+06
+REF_OBJ[TSSB_EC_NC_Test_TUB_NB.nc4]=3.753955378e+06
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
