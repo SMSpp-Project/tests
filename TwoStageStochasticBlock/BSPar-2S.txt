@@ -41,10 +41,10 @@ intLogVerb          0    # log verbosity of the MILPSolver
 intRelaxIntVars     1    # nonzero if the continuous relaxation is solved
 intCutSepPar        7    # separate user cuts + lazy constraints
 
-0 # number of double parameters
+1 # number of double parameters
 
 # now all the double parameters
-# [none]
+dblRelAcc  1e-8    # relative accuracy required to solution
 
 0 # number of string parameters
 
