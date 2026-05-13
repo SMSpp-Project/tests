@@ -47,7 +47,7 @@ sizes=${sizes:-"10 50"}
 denss=${denss:-"3"}
 nfs=${nfs:-"0 1 -1 2 -2"}
 verts=${verts:-"0 0.1 0.3 0.5"}
-duals=${duals:-"0"}
+duals=${duals:-"0 1"}
 
 PolyhedralFunctionBlock_test=${1:-./PolyhedralFunctionBlock_test}
 
