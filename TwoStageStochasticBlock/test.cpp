@@ -86,7 +86,7 @@ Block * TestBlock;  // the TwoStageStochasticBlock that is solved
 // if not-NaN, the objective value of the (1st) Solver attached to the Block
 // is compared against a reference value passed on the command line
 
-double RefObjective = std::numeric_limits< double >::quiet_NaN();
+// RefObjective is defined in common_utils.cpp (extern in common_utils.h)
 
 const double RefTolerance = 1e-5;
 

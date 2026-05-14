@@ -60,10 +60,14 @@
 /*----------------------------- INCLUDES -----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <getopt.h>
+#include <filesystem>
+
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <Block.h>
 #include <BlockSolverConfig.h>
@@ -74,6 +78,49 @@
 
 using namespace SMSpp_di_unipi_it;
 
+/*--------------------------------------------------------------------------*/
+/*------------------------------- GLOBALS ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+/** @name Global variables shared across SMS++ tests that opt into the
+ *        getopt-style command line. Tests that parse argv positionally can
+ *        ignore them entirely. */
+/// @{
+
+extern std::string docopt_desc;     ///< test description; set by the test before calling docopt()
+
+extern std::string exe;             ///< name of the executable file
+extern std::string filename;        ///< input filename (last positional argv)
+extern std::string bconf_file;      ///< BlockConfig filename (-B)
+extern std::string sconf_file;      ///< BlockSolverConfig filename (-S)
+extern std::string block_prefix;    ///< prefix for all Block filenames (-p)
+extern std::string conf_prefix;     ///< prefix for all Configuration filenames (-c)
+
+extern bool sol_verbose;            ///< if the Solver should be verbose
+extern bool dryrun;                 ///< if compute() need not really be called (-D)
+
+extern int verbosity_level;         ///< verbosity level (0 = silent, >0 = verbose output, -v)
+
+/// reference objective for the ref-vs-Solver comparison; defaults to NaN
+/** Tests set this directly (positional argv or test-specific option); the
+ *  default getopt baseline does not parse it because individual tests use
+ *  different conventions for the option letter. */
+extern double RefObjective;
+
+/// default short command-line options string used by process_standard_arg()
+/** Tests that need extra options override this (and long_opts / help) in
+ *  their main() before calling process_args(), then handle the
+ *  test-specific switches in their own dispatcher. */
+extern std::string short_opts;
+
+/// default long command-line options vector
+
+extern std::vector< option > long_opts;
+
+/// default help text printed by docopt()
+
+extern std::string help;
+
+/// @}
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -141,7 +188,7 @@ void b_config_Block( Block * block , Configuration * b_config ,
                      const std::string & fn );
 
 /*--------------------------------------------------------------------------*/
-/// apply a (meta-)BlockSolverConfig to a Block, then clear() it for cleanup
+/// apply a (meta-)BlockSolverConfig to a Block, optionally clear() for cleanup
 /** Mirror of b_config_Block() for BlockSolverConfig. The differences are:
  *
  *  - no clone() is required since BlockSolverConfig::apply() does not transfer
@@ -150,13 +197,16 @@ void b_config_Block( Block * block , Configuration * b_config ,
  *  - after apply(), every BlockSolverConfig is clear()-ed (or, in the
  *    meta-mode, every value of the map is clear()-ed) so the same object can
  *    be re-applied at the end of main() to unregister the Solver and free
- *    the resources.
+ *    the resources. Pass @p clear_after = false to skip this clear() when
+ *    the same BlockSolverConfig is applied multiple times (e.g., re-attach
+ *    in a test loop) and a single deferred clear() is done by the caller.
  *
  *  @p fn defaults to the empty string so the same call can be reused at
  *  cleanup time without a filename to cite in error messages. */
 
 void s_config_Block( Block * block , Configuration * s_config ,
-                     const std::string & fn = "" );
+                     const std::string & fn = "" ,
+                     bool clear_after = true );
 
 /*--------------------------------------------------------------------------*/
 /// which Solver getter to use when extracting the objective value
@@ -224,6 +274,95 @@ bool CheckRefValue( double fo , double ref ,
 bool SolveAndCheckRef( Block * block , double ref ,
                        ObjGetter g = ObjGetter::LowerBound ,
                        double rel_tol = 1e-5 );
+
+/*--------------------------------------------------------------------------*/
+/*------------------------ CLI baseline (opt-in) ---------------------------*/
+/*--------------------------------------------------------------------------*/
+/** Helpers to give tests a getopt-style command line with a small shared
+ *  baseline (-h help, -B BlockConfig, -S SolverConfig, -p Block prefix,
+ *  -c Config prefix, -D dryrun, -v verbose). Tests that need extra options
+ *  override @ref short_opts / @ref long_opts / @ref help and handle the
+ *  extra switches via their own dispatcher (calling process_standard_arg()
+ *  to deal with the baseline first). */
+
+/// normalize a directory prefix in a portable way (adds trailing separator)
+
+inline std::string normalize_prefix( const std::string & prefix )
+{
+ if( prefix.empty() )
+  return( prefix );
+
+ std::filesystem::path p( prefix );
+ p = p.lexically_normal();
+
+ auto s = p.string();
+ if( s.empty() )
+  return( s );
+
+ if( ( s.back() != '/' ) && ( s.back() != '\\' ) )
+  s += std::filesystem::path::preferred_separator;
+
+ return( s );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// resolve @p name against @p prefix in a portable way
+/** If @p name is absolute, returns it normalized; otherwise prepends @p
+ *  prefix (if non-empty) and normalizes. Used to apply the --prefix
+ *  (block_prefix) and --configdir (conf_prefix) options. */
+
+inline std::string resolve_with_prefix( const std::string & prefix ,
+                                        const std::string & name )
+{
+ if( name.empty() )
+  return( name );
+
+ std::filesystem::path p( name );
+ if( p.is_absolute() )
+  return( p.lexically_normal().string() );
+
+ if( prefix.empty() )
+  return( p.lexically_normal().string() );
+
+ return( ( std::filesystem::path( prefix ) / p ).lexically_normal().string() );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// extract the file basename from a (possibly empty) full path
+
+inline std::string get_filename( const std::string & fullpath )
+{
+ if( fullpath.empty() )
+  return( fullpath );
+ return( std::filesystem::path( fullpath ).filename().string() );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// open an SMS++ nc4 file, return its file type (eProbFile or eBlockFile)
+
+int read_open_netCDF( netCDF::NcFile & f , std::string fn );
+
+/*--------------------------------------------------------------------------*/
+/// print the test description and the standard usage to stdout
+
+void docopt( void );
+
+/*--------------------------------------------------------------------------*/
+/// processes one of the default command-line arguments
+/** Returns true if @p opt was recognised as a standard option, false if it
+ *  was unknown (so the caller can dispatch it as a test-specific option or
+ *  emit a usage error). Tests that extend short_opts/long_opts should call
+ *  process_standard_arg() first and handle the test-specific switches in
+ *  their own dispatcher.  */
+
+bool process_standard_arg( int opt );
+
+/*--------------------------------------------------------------------------*/
+/// processes all command-line arguments via getopt_long()
+/** Drives the parsing loop, sets @p filename from the last positional arg,
+ *  and exits 1 with a usage hint on error. */
+
+void process_args( int argc , char ** argv );
 
 /*--------------------------------------------------------------------------*/
 

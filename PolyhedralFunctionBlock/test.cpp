@@ -1795,19 +1795,16 @@ int main( int argc , char **argv )
  // do this by reading appropriate BlockSolverConfig from files and apply()
  // them to the ::Block
  
- auto msc = new BlockSolverConfig;
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches and clears.
+ auto msc = Configuration::deserialize( "LPPar.txt" );
+ if( ! msc ) {
+  cerr << "Error: cannot load BSC from LPPar.txt" << endl;
+  return( 1 );
+  }
  {
-  ifstream LPParFile( "LPPar.txt" );
-  if( ! LPParFile.is_open() ) {
-   cerr << "Error: cannot open file LPPar.txt" << endl;
-   return( 1 );
-   }
-
-  LPParFile >> *( msc );
-  LPParFile.close();
-
-  msc->apply( LPBlock );
-  msc->clear();
+  s_config_Block( LPBlock , msc , "LPPar.txt" );
 
   // for LPBlock, in addition "manually" attach an UpdateSolver to (each
   // PolyhedralFunctionBlock in) LPBlock so that the physical
@@ -1824,24 +1821,16 @@ int main( int argc , char **argv )
    LPBlock->register_Solver( new UpdateSolver( NDOBlock ) );
   }
  
- auto bsc = new BlockSolverConfig;
- {
-  // for NDOBlock do this by reading the appropriate BlockSolverConfig
-  // from NDOPar.txt and apply() it to the NDOBlock. NDOPar.txt selects
-  // BundleSolver on the natural representation in both primal and
-  // dual mode (cf. the cfg = 0 above).
-  ifstream NDOParFile( "NDOPar.txt" );
-  if( ! NDOParFile.is_open() ) {
-   cerr << "Error: cannot open file NDOPar.txt" << endl;
-   return( 1 );
-   }
-
-  NDOParFile >> *( bsc );
-  NDOParFile.close();
-
-  bsc->apply( NDOBlock );
-  bsc->clear();
+ // for NDOBlock do this by reading the appropriate BlockSolverConfig
+ // from NDOPar.txt and apply() it to the NDOBlock. NDOPar.txt selects
+ // BundleSolver on the natural representation in both primal and
+ // dual mode (cf. the cfg = 0 above).
+ auto bsc = Configuration::deserialize( "NDOPar.txt" );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from NDOPar.txt" << endl;
+  return( 1 );
   }
+ s_config_Block( NDOBlock , bsc , "NDOPar.txt" );
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2710,7 +2699,7 @@ int main( int argc , char **argv )
  // unregister (and delete) all Solvers attached to the Blocks: do this by
  // apply()-ing the clear()-ed BlockSolverConfig, then delete them
 
- bsc->apply( NDOBlock );
+ s_config_Block( NDOBlock , bsc );
  delete( bsc );
 
  // for LPBlock, before  "manually" un-register (and delete) the
@@ -2723,7 +2712,7 @@ int main( int argc , char **argv )
  else
   LPBlock->unregister_Solver( LPBlock->get_registered_solvers().back() ,
 			      true );
- msc->apply( LPBlock );
+ s_config_Block( LPBlock , msc );
  delete( msc );
 
  // delete the Blocks

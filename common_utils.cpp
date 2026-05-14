@@ -27,6 +27,8 @@
 #include <map>
 #include <typeinfo>
 
+#include <SMSTypedefs.h>
+
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -120,7 +122,8 @@ void b_config_Block( Block * block , Configuration * b_config ,
 /*--------------------------------------------------------------------------*/
 
 void s_config_Block( Block * block , Configuration * s_config ,
-                     const std::string & fn )
+                     const std::string & fn ,
+                     bool clear_after )
 {
  // std::list rather than std::vector since it's built by push_back and
  // only trasversed head-to-tail
@@ -154,16 +157,18 @@ void s_config_Block( Block * block , Configuration * s_config ,
     }
 
   // finally, clear() all the BlockSolverConfig for final cleanup
-  for( auto & el : map )
-   (el.second)->clear();
+  if( clear_after )
+   for( auto & el : map )
+    (el.second)->clear();
 
   return;  // all done
   }
 
  if( auto * bsc = dynamic_cast< BlockSolverConfig * >( s_config ) ) {
-  bsc->apply( block );  // just apply() it
-  bsc->clear();         // clear() it for final cleanup
-  return;               // all done
+  bsc->apply( block );          // just apply() it
+  if( clear_after )
+   bsc->clear();                // clear() it for final cleanup
+  return;                       // all done
   }
 
  std::cerr << "Error: " << fn
@@ -353,6 +358,155 @@ bool SolveAndCheckRef( Block * block , double ref ,
   }
  catch( ... ) {
   std::cerr << "Error: unknown exception thrown" << std::endl;
+  exit( 1 );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+/*--------------------- CLI baseline (opt-in) ------------------------------*/
+/*--------------------------------------------------------------------------*/
+// Globals (declared extern in common_utils.h).
+
+std::string docopt_desc;
+
+std::string exe;
+std::string filename;
+std::string bconf_file;
+std::string sconf_file;
+std::string block_prefix;
+std::string conf_prefix;
+
+bool sol_verbose = false;
+bool dryrun      = false;
+
+int verbosity_level = 0;
+
+double RefObjective = std::numeric_limits< double >::quiet_NaN();
+
+// Minimal getopt baseline shared by tests that opt in. Tests that need
+// extra switches override short_opts / long_opts / help in their main()
+// before calling process_args().
+std::string short_opts = "B:S:p:c:Dv:h";
+
+std::vector< option > long_opts = {
+ { "help"            , no_argument       , nullptr , 'h' } ,
+ { "blockcfg"        , required_argument , nullptr , 'B' } ,
+ { "solvercfg"       , required_argument , nullptr , 'S' } ,
+ { "prefix"          , required_argument , nullptr , 'p' } ,
+ { "configdir"       , required_argument , nullptr , 'c' } ,
+ { "dryrun"          , no_argument       , nullptr , 'D' } ,
+ { "verbose"         , optional_argument , nullptr , 'v' } ,
+ { nullptr           , no_argument       , nullptr , 0   }
+ };
+
+std::string help =
+ "  -h, --help                      print this help\n"
+ "  -B, --blockcfg <file>           Block Configuration\n"
+ "  -S, --solvercfg <file>          Solver Configuration\n"
+ "  -p, --prefix <path>             the prefix for all Block filenames\n"
+ "  -c, --configdir <path>          the prefix for all Config filenames\n"
+ "  -D, --dryrun                    skip the compute() call\n"
+ "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic, 2 = debug)\n";
+
+/*--------------------------------------------------------------------------*/
+
+int read_open_netCDF( netCDF::NcFile & f , std::string fn )
+{
+ if( ! block_prefix.empty() && ! fn.empty()
+     && fn.front() != '/' && fn.front() != '\\' )
+  fn = block_prefix + fn;
+
+ try {
+  f.open( fn , netCDF::NcFile::read );
+  }
+ catch( netCDF::exceptions::NcException & ) {
+  std::cerr << exe << ": cannot open nc4 file " << fn << std::endl;
+  exit( 1 );
+  }
+
+ netCDF::NcGroupAtt gtype = f.getAtt( "SMS++_file_type" );
+ if( gtype.isNull() ) {
+  std::cerr << exe << ": " << fn << " is not an SMS++ nc4 file" << std::endl;
+  exit( 1 );
+  }
+
+ int type;
+ gtype.getValues( &type );
+
+ if( ( type != eProbFile ) && ( type != eBlockFile ) ) {
+  std::cerr << exe << ": " << fn << " is not a valid SMS++ file" << std::endl;
+  exit( 1 );
+  }
+
+ return( type );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+void docopt( void )
+{
+ // http://docopt.org
+ std::cout << docopt_desc << std::endl;
+ std::cout << "Usage:" << std::endl
+           << "  " << exe << " [options] <file>" << std::endl
+           << "  " << exe << " -h | --help" << std::endl << std::endl
+           << "Options:" << std::endl << help << std::endl;
+ }
+
+/*--------------------------------------------------------------------------*/
+
+bool process_standard_arg( int opt )
+{
+ switch( opt ) {
+  case 'B': bconf_file = std::string( optarg ); break;
+  case 'S': sconf_file = std::string( optarg ); break;
+  case 'p': {
+   block_prefix = normalize_prefix( std::string( optarg ) );
+   Block::set_filename_prefix( std::string( block_prefix ) );
+   break;
+   }
+  case 'c': conf_prefix = normalize_prefix( std::string( optarg ) ); break;
+  case 'D': dryrun = true; break;
+  case 'v': {
+   sol_verbose = true;
+   verbosity_level = optarg ? std::atoi( optarg ) : 1;
+   break;
+   }
+  case 'h': docopt(); exit( 0 );
+  case '?':
+  default:  return( false );
+  }
+ return( true );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+void process_args( int argc , char ** argv )
+{
+ exe = get_filename( argv[ 0 ] );
+ if( argc < 2 ) {
+  std::cout << exe << ": no input file" << std::endl
+            << "Try '" << exe << " --help' for more information" << std::endl;
+  exit( 1 );
+  }
+
+ while( true ) {  // options
+  const auto opt = getopt_long( argc , argv , short_opts.data() ,
+                                long_opts.data() , nullptr );
+  if( opt == -1 ) break;
+
+  if( ! process_standard_arg( opt ) ) {
+   std::cout << "Try '" << exe << " --help' for more information"
+             << std::endl;
+   exit( 1 );
+   }
+  }
+
+ if( optind < argc )  // last argument == [Block] filename
+  filename = std::string( argv[ optind ] );
+ else {
+  std::cout << exe << ": no input file" << std::endl
+            << "Try '" << exe << " --help' for more information" << std::endl;
   exit( 1 );
   }
  }

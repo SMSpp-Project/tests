@@ -65,9 +65,9 @@ static constexpr double INF = SMSpp_di_unipi_it::Inf< double >();
 Block * Block1;
 Block * Block2;
 
-// if not-NaN, the objective value of the 1st Solver is compared against a
-// reference value passed on the command line (argv[6])
-double RefObjective = std::numeric_limits< double >::quiet_NaN();
+// RefObjective is defined in common_utils.cpp (extern in common_utils.h).
+// If not-NaN, the objective value of the 1st Solver is compared against
+// the reference value passed on the command line (argv[6]).
 
 /*--------------------------------------------------------------------------*/
 /*----------------------------- FUNCTIONS ----------------------------------*/

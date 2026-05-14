@@ -1317,17 +1317,15 @@ int main( int argc , char **argv )
  {
   // for LPBlock do this by reading an appropriate BlockSolverConfig from
   // file and apply() it to the LPBlock; 
-  ifstream LPParFile( "LPPar.txt" );
-  if( ! LPParFile.is_open() ) {
-   cerr << "Error: cannot open file LPPar.txt" << endl;
+  // BSC may be a plain BlockSolverConfig or a meta-config
+  // SimpleConfiguration< std::map< std::string , Configuration * > >;
+  // s_config_Block() dispatches on the runtime type and clears the config(s).
+  auto lsc = Configuration::deserialize( "LPPar.txt" );
+  if( ! lsc ) {
+   cerr << "Error: cannot load BSC from LPPar.txt" << endl;
    return( 1 );
    }
-
-  auto lsc = new BlockSolverConfig;
-  LPParFile >> *( lsc );
-  LPParFile.close();
-
-  lsc->apply( LPBlock );
+  s_config_Block( LPBlock , lsc , "LPPar.txt" );
   delete( lsc );
 
   // furthermore, "manually" attach an UpdateSolver to (each
@@ -1340,14 +1338,17 @@ int main( int argc , char **argv )
  {
   // for NDOBlock do this by reading appropriate BlockSolverConfig from
   // files and apply() it to the NDOBlock
-  ifstream NDOParFile( "NDOPar.txt" );
-  if( ! NDOParFile.is_open() ) {
-   cerr << "Error: cannot open file NDOPar.txt" << endl;
+  // load the BSC via Configuration::deserialize; dynamic_cast back so we
+  // can mutate the BundleSolver intDoEasy parameter below (which requires
+  // the static BlockSolverConfig type). Meta-config (nested map) is NOT
+  // supported here because of the per-Solver mutation pattern.
+  auto cfg = Configuration::deserialize( "NDOPar.txt" );
+  auto bsc = dynamic_cast< BlockSolverConfig * >( cfg );
+  if( ! bsc ) {
+   cerr << "Error: NDOPar.txt does not contain a BlockSolverConfig" << endl;
+   delete( cfg );
    return( 1 );
    }
-
-  auto bsc = new BlockSolverConfig( NDOParFile );
-  NDOParFile.close();
 
   // specialised treatment for BundleSolver:  ensure the "easy components"
   // parameter is properly set as HasEasy requires
@@ -1370,8 +1371,8 @@ int main( int argc , char **argv )
 
     bsc->get_SolverConfig( i )->set_par( "intDoEasy" , val );
     }
-  
-  bsc->apply( NDOBlock );  // now apply the BlockSolverConfig to NDOBlock
+
+  s_config_Block( NDOBlock , bsc , "NDOPar.txt" );
   delete( bsc );
 
   #if( LOG_LEVEL >= 4 )
