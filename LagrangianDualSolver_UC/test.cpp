@@ -366,42 +366,55 @@ int main( int argc , char ** argv )
 
    auto sb = TestBlock->get_nested_Blocks();
 
+   // dispatch the per-classname configurations loaded above to all the
+   // matching sub-Blocks via a (meta) BlockConfig / BlockSolverConfig that
+   // b_config_Block / s_config_Block resolve by classname:
+   //   tbc  -> every ThermalUnitBlock           (BlockConfig)
+   //   tbsc -> every ThermalUnitBlock           (BlockSolverConfig)
+   //   hbsc -> every HydroSystemUnitBlock       (BlockSolverConfig, optional)
+   // obsc remains code-driven (catch-all on non-Thermal/non-HSUB) and is
+   // applied below only in the DoEasy=false branch.
+   {
+    // NB: SimpleConfiguration<map<string,Configuration*>>::guts_of_destructor
+    // delete()s every value in the map; we f_value.clear() before scope-exit
+    // so tbc / tbsc / hbsc are NOT double-deleted (they survive for the
+    // explicit delete() at end of this configuration block).
+    SimpleConfiguration< std::map< std::string , Configuration * > > meta_bc;
+    meta_bc.f_value[ "ThermalUnitBlock" ] = tbc;
+    b_config_Block( TestBlock , &meta_bc , "" );
+    meta_bc.f_value.clear();
+
+    SimpleConfiguration< std::map< std::string , Configuration * > > meta_bsc;
+    meta_bsc.f_value[ "ThermalUnitBlock" ] = tbsc;
+    if( hbsc )
+     meta_bsc.f_value[ "HydroSystemUnitBlock" ] = hbsc;
+    s_config_Block( TestBlock , &meta_bsc , "" , false );  // deferred clear
+    meta_bsc.f_value.clear();
+    }
+
+   // Configure_HSUB the linearised PolyhedralFunctionBlock inside every
+   // HydroSystemUnitBlock; runtime block-mutation, not config-driven
+   for( auto sb_i : sb )
+    if( auto hsub = dynamic_cast< HydroSystemUnitBlock * >( sb_i ) )
+     Configure_HSUB( hsub );
+
    // if "easy" components are used
    if( DoEasy ) {
     // define the vector of components to be excluded from being "easy",
-    // i.e., all ThermalUnitBlock and possibly the HydroSystemUnitBlock
+    // i.e., all ThermalUnitBlock and possibly the HydroSystemUnitBlock,
+    // plus the BatteryUnitBlock whose commitment variables are binary
     std::vector< int > NoEasy;
-
     for( auto i = 0 ; i < sb.size() ; ++i ) {
-
-     // deal with ThermalUnitBlock
-     if( auto tub = dynamic_cast< ThermalUnitBlock * >( sb[ i ] ) ) {
-      tub->set_BlockConfig( tbc->clone() );
+     if( dynamic_cast< ThermalUnitBlock * >( sb[ i ] ) )
       NoEasy.push_back( i );
-      tbsc->apply( tub );
-      continue;
-      }
-
-     // deal with BatteryUnitBlock with binary variables
-     if( auto bub = dynamic_cast< BatteryUnitBlock * >( sb[ i ] ) ) {
+     else if( auto bub = dynamic_cast< BatteryUnitBlock * >( sb[ i ] ) ) {
       if( ! bub->get_intake_outtake_binary_variables().empty() )
        NoEasy.push_back( i );
-      continue;
       }
-
-     // deal with HydroSystemUnitBlock
-     if( auto hsub = dynamic_cast< HydroSystemUnitBlock * >( sb[ i ] ) ) {
-      // surely Configure it to use the "linearised" representation
-      Configure_HSUB( hsub );
-      // if not considered an "easy" component, also BlockSolverConfigure it
-      if( hbsc ) {
+     else if( dynamic_cast< HydroSystemUnitBlock * >( sb[ i ] ) ) {
+      if( hbsc )
        NoEasy.push_back( i );
-       hbsc->apply( hsub );
-       }
-      continue;
       }
-
-     // all the other are treated as easy
      }
 
     // if no "hard" components were given in Configuration file...
@@ -467,7 +480,6 @@ int main( int argc , char ** argv )
        "intDoEasy == 0 in the Configuration file and, optionally, specify "
        "which non-ECNetworkBlocks(s) to treat as `hard` components through "
        "`vintNoEasy` parameter." ) );
-  #endif
     // load the BlockSolverConfig for all the other :UnitBlock; note that
     // this can be "empty", and indeed even not there
     auto co = Configuration::deserialize( "OUBSCfg.txt" );
@@ -477,31 +489,17 @@ int main( int argc , char ** argv )
      obsc = nullptr;
      }
 
-    for( auto ub : sb ) {
+    // apply obsc as catch-all to every sub-Block that is not Thermal or
+    // HSUB (those have already been configured via the meta-config above)
+    if( obsc )
+     for( auto ub : sb )
+      if( ! dynamic_cast< ThermalUnitBlock * >( ub ) &&
+          ! dynamic_cast< HydroSystemUnitBlock * >( ub ) )
+       obsc->apply( ub );
 
-     // deal with ThermalUnitBlock
-     if( auto tub = dynamic_cast< ThermalUnitBlock * >( ub ) ) {
-      tub->set_BlockConfig( tbc->clone() );
-      tbsc->apply( tub );
-      continue;
-      }
-
-     // deal with HydroSystemUnitBlock
-     if( auto hub = dynamic_cast< HydroSystemUnitBlock * >( ub ) ) {
-      Configure_HSUB( hub );
-      if( hbsc )
-       hbsc->apply( hub );
-      continue;
-      }
-
-     // deal with all other :UnitBlock
-     if( obsc )
-      obsc->apply( ub );
-     }
-
-    // cleanup
     delete( obsc );
     }
+  #endif
 
   // cleanup
   delete( tbc );
