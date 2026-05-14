@@ -366,27 +366,23 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and
  // apply() it to the MCFBlock; note that the BlockSolverConfig is
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( "BSPar.txt" );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
+ std::string bsc_fn = "BSPar.txt";
+ Configuration * bsc = Configuration::deserialize( bsc_fn );
+ if( ! bsc ) {
+  std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;
+  return( 1 );
+  }
+ s_config_Block( MCFB , bsc , bsc_fn );
 
-  if( ! bsc ) {
-   std::cerr << "Error: BSPar.txt does not contain a BlockSolverConfig"
-	     << std::endl;
-   delete( c );
-   return( 1 );
-   }
-
-  bsc->apply( MCFB );
-  bsc->clear();
-
-  if( MCFB->get_registered_solvers().size() < 2 ) {
-   std::cout << "too few Solver registered to MCFB!" << std::endl;
-   return( 1 );
-   }
+ if( MCFB->get_registered_solvers().size() < 2 ) {
+  std::cout << "too few Solver registered to MCFB!" << std::endl;
+  return( 1 );
   }
 
  // compute min/max cost & max deficit- - - - - - - - - - - - - - - - - - - -
@@ -899,8 +895,8 @@ int main( int argc , char **argv )
  // destroy objects - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- bsc->apply( MCFB );
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( MCFB , bsc );
 
  // then delete the BlockSolverConfig
  delete( bsc );

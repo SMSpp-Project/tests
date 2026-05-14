@@ -136,28 +136,25 @@ int main( int argc , char ** argv )
 
  // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( argc >= 3 ? argv[ 2 ] : "BSPar.txt" );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! bsc ) {
-   std::cerr << "Error: configuration file not a BlockSolverConfig"
-             << std::endl;
-   delete( c );
-   delete TestBlock;
-   exit( 1 );
-   }
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
+ std::string bsc_fn = argc >= 3 ? argv[ 2 ] : "BSPar.txt";
+ Configuration * bsc = Configuration::deserialize( bsc_fn );
+ if( ! bsc ) {
+  std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;
+  delete TestBlock;
+  exit( 1 );
+  }
+ s_config_Block( TestBlock , bsc , bsc_fn );
 
-  bsc->apply( TestBlock );
-  bsc->clear();
-
-  if( TestBlock->get_registered_solvers().empty() ) {
-   std::cout << std::endl
-             << "no Solver registered to the Block!" << std::endl;
-   delete bsc;
-   delete TestBlock;
-   exit( 1 );
-   }
+ if( TestBlock->get_registered_solvers().empty() ) {
+  std::cout << std::endl
+            << "no Solver registered to the Block!" << std::endl;
+  delete bsc;
+  delete TestBlock;
+  exit( 1 );
   }
 
  // open log-file - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

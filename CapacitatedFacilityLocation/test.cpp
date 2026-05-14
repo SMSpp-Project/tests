@@ -343,17 +343,20 @@ static void SShift( Subset & sbst , Index k )
 
 /*--------------------------------------------------------------------------*/
 
-static void PrintResults( int rtrn , double fo )
+// helper: decode Solver return code into the "has-solution" flag expected by
+// the canonical PrintResults() in common_utils.h
+
+static inline bool has_solution( int rtrn )
 {
- if( rtrn == Solver::kInfeasible )
-  cout << "    Unfeas";
- else
-  cout << fo;
+ return( ( ( rtrn >= Solver::kOK ) && ( rtrn < Solver::kError )
+           && ( rtrn != Solver::kUnbounded )
+           && ( rtrn != Solver::kInfeasible ) )
+         || ( rtrn == Solver::kLowPrecision ) );
  }
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) 
+static bool SolveBoth( void )
 {
  try {
   // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
@@ -417,9 +420,9 @@ static bool SolveBoth( void )
 
    #if( LOG_LEVEL >= 1 )
     cout << " - " << setprecision( 7 );
-    PrintResults( rtrn1st , fo1st );
+    PrintResults( has_solution( rtrn1st ) , rtrn1st , fo1st );
     cout << " - ";
-    PrintResults( rtrn2nd , fo2nd );
+    PrintResults( has_solution( rtrn2nd ) , rtrn2nd , fo2nd );
     cout << endl;
    #endif
 

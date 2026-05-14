@@ -725,25 +725,23 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and
  // apply() it to the BoxBlock; note that the BlockSolverConfig is
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( "BSCfg.txt" );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! bsc ) {
-   cerr << "Error: configuration file not a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ std::string bsc_fn = "BSCfg.txt";
+ Configuration * bsc = Configuration::deserialize( bsc_fn );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from " << bsc_fn << endl;
+  exit( 1 );
+  }
+ s_config_Block( BoxBlock , bsc , bsc_fn );
 
-  bsc->apply( BoxBlock );
-  bsc->clear();
-
-  if( BoxBlock->get_registered_solvers().empty() ) {
-   cout << endl << "no Solver registered to the Block!" << endl;
-   exit( 1 );
-   }
+ if( BoxBlock->get_registered_solvers().empty() ) {
+  cout << endl << "no Solver registered to the Block!" << endl;
+  exit( 1 );
   }
 
   #if( LOG_LEVEL >= 2 )
@@ -907,8 +905,8 @@ int main( int argc , char **argv )
  // destroy objects and vectors - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- bsc->apply( BoxBlock );
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( BoxBlock , bsc );
 
  // then delete the BlockSolverConfig
  delete( bsc );

@@ -1219,35 +1219,27 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // for both Block do this by reading an appropriate BlockSolverConfig from
  // file and apply() it to the Block; note that the BlockSolverConfig are
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * lpbsc;
- {
-  auto c = Configuration::deserialize( "LPPar.txt" );
-  lpbsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! lpbsc ) {
-   cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ std::string lpbsc_fn = "LPPar.txt";
+ Configuration * lpbsc = Configuration::deserialize( lpbsc_fn );
+ if( ! lpbsc ) {
+  cerr << "Error: cannot load BSC from " << lpbsc_fn << endl;
+  exit( 1 );
   }
+ s_config_Block( LPBlock , lpbsc , lpbsc_fn );
 
- lpbsc->apply( LPBlock );
- lpbsc->clear();
-
- BlockSolverConfig * ndobsc;
- {
-  auto c = Configuration::deserialize( "NDOPar.txt" );
-  ndobsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! ndobsc ) {
-   cerr << "Error: NDOPar.txt does not contain a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ std::string ndobsc_fn = "NDOPar.txt";
+ Configuration * ndobsc = Configuration::deserialize( ndobsc_fn );
+ if( ! ndobsc ) {
+  cerr << "Error: cannot load BSC from " << ndobsc_fn << endl;
+  exit( 1 );
   }
-
- ndobsc->apply( NDOBlock );
- ndobsc->clear();
+ s_config_Block( NDOBlock , ndobsc , ndobsc_fn );
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1913,9 +1905,9 @@ int main( int argc , char **argv )
  // destroy the Block - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- ndobsc->apply( NDOBlock );
- lpbsc->apply( LPBlock );
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( NDOBlock , ndobsc );
+ s_config_Block( LPBlock , lpbsc );
 
  // then delete the BlockSolverConfig
  delete( ndobsc );

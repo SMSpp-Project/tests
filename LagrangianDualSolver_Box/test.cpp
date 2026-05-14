@@ -559,25 +559,22 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and
  // apply() it to the TestBlock; note that the BlockSolverConfig is
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( BSC );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! bsc ) {
-   cerr << "Error: " << BSC << " not a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ Configuration * bsc = Configuration::deserialize( BSC );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from " << BSC << endl;
+  exit( 1 );
+  }
+ s_config_Block( TestBlock , bsc , BSC );
 
-  bsc->apply( TestBlock );
-  bsc->clear();
-
-  if( TestBlock->get_registered_solvers().empty() ) {
-   cout << endl << "no Solver registered to the Block!" << endl;
-   exit( 1 );
-   }
+ if( TestBlock->get_registered_solvers().empty() ) {
+  cout << endl << "no Solver registered to the Block!" << endl;
+  exit( 1 );
   }
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
@@ -800,8 +797,8 @@ int main( int argc , char **argv )
  // destroy the Block - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- bsc->apply( TestBlock );
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( TestBlock , bsc );
 
  // then delete the BlockSolverConfig
  delete( bsc );
