@@ -265,9 +265,10 @@ int main( int argc , char ** argv )
  // apply() it to the TestBlock; note that the BlockSolverConfig is
  // clear()-ed and kept to do the cleanup at the end
 
+ std::string bsc_fn = argc >= 3 ? argv[ 2 ] : "BSPar.txt";
  BlockSolverConfig * bsc;
  {
-  auto c = Configuration::deserialize( argc >= 3 ? argv[ 2 ] : "BSPar.txt" );
+  auto c = Configuration::deserialize( bsc_fn );
   bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
    std::cerr << "Error: configuration file not a BlockSolverConfig"
@@ -507,8 +508,9 @@ int main( int argc , char ** argv )
   delete( tbsc );
   delete( hbsc );
 
-  bsc->apply( TestBlock );
-  bsc->clear();
+  // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
+  // dispatches on the runtime type, applies, and clear()s for cleanup
+  s_config_Block( TestBlock , bsc , bsc_fn );
 
   if( TestBlock->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!" << std::endl;
