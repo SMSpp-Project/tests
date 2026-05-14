@@ -8,21 +8,17 @@
 # runs all the energy community instances and checks that the PyPsa objective
 # value matches the given reference one
 
-# command line parameter setup- - - - - - - - - - - - - - - - - - - - - - - -
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+# NOTE: this batch keeps a 3-arg CLI (exe, par, log) for backward compat with
+# the metabatch caller (`./batches/batch-resilient "$exe" "$par" "$mlf"`),
+# so we cannot use the standard 4-arg `parse_batch_args` directly. We only
+# source `run_test` from the shared helper.
+source "$(dirname "$0")/../../batch_common.sh"
 
-if [ $# -gt 0 ]; then
-   exe=$1
-else
-   exe=./LDS_UC_test
-fi
-if [ $# -gt 1 ]; then
-   par=$2
-else
-   par=BSPar-2S-EASY.txt
-fi
-if [ $# -gt 2 ]; then
-   mlf=$3
-fi
+exe="${1:-./LDS_UC_test}"
+par="${2:-BSPar-2S-EASY.txt}"
+mlf="${3:-}"
+slv=0
 
 # All resilient instances are pure-LD subproblems on a single ECNetworkBlock-
 # like component: BundleSolver requires intDoEasy=0. If the metabatch passed
@@ -66,18 +62,7 @@ for what in ../../UCBlock/data/nc4/resilient-data/smspp_*.nc; do
       exit 1
     fi
 
-    if [ -z "$mlf" ]; then
-      printf "[$what $par 0 $ref]: "
-      "$exe" "$what" "$par" 0 "$ref"
-    else
-      printf "[$what $par 0 $ref]: " >> "$mlf"
-      "$exe" "$what" "$par" 0 "$ref" >> "$mlf"
-    fi
-
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
+    run_test "$exe" "$what" "$par" "$slv" "$ref"
 
 done
 

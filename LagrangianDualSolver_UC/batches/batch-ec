@@ -9,26 +9,13 @@
 # runs all the deterministic energy community instances and checks that the
 # EnergyCommunity.jl objective value matches the given reference one
 
-# command line parameter setup- - - - - - - - - - - - - - - - - - - - - - - -
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
 
-if [ $# -gt 0 ]; then
-   exe=$1
-else
-   exe=./LDS_UC_test
-fi
-if [ $# -gt 1 ]; then
-   par=$2
-else
-   par=BSPar-2S.txt
-fi
-if [ $# -gt 2 ]; then
-   slv=$3
-else
-   slv=0
-fi
-if [ $# -gt 3 ]; then
-   mlf=$4
-fi
+DEFAULT_EXE=./LDS_UC_test
+DEFAULT_PAR=BSPar-2S.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = | EnergyCommunity.jl objective value |
@@ -93,19 +80,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/EC_CO_*.nc4 \
       *)       cur_par=$par ;;
     esac
 
-    if [ -z "$mlf" ]; then
-       printf "[$what $cur_par $slv $ref]: "
-       "$exe" "$what" "$cur_par" "$slv" "$ref"
-    else
-       printf "[$what $cur_par $slv $ref]: " >> "$mlf"
-       "$exe" "$what" "$cur_par" "$slv" "$ref" >> "$mlf"
-    fi
-
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
-
+    run_test "$exe" "$what" "$cur_par" "$slv" "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

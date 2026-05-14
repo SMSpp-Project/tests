@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../batch_common.sh"
+
 DATADIR=../MMCFBlock/data
 
 LDS_MMCF_test=${1:-./LDS_MMCF_test}
 
 for what in ${DATADIR}/Canad/*.dat; do
 
-  printf "[$what s]: "
-
-  "$LDS_MMCF_test" $what s
-
-  retVal=$?
-  if [ $retVal -ne 0 ]; then
-    exit 1
-  fi
+  run_test "$LDS_MMCF_test" "$what" s
 
 done

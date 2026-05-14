@@ -2,6 +2,8 @@
 #
 # usage: batch < bpar file > < bspar file >
 
+source "$(dirname "$0")/../batch_common.sh"
+
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #set=resilient-data/tmp_smspp_*.nc
@@ -9,15 +11,7 @@ set=plan4res-data/FirstSetofInstances/*.nc4
 
 for what in ../../UCBlock/data/nc4/$set; do
 
-    arg='MetaConfig1.txt MetaConfig2.txt BSCfg1.txt BSCfg2.txt'
-
-    printf "[$what $arg]: "
-    ./compare_formulations $what $arg
-
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
+    run_test ./compare_formulations "$what" MetaConfig1.txt MetaConfig2.txt BSCfg1.txt BSCfg2.txt
 
 done
 

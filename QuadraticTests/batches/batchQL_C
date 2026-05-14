@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../../batch_common.sh"
+
 DATADIR=./ObjQ_ConsL
 TYPE=C
 
@@ -7,13 +9,6 @@ quad_test=${1:-./quad_test}
 
 for what in "$DATADIR"/*; do
 
-  printf "[$what $TYPE]: "
-
-  "$quad_test" $what $TYPE
-
-  retVal=$?
-  if [ $retVal -ne 0 ]; then
-    exit 1
-  fi
+  run_test "$quad_test" "$what" "$TYPE"
 
 done

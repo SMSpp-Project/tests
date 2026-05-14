@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../batch_common.sh"
+
 what=3
 #iter=0
 
@@ -8,18 +10,7 @@ BoxSolver_test=${1:-./BoxSolver_test}
 for size in 2 10 50 100 1000; do
   for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-    if [ -z "$iter" ]; then
-      printf "[$seed $what $size]: "
-    else
-      printf "[$seed $what $size $iter]: "
-    fi
-
-    "$BoxSolver_test" $seed $what $size $iter
-
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
+    run_test "$BoxSolver_test" "$seed" "$what" "$size" "$iter"
 
   done
 done

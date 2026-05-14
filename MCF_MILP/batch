@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../batch_common.sh"
+
 DATADIR=../../MCFBlock/data
 
 wchg=255
@@ -17,22 +19,7 @@ for type in net goto; do
 
         what=${DATADIR}/nc4/${type}${sz}_${h}.nc4
 
-        if [ -z "$wchg" ]; then
-          printf "[$what $seed]: "
-        else
-          if [ -z "$rounds" ]; then
-            printf "[$what $seed $wchg]: "
-          else
-            printf "[$what $seed $wchg $rounds]: "
-          fi
-        fi
-
-        "$MCF_MILP_test" $what $seed $wchg $rounds
-
-        retVal=$?
-        if [ $retVal -ne 0 ]; then
-          exit 1
-        fi
+        run_test "$MCF_MILP_test" "$what" "$seed" "$wchg" "$rounds"
 
       done # h
     done   # sz

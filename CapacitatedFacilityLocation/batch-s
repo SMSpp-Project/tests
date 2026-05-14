@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../batch_common.sh"
+
 DATADIR=../../CapacitatedFacilityLocationBlock/data
 
 # testing batch reduced to small instances only, so that solving them
@@ -28,14 +30,7 @@ for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
 
     what=${DATADIR}/txt/ORLib/cap${f}.txt
 
-    printf "[$what c $niter $seed $wchg $rounds]: "
-
-    "$CFL_test" $what c $niter $seed $wchg $rounds
-
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
+    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
 
   done
 done

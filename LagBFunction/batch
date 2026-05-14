@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../batch_common.sh"
+
 what=511
 #what=0
 #iter=3
@@ -23,18 +25,7 @@ for nf in -2 -11; do
       for dens in 3 1.1; do
         for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-          if [ -z "$iter" ]; then
-            printf "[$seed $what $size $nf $nt $dens]: "
-          else
-            printf "[$seed $what $size $nf $nt $dens $iter]: "
-          fi
-
-          "$LagBFunction_test" $seed $what $size $nf $nt $dens $iter
-
-          retVal=$?
-          if [ $retVal -ne 0 ]; then
-            exit 1
-          fi
+          run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter"
 
         done
       done
