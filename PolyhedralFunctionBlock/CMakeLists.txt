@@ -10,7 +10,8 @@ if (NOT hasParent)
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
-add_executable(PolyhedralFunctionBlock_test test.cpp)
+add_executable(PolyhedralFunctionBlock_test test.cpp ../common_utils.cpp)
+target_include_directories(PolyhedralFunctionBlock_test PRIVATE ..)
 target_link_libraries(PolyhedralFunctionBlock_test PRIVATE SMS++::SMS++)
 
 if (TARGET SMS++::BundleSolver)

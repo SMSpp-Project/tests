@@ -43,9 +43,9 @@
 /*----------------------------- INCLUDES -----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include "BinaryKnapsackBlock.h"
+#include "common_utils.h"
 
-#include "BlockSolverConfig.h"
+#include "BinaryKnapsackBlock.h"
 
 #include <random>
 
@@ -93,12 +93,6 @@ static constexpr double rangeP = 100;  // range values of profits
 /*--------------------------------------------------------------------------*/
 /*----------------------------- FUNCTIONS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char * str , T & sthg ) {
- istringstream( str ) >> sthg;
- }
-
 /*--------------------------------------------------------------------------*/
 // Generate a random Range of size m < N
 
@@ -221,24 +215,6 @@ bool SolveBoth( void )
  return( false );     
  } 
 
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {

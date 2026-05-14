@@ -13,7 +13,9 @@ endif ()
 if (TARGET SMS++::MCFBlock)
 
     add_executable(BendersBFunction_test test.cpp
-                                         cwl-mcf/cwl-mcf.cpp)
+                                         cwl-mcf/cwl-mcf.cpp
+                                         ../common_utils.cpp)
+    target_include_directories(BendersBFunction_test PRIVATE ..)
     target_link_libraries(BendersBFunction_test PRIVATE SMS++::MCFBlock)
 
     if (TARGET SMS++::BundleSolver)
@@ -26,7 +28,8 @@ if (TARGET SMS++::MCFBlock)
 
     smspp_install(BendersBFunction_test)
 
-    add_executable(BendersBFunction_test2 test2.cpp)
+    add_executable(BendersBFunction_test2 test2.cpp ../common_utils.cpp)
+    target_include_directories(BendersBFunction_test2 PRIVATE ..)
 
     if (TARGET SMS++::BundleSolver)
         target_link_libraries(BendersBFunction_test2 PRIVATE SMS++::BundleSolver)

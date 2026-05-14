@@ -14,7 +14,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::CapacitatedFacilityLocationBlock)
 
-    add_executable(CFL_test test.cpp)
+    add_executable(CFL_test test.cpp ../common_utils.cpp)
+    target_include_directories(CFL_test PRIVATE ..)
     target_link_libraries(CFL_test PRIVATE
                           SMS++::CapacitatedFacilityLocationBlock)
 

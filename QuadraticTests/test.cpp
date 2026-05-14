@@ -43,9 +43,9 @@
 #include <sstream>
 #include <iomanip>
 
-#include "AbstractBlock.h"
+#include "common_utils.h"
 
-#include "BlockSolverConfig.h"
+#include "AbstractBlock.h"
 
 #include "MILPSolver.h"
 
@@ -79,15 +79,6 @@ AbstractBlock * LPBlock;   // the problem expressed as an LP
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-/*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char* const str , T& sthg )
-{
- istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
 
 static bool search_opt( std::string file_name , double* opt_value , char type )
 {
@@ -214,24 +205,6 @@ static bool SolveModel( bool is_found , double opt_value )
   }
  }
 
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {

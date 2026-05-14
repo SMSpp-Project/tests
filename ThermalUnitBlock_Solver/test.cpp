@@ -87,7 +87,7 @@
 
 #include "ThermalUnitBlock.h"
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "FRealObjective.h"
 
@@ -136,14 +136,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- std::istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
-
 static Subset GenerateRand( Index m , Index k )
 {
  // generate a sorted random k-vector of unique integers in 0 ... m - 1
@@ -155,22 +147,6 @@ static Subset GenerateRand( Index m , Index k )
  sort( rnd.begin() , rnd.end() );
 
  return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs )
-  std::cout << fo;
- else
-  if( rtrn == Solver::kInfeasible )
-   std::cout << "    Unfeas";
-  else
-   if( rtrn == Solver::kUnbounded )
-    std::cout << "      Unbounded";
-   else
-    std::cout << "      Error!";
  }
 
 /*--------------------------------------------------------------------------*/
@@ -471,23 +447,6 @@ static bool SolveBoth( void )
   exit( 1 );
   }
  }
-
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
 
 /*--------------------------------------------------------------------------*/
 

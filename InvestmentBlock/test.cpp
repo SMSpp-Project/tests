@@ -90,14 +90,8 @@
 #define CLOG1( y , x )
 #endif
 
-#define USECOLORS 1
-#if( USECOLORS )
-#define RED( x ) "\x1B[31m" #x "\033[0m"
-#define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
-#define RED( x ) #x
-#define GREEN( x ) #x
-#endif
+// USECOLORS / RED / GREEN: in common_utils.h
+#include "common_utils.h"
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
@@ -350,25 +344,6 @@ bool process_standard_arg( int opt )
  return( true );
 }
 
-/*--------------------------------------------------------------------------*/
-
-void smspp_terminate( void )
-{
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- }
- catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort();
-}
-
-/*--------------------------------------------------------------------------*/
 
 void get_initial_Solution( Block * block )
 {
@@ -516,71 +491,12 @@ const std::string my_help =
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-static inline std::ostream & def( std::ostream & os ) {
- os.setf( std::ios::scientific , std::ios::floatfield );
- os << std::setprecision( 7 );
- return( os );
-}
-
-/*--------------------------------------------------------------------------*/
-
-static inline std::ostream & fixd( std::ostream & os ) {
- os.setf( std::ios::fixed , std::ios::floatfield );
- os << std::setprecision( 4 );
- return( os );
-}
-
-/*--------------------------------------------------------------------------*/
-
-static void PrintResults( bool hs , int rtrn , double fo ) {
- if( hs ) {
-  std::cout.setf( std::ios::scientific , std::ios::floatfield );
-  std::cout << def << fo;
- }
- else if( rtrn == Solver::kInfeasible )
-  std::cout << "    Unfeas";
- else if( rtrn == Solver::kUnbounded )
-  std::cout << "      Unbounded";
- else
-  std::cout << "      Error!";
-}
-
-/*--------------------------------------------------------------------------*/
-
 static double get_solver_objective_value( Solver * solver ) {
  if( solver->has_var_solution() )
   return( solver->get_var_value() );
 
  return( solver->get_lb() );
 }
-
-/*--------------------------------------------------------------------------*/
-
-static bool CheckRefValue( double fo , double ref
-#if( LOG_LEVEL >= 1 )
-                           , double time1 , long iters
-#endif
-) {
- double maxv = std::max( double( 1 ) ,
-                         std::max( std::abs( fo ) , std::abs( ref ) ) );
- double diff = std::abs( fo - ref );
- double tol = 1e-5 * maxv;
-
- bool OK = ( diff <= tol );
-
-#if( LOG_LEVEL >= 1 )
- std::cout << fixd << time1 << "\t" << iters << "\t";
- std::cout.setf( std::ios::scientific , std::ios::floatfield );
- std::cout << def << fo;
- std::cout << " ~ Ref = " << def << ref
-  << " (|diff| = " << def << diff
-  << ( OK ? ", OK" : ", KO" ) << ")" << std::endl;
-#endif
-
- return( OK );
-}
-
-/*--------------------------------------------------------------------------*/
 
 static bool test_investment_solvers( InvestmentBlock * investment_block ) {
  try {
@@ -718,16 +634,8 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ) {
   }
 
   if( ! std::isnan( RefObjective ) ) {
-   if( hs1st ) {
-#if( LOG_LEVEL >= 1 )
-    all_passed &= CheckRefValue( fo1st , RefObjective , time1 , it1 );
-#else
-    double maxv = std::max( double( 1 ) ,
-                            std::max( std::abs( fo1st ) ,
-                                      std::abs( RefObjective ) ) );
-    all_passed &= ( std::abs( fo1st - RefObjective ) <= 1e-5 * maxv );
-#endif
-   }
+   if( hs1st )
+    all_passed &= CheckRefValue( fo1st , RefObjective , 1e-5 , time1 , it1 );
    else
     all_passed = false;
   }
@@ -1372,115 +1280,6 @@ void set_log( SDDPBlock * sddp_block , std::ostream * output_stream ) {
  }
 }
 
-/*--------------------------------------------------------------------------*/
-
-void b_config_Block( Block * block , Configuration * b_config ,
-                     const std::string & fn )
-{
- // std::list rather than std::vector since it's built by push_back and
- // only trasversed head-to-tail
- std::list< Block * > BFS;
-
- // handle the special case of a "meta" BlockConfig
- if( auto * mb =
-     dynamic_cast< SimpleConfiguration< std::map< std::string ,
-                                                  Configuration * > >
-                                        * >( b_config ) ) {
-
-  // construct the list of all Block inside block
-  BFS.push_back( block );
-  for( auto bit = BFS.begin() ; bit != BFS.end() ; ++bit )
-   for( auto el : ( *bit )->get_nested_Blocks() )
-    BFS.push_back( el );
-
-  auto & map = mb->f_value;
-
-  // now BlockConfig-ure all Block whose classname() matches
-  for( auto b : BFS )
-   if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bc = dynamic_cast< BlockConfig * >( bcit->second ) ) {
-     auto cbc = bc->clone();
-     cbc->apply( b );
-     delete cbc;
-    }
-    else {
-     std::cerr << "Error: meta-Configuration for :Block " << bcit->first
-               << " in file " << fn << " is not a BlockConfig" << std::endl;
-     exit( 1 );
-    }
-   }
-
-  return;  // all done
- }
-
- if( auto * bc = dynamic_cast< BlockConfig * >( b_config ) ) {
-  bc->apply( block );  // just apply() it
-  return;              // all done
- }
-
- std::cerr << "Error: " << fn
-           << " does not contain a valid [meta]BlockConfig" << std::endl;
- exit( 1 );
-
-}  // end( b_config_Block )
-
-/*--------------------------------------------------------------------------*/
-
-void s_config_Block( Block * block , Configuration * s_config ,
-                     const std::string & fn = "" )
-{
- // std::list rather than std::vector since it's built by push_back and
- // only trasversed head-to-tail
- std::list< Block * > BFS;
-
- // handle the special case of a "meta" BlockSolverConfig
- if( auto * mb =
-     dynamic_cast< SimpleConfiguration< std::map< std::string ,
-                                                  Configuration * > >
-                                        * >( s_config ) ) {
-
-  // construct the list of all Block inside block
-  BFS.push_back( block );
-  for( auto bit = BFS.begin() ; bit != BFS.end() ; ++bit )
-   for( auto el : ( *bit )->get_nested_Blocks() )
-    BFS.push_back( el );
-
-  auto & map = mb->f_value;
-
-  // now BlockSolverConfig-ure all Block whose classname() matches
-  for( auto b : BFS )
-   if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bsc = dynamic_cast< BlockSolverConfig * >( bcit->second ) )
-     bsc->apply( b );
-    else {
-     std::cerr << "Error: meta-Configuration for :Block " << bcit->first
-               << " in file " << fn << " is not a BlockSolverConfig"
-               << std::endl;
-     exit( 1 );
-    }
-   }
-
-  // finally, clear() all the BlockSolverConfig for final cleanup
-  for( auto & el : map )
-   (el.second)->clear();
-
-  return;  // all done
- }
-
- if( auto * bsc = dynamic_cast< BlockSolverConfig * >( s_config ) ) {
-  bsc->apply( block );  // just apply() it
-  bsc->clear();         // clear() it for final cleanup
-  return;               // all done
- }
-
- std::cerr << "Error: " << fn
-           << " does not contain a valid [meta]BlockSolverConfig"
-           << std::endl;
- exit( 1 );
-
-}  // end( s_config_Block )
-
-/*--------------------------------------------------------------------------*/
 
 void process_prob_file( const netCDF::NcFile & file ) {
  auto problems = file.getGroups();

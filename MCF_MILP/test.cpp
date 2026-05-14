@@ -114,8 +114,9 @@
 
 #include <random>
 
+#include "common_utils.h"
+
 #include "MCFBlock.h"
-#include "BlockSolverConfig.h"
 #if SET_EPS
  #include "CDASolver.h"
 #endif
@@ -158,12 +159,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- std::istringstream( str ) >> sthg;
- }
 
 /*--------------------------------------------------------------------------*/
 // return a random number in [ 0.5 , 2 ] so that the probability of being
@@ -235,17 +230,6 @@ static void Compact( Subset & nms , Index m )
 
 /*--------------------------------------------------------------------------*/
 
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs )
-  std::cout << fo;
- else
-  if( rtrn == Solver::kInfeasible )
-   std::cout << "    Unfeas";
-  else
-   std::cout << "      Error!";
- }
-
 /*--------------------------------------------------------------------------*/
 
 static bool SolveBoth( void ) 
@@ -315,23 +299,6 @@ static bool SolveBoth( void )
   exit( 1 );
   }
  }
-
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
 
 /*--------------------------------------------------------------------------*/
 

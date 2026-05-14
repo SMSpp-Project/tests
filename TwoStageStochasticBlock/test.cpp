@@ -49,27 +49,13 @@
 #endif
 
 /*--------------------------------------------------------------------------*/
-
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
-/*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <chrono>
+#include <cmath>
 #include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "TwoStageStochasticBlock.h"
 
@@ -107,268 +93,6 @@ const double RefTolerance = 1e-5;
 bool ProxHeur = false;     // false = LagrangianDualSolver
                            // true  = PrimalProximalHeur
 
-/*--------------------------------------------------------------------------*/
-/*------------------------------ FUNCTIONS ---------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char * const str , T & sthg ) {
- std::istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
-
-static inline std::ostream & def( std::ostream & os )
-{
- os.setf( std::ios::scientific , std::ios::floatfield );
- os << std::setprecision( 7 );
- return( os );
- }
-
-/*--------------------------------------------------------------------------*/
-
-static inline std::ostream & fixd( std::ostream & os )
-{
- os.setf( std::ios::fixed , std::ios::floatfield );
- os << std::setprecision( 4 );
- return( os );
- }
-
-/*--------------------------------------------------------------------------*/
-
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs ) {
-  std::cout.setf( std::ios::scientific , std::ios::floatfield );
-  std::cout << def << fo;
-  }
- else
-  if( rtrn == Solver::kInfeasible )
-   std::cout << "    Unfeas";
-  else
-   if( rtrn == Solver::kUnbounded )
-    std::cout << "      Unbounded";
-   else
-    std::cout << "      Error!";
- }
-
-/*--------------------------------------------------------------------------*/
-
-static bool SolveBoth( double * out_fo1st = nullptr ,
-                       bool   * out_hs1st = nullptr
-#if( LOG_LEVEL >= 1 )
-                     , double * out_time1 = nullptr
-#endif
-                     )
-{
- try {
-  // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  #if( LOG_LEVEL >= 1 )
-   auto start = std::chrono::system_clock::now();
-  #endif
-  Solver * Slvr1 = TestBlock->get_registered_solvers().front();
-  int rtrn1st = Slvr1->compute( false );
-  #if( LOG_LEVEL >= 1 )
-   auto end = std::chrono::system_clock::now();
-   std::chrono::duration< double > elapsed = end - start;
-   auto time1 = elapsed.count();
-  #endif
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-
-  double fo1st = hs1st ? Slvr1->get_lb() : -INF;
-
-  if( out_fo1st ) *out_fo1st = fo1st;
-  if( out_hs1st ) *out_hs1st = hs1st;
-  #if( LOG_LEVEL >= 1 )
-   if( out_time1 ) *out_time1 = time1;
-  #endif
-
-  if( TestBlock->get_registered_solvers().size() == 1 ) {
-   #if( LOG_LEVEL >= 1 )
-    std::cout << fixd << time1 << "\t";
-    PrintResults( hs1st , rtrn1st , fo1st );
-    std::cout << std::endl;
-   #endif
-   return( hs1st );
-   }
-
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  #if( LOG_LEVEL >= 1 )
-   start = std::chrono::system_clock::now();
-  #endif
-  Solver * Slvr2 = TestBlock->get_registered_solvers().back();
-  int rtrn2nd = Slvr2->compute( false );
-  #if( LOG_LEVEL >= 1 )
-   end = std::chrono::system_clock::now();
-   elapsed = end - start;
-   auto time2 = elapsed.count();
-   std::cout << fixd << time1 << " - " << time2 << " - ";
-  #endif
-
-  bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
-                   && ( rtrn2nd != Solver::kUnbounded )
-                   && ( rtrn2nd != Solver::kInfeasible ) )
-                 || ( rtrn2nd == Solver::kLowPrecision ) );
-  double fo2nd = -INF;
-
-  if( hs1st && hs2nd ) {
-   bool OK;
-   if( ProxHeur ) {
-    fo2nd = Slvr2->get_ub();
-    OK = ( fo1st - fo2nd <= 1e-5 );
-    }
-   else {
-    fo2nd = Slvr2->get_lb();
-    OK = ( std::abs( fo1st - fo2nd ) <=
-           1e-5 * std::max( double( 1 ) , std::max( std::abs( fo1st ) ,
-                                                     std::abs( fo2nd ) ) ) );
-    }
-   if( OK ) {
-    LOG1( "OK(f)" << std::endl );
-    return( true );
-    }
-   }
-
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   LOG1( "OK(e)" << std::endl );
-   return( true );
-   }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   LOG1( "OK(u)" << std::endl );
-   return( true );
-   }
-
-  #if( LOG_LEVEL >= 1 )
-   std::cout << "Solver1 = ";
-   PrintResults( hs1st , rtrn1st , fo1st );
-   std::cout << " ~ Solver2 = ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   std::cout << std::endl;
-  #endif
-
-  return( false );
-  }
- catch( std::exception & e ) {
-  std::cerr << e.what() << std::endl;
-  exit( 1 );
-  }
- catch( ... ) {
-  std::cerr << "Error: unknown exception thrown" << std::endl;
-  exit( 1 );
-  }
- }
-
-/*--------------------------------------------------------------------------*/
-
-static bool SolveAndCheckRef( double ref , double rel_tol )
-{
- try {
-  #if( LOG_LEVEL >= 1 )
-   auto start = std::chrono::system_clock::now();
-  #endif
-  Solver * Slvr1 = TestBlock->get_registered_solvers().front();
-  int rtrn1st = Slvr1->compute( false );
-  #if( LOG_LEVEL >= 1 )
-   auto end = std::chrono::system_clock::now();
-   std::chrono::duration< double > elapsed = end - start;
-   auto time1 = elapsed.count();
-  #endif
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-
-  if( ! hs1st ) {
-   #if( LOG_LEVEL >= 1 )
-    std::cout << "Solver returned code " << rtrn1st << std::endl;
-   #endif
-   return( false );
-   }
-
-  double fo1st = Slvr1->get_lb();
-
-  double maxv = std::max( double( 1 ) ,
-                          std::max( std::abs( fo1st ) , std::abs( ref ) ) );
-  double diff = std::abs( fo1st - ref );
-  double tol = rel_tol * maxv;
-
-  bool OK = ( diff <= tol );
-
-  #if( LOG_LEVEL >= 1 )
-   std::cout << fixd << time1 << "\t";
-   PrintResults( hs1st , rtrn1st , fo1st );
-   std::cout << " ~ Ref = " << def << ref
-             << " (|diff| = " << def << diff
-             << ", |rel| = " << def << ( diff / maxv )
-             << ( OK ? ", OK" : ", KO" ) << ")" << std::endl;
-  #endif
-
-  return( OK );
-  }
- catch( std::exception & e ) {
-  std::cerr << e.what() << std::endl;
-  exit( 1 );
-  }
- catch( ... ) {
-  std::cerr << "Error: unknown exception thrown" << std::endl;
-  exit( 1 );
-  }
- }
-
-/*--------------------------------------------------------------------------*/
-
-static bool CheckRefValue( double fo , double ref , double rel_tol
-#if( LOG_LEVEL >= 1 )
-                         , double time1
-#endif
-                         )
-{
- double maxv = std::max( double( 1 ) ,
-                         std::max( std::abs( fo ) , std::abs( ref ) ) );
- double diff = std::abs( fo - ref );
- double tol = rel_tol * maxv;
-
- bool OK = ( diff <= tol );
-
- #if( LOG_LEVEL >= 1 )
-  std::cout << fixd << time1 << "\t";
-  std::cout.setf( std::ios::scientific , std::ios::floatfield );
-  std::cout << def << fo;
-  std::cout << " ~ Ref = " << def << ref
-            << " (|diff| = " << def << diff
-            << ", |rel| = " << def << ( diff / maxv )
-            << ( OK ? ", OK" : ", KO" ) << ")" << std::endl;
- #endif
-
- return( OK );
- }
-
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void )
-{
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
-  }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
-  }
- catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
-  }
- std::abort();  // or exit(1)
- }
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char ** argv )
 {
@@ -459,28 +183,24 @@ int main( int argc , char ** argv )
 
  bool AllPassed;
 
+ // TSSB always uses lower-bound producers (MILPSolver LP, LagrangianDualSolver);
+ // ProxHeur is a placeholder kept for CLI symmetry with LDS_UC.
+ const auto getter1 = ObjGetter::LowerBound;
+ const auto getter2 = ProxHeur ? ObjGetter::UpperBound : ObjGetter::LowerBound;
+
  if( TestBlock->get_registered_solvers().size() > 1 ) {
   double fo1st = -INF;
   bool hs1st = false;
-  #if( LOG_LEVEL >= 1 )
-   double time1 = 0.0;
-   AllPassed = SolveBoth( &fo1st , &hs1st , &time1 );
-  #else
-   AllPassed = SolveBoth( &fo1st , &hs1st );
-  #endif
+  double time1 = 0.0;
+  long it1 = 0;
+  AllPassed = SolveBoth( TestBlock , getter1 , getter2 , ProxHeur ,
+                         RefTolerance , &fo1st , &hs1st , &time1 , &it1 );
 
   // optional additional check against reference objective
   if( ! std::isnan( RefObjective ) ) {
-   if( hs1st ) {
-    #if( LOG_LEVEL >= 1 )
-     AllPassed &= CheckRefValue( fo1st , RefObjective , RefTolerance , time1 );
-    #else
-     double maxv = std::max( double( 1 ) ,
-                             std::max( std::abs( fo1st ) ,
-                                       std::abs( RefObjective ) ) );
-     AllPassed &= ( std::abs( fo1st - RefObjective ) <= RefTolerance * maxv );
-    #endif
-    }
+   if( hs1st )
+    AllPassed &= CheckRefValue( fo1st , RefObjective , RefTolerance ,
+                                time1 , it1 );
    else
     AllPassed = false;
    }
@@ -488,9 +208,10 @@ int main( int argc , char ** argv )
  else {
   // single-solver case
   if( std::isnan( RefObjective ) )
-   AllPassed = SolveBoth();
+   AllPassed = SolveBoth( TestBlock , getter1 );
   else
-   AllPassed = SolveAndCheckRef( RefObjective , RefTolerance );
+   AllPassed = SolveAndCheckRef( TestBlock , RefObjective , getter1 ,
+                                 RefTolerance );
   }
 
  #if( LOG_LEVEL >= 0 )

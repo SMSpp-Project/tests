@@ -45,10 +45,15 @@ include $(LgDSLVSDR)/makefile
 #MILPSSDR = ../../MILPSolver
 #include $(MILPSSDR)/makefile-c
 
+# common_utils stuff - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+CMMNUOBJ = ../common_utils.o
+CMMNUH = ../common_utils.h
+CMMNUINC = -I..
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(InvsBkOBJ)
+MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(InvsBkOBJ) $(CMMNUOBJ)
 
 # libraries
 MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(InvsBkLIB)
@@ -59,12 +64,15 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(BNDSLVINC) $(LgDSLVINC) $(InvsBkINC)
+MINC =  $(BNDSLVINC) $(LgDSLVINC) $(InvsBkINC) $(CMMNUINC)
 
 # includes
-MH =    $(BNDSLVH) $(LgDSLVH) $(InvsBkH)
+MH =    $(BNDSLVH) $(LgDSLVH) $(InvsBkH) $(CMMNUH)
 
 # compile command
+
+$(CMMNUOBJ): $(CMMNUH) ../common_utils.cpp
+	$(CC) -c ../common_utils.cpp -o $@ $(MINC) $(SW)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)

@@ -40,10 +40,15 @@ include $(MILPSSDR)/makefile-s
 UCBckDIR = ../../UCBlock
 include $(UCBckDIR)/lib/makefile
 
+# common_utils stuff - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+CMMNUOBJ = ../common_utils.o
+CMMNUH = ../common_utils.h
+CMMNUINC = -I..
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(MILPSOBJ) $(UCBckOBJ) $(SMS++OBJ)
+MOBJ =  $(MILPSOBJ) $(UCBckOBJ) $(SMS++OBJ) $(CMMNUOBJ)
 
 # libraries
 MLIB =  $(SMS++LIB) $(MILPSLIB) $(UCBckLIB)
@@ -54,12 +59,15 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(MILPSINC) $(UCBckINC)
+MINC =  $(SMS++INC) $(MILPSINC) $(UCBckINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(MILPSH) $(UCBckH)
+MH =    $(SMS++H) $(MILPSH) $(UCBckH) $(CMMNUH)
 
 # compile command
+
+$(CMMNUOBJ): $(CMMNUH) $(SMS++H) ../common_utils.cpp
+	$(CC) -c ../common_utils.cpp -o $@ $(MINC) $(SW)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)

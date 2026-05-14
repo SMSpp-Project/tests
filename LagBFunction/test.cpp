@@ -279,7 +279,7 @@
 
 #include "MILPSolver.h"
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "LagBFunction.h"
 
@@ -368,14 +368,6 @@ RealVector s;              // supplies == demands
 // convex ==> minimize ==> negative numbers
 
 static double rs( double x ) { return( convex ? -x : x ); }
-
-/*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- istringstream( str ) >> sthg;
- }
 
 /*--------------------------------------------------------------------------*/
 
@@ -744,23 +736,6 @@ static bool SolveBoth( void )
   exit( 1 );
   }
  }  // end( SolveBoth )
-
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
 
 /*--------------------------------------------------------------------------*/
 

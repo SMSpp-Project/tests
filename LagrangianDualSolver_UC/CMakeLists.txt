@@ -13,7 +13,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::UCBlock)
 
-    add_executable(LDS_UC_test test.cpp)
+    add_executable(LDS_UC_test test.cpp ../common_utils.cpp)
+    target_include_directories(LDS_UC_test PRIVATE ..)
     target_link_libraries(LDS_UC_test PRIVATE SMS++::UCBlock)
 
     if (TARGET SMS++::LagrangianDualSolver)

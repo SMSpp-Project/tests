@@ -131,7 +131,7 @@
 
 #include "AbstractBlock.h"
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 // if SMSpp_ensure_load() need not be used, BoxSolver.h need not be included
 // unless DIRECTION_TEST > 0
@@ -219,14 +219,6 @@ std::uniform_int_distribution<> idis( 0 , NUMBER_SONS );
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
-
 static Subset GenerateRand( Index m , Index k )
 {
  // generate a sorted random k-vector of unique integers in 0 ... m - 1
@@ -238,22 +230,6 @@ static Subset GenerateRand( Index m , Index k )
  sort( rnd.begin() , rnd.end() );
 
  return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs )
-  cout << fo;
- else
-  if( rtrn == Solver::kInfeasible )
-   cout << "    Unfeas";
-  else
-   if( rtrn == Solver::kUnbounded )
-    cout << "      Unbounded";
-   else
-    cout << "      Error!";
  }
 
 /*--------------------------------------------------------------------------*/
@@ -647,24 +623,6 @@ static bool SolveBoth( void )
   exit( 1 );
   }
  }
-
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
-
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
 
 /*--------------------------------------------------------------------------*/
 
