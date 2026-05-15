@@ -25,6 +25,8 @@
 # corner cases rather than the PolyhedralFunction itself; they are not
 # included in the default sweep.
 
+source "$(dirname "$0")/../batch_common.sh"
+
 what=${what:-31}
 iter=${iter:-20}
 nchg=${nchg:-10}
@@ -41,15 +43,8 @@ for size in $sizes; do
     for vert in $verts; do
       for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-        printf "[$seed $what $size $dens $iter $nchg $pchg $vert]: "
-
-        "$PolyhedralFunction_test" $seed $what $size $dens \
+        run_test "$PolyhedralFunction_test" "$seed" "$what" "$size" "$dens" \
             $iter $nchg $pchg $vert
-
-        retVal=$?
-        if [ $retVal -ne 0 ]; then
-          exit 1
-        fi
 
       done
     done

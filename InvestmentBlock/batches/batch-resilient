@@ -9,26 +9,20 @@
 # runs all the energy community instances and checks that the PyPsa objective
 # value matches the given reference one
 
-# command line parameter setup- - - - - - - - - - - - - - - - - - - - - - - -
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+# NOTE: this batch takes a BlockConfig (bpar) + BlockSolverConfig (spar) pair
+# rather than the standard (par, slv); we map them onto the helper's $par/$slv
+# slots so that `parse_batch_args` and `run_test` work unchanged. The runtime
+# call passes a hardcoded `0` between $spar and $ref to match the existing
+# executable CLI (exe what bpar spar 0 ref).
+source "$(dirname "$0")/../../batch_common.sh"
 
-if [ $# -gt 0 ]; then
-   exe=$1
-else
-   exe=./InvestmentBlock_test
-fi
-if [ $# -gt 1 ]; then
-   bpar=$2
-else
-   bpar=MetaConfig1.txt
-fi
-if [ $# -gt 2 ]; then
-   spar=$3
-else
-   spar=BSPar.txt
-fi
-if [ $# -gt 3 ]; then
-   mlf=$4
-fi
+DEFAULT_EXE=./InvestmentBlock_test
+DEFAULT_PAR=MetaConfig1.txt
+DEFAULT_SLV=BSPar.txt
+parse_batch_args "$@"
+bpar=$par
+spar=$slv
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = PyPsa objective value
@@ -60,18 +54,7 @@ for what in ../../InvestmentBlock/data/nc4/resilient-data/smspp_*.nc; do
       exit 1
     fi
 
-    if [ -z "$mlf" ]; then
-      printf "[$what $bpar $spar 0 $ref]: "
-      "$exe" $what $bpar $spar 0 $ref
-    else
-      printf "[$what $bpar $spar 0 $ref]: " >> $mlf
-      "$exe" $what $bpar $spar 0 $ref >> $mlf
-    fi
-
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
+    run_test "$exe" "$what" "$bpar" "$spar" 0 "$ref"
 
 done
 

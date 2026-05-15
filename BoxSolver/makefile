@@ -36,10 +36,15 @@ include $(SMS++SDR)/lib/makefile-inc
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-s
 
+# common_utils stuff - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+CMMNUOBJ = ../common_utils.o
+CMMNUH = ../common_utils.h
+CMMNUINC = -I..
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(SMS++OBJ) $(MILPSOBJ)
+MOBJ =  $(SMS++OBJ) $(MILPSOBJ) $(CMMNUOBJ)
 
 # libraries
 # note the --force_link, that is used to ensure that BoxSolver (which is
@@ -68,12 +73,15 @@ $(DIR)/$(NAME): $(DIR)/test.o $(MOBJ)
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(MILPSINC)
+MINC =  $(SMS++INC) $(MILPSINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(MILPSH)
+MH =    $(SMS++H) $(MILPSH) $(CMMNUH)
 
 # compile command
+
+$(CMMNUOBJ): $(CMMNUH) $(SMS++H) ../common_utils.cpp
+	$(CC) -c ../common_utils.cpp -o $@ $(MINC) $(SW)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../batch_common.sh"
+
 seed=264
 wchg=127
 n_repeat=50
@@ -18,14 +20,7 @@ for N in 100 500 3000; do
 
           for nM in 0 0.2 0.7 1; do
 
-            printf "[$seed $wchg $N $n_repeat $delta $nW $nP $nI $nM]: "
-
-            "$BinaryKnapsackBlock_test" $seed $wchg $N $n_repeat $delta $nW $nP $nI $nM
-
-            retVal=$?
-            if [ $retVal -ne 0 ]; then
-              exit 1
-            fi
+            run_test "$BinaryKnapsackBlock_test" "$seed" "$wchg" "$N" "$n_repeat" "$delta" "$nW" "$nP" "$nI" "$nM"
 
           done
         done

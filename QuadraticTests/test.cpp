@@ -43,9 +43,9 @@
 #include <sstream>
 #include <iomanip>
 
-#include "AbstractBlock.h"
+#include "common_utils.h"
 
-#include "BlockSolverConfig.h"
+#include "AbstractBlock.h"
 
 #include "MILPSolver.h"
 
@@ -79,15 +79,6 @@ AbstractBlock * LPBlock;   // the problem expressed as an LP
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-/*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char* const str , T& sthg )
-{
- istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
 
 static bool search_opt( std::string file_name , double* opt_value , char type )
 {
@@ -214,24 +205,6 @@ static bool SolveModel( bool is_found , double opt_value )
   }
  }
 
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
@@ -285,22 +258,19 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // for both Block do this by reading an appropriate BlockSolverConfig from
  // file and apply() it to the Block; note that the BlockSolverConfig are
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * lpbsc;
- {
-  auto c = ( type == 'C' ) ? Configuration::deserialize( "LPPar_C.txt" ) :
-    Configuration::deserialize( "LPPar_I.txt" );
-  lpbsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! lpbsc ) {
-   cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ std::string lpbsc_fn = ( type == 'C' ) ? "LPPar_C.txt" : "LPPar_I.txt";
+ Configuration * lpbsc = Configuration::deserialize( lpbsc_fn );
+ if( ! lpbsc ) {
+  cerr << "Error: cannot load BSC from " << lpbsc_fn << endl;
+  exit( 1 );
   }
-
- lpbsc->apply( LPBlock );
- lpbsc->clear();
+ s_config_Block( LPBlock , lpbsc , lpbsc_fn );
 
  // Solve the continuous relaxation, if required
  if( type == 'C' )
@@ -329,8 +299,8 @@ int main( int argc , char **argv )
  // destroy the Block - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- lpbsc->apply( LPBlock );
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( LPBlock , lpbsc );
 
  // then delete the BlockSolverConfig
  delete( lpbsc );

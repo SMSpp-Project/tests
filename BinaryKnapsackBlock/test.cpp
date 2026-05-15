@@ -43,9 +43,9 @@
 /*----------------------------- INCLUDES -----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include "BinaryKnapsackBlock.h"
+#include "common_utils.h"
 
-#include "BlockSolverConfig.h"
+#include "BinaryKnapsackBlock.h"
 
 #include <random>
 
@@ -93,12 +93,6 @@ static constexpr double rangeP = 100;  // range values of profits
 /*--------------------------------------------------------------------------*/
 /*----------------------------- FUNCTIONS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char * str , T & sthg ) {
- istringstream( str ) >> sthg;
- }
-
 /*--------------------------------------------------------------------------*/
 // Generate a random Range of size m < N
 
@@ -221,24 +215,6 @@ bool SolveBoth( void )
  return( false );     
  } 
 
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
@@ -398,19 +374,21 @@ int main( int argc , char **argv )
  else
   BKB->load( N , C , std::move( W ) , std::move( P ) );
  
- // attach two Solver to the BinaryKnapsackBlock- - - - - - - - - - - - - - - 
+ // attach two Solver to the BinaryKnapsackBlock- - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do it by using a single a BlockSolverConfig, read from file
- 
- auto bsc = dynamic_cast< BlockSolverConfig * >(
-		     Configuration::deserialize( "BinaryKnapsackPar.txt" ) );
- if( ! bsc ) {
-  cerr << "Error: configuration file not a BlockSolverConfig" << endl;
-  exit( 1 );    
-  }
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- bsc->apply( BKB );
- bsc->clear();  // keep the clear()-ed BlockSolverConfig for final cleanup
+ std::string bsc_fn = "BinaryKnapsackPar.txt";
+ Configuration * bsc = Configuration::deserialize( bsc_fn );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from " << bsc_fn << endl;
+  exit( 1 );
+  }
+ s_config_Block( BKB , bsc , bsc_fn );
 
  // check Solvers - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -708,7 +686,8 @@ int main( int argc , char **argv )
  // final cleanup - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
- bsc->apply( BKB );  // remove the Solver by apply()-ing the clear()-ed bsc
+ s_config_Block( BKB , bsc );  // remove the Solver by re-apply()-ing the
+                               // clear()-ed bsc (or meta-config)
 
  delete( bsc );      // delete the BlockSolverConfig
 

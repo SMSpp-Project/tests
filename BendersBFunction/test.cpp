@@ -35,8 +35,9 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include "common_utils.h"
+
 #include "AbstractBlock.h"
-#include "BlockSolverConfig.h"
 #include "CWLAbstractBlockBuilder.h"
 
 #include "cwl-mcf/cwl-mcf.h"
@@ -82,20 +83,16 @@ int solve_with_BundleSolver( std::filesystem::path file_path ,
                              double * solution_value ) {
  auto inner_block = new AbstractBlock();
 
- // Add a *MILPSolver to inner_block
-  BlockSolverConfig * lpbsc;
-  {
-   auto c = Configuration::deserialize( "LPPar_innerBlock.txt" );
-   lpbsc = dynamic_cast< BlockSolverConfig * >( c );
-   if( ! lpbsc ) {
-    std::cerr << "Error: LPPar_innerBlock.txt does not contain a BlockSolverConfig" << std::endl;
-    delete( c );
-    exit( 1 );
-    }
-   }
-
- lpbsc->apply( inner_block );
- lpbsc->clear();
+ // Add a *MILPSolver to inner_block; BSC may be a plain BlockSolverConfig
+ // or a meta-config SimpleConfiguration< std::map< std::string ,
+ // Configuration * > >, dispatched by s_config_Block().
+ std::string lpbsc_fn = "LPPar_innerBlock.txt";
+ Configuration * lpbsc = Configuration::deserialize( lpbsc_fn );
+ if( ! lpbsc ) {
+  std::cerr << "Error: cannot load BSC from " << lpbsc_fn << std::endl;
+  exit( 1 );
+  }
+ s_config_Block( inner_block , lpbsc , lpbsc_fn );
 
  auto inner_block_solver = ( inner_block->get_registered_solvers() ).front();
  //inner_block_solver->set_par( MILPSolver::strOutputFile , "lp.txt" )
@@ -108,10 +105,12 @@ int solve_with_BundleSolver( std::filesystem::path file_path ,
  block_config.f_solution_Configuration = new SimpleConfiguration< int >( 1 );
  block_config.apply( block );
 
- // Solver configuration
+ // Solver configuration; pass through s_config_Block() so a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > > would
+ // also be supported should build_solver_config() be generalised in the
+ // future to read one.
  auto block_solver_config = build_solver_config( "BundlePar-cwl.txt" );
- block_solver_config->apply( block );
- block_solver_config->clear();
+ s_config_Block( block , block_solver_config , "BundlePar-cwl.txt" );
 
  auto solver = block->get_registered_solvers().front();
 
@@ -120,7 +119,7 @@ int solve_with_BundleSolver( std::filesystem::path file_path ,
  if( solver->has_var_solution() )
   *solution_value = solver->get_var_value();
 
- block_solver_config->apply( block );
+ s_config_Block( block , block_solver_config );
  delete( block_solver_config );
  delete( block );
  return( status );
@@ -133,20 +132,16 @@ int solve_with_MILPSolver( std::filesystem::path file_path ,
                            double * solution_value ) {
  auto block = build_CWL_block( file_path , continuous_relaxation );
 
- // Add a *MILPSolver to block
-  BlockSolverConfig * lpbsc;
-  {
-   auto c = Configuration::deserialize( "LPPar.txt" );
-   lpbsc = dynamic_cast< BlockSolverConfig * >( c );
-   if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
-    delete( c );
-    exit( 1 );
-    }
-   }
-
- lpbsc->apply( block );
- lpbsc->clear();
+ // Add a *MILPSolver to block; BSC may be a plain BlockSolverConfig or a
+ // meta-config SimpleConfiguration< std::map< std::string ,
+ // Configuration * > >, dispatched by s_config_Block().
+ std::string lpbsc_fn = "LPPar.txt";
+ Configuration * lpbsc = Configuration::deserialize( lpbsc_fn );
+ if( ! lpbsc ) {
+  std::cerr << "Error: cannot load BSC from " << lpbsc_fn << std::endl;
+  exit( 1 );
+  }
+ s_config_Block( block , lpbsc , lpbsc_fn );
 
  auto solver = ( block->get_registered_solvers() ).front();
  auto status = solver->compute();
@@ -212,24 +207,6 @@ void compare( std::string data_dir_path ,
  }
 }
 
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char ** argv )
 {

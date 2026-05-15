@@ -11,7 +11,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::UCBlock)
 
-    add_executable(TUDPS_test test.cpp)
+    add_executable(TUDPS_test test.cpp ../common_utils.cpp)
+    target_include_directories(TUDPS_test PRIVATE ..)
     target_link_libraries(TUDPS_test PRIVATE SMS++::UCBlock)
 
     if (TARGET SMS++::MILPSolver)

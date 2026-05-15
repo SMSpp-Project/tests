@@ -13,7 +13,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::LagrangianDualSolver)
 
-    add_executable(LDS_Box_test test.cpp)
+    add_executable(LDS_Box_test test.cpp ../common_utils.cpp)
+    target_include_directories(LDS_Box_test PRIVATE ..)
     target_link_libraries(LDS_Box_test PRIVATE SMS++::LagrangianDualSolver)
 
     if (TARGET SMS++::BundleSolver)

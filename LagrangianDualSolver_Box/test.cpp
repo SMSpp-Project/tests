@@ -93,7 +93,7 @@
 
 #include "AbstractBlock.h"
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "FRealObjective.h"
 
@@ -164,14 +164,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
-
 static Subset GenerateRand( Index m , Index k )
 {
  // generate a sorted random k-vector of unique integers in 0 ... m - 1
@@ -183,22 +175,6 @@ static Subset GenerateRand( Index m , Index k )
  sort( rnd.begin() , rnd.end() );
 
  return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs )
-  cout << fo;
- else
-  if( rtrn == Solver::kInfeasible )
-   cout << "    Unfeas";
-  else
-   if( rtrn == Solver::kUnbounded )
-    cout << "      Unbounded";
-   else
-    cout << "      Error!";
  }
 
 /*--------------------------------------------------------------------------*/
@@ -431,25 +407,6 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void )
-{
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
-  }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
-  }
- catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
-  }
- std::abort();  // or exit(1)
- }
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
@@ -602,25 +559,22 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and
  // apply() it to the TestBlock; note that the BlockSolverConfig is
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( BSC );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! bsc ) {
-   cerr << "Error: " << BSC << " not a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ Configuration * bsc = Configuration::deserialize( BSC );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from " << BSC << endl;
+  exit( 1 );
+  }
+ s_config_Block( TestBlock , bsc , BSC );
 
-  bsc->apply( TestBlock );
-  bsc->clear();
-
-  if( TestBlock->get_registered_solvers().empty() ) {
-   cout << endl << "no Solver registered to the Block!" << endl;
-   exit( 1 );
-   }
+ if( TestBlock->get_registered_solvers().empty() ) {
+  cout << endl << "no Solver registered to the Block!" << endl;
+  exit( 1 );
   }
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
@@ -843,8 +797,8 @@ int main( int argc , char **argv )
  // destroy the Block - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- bsc->apply( TestBlock );
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( TestBlock , bsc );
 
  // then delete the BlockSolverConfig
  delete( bsc );

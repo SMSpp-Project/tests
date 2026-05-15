@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - - TUBSCfg-CLP.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a ThermalUnitBlock whose
-# continuous relaxation is being solved (to optimality) by a :MILPSolver.
+# continuous relaxation is being solved (to optimality) by a :MILPSolver
 #
 #   Antonio Frangioni
 #
@@ -67,5 +67,5 @@ dblRelAcc  1e-8          # relative accuracy required to solution = mipmap
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - TUBSCfg-CLP.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -END TUBSCfg-CLP.txt- - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

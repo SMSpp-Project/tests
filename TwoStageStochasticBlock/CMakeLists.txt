@@ -14,7 +14,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::TwoStageStochasticBlock)
 
-    add_executable(TSSB_test test.cpp)
+    add_executable(TSSB_test test.cpp ../common_utils.cpp)
+    target_include_directories(TSSB_test PRIVATE ..)
     target_link_libraries(TSSB_test PRIVATE SMS++::TwoStageStochasticBlock)
 
     if (TARGET SMS++::UCBlock)

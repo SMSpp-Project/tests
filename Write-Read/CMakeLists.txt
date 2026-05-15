@@ -9,7 +9,8 @@ if (NOT hasParent)
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
-add_executable(writeandread_test test.cpp)
+add_executable(writeandread_test test.cpp ../common_utils.cpp)
+target_include_directories(writeandread_test PRIVATE ..)
 target_link_libraries(writeandread_test PRIVATE SMS++::SMS++)
 
 if (TARGET SMS++::MILPSolver)

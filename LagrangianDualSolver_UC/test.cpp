@@ -87,26 +87,13 @@
 #define SKIP_BEAT 0
 
 /*--------------------------------------------------------------------------*/
-
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
-/*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <sstream>
-#include <iomanip>
-#include <chrono>
+#include <cmath>
 #include <random>
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "PolyhedralFunctionBlock.h"
 
@@ -155,20 +142,13 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 // if not-NaN, the objective value of the (only) Solver attached to the Block
 // is compared against a reference value passed on the command line
 
-double RefObjective = std::numeric_limits< double >::quiet_NaN();
+// RefObjective is defined in common_utils.cpp (extern in common_utils.h)
 
 bool ProxHeur = false;     // false = LagrangianDualSolver
                            // true  = PrimalProximalHeur
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char * const str , T & sthg ) {
- std::istringstream( str ) >> sthg;
- }
-
 /*--------------------------------------------------------------------------*/
 
 static void Configure_HSUB( HydroSystemUnitBlock * hsub ) {
@@ -206,282 +186,6 @@ static Subset GenerateRand( Index m , Index k )
  sort( rnd.begin() , rnd.end() );
 
  return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-// set precision for long floats (7 digits) in scientific notation
-
-static inline std::ostream & def( std::ostream & os )
-{
- os.setf( std::ios::scientific , std::ios::floatfield );
- os << std::setprecision( 7 );
- return( os );
- }
-
-/*--------------------------------------------------------------------------*/
-// set precision for short floats (4 digits) in fixed notation
-
-static inline std::ostream & fixd( std::ostream & os )
-{
- os.setf( std::ios::fixed , std::ios::floatfield );
- os << std::setprecision( 4 );
- return( os );
- }
-
-/*--------------------------------------------------------------------------*/
-
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs ) {
-  std::cout.setf( std::ios::scientific , std::ios::floatfield );
-  std::cout << def << fo;
-  }
- else
-  if( rtrn == Solver::kInfeasible )
-   std::cout << "    Unfeas";
-  else
-   if( rtrn == Solver::kUnbounded )
-    std::cout << "      Unbounded";
-   else
-    std::cout << "      Error!";
- }
-
-/*--------------------------------------------------------------------------*/
-
-static bool SolveBoth( double * out_fo1st = nullptr ,
-                       bool   * out_hs1st = nullptr
-#if( LOG_LEVEL >= 1 )
-                     , double * out_time1 = nullptr ,
-                       long   * out_it1 = nullptr
-#endif
-                     )
-{
- try {
-  // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  #if( LOG_LEVEL >= 1 )
-   auto start = std::chrono::system_clock::now();
-  #endif
-  Solver * Slvr1 = TestBlock->get_registered_solvers().front();
-  #if DETACH_1ST
-   TestBlock->unregister_Solver( Slvr1 );
-   TestBlock->register_Solver( Slvr1 , true );  // push it to the front
-  #endif
-  int rtrn1st = Slvr1->compute( false );
-  #if( LOG_LEVEL >= 1 )
-   auto end = std::chrono::system_clock::now();
-   std::chrono::duration< double > elapsed = end - start;
-   auto time1 = elapsed.count();
-  #endif
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-
-  // objective value of the 1st Solver (used also for reference check)
-  double fo1st = hs1st ? Slvr1->get_lb() : -INF;
-
-  if( out_fo1st ) *out_fo1st = fo1st;
-  if( out_hs1st ) *out_hs1st = hs1st;
-#if( LOG_LEVEL >= 1 )
-  if( out_time1 ) *out_time1 = time1;
-  if( out_it1 )   *out_it1 = Slvr1->get_elapsed_iterations();
-#endif
-
-  if( TestBlock->get_registered_solvers().size() == 1 ) {
-   #if( LOG_LEVEL >= 1 )
-    std::cout << fixd << time1 << "\t" << Slvr1->get_elapsed_iterations()
-	      << "\t";
-    PrintResults( hs1st , rtrn1st , fo1st );
-    std::cout << std::endl;
-   #endif
-   return( hs1st );
-   }
-
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  #if( LOG_LEVEL >= 1 )
-   start = std::chrono::system_clock::now();
-  #endif
-  Solver * Slvr2 = TestBlock->get_registered_solvers().back();
-  #if DETACH_2ND
-   TestBlock->unregister_Solver( Slvr2 );
-   TestBlock->register_Solver( Slvr2 );  // push it to the back
-  #endif
-  int rtrn2nd = Slvr2->compute( false );
-  #if( LOG_LEVEL >= 1 )
-   end = std::chrono::system_clock::now();
-   elapsed = end - start;
-   auto time2 = elapsed.count();
-   std::cout << fixd << time1 << " - " << time2 << " - ";
-  #endif
-
-  bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
-                   && ( rtrn2nd != Solver::kUnbounded )
-                   && ( rtrn2nd != Solver::kInfeasible ) )
-                 || ( rtrn2nd == Solver::kLowPrecision ) );
-  double fo2nd = -INF;
-
-  if( hs1st && hs2nd ) {
-   bool OK;
-   if( ProxHeur ) {
-    // the PrimalProximal computes upper bounds, so that's what we compare;
-    // besides, the condition is "fo2nd >= fo1st"
-    fo2nd = Slvr2->get_ub();
-    OK = ( fo1st - fo2nd <= 1e-5 );
-    }
-   else {
-    // the Lagrangian Dual computes lower bounds, so that's what we compare;
-    // besides, the condition is "fo2nd == fo1st"
-    fo2nd = Slvr2->get_lb();
-    OK = ( std::abs( fo1st - fo2nd ) <=
-	    1e-5 * std::max( double( 1 ) , std::max( std::abs( fo1st ) ,
-						     std::abs( fo2nd ) ) ) );
-    }
-
-   if( OK ) {
-    LOG1( "OK(f)" << std::endl );
-    return( true );
-    }
-   }
-
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   LOG1( "OK(e)" << std::endl );
-   return( true );
-   }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   LOG1( "OK(u)" << std::endl );
-   return( true );
-   }
-
-  #if( LOG_LEVEL >= 1 )
-   std::cout << "Solver1 = ";
-   PrintResults( hs1st , rtrn1st , fo1st );
-
-   std::cout << " ~ Solver2 = ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   std::cout << std::endl;
-  #endif
-
-  return( false );
-  }
- catch( std::exception &e ) {
-  std::cerr << e.what() << std::endl;
-  exit( 1 );
-  }
- catch( ... ) {
-  std::cerr << "Error: unknown exception thrown" << std::endl;
-  exit( 1 );
-  }
- }
-
-/*--------------------------------------------------------------------------*/
-
-static bool SolveAndCheckRef( double ref )
-{
- try {
-  // solve with the 1st (and only) Solver- - - - - - - - - - - - - - - - - - -
-  #if( LOG_LEVEL >= 1 )
-   auto start = std::chrono::system_clock::now();
-  #endif
-  Solver * Slvr1 = TestBlock->get_registered_solvers().front();
-  int rtrn1st = Slvr1->compute( false );
-  #if( LOG_LEVEL >= 1 )
-   auto end = std::chrono::system_clock::now();
-   std::chrono::duration< double > elapsed = end - start;
-   auto time1 = elapsed.count();
-  #endif
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-
-  if( ! hs1st ) {
-   #if( LOG_LEVEL >= 1 )
-    std::cout << "Solver returned code " << rtrn1st << std::endl;
-   #endif
-   return( false );
-   }
-
-  // get the objective value- - - - - - - - - - - - - - - - - - - - - - - - -
-  double fo1st = Slvr1->get_lb();
-
-  // compare with reference objective- - - - - - - - - - - - - - - - - - - - -
-
-  double maxv = std::max( double( 1 ) ,
-                          std::max( std::abs( fo1st ) , std::abs( ref ) ) );
-  double diff = std::abs( fo1st - ref );
-  double tol = 1e-5 * maxv;
-
-  bool OK = ( diff <= tol );
-
-  #if( LOG_LEVEL >= 1 )
-   std::cout << fixd << time1 << "\t" << Slvr1->get_elapsed_iterations()
-             << "\t";
-   PrintResults( hs1st , rtrn1st , fo1st );
-   std::cout << " ~ Ref = " << def << ref
-             << " (|diff| = " << def << diff
-             << ( OK ? ", OK" : ", KO" ) << ")" << std::endl;
-  #endif
-
-  return( OK );
-  }
- catch( std::exception & e ) {
-  std::cerr << e.what() << std::endl;
-  exit( 1 );
-  }
- catch( ... ) {
-  std::cerr << "Error: unknown exception thrown" << std::endl;
-  exit( 1 );
-  }
- }
-
-/*--------------------------------------------------------------------------*/
-
-static bool CheckRefValue( double fo , double ref
-#if( LOG_LEVEL >= 1 )
-                         , double time1 , long iters
-#endif
-                         )
-{
- double maxv = std::max( double( 1 ) ,
-                         std::max( std::abs( fo ) , std::abs( ref ) ) );
- double diff = std::abs( fo - ref );
- double tol = 1e-5 * maxv;
-
- bool OK = ( diff <= tol );
-
-#if( LOG_LEVEL >= 1 )
- std::cout << fixd << time1 << "\t" << iters << "\t";
- // here we mimic SolveAndCheckRef output style as much as possible
- std::cout.setf( std::ios::scientific, std::ios::floatfield );
- std::cout << def << fo;
- std::cout << " ~ Ref = " << def << ref
-           << " (|diff| = " << def << diff
-           << ( OK ? ", OK" : ", KO" ) << ")" << std::endl;
-#endif
-
- return( OK );
- }
-
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void )
-{
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
-  }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
-  }
- catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
-  }
- std::abort();  // or exit(1)
  }
 
 /*--------------------------------------------------------------------------*/
@@ -561,9 +265,10 @@ int main( int argc , char ** argv )
  // apply() it to the TestBlock; note that the BlockSolverConfig is
  // clear()-ed and kept to do the cleanup at the end
 
+ std::string bsc_fn = argc >= 3 ? argv[ 2 ] : "BSPar.txt";
  BlockSolverConfig * bsc;
  {
-  auto c = Configuration::deserialize( argc >= 3 ? argv[ 2 ] : "BSPar.txt" );
+  auto c = Configuration::deserialize( bsc_fn );
   bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
    std::cerr << "Error: configuration file not a BlockSolverConfig"
@@ -661,42 +366,55 @@ int main( int argc , char ** argv )
 
    auto sb = TestBlock->get_nested_Blocks();
 
+   // dispatch the per-classname configurations loaded above to all the
+   // matching sub-Blocks via a (meta) BlockConfig / BlockSolverConfig that
+   // b_config_Block / s_config_Block resolve by classname:
+   //   tbc  -> every ThermalUnitBlock           (BlockConfig)
+   //   tbsc -> every ThermalUnitBlock           (BlockSolverConfig)
+   //   hbsc -> every HydroSystemUnitBlock       (BlockSolverConfig, optional)
+   // obsc remains code-driven (catch-all on non-Thermal/non-HSUB) and is
+   // applied below only in the DoEasy=false branch.
+   {
+    // NB: SimpleConfiguration<map<string,Configuration*>>::guts_of_destructor
+    // delete()s every value in the map; we f_value.clear() before scope-exit
+    // so tbc / tbsc / hbsc are NOT double-deleted (they survive for the
+    // explicit delete() at end of this configuration block).
+    SimpleConfiguration< std::map< std::string , Configuration * > > meta_bc;
+    meta_bc.f_value[ "ThermalUnitBlock" ] = tbc;
+    b_config_Block( TestBlock , &meta_bc , "" );
+    meta_bc.f_value.clear();
+
+    SimpleConfiguration< std::map< std::string , Configuration * > > meta_bsc;
+    meta_bsc.f_value[ "ThermalUnitBlock" ] = tbsc;
+    if( hbsc )
+     meta_bsc.f_value[ "HydroSystemUnitBlock" ] = hbsc;
+    s_config_Block( TestBlock , &meta_bsc , "" , false );  // deferred clear
+    meta_bsc.f_value.clear();
+    }
+
+   // Configure_HSUB the linearised PolyhedralFunctionBlock inside every
+   // HydroSystemUnitBlock; runtime block-mutation, not config-driven
+   for( auto sb_i : sb )
+    if( auto hsub = dynamic_cast< HydroSystemUnitBlock * >( sb_i ) )
+     Configure_HSUB( hsub );
+
    // if "easy" components are used
    if( DoEasy ) {
     // define the vector of components to be excluded from being "easy",
-    // i.e., all ThermalUnitBlock and possibly the HydroSystemUnitBlock
+    // i.e., all ThermalUnitBlock and possibly the HydroSystemUnitBlock,
+    // plus the BatteryUnitBlock whose commitment variables are binary
     std::vector< int > NoEasy;
-
     for( auto i = 0 ; i < sb.size() ; ++i ) {
-
-     // deal with ThermalUnitBlock
-     if( auto tub = dynamic_cast< ThermalUnitBlock * >( sb[ i ] ) ) {
-      tub->set_BlockConfig( tbc->clone() );
+     if( dynamic_cast< ThermalUnitBlock * >( sb[ i ] ) )
       NoEasy.push_back( i );
-      tbsc->apply( tub );
-      continue;
-      }
-
-     // deal with BatteryUnitBlock with binary variables
-     if( auto bub = dynamic_cast< BatteryUnitBlock * >( sb[ i ] ) ) {
+     else if( auto bub = dynamic_cast< BatteryUnitBlock * >( sb[ i ] ) ) {
       if( ! bub->get_intake_outtake_binary_variables().empty() )
        NoEasy.push_back( i );
-      continue;
       }
-
-     // deal with HydroSystemUnitBlock
-     if( auto hsub = dynamic_cast< HydroSystemUnitBlock * >( sb[ i ] ) ) {
-      // surely Configure it to use the "linearised" representation
-      Configure_HSUB( hsub );
-      // if not considered an "easy" component, also BlockSolverConfigure it
-      if( hbsc ) {
+     else if( dynamic_cast< HydroSystemUnitBlock * >( sb[ i ] ) ) {
+      if( hbsc )
        NoEasy.push_back( i );
-       hbsc->apply( hsub );
-       }
-      continue;
       }
-
-     // all the other are treated as easy
      }
 
     // if no "hard" components were given in Configuration file...
@@ -762,7 +480,6 @@ int main( int argc , char ** argv )
        "intDoEasy == 0 in the Configuration file and, optionally, specify "
        "which non-ECNetworkBlocks(s) to treat as `hard` components through "
        "`vintNoEasy` parameter." ) );
-  #endif
     // load the BlockSolverConfig for all the other :UnitBlock; note that
     // this can be "empty", and indeed even not there
     auto co = Configuration::deserialize( "OUBSCfg.txt" );
@@ -772,39 +489,26 @@ int main( int argc , char ** argv )
      obsc = nullptr;
      }
 
-    for( auto ub : sb ) {
+    // apply obsc as catch-all to every sub-Block that is not Thermal or
+    // HSUB (those have already been configured via the meta-config above)
+    if( obsc )
+     for( auto ub : sb )
+      if( ! dynamic_cast< ThermalUnitBlock * >( ub ) &&
+          ! dynamic_cast< HydroSystemUnitBlock * >( ub ) )
+       obsc->apply( ub );
 
-     // deal with ThermalUnitBlock
-     if( auto tub = dynamic_cast< ThermalUnitBlock * >( ub ) ) {
-      tub->set_BlockConfig( tbc->clone() );
-      tbsc->apply( tub );
-      continue;
-      }
-
-     // deal with HydroSystemUnitBlock
-     if( auto hub = dynamic_cast< HydroSystemUnitBlock * >( ub ) ) {
-      Configure_HSUB( hub );
-      if( hbsc )
-       hbsc->apply( hub );
-      continue;
-      }
-
-     // deal with all other :UnitBlock
-     if( obsc )
-      obsc->apply( ub );
-     }
-
-    // cleanup
     delete( obsc );
     }
+  #endif
 
   // cleanup
   delete( tbc );
   delete( tbsc );
   delete( hbsc );
 
-  bsc->apply( TestBlock );
-  bsc->clear();
+  // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
+  // dispatches on the runtime type, applies, and clear()s for cleanup
+  s_config_Block( TestBlock , bsc , bsc_fn );
 
   if( TestBlock->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!" << std::endl;
@@ -838,40 +542,34 @@ int main( int argc , char ** argv )
 
  bool AllPassed;
 
+ // Solver1 is always treated as a lower-bound producer; Solver2 too unless
+ // ProxHeur=true, in which case it's a PrimalProximalHeur (upper bound) and
+ // the agreement criterion becomes one-sided "fo1st - fo2nd <= 1e-5".
+ const auto getter1 = ObjGetter::LowerBound;
+ const auto getter2 = ProxHeur ? ObjGetter::UpperBound : ObjGetter::LowerBound;
+
  if( TestBlock->get_registered_solvers().size() > 1 ) {
   double fo1st = -INF;
   bool hs1st = false;
-#if( LOG_LEVEL >= 1 )
   double time1 = 0.0;
   long it1 = 0;
-  AllPassed = SolveBoth( &fo1st , &hs1st , &time1 , &it1 );
-#else
-  AllPassed = SolveBoth( &fo1st , &hs1st );
-#endif
+  AllPassed = SolveBoth( TestBlock , getter1 , getter2 , ProxHeur , 1e-5 ,
+                         &fo1st , &hs1st , &time1 , &it1 );
 
   // optional additional check against reference objective
   if( ! std::isnan( RefObjective ) ) {
-   if( hs1st ) {
-#if( LOG_LEVEL >= 1 )
-    AllPassed &= CheckRefValue( fo1st , RefObjective , time1 , it1 );
-#else
-    // no printing, but still check
-    double maxv = std::max( double( 1 ) ,
-                            std::max( std::abs( fo1st ) ,
-                                      std::abs( RefObjective ) ) );
-    AllPassed &= ( std::abs( fo1st - RefObjective ) <= 1e-5 * maxv );
-#endif
-   }
+   if( hs1st )
+    AllPassed &= CheckRefValue( fo1st , RefObjective , 1e-5 , time1 , it1 );
    else
     AllPassed = false;
+   }
   }
- }
  else {
   // single-solver case: keep old behavior
   if( std::isnan( RefObjective ) )
-   AllPassed = SolveBoth();          // will just solve the only solver
+   AllPassed = SolveBoth( TestBlock , getter1 );  // just solve the only solver
   else
-   AllPassed = SolveAndCheckRef( RefObjective );
+   AllPassed = SolveAndCheckRef( TestBlock , RefObjective , getter1 , 1e-5 );
  }
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -37,35 +37,16 @@
  * \copyright &copy; by Antonio Frangioni
  */
 /*--------------------------------------------------------------------------*/
-/*------------------------------ MACROS ------------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
-/*--------------------------------------------------------------------------*/
 /*----------------------------- INCLUDES -----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <iomanip>
-
 #include <chrono>
+#include <cmath>
+#include <limits>
+
+#include "common_utils.h"
 
 #include "RBlockConfig.h"
-
-#include "BlockSolverConfig.h"
-
-/*--------------------------------------------------------------------------*/
-/*------------------------------- USING ------------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-using namespace SMSpp_di_unipi_it;
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------- TYPES ------------------------------------*/
@@ -84,135 +65,16 @@ static constexpr double INF = SMSpp_di_unipi_it::Inf< double >();
 Block * Block1;
 Block * Block2;
 
+// RefObjective is defined in common_utils.cpp (extern in common_utils.h).
+// If not-NaN, the objective value of the 1st Solver is compared against
+// the reference value passed on the command line (argv[6]).
+
 /*--------------------------------------------------------------------------*/
 /*----------------------------- FUNCTIONS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs )
-  std::cout << fo;
- else
-  if( rtrn == Solver::kInfeasible )
-   std::cout << "    Unfeas";
-  else
-   if( rtrn == Solver::kUnbounded )
-    std::cout << "      Unbounded";
-   else
-    std::cout << "      Error!";
- }
-
-/*--------------------------------------------------------------------------*/
-
-void b_config_Block( Block * block , Configuration * b_config ,
-		     const std::string & fn )
-{
- // std::list rather than std::vector since it's built by push_back and
- // only trasversed head-to-tail
- std::list< Block * > BFS;
-
- // handle the special case of a "meta" BlockConfig
- if( auto * mb =
-     dynamic_cast< SimpleConfiguration< std::map< std::string ,
-                                                  Configuration * > >
-                                        * >( b_config ) ) {
-
-  // construct the list of all Block inside block
-  BFS.push_back( block );
-  for( auto bit = BFS.begin() ; bit != BFS.end() ; ++bit )
-   for( auto el : ( *bit )->get_nested_Blocks() )
-    BFS.push_back( el );
-
-  auto & map = mb->f_value;
-
-  // now BlockConfig-ure all Block whose classname() matches
-  for( auto b : BFS )
-   if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bc = dynamic_cast< BlockConfig * >( bcit->second ) ) {
-     auto cbc = bc->clone();
-     cbc->apply( b );
-     delete cbc;
-     }
-    else {
-     std::cerr << "Error: meta-Configuration for :Block " << bcit->first
-	       << " in file " << fn << " is not a BlockConfig" << std::endl;
-     exit( 1 );
-     }
-    }
-
-  return;  // all done
-  }
-
- if( auto * bc = dynamic_cast< BlockConfig * >( b_config ) ) {
-  bc->apply( block );  // just apply() it
-  return;              // all done
-  }
-
- std::cerr << "Error: " << fn
-	   << " does not contain a valid [meta]BlockConfig" << std::endl;
- exit( 1 );
-
- }  // end( b_config_Block )
-
-/*--------------------------------------------------------------------------*/
-
-void s_config_Block( Block * block , Configuration * s_config ,
-		     const std::string & fn = "" )
-{
- // std::list rather than std::vector since it's built by push_back and
- // only trasversed head-to-tail
- std::list< Block * > BFS;
-
- // handle the special case of a "meta" BlockSolverConfig
- if( auto * mb =
-     dynamic_cast< SimpleConfiguration< std::map< std::string ,
-                                                  Configuration * > >
-                                        * >( s_config ) ) {
-
-  // construct the list of all Block inside block
-  BFS.push_back( block );
-  for( auto bit = BFS.begin() ; bit != BFS.end() ; ++bit )
-   for( auto el : ( *bit )->get_nested_Blocks() )
-    BFS.push_back( el );
-
-  auto & map = mb->f_value;
-
-  // now BlockSolverConfig-ure all Block whose classname() matches
-  for( auto b : BFS )
-   if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bsc = dynamic_cast< BlockSolverConfig * >( bcit->second ) )
-     bsc->apply( b );
-    else {
-     std::cerr << "Error: meta-Configuration for :Block " << bcit->first
-	       << " in file " << fn << " is not a BlockSolverConfig"
-	       << std::endl;
-     exit( 1 );
-     }
-    }
-
-  // finally, clear() all the BlockSolverConfig for final cleanup
-  for( auto & el : map )
-   (el.second)->clear();
-
-  return;  // all done
-  }
-
- if( auto * bsc = dynamic_cast< BlockSolverConfig * >( s_config ) ) {
-  bsc->apply( block );  // just apply() it
-  bsc->clear();         // clear() it for final cleanup
-  return;               // all done
-  }
-
- std::cerr << "Error: " << fn
-	   << " does not contain a valid [meta]BlockSolverConfig"
-	   << std::endl;
- exit( 1 );
-
- }  // end( s_config_Block )
-
-/*--------------------------------------------------------------------------*/
-
-static bool SolveBoth( void ) 
+static bool SolveBoth( double * out_fo1 = nullptr ,
+                       bool   * out_hs1 = nullptr )
 {
  try {
   // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
@@ -227,9 +89,12 @@ static bool SolveBoth( void )
                  || ( rtrn1st == Solver::kLowPrecision ) );
   double fo1st = hs1st ? Slvr1->get_var_value() : -INF;
 
+  if( out_fo1 ) *out_fo1 = fo1st;
+  if( out_hs1 ) *out_hs1 = hs1st;
+
   auto end = std::chrono::system_clock::now();
   std::chrono::duration< double > elapsed = end - start;
- 
+
   std::cout.setf( std::ios::scientific, std::ios::floatfield );
   std::cout << std::setprecision( 2 ) << elapsed.count() << " - "
 	    << std::flush;
@@ -290,24 +155,6 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
-  }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
-  }
- catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
-  }
- std::abort(); // or exit(1)
- }
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
@@ -319,14 +166,22 @@ int main( int argc , char **argv )
  if( argc < 2 ) {
   std::cerr << "Usage: " << argv[ 0 ]
 	    << " block_filename [BlockConfig1 BlockConfig2 "
-	    << "BlockSolverConfig1 BlockSolverConfig1]"
+	    << "BlockSolverConfig1 BlockSolverConfig2 RefObj]"
 	    << std::endl
-	    << "       default filenames: RBlockConfig1.txt RBlockConfig1.txt"
+	    << "       default filenames: RBlockConfig1.txt RBlockConfig2.txt"
 	    << " BSCfg1.txt BSCfg2.txt" << std::endl
 	    << "       (if BSCfg1 is given but BSCfg2 is not, they are "
-	    << "the same)"  << std::endl;
-  return( 1 );  
+	    << "the same)"  << std::endl
+	    << "       RefObj: optional reference objective; if passed, fo1st"
+	    << " is compared against it with relative tolerance 1e-5"
+	    << std::endl;
+  return( 1 );
   }
+
+ // read optional reference objective- - - - - - - - - - - - - - - - - - - -
+
+ if( argc >= 7 )
+  Str2Sthg( argv[ 6 ] , RefObjective );
 
  // load both Block out of the same netCDF file- - - - - - - - - - - - - - - -
 
@@ -389,7 +244,35 @@ int main( int argc , char **argv )
 
  // solve- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- auto ok = SolveBoth();
+ double fo1 = -INF;
+ bool   hs1 = false;
+ auto ok = SolveBoth( &fo1 , &hs1 );
+
+ // optional reference-objective check- - - - - - - - - - - - - - - - - - - -
+
+ if( ok && ! std::isnan( RefObjective ) ) {
+  if( ! hs1 ) {
+   std::cout << "Cannot check Ref: Solver1 returned no solution"
+             << std::endl;
+   ok = false;
+   }
+  else {
+   double maxv = std::max( double( 1 ) ,
+                           std::max( std::abs( fo1 ) ,
+                                     std::abs( RefObjective ) ) );
+   double diff = std::abs( fo1 - RefObjective );
+   double tol = 1e-5 * maxv;
+   bool ref_ok = ( diff <= tol );
+
+   std::cout << def << fo1
+             << " ~ Ref = " << def << RefObjective
+             << " (|diff| = " << def << diff
+             << ( ref_ok ? ", OK" : ", KO" ) << ")" << std::endl;
+
+   if( ! ref_ok ) ok = false;
+   }
+  }
+
  if( ok )
   std::cout << GREEN( Test passed!! ) << std::endl;
  else

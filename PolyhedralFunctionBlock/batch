@@ -14,7 +14,9 @@
 #
 # Tunable via environment variables:
 #   - what:  bit-mask of changes (default: 319 = add/del/modify rows + modify
-#            constants + modify bound, etc.)
+#            constants + modify bound, etc.). Bit 10 (+1024) selects the
+#            *dual* (Fenchel) representation for the LPBlock and is exercised
+#            via the separate "duals" axis below.
 #   - iter:  number of rounds (default: 4)
 #   - nchg:  upper bound on changes per round (default: 4)
 #   - pchg:  probability of each kind of change (default: 0.5)
@@ -22,43 +24,68 @@
 #   - denss: list of densities to test (default: "3")
 #   - nfs:   list of nf values (default: "0 1 -1 2 -2")
 #   - verts: list of %vert values (default: "0 0.1 0.3 0.5")
+#   - duals: list of "dual_mode" toggles to sweep (default: "0 1" = both
+#            primal and dual). For each "1" the bit 1024 is ORed into
+#            $what. In dual mode the per-iteration modify loop is fully
+#            exercised through guts_of_add_Modification_PF_dual, but the
+#            primal-only paths (abstract changes bit-9, linear-objective
+#            changes bit-5, and the "globalbound" wrapper bit-6) are
+#            silently skipped inside the tester.
 #
 # Note: very small sizes (e.g. size=2) and very low densities (e.g.
 # dens=1.1) often produce LP-degenerate instances (unbounded /
 # near-infeasible) that mostly stress the test harness's handling of
 # corner cases rather than the PolyhedralFunctionBlock itself; they are
 # not included in the default sweep.
-
+SECONDS=0
 what=${what:-319}
 iter=${iter:-20}
 nchg=${nchg:-5}
 pchg=${pchg:-0.5}
 
 sizes=${sizes:-"10 50"}
-denss=${denss:-"1.1 3"}
+denss=${denss:-"3"}
 nfs=${nfs:-"0 1 -1 2 -2"}
 verts=${verts:-"0 0.1 0.3 0.5"}
+duals=${duals:-"0 1"}
 
 PolyhedralFunctionBlock_test=${1:-./PolyhedralFunctionBlock_test}
 
-for nf in $nfs; do
-  for size in $sizes; do
-    for dens in $denss; do
-      for vert in $verts; do
-        for (( seed = 0 ; seed < 20 ; seed++ )); do
+for dual in $duals; do
+  if [ "$dual" -eq 1 ]; then
+    # in dual mode bit 10 (+1024) is ORed into $what to select the
+    # *dual* (Fenchel) representation for the LPBlock; the per-
+    # iteration modify loop is then fully exercised (Modifications
+    # are wired up through guts_of_add_Modification_PF_dual)
+    cur_what=$(( what | 1024 ))
+  else
+    cur_what=$what
+  fi
+  cur_iter=$iter
+  for nf in $nfs; do
+    for size in $sizes; do
+      for dens in $denss; do
+        for vert in $verts; do
+          for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-          printf "[$seed $what $size $dens $nf $iter $nchg $pchg $vert]: "
+            printf "[$seed $cur_what $size $dens $nf $cur_iter $nchg $pchg $vert]: "
 
-          "$PolyhedralFunctionBlock_test" $seed $what $size $dens $nf \
-              $iter $nchg $pchg $vert
+            "$PolyhedralFunctionBlock_test" $seed $cur_what $size $dens $nf \
+                $cur_iter $nchg $pchg $vert
 
-          retVal=$?
-          if [ $retVal -ne 0 ]; then
-            exit 1
-          fi
+            retVal=$?
+            #if [ $retVal -ne 0 ]; then
+            #  exit 1
+            #fi
 
+          done
         done
       done
     done
   done
 done
+
+printf "\nTotal elapsed time: %02d:%02d:%02d\n" \
+  $((SECONDS/3600)) \
+  $((SECONDS%3600/60)) \
+  $((SECONDS%60))

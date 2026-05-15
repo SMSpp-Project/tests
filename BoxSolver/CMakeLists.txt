@@ -9,7 +9,8 @@ if (NOT hasParent)
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
-add_executable(BoxSolver_test test.cpp)
+add_executable(BoxSolver_test test.cpp ../common_utils.cpp)
+target_include_directories(BoxSolver_test PRIVATE ..)
 target_link_libraries(BoxSolver_test PRIVATE SMS++::SMS++)
 
 if (TARGET SMS++::MILPSolver)

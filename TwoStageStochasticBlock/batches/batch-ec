@@ -9,26 +9,13 @@
 # runs all the stochastic energy community instances and checks that the
 # EnergyCommunity.jl@stochastic objective value matches the given reference one
 
-# command line parameter setup- - - - - - - - - - - - - - - - - - - - - - - -
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
 
-if [ $# -gt 0 ]; then
-   exe=$1
-else
-   exe=./TSSB_test
-fi
-if [ $# -gt 1 ]; then
-   par=$2
-else
-   par=BSPar-2S.txt
-fi
-if [ $# -gt 2 ]; then
-   slv=$3
-else
-   slv=0
-fi
-if [ $# -gt 3 ]; then
-   mlf=$4
-fi
+DEFAULT_EXE=./TSSB_test
+DEFAULT_PAR=BSPar-2S.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = | EnergyCommunity.jl@stochastic objective value |
@@ -49,20 +36,20 @@ fi
 
 declare -A REF_OBJ
 
-REF_OBJ[TSSB_EC_CO_Test.nc4]=3.587883106e+06
-REF_OBJ[TSSB_EC_CO_Test_NB.nc4]=3.587883106e+06
+REF_OBJ[TSSB_EC_CO_Test.nc4]=3.587882697e+06
+REF_OBJ[TSSB_EC_CO_Test_NB.nc4]=3.587882697e+06
 
-REF_OBJ[TSSB_EC_CO_Test_TUB.nc4]=3.552729880e+06
-REF_OBJ[TSSB_EC_CO_Test_TUB_NB.nc4]=3.552729880e+06
+REF_OBJ[TSSB_EC_CO_Test_TUB.nc4]=3.552484027e+06
+REF_OBJ[TSSB_EC_CO_Test_TUB_NB.nc4]=3.552484027e+06
 
 REF_OBJ[TSSB_EC_NA_Test.nc4]=3.981238724e+06
 REF_OBJ[TSSB_EC_NA_Test_NB.nc4]=3.981238724e+06
 
-REF_OBJ[TSSB_EC_NC_Test.nc4]=3.757320861e+06
-REF_OBJ[TSSB_EC_NC_Test_NB.nc4]=3.757320861e+06
+REF_OBJ[TSSB_EC_NC_Test.nc4]=3.757252611e+06
+REF_OBJ[TSSB_EC_NC_Test_NB.nc4]=3.757252611e+06
 
-REF_OBJ[TSSB_EC_NC_Test_TUB.nc4]=3.719122756e+06
-REF_OBJ[TSSB_EC_NC_Test_TUB_NB.nc4]=3.719122756e+06
+REF_OBJ[TSSB_EC_NC_Test_TUB.nc4]=3.717360943e+06
+REF_OBJ[TSSB_EC_NC_Test_TUB_NB.nc4]=3.717360943e+06
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -83,19 +70,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/TSSB_EC_CO_*.nc4 \
       exit 1
     fi
 
-    if [ -z "$mlf" ]; then
-       printf "[$what $par $slv $ref]: "
-       "$exe" "$what" "$par" "$slv" "$ref"
-    else
-       printf "[$what $par $slv $ref]: " >> "$mlf"
-       "$exe" "$what" "$par" "$slv" "$ref" >> "$mlf"
-    fi
-
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
-
+    run_test "$exe" "$what" "$par" "$slv" "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

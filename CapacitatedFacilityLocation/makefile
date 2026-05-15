@@ -55,10 +55,15 @@ include $(LgDSLVSDR)/makefile
 #MCFLESDR = ../../LEMONSolver
 #include $(MCFLESDR)/makefile
 
+# common_utils stuff - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+CMMNUOBJ = ../common_utils.o
+CMMNUH = ../common_utils.h
+CMMNUINC = -I..
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(CFLBkOBJ) $(SMS++OBJ) $(MCFBkOBJ) $(MCFLEOBJ)
+MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(CFLBkOBJ) $(SMS++OBJ) $(MCFBkOBJ) $(MCFLEOBJ) $(CMMNUOBJ)
 
 # libraries
 MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(CFLBkLIB) $(SMS++LIB) $(MCFBkLIB) $(MCFLELIB)
@@ -69,12 +74,15 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(CFLBkINC) $(MCFBkINC) $(MCFLEINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(CFLBkINC) $(MCFBkINC) $(MCFLEINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CFLBkH) $(MCFBkH) $(MCFLEH)
+MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CFLBkH) $(MCFBkH) $(MCFLEH) $(CMMNUH)
 
 # compile command
+
+$(CMMNUOBJ): $(CMMNUH) $(SMS++H) ../common_utils.cpp
+	$(CC) -c ../common_utils.cpp -o $@ $(MINC) $(SW)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)

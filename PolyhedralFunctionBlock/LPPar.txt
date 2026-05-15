@@ -12,12 +12,14 @@
 # BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+BlockSolverConfig     # exact type of the Configuration object
+
 0  # the BlockSolverConfig is not a "differential" one: values are being set
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver    # name of Solver
-#GRBMILPSolver   # name of Solver
+CPXMILPSolver   # name of Solver
+#GRBMILPSolver    # name of Solver
 #SCIPMILPSolver  # name of Solver
 #HiGHSMILPSolver # name of Solver
 
@@ -36,10 +38,15 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 intLogVerb           0   # LogVerb, log verbosity of the MILPSolver
 
-1 # number of double parameters
+2 # number of double parameters
 
 # now all the double parameters
 dblRelAcc  1e-8   # relative accuracy required to solution
+dblFAccSol 1e-9   # tight feasibility tolerance: needed because the test
+                  # tolerance (2e-7 relative) is tighter than CPLEX's default
+                  # LP simplex feasibility tolerance (1e-6), so an LP solved
+                  # at default precision can drift past the test tolerance
+                  # over many iterations of accumulated modifications
 
 0 # number of string parameters
 

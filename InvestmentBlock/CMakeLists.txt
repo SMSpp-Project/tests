@@ -12,7 +12,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::InvestmentBlock)
 
-    add_executable(InvestmentBlock_test test.cpp)
+    add_executable(InvestmentBlock_test test.cpp ../common_utils.cpp)
+    target_include_directories(InvestmentBlock_test PRIVATE ..)
     target_link_libraries(InvestmentBlock_test PRIVATE SMS++::InvestmentBlock)
 
     if (TARGET SMS++::BundleSolver)

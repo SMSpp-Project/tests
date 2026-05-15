@@ -14,7 +14,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::MMCFBlock)
 
-    add_executable(LDS_MMCF_test test.cpp)
+    add_executable(LDS_MMCF_test test.cpp ../common_utils.cpp)
+    target_include_directories(LDS_MMCF_test PRIVATE ..)
     target_link_libraries(LDS_MMCF_test PRIVATE SMS++::MMCFBlock)
 
     if (TARGET SMS++::LagrangianDualSolver)

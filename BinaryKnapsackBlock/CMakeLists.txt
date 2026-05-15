@@ -11,7 +11,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::BinaryKnapsackBlock)
 
-    add_executable(BinaryKnapsackBlock_test test.cpp)
+    add_executable(BinaryKnapsackBlock_test test.cpp ../common_utils.cpp)
+    target_include_directories(BinaryKnapsackBlock_test PRIVATE ..)
     target_link_libraries(BinaryKnapsackBlock_test PRIVATE
                           SMS++::BinaryKnapsackBlock)
 

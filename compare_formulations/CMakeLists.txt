@@ -6,7 +6,8 @@ if (NOT hasParent)
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
-add_executable(compare_formulations test.cpp)
+add_executable(compare_formulations test.cpp ../common_utils.cpp)
+target_include_directories(compare_formulations PRIVATE ..)
 target_link_libraries(compare_formulations PRIVATE SMS++::SMS++)
 
 # --------------------------------------------------------------------------- #

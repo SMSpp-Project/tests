@@ -47,10 +47,15 @@ include $(MCFLESDR)/makefile
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-s
 
+# common_utils stuff - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+CMMNUOBJ = ../common_utils.o
+CMMNUH = ../common_utils.h
+CMMNUINC = -I..
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(MCFLEOBJ) $(MILPSOBJ) $(MCFBkOBJ)
+MOBJ =  $(MCFLEOBJ) $(MILPSOBJ) $(MCFBkOBJ) $(CMMNUOBJ)
 
 # libraries
 MLIB =  $(MCFBkLIB) $(MCFLELIB) $(MILPSLIB)
@@ -63,12 +68,15 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(MCFBkINC) $(MCFLEINC) $(MILPSINC)
+MINC =  $(MCFBkINC) $(MCFLEINC) $(MILPSINC) $(CMMNUINC)
 
 # includes
-MH =    $(MCFBkH) $(MCFLEH) $(MILPSH)
+MH =    $(MCFBkH) $(MCFLEH) $(MILPSH) $(CMMNUH)
 
 # compile command
+
+$(CMMNUOBJ): $(CMMNUH) $(SMS++H) ../common_utils.cpp
+	$(CC) -c ../common_utils.cpp -o $@ $(MINC) $(SW)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)

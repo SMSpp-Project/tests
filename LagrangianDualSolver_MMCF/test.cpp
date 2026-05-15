@@ -95,7 +95,7 @@
 
 #include <random>
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "CDASolver.h"
 
@@ -149,12 +149,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- istringstream( str ) >> sthg;
- }
-
 /*----------------------------------------------------------------------------
 
 static double rndfctr( void )
@@ -182,20 +176,6 @@ static Subset GenerateRand( Index m , Index k )
 
 ----------------------------------------------------------------------------*/
 
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs )
-  cout << fo;
- else
-  if( rtrn == Solver::kInfeasible )
-   cout << "    Unfeas";
-  else
-   if( rtrn == Solver::kUnbounded )
-    cout << "      Unbounded";
-   else
-    cout << "      Error!";
- }
- 
 /*-------------------------------------------------------------------------*/
 
 static void PrintSol( CDASolver * slvr , bool first ,
@@ -376,23 +356,6 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
@@ -432,15 +395,17 @@ int main( int argc , char **argv )
  TestBlock->load( argv[ 1 ] , filetype );
  TestBlock->PreProcess();
  
- auto cfg = Configuration::deserialize( "BPar.txt" );
- if( BlockConfig * bc = dynamic_cast< BlockConfig * >( cfg ) )
-  bc->apply( TestBlock );
- else {
-  cerr << "Error: BPar.txt does not contain a BlockConfig" << endl;
-  delete( cfg );
+ // BC may be a plain BlockConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // b_config_Block() dispatches on the runtime type.
+ std::string bc_fn = "BPar.txt";
+ Configuration * cfg = Configuration::deserialize( bc_fn );
+ if( ! cfg ) {
+  cerr << "Error: cannot load BC from " << bc_fn << endl;
   exit( 1 );
   }
-  
+ b_config_Block( TestBlock , cfg , bc_fn );
+
  delete( cfg );
  
  TestBlock->generate_abstract_variables();
@@ -449,26 +414,23 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and
  // apply() it to the TestBlock; note that the BlockSolverConfig is
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( "BSPar.txt" );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
-  
-  if( ! bsc ) {
-   cerr << "Error: BSPar.txt does not contain a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ std::string bsc_fn = "BSPar.txt";
+ Configuration * bsc = Configuration::deserialize( bsc_fn );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from " << bsc_fn << endl;
+  exit( 1 );
+  }
+ s_config_Block( TestBlock , bsc , bsc_fn );
 
-  bsc->apply( TestBlock );
-  bsc->clear();
-
-  if( TestBlock->get_registered_solvers().empty() ) {
-   cout << endl << "no Solver registered to the Block!" << endl;
-   exit( 1 );
-   }
+ if( TestBlock->get_registered_solvers().empty() ) {
+  cout << endl << "no Solver registered to the Block!" << endl;
+  exit( 1 );
   }
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
@@ -568,8 +530,8 @@ int main( int argc , char **argv )
  // destroy the Block - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- bsc->apply( TestBlock );
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( TestBlock , bsc );
 
  // then delete the BlockSolverConfig
  delete( bsc );

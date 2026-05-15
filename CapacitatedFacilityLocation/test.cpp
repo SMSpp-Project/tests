@@ -132,7 +132,7 @@
 
 #include <chrono>
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "CDASolver.h"
 
@@ -190,13 +190,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
 // return a random number in [ 0.5 , 2 ] so that the probability of being
 // p > 1 is the same as the probability of being 1 / p < 1: in this way the
 // modified numbers should, on average, retain the same order of magnitude
@@ -350,17 +343,20 @@ static void SShift( Subset & sbst , Index k )
 
 /*--------------------------------------------------------------------------*/
 
-static void PrintResults( int rtrn , double fo )
+// helper: decode Solver return code into the "has-solution" flag expected by
+// the canonical PrintResults() in common_utils.h
+
+static inline bool has_solution( int rtrn )
 {
- if( rtrn == Solver::kInfeasible )
-  cout << "    Unfeas";
- else
-  cout << fo;
+ return( ( ( rtrn >= Solver::kOK ) && ( rtrn < Solver::kError )
+           && ( rtrn != Solver::kUnbounded )
+           && ( rtrn != Solver::kInfeasible ) )
+         || ( rtrn == Solver::kLowPrecision ) );
  }
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) 
+static bool SolveBoth( void )
 {
  try {
   // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
@@ -424,9 +420,9 @@ static bool SolveBoth( void )
 
    #if( LOG_LEVEL >= 1 )
     cout << " - " << setprecision( 7 );
-    PrintResults( rtrn1st , fo1st );
+    PrintResults( has_solution( rtrn1st ) , rtrn1st , fo1st );
     cout << " - ";
-    PrintResults( rtrn2nd , fo2nd );
+    PrintResults( has_solution( rtrn2nd ) , rtrn2nd , fo2nd );
     cout << endl;
    #endif
 
@@ -573,23 +569,6 @@ static bool SolveBoth( void )
   exit( 1 );
   }
  }
-
-/*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
 
 /*--------------------------------------------------------------------------*/
 

@@ -90,14 +90,8 @@
 #define CLOG1( y , x )
 #endif
 
-#define USECOLORS 1
-#if( USECOLORS )
-#define RED( x ) "\x1B[31m" #x "\033[0m"
-#define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
-#define RED( x ) #x
-#define GREEN( x ) #x
-#endif
+// USECOLORS / RED / GREEN: in common_utils.h
+#include "common_utils.h"
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
@@ -153,117 +147,21 @@
 using namespace SMSpp_di_unipi_it;
 
 /*--------------------------------------------------------------------------*/
-/*------------------------------ FUNCTIONS ---------------------------------*/
+/*------------------- Investment-local CLI extensions ----------------------*/
 /*--------------------------------------------------------------------------*/
+// Globals + getopt extensions that go beyond the test baseline in
+// tests/common_utils.h. Kept local because they replicate the tools/
+// state-save / solution-I/O machinery, which is not relevant to other tests.
 
-// Globals formerly provided by common_utils
+std::string state_in_file;       ///< State to be loaded into the Solver (-b)
+std::string state_out_file;      ///< final State of the Solver (-a)
+std::string sol_input;           ///< filename of input Solution (-I)
+std::string sol_output;          ///< filename of output Solution (-O)
+std::string sol_cfg_file;        ///< filename of output Solution Config (-C)
+bool output_solution = false;    ///< true if solution has to be output (-o)
+bool writeprob       = false;    ///< if the problem should be written back (-n)
 
-std::string docopt_desc {};
-
-std::string filename {};
-std::string bconf_file {};
-std::string sconf_file {};
-std::string state_in_file {};
-std::string state_out_file {};
-std::string block_prefix {};
-std::string conf_prefix {};
-std::string exe {};
-std::string sol_input {};
-std::string sol_output {};
-std::string sol_cfg_file {};
-
-bool output_solution = false;
-bool sol_verbose = false;
-bool writeprob = false;
-bool dryrun = false;
-
-int verbosity_level = 0;
-
-// default short command-line options
-std::string short_opts = "a:B:b:p:S:c:on:I:O:C:Dv:h";
-
-// default long command-line options
-std::vector< option > long_opts = {
- { "help"            , no_argument       , nullptr , 'h' } ,
- { "save-state"      , required_argument , nullptr , 'a' } ,
- { "blockcfg"        , required_argument , nullptr , 'B' } ,
- { "load-state"      , required_argument , nullptr , 'b' } ,
- { "prefix"          , required_argument , nullptr , 'p' } ,
- { "solvercfg"       , required_argument , nullptr , 'S' } ,
- { "configdir"       , required_argument , nullptr , 'c' } ,
- { "output-solution" , no_argument       , nullptr , 'o' } ,
- { "nc4problem"      , required_argument , nullptr , 'n' } ,
- { "inputsol"        , required_argument , nullptr , 'I' } ,
- { "outputsol"       , required_argument , nullptr , 'O' } ,
- { "outsolcfg"       , required_argument , nullptr , 'C' } ,
- { "dryrun"          , no_argument       , nullptr , 'D' } ,
- { "verbose"         , optional_argument , nullptr , 'v' } ,
- { nullptr           , no_argument       , nullptr , 0 }
-};
-
-std::string help =
- "  -h, --help                      print this help\n"
- "  -a, --save-state <file>         save State of the Solver\n"
- "  -B, --blockcfg <file>           Block Configuration\n"
- "  -b, --load-state <file>         load State for the Solver\n"
- "  -p, --prefix <path>             the prefix for all Block filenames\n"
- "  -S, --solvercfg <file>          Solver Configuration\n"
- "  -c, --configdir <path>          the prefix for all Config filenames\n"
- "  -I, --inputsol <file>           input Solution\n"
- "  -O, --outputsol <file>          output Solution\n"
- "  -C, --outsolcfg <file>          output Solution Configuration\n"
- "  -o, --output-solution           output the solutions\n"
- "  -n, --nc4problem <file>         write nc4 problem on file\n"
- "  -D, --dryrun                    skip the compute() call\n"
- "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic, 2 = debug)\n";
-
-/*--------------------------------------------------------------------------*/
-
-inline std::string normalize_prefix( const std::string & prefix )
-{
- if( prefix.empty() )
-  return( prefix );
-
- std::filesystem::path p( prefix );
- p = p.lexically_normal();
-
- auto s = p.string();
- if( s.empty() )
-  return( s );
-
- if( ( s.back() != '/' ) && ( s.back() != '\\' ) )
-  s += std::filesystem::path::preferred_separator;
-
- return( s );
-}
-
-/*--------------------------------------------------------------------------*/
-
-inline std::string resolve_with_prefix( const std::string & prefix ,
-                                        const std::string & name )
-{
- if( name.empty() )
-  return( name );
-
- std::filesystem::path p( name );
- if( p.is_absolute() )
-  return( p.lexically_normal().string() );
-
- if( prefix.empty() )
-  return( p.lexically_normal().string() );
-
- return( ( std::filesystem::path( prefix ) / p ).lexically_normal().string() );
-}
-
-/*--------------------------------------------------------------------------*/
-
-inline std::string get_filename( const std::string & fullpath )
-{
- std::size_t found = fullpath.find_last_of( "/\\" );
- return( fullpath.substr( found + 1 ) );
-}
-
-/*--------------------------------------------------------------------------*/
+/// parse the current optarg as a long int, returning -1 on parse error
 
 inline long get_long_option( char * end = nullptr )
 {
@@ -273,101 +171,10 @@ inline long get_long_option( char * end = nullptr )
                        ( errno || ( end && *end ) ) ) )
   option = -1;
  return( option );
-}
+ }
 
 /*--------------------------------------------------------------------------*/
-
-int read_open_netCDF( netCDF::NcFile & f , std::string fn )
-{
- fn = resolve_with_prefix( block_prefix , fn );
-
- try {
-  f.open( fn , netCDF::NcFile::read );
- }
- catch( netCDF::exceptions::NcException & ) {
-  std::cerr << exe << ": cannot open nc4 file " << fn << std::endl;
-  exit( 1 );
- }
-
- netCDF::NcGroupAtt gtype = f.getAtt( "SMS++_file_type" );
- if( gtype.isNull() ) {
-  std::cerr << exe << ": " << fn << " is not an SMS++ nc4 file" << std::endl;
-  exit( 1 );
- }
-
- int type;
- gtype.getValues( &type );
-
- if( ( type != eProbFile ) && ( type != eBlockFile ) ) {
-  std::cerr << exe << ": " << fn << " is not a valid SMS++ file" << std::endl;
-  exit( 1 );
- }
-
- return( type );
-}
-
-/*--------------------------------------------------------------------------*/
-
-void docopt( void )
-{
- std::cout << docopt_desc << std::endl;
- std::cout << "Usage:" << std::endl
-           << "  " << exe << " [options] <file>" << std::endl
-           << "  " << exe << " -h | --help" << std::endl << std::endl
-           << "Options:"  << std::endl << help << std::endl;
-}
-
-/*--------------------------------------------------------------------------*/
-
-bool process_standard_arg( int opt )
-{
- switch( opt ) {
-  case 'a': state_out_file = std::string( optarg ); break;
-  case 'B': bconf_file = std::string( optarg ); break;
-  case 'b': state_in_file = std::string( optarg ); break;
-  case 'p': {
-   block_prefix = normalize_prefix( std::string( optarg ) );
-   Block::set_filename_prefix( std::string( block_prefix ) );
-   break;
-  }
-  case 'S': sconf_file = std::string( optarg ); break;
-  case 'c': conf_prefix = normalize_prefix( std::string( optarg ) ); break;
-  case 'o': output_solution = true; break;
-  case 'I': sol_input = std::string( optarg ); break;
-  case 'O': sol_output = std::string( optarg ); break;
-  case 'C': sol_cfg_file = std::string( optarg ); break;
-  case 'n': writeprob = true; break;
-  case 'D': dryrun = true; break;
-  case 'v': {
-   sol_verbose = true;
-   verbosity_level = optarg ? std::atoi( optarg ) : 1;
-   break;
-  }
-  case 'h': docopt(); exit( 0 );
-  case '?':
-  default:  return( false );
- }
- return( true );
-}
-
-/*--------------------------------------------------------------------------*/
-
-void smspp_terminate( void )
-{
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- }
- catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort();
-}
-
+/*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
 void get_initial_Solution( Block * block )
@@ -474,8 +281,6 @@ bool relax_integrality = false;
 bool simulate_investment = false;
 bool single_scenario = false;
 
-// Optional reference objective value
-double RefObjective = std::numeric_limits< double >::quiet_NaN();
 
 // Since BundleSolver cannot currently handle general bounds on the variables
 // of the form l <= x <= u, these constraints must be reformulated by
@@ -516,71 +321,12 @@ const std::string my_help =
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-static inline std::ostream & def( std::ostream & os ) {
- os.setf( std::ios::scientific , std::ios::floatfield );
- os << std::setprecision( 7 );
- return( os );
-}
-
-/*--------------------------------------------------------------------------*/
-
-static inline std::ostream & fixd( std::ostream & os ) {
- os.setf( std::ios::fixed , std::ios::floatfield );
- os << std::setprecision( 4 );
- return( os );
-}
-
-/*--------------------------------------------------------------------------*/
-
-static void PrintResults( bool hs , int rtrn , double fo ) {
- if( hs ) {
-  std::cout.setf( std::ios::scientific , std::ios::floatfield );
-  std::cout << def << fo;
- }
- else if( rtrn == Solver::kInfeasible )
-  std::cout << "    Unfeas";
- else if( rtrn == Solver::kUnbounded )
-  std::cout << "      Unbounded";
- else
-  std::cout << "      Error!";
-}
-
-/*--------------------------------------------------------------------------*/
-
 static double get_solver_objective_value( Solver * solver ) {
  if( solver->has_var_solution() )
   return( solver->get_var_value() );
 
  return( solver->get_lb() );
 }
-
-/*--------------------------------------------------------------------------*/
-
-static bool CheckRefValue( double fo , double ref
-#if( LOG_LEVEL >= 1 )
-                           , double time1 , long iters
-#endif
-) {
- double maxv = std::max( double( 1 ) ,
-                         std::max( std::abs( fo ) , std::abs( ref ) ) );
- double diff = std::abs( fo - ref );
- double tol = 1e-5 * maxv;
-
- bool OK = ( diff <= tol );
-
-#if( LOG_LEVEL >= 1 )
- std::cout << fixd << time1 << "\t" << iters << "\t";
- std::cout.setf( std::ios::scientific , std::ios::floatfield );
- std::cout << def << fo;
- std::cout << " ~ Ref = " << def << ref
-  << " (|diff| = " << def << diff
-  << ( OK ? ", OK" : ", KO" ) << ")" << std::endl;
-#endif
-
- return( OK );
-}
-
-/*--------------------------------------------------------------------------*/
 
 static bool test_investment_solvers( InvestmentBlock * investment_block ) {
  try {
@@ -718,16 +464,8 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ) {
   }
 
   if( ! std::isnan( RefObjective ) ) {
-   if( hs1st ) {
-#if( LOG_LEVEL >= 1 )
-    all_passed &= CheckRefValue( fo1st , RefObjective , time1 , it1 );
-#else
-    double maxv = std::max( double( 1 ) ,
-                            std::max( std::abs( fo1st ) ,
-                                      std::abs( RefObjective ) ) );
-    all_passed &= ( std::abs( fo1st - RefObjective ) <= 1e-5 * maxv );
-#endif
-   }
+   if( hs1st )
+    all_passed &= CheckRefValue( fo1st , RefObjective , 1e-5 , time1 , it1 );
    else
     all_passed = false;
   }
@@ -1372,115 +1110,6 @@ void set_log( SDDPBlock * sddp_block , std::ostream * output_stream ) {
  }
 }
 
-/*--------------------------------------------------------------------------*/
-
-void b_config_Block( Block * block , Configuration * b_config ,
-                     const std::string & fn )
-{
- // std::list rather than std::vector since it's built by push_back and
- // only trasversed head-to-tail
- std::list< Block * > BFS;
-
- // handle the special case of a "meta" BlockConfig
- if( auto * mb =
-     dynamic_cast< SimpleConfiguration< std::map< std::string ,
-                                                  Configuration * > >
-                                        * >( b_config ) ) {
-
-  // construct the list of all Block inside block
-  BFS.push_back( block );
-  for( auto bit = BFS.begin() ; bit != BFS.end() ; ++bit )
-   for( auto el : ( *bit )->get_nested_Blocks() )
-    BFS.push_back( el );
-
-  auto & map = mb->f_value;
-
-  // now BlockConfig-ure all Block whose classname() matches
-  for( auto b : BFS )
-   if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bc = dynamic_cast< BlockConfig * >( bcit->second ) ) {
-     auto cbc = bc->clone();
-     cbc->apply( b );
-     delete cbc;
-    }
-    else {
-     std::cerr << "Error: meta-Configuration for :Block " << bcit->first
-               << " in file " << fn << " is not a BlockConfig" << std::endl;
-     exit( 1 );
-    }
-   }
-
-  return;  // all done
- }
-
- if( auto * bc = dynamic_cast< BlockConfig * >( b_config ) ) {
-  bc->apply( block );  // just apply() it
-  return;              // all done
- }
-
- std::cerr << "Error: " << fn
-           << " does not contain a valid [meta]BlockConfig" << std::endl;
- exit( 1 );
-
-}  // end( b_config_Block )
-
-/*--------------------------------------------------------------------------*/
-
-void s_config_Block( Block * block , Configuration * s_config ,
-                     const std::string & fn = "" )
-{
- // std::list rather than std::vector since it's built by push_back and
- // only trasversed head-to-tail
- std::list< Block * > BFS;
-
- // handle the special case of a "meta" BlockSolverConfig
- if( auto * mb =
-     dynamic_cast< SimpleConfiguration< std::map< std::string ,
-                                                  Configuration * > >
-                                        * >( s_config ) ) {
-
-  // construct the list of all Block inside block
-  BFS.push_back( block );
-  for( auto bit = BFS.begin() ; bit != BFS.end() ; ++bit )
-   for( auto el : ( *bit )->get_nested_Blocks() )
-    BFS.push_back( el );
-
-  auto & map = mb->f_value;
-
-  // now BlockSolverConfig-ure all Block whose classname() matches
-  for( auto b : BFS )
-   if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bsc = dynamic_cast< BlockSolverConfig * >( bcit->second ) )
-     bsc->apply( b );
-    else {
-     std::cerr << "Error: meta-Configuration for :Block " << bcit->first
-               << " in file " << fn << " is not a BlockSolverConfig"
-               << std::endl;
-     exit( 1 );
-    }
-   }
-
-  // finally, clear() all the BlockSolverConfig for final cleanup
-  for( auto & el : map )
-   (el.second)->clear();
-
-  return;  // all done
- }
-
- if( auto * bsc = dynamic_cast< BlockSolverConfig * >( s_config ) ) {
-  bsc->apply( block );  // just apply() it
-  bsc->clear();         // clear() it for final cleanup
-  return;               // all done
- }
-
- std::cerr << "Error: " << fn
-           << " does not contain a valid [meta]BlockSolverConfig"
-           << std::endl;
- exit( 1 );
-
-}  // end( s_config_Block )
-
-/*--------------------------------------------------------------------------*/
 
 void process_prob_file( const netCDF::NcFile & file ) {
  auto problems = file.getGroups();

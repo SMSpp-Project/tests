@@ -12,7 +12,8 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::MCFBlock)
 
-    add_executable(MCF_MILP_test test.cpp)
+    add_executable(MCF_MILP_test test.cpp ../common_utils.cpp)
+    target_include_directories(MCF_MILP_test PRIVATE ..)
     target_link_libraries(MCF_MILP_test PRIVATE SMS++::MCFBlock)
 
     if (TARGET SMS++::MILPSolver)

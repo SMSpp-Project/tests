@@ -82,7 +82,7 @@
 
 #include "AbstractBlock.h"
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "FRealObjective.h"
 
@@ -185,14 +185,6 @@ static double rs( double x ) { return( convex ? -x : x ); }
 
 /*--------------------------------------------------------------------------*/
 
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
-
 static void GenerateA( Index nr , Index nc )
 {
  A.resize( nr );
@@ -267,7 +259,6 @@ static Subset GenerateRand( Index m , Index k )
 
  return( std::move( rnd ) );
  }
-
 
 /*--------------------------------------------------------------------------*/
 
@@ -469,23 +460,6 @@ static bool SolveSecond( void )
  }
 
 /*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
@@ -620,21 +594,19 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // for both Block do this by reading an appropriate BlockSolverConfig from
  // file and apply() it to the Block; note that the BlockSolverConfig are
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * lpbsc;
- {
-  auto c = Configuration::deserialize( "LPPar.txt" );
-  lpbsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! lpbsc ) {
-   cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ std::string lpbsc_fn = "LPPar.txt";
+ Configuration * lpbsc = Configuration::deserialize( lpbsc_fn );
+ if( ! lpbsc ) {
+  cerr << "Error: cannot load BSC from " << lpbsc_fn << endl;
+  exit( 1 );
   }
-
- lpbsc->apply( LPBlock );
- lpbsc->clear();
+ s_config_Block( LPBlock , lpbsc , lpbsc_fn );
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -720,18 +692,18 @@ int main( int argc , char **argv )
  // file and apply() it to the Block; note that the BlockSolverConfig are
  // clear()-ed and kept to do the cleanup at the end
 
- BlockSolverConfig * secondlpbsc;
- {
-  auto c = Configuration::deserialize( "SecondLPPar.txt" );
-  secondlpbsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! secondlpbsc ) {
-   cerr << "Error: SecondLPPar.txt does not contain a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
+ // secondlpbsc is applied multiple times in the main loop below before
+ // its single deferred clear() at line 1005; pass clear_after=false to
+ // s_config_Block here and at the in-loop apply, and clear() manually.
+ // Meta-config (nested map) is NOT supported for secondlpbsc because of
+ // the multi-apply pattern (each apply would re-register; the deferred
+ // clear() at the end clears the captured one).
+ Configuration * secondlpbsc = Configuration::deserialize( "SecondLPPar.txt" );
+ if( ! secondlpbsc ) {
+  cerr << "Error: cannot load BSC from SecondLPPar.txt" << endl;
+  exit( 1 );
   }
-
- secondlpbsc->apply( secondLPBlock );
+ s_config_Block( secondLPBlock , secondlpbsc , "SecondLPPar.txt" , false );
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1005,7 +977,7 @@ int main( int argc , char **argv )
     // for both Block do this by reading an appropriate BlockSolverConfig from
     // file and apply() it to the Block; note that the BlockSolverConfig are
     // clear()-ed and kept to do the cleanup at the end
-    secondlpbsc->apply( secondLPBlock );
+    s_config_Block( secondLPBlock , secondlpbsc , "SecondLPPar.txt" , false );
 
     // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1030,11 +1002,14 @@ int main( int argc , char **argv )
  
  // destroy the Block - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- secondlpbsc->clear();
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( LPBlock , lpbsc );
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- lpbsc->apply( LPBlock );
- secondlpbsc->apply( secondLPBlock );
+ // secondlpbsc was never clear()-ed during the in-loop applies; clear() it
+ // now (so the next apply unregisters the Solver) and re-apply for cleanup
+ if( auto bsc_static = dynamic_cast< BlockSolverConfig * >( secondlpbsc ) )
+  bsc_static->clear();
+ s_config_Block( secondLPBlock , secondlpbsc , "" , false );
 
  // then delete the BlockSolverConfig
  delete( lpbsc );

@@ -87,7 +87,7 @@
 
 #include "ThermalUnitBlock.h"
 
-#include "BlockSolverConfig.h"
+#include "common_utils.h"
 
 #include "FRealObjective.h"
 
@@ -136,14 +136,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-template< class T >
-static void Str2Sthg( const char* const str , T &sthg )
-{
- std::istringstream( str ) >> sthg;
- }
-
-/*--------------------------------------------------------------------------*/
-
 static Subset GenerateRand( Index m , Index k )
 {
  // generate a sorted random k-vector of unique integers in 0 ... m - 1
@@ -155,22 +147,6 @@ static Subset GenerateRand( Index m , Index k )
  sort( rnd.begin() , rnd.end() );
 
  return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
-static void PrintResults( bool hs , int rtrn , double fo )
-{
- if( hs )
-  std::cout << fo;
- else
-  if( rtrn == Solver::kInfeasible )
-   std::cout << "    Unfeas";
-  else
-   if( rtrn == Solver::kUnbounded )
-    std::cout << "      Unbounded";
-   else
-    std::cout << "      Error!";
  }
 
 /*--------------------------------------------------------------------------*/
@@ -473,23 +449,6 @@ static bool SolveBoth( void )
  }
 
 /*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
-
-void smspp_terminate( void ) {
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
- }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
- }
- std::abort(); // or exit(1)
-}
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
@@ -589,27 +548,24 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and
  // apply() it to the BoxBlock; note that the BlockSolverConfig is
- // clear()-ed and kept to do the cleanup at the end
+ // clear()-ed and kept to do the cleanup at the end.
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( "BSCfg.txt" );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
-  if( ! bsc ) {
-   std::cerr << "Error: configuration file not a BlockSolverConfig"
-             << std::endl;
-   delete( c );
-   exit( 1 );
-   }
+ std::string bsc_fn = "BSCfg.txt";
+ Configuration * bsc = Configuration::deserialize( bsc_fn );
+ if( ! bsc ) {
+  std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;
+  exit( 1 );
+  }
+ s_config_Block( TUBlock , bsc , bsc_fn );
 
-  bsc->apply( TUBlock );
-  bsc->clear();
-
-  if( TUBlock->get_registered_solvers().size() < 2 ) {
-   std::cout << std::endl << "too few Solver registered to the Block"
-             << std::endl;
-   exit( 1 );
-   }
+ if( TUBlock->get_registered_solvers().size() < 2 ) {
+  std::cout << std::endl << "too few Solver registered to the Block"
+            << std::endl;
+  exit( 1 );
   }
 
  // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -869,8 +825,8 @@ int main( int argc , char **argv )
  // destroy objects and vectors - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- bsc->apply( TUBlock );
+ // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
+ s_config_Block( TUBlock , bsc );
 
  // then delete the BlockSolverConfig
  delete( bsc );

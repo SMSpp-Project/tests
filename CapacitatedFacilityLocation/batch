@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../batch_common.sh"
+
 DATADIR=../../CapacitatedFacilityLocationBlock/data
 
 niter=0
@@ -22,14 +24,7 @@ for what in ${DATADIR}/txt/ORLib/*.txt; do
 
   for (( seed = 0 ; seed <= maxseed ; seed++ )); do
 
-    printf "[$what c $niter $seed $wchg $rounds]: "
-
-    "$CFL_test" $what c $niter $seed $wchg $rounds
-
-    retVal=$?
-    if [ $retVal -ne 0 ]; then
-      exit 1
-    fi
+    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
 
   done
 done
@@ -42,14 +37,7 @@ for i in 30-200 60-200 60-300 80-400; do
 
       what=${DATADIR}/txt/Yang/${i}/${i}-${h}.txt
 
-      printf "[$what l $niter $seed $wchg $rounds]: "
-
-      "$CFL_test" $what l $niter $seed $wchg $rounds
-
-      retVal=$?
-      if [ $retVal -ne 0 ]; then
-        exit 1
-      fi
+      run_test "$CFL_test" "$what" l "$niter" "$seed" "$wchg" "$rounds"
 
     done
   done
@@ -63,14 +51,7 @@ for i in 300; do            # 300_1500 500 700 1000
 
       what=${DATADIR}/txt/TBED/${i}/i${i}_${h}.txt
 
-      printf "[$what f $niter $seed $wchg $rounds]: "
-
-      "$CFL_test" $what f $niter $seed $wchg $rounds
-
-      retVal=$?
-      if [ $retVal -ne 0 ]; then
-        exit 1
-      fi
+      run_test "$CFL_test" "$what" f "$niter" "$seed" "$wchg" "$rounds"
 
     done
   done
