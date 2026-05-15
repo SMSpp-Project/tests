@@ -47,22 +47,26 @@ REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=2.399258678e+05
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../UCBlock/data/nc4/resilient-data/smspp_*.nc; do
+for wf in 0 1 2; do
 
-    # skip if pattern did not match any file
-    if [ ! -f "$what" ]; then
-      continue
-    fi
+    for what in ../../UCBlock/data/nc4/resilient-data/smspp_*.nc; do
 
-    base=$(basename "$what")
-    ref=${REF_OBJ[$base]}
+        # skip if pattern did not match any file
+        if [ ! -f "$what" ]; then
+          continue
+        fi
 
-    if [ -z "$ref" ]; then
-      echo "No reference objective defined for file: $base"
-      exit 1
-    fi
+        base=$(basename "$what")
+        ref=${REF_OBJ[$base]}
 
-    run_test "$exe" "$what" "$par" "$slv" "$ref"
+        if [ -z "$ref" ]; then
+          echo "No reference objective defined for file: $base"
+          exit 1
+        fi
+
+        run_test "$exe" "$what" "$par" "$slv" "$ref" "$wf"
+
+    done
 
 done
 

@@ -147,6 +147,9 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 bool ProxHeur = false;     // false = LagrangianDualSolver
                            // true  = PrimalProximalHeur
 
+int wf = 0;                // DCNetworkBlock formulation selector
+                           // 0 = PTDF (default), 1 = CYCLE, 2 = KIRCHHOFF
+
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -218,17 +221,23 @@ int main( int argc , char ** argv )
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
              break;
 	     !!*/
+  case( 6 ): Str2Sthg( argv[ 5 ] , wf );
   case( 5 ): Str2Sthg( argv[ 4 ] , RefObjective );
   case( 4 ): Str2Sthg( argv[ 3 ] , ProxHeur );
-  case( 3 ): 
+  case( 3 ):
   case( 2 ): break;
-  default: std::cerr << "Usage: " << argv[ 0 ] << " UC-file [BSC-file ws ref]"
+  default: std::cerr << "Usage: " << argv[ 0 ]
+		     << " UC-file [BSC-file ws ref wf]"
 		     << std::endl <<
 	   "       BSC-file: BlockSolverConfig description [BSPar.txt]"
 		     << std::endl <<
            "       ws: 0 = LagrangianDualSolver, 1 = PrimalProximalHeur [0]"
 		     << std::endl <<
            "       ref: reference objective value to compare against [none]"
+		     << std::endl <<
+           "       wf: DCNetworkBlock formulation [0]"
+		     << std::endl <<
+           "             0 = PTDF, 1 = CYCLE, 2 = KIRCHHOFF"
 	        << std::endl;
     /*!!
 	   " UC file [BSC file seed wchg #rounds #chng %chng]"
@@ -310,6 +319,14 @@ int main( int argc , char ** argv )
    hbsc = nullptr;
    }
 
+  // per-classname BlockConfig that drives the DCNetworkBlock formulation
+  // selector (read by DCNetworkBlock::generate_abstract_variables): 0=PTDF,
+  // 1=CYCLE, 2=KIRCHHOFF. A no-op on instances without a DCNetworkBlock.
+  // Dispatched below via the meta_bc map (same pattern used for tbc).
+  auto dcbc = new BlockConfig;
+  dcbc->f_static_variables_Configuration = new SimpleConfiguration< int >(
+                                                                          wf );
+
   #if USE_BundleSolver
    auto nbsc = bsc->num_ComputeConfig();
    if( ! nbsc ) {
@@ -377,10 +394,11 @@ int main( int argc , char ** argv )
    {
     // NB: SimpleConfiguration<map<string,Configuration*>>::guts_of_destructor
     // delete()s every value in the map; we f_value.clear() before scope-exit
-    // so tbc / tbsc / hbsc are NOT double-deleted (they survive for the
-    // explicit delete() at end of this configuration block).
+    // so tbc / tbsc / hbsc / dcbc are NOT double-deleted (they survive for
+    // the explicit delete() at end of this configuration block).
     SimpleConfiguration< std::map< std::string , Configuration * > > meta_bc;
     meta_bc.f_value[ "ThermalUnitBlock" ] = tbc;
+    meta_bc.f_value[ "DCNetworkBlock" ] = dcbc;
     b_config_Block( TestBlock , &meta_bc , "" );
     meta_bc.f_value.clear();
 
@@ -505,6 +523,7 @@ int main( int argc , char ** argv )
   delete( tbc );
   delete( tbsc );
   delete( hbsc );
+  delete( dcbc );
 
   // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
   // dispatches on the runtime type, applies, and clear()s for cleanup
