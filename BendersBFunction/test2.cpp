@@ -1316,7 +1316,6 @@ void test8( bool invert ) {
  block_solver_config->apply( benders_block );
  block_solver_config->clear();
 
- /* // TODO Uncomment when *MILPSolver is ready to deal with l > u bounds
  auto bundle_solver = benders_block->get_registered_solvers().front();
  assert( bundle_solver->compute() == Solver::kOK );
  assert( bundle_solver->has_var_solution() );
@@ -1326,7 +1325,6 @@ void test8( bool invert ) {
  block_solver_config->clear();
  block_solver_config->apply( benders_block );
  delete( block_solver_config );
- */
 
  // Test linearizations
 
@@ -1415,7 +1413,6 @@ void test9( bool invert ) {
  block_solver_config->apply( benders_block );
  block_solver_config->clear();
 
- /* // TODO Uncomment when *MILPSolver is ready to deal with l > u bounds
  auto bundle_solver = benders_block->get_registered_solvers().front();
  assert( bundle_solver->compute() == Solver::kOK );
  assert( bundle_solver->has_var_solution() );
@@ -1425,7 +1422,6 @@ void test9( bool invert ) {
  block_solver_config->clear();
  block_solver_config->apply( benders_block );
  delete( block_solver_config );
- */
 
  // Test linearizations
 
@@ -1515,7 +1511,6 @@ void test10( bool invert ) {
  block_solver_config->apply( benders_block );
  block_solver_config->clear();
 
- /* // TODO Uncomment when *MILPSolver is ready to deal with l > u bounds
  auto bundle_solver = benders_block->get_registered_solvers().front();
  assert( bundle_solver->compute() == Solver::kOK );
  assert( bundle_solver->has_var_solution() );
@@ -1525,7 +1520,6 @@ void test10( bool invert ) {
  block_solver_config->clear();
  block_solver_config->apply( benders_block );
  delete( block_solver_config );
- */
 
  // Test linearizations
 
