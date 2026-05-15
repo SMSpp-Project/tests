@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BPar1.txt - - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockConfig for CapacitatedFacilityLocationBlock
+#
+# The CapacitatedFacilityLocationBlock is Configur-ed for being solved by a
+# *MILPSolver (either to integer optimality or the continuous relaxation)
+# with the use of the strong forcing constraints, hence
+# - Natural configuration
+# - all (static) Constraint
+# - no dynamic Constraint active
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the ComputeConfig object
+
+1  # the BlockConfig is a "differential" one
+
+# static_constraints
+SimpleConfiguration<int>
+3    # bit 0 = demand, bit 1 = capacity, bit 2 = strong
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+SimpleConfiguration<int>
+0    # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BPar1.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
