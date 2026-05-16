@@ -16,7 +16,7 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./LDS_UC_test
-DEFAULT_PAR=BSPar-2S.txt
+DEFAULT_PAR=BSPar-2S-EASY.txt
 DEFAULT_SLV=0
 parse_batch_args "$@"
 
