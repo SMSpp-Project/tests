@@ -50,8 +50,8 @@ UCBckDIR = ../../UCBlock
 include $(UCBckDIR)/lib/makefile
 
 # define input macros for TwoStageStochasticBlock makefile, then include it
-TSSBckDIR = ../../TwoStageStochasticBlock
-include $(TSSBckDIR)/makefile
+TSSBkSDR = ../../TwoStageStochasticBlock
+include $(TSSBkSDR)/makefile
 
 # common_utils stuff - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 CMMNUOBJ = ../common_utils.o
@@ -61,10 +61,10 @@ CMMNUINC = -I..
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(TSSBckOBJ) $(UCBckOBJ) $(SMS++OBJ) $(CMMNUOBJ)
+MOBJ =  $(CMMNUOBJ) $(BNDSLVOBJ) $(LgDSLVOBJ) $(TSSBkOBJ) $(UCBckOBJ) $(SMS++OBJ)
 
 # libraries
-MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LgDSLVLIB) $(UCBckLIB) $(TSSBckLIB)
+MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LgDSLVLIB) $(UCBckLIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
@@ -72,10 +72,10 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(UCBckINC) $(TSSBckINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(UCBckINC) $(TSSBkINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(UCBckH) $(TSSBckH) $(CMMNUH)
+MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(UCBckH) $(TSSBkH) $(CMMNUH)
 
 # compile command
 

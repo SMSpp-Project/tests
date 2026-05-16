@@ -55,7 +55,7 @@ CMMNUINC = -I..
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(MCFLEOBJ) $(MILPSOBJ) $(MCFBkOBJ) $(CMMNUOBJ)
+MOBJ =  $(CMMNUOBJ) $(MCFLEOBJ) $(MILPSOBJ) $(MCFBkOBJ)
 
 # libraries
 MLIB =  $(MCFBkLIB) $(MCFLELIB) $(MILPSLIB)
