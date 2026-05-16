@@ -44,4 +44,7 @@ slv=0
 # run resilient (PyPsa) instances
 ./batches/batch-resilient "$exe" "$par" "$mlf"
 
+# run AC OPF instances
+./batches/batch-ac "$exe" "$par" "$slv" "$mlf"
+
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

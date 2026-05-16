@@ -44,6 +44,7 @@ if (TARGET SMS++::UCBlock)
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-acad-s"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-acadh"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ec"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ac"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-p4r"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-resilient"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/metabatch"

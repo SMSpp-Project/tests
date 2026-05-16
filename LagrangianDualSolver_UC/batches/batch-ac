@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ac < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default LDS_UC_test
+#        < par file > = BlockSolverConfig file, default BSPar-2S.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs all the AC OPF instances. ACNetworkBlock derives from DCNetworkBlock
+# but entirely redefines its constraints with the SOCP relaxation (see
+# ACNetworkBlock.cpp: "do not call DCNetworkBlock::generate_abstract_constraints
+# ...the class entirely redefines its constraints"), so the DCNetworkBlock
+# wf switch (PTDF/CYCLE/KIRCHHOFF) is bypassed: no wf loop here.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./LDS_UC_test
+DEFAULT_PAR=BSPar-2S.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/AC_Data
+
+for what in ${DATADIR}/*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    run_test "$exe" "$what" "$par" "$slv"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
