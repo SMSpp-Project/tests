@@ -45,10 +45,6 @@ include $(BNDSLVSDR)/makefile-s
 LgDSLVSDR = ../../LagrangianDualSolver
 include $(LgDSLVSDR)/makefile
 
-# common_utils stuff - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-CMMNUOBJ = ../common_utils.o
-CMMNUH = ../common_utils.h
-CMMNUINC = -I..
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -89,8 +85,6 @@ MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CMMNUH)
 
 # compile command
 
-$(CMMNUOBJ): $(CMMNUH) $(SMS++H) ../common_utils.cpp
-	$(CC) -c ../common_utils.cpp -o $@ $(MINC) $(SW)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)

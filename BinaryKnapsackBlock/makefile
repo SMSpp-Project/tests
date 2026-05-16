@@ -37,10 +37,6 @@ include $(BKBkSDR)/makefile-c
 MILPSSDR = $(BKBkSDR)/../MILPSolver
 include $(MILPSSDR)/makefile-s
 
-# common_utils stuff - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-CMMNUOBJ = ../common_utils.o
-CMMNUH = ../common_utils.h
-CMMNUINC = -I..
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -63,8 +59,6 @@ MH =    $(BKBkH) $(CMMNUH)
 
 # compile command
 
-$(CMMNUOBJ): $(CMMNUH) $(SMS++H) ../common_utils.cpp
-	$(CC) -c ../common_utils.cpp -o $@ $(MINC) $(SW)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)
