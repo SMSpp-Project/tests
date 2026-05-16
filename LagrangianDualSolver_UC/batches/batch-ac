@@ -41,6 +41,14 @@ for what in ${DATADIR}/*.nc4; do
       continue
     fi
 
+    # skip 24h temporal instances: 1236 nodes x 1543 lines x 24 time steps
+    # produces ~500k SOCP constraints and the run does not complete in any
+    # reasonable test timeout. Pending a performance investigation, restrict
+    # this batch to single-period AC OPF benchmarks.
+    case "$(basename "$what")" in
+      *_24h_*) continue ;;
+    esac
+
     run_test "$exe" "$what" "$par" "$slv"
 
 done

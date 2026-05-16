@@ -324,8 +324,7 @@ int main( int argc , char ** argv )
   // 1=CYCLE, 2=KIRCHHOFF. A no-op on instances without a DCNetworkBlock.
   // Dispatched below via the meta_bc map (same pattern used for tbc).
   auto dcbc = new BlockConfig;
-  dcbc->f_static_variables_Configuration = new SimpleConfiguration< int >(
-                                                                          wf );
+  dcbc->f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
 
   #if USE_BundleSolver
    auto nbsc = bsc->num_ComputeConfig();
@@ -499,23 +498,32 @@ int main( int argc , char ** argv )
        "which non-ECNetworkBlocks(s) to treat as `hard` components through "
        "`vintNoEasy` parameter." ) );
     // load the BlockSolverConfig for all the other :UnitBlock; note that
-    // this can be "empty", and indeed even not there
-    auto co = Configuration::deserialize( "OUBSCfg.txt" );
-    auto obsc = dynamic_cast< BlockSolverConfig * >( co );
-    if( ( ! obsc ) || ( ! obsc->num_ComputeConfig() ) ) {
-     delete( co );
-     obsc = nullptr;
+    // this can be "empty", and indeed even not there.
+    // When the main BSC contains a LagrangianDualSolver (cc != nullptr,
+    // independently of whether it is the first or a later Solver) we
+    // *skip* applying this catch-all altogether: LagrangianDualSolver will
+    // configure each sub-Block's inner Solver itself, via the
+    // str_LagBF_BSCfg parameter (typically LPBSCfg.txt). Pre-attaching an
+    // MILPSolver here would just stack a second, never-used Solver on top
+    // of each sub-Block — on large instances this dominates the setup time.
+    if( ! cc ) {
+     auto co = Configuration::deserialize( "OUBSCfg.txt" );
+     auto obsc = dynamic_cast< BlockSolverConfig * >( co );
+     if( ( ! obsc ) || ( ! obsc->num_ComputeConfig() ) ) {
+      delete( co );
+      obsc = nullptr;
+      }
+
+     // apply obsc as catch-all to every sub-Block that is not Thermal or
+     // HSUB (those have already been configured via the meta-config above)
+     if( obsc )
+      for( auto ub : sb )
+       if( ! dynamic_cast< ThermalUnitBlock * >( ub ) &&
+           ! dynamic_cast< HydroSystemUnitBlock * >( ub ) )
+        obsc->apply( ub );
+
+     delete( obsc );
      }
-
-    // apply obsc as catch-all to every sub-Block that is not Thermal or
-    // HSUB (those have already been configured via the meta-config above)
-    if( obsc )
-     for( auto ub : sb )
-      if( ! dynamic_cast< ThermalUnitBlock * >( ub ) &&
-          ! dynamic_cast< HydroSystemUnitBlock * >( ub ) )
-       obsc->apply( ub );
-
-    delete( obsc );
     }
   #endif
 
