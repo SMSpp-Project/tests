@@ -16,9 +16,19 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./LDS_UC_test
-DEFAULT_PAR=BSPar-2S-EASY.txt
+DEFAULT_PAR=BSPar-2S-AC.txt
 DEFAULT_SLV=0
 parse_batch_args "$@"
+
+# AC OPF LP relaxations are more degenerate than DC ones (SOCP cone +
+# McCormick envelopes), so the default GRBMILPSolver settings can pick a
+# different optimal vertex than the LagrangianDualSolver, producing a small
+# Solver1/Solver2 gap. BSPar-2S-AC.txt is the EASY variant (intDoEasy=0)
+# with the LP-reproducibility recipe applied (Method=1, Presolve=0,
+# NumericFocus=3) — see also project_milpsolver_lp_reproducibility note.
+# If metabatch passed BSPar-2S.txt or BSPar-2S-EASY.txt, redirect to the AC
+# tuned variant.
+par=$(echo "$par" | sed 's/BSPar-2S\(-EASY\)\?\.txt$/BSPar-2S-AC.txt/')
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
