@@ -34,7 +34,8 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 intPushCostToOwner 1 # whether sub-Block Objective are changed
-intDoEasy 	 0      # do easy components for (some) LagBFunction
+intDoEasy 	 3      # do easy components for (some) LagBFunction
+                    # (bit 0 + bit 1 = enable easy + ChgCosts)
 intMaxIter 	 100    # max number of iterations for each call
 intMaxThread 1	    # MaxThread, max number of new tasks to spawn
 intLogVerb  0     # log verbosity of main Bundle algorithm
@@ -51,7 +52,6 @@ inttSPar1  12     # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = bal
 intMaxNrEvls 2    # maximum number of function evaluations at each iteration
 intMPName  15     # MP solver: 0 = QPP, 7 = Cplex/Gurobi with quadratic stabilization
                   # + 8 = check for duplicate linearizations
-                  # NB: 0 (QPP) NOT supported here -- inner Fi is decomposable
 
 # QPPenalty's parameters :- - - - - - - - - - - - - - - - - - - - - - - - - -
 
