@@ -785,6 +785,15 @@ int main( int argc , char **argv )
            "             7 = modify flow bounds"
 		<< endl <<
            "             8 = change linear objective"
+		<< endl <<
+           "             9 = each LagBFunction dualises a random subset "
+                                              "(exercises sparse Lambda)"
+		<< endl <<
+           "            10 = remove one dual_pair from a single LagBFunction "
+                                              "(naked, not GroupMod;"
+		<< endl <<
+           "                 exercises dense->sparse auto-promotion + "
+                                              "per-Function Mod dispatch)"
   #if DYNAMIC_VARS > 0  
 		<< endl <<
            "             7 = add variables rows, 8 = delete variables"
@@ -816,6 +825,19 @@ int main( int argc , char **argv )
  nf = std::abs( nf );
  bool HasEasy = ( nt < 0 );
  nt = std::abs( nt );
+
+ // wchg bit 9: each LagBFunction dualises only a random subset (about
+ // half) of the NDOBlock x variables, instead of all of them. Different
+ // LagBFunction get independent random subsets, so the union LamVcblr
+ // covers all nvar x's but each v_c05f[ h ] exposes a strict subset (in
+ // ascending order, as required by MPSolver::SetItemBse), which makes
+ // the BundleSolver::set_Block auto-detect engage the sparse Lambda
+ // path. To keep the LPBlock-vs-NDOBlock comparison mathematically
+ // sound, the corresponding (i,j) constraint in the LPBlock
+ // transportation block omits the xLP[ j ] term whenever j is not in
+ // the subset: this mirrors the fact that x_NDO[ j ] does not shift
+ // column j's cost in the inner LP of that LagBFunction.
+ bool sparse_subset = ( wchg & ( 1 << 9 ) );
 
  if( ( ! nf ) && ( ! nt ) ) {
   cout << "error: no sub-Block";
@@ -991,6 +1013,26 @@ int main( int argc , char **argv )
    GenerateSupplies();                // generate random supplies == demands
    Index nic = GenerateCapacities();  // generate random capacities
 
+   // sparse-subset support: when wchg bit 9 is on, choose a random
+   // ascending subset of [ 0 , nvar ) of size ~ nvar / 2 for this
+   // LagBFunction; otherwise the subset is the full [ 0 , nvar ). The
+   // subset is used on both the LPBlock side (to omit the corresponding
+   // xLP[ j ] term from the (i, j) constraints) and the NDOBlock side
+   // (to omit the dual_pair (xNDO[ j ], cost-shift_j)). LagBFunction p
+   // ends up dualising only the x_j with j in subset[ p ]; the others
+   // do not shift its inner-LP cost in either representation, which
+   // keeps the LPBlock-vs-NDOBlock comparison mathematically sound.
+   Subset subset;
+   if( sparse_subset )
+    subset = GenerateSubset( nvar , std::max( Index( 1 ) , Index( nvar / 2 ) ) );
+   else {
+    subset.resize( nvar );
+    std::iota( subset.begin() , subset.end() , Index( 0 ) );
+    }
+   std::vector< bool > in_subset( nvar , false );
+   for( auto j : subset )
+    in_subset[ j ] = true;
+
    #if( LOG_LEVEL >= 5 )
     cout << "T[ " << p << " ] = " << endl;
     printT();
@@ -1035,22 +1077,28 @@ int main( int argc , char **argv )
       (*pc)[ i ][ j ].set_lhs( convex ? C[ i ][ j ] : -INF , eNoMod );
       (*pc)[ i ][ j ].set_rhs( convex ? INF : C[ i ][ j ] , eNoMod );
 
+      // when j is in the subset for this LBF the (i, j) constraint
+      // carries the -x[ j ] Lagrangian-shift term; when j is outside
+      // the subset the term is omitted (this LBF does not dualise
+      // x_j, so its inner LP cost for column j is the unshifted c)
+      const bool with_x = in_subset[ j ];
       v_coeff_pair cf;
       if( U[ i ][ j ] == INF )
        // no bound ==> ys[ i ] + yd[ j ] - x[ j ] >= c[ i ][ j ]
-       cf.resize( 3 );
+       cf.resize( with_x ? 3 : 2 );
       else {
-       cf.resize( 4 );
+       cf.resize( with_x ? 4 : 3 );
        // bound ==> ys[ i ] + yd[ j ] + w[ i ][ j ] - x[ j ] >= c[ i ][ j ]
        wit->set_type( ColVariable::kNonNegative , eNoMod );
-       cf[ 3 ] = std::make_pair( & (*wit) , convex ? 1 : -1 );
+       cf[ with_x ? 3 : 2 ] = std::make_pair( & (*wit) , convex ? 1 : -1 );
        *(docfit++) = std::make_pair( & (*(wit++)) , convex ?   U[ i ][ j ]
 				                           : - U[ i ][ j ] );
        }
 
      cf[ 0 ] = std::make_pair( & (*ys)[ i ] , 1 );
      cf[ 1 ] = std::make_pair( & (*yd)[ j ] , 1 );
-     cf[ 2 ] = std::make_pair( & (*xLP)[ j ] , -1 );
+     if( with_x )
+      cf[ 2 ] = std::make_pair( & (*xLP)[ j ] , -1 );
 
      (*pc)[ i ][ j ].set_function( new LinearFunction( std::move( cf ) ) );
      }
@@ -1066,13 +1114,17 @@ int main( int argc , char **argv )
     for( Index i = 0 ; i < nvar ; ++i )
      for( Index j = 0 ; j < nvar ; ++j ) {
       // construct constraint ys[ i ] + yd[ j ] - x[ j ] >= c[ i ][ j ]
+      // (-x[ j ] is dropped when j is not in this LBF's subset; see
+      // the comment in the cap branch above)
       (*pc)[ i ][ j ].set_lhs( convex ? C[ i ][ j ] : -INF , eNoMod );
       (*pc)[ i ][ j ].set_rhs( convex ? INF : C[ i ][ j ] , eNoMod );
 
-      v_coeff_pair cf( 3 );
+      const bool with_x = in_subset[ j ];
+      v_coeff_pair cf( with_x ? 3 : 2 );
       cf[ 0 ] = std::make_pair( & (*ys)[ i ] , 1 );
       cf[ 1 ] = std::make_pair( & (*yd)[ j ] , 1 );
-      cf[ 2 ] = std::make_pair( & (*xLP)[ j ] , -1 );
+      if( with_x )
+       cf[ 2 ] = std::make_pair( & (*xLP)[ j ] , -1 );
 
       (*pc)[ i ][ j ].set_function( new LinearFunction( std::move( cf ) ) );
       }
@@ -1212,13 +1264,19 @@ int main( int argc , char **argv )
 
    LBF->set_ComputeConfig( LBFC );  // ComputeConfig-ure it
 
-   // construct the dual pairs
-   LagBFunction::v_dual_pair lp( nvar );
+   // construct the dual pairs only for j in this LBF's subset; if the
+   // sparse-subset flag is off the subset is [ 0 , nvar ) and lp has
+   // size nvar, matching the legacy dense behaviour. When the flag is
+   // on, lp has size subset.size() < nvar and the local-to-global map
+   // built by BundleSolver::set_Block will be a strict subset of
+   // LamVcblr (in ascending order), which triggers the sparse path.
+   LagBFunction::v_dual_pair lp;
+   lp.reserve( subset.size() );
 
    // ... that use the variables in NDOBlock
    auto xNDO = NDOBlock->get_static_variable_v< ColVariable >( 0 );
 
-   for( Index j = 0 ; j < nvar ; ++j ) {
+   for( auto j : subset ) {
     v_coeff_pair cfj( nvar );
 
     for( Index i = 0 ; i < nvar ; ++i ) {
@@ -1226,8 +1284,7 @@ int main( int argc , char **argv )
      cfj[ i ].second = 1;
      }
 
-    lp[ j ].first = & (*xNDO)[ j ];
-    lp[ j ].second = new LinearFunction( std::move( cfj ) );
+    lp.emplace_back( & (*xNDO)[ j ] , new LinearFunction( std::move( cfj ) ) );
     }
 
    // pass the dual pairs to the LagBFunction
@@ -1472,6 +1529,7 @@ int main( int argc , char **argv )
   p_AB LPTr = nullptr;
   p_AB NDOTr = nullptr;
   p_PFB LPBr = nullptr;
+  p_LBF LBF = nullptr;  // the LagBFunction of NDOTr, when bn is a TB
 
   Index bn = rep % ( nf + nt );  // which sub-Block to change
 
@@ -1482,8 +1540,8 @@ int main( int argc , char **argv )
   else {
    LPTr = static_cast< p_AB >( LPBlock->get_nested_Block( bn ) );
    NDOTr = static_cast< p_AB >( NDOBlock->get_nested_Block( bn ) );
-   auto LBF = static_cast< p_LBF >(
-		  NDOTr->get_objective< FRealObjective >()->get_function() );
+   LBF = static_cast< p_LBF >(
+		NDOTr->get_objective< FRealObjective >()->get_function() );
    NDOTr = static_cast< p_AB >( LBF->get_nested_Block( 0 ) );
    LOG1( rep << "[TB " << bn - nf << "]: ");
    }
@@ -1925,6 +1983,56 @@ int main( int argc , char **argv )
       lf->modify_coefficients( std::move( tmpU ) , std::move( nms ) , true ); 
       }
      }
+
+  // per-LagBFunction dual_pair removal - - - - - - - - - - - - - - - - - - -
+  //
+  // bit 10: remove one dual_pair from THIS LBF and mirror by zeroing the
+  // corresponding xLP[ j ] coefficient on the LPBlock side. The Mod is
+  // issued on a single LBF — i.e. naked, not part of a GroupModification
+  // covering all components — to exercise:
+  //
+  //  (a) BundleSolver's dense → sparse auto-promotion in the 4th
+  //      Modification loop, when this is the first per-Function var Mod
+  //      and the Solver was in dense mode;
+  //
+  //  (b) the per-Function sparse FunctionModVarsRngd handler that
+  //      decrements v_ref_count on the affected LamVcblr slot and
+  //      queues globally-dead slots for end-of-loop compaction.
+  //
+  // Mathematically, removing dual_pair k from the LBF means the inner LP
+  // no longer dualises x_NDO[ j ] (where j is k's outer-variable index):
+  // its inner cost for column j becomes the unshifted c. We mirror on
+  // the LP side by zeroing the - xLP[ j ] coefficient in every (i, j)
+  // constraint, which is the dual of "column j's inner cost is c".
+
+  if( LPTr && ( wchg & 1024 ) && ( dis( rg ) <= p_change ) ) {
+   const Index loc_NV = LBF->get_num_active_var();
+   if( loc_NV > 1 ) {  // keep at least one dual_pair alive
+    const Index k = Index( dis( rg ) * loc_NV );
+    auto xNDO = NDOBlock->get_static_variable_v< ColVariable >( 0 );
+    const auto * xp = static_cast< ColVariable * >(
+                                       LBF->get_active_var( k ) );
+    const Index j = Index( xp - xNDO->data() );
+
+    LOG1( "removed dual_pair k=" << k << " (j=" << j << ") from LBF - " );
+
+    // NDOBlock side: naked FunctionModVarsRngd[ k , k+1 )
+    LBF->remove_variable( k , eModBlck );
+
+    // LPBlock side: zero the - xLP[ j ] term in every (i, j) constraint
+    // of LPTr's "pc" — equivalent to dropping xLP[ j ] from the
+    // LinearFunction, but doesn't shift the other coefficients'
+    // positions, which is friendlier to subsequent removals.
+    auto pc = LPTr->get_static_constraint< FRowConstraint , 2 >( "pc" );
+    auto xLP = LPBlock->get_static_variable_v< ColVariable >( "x" );
+    for( Index i = 0 ; i < nvar ; ++i ) {
+     auto lf = static_cast< p_LF >( (*pc)[ i ][ j ].get_function() );
+     const auto idx = lf->is_active( & (*xLP)[ j ] );
+     if( idx < lf->get_num_active_var() )
+      lf->modify_coefficient( idx , 0.0 );
+     }
+    }
+   }
 
   // modify linear objective- - - - - - - - - - - - - - - - - - - - - - - - -
   // ... if there is any, of course

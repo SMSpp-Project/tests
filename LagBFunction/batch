@@ -2,31 +2,45 @@
 
 source "$(dirname "$0")/../batch_common.sh"
 
-what=511
-#what=0
+# what (= wchg) is the wchg bit-mask covering both the runtime mutation
+# menu and the sparse Lambda mode selectors: bits 0..8 cover the legacy
+# mutations (rows / costs / demands / bounds / linear obj...); bit 9
+# (= 512) enables the per-LagBFunction sparse-subset variant at setup
+# (each LBF dualises a random subset of the x's instead of all of them,
+# triggering BundleSolver's sparse Lambda path at set_Block); bit 10
+# (= 1024) enables runtime per-LBF dual_pair removal (a naked
+# FunctionModVarsRngd on a single LBF, which exercises the dense →
+# sparse auto-promotion in the 4th Modification loop and the per-
+# Function sparse handlers). The four sweep values cover every path:
+#   511  = legacy dense throughout
+#   1023 = sparse from setup
+#   1535 = dense at setup + runtime auto-promotion (511 | 1024)
+#   2047 = sparse from setup + runtime per-LBF Mod      (1023 | 1024)
 #iter=3
 
 LagBFunction_test=${1:-./LagBFunction_test}
 
-for nf in -2 -11; do
+for what in 511 1023 1535 2047; do
+  for nf in -2 -11; do
 
-  if [ $nf -eq -2 ]; then
-    t=1
-  else
-    t=3
-  fi
+    if [ $nf -eq -2 ]; then
+      t=1
+    else
+      t=3
+    fi
 
-  # z = 1 is LagBFunction treated as non-easy, -1 is treated as easy
-  for z in 1 -1; do
-    let nt=t*z
+    # z = 1 is LagBFunction treated as non-easy, -1 is treated as easy
+    for z in 1 -1; do
+      let nt=t*z
 
-    #for size in 2 10 50 100
-    for size in 2 10 50; do
-      for dens in 3 1.1; do
-        for (( seed = 0 ; seed < 20 ; seed++ )); do
+      #for size in 2 10 50 100
+      for size in 2 10 50; do
+        for dens in 3 1.1; do
+          for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-          run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter"
+            run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter"
 
+          done
         done
       done
     done
