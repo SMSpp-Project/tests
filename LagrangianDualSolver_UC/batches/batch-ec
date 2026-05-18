@@ -74,10 +74,20 @@ for what in ../../UCBlock/data/nc4/EC_Data/EC_CO_*.nc4 \
     # "no non-ECNetworkBlock candidate block to set as a `hard` component".
     # Force the EASY variant (intDoEasy=0) for those, while CO/NC instances
     # — which have UnitBlock components that BundleSolver can keep "hard" —
-    # use the BSPar passed in.
+    # use the BSPar passed in. When running PrimalProximalHeur (slv=1) the
+    # EC_NA all-easy instances are skipped: PPH would need the EASY BSPar
+    # variant of its own ProxHeur-2S config, which is not available, and
+    # PPH adds nothing on top of plain LD when there are no binary vars.
     case "$base" in
-      EC_NA_*) cur_par=$(echo "$par" | sed 's/BSPar-2S\.txt$/BSPar-2S-EASY.txt/') ;;
-      *)       cur_par=$par ;;
+      EC_NA_*)
+        if [ "$slv" = "1" ]; then
+          continue
+        fi
+        cur_par=$(echo "$par" | sed 's/BSPar-2S\.txt$/BSPar-2S-EASY.txt/')
+        ;;
+      *)
+        cur_par=$par
+        ;;
     esac
 
     run_test "$exe" "$what" "$cur_par" "$slv" "$ref"

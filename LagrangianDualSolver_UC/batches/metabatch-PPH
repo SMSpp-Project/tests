@@ -41,7 +41,11 @@ slv=1
 # run energy community instances
 ./batches/batch-ec "$exe" "$par" "$slv" "$mlf"
 
-# run resilient (PyPsa) instances
-./batches/batch-resilient "$exe" "$par" "$mlf"
+# resilient instances are skipped in PPH mode: they are pure-LD on a single
+# ECNetworkBlock-like easy component (all-easy BundleSolver decomposition),
+# and they carry no binary Variable, so PrimalProximalHeur has nothing to
+# add over plain LagrangianDualSolver and would need the EASY BSPar variant
+# anyway. Keep them in the regular metabatch (slv=0) instead.
+#./batches/batch-resilient "$exe" "$par" "$mlf"
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
