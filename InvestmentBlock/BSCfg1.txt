@@ -2,12 +2,7 @@
 # - - - - - - - - - - - - - - - - BSCfg1.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the inner UCBlock-style block
-# of an InvestmentBlock, to be solved by a :MILPSolver as the LP relaxation
-# (intRelaxIntVars 1) of the underlying MIP. To get reproducible results
-# across CPLEX/Gurobi/HiGHS the LP must be solved without presolve (presolve
-# can transform the model and shift the optimal vertex on degenerate LPs);
-# HiGHS additionally needs IPM rather than simplex because its simplex
-# implementation visits different vertices than CPLEX/Gurobi.
+# of an InvestmentBlock, to be solved by a :MILPSolver
 #
 #   Antonio Frangioni, Donato Meoli
 #
@@ -43,8 +38,9 @@ intRelaxIntVars     1    # nonzero if the continuous relaxation is solved
 intCutSepPar        7    # separate user cuts + lazy constraints
 
 # All specific CPLEX parameter (uncomment based on Solver)
-#CPXPARAM_Preprocessing_Presolve  0   # disable presolve for reproducibility
-#CPXPARAM_Emphasis_Numerical      1   # numerical precision emphasis
+#CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
+                                      # disable presolve for reproducibility
+#CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme numerical caution
 
 # All specific GUROBI parameter (uncomment based on Solver)
 #Method        1   # 0 = primal, 1 = dual simplex (matches CPLEX default)
@@ -61,7 +57,8 @@ dual_feasibility_tolerance    1e-9
 
 # All specific HiGHS parameter (uncomment based on Solver)
 presolve  off    # disable presolve for reproducibility
-solver    ipm    # interior point: converges to analytic center (unique x*)
+solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
+                 # (ipm = interior point: converges to analytic center, unique x*)
 
 #strOutputFile uc1.lp
 

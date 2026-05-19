@@ -44,9 +44,11 @@ intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
 # what the bundle method needs to converge.
 
 # All specific CPLEX parameter (uncomment based on Solver)
-#CPXPARAM_LPMethod                4   # 0 = auto, 1 = primal, 2 = dual, 4 = barrier, 6 = concurrent
-#CPXPARAM_Preprocessing_Presolve  0   # disable presolve for reproducibility
-#CPXPARAM_Emphasis_Numerical      1   # numerical precision emphasis
+#CPXPARAM_LPMethod                4   # 0 = auto (default), 1 = primal, 2 = dual,
+                                      # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
+#CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
+                                      # disable presolve for reproducibility
+#CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme numerical caution
 
 # All specific GUROBI parameter (uncomment based on Solver)
 Method        2   # 0 = primal, 1 = dual simplex, 2 = barrier (analytic center, no degeneracy)
@@ -71,7 +73,8 @@ dblRAccSol 1e-08     # relative accuracy required to solution
 
 # All specific HiGHS parameter (uncomment based on Solver)
 #presolve  off    # disable presolve for reproducibility
-#solver    ipm    # interior point: converges to analytic center (unique x*)
+#solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
+                  # (ipm = interior point: converges to analytic center, unique x*)
 
 0 # number of vector-of-int parameters
 
