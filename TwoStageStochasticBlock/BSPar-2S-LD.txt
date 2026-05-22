@@ -31,38 +31,53 @@ LagrangianDualSolver  # name of 2nd Solver
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the :MILPSolver
 
-*MILPCmpCfg.txt
+*MILPCfg.txt
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the LagrangianDualSolver; it mostly is the
 # ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver
 
-*LDCmpCfg.txt +
+*LDCfg.txt +
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
 4 # number of integer parameters
 
-int_LDSlv_iBCopy    0   # 1 if sub-Block must be R3B-copied
-intLogVerb          0
-intTrgtMng         31   # bit-wise targets and accuracies management
-intMPlvl            0
+int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
+intLogVerb        0 # log verbosity of main Bundle algorithm
+intTrgtMng       31 # bit-wise encoding targets and accuracies management:
+                    # bit 0: if lower/upper target is set to each convex/concave component
+                    # bit 1: if upper/lower target is set to each convex/concave component
+                    # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
+                    # bit 4: if Lipschitz constant is used to compute the upper model
+intMPlvl          0 # log verbosity of Master Problem
 
 5 # number of double parameters
 
-dblRelAcc           1e-5
-dbltStar           -1e+0
-dblmxIncr           2
-dbltMaior           1e+9
-dbltInit            1e-3
+dblRelAcc         1e-5 # relative accuracy required to solution
+dbltStar         -1e+0 # stopping parameter: multiplied to || residual || to estimate gap
+dblmxIncr            2 # max increase of t
+dbltMaior         1e+9 # maximum value for t
+dbltInit          1e-3 # initial value for t
 
 1 # number of string parameters
 
-str_LagBF_BSCfg     LPBSCfg-LD.txt   # BlockSolverConfig for the LagBFunctions
+str_LagBF_BSCfg  LPBSCfg-LD.txt # BlockSolverConfig for the LagBFunctions
 
 0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
 0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
 0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

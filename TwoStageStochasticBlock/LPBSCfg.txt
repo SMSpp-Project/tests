@@ -26,7 +26,7 @@ LagrangianDualSolver  # name of Solver
 # ComputeConfig of the LagrangianDualSolver; it mostly is the
 # ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver
 
-*LDCmpCfg.txt
+*LDCfg.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
