@@ -36,7 +36,7 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
-#intCutSepPar    0    # separate user cuts at the root node & sub-nodes
+#intCutSepPar   0 # separate user cuts at the root node & sub-nodes
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Threads                     1        # avoid parallel
@@ -62,7 +62,7 @@ dblRelAcc       1e-7 #relative accuracy for the solver
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile	cfl1.lp
+#strOutputFile  cfl1.lp
 
 0 # number of vector-of-int parameters
 

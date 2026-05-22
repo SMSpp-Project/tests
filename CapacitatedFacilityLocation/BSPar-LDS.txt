@@ -94,13 +94,13 @@ dblCtOff          0.01 # cut-off factor for pricing in MinQuad
 2 # number of string parameters
 
 # now all the string parameters
-#str_LDSlv_ISName	ParallelBundleSolver  # the inner Solver used by LagrangianDualSolver 
-str_LDSlv_ISName     BundleSolver # the inner Solver used by LagrangianDualSolver 
-#str_LagBF_BSCfg	LPBSCfg-F.txt   # BlockSolverConfig for the LagBFunctions
+#str_LDSlv_ISName ParallelBundleSolver # the inner Solver used by LagrangianDualSolver 
+str_LDSlv_ISName         BundleSolver # the inner Solver used by LagrangianDualSolver 
+#str_LagBF_BSCfg        LPBSCfg-F.txt # BlockSolverConfig for the LagBFunctions
 #                      this is for the Flow relaxation, using :MCFSolver
-str_LagBF_BSCfg  LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
+str_LagBF_BSCfg      LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
 #                      this is for the Knapsack relaxation, using DPBinaryKnapsackSolver
-#str_LagBF_BSCfg	LPBSCfg-K-CX.txt   # BlockSolverConfig for the LagBFunctions
+#str_LagBF_BSCfg     LPBSCfg-K-CX.txt # BlockSolverConfig for the LagBFunctions
 #                      this is for the Flow relaxation, using a :MILPSolver
 
 0 # number of vector-of-int parameters

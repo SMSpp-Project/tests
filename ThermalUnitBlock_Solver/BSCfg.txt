@@ -18,10 +18,10 @@ BlockSolverConfig     # exact type of the Configuration object
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 ThermalUnitDPSolver      # name of 1st Solver
-CPXMILPSolver 			# name of 2nd Solver
-#GRBMILPSolver 			# name of 2nd Solver
-#SCIPMILPSolver 	    # name of 2nd Solver
-#HiGHSMILPSolver 		# name of 2nd Solver
+CPXMILPSolver                   # name of 2nd Solver
+#GRBMILPSolver                  # name of 2nd Solver
+#SCIPMILPSolver             # name of 2nd Solver
+#HiGHSMILPSolver                # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -94,7 +94,7 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile	1tub.lp
+#strOutputFile  1tub.lp
 
 0 # number of vector-of-int parameters
 

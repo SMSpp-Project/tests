@@ -33,13 +33,13 @@ ComputeConfig # exact type of the ComputeConfig object
 3  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb          0    # LogVerb, log verbosity of the MILPSolver
-intRelaxIntVars     1    # nonzero if the continuous relaxation is solved
-intCutSepPar        7    # separate user cuts + lazy constraints
+intLogVerb      0 # LogVerb, log verbosity of the MILPSolver
+intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+intCutSepPar    7 # separate user cuts + lazy constraints
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
-                                      # disable presolve for reproducibility
+                  # disable presolve for reproducibility
 #CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme numerical caution
 
 # All specific GUROBI parameter (uncomment based on Solver)
@@ -60,7 +60,7 @@ presolve  off    # disable presolve for reproducibility
 solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
                  # (ipm = interior point: converges to analytic center, unique x*)
 
-#strOutputFile uc1.lp
+#strOutputFile  uc1.lp
 
 0 # number of vector-of-int parameters
 

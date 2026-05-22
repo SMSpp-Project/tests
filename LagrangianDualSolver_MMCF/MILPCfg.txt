@@ -22,11 +22,11 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_LPMethod 3 # 0 = auto (default), 1 = primal, 2 = dual,
-                     # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
+                  # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
 
 ## All specific GUROBI parameter (uncomment based on Solver)
 #Method 4 # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
-          # 3 = barrier + crossover, 4 = network
+                  # 3 = barrier + crossover, 4 = network
 
 0 # number of double parameters
 
@@ -36,7 +36,7 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile mmcf.lp
+#strOutputFile  mmcf.lp
 
 0 # number of vector-of-int parameters
 

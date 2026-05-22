@@ -46,8 +46,8 @@ intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 # cranking to 11 Cplex LP (simplex) tolerance
-CPXPARAM_Simplex_Tolerances_Optimality	1e-9
-CPXPARAM_Simplex_Tolerances_Feasibility	1e-9
+CPXPARAM_Simplex_Tolerances_Optimality  1e-9
+CPXPARAM_Simplex_Tolerances_Feasibility 1e-9
 
 ## All specific GUROBI parameter (uncomment based on Solver)
 #IntFeasTol 1e-9

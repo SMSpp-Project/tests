@@ -18,10 +18,10 @@ BlockSolverConfig     # exact type of the Configuration object
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 BoxSolver               # name of 1st Solver
-CPXMILPSolver 			# name of 2nd Solver
-#GRBMILPSolver 			# name of 2nd Solver
-#SCIPMILPSolver 	    # name of 2nd Solver
-#HiGHSMILPSolver 		# name of 2nd Solver
+CPXMILPSolver                   # name of 2nd Solver
+#GRBMILPSolver                  # name of 2nd Solver
+#SCIPMILPSolver             # name of 2nd Solver
+#HiGHSMILPSolver                # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -37,9 +37,9 @@ ComputeConfig # exact type of the ComputeConfig object
 0  # number of integer parameters
 
 # now all the integer parameters
-#intPDSol 3    # whether solutions are computed and written inside compute()
-              # bit 0: primal solution
-              # bit 1: dual solution
+#intPDSol     3 # whether solutions are computed and written inside compute()
+                # bit 0: primal solution
+                # bit 1: dual solution
 
 0 # number of double parameters
 
@@ -79,7 +79,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
+intLogVerb    0 # LogVerb, log verbosity of the MILPSolver
 
 0 # number of double parameters
 
@@ -92,7 +92,7 @@ intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile	box.lp
+#strOutputFile box.lp
 
 0 # number of vector-of-int parameters
 

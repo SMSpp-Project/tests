@@ -3,7 +3,7 @@
 # usage: batch-resilient < exe file > < bpar file > < spar file > < log file >
 #        < exe file > = path of the executable file, default InvestmentBlock_test
 #        < bpar file > = BlockConfig file, default MetaConfig1.txt
-#        < spar file > = BlockSolverConfig file, default BSPar-2S.txt
+#        < spar file > = BlockSolverConfig file, default BSPar.txt
 #        < log file > = name of log file, default no log
 #
 # runs all the energy community instances and checks that the PyPsa objective
@@ -19,7 +19,7 @@ source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./InvestmentBlock_test
 DEFAULT_PAR=MetaConfig1.txt
-DEFAULT_SLV=BSPar-2S.txt
+DEFAULT_SLV=BSPar.txt
 parse_batch_args "$@"
 bpar=$par
 spar=$slv

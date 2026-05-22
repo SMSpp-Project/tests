@@ -30,23 +30,23 @@ ComputeConfig # exact type of the ComputeConfig object
 3 # number of integer parameters
 
 # now all the integer parameters
-intLogVerb          0    # log verbosity of the MILPSolver
-intRelaxIntVars     0    # nonzero if the continuous relaxation is solved
-intCutSepPar        7    # separate user cuts at the root node & sub-nodes
-                         # and lazy constraints (everywhere); this has no
-                         # effect if P/C are not activated in the TUBCfg
+intLogVerb      0 # log verbosity of the MILPSolver
+intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
+intCutSepPar    7 # separate user cuts at the root node & sub-nodes
+                  # and lazy constraints (everywhere); this has no
+                  # effect if P/C are not activated in the TUBCfg
 
 1 # number of double parameters
 
 # now all the double parameters
-dblRelAcc  1e-6          # relative accuracy required to solution = mipmap
-                         # must be tighter than the accuracy required to
-                         # the Lagrangian Dual, but not too much so
+dblRelAcc       1e-6 # relative accuracy required to solution = mipmap
+                     # must be tighter than the accuracy required to
+                     # the Lagrangian Dual, but not too much so
 
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile	thermal.lp
+#strOutputFile  thermal.lp
 
 0 # number of vector-of-int parameters
 

@@ -113,7 +113,7 @@ dblCtOff          0.01 # cut-off factor for pricing in MinQuad
 # first those of LagrangianDualSolver proper
 str_LDSlv_ISName BundleSolver # the inner Solver used by LagrangianDualSolver
 str_LagBF_BSCfg   BXBSCfg.txt # the BlockSolverConfig for inner Block
-#str_LagBF_BSCfg		LPBSCfg.txt   # the BlockSolverConfig for inner Block
+#str_LagBF_BSCfg  LPBSCfg.txt # the BlockSolverConfig for inner Block
 
 # then those of BundleSolver as its inner Solver
 # [none]

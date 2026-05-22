@@ -17,10 +17,10 @@ BlockSolverConfig     # exact type of the Configuration object
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 DPBinaryKnapsackSolver  # name of 1st Solver
-CPXMILPSolver 			# name of 2nd Solver
-#GRBMILPSolver 			# name of 2nd Solver
-#SCIPMILPSolver 	    # name of 2nd Solver
-#HiGHSMILPSolver 		# name of 2nd Solver
+CPXMILPSolver                   # name of 2nd Solver
+#GRBMILPSolver                  # name of 2nd Solver
+#SCIPMILPSolver             # name of 2nd Solver
+#HiGHSMILPSolver                # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -37,15 +37,24 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # number of double parameters
 
 # now all the double parameters
-dblReopt     0.3
+dblReopt        0.3
 
 0  # number of string parameters
 
 0  # number of vector-of-int parameters
 
+# now all the vector-of-int parameters
+# [none]
+
 0  # number of vector-of-double parameters
 
+# now all the vector-of-double parameters
+# [none]
+
 0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
 
 # pointer to the "extra" Configuration
 * # [none]
@@ -57,20 +66,20 @@ dblReopt     0.3
 ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-                 # f_diff == 1 ==> all non-provided parameters are not changed
+   # f_diff == 1 ==> all non-provided parameters are not changed
 
 1  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb 0
+intLogVerb    0
 
 2  # number of double parameters
 
 # now all the double parameters
-dblRelAcc  1e-08
+dblRelAcc     1e-08
 
 ## All specific CPLEX parameter (uncomment based on 2nd Solver)
-CPXPARAM_MIP_Tolerances_Integrality	1e-07
+CPXPARAM_MIP_Tolerances_Integrality     1e-07
 
 ## All specific GUROBI parameter (uncomment based on 2nd Solver)
 #IntFeasTol  1e-07
@@ -78,7 +87,7 @@ CPXPARAM_MIP_Tolerances_Integrality	1e-07
 0  # number of string parameters
 
 # now all the string parameters
-#strOutputFile	bk.lp
+#strOutputFile bk.lp
 
 0  # number of vector-of-int parameters
 

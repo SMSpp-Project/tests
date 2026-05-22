@@ -49,7 +49,7 @@ dblMaxTime      600 # max time: 10 minute
 1 # number of string parameters
 
 # now all the string parameters
-#strOutputFile	cfl1.lp
+#strOutputFile      cfl1.lp
 strLogFileName  logMILP.txt
 
 0 # number of vector-of-int parameters

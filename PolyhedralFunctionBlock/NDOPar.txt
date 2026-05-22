@@ -94,7 +94,7 @@ dbltMaior     1e+6 # maximum value for t
 dbltMinor     1e-8 # minimum value for t
 dbltInit         1 # initial value for t
 dbltSPar2    0.001 # parameter for the long-term t-strategy
-#dblMinNrEvls 2    # minimum number/fraction of function evaluations at each iteration
+#dblMinNrEvls     2 # minimum number/fraction of function evaluations at each iteration
 dblCtOff      0.01 # cut-off factor for pricing in MinQuad
 
 0 # number of string parameters

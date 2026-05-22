@@ -35,8 +35,8 @@ ComputeConfig # exact type of the ComputeConfig object
 2 # number of integer parameters
 
 # now all the integer parameters
-intLogVerb      0    # log verbosity of the MILPSolver
-intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
+intLogVerb      0 # log verbosity of the MILPSolver
+intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 
 0 # number of double parameters
 
@@ -46,7 +46,7 @@ intRelaxIntVars 1    # nonzero if the continuous relaxation is solved
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile	unit.lp
+#strOutputFile  unit.lp
 
 0 # number of vector-of-int parameters
 

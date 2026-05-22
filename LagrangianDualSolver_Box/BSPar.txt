@@ -16,10 +16,10 @@ BlockSolverConfig     # exact type of the Configuration object
 
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver 			# name of 1st Solver
-#GRBMILPSolver 			# name of 1st Solver
-#SCIPMILPSolver 	    # name of 1st Solver
-#HiGHSMILPSolver 		# name of 1st Solver
+CPXMILPSolver                   # name of 1st Solver
+#GRBMILPSolver                  # name of 1st Solver
+#SCIPMILPSolver             # name of 1st Solver
+#HiGHSMILPSolver                # name of 1st Solver
 LagrangianDualSolver    # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
@@ -123,7 +123,7 @@ dblCtOff            0.01 # cut-off factor for pricing in MinQuad
 # first those of LagrangianDualSolver proper
 str_LDSlv_ISName   BundleSolver # the inner Solver used by LagrangianDualSolver
 str_LagBF_BSCfg     BXBSCfg.txt # the BlockSolverConfig for inner Block
-#str_LagBF_BSCfg	LPBSCfg.txt   # the BlockSolverConfig for inner Block
+#str_LagBF_BSCfg    LPBSCfg.txt # the BlockSolverConfig for inner Block
 
 # then those of BundleSolver as its inner Solver
 # [none]

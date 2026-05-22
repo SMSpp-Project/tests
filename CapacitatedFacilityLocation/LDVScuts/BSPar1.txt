@@ -36,7 +36,7 @@ ComputeConfig # exact type of the ComputeConfig object
 14 # number of integer parameters
 
 # now all the integer parameters
-#intLogVerb                              10 # log verbosity of the MILPSolver
+#intLogVerb     10 # log verbosity of the MILPSolver
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 CPXPARAM_ScreenOutput                   1  # no output on screen
@@ -44,11 +44,11 @@ CPXPARAM_Threads                        1  # avoid parallel
 # never change the following to 1, since solving the integer program
 # (albeit at the root node only) is required to have the strong forcing
 # constraints separated Cplex
-intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
+intRelaxIntVars  0 # nonzero if the continuous relaxation is solved
 # if the optimal integer solution is required, consider changing the
 # following to 3 (separate user cuts at the root node & every other node),
 # although this is not 100% guaranteed to be better
-intCutSepPar    1 # separate user cuts at the root node only
+intCutSepPar     1 # separate user cuts at the root node only
 # if the optimal integer solution is required, comment out the next stuff
 CPXPARAM_MIP_Limits_Nodes               0  # only do root node
 CPXPARAM_MIP_Limits_EachCutLimit        0  # disable all standard cuts but Gomory
@@ -68,7 +68,7 @@ CPXPARAM_MIP_Pool_Capacity              0
 3 # number of double parameters
 
 # now all the double parameters
-#dblMaxTime                              60 # max time: 1 minute
+#dblMaxTime     60 # max time: 1 minute
 CPXPARAM_MIP_Tolerances_Integrality     0
 CPXPARAM_MIP_Tolerances_AbsMIPGap       1e-12
 CPXPARAM_MIP_Tolerances_MIPGap          1e-12
@@ -76,7 +76,7 @@ CPXPARAM_MIP_Tolerances_MIPGap          1e-12
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile	cfl1.lp
+#strOutputFile  cfl1.lp
 
 0 # number of vector-of-int parameters
 
