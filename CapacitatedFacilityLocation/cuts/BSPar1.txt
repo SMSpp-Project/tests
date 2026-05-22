@@ -34,9 +34,9 @@ ComputeConfig # exact type of the ComputeConfig object
 9  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb                          0        # log verbosity of the MILPSolver
-intRelaxIntVars                     0        # nonzero if the continuous relaxation is solved
-intCutSepPar                        3        # separate user cuts at the root node & sub-nodes
+intLogVerb      0 # log verbosity of the MILPSolver
+intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
+intCutSepPar    3 # separate user cuts at the root node & sub-nodes
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 CPXPARAM_Threads                    1        # avoid parallel
@@ -58,7 +58,7 @@ CPXPARAM_MIP_Strategy_HeuristicFreq 0	     # 0 = auto, -1 = disable heuristic
 1 # number of double parameters
 
 # now all the double parameters
-dblMaxTime 120   # max time: 1 minute
+dblMaxTime      120 # max time: 1 minute
 
 0 # number of string parameters
 

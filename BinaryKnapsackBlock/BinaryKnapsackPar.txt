@@ -37,7 +37,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # number of double parameters
 
 # now all the double parameters
-dblReopt	0.3	
+dblReopt     0.3
 
 0  # number of string parameters
 
@@ -57,7 +57,7 @@ dblReopt	0.3
 ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+                 # f_diff == 1 ==> all non-provided parameters are not changed
 
 1  # number of integer parameters
 
@@ -67,7 +67,7 @@ intLogVerb 0
 2  # number of double parameters
 
 # now all the double parameters
-dblRelAcc		1e-08
+dblRelAcc  1e-08
 
 ## All specific CPLEX parameter (uncomment based on 2nd Solver)
 CPXPARAM_MIP_Tolerances_Integrality	1e-07

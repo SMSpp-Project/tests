@@ -37,13 +37,13 @@ ComputeConfig # exact type of the ComputeConfig object
 2 # number of integer parameters
 
 # now all the integer parameters
-intLogVerb     0     # LogVerb, log verbosity of the MILPSolver
-intRelaxIntVars 1   # Relax Integer variables
+intLogVerb      0 # LogVerb, log verbosity of the MILPSolver
+intRelaxIntVars 1 # Relax Integer variables
 
 # Specific Gurobi parameters
 #NonConvex    2       # Specific Gurobi parameter to solve nonconvex instances
-                      # When solving Q instances with GRBMILPSolver, this
-                      # parameter should be set to 2
+                  # When solving Q instances with GRBMILPSolver, this
+                  # parameter should be set to 2
 
 1 # number of double parameters
 

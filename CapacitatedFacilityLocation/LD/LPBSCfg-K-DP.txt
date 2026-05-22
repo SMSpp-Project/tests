@@ -33,7 +33,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # number of double parameters
 
 # now all the double parameters
-dblReopt	0.3
+dblReopt 0.3
 
 0  # number of string parameters
 

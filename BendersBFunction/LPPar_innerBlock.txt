@@ -34,16 +34,16 @@ ComputeConfig # exact type of the ComputeConfig object
 2  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb     0     # LogVerb, log verbosity of the MILPSolver
+intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 CPXPARAM_Preprocessing_Presolve  0  # 0 = off, 1 = on (default)
-                                    # disable presolve for reproducibility
+             # disable presolve for reproducibility
 #CPXPARAM_LPMethod               2  # 0 = auto (default), 1 = primal, 2 = dual, 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
 
 # All specific GUROBI parameter (uncomment based on Solver)
 #Method              1    # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
-                          # 3 = barrier + crossover, 4 = network
+             # 3 = barrier + crossover, 4 = network
 #Presolve            0    # 0 = off, 1 = conservative, 2 = aggressive (default -1)
 
 2 # number of double parameters
@@ -62,7 +62,7 @@ CPXPARAM_Simplex_Tolerances_Optimality       1.0e-15
 # All specific HiGHS parameter (uncomment based on Solver)
 #presolve  off    # disable presolve for reproducibility
 #solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
-                  # (ipm = interior point: converges to analytic center, unique x*)
+             # (ipm = interior point: converges to analytic center, unique x*)
 
 0 # number of vector-of-int parameters
 

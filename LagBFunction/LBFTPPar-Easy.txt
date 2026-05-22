@@ -21,7 +21,7 @@ ComputeConfig     # exact type of the Configuration object
 1  # number of integer parameters
 
 # now all the integer parameters
-intPushCostToOwner	0
+intPushCostToOwner 0
 
 0  # number of integer parameters
 

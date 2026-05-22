@@ -1,24 +1,32 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - LPCCfg.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - - -
 #
-# A txt description of a ComputeConfig for a :MILPSolver solving is a simple
-# QP (continuous, convex, separable) 
+# A txt description of a ComputeConfig for a :MILPSolver solving a MMCFBlock
 #
-#   Luca Mencarelli, Antonio Frangioni
+#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig # exact type of the ComputeConfig object
+ComputeConfig         # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-2  # number of integer parameters
+2 # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+
+## All specific CPLEX parameter (uncomment based on Solver)
+#CPXPARAM_LPMethod 3 # 0 = auto (default), 1 = primal, 2 = dual,
+                     # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
+
+## All specific GUROBI parameter (uncomment based on Solver)
+#Method 4 # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
+          # 3 = barrier + crossover, 4 = network
 
 0 # number of double parameters
 
@@ -28,7 +36,7 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile	box.lp
+#strOutputFile mmcf.lp
 
 0 # number of vector-of-int parameters
 
@@ -48,6 +56,8 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 # pointer to the "extra" Configuration
 * # [none]
 
+# end of ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END LPCCfg.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MILPCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

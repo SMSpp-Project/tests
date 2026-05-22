@@ -34,15 +34,15 @@ ComputeConfig # exact type of the ComputeConfig object
 3  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb          0    # LogVerb, log verbosity of the MILPSolver
-intRelaxIntVars     0    # nonzero if the continuous relaxation is solved
-intCutSepPar        7    # separate user cuts + lazy constraints
+intLogVerb      0 # LogVerb, log verbosity of the MILPSolver
+intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
+intCutSepPar    7 # separate user cuts + lazy constraints
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Threads    1    # number of threads
 #CPXPARAM_LPMethod   1    # 0 = auto (default), 1 = primal, 2 = dual, 
-                          # 3 = network, 4 = barrier, 5 = sifting,
-                          # 6 = concurrent
+                  # 3 = network, 4 = barrier, 5 = sifting,
+                  # 6 = concurrent
 
 # All specific GUROBI parameter (uncomment based on Solver)
 #Threads     1    # number of threads
@@ -57,7 +57,7 @@ intCutSepPar        7    # separate user cuts + lazy constraints
 1 # number of string parameters
 
 # now all the string parameters
-strOutputFile	uc2.lp
+strOutputFile   uc2.lp
 
 0 # number of vector-of-int parameters
 

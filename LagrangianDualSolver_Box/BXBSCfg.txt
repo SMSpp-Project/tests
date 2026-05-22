@@ -31,9 +31,9 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # number of integer parameters
 
 # now all the integer parameters
-intPDSol 1    # whether solutions are computed and written inside compute()
-              # bit 0: primal solution
-              # bit 1: dual solution
+intPDSol 1 # whether solutions are computed and written inside compute()
+           # bit 0: primal solution
+           # bit 1: dual solution
 # note: setting intPDSol == 1 speeds things up a bit but it creates problems
 #       when LagrangianDualSolver uses a BundleSolver with intFrcLstSS == 1,
 #       since by directly writing the solution inside compute() it can

@@ -79,7 +79,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb     0     # LogVerb, log verbosity of the MILPSolver
+intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 
 0 # number of double parameters
 
