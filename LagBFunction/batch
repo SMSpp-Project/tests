@@ -20,17 +20,7 @@ source "$(dirname "$0")/../batch_common.sh"
 
 LagBFunction_test=${1:-./LagBFunction_test}
 
-# NOTE: until OSIMPSolver is replaced by Bundle 2.0, the new sparse-Lambda
-# sweep values (1023 / 1535 / 2047) hit a master-side linearization-refresh
-# limitation that surfaces as a small "Sigma < 0" inconsistency after the
-# right cocktail of PolyhedralFunction Mod accumulate on a sparse-Lambda
-# LagBFunction. The BundleSolver-side support (per-Function map ownership,
-# auto-promotion, refcount, IsOptimal Sigma guard) is already in place and
-# exercised by the in-tree code paths; the sweep below is parked for the
-# moment with only the legacy dense variant (511) active. Switch to the
-# commented 4-variant `for` line once Bundle 2.0 is in.
-for what in 511 ; do
-#for what in 511 1023 1535 2047 ; do
+for what in 511 1023 1535 2047 ; do
   for nf in -2 -11; do
 
     if [ $nf -eq -2 ]; then

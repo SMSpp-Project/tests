@@ -31,13 +31,12 @@ LagrangianDualSolver  # name of Solver
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-4 # number of integer parameters
+3 # number of integer parameters
 
 intDoEasy         3 # do easy components for (some) LagBFunction
                     # (bit 0 + bit 1 = enable easy + ChgCosts)
 intMaxIter      100 # max number of iterations for each call
 intLogVerb        0 # log verbosity of main Bundle algorithm
-intMPlvl          0 # log verbosity of Master Problem
 
 2 # number of double parameters
 

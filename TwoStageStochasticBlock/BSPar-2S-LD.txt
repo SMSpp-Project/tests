@@ -41,7 +41,7 @@ LagrangianDualSolver  # name of 2nd Solver
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-4 # number of integer parameters
+3 # number of integer parameters
 
 int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
 intLogVerb        0 # log verbosity of main Bundle algorithm
@@ -50,7 +50,6 @@ intTrgtMng       31 # bit-wise encoding targets and accuracies management:
                     # bit 1: if upper/lower target is set to each convex/concave component
                     # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                     # bit 4: if Lipschitz constant is used to compute the upper model
-intMPlvl          0 # log verbosity of Master Problem
 
 5 # number of double parameters
 

@@ -10,7 +10,6 @@
 #
 # for LagrangianDualSolver + BundleSolver:
 # correct value of tStar: 1e-2
-# correct value of dblCtOff: 0.1
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
