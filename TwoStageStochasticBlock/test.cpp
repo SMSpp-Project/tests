@@ -223,6 +223,7 @@ int main( int argc , char ** argv )
 
  // destroy the Block - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+ TestBlock->unregister_Solvers( true );
  delete( bsc );
  delete( TestBlock );
 
