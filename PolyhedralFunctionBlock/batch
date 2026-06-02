@@ -31,6 +31,10 @@
 #            primal-only paths (abstract changes bit-9, linear-objective
 #            changes bit-5, and the "globalbound" wrapper bit-6) are
 #            silently skipped inside the tester.
+#   - scales: list of scaling modes to sweep (default: "0 1 2 3"):
+#             0 = none, 1 = local row scaling, 2 = global epigraph scaling,
+#             3 = both. Bits 11 and 12 are ORed into $what accordingly.
+#   - seeds: number of random seeds per configuration (default: 20)
 #
 # Note: very small sizes (e.g. size=2) and very low densities (e.g.
 # dens=1.1) often produce LP-degenerate instances (unbounded /
@@ -48,8 +52,12 @@ denss=${denss:-"3"}
 nfs=${nfs:-"0 1 -1 2 -2"}
 verts=${verts:-"0 0.1 0.3 0.5"}
 duals=${duals:-"0 1"}
+scales=${scales:-"0 1 2 3"}
+seeds=${seeds:-20}
 
 PolyhedralFunctionBlock_test=${1:-./PolyhedralFunctionBlock_test}
+cases=0
+failures=0
 
 for dual in $duals; do
   if [ "$dual" -eq 1 ]; then
@@ -61,23 +69,29 @@ for dual in $duals; do
   else
     cur_what=$what
   fi
-  cur_iter=$iter
-  for nf in $nfs; do
-    for size in $sizes; do
-      for dens in $denss; do
-        for vert in $verts; do
-          for (( seed = 0 ; seed < 20 ; seed++ )); do
+  for scale in $scales; do
+    scale_bits=$(( scale << 11 ))
+    scaled_what=$(( cur_what | scale_bits ))
+    cur_iter=$iter
+    for nf in $nfs; do
+      for size in $sizes; do
+        for dens in $denss; do
+          for vert in $verts; do
+            for (( seed = 0 ; seed < seeds ; seed++ )); do
 
-            printf "[$seed $cur_what $size $dens $nf $cur_iter $nchg $pchg $vert]: "
+              printf "[scale=$scale $seed $scaled_what $size $dens $nf $cur_iter $nchg $pchg $vert]: "
 
-            "$PolyhedralFunctionBlock_test" $seed $cur_what $size $dens $nf \
-                $cur_iter $nchg $pchg $vert
+              "$PolyhedralFunctionBlock_test" $seed $scaled_what $size $dens $nf \
+                  $cur_iter $nchg $pchg $vert
 
-            retVal=$?
-            #if [ $retVal -ne 0 ]; then
-            #  exit 1
-            #fi
+              retVal=$?
+              cases=$(( cases + 1 ))
+              if [ $retVal -ne 0 ]; then
+                failures=$(( failures + 1 ))
+                printf "FAILED(exit=%d)\n" "$retVal"
+              fi
 
+            done
           done
         done
       done
@@ -89,3 +103,6 @@ printf "\nTotal elapsed time: %02d:%02d:%02d\n" \
   $((SECONDS/3600)) \
   $((SECONDS%3600/60)) \
   $((SECONDS%60))
+printf "Completed cases: %d; failures: %d\n" "$cases" "$failures"
+
+exit "$failures"
