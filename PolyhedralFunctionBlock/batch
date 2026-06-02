@@ -79,7 +79,7 @@ for dual in $duals; do
           for vert in $verts; do
             for (( seed = 0 ; seed < seeds ; seed++ )); do
 
-              printf "[scale=$scale $seed $scaled_what $size $dens $nf $cur_iter $nchg $pchg $vert]: "
+              printf "[$seed $scaled_what $size $dens $nf $cur_iter $nchg $pchg $vert]: "
 
               "$PolyhedralFunctionBlock_test" $seed $scaled_what $size $dens $nf \
                   $cur_iter $nchg $pchg $vert
