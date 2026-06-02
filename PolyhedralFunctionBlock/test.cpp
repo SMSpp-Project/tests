@@ -177,6 +177,7 @@
 #include <iomanip>
 
 #include <random>
+#include <cmath>
 
 #include "common_utils.h"
 
@@ -289,6 +290,9 @@ bool dual_mode = false;    // if true, exercise the *dual* (Fenchel
                            // not yet wired up for the dual rep, so the
                            // test only exercises the "First call" and
                            // skips the modify-then-resolve loop.
+
+int pfb_cfg = 1;            // stvv configuration for the LP-side PFBs:
+                            // representation bits plus optional scaling
 
 // number of diagonal rows in block k (cur_iV[ k ] has size == current
 // number of rows; an entry is true iff the corresponding row is vertical)
@@ -646,22 +650,48 @@ static void ConstructObj( AbstractBlock * AB )
 
 /*--------------------------------------------------------------------------*/
 
-static void ChangeLPConstraint( Index i , FRowConstraint & ci , ModParam iAM )
+static double ComputeLocalScale( const RealVector & ai , double bi )
 {
+ if( ! ( pfb_cfg & 4 ) )
+  return( 1.0 );
+
+ double mx = std::max( 1.0 , std::abs( bi ) );
+ for( const auto a : ai )
+  mx = std::max( mx , std::abs( a ) );
+
+ return( 1.0 / std::sqrt( mx ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static bool SameValue( double x , double y )
+{
+ return( std::abs( x - y ) <=
+         1e-10 * std::max( { 1.0 , std::abs( x ) , std::abs( y ) } ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static void ChangeLPConstraint( Index i , Index row , p_PFB pfb ,
+                                FRowConstraint & ci , ModParam iAM )
+{
+ const auto local_scale = pfb->get_row_scale( row );
+ const auto scale = local_scale * pfb->get_v_scale();
+
  // change the constant == LHS or RHS of the constraint (depending on convex)
  if( convex )
-  ci.set_lhs( b[ i ] , iAM );
+  ci.set_lhs( scale * b[ i ] , iAM );
  else
-  ci.set_rhs( b[ i ] , iAM );
+  ci.set_rhs( scale * b[ i ] , iAM );
 
  // now change all the coefficients, including that of v: it is 1 for
  // diagonal rows and 0 for vertical rows (and a row may switch between
  // diagonal and vertical when modified)
  const bool is_v = ( i < iV.size() ) ? iV[ i ] : false;
  LinearFunction::Vec_FunctionValue coeffs( nvar + 1 );
- coeffs[ 0 ] = is_v ? 0.0 : 1.0;
+ coeffs[ 0 ] = is_v ? 0.0 : local_scale;
  for( Index j = 0 ; j < nvar ; ++j )
-  coeffs[ j + 1 ] = - A[ i ][ j ];
+  coeffs[ j + 1 ] = - scale * A[ i ][ j ];
 
  auto f = static_cast< p_LF >( ci.get_function() );
  f->modify_coefficients( std::move( coeffs ) , Range( 0 , nvar + 1 ) , iAM );
@@ -993,6 +1023,10 @@ int main( int argc , char **argv )
            "             10 (+1024) = use the *dual* (Fenchel) "
                                           "representation for the LPBlock"
 	        << endl <<
+           "             11 (+2048) = scale each PFB row locally"
+	        << endl <<
+           "             12 (+4096) = apply one global PFB epigraph scale"
+	        << endl <<
            "       nvar: number of variables [10]"
 	        << endl <<
            "       dens: rows / variables [3]"
@@ -1022,6 +1056,9 @@ int main( int argc , char **argv )
  // bit 10 of wchg (& 1024) enables the dual (Fenchel conjugate)
  // representation for the LPBlock
  dual_mode = ( wchg & 1024 );
+ pfb_cfg = ( dual_mode ? 3 : 1 ) |
+           ( ( wchg & 2048 ) ? 4 : 0 ) |
+           ( ( wchg & 4096 ) ? 8 : 0 );
 
  #if DYNAMIC_VARS > 0
   nsvar = nvar / 2;      // half of the variables are dynamic
@@ -1125,7 +1162,7 @@ int main( int argc , char **argv )
     // representation according to dual_mode
     auto bc = new BlockConfig();
     bc->f_static_variables_Configuration =
-     new SimpleConfiguration< int >( dual_mode ? 3 : 1 );
+     new SimpleConfiguration< int >( pfb_cfg );
     bi->set_BlockConfig( bc );
     }
 
@@ -1187,13 +1224,13 @@ int main( int argc , char **argv )
     Index i = vp.size();
     vp.resize( i + std::abs( nf ) );
     for( Index h = 0 ; h < LPBlock->get_number_nested_Blocks() ; ++h ) {
-     auto vh = LPBlock->get_nested_Block( h
-		         )->get_static_variable< ColVariable >( "PolyF_v" );
+     auto pfbh = static_cast< p_PFB >( LPBlock->get_nested_Block( h ) );
+     auto vh = pfbh->get_v();
      if( ! vh ) {
       cout << "something very bad happened!" << endl;
       exit( 1 );
       }
-     vp[ i++ ] = std::make_pair( vh , 1 );
+     vp[ i++ ] = std::make_pair( vh , 1.0 );
      }
     lbc->set_function( new LinearFunction( std::move( vp ) ) );
     LPBlock->add_static_constraint( *lbc , "globalbound" );
@@ -1252,7 +1289,7 @@ int main( int argc , char **argv )
 
    // generate the abstract representation: 1 = linearized primal,
    // 3 = linearized dual
-   SimpleConfiguration< int > cfg( dual_mode ? 3 : 1 );
+   SimpleConfiguration< int > cfg( pfb_cfg );
    LPBlock->generate_abstract_variables( &cfg );
    }
 
@@ -1938,16 +1975,15 @@ int main( int argc , char **argv )
      // in 50% of the cases do an "abstract" change
      LOG1( "(a)" );
 
-     ColVariable * vLP;                 // pointer to v LP variable
+     ColVariable * vLP;                 // pointer to the v used by LP cuts
      std::vector< ColVariable > * xLP;  // pointer to (static) x LP variables
-     if( nf ) {
-      vLP = LPBr->get_static_variable< ColVariable >( 0 );
+     if( nf )
       xLP = LPBlock->get_static_variable_v< ColVariable >( 0 );
-      }
-     else {
-      vLP = LPBlock->get_static_variable< ColVariable >( 0 );
-      xLP = LPBlock->get_static_variable_v< ColVariable >( 1 );
-      }
+     else
+      xLP = LPBlock->get_static_variable_v< ColVariable >(
+                                             ( pfb_cfg & 8 ) ? 2 : 1 );
+     vLP = LPBr->get_static_variable< ColVariable >(
+                  ( pfb_cfg & 8 ) ? "PolyF_scaled_v" : "PolyF_v" );
      #if DYNAMIC_VARS > 0
       auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
      #endif
@@ -1969,30 +2005,47 @@ int main( int argc , char **argv )
       // note: variable x[ i ] is given index i + 1, variable v has index 0
 
       const bool is_v = ( i < iV.size() ) && iV[ i ];
+      const auto local_scale = ComputeLocalScale( A[ i ] , b[ i ] );
+      const auto row_factor = local_scale * LPBr->get_v_scale();
 
-      ncit->set_lhs( convex ? b[ i ] : -INF );
-      ncit->set_rhs( convex ? INF : b[ i ] );
+      ncit->set_lhs( convex ? row_factor * b[ i ] : -INF );
+      ncit->set_rhs( convex ? INF : row_factor * b[ i ] );
       LinearFunction::v_coeff_pair vars( nvar + 1 );
       Index j = 0;
 
-      // first, v: coef is 1 for diagonal rows and 0 for vertical ones
-      vars[ j ] = std::make_pair( vLP , is_v ? 0.0 : 1.0 );
+      // first, v: coef is the local scale for diagonal rows and 0 for
+      // vertical ones
+      vars[ j ] = std::make_pair( vLP , is_v ? 0.0 : local_scale );
 
       // then, static x
       for( ; j < nsvar ; ++j )
-       vars[ j + 1 ] = std::make_pair( &((*xLP)[ j ] ) , - A[ i ][ j ] );
+       vars[ j + 1 ] = std::make_pair( &((*xLP)[ j ] ) ,
+                                       - row_factor * A[ i ][ j ] );
 
       #if DYNAMIC_VARS > 0
        // finally, dynamic x
        auto xLPdit = xLPd->begin();
        for( ; j < nvar ; ++j , ++xLPdit )
-	vars[ j + 1 ] = std::make_pair( &(*xLPdit) , - A[ i ][ j ] );
+	vars[ j + 1 ] = std::make_pair( &(*xLPdit) ,
+                                        - row_factor * A[ i ][ j ] );
       #endif
 
       ncit->set_function( new LinearFunction( std::move( vars ) ) );
       }
 
      LPBr->add_dynamic_constraints( *cnst , nc );
+
+     // The abstract row must round-trip to the unscaled physical
+     // PolyhedralFunction row, including for vertical rows where the
+     // coefficient of v is zero and cannot carry the local scale.
+     const auto & pf = LPBr->get_PolyhedralFunction();
+     for( Index i = 0 ; i < tochange ; ++i ) {
+      PANIC( SameValue( pf.get_b()[ m + i ] , b[ i ] ) )
+      for( Index j = 0 ; j < nvar ; ++j )
+       PANIC( SameValue( pf.get_A()[ m + i ][ j ] , A[ i ][ j ] ) )
+      PANIC( pf.is_row_vertical( m + i ) ==
+             ( ( i < iV.size() ) && iV[ i ] ) )
+      }
      }
     else {  // directly change the PolyhedralFunction in LPBlock
      if( tochange == 1 )
@@ -2146,7 +2199,8 @@ int main( int argc , char **argv )
        }
       else {
        vLP = LPBlock->get_static_variable< ColVariable >( 0 );
-       xLP = LPBlock->get_static_variable_v< ColVariable >( 1 );
+       xLP = LPBlock->get_static_variable_v< ColVariable >(
+                                              ( pfb_cfg & 8 ) ? 2 : 1 );
        }
       #if DYNAMIC_VARS > 0
        auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
@@ -2159,7 +2213,7 @@ int main( int argc , char **argv )
 
       auto cit = std::next( cnst->begin() , strt );
       for( Index i = 0 ; i < tochange ; ++i )
-       ChangeLPConstraint( i++ , *(cit++) , iAM );
+       ChangeLPConstraint( i , strt + i , LPBr , *(cit++) , iAM );
 
       LPBr->close_channel( chnl );
       }
@@ -2198,7 +2252,8 @@ int main( int argc , char **argv )
        }
       else {
        vLP = LPBlock->get_static_variable< ColVariable >( 0 );
-       xLP = LPBlock->get_static_variable_v< ColVariable >( 1 );
+       xLP = LPBlock->get_static_variable_v< ColVariable >(
+                                              ( pfb_cfg & 8 ) ? 2 : 1 );
        }
       #if DYNAMIC_VARS > 0
        auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
@@ -2214,7 +2269,7 @@ int main( int argc , char **argv )
       for( Index i = 0 ; i < tochange ; ++i ) {
        cit = std::next( cit , nms[ i ] - prev );
        prev = nms[ i ];
-       ChangeLPConstraint( i , *cit , iAM );
+       ChangeLPConstraint( i , nms[ i ] , LPBr , *cit , iAM );
        }
 
       LPBr->close_channel( chnl );
@@ -2257,11 +2312,15 @@ int main( int argc , char **argv )
 
       auto cit = std::next( cnst->begin() , strt );
       if( convex )
-       for( Index i = 0 ; i < tochange ; )
-	(cit++)->set_lhs( b[ i++ ] , iAM );
+       for( Index i = 0 ; i < tochange ; ++i )
+	(cit++)->set_lhs( LPBr->get_v_scale() *
+                          LPBr->get_row_scale( strt + i ) * b[ i ] ,
+                          iAM );
       else
-       for( Index i = 0 ; i < tochange ; )
-	(cit++)->set_rhs( b[ i++ ] , iAM );
+       for( Index i = 0 ; i < tochange ; ++i )
+	(cit++)->set_rhs( LPBr->get_v_scale() *
+                          LPBr->get_row_scale( strt + i ) * b[ i ] ,
+                          iAM );
 
       LPBr->close_channel( chnl );
       }
@@ -2290,16 +2349,18 @@ int main( int argc , char **argv )
       Index prev = 0;
       auto cit = cnst->begin();
       if( convex )
-       for( Index i = 0 ; i < tochange ; ) {
+       for( Index i = 0 ; i < tochange ; ++i ) {
 	cit = std::next( cit , nms[ i ] - prev );
 	prev = nms[ i ];
-	cit->set_lhs( b[ i++ ] , iAM );
+	cit->set_lhs( LPBr->get_v_scale() *
+                      LPBr->get_row_scale( nms[ i ] ) * b[ i ] , iAM );
         }
       else
-       for( Index i = 0 ; i < tochange ; ) {
+       for( Index i = 0 ; i < tochange ; ++i ) {
 	cit = std::next( cit , nms[ i ] - prev );
 	prev = nms[ i ];
-	cit->set_rhs( b[ i++ ] , iAM );
+	cit->set_rhs( LPBr->get_v_scale() *
+                      LPBr->get_row_scale( nms[ i ] ) * b[ i ] , iAM );
         }
 
       LPBr->close_channel( chnl );
