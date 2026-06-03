@@ -11,11 +11,16 @@ TUDPS_test=${1:-./TUDPS_test}
 
 # ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
 
-for wf in 0 1 2 3 4 5 6; do
+# wf is bit-wise: 0-6 select the formulation (3bin/T/pt/DP/SU/SD/SUSD), +8
+# (PCuts) adds the perspective cuts. We test every formulation with cuts, i.e.
+# wf in 8..14. The interval-based formulations (pt/DP/SU/SD/SUSD, base wf >= 2,
+# i.e. wf >= 10) are too expensive on large-horizon instances, so there we skip
+# them and keep only 3bin/T (wf 8,9).
+for wf in 8 9 10 11 12 13 14; do
   i=24
   #for i in 24 96; do
-    # skip DP, pt, SU, SD and SUSD formulations for 96 problems
-    #if [ $wf -ge 2 ] && [ $i -eq 96 ]; then
+    # skip the expensive interval-based formulations on large instances
+    #if [ $wf -ge 10 ] && [ $i -eq 96 ]; then
       #continue
     #fi
     j=1

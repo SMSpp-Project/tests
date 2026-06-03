@@ -525,6 +525,12 @@ int main( int argc , char **argv )
  bc->f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
  TUBlock->set_BlockConfig( bc );
 
+ // enable primary + secondary spinning-reserve variables: when the unit is
+ // solved standalone there is no UCBlock parent to do it, so the reserve
+ // variables/constraints would otherwise never be generated. This is a
+ // no-op for instances with no PrimaryRho/SecondaryRho data.
+ TUBlock->set_reserve_vars( 3 );
+
  TUBlock->generate_abstract_variables();
  TUBlock->generate_objective( nullptr );
 
