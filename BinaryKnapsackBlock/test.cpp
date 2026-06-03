@@ -12,6 +12,10 @@
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
+ *
+ * \author Donato Meoli \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
  */
 /*--------------------------------------------------------------------------*/
 /*------------------------------ MACROS ------------------------------------*/
@@ -19,9 +23,11 @@
 
 #define STEP 3  // after modifications solve again at each multiple of STEP
 
-#define LOG_LEVEL 0
+#ifndef LOG_LEVEL
+ #define LOG_LEVEL 0
+#endif
 // 0 = only pass/fail
-// 1 = list of modifications
+// 1 = list of modifications (and per-solve timings)
 // 2 = also print verbose header about main configuration at start
 
 #if( LOG_LEVEL > 0 )
@@ -50,6 +56,8 @@
 #include <random>
 
 #include <chrono>
+
+#include <cstdlib>
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------- USING ------------------------------------*/
@@ -373,7 +381,15 @@ int main( int argc , char **argv )
   BKB->load( N , C , std::move( W ) , std::move( P ) , std::move( I ) );
  else
   BKB->load( N , C , std::move( W ) , std::move( P ) );
- 
+
+ // build the abstract representation (Objective + Constraint) up front, so
+ // that the test works also with solver configurations that do not trigger it
+ // themselves (e.g. the pure-DP benchmark config with no :MILPSolver); the
+ // generate_abstract_*() are idempotent, hence a no-op when already built
+ BKB->generate_abstract_variables();
+ BKB->generate_abstract_constraints();
+ BKB->generate_objective();
+
  // attach two Solver to the BinaryKnapsackBlock- - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do it by using a single a BlockSolverConfig, read from file
@@ -382,7 +398,11 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- std::string bsc_fn = "BinaryKnapsackPar.txt";
+ // the BlockSolverConfig file name defaults to BinaryKnapsackPar.txt, but can
+ // be overridden via the BKB_BSCFG environment variable (used by the benchmark
+ // batches to switch to the parallel solver configuration)
+ const char * bsc_env = std::getenv( "BKB_BSCFG" );
+ std::string bsc_fn = bsc_env ? bsc_env : "BinaryKnapsackPar.txt";
  Configuration * bsc = Configuration::deserialize( bsc_fn );
  if( ! bsc ) {
   cerr << "Error: cannot load BSC from " << bsc_fn << endl;
