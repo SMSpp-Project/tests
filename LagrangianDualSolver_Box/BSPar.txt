@@ -18,9 +18,9 @@ BlockSolverConfig     # exact type of the Configuration object
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 CPXMILPSolver                   # name of 1st Solver
 #GRBMILPSolver                  # name of 1st Solver
-#SCIPMILPSolver             # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
 #HiGHSMILPSolver                # name of 1st Solver
-LagrangianDualSolver    # name of 2nd Solver
+LagrangianDualSolver            # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -38,7 +38,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-28 # number of integer parameters
+19 # number of integer parameters
 
 # now all the integer parameters
 # first those of LagrangianDualSolver proper
@@ -50,7 +50,6 @@ intPushCostToOwner     1 # the value of intPushCostToOwner for the LagBF
 intDoEasy              0 # do not do easy components even for LagBFunction
 intMaxIter         10000 # MaxIter, max number of iterations for each call
 intLogVerb             0 # LogVerb, log verbosity of main Bundle algorithm
-
 intWZNorm              2 # which norm to use in the norm-based stopping condition
 intBPar1              20 # discard items when they have been useless for <this> iterations
 intBPar2             400 # max bundle size per component
@@ -61,18 +60,13 @@ intBPar7              11 # how to deal with the global pools
 intMnSSC               0 # min number of consecutive SS with the same t for a t increase
 intMnNSC               1 # min number of consecutive NS with the same t for a t decrease
 inttSPar1             12 # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
-intMaxThread           1
-
 intMaxNrEvls           2 # maximum number of function evaluations at each iteration
-
 intFrcLstSS            0 # if all the components need be computed at the optimum
-
 intTrgtMng             0 # bit-wise encoding targets and accuracies management:
                          # bit 0: if lower/upper target is set to each convex/concave component
                          # bit 1: if upper/lower target is set to each convex/concave component
                          # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                          # bit 4: if Lipschitz constant is used to compute the upper model
-                  
 
 16 # number of double parameters
 
@@ -98,8 +92,8 @@ dbltSPar3              0 # parameter for small heuristic t adjustments
 
 # now all the string parameters
 # first those of LagrangianDualSolver proper
-str_LDSlv_ISName BundleSolver # the inner Solver used by LagrangianDualSolver
-strMPBSolverCfg                 MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
+str_LDSlv_ISName   BundleSolver # the inner Solver used by LagrangianDualSolver
+strMPBSolverCfg      MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
 str_LagBF_BSCfg     BXBSCfg.txt # the BlockSolverConfig for inner Block
 #str_LagBF_BSCfg    LPBSCfg.txt # the BlockSolverConfig for inner Block
 
