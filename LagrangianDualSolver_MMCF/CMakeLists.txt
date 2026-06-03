@@ -8,7 +8,7 @@ if (NOT hasParent)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
     find_package(MILPSolver)
-    find_package(LEMONSolver)
+    find_package(MCFLemonSolver)
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
@@ -30,8 +30,8 @@ if (TARGET SMS++::MMCFBlock)
         target_link_libraries(LDS_MMCF_test PRIVATE SMS++::MILPSolver)
     endif ()
 
-    if (TARGET SMS++::LEMONSolver)
-        target_link_libraries(LDS_MMCF_test PRIVATE SMS++::LEMONSolver)
+    if (TARGET SMS++::MCFLemonSolver)
+        target_link_libraries(LDS_MMCF_test PRIVATE SMS++::MCFLemonSolver)
     endif ()
 
     smspp_install(LDS_MMCF_test)

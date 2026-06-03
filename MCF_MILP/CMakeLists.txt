@@ -6,7 +6,7 @@ if (NOT hasParent)
     find_package(MCFBlock)
     # Solvers
     find_package(MILPSolver)
-    find_package(LEMONSolver)
+    find_package(MCFLemonSolver)
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
@@ -20,8 +20,8 @@ if (TARGET SMS++::MCFBlock)
         target_link_libraries(MCF_MILP_test PRIVATE SMS++::MILPSolver)
     endif ()
 
-    if (TARGET SMS++::LEMONSolver)
-        target_link_libraries(MCF_MILP_test PRIVATE SMS++::LEMONSolver)
+    if (TARGET SMS++::MCFLemonSolver)
+        target_link_libraries(MCF_MILP_test PRIVATE SMS++::MCFLemonSolver)
     endif ()
 
     smspp_install(MCF_MILP_test)
