@@ -4,7 +4,8 @@ source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../UCBlock/data/nc4/1UC_Data
 
-wchg=133
+wchg=133    # change fixed + quadratic costs (+128: also regen the abstract
+            # representation, exercising the Modification path)
 #iter=0
 
 TUDPS_test=${1:-./TUDPS_test}

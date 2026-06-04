@@ -12,7 +12,8 @@ DATADIR=../../UCBlock/data/nc4/plan4res-data/1UC_TUB
 TUDPS_test=${1:-./TUDPS_test}
 
 seed=0
-wchg=7      # change fixed + linear + quadratic costs (no abstract regen)
+wchg=135    # change fixed + linear + quadratic costs (+128: also regen the
+            # abstract representation, exercising the Modification path)
 rounds=1    # one solve per instance
 nchg=10
 pchg=0.6
