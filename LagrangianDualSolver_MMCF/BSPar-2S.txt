@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar-2S.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-2S.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
 # two different Solver: a :MILPSolver and a LagrangianDualSolver using a
@@ -8,7 +8,6 @@
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -41,5 +40,5 @@ LagrangianDualSolver  # name of 2nd Solver
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END BSPar-2S.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-2S.txt- - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

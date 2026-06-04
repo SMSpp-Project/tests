@@ -1,0 +1,35 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - InnerBSCfg.txt- - - - - - - - - - - - - - -
+#
+# A "meta"-BlockSolverConfig: a map from a Block classname() to the
+# BlockSolverConfig that says how to solve each inner sub-Block of the
+# Lagrangian Dual. It is the value of the LagrangianDualSolver str_LagBF_BSCfg
+# parameter (set in LDCfg.txt), and LagrangianDualSolver::default_BSCfg_for()
+# dispatches it by classname() over the inner Block of each LagBFunction:
+#
+#   ThermalUnitBlock  -> TUBSCfg-CLP.txt (continuous relaxation of the unit)
+#   *  (catch-all)    -> LPBSCfg.txt     (every other "hard" inner Block)
+#
+# The "*" entry is the default applied to any inner Block whose classname() is
+# not listed explicitly, so a single (meta) str_LagBF_BSCfg can say "this Solver
+# for the ThermalUnitBlock, that Solver for all the others", and the same scheme
+# nests across Block levels (one map per level). Solving the inner subproblems in
+# their continuous relaxation makes the Lagrangian Dual bound coincide with the
+# continuous relaxation of the :MILPSolver on the whole UCBlock.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+2 # the number of elements in the map
+
+# classname             BlockSolverConfig to attach to all Blocks of that class
+ThermalUnitBlock        *TUBSCfg-CLP.txt
+*                       *LPBSCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END InnerBSCfg.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

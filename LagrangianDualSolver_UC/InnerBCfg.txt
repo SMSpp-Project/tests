@@ -1,0 +1,25 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - InnerBCfg.txt - - - - - - - - - - - - - - -
+#
+# A "meta"-BlockConfig: a map from a Block classname() to the BlockConfig to
+# apply to every sub-Block of that class. b_config_Block() dispatches it by
+# classname over the whole Block tree, so it configures the inner sub-Blocks
+# of the UCBlock regardless of where they sit:
+#
+#   ThermalUnitBlock  -> its formulation / P-C parameters (TUBCfg.txt)
+#   DCNetworkBlock    -> its formulation selector (DCNBCfg.txt)
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+2 # the number of elements in the map
+
+# classname             BlockConfig to apply to all Blocks of that class
+ThermalUnitBlock        *TUBCfg.txt
+DCNetworkBlock          *DCNBCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END InnerBCfg.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

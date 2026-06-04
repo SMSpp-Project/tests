@@ -54,7 +54,6 @@ intseed         1 # seed for function 28 (MaxQR)
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 0  # the BlockSolverConfig is not a "differential" one: values are being set

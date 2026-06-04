@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - MILPCfg.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a :MILPSolver solving the
 # deterministic equivalent of a TwoStageStochasticBlock
@@ -7,7 +7,6 @@
 #   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ComputeConfig         # exact type of the ComputeConfig object
@@ -53,5 +52,5 @@ dblRelAcc       1e-8 # relative accuracy required to solution
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END MILPCfg.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MILPCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

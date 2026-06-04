@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - SecondLPPar.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - SecondLPPar.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block containing the LP
 # representation of the problem solved by the tester for PolyhedralFunction;
@@ -69,5 +69,5 @@ intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END LPPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END SecondLPPar.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

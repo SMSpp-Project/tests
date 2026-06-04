@@ -91,6 +91,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include <cmath>
+#include <cstdlib>
 #include <random>
 
 #include "common_utils.h"
@@ -147,8 +148,12 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 bool ProxHeur = false;     // false = LagrangianDualSolver
                            // true  = PrimalProximalHeur
 
-int wf = 0;                // DCNetworkBlock formulation selector
-                           // 0 = PTDF (default), 1 = CYCLE, 2 = KIRCHHOFF
+int wf = -1;               // DCNetworkBlock formulation selector
+                           // 0 = PTDF, 1 = CYCLE, 2 = KIRCHHOFF
+                           // < 0 (default) = use the value set in the meta-
+                           // BlockConfig InnerBCfg.txt (-> DCNBCfg.txt); when
+                           // passed on the command line it overrides that file
+                           // (used by batch-resilient to iterate over all wf)
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
@@ -235,7 +240,7 @@ int main( int argc , char ** argv )
 		     << std::endl <<
            "       ref: reference objective value to compare against [none]"
 		     << std::endl <<
-           "       wf: DCNetworkBlock formulation [0]"
+           "       wf: DCNetworkBlock formulation, overrides DCNBCfg.txt [file]"
 		     << std::endl <<
            "             0 = PTDF, 1 = CYCLE, 2 = KIRCHHOFF"
 	        << std::endl;
@@ -286,45 +291,42 @@ int main( int argc , char ** argv )
    exit( 1 );
    }
 
-  // load the BlockConfig for ThermalUnitBlock
-  auto tc = Configuration::deserialize( "TUBCfg.txt" );
-  auto tbc = dynamic_cast< BlockConfig * >( tc );
-  if( ! tbc ) {
-   std::cerr << "Error: TUBCfg.txt does not contain a BlockSolverConfig"
-             << std::endl;
+  // load the inner (meta-)BlockConfig that drives the *formulation* of the
+  // sub-Blocks: a SimpleConfiguration< map< classname, Configuration* >>
+  // mapping a Block classname to the BlockConfig to apply to every sub-Block of
+  // that class, dispatched by b_config_Block (see tests/compare_formulations):
+  //   InnerBCfg.txt -> ThermalUnitBlock formulation (TUBCfg.txt) and
+  //                    DCNetworkBlock formulation (DCNBCfg.txt)
+  // How the sub-Blocks are *solved* inside the Lagrangian Dual is NOT set here:
+  // it descends entirely from the main BSC stack via the LagrangianDualSolver
+  // str_LagBF_BSCfg parameter (BSPar -> LDCfg -> InnerBSCfg.txt), so the inner
+  // Solver of the LagBFunction is the single source of truth (e.g. BSPar-2S-EC
+  // -> LDCfg-EC -> InnerBSCfg-DP.txt to solve the thermal units with the
+  // efficient ThermalUnitExtDPSolver). A HydroSystemUnitBlock is a "hard" component
+  // iff that str_LagBF_BSCfg meta configures it; computed below once cc is found.
+  auto ibc = Configuration::deserialize( "InnerBCfg.txt" );
+  if( ! ibc ) {
+   std::cerr << "Error: cannot load InnerBCfg.txt" << std::endl;
    delete( c );
-   delete( tc );
    exit( 1 );
    }
+  bool hydro_hard = false;
 
-  // load the BlockSolverConfig for ThermalUnitBlock
-  auto ct = Configuration::deserialize( "TUBSCfg-CLP.txt" );
-  auto tbsc = dynamic_cast< BlockSolverConfig * >( ct );
-  if( ! tbsc ) {
-   std::cerr << "Error: TUBSCfg-CLP.txt does not contain a BlockSolverConfig"
-             << std::endl;
-   delete( c );
-   delete( tc );
-   delete( ct );
-   exit( 1 );
-   }
-
-  // load the BlockSolverConfig for HydroSystemUnitBlock; note that
-  // this can be "empty", and indeed even not there, in which case
-  // the HydroSystemUnitBlock will be treated as "easy"
-  auto ch = Configuration::deserialize( "HSUBSCfg.txt" );
-  auto hbsc = dynamic_cast< BlockSolverConfig * >( ch );
-  if( ( ! hbsc ) || ( ! hbsc->num_ComputeConfig() ) ) {
-   delete( ch );
-   hbsc = nullptr;
-   }
-
-  // per-classname BlockConfig that drives the DCNetworkBlock formulation
-  // selector (read by DCNetworkBlock::generate_abstract_variables): 0=PTDF,
-  // 1=CYCLE, 2=KIRCHHOFF. A no-op on instances without a DCNetworkBlock.
-  // Dispatched below via the meta_bc map (same pattern used for tbc).
-  auto dcbc = new BlockConfig;
-  dcbc->f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
+  // optional command-line override of the DCNetworkBlock formulation: when wf
+  // is passed (>= 0) it replaces the static-variables Configuration of the
+  // DCNetworkBlock entry of the meta-BlockConfig, overriding DCNBCfg.txt (used
+  // by batch-resilient to iterate over all formulations)
+  if( wf >= 0 )
+   if( auto m = dynamic_cast< SimpleConfiguration<
+        std::map< std::string , Configuration * > > * >( ibc ) ) {
+    auto it = m->f_value.find( "DCNetworkBlock" );
+    if( it != m->f_value.end() )
+     if( auto dcbc = dynamic_cast< BlockConfig * >( it->second ) ) {
+      delete dcbc->f_static_variables_Configuration;
+      dcbc->f_static_variables_Configuration =
+       new SimpleConfiguration< int >( wf );
+      }
+    }
 
   #if USE_BundleSolver
    auto nbsc = bsc->num_ComputeConfig();
@@ -377,37 +379,32 @@ int main( int argc , char ** argv )
     else                               // otherwise
      DoEasy = true;                    // assume it is true (default)
 
+    // the inner Solver of each LagBFunction descends from str_LagBF_BSCfg; a
+    // HydroSystemUnitBlock is a "hard" component iff that (meta-)BSC configures
+    // it. Peek at the file to decide (no-op when it is a plain BSC or absent)
+    auto bit = std::find_if( cc->str_pars.begin() , cc->str_pars.end() ,
+			     []( auto & pair ) {
+			      return( pair.first == "str_LagBF_BSCfg" );
+			      } );
+    if( bit != cc->str_pars.end() )
+     if( auto lbc = Configuration::deserialize( bit->second ) ) {
+      if( auto m = dynamic_cast< SimpleConfiguration<
+           std::map< std::string , Configuration * > > * >( lbc ) )
+       hydro_hard = m->f_value.count( "HydroSystemUnitBlock" ) > 0;
+      delete( lbc );
+      }
+
     break;  // note that we assume this happens *at most* once
     }
 
    auto sb = TestBlock->get_nested_Blocks();
 
-   // dispatch the per-classname configurations loaded above to all the
-   // matching sub-Blocks via a (meta) BlockConfig / BlockSolverConfig that
-   // b_config_Block / s_config_Block resolve by classname:
-   //   tbc  -> every ThermalUnitBlock           (BlockConfig)
-   //   tbsc -> every ThermalUnitBlock           (BlockSolverConfig)
-   //   hbsc -> every HydroSystemUnitBlock       (BlockSolverConfig, optional)
-   // obsc remains code-driven (catch-all on non-Thermal/non-HSUB) and is
-   // applied below only in the DoEasy=false branch.
-   {
-    // NB: SimpleConfiguration<map<string,Configuration*>>::guts_of_destructor
-    // delete()s every value in the map; we f_value.clear() before scope-exit
-    // so tbc / tbsc / hbsc / dcbc are NOT double-deleted (they survive for
-    // the explicit delete() at end of this configuration block).
-    SimpleConfiguration< std::map< std::string , Configuration * > > meta_bc;
-    meta_bc.f_value[ "ThermalUnitBlock" ] = tbc;
-    meta_bc.f_value[ "DCNetworkBlock" ] = dcbc;
-    b_config_Block( TestBlock , &meta_bc , "" );
-    meta_bc.f_value.clear();
-
-    SimpleConfiguration< std::map< std::string , Configuration * > > meta_bsc;
-    meta_bsc.f_value[ "ThermalUnitBlock" ] = tbsc;
-    if( hbsc )
-     meta_bsc.f_value[ "HydroSystemUnitBlock" ] = hbsc;
-    s_config_Block( TestBlock , &meta_bsc , "" , false );  // deferred clear
-    meta_bsc.f_value.clear();
-    }
+   // apply the inner (meta-)BlockConfig (formulation) by classname over the
+   // sub-Blocks; b_config_Block clones each BlockConfig before applying, so ibc
+   // keeps ownership. The inner Solvers are NOT attached here: they descend from
+   // the LagrangianDualSolver str_LagBF_BSCfg when bsc is applied below. The
+   // OUBSCfg catch-all stays code-driven (DoEasy=false branch).
+   b_config_Block( TestBlock , ibc , "InnerBCfg.txt" );
 
    // Configure_HSUB the linearised PolyhedralFunctionBlock inside every
    // HydroSystemUnitBlock; runtime block-mutation, not config-driven
@@ -429,7 +426,7 @@ int main( int argc , char ** argv )
        NoEasy.push_back( i );
       }
      else if( dynamic_cast< HydroSystemUnitBlock * >( sb[ i ] ) ) {
-      if( hbsc )
+      if( hydro_hard )
        NoEasy.push_back( i );
       }
      }
@@ -527,11 +524,9 @@ int main( int argc , char ** argv )
     }
   #endif
 
-  // cleanup
-  delete( tbc );
-  delete( tbsc );
-  delete( hbsc );
-  delete( dcbc );
+  // cleanup the inner (meta-)BlockConfig (its destructor deletes the contained
+  // per-classname BlockConfig)
+  delete( ibc );
 
   // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
   // dispatches on the runtime type, applies, and clear()s for cleanup

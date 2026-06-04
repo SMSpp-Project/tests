@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-orig.txt- - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block to be solved by two
 # different Solver: a :MILPSolver and a LagrangianDualSolver using a
@@ -141,5 +141,5 @@ str_LagBF_BSCfg   BXBSCfg.txt # the BlockSolverConfig for inner Block
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-orig.txt- - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

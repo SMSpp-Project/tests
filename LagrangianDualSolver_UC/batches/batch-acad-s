@@ -8,7 +8,7 @@
 #
 # runs only "small" pure thermal academic instances, intended for being used
 # when the ThermalUnitBlock subproblems are solved to integer optimality
-# (typically using ThermalUnitDPSolver, although a :MILPSolver would
+# (typically using ThermalUnitExtDPSolver, although a :MILPSolver would
 # be a less efficient option)
 #
 # for LagrangianDualSolver + BundleSolver:

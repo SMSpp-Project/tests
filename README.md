@@ -113,7 +113,7 @@ The following tests are provided:
   `SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`).
 
 - [`ThermalUnitBlock_Solver`](ThermalUnitBlock_Solver), a tester for the
-  `ThermalUnitDPSolver` specialised Dynamic Programming `:Solver` for
+  `ThermalUnitExtDPSolver` specialised Dynamic Programming `:Solver` for
   `ThermalUnitBlock` as compared with a `:MILPSolver` on some of the (many)
   different formulations supported by `ThermalUnitBlock`.
 

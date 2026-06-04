@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - LDCfg.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - LDCfg.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for the LagrangianDualSolver wrapping
 # a BundleSolver as the inner Solver, applied to a UCBlock
@@ -7,7 +7,6 @@
 #   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ComputeConfig         # exact type of the ComputeConfig object
@@ -92,7 +91,7 @@ dblCtOff            0.01 # cut-off factor for pricing in MinQuad
 # now all the string parameters
 #str_LDSlv_ISName  ParallelBundleSolver # the inner Solver used by LagrangianDualSolver
 str_LDSlv_ISName           BundleSolver # the inner Solver used by LagrangianDualSolver
-str_LagBF_BSCfg             LPBSCfg.txt # BlockSolverConfig for the LagBFunctions
+str_LagBF_BSCfg             InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
 # not needed if intDoEasy >= 1 && USE_BundleSolver > 0, this is done "by hand"
 
 0 # number of vector-of-int parameters
@@ -116,5 +115,5 @@ str_LagBF_BSCfg             LPBSCfg.txt # BlockSolverConfig for the LagBFunction
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END LDCfg.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END LDCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

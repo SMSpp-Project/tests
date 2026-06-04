@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSCfg.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSCfg.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a BundleSolver solving an
 # InvestmentBlock
@@ -7,7 +7,6 @@
 #   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ComputeConfig         # exact type of the ComputeConfig object
@@ -111,5 +110,5 @@ dblCtOff      0.01 # cut-off factor for pricing in MinQuad
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSCfg.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

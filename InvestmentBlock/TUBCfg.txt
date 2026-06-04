@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - -TUBCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - TUBCfg.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockConfig for a ThermalUnitBlock that is being
 # solved by a :MILPSolver. As such it is relevant:

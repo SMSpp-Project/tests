@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BundlePar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BundlePar-cwl.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block having a single
 # BundleSolver attached, and no sub-Block
@@ -7,7 +7,6 @@
 #   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 0  # the BlockSolverConfig is not a "differential" one: values are being set
@@ -107,5 +106,5 @@ dblCtOff      0.01 # cut-off factor for pricing in MinQuad
 # end 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BundlePar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BundlePar-cwl.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

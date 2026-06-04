@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - LDCfg.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - LDCfg.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for the LagrangianDualSolver wrapping
 # a BundleSolver as the inner Solver
@@ -7,7 +7,6 @@
 #   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ComputeConfig         # exact type of the ComputeConfig object
@@ -101,5 +100,5 @@ str_LagBF_BSCfg      BSCfg2.txt # BlockSolverConfig for the LagBFunctions
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END LDCfg.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END LDCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

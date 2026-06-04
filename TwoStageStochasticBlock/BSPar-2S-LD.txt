@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -BSPar-2S-LD.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-2S-LD.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a TwoStageStochasticBlock to
 # be solved by two different Solver: a :MILPSolver on the deterministic
@@ -9,7 +9,6 @@
 #   Donato Meoli, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
