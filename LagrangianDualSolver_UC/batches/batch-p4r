@@ -28,4 +28,13 @@ for what in ../../UCBlock/data/nc4/plan4res-data/FirstSetofInstances/*.nc4; do
 
 done
 
+# the four reserve-bearing UCBlocks (top-level in plan4res-data/, carrying
+# primary/secondary reserve demand: L_B_C_26 / L_B_C_31 / L_B_C_32 / L_H_C_34)
+
+for what in ../../UCBlock/data/nc4/plan4res-data/*.nc4; do
+
+    run_test "$exe" "$what" "$par" "$slv"
+
+done
+
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
