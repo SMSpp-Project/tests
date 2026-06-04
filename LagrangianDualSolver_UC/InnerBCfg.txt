@@ -12,11 +12,13 @@
 #   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
 2 # the number of elements in the map
 
-# classname             BlockConfig to apply to all Blocks of that class
 ThermalUnitBlock        *TUBCfg.txt
 DCNetworkBlock          *DCNBCfg.txt
 
