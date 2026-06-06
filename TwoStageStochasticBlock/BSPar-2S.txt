@@ -6,7 +6,7 @@
 # equivalent and a LagrangianDualSolver using a BundleSolver as the inner
 # Solver
 #
-#   Donato Meoli, Antonio Frangioni
+#   Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
