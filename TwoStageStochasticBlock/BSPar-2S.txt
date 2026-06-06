@@ -42,6 +42,7 @@ LagrangianDualSolver  # name of 2nd Solver
 
 4 # number of integer parameters
 
+# now all the integer parameters
 int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
 intLogVerb        0 # log verbosity of main Bundle algorithm
 intTrgtMng       31 # bit-wise encoding targets and accuracies management:
@@ -53,12 +54,14 @@ intMPlvl          0 # log verbosity of Master Problem
 
 2 # number of double parameters
 
+# now all the double parameters
 dbltStar         -1e+0 # stopping parameter: multiplied to || residual || to estimate gap
 dbltInit          1e-3 # initial value for t
 
 1 # number of string parameters
 
-str_LagBF_BSCfg  BSCfg1.txt # BlockSolverConfig for the LagBFunctions
+# now all the string parameters
+str_LagBF_BSCfg  InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
 
 0 # number of vector-of-int parameters
 

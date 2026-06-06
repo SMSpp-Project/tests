@@ -23,12 +23,12 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 ## All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Threads   1
 #CPXPARAM_LPMethod  1 # 0 = auto (default), 1 = primal, 2 = dual,
-                  # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
+                      # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
 
 ## All specific GUROBI parameter (uncomment based on Solver)
 #Threads   1
 #Method    0 # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
-                  # 3 = barrier + crossover, 4 = network
+             # 3 = barrier + crossover, 4 = network
 
 0 # number of double parameters
 

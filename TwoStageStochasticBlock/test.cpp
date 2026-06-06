@@ -147,6 +147,18 @@ int main( int argc , char ** argv )
   delete TestBlock;
   exit( 1 );
   }
+
+ // apply the inner (meta-)BlockConfig (formulation) by classname recursively
+ // over the whole Block tree: the scenarios contain UCBlocks whose
+ // ThermalUnitBlock (and DCNetworkBlock) sit arbitrarily deep, and
+ // b_config_Block reaches them all. The inner Solvers are NOT attached here:
+ // they descend from the LagrangianDualSolver str_LagBF_BSCfg (InnerBSCfg.txt)
+ // when bsc is applied below.
+ if( auto ibc = Configuration::deserialize( "InnerBCfg.txt" ) ) {
+  b_config_Block( TestBlock , ibc , "InnerBCfg.txt" );
+  delete( ibc );
+  }
+
  s_config_Block( TestBlock , bsc , bsc_fn );
 
  if( TestBlock->get_registered_solvers().empty() ) {

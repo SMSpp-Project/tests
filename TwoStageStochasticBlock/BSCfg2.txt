@@ -44,9 +44,9 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_LPMethod                4   # 0 = auto (default), 1 = primal, 2 = dual,
-                  # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
+                                      # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
 #CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
-                  # disable presolve for reproducibility
+                                      # disable presolve for reproducibility
 #CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme numerical caution
 
 # All specific GUROBI parameter (uncomment based on Solver)
@@ -73,7 +73,7 @@ dblRAccSol      1e-08 # relative accuracy required to solution
 # All specific HiGHS parameter (uncomment based on Solver)
 #presolve  off    # disable presolve for reproducibility
 #solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
-                            # (ipm = interior point: converges to analytic center, unique x*)
+                  # (ipm = interior point: converges to analytic center, unique x*)
 
 0 # number of vector-of-int parameters
 
