@@ -488,16 +488,25 @@ int main( int argc , char **argv )
  Index n_change = 10;
  Index n_repeat = 100;
 
+ // the BlockSolverConfig file is passed on the command line (argv[2]), so that
+ // the same tester can drive different solver configurations (e.g. the thermal
+ // ThermalUnitExtDPSolver vs the nuclear NuclearUnitExtDPSolver) on different
+ // instances without editing any file; defaults to "BSCfg.txt"
+ std::string bsc_fn = argc >= 3 ? argv[ 2 ] : "BSCfg.txt";
+
  switch( argc ) {
-  case( 8 ): Str2Sthg( argv[ 7 ] , p_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_repeat );
-  case( 5 ): Str2Sthg( argv[ 4 ] , wf );
-  case( 4 ): Str2Sthg( argv[ 3 ] , wchg );
-  case( 3 ): Str2Sthg( argv[ 2 ] , seed );
+  case( 9 ): Str2Sthg( argv[ 8 ] , p_change );
+  case( 8 ): Str2Sthg( argv[ 7 ] , n_change );
+  case( 7 ): Str2Sthg( argv[ 6 ] , n_repeat );
+  case( 6 ): Str2Sthg( argv[ 5 ] , wf );
+  case( 5 ): Str2Sthg( argv[ 4 ] , wchg );
+  case( 4 ): Str2Sthg( argv[ 3 ] , seed );
+  case( 3 ):  // argv[2] is the BlockSolverConfig file, read above
   case( 2 ): break;
   default: std::cerr << "Usage: " << argv[ 0 ] <<
-	   "file [seed wchg wf #rounds #chng %chng]"
+	   "file [BSC-file seed wchg wf #rounds #chng %chng]"
+    << std::endl <<
+    "       BSC-file: BlockSolverConfig description [BSCfg.txt]"
     << std::endl <<
     "       wchg: what to change, coded bit-wise [135]"
     << std::endl <<
@@ -581,7 +590,6 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- std::string bsc_fn = "BSCfg.txt";
  Configuration * bsc = Configuration::deserialize( bsc_fn );
  if( ! bsc ) {
   std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;

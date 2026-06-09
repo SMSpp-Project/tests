@@ -16,6 +16,7 @@ source "$(dirname "$0")/../../batch_common.sh"
 DATADIR=../../UCBlock/data/nc4/plan4res-data/1UC_TUB
 
 TUDPS_test=${1:-./TUDPS_test}
+par=BSCfg.txt
 
 seed=0
 wchg=135    # change fixed + linear + quadratic costs (+128: also regen the
@@ -39,7 +40,7 @@ for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
       if [ $wf -ge 10 ] && [ "$big" = 1 ]; then
         continue
       fi
-      run_test "$TUDPS_test" "$f" "$seed" "$wchg" "$wf" "$rounds" "$nchg" "$pchg"
+      run_test "$TUDPS_test" "$f" "$par" "$seed" "$wchg" "$wf" "$rounds" "$nchg" "$pchg"
     done
   done
 done

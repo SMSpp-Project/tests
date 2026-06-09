@@ -8,12 +8,9 @@
 # Same as batch-singlebus-tpc but for the NUCLEAR units: each single
 # NuclearUnitBlock instance is solved with GRBMILPSolver (1st / reference) and
 # NuclearUnitExtDPSolver (2nd), on the T + Perspective-Cuts formulation
-# (wf = 9), and the two are compared. The solver pair is selected through the
-# BSCFG environment variable honoured by test.cpp (a NuclearUnitBlock is-a
-# ThermalUnitBlock, so the same tester drives it; the nuclear DP solver only
-# differs in the BlockSolverConfig).
-#
-#   BSCFG=BSCfg-nuc.txt : GRBMILPSolver vs NuclearUnitExtDPSolver
+# (wf = 9), and the two are compared. A NuclearUnitBlock is-a ThermalUnitBlock,
+# so the same tester drives it; the nuclear DP solver only differs in the
+# BlockSolverConfig, passed to the tester on the command line (BSCfg-nuc.txt).
 #
 # The single-TUB nuclear instances are the per-unit, per-iteration
 # NuclearUnitBlocks with Lagrangian costs dumped by ucblock_solver -DSAVE_TUB=1
@@ -26,6 +23,7 @@ source "$(dirname "$0")/../../batch_common.sh"
 TUDPS_test=${1:-./TUDPS_test}
 DATADIR=${2:-../../UCBlock/data/nc4/1UC_Data/singlebus-nuclear}
 
+par=BSCfg-nuc.txt
 seed=0
 wchg=0      # just solve and compare the optimum
 wf=9        # T (=1) + Perspective Cuts (+8): the T+P/C formulation
@@ -46,10 +44,8 @@ if [ ${#instances[@]} -eq 0 ]; then
   exit 0
 fi
 
-export BSCFG=BSCfg-nuc.txt
 for f in "${instances[@]}"; do
-  run_test "$TUDPS_test" "$f" "$seed" "$wchg" "$wf"
+  run_test "$TUDPS_test" "$f" "$par" "$seed" "$wchg" "$wf"
 done
-unset BSCFG
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

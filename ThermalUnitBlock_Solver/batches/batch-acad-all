@@ -15,6 +15,7 @@ wchg=135    # change fixed + linear + quadratic costs (+128: also regen the
 #iter=0
 
 TUDPS_test=${1:-./TUDPS_test}
+par=BSCfg.txt
 
 # ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
 
@@ -36,7 +37,7 @@ for wf in 8 9 10 11 12 13 14; do
 
           what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-          run_test "$TUDPS_test" "$what" "$seed" "$wchg" "$wf" "$iter"
+          run_test "$TUDPS_test" "$what" "$par" "$seed" "$wchg" "$wf" "$iter"
 
         #done
       done

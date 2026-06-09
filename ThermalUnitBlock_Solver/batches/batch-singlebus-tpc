@@ -21,6 +21,7 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 TUDPS_test=${1:-./TUDPS_test}
+par=BSCfg.txt
 DATADIR=${2:-../../UCBlock/data/nc4/1UC_Data/singlebus}
 
 seed=0
@@ -47,7 +48,7 @@ if [ ${#instances[@]} -eq 0 ]; then
 fi
 
 for f in "${instances[@]}"; do
-  run_test "$TUDPS_test" "$f" "$seed" "$wchg" "$wf"
+  run_test "$TUDPS_test" "$f" "$par" "$seed" "$wchg" "$wf"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
