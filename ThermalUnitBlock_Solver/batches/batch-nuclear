@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+#
+# usage: batch-nuclear [ exe file ] [ data dir ]
+#        [ exe file ] = path of the executable, default ./TUDPS_test
+#        [ data dir ] = directory holding the single-TUB NuclearUnitBlock .nc4,
+#                       default ../../UCBlock/data/nc4/1UC_Data/singlebus-nuclear
+#
+# Same as batch-singlebus-tpc but for the NUCLEAR units: each single
+# NuclearUnitBlock instance is solved with GRBMILPSolver (1st / reference) and
+# NuclearUnitExtDPSolver (2nd), on the T + Perspective-Cuts formulation
+# (wf = 9), and the two are compared. The solver pair is selected through the
+# BSCFG environment variable honoured by test.cpp (a NuclearUnitBlock is-a
+# ThermalUnitBlock, so the same tester drives it; the nuclear DP solver only
+# differs in the BlockSolverConfig).
+#
+#   BSCFG=BSCfg-nuc.txt : GRBMILPSolver vs NuclearUnitExtDPSolver
+#
+# The single-TUB nuclear instances are the per-unit, per-iteration
+# NuclearUnitBlocks with Lagrangian costs dumped by ucblock_solver -DSAVE_TUB=1
+# on single-bus UCBlock instances that contain NuclearUnitBlocks. Place them
+# under <data dir> before running this batch.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+TUDPS_test=${1:-./TUDPS_test}
+DATADIR=${2:-../../UCBlock/data/nc4/1UC_Data/singlebus-nuclear}
+
+seed=0
+wchg=0      # just solve and compare the optimum
+wf=9        # T (=1) + Perspective Cuts (+8): the T+P/C formulation
+
+# scaffold: SKIP cleanly (exit 0) until the nuclear single-TUBs are produced
+if [ ! -d "$DATADIR" ]; then
+  echo "batch-nuclear: SKIP - data dir '$DATADIR' not found."
+  echo "  Produce the nuclear single-TUB dumps with ucblock_solver -DSAVE_TUB=1"
+  echo "  on the single-bus nuclear UCBlock instances, then place them under"
+  echo "  '$DATADIR'."
+  exit 0
+fi
+
+shopt -s nullglob
+instances=( "$DATADIR"/*.nc4 "$DATADIR"/*/*.nc4 )
+if [ ${#instances[@]} -eq 0 ]; then
+  echo "batch-nuclear: SKIP - no .nc4 instances under '$DATADIR'"
+  exit 0
+fi
+
+export BSCFG=BSCfg-nuc.txt
+for f in "${instances[@]}"; do
+  run_test "$TUDPS_test" "$f" "$seed" "$wchg" "$wf"
+done
+unset BSCFG
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

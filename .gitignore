@@ -30,7 +30,7 @@ Write-Read/writeandread_test
 MMCFBlock/data/*
 MMCFBlock/gen/Canad.tgz
 InvestmentBlock/investment_candidates.txt
-CapacitatedFacilityLocation/CFL*.txt
+CapacitatedFacilityLocation/LD/CFL*.txt
 
 # Solver-side run output
 # *.bn = BundleSolver log; *.lp = MILPSolver LP dump

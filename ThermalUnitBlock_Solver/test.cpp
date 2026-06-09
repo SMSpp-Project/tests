@@ -87,6 +87,13 @@
 
 #include "ThermalUnitBlock.h"
 
+// NuclearUnitBlock derives from ThermalUnitBlock; this same tester also drives
+// the nuclear instances (a NuclearUnitBlock deserialises and casts to a
+// ThermalUnitBlock), printing the modulation indicators when present. The
+// nuclear DP solver (NuclearUnitExtDPSolver) is selected through the
+// BlockSolverConfig (BSCFG), not hard-wired here.
+#include "NuclearUnitBlock.h"
+
 #include "common_utils.h"
 
 #include "FRealObjective.h"
@@ -178,6 +185,20 @@ static void PrintSolution( void )
    std::cout << ", ";
   }
  std::cout << " ]" << std::endl;
+
+ // modulation profile, only for a nuclear unit
+ if( auto NUBlock = dynamic_cast< NuclearUnitBlock * >( TUBlock ) )
+  if( auto m = NUBlock->get_modulation() ) {
+   std::cout << "m = [ ";
+   for( Index i = 0 ; ; ++m ) {
+    std::cout << int( m->get_value() );
+    if( ++i >= time_horizon )
+     break;
+    else
+     std::cout << ", ";
+    }
+   std::cout << " ]" << std::endl;
+   }
  }
 
 /*--------------------------------------------------------------------------*/
