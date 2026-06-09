@@ -23,6 +23,21 @@ if (TARGET SMS++::BinaryKnapsackBlock)
 
     smspp_install(BinaryKnapsackBlock_test)
 
+    # same driver built with timing on (LOG_LEVEL=1), used by the scaling
+    # benchmarks of ParallelDPBinaryKnapsackSolver (see batches/batch-par)
+    add_executable(BinaryKnapsackBlock_bench test.cpp ../common_utils.cpp)
+    target_include_directories(BinaryKnapsackBlock_bench PRIVATE ..)
+    target_compile_definitions(BinaryKnapsackBlock_bench PRIVATE LOG_LEVEL=1)
+    target_link_libraries(BinaryKnapsackBlock_bench PRIVATE
+                          SMS++::BinaryKnapsackBlock)
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(BinaryKnapsackBlock_bench PRIVATE
+                              SMS++::MILPSolver)
+    endif ()
+
+    smspp_install(BinaryKnapsackBlock_bench)
+
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch")
     foreach (BATCH_FILE ${BATCH_FILES})
