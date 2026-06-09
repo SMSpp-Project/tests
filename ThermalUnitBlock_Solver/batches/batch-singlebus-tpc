@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# usage: batch-singlebus-tpc [ exe file ] [ data dir ]
+#        [ exe file ] = path of the executable, default ./TUDPS_test
+#        [ data dir ] = directory holding the single-TUB .nc4, default
+#                       ../../UCBlock/data/nc4/1UC_Data/singlebus
+#
+# Solves every single-TUB instance with GRBMILPSolver (1st / reference) and the
+# ext DP solver ThermalUnitExtDPSolver (2nd), on the T + Perspective-Cuts
+# formulation (wf = 9), and compares the two. The solver pair comes from the
+# default BSCfg.txt of this test directory.
+#
+# The single-TUB instances are the per-unit, per-iteration ThermalUnitBlocks
+# with Lagrangian costs dumped by tools/ucblock_solver compiled with
+# -DSAVE_TUB=1 (filenames TUB-<unit>-<iteration>.nc4), run on the single-bus
+# UCBlock instances under UCBlock/data/nc4/UC_singlebus/.  Drop those dumps
+# under <data dir> (optionally split into <periods>/ sub-directories, as the
+# other 1UC_Data suites are) before running this batch.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+TUDPS_test=${1:-./TUDPS_test}
+DATADIR=${2:-../../UCBlock/data/nc4/1UC_Data/singlebus}
+
+seed=0
+wchg=0      # just solve and compare the optimum (no cost perturbation here)
+wf=9        # T (=1) + Perspective Cuts (+8): the T+P/C formulation
+
+# This batch is a scaffold: the single-TUB instances it consumes are produced
+# offline by ucblock_solver -DSAVE_TUB=1 and are not committed. When they are
+# absent we SKIP cleanly (exit 0) so the test suite is not broken.
+if [ ! -d "$DATADIR" ]; then
+  echo "batch-singlebus-tpc: SKIP - data dir '$DATADIR' not found."
+  echo "  Produce the single-TUB dumps with ucblock_solver -DSAVE_TUB=1 on the"
+  echo "  UC_singlebus instances, then place them under '$DATADIR'."
+  exit 0
+fi
+
+# collect the instances: either TUB-*.nc4 directly under DATADIR or under
+# <periods>/ sub-directories
+shopt -s nullglob
+instances=( "$DATADIR"/*.nc4 "$DATADIR"/*/*.nc4 )
+if [ ${#instances[@]} -eq 0 ]; then
+  echo "batch-singlebus-tpc: SKIP - no .nc4 instances under '$DATADIR'"
+  exit 0
+fi
+
+for f in "${instances[@]}"; do
+  run_test "$TUDPS_test" "$f" "$seed" "$wchg" "$wf"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

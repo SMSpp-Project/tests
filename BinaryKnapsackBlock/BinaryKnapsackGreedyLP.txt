@@ -1,75 +1,34 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - BinaryKnapsackGreedyLP.txt- - - - - - - - - - - - -
 #
-# BlockSolverConfig that attaches, to a (single-TUB) ThermalUnitBlock,
-# GRBMILPSolver as the 1st (reference) Solver and the EXT DP solver
-# (ThermalUnitExtDPSolver) as the 2nd Solver, so the batch compares the ext DP
-# against Gurobi on the T+PC formulation (the DP is the 2nd / "back" Solver).
+# A txt description of a BlockSolverConfig for a BinaryKnapsackBlock to be
+# solved by two different Solver that both compute the *continuous (LP)
+# relaxation* of the knapsack, so the test's equality oracle is meaningful:
+#   - a GreedyRelaxationSolver (Dantzig continuous-knapsack bound), and
+#   - a :MILPSolver run with intRelaxIntVars == 1 (LP relaxation).
+# The two must agree on the optimal value.
 #
-#   Antonio Frangioni, Donato Meoli
+#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
-1  # the BlockSolverConfig is a "differential" one
+1  # the BlockSolverConfig is a "differential" one: values are being set
 
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-GRBMILPSolver                   # name of 1st Solver (the reference)
-ThermalUnitExtDPSolver          # name of 2nd Solver (the ext DP under test)
+GreedyRelaxationSolver  # name of 1st Solver
+CPXMILPSolver                   # name of 2nd Solver
+#GRBMILPSolver                  # name of 2nd Solver
+#SCIPMILPSolver             # name of 2nd Solver
+#HiGHSMILPSolver                # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# this is the ComputeConfig of GRBMILPSolver
-
-ComputeConfig # exact type of the ComputeConfig object
-
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
-
-3  # number of integer parameters
-
-# now all the integer parameters
-intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
-intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
-
-0 # number of double parameters
-
-# now all the double parameters
-
-## All specific GUROBI parameter
-#FeasibilityTol 1e-9
-
-0 # number of string parameters
-
-# now all the string parameters
-#strOutputFile  1tub.lp
-
-0 # number of vector-of-int parameters
-
-# now all the vector-of-int parameters
-# [none]
-
-0 # number of vector-of-double parameters
-
-# now all the vector-of-double parameters
-# [none]
-
-0 # number of vector-of-string parameters
-
-# now all the vector-of-string parameters
-# [none]
-
-# pointer to the "extra" Configuration
-* # [none]
-
-# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# this is the ComputeConfig of ThermalUnitExtDPSolver
 
 ComputeConfig # exact type of the ComputeConfig object
 
@@ -78,30 +37,70 @@ ComputeConfig # exact type of the ComputeConfig object
 
 0  # number of integer parameters
 
-# now all the integer parameters
-# [none]
+0  # number of double parameters
 
-0 # number of double parameters
+0  # number of string parameters
 
-# now all the double parameters
-# [none]
-
-0 # number of string parameters
-
-# now all the string parameters
-# [none]
-
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intLogVerb           0
+intRelaxIntVars      1   # solve the LP relaxation (integer Variable relaxed)
+
+2  # number of double parameters
+
+# now all the double parameters
+dblRelAcc     1e-08
+
+## All specific CPLEX parameter (uncomment based on 2nd Solver)
+CPXPARAM_MIP_Tolerances_Integrality     1e-07
+
+## All specific GUROBI parameter (uncomment based on 2nd Solver)
+#IntFeasTol  1e-07
+
+0  # number of string parameters
+
+# now all the string parameters
+#strOutputFile bk.lp
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -114,5 +113,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - End BinaryKnapsackGreedyLP.txt- - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
