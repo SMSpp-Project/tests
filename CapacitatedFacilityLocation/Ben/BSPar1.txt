@@ -1,0 +1,29 @@
+# BlockSolverConfig for B1: GRBMILPSolver on the LP relaxation.
+# Plain LP (intRelaxIntVars = 1), no user cuts (the natural formulation
+# has the full x_{ij} so no separation is needed).
+
+BlockSolverConfig
+
+1  # differential
+
+1  # number of Solver names
+GRBMILPSolver
+
+1  # number of ComputeConfig
+
+ComputeConfig
+1  # f_diff
+
+2  # int params
+intLogVerb        0
+intRelaxIntVars   1
+
+1  # double params
+dblRelAcc 1e-7
+
+0  # string params
+0  # vint
+0  # vdbl
+0  # vstr
+
+*  # extra

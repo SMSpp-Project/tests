@@ -3,10 +3,10 @@
 A tester which provides initial tests for `CapacitatedFacilityLocationBlock`,
 possibly `MCFBlock` and `MCFSolver`, possibly `BinaryKnapsackBlock` and any
 specialised `Solver` for it, possibly `LagrangianDualSolver`, `LagBFunction`,
-any `CDASolver` able to handle `C05Function` in the `Objective` (such as
-`BundleSolver`), any `Solver` able to handle (Mixed Integer) Linear Programs
-(such as `MILPSolver` and its derived classes `CPXMILPSolver` ,
-`SCIPMILPSolver` and `GRBMILPSolver`), as well as for quite a lot of the 
+`BendersBFunction`, any `CDASolver` able to handle `C05Function` in the
+`Objective` (such as `BundleSolver`), any `Solver` able to handle
+(Mixed Integer) Linear Programs (such as `MILPSolver` and its derived classes
+`CPXMILPSolver` , `GRBMILPSolver`, etc.), as well as for quite a lot of the 
 mechanics of the "core" SMS++ library.
 
 This executable, given the filename and (optionally) filetype of one
@@ -39,7 +39,7 @@ This is repeated for a maximum number of iterations, or until the solution
 (value) of the relaxation stops changing. In this case the results (both
 lower and upper bound) are compared with the optimal value of the other
 `Solver`, but not expecting them to be equal. Note that there are at least
-three significantly different implementations for the R3Block and its
+four significantly different implementations for the R3Block and its
 `Solver`:
 
 * The R3Block is a `CapacitatedFacilityLocationBlock` (in any formulation)
@@ -58,11 +58,23 @@ three significantly different implementations for the R3Block and its
   fractional solution that comes with it, but obtained at a (much) higher
   computational cost.
 
-This anyway shows how these three completely different arrangements can be
-obtained with exactly the same executable by just changing the configuration
-files. In fact, the three folders [cuts](cuts), [MCF](MCF) and [LD](LD)
-contain configuration files primed for these three different settings, plus
-a symlink to the same executable.
+* The R3Block is a `CapacitatedFacilityLocationBlock` in the "Benders
+  friendly" formulation (BenForm), whose hidden `BendersBFunction` separates
+  Benders optimality/feasibility cuts from an inner `MCFBlock`; solved as a
+  pure LP with an explicit user-cut separation loop (`MILPSolver` with
+  `intRelaxIntVars == 2`), it reproduces the natural-formulation LP bound.
+
+This shows how these completely different arrangements can be obtained with
+exactly the same executable by just changing the configuration files. The
+default config files (BPar1.txt, BPar2.txt, BSPar1.txt, BSPar2.txt,
+R3BCfg.txt) live in this directory; each alternative arrangement keeps its
+own copy of the five files in a dedicated folder: [MCF](MCF) (flow
+relaxation), [cuts](cuts) (LP + user cuts), [LD](LD) and
+[LDVScuts](LDVScuts) (Lagrangian dual of the knapsack relaxation), and
+[Ben](Ben) (the Benders formulation). All the batch scripts live in
+[batches](batches); each one `cd`-s into the folder holding the config set
+it needs before running, so the same script works both via `ctest` and when
+launched by hand (no per-folder executable symlink is needed).
 
 All this is possibly repeated a number of times in a loop where data of the
 CFLproblem (fixed and transportation costs, demands, capacities, facilities
@@ -96,21 +108,35 @@ The usage of the executable is the following:
             4 = close, 5 = re-open, 6 = fix-open fac.
             7 = change problem type (split/unsplit)
             8 (+256) = change abstract representation
+            9 (+512) = set eps & no negative design
       #rounds: number of changing rounds [40]
       #chng: average number of elements to change [10]
       %chng: probability of any single change [0.5]
 
-A [batch](batch) file is provided that runs the test on a largish set of CFL
-instances, supposed to be in the `data/` folder, the idea being it is a
-symlink (or copy) of that of the
+The [batches](batches) folder collects all the batch scripts; each runs the
+test on a set of CFL instances taken from the `data/` folder of the
 [CapacitatedFacilityLocationBlock
-repo](https://gitlab.com/smspp/capacitatedfacilitylocationblock);
-but not all of them and not the very large ones, so that the tests does end
-in reasonable time if the continuous relaxations are solved. A smaller
-[batch-s](batch-s) file is provided that only solves the one that are small
-and easy enough so that the test can be ran while solving the instances to
-integer optimality (required if, for instance, you want to test changing
-the problem type from splittable to unsplittable).
+repo](https://gitlab.com/smspp/capacitatedfacilitylocationblock) (not the very
+large ones, so that the tests end in reasonable time):
+
+* [batch](batches/batch) / [batch-s](batches/batch-s): the default arrangement
+  (natural-formulation LP vs the MCF flow relaxation), on a largish / small
+  set of instances respectively;
+* [batch-mcf](batches/batch-mcf): the MCF flow-relaxation arrangement;
+* [batch-ben](batches/batch-ben): the Benders-formulation arrangement;
+* [batch-cuts](batches/batch-cuts): the LP + user-cuts arrangement;
+* [batch-ld](batches/batch-ld) / [batch-ldvscuts](batches/batch-ldvscuts): the
+  Lagrangian-dual (knapsack relaxation) arrangement.
+
+The `-s` scripts are restricted to instances small and easy enough that the
+test can be run while solving them to integer optimality (required, e.g., to
+test changing the problem type from splittable to unsplittable). Whenever the
+R3Block is the MCF flow relaxation (the default and `batch-mcf`) the `wchg`
+bitmask must include the +512 bit ("set eps & no negative design"), otherwise
+the natural-LP and MCF bounds diverge after a few modification rounds. Only
+the scenarios that currently pass are registered with `ctest` (see the
+`CMakeLists.txt` for the per-batch status); the `batch-cuts`, `batch-ld` and
+`batch-ldvscuts` arrangements are known to be broken and are kept off.
 
 A makefile is also provided that builds the executable including the
 `LagrangianDualSolver` module, the `BundleSolver` module, the `MILPSolver`

@@ -1,0 +1,5 @@
+# R3Block Configuration: 0 = "copy" R3Block, so B2 is another
+# CapacitatedFacilityLocationBlock that we can configure in BenForm
+
+SimpleConfiguration<int>
+0

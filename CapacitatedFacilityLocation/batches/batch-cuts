@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# usage: batch-cuts < exe file > < log file >
+#        < exe file > = path of the executable file, default ../CFL_test
+#        < log file > = name of the log file, default no log (stdout)
+#
+# user-cuts arrangement: B2 is a copy CapacitatedFacilityLocationBlock solved
+# by a :MILPSolver with dynamic cut separation; runs ORLib, Yang and TBED
+# instances
+
+# run from the cuts config directory so CFL_test reads its config files
+# (BPar*, BSPar*, R3BCfg) there
+cd "$(dirname "$0")/../cuts" || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../../CapacitatedFacilityLocationBlock/data
+
+CFL_test=${1:-../CFL_test}
+mlf=${2:-}
+
+niter=0
+# wchg = 831 = all data changes + abstract representation (+256) + the +512
+# ("set eps & no negative design") bit
+wchg=831
+rounds=40
+maxseed=2
+
+# ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ${DATADIR}/txt/ORLib/*.txt; do
+
+  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
+
+  done
+done
+
+# Yang - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for i in 30-200 60-200 60-300 80-400; do
+  for (( h = 1 ; h <= 5 ; h++ )); do
+    for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+      what=${DATADIR}/txt/Yang/${i}/${i}-${h}.txt
+
+      run_test "$CFL_test" "$what" l "$niter" "$seed" "$wchg" "$rounds"
+
+    done
+  done
+done
+
+# TBED - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for i in 300; do
+  for (( h = 1 ; h <= 10 ; h++ )); do
+    for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+      what=${DATADIR}/txt/TBED/${i}/i${i}_${h}.txt
+
+      run_test "$CFL_test" "$what" f "$niter" "$seed" "$wchg" "$rounds"
+
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# usage: batch-s < exe file > < log file >
+#        < exe file > = path of the executable file, default ./CFL_test
+#        < log file > = name of the log file, default no log (stdout)
+#
+# default arrangement (B1 = natural-formulation LP, B2 = MCF flow relaxation),
+# reduced to small instances only, so that solving them to integer optimality
+# is an option (required, e.g., to test changing the problem type)
+
+# run from the test root (one level up) so CFL_test reads the default config
+# files (BPar*, BSPar*, R3BCfg) there
+cd "$(dirname "$0")/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../CapacitatedFacilityLocationBlock/data
+
+CFL_test=${1:-./CFL_test}
+mlf=${2:-}
+
+niter=0
+# wchg = 831 = all data changes + abstract representation (+256) + the +512
+# ("set eps & no negative design") bit, always required with a MCF R3Block
+wchg=831
+rounds=40
+maxseed=1
+
+# ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
+  64 81 93 111 122 134 51 71 82 94 112 123 41 61 72 84; do
+  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+    what=${DATADIR}/txt/ORLib/cap${f}.txt
+
+    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

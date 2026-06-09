@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ldvscuts < exe file > < log file >
+#        < exe file > = path of the executable file, default ../CFL_test
+#        < log file > = name of the log file, default no log (stdout)
+#
+# Lagrangian-dual vs cuts arrangement: same knapsack Lagrangian-dual R3Block
+# as batch-ld, configured to be contrasted with the user-cuts setting; runs
+# the small ORLib instances
+
+# run from the LDVScuts config directory so CFL_test reads its config files
+# (BPar*, BSPar*, R3BCfg) there
+cd "$(dirname "$0")/../LDVScuts" || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../../CapacitatedFacilityLocationBlock/data
+
+CFL_test=${1:-../CFL_test}
+mlf=${2:-}
+
+niter=0
+# wchg = 257 = change facility costs (bit 0) and the abstract representation
+# (+256)
+wchg=257
+rounds=40
+maxseed=1
+
+# ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
+  64 81 93 111 122 134 51 71 82 94 112 123 41 61 72 84; do
+  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+    what=${DATADIR}/txt/ORLib/cap${f}.txt
+
+    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
