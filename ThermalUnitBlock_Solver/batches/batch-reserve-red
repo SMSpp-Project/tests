@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 #
+# usage: batch-reserve-red < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#
+# runs a reduced set of 1UC instances with spinning-reserve requirements
+#
 # batch-reserve-red: reduced version of batch-reserve for quick checks.
 # Runs only the first few units of each plan4res 1UC_TUB family (so both the
 # primary-only and primary+secondary reserve cases, and both time horizons,
 # are covered) with a single re-solve per instance.
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../UCBlock/data/nc4/plan4res-data/1UC_TUB
@@ -37,3 +43,5 @@ for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

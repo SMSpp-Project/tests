@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./LagBFunction_test
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 # what (= wchg) is the wchg bit-mask covering both the runtime mutation
@@ -56,3 +60,5 @@ for what in 511 ; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

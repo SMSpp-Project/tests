@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./BoxSolver_test
+#
+# sweeps BoxSolver_test over a range of problem sizes, 20 seeds each
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 what=3
@@ -14,3 +20,5 @@ for size in 2 10 50 100 1000; do
 
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

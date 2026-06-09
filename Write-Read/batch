@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./writeandread_test
+#
+# writes each generated Block to file and reads it back, checking the
+# round-trip over a range of sizes, densities and seeds
 
 what=31
 #what=1
@@ -27,3 +33,5 @@ for size in 2 10 50; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

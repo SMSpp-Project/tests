@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 #
+# usage: batch-reserve < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#
+# runs the 1UC instances with spinning-reserve requirements
+#
 # batch-reserve: run TUDPS on the plan4res "1UC_TUB" single-unit instances.
 #
 # These are single ThermalUnitBlocks extracted from the L_B_C_26 / L_B_C_31 /
@@ -14,6 +19,7 @@
 #   L_B_C_32  TimeHorizon  24   114 units   (primary + secondary reserve)
 #   L_H_C_34  TimeHorizon  24   978 units   (primary + secondary reserve)
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../UCBlock/data/nc4/plan4res-data/1UC_TUB
@@ -44,3 +50,5 @@ for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

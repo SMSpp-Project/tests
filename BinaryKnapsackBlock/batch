@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./BinaryKnapsackBlock_test
+#
+# sweeps BinaryKnapsackBlock_test over instance sizes, densities and the
+# four item-type fractions (weights/profits/integers/mixed), with runtime
+# mutations, checking the DP solver against the reference each round
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 seed=264
@@ -28,3 +36,5 @@ for N in 100 500 3000; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

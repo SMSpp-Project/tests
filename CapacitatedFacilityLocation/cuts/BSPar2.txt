@@ -31,12 +31,13 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-9  # number of integer parameters
+10 # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
-intCutSepPar    0 # separate user cuts at the root node & sub-nodes
+intRelaxIntVars 2 # pure LP with the MILPSolver user-cut separation loop
+intCutSepPar    1 # run the separation loop (separate the strong constraints)
+intMaxCutPasses 10000 # raise the cut-pass cap so the bound can converge
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 CPXPARAM_Threads                        1            # avoid parallel

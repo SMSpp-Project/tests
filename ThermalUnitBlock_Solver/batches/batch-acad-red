@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
+#
+# usage: batch-acad-red < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#
+# runs a reduced set of 1UC academic instances across thermal formulations
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../UCBlock/data/nc4/1UC_Data
@@ -39,3 +45,5 @@ for wf in 8 9 10 11 12 13 14; do
     #done
   #done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

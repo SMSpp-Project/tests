@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./PolyhedralFunction_test
+#
 # Tester batch for PolyhedralFunction. Sweeps over:
 #   - problem sizes (number of variables)
 #   - constraint densities
@@ -25,6 +28,7 @@
 # corner cases rather than the PolyhedralFunction itself; they are not
 # included in the default sweep.
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 what=${what:-31}
@@ -50,3 +54,5 @@ for size in $sizes; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

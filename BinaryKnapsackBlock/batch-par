@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# usage: batch-par < bench exe >
+#        < bench exe > = path of the timing bench, default the
+#                       BinaryKnapsackBlock_bench CMake target
+
 ##############################################################################
 ############################### batch-par ####################################
 ##############################################################################
@@ -99,3 +104,5 @@ echo
 echo "serial  = intWhichParallel=-1 (auto: serial base DP)"
 echo "FF(Nw)  = intWhichParallel=1  (FastFlow) with intMaxThread=N"
 echo "best-sp = t(serial) / min over N of t(FF)  ( > 1 = parallel wins )"
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

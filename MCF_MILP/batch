@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./MCF_MILP_test
+#
+# runs net/goto MCF instances of several sizes through the MCFBlock-vs-MILP
+# comparison, over 3 seeds each
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 DATADIR=../../MCFBlock/data
@@ -26,3 +33,5 @@ for type in net goto; do
 
   done # seed
 done   # type
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

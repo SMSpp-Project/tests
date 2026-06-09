@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./LDS_MMCF_test
+#
+# runs the Canad and Mnetgen MMCF instances through LagrangianDualSolver
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 DATADIR=../MMCFBlock/data
@@ -58,3 +64,5 @@ done
 #    done
 #  done
 #done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

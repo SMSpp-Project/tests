@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./PolyhedralFunctionBlock_test
+#
 # Tester batch for PolyhedralFunctionBlock. Sweeps over:
 #   - problem sizes (number of variables)
 #   - constraint densities
@@ -89,3 +92,4 @@ printf "\nTotal elapsed time: %02d:%02d:%02d\n" \
   $((SECONDS/3600)) \
   $((SECONDS%3600/60)) \
   $((SECONDS%60))
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

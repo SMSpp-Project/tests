@@ -1,5 +1,10 @@
-# batch for running the tests with PrimalProximalHeur
 #!/usr/bin/env bash
+#
+# usage: batch-PPH < exe file >
+#        < exe file > = path of the executable file, default ./LDS_Box_test
+#
+# runs the tests with the PrimalProximalHeur over a range of sizes, number of
+# sub-blocks, densities and seeds
 
 what=63
 iter=40
@@ -28,3 +33,5 @@ for nvar in 2 10 50; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

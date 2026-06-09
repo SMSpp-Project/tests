@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
+#
+# usage: batch-c < exe file >
+#        < exe file > = path of the executable file, default ./LDS_MMCF_test
+#
+# runs the Canad MMCF instances through LagrangianDualSolver
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 DATADIR=../MMCFBlock/data
@@ -11,3 +17,5 @@ for what in ${DATADIR}/Canad/*.dat; do
   run_test "$LDS_MMCF_test" "$what" s
 
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

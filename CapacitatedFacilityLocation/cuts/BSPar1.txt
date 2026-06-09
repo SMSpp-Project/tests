@@ -35,8 +35,8 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
-intCutSepPar    3 # separate user cuts at the root node & sub-nodes
+intRelaxIntVars 1 # solve the LP relaxation of the strong formulation
+intCutSepPar    0 # no separation needed: the strong constraints are static
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 CPXPARAM_Threads                    1        # avoid parallel

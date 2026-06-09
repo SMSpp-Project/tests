@@ -1,6 +1,12 @@
-# batch for running the tests with LagrangianDualSolver
 #!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./LDS_Box_test
+#
+# runs the tests with LagrangianDualSolver over a range of sizes, number of
+# sub-blocks, densities and seeds
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 what=15
@@ -23,3 +29,5 @@ for nvar in 2 10 50; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

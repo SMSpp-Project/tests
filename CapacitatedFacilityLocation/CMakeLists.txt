@@ -49,13 +49,13 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
     # one cd-s into the directory holding its config files (BPar*, BSPar*,
     # R3BCfg) so the same scripts work both via ctest and when launched by
     # hand. Only the scenarios that currently pass are registered.
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-s"     # natural-LP vs MCF flow-relaxation, small instances (passes)
-                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"      # same as batch-s on all instances; passes but long, covered by batch-mcf
-                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-cuts" # TODO broken by design: B2 is LP + CPLEX cuts, a tighter bound than B1's pure LP (superseded by batch-ben)
-                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ld"   # TODO broken: knapsack Lagrangian dual converges to a wrong bound (needs LagBFunction fix)
-                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ldvscuts" # TODO broken: same as batch-ld
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ben"     # Benders-formulation LP test (passes)
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mcf")    # MCF flow-relaxation test (passes)
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-s"
+                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-cuts"
+                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ld"
+                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ldvscuts"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ben"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mcf")
 
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
