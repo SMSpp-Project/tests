@@ -74,7 +74,7 @@ intRstAlg            2 # parameter to handle the reset of the algorithm
 16 # number of double parameters
 
 # now all the double parameters
-dblRelAcc         1e-4 # relative accuracy required to solution
+dblRelAcc         1e-8 # relative accuracy required to solution
 dblNZEps          1e-8 # stopping parameter: threshold to declare 0 the || residual ||
 #dbltStar         1e+8 # stopping parameter: multiplied to || residual || to estimate gap
 dbltStar          1e+4 # stopping parameter: multiplied to || residual || to estimate gap
@@ -97,7 +97,7 @@ dblCtOff          0.01 # cut-off factor for pricing in MinQuad
 # now all the string parameters
 #str_LDSlv_ISName ParallelBundleSolver # the inner Solver used by LagrangianDualSolver 
 str_LDSlv_ISName         BundleSolver # the inner Solver used by LagrangianDualSolver 
-str_LagBF_BSCfg      LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
+str_LagBF_BSCfg      LPBSCfg-K-LP.txt # BlockSolverConfig for the LagBFunctions
 #                      this is for the Knapsack relaxation, using DPBinaryKnapsackSolver
 strLogFileName              logLD.txt
 

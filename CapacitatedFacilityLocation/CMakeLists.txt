@@ -37,25 +37,38 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
 
     smspp_install(CFL_test)
 
-    # Create a test fixture to generate .nc4 files by running run_txt2nc4.
-    # This test will build and run the run_txt2nc4 target
-    add_test(NAME run_txt2nc4
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_txt2nc4)
-    # Mark run_txt2nc4 as a fixture that sets up "txt2nc4_generated"
-    set_tests_properties(run_txt2nc4
-                         PROPERTIES FIXTURES_SETUP txt2nc4_generated)
+    # Create a test fixture to generate .nc4 files by running run_cfl2nc4.
+    # This test will build and run the run_cfl2nc4 target
+    add_test(NAME run_cfl2nc4
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_cfl2nc4)
+    # Mark run_cfl2nc4 as a fixture that sets up "cfl2nc4_generated"
+    set_tests_properties(run_cfl2nc4
+                         PROPERTIES FIXTURES_SETUP cfl2nc4_generated)
 
     # Add a test for each batch file. All batch scripts live in batches/; each
     # one cd-s into the directory holding its config files (BPar*, BSPar*,
     # R3BCfg) so the same scripts work both via ctest and when launched by
     # hand. Only the scenarios that currently pass are registered.
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-s"
-                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
+                          # default arrangement (natural-LP vs MCF flow), small instances
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
+                          # default arrangement, full instance set
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-cuts"
-                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ld"
+                          # strong-LP vs weak + dynamic strong-cut separation
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ld"
+                          # knapsack Lagrangian dual (LP knapsack leaf) vs natural LP: LD == LP
                           #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ldvscuts"
+                          # disabled (not a bug): it compares the integer-knapsack Lagrangian dual
+                          # (demand relaxed, decomposed per facility) against the cut-strengthened LP
+                          # bound (demand exact, with cross-facility cuts). These are two distinct
+                          # valid lower bounds: the cuts can exceed the per-facility dual, so their
+                          # difference is neither zero nor sign-definite in general (verified ~7e-4
+                          # on some instances, identical with the DP and CPLEX integer leaves and
+                          # immune to bundle tuning), hence the strict 1e-5 equality is ill-posed
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ben"
+                          # Benders-formulation LP test
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mcf")
+                          # MCF flow-relaxation test
 
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
@@ -71,9 +84,9 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:CFL_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
-        # Make each batch test require the txt2nc4_generated fixture
+        # Make each batch test require the cfl2nc4_generated fixture
         set_tests_properties(CFL_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED txt2nc4_generated)
+                             PROPERTIES FIXTURES_REQUIRED cfl2nc4_generated)
     endforeach ()
 endif ()
 
