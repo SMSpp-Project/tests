@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 #
-# usage: batch-par-nc4 < block_solver exe > [ <nc4 dir> ] [ <reps> ]
-#        < block_solver exe > = path of the SMS++ generic block_solver tool
-#        < nc4 dir >          = dir holding the .nc4 instances
-#                               (default ../../BinaryKnapsackBlock/data/nc4)
-#        < reps >             = timing repetitions, best (min) is kept (default 3)
+# usage: batch-par-nc4 < exe file > < par file > < nc4 dir > < reps >
+#        < exe file > = path of the SMS++ generic block_solver tool,
+#                       default ./block_solver
+#        < par file > = BlockSolverConfig of the serial baseline,
+#                       default BKBSCfg-DP.txt
+#        < nc4 dir >  = dir holding the .nc4 instances,
+#                       default ../../BinaryKnapsackBlock/data/nc4
+#        < reps >     = timing repetitions, best (min) is kept, default 3
 #
 # Head-to-head DP timing on real (Pisinger) knapsack .nc4 instances: the exact
 # serial DPBinaryKnapsackSolver vs the multi-threaded
@@ -17,12 +20,20 @@
 
 set -u
 
-block_solver=${1:-./block_solver}
+# run from the test directory so the configuration files are read there
 here="$(cd "$(dirname "$0")" && pwd)"
-nc4dir=${2:-"$here/../../../BinaryKnapsackBlock/data/nc4"}
-reps=${3:-3}
+cd "$here/.." || exit 1
 
-serial="$here/../BKBSCfg-DP.txt"
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./block_solver
+DEFAULT_PAR=BKBSCfg-DP.txt
+parse_batch_args "$@"
+block_solver=$exe
+serial=$par
+nc4dir=${3:-"../../BinaryKnapsackBlock/data/nc4"}
+reps=${4:-3}
 
 # emit a single-solver ParallelDP config with the given worker count
 par_cfg() {  # $1 = intMaxThread

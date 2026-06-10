@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 #
-# usage: batch-nc4-par < exe file >
+# usage: batch-nc4-par < exe file > < par file 1 > < par file 2 > < log file >
 #        < exe file > = path of the SMS++ generic block_solver tool,
 #                       default ./block_solver
+#        < par file 1 > = BlockSolverConfig of the solver under test,
+#                         default BKBSCfg-PDP.txt
+#        < par file 2 > = BlockSolverConfig of the reference solver,
+#                         default BKBSCfg-DP.txt
+#        < log file > = name of log file, default no log
 #
 # Reference-free regression of the multi-threaded
 # ParallelDPBinaryKnapsackSolver on the curated Pisinger knapsack instances:
@@ -17,18 +22,20 @@
 
 set -u
 
-# self-locating paths - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# run from the test directory so the configuration files are read there
 here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$here/../../batch_common.sh"
 
 DEFAULT_EXE=./block_solver
+DEFAULT_PAR=BKBSCfg-PDP.txt
+DEFAULT_PAR2=BKBSCfg-DP.txt
 parse_batch_args "$@"
+par2="${3:-${DEFAULT_PAR2}}"
 
-nc4dir="$here/../../../BinaryKnapsackBlock/data/nc4"
-cfg1="$here/../BKBSCfg-PDP.txt"
-cfg2="$here/../BKBSCfg-DP.txt"
+nc4dir="../../BinaryKnapsackBlock/data/nc4"
 
 # the optimum reported by block_solver for the given config / instance
 bound() { "$exe" -S "$1" "$2" 2>/dev/null | awk '/Lower bound/{print $4}'; }
@@ -38,8 +45,8 @@ shopt -s globstar nullglob
 n=0; fail=0
 for f in "$nc4dir"/**/*.nc4; do
   n=$((n + 1))
-  v1=$(bound "$cfg1" "$f")
-  v2=$(bound "$cfg2" "$f")
+  v1=$(bound "$par" "$f")
+  v2=$(bound "$par2" "$f")
   ok=$(awk -v a="$v1" -v b="$v2" 'BEGIN {
          if( a == "" || b == "" ) { print 0; exit }
          d = a - b; if( d < 0 ) d = -d;
