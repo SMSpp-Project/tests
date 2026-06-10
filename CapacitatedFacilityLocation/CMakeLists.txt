@@ -63,8 +63,10 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
                           # bound (demand exact, with cross-facility cuts). These are two distinct
                           # valid lower bounds: the cuts can exceed the per-facility dual, so their
                           # difference is neither zero nor sign-definite in general (verified ~7e-4
-                          # on some instances, identical with the DP and CPLEX integer leaves and
-                          # immune to bundle tuning), hence the strict 1e-5 equality is ill-posed
+                          # on some instances, identical with the DP and the :MILPSolver integer
+                          # leaves and immune to bundle tuning), so the strict 1e-5 equality is
+                          # ill-posed. The batch file documents the per-instance gaps and offers a
+                          # commented run_test variant with an ad-hoc 2e-3 tolerance that makes it pass.
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ben"
                           # Benders-formulation LP test
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mcf")

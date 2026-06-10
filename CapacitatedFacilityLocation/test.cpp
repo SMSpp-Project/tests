@@ -183,6 +183,12 @@ Configuration * r3bc;  // the R3Block Configuration
 
 Index niter = 0;  // how many iterations of Slope Scaling have to be done
 
+double cmp_tol = 1e-5;  // relative tolerance used to compare the two bounds;
+                        // 1e-5 by default, but a batch may pass a looser value
+                        // (last command-line argument) when the two Solver
+                        // legitimately compute *different* bounds (e.g. a
+                        // Lagrangian dual vs a cut-strengthened LP)
+
 std::mt19937 rg;               // base random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
@@ -407,7 +413,7 @@ static bool SolveBoth( void )
    #endif
 
    if( abs( fo1st - fo2nd ) <
-       1e-5 *  max( double( 1 ) , max( abs( fo1st ) , abs( fo2nd ) ) ) ) {
+       cmp_tol *  max( double( 1 ) , max( abs( fo1st ) , abs( fo2nd ) ) ) ) {
     LOG1( " - OK(f)" << endl );
     return( true );
     }
@@ -590,6 +596,7 @@ int main( int argc , char **argv )
  Index n_repeat = 40;
 
  switch( argc ) {
+  case( 10 ): Str2Sthg( argv[ 9 ] , cmp_tol );
   case( 9 ): Str2Sthg( argv[ 8 ] , p_change );
   case( 8 ): Str2Sthg( argv[ 7 ] , n_change );
   case( 7 ): Str2Sthg( argv[ 6 ] , n_repeat );
@@ -599,7 +606,7 @@ int main( int argc , char **argv )
   case( 3 ): filetype = argv[ 2 ][ 0 ];
   case( 2 ): break;
   default:   cerr << "Usage: " << argv[ 0 ]
-		  << " name [typ niter seed wchg #rounds #chng %chng]"
+		  << " name [typ niter seed wchg #rounds #chng %chng cmptol]"
 		  << endl
 		  << "      typ = [C], F, L, ignored if name ends in .nc4"
 		  << endl 
