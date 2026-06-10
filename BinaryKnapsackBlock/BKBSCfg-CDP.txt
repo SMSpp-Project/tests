@@ -1,43 +1,36 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - LPBSCfg-K-DP.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BKBSCfg-CDP.txt - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a BinaryKnapsackBlock solved
-# by a CoreCoreDPBinaryKnapsackSolver
-#
-#   Enrico Gorgone, Antonio Frangioni
+# Single-Solver BlockSolverConfig: the core / non-dominated-state
+# CoreDPBinaryKnapsackSolver, used to cross-check it against the exact
+# DPBinaryKnapsackSolver / :MILPSolver on the curated Pisinger knapsack
+# .nc4 instances.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
-1  # the BlockSolverConfig is a "differential" one
+1  # the BlockSolverConfig is a "differential" one: values are being set
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CoreDPBinaryKnapsackSolver
+CoreDPBinaryKnapsackSolver  # name of 1st Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 ComputeConfig # exact type of the ComputeConfig object
 
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+1  # f_diff == 1 ==> all non-provided parameters are not changed
 
 0  # number of integer parameters
 
-# now all the integer parameters
-# [none]
-
 0  # number of double parameters
 
-# now all the double parameters
-# [none]
-
 0  # number of string parameters
-
-# now all the string parameters
-# [none]
 
 0  # number of vector-of-int parameters
 
@@ -57,6 +50,10 @@ ComputeConfig # exact type of the ComputeConfig object
 # pointer to the "extra" Configuration
 * # [none]
 
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END LPBSCfg-K-DP.txt- - - - - - - - - - - - -
+# - - - - - - - - - - - - - - End BKBSCfg-CDP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

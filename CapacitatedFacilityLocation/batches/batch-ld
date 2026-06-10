@@ -6,7 +6,7 @@
 #
 # Lagrangian-dual arrangement: B2 is a copy CapacitatedFacilityLocationBlock
 # in the knapsack formulation solved by a LagrangianDualSolver (BundleSolver
-# driving the dual, DPBinaryKnapsackSolver on the subproblems); runs the small
+# driving the dual, an LP leaf via :MILPSolver on the subproblems); runs the small
 # ORLib instances
 
 # run from the LD config directory so CFL_test reads its config files

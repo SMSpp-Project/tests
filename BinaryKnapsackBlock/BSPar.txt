@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - BinaryKnapsackPar.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a BinaryKnapsackBlock to be
 # solved by two different Solver: a DPBinaryKnapsackSolver and a :MILPSolver
@@ -111,5 +111,5 @@ CPXPARAM_MIP_Tolerances_Integrality     1e-07
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - End BinaryKnapsackPar.txt - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - End BSPar.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

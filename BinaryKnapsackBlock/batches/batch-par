@@ -1,35 +1,31 @@
 #!/usr/bin/env bash
 #
-# usage: batch-par < bench exe >
+# usage: batch-par < bench exe > < par file >
 #        < bench exe > = path of the timing bench, default the
-#                       BinaryKnapsackBlock_bench CMake target
+#                        BinaryKnapsackBlock_bench CMake target binary
+#        < par file >  = unused (the single-solver configs are generated
+#                        inline, see mkcfg below)
+#
+# Manual scaling benchmark for ParallelDPBinaryKnapsackSolver (not registered
+# in ctest): sweeps the number of workers (intMaxThread) over a set of fixed
+# pure-integer knapsack instances and reports the dynamic-programming solve
+# time and the speedup against the serial baseline (intMaxThread = 1, which
+# delegates to the pruning serial DP of DPBinaryKnapsackSolver).
+#
+# No :MILPSolver is attached and no modifications are applied (nM = 0): the
+# timing is the single full DP solve at iteration 0. Requires the
+# timing-enabled bench binary, built by the BinaryKnapsackBlock_bench CMake
+# target (LOG_LEVEL = 1). See BSPar-PDP.txt for a plain (non-generated)
+# single-solver ParallelDP configuration.
 
-##############################################################################
-############################### batch-par ####################################
-##############################################################################
-#                                                                            #
-#   Scaling benchmark for ParallelDPBinaryKnapsackSolver.                    #
-#                                                                            #
-#   Sweeps the number of workers (intMaxThread) over a set of fixed pure-    #
-#   integer knapsack instances and reports the dynamic-programming solve     #
-#   time and the speedup against the serial baseline (intMaxThread = 1,      #
-#   which delegates to the pruning serial DP of DPBinaryKnapsackSolver).     #
-#                                                                            #
-#   No :MILPSolver is attached (see BinaryKnapsackPar-par.txt), and no       #
-#   modifications are applied (nM = 0): the timing is the single full DP     #
-#   solve at iteration 0. Requires the timing-enabled bench binary, built    #
-#   by the BinaryKnapsackBlock_bench CMake target (LOG_LEVEL = 1).           #
-#                                                                            #
-#   Usage: ./batch-par [ bench-executable ] [ config-file ]                  #
-#                                                                            #
-#                              Donato Meoli                                  #
-#                         Dipartimento di Informatica                        #
-#                             Universita' di Pisa                            #
-#                                                                            #
-##############################################################################
+# run from the test directory - - - - - - - - - - - - - - - - - - - - - - - -
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
 set -euo pipefail
 
 BENCH=${1:-../../cmake-build-release/tests/BinaryKnapsackBlock/BinaryKnapsackBlock_bench}
+
 # fixed instance-generation parameters (pure integer knapsack, no
 # modifications: we time the single full DP solve at iteration 0)
 seed=264 ; wchg=127 ; n_repeat=1 ; delta=0.9
@@ -76,7 +72,7 @@ dp_time() { awk -F' - ' '/^0:/ { split( $1 , a , ": " ) ; print a[ 2 ] }' ; }
 run() {
   mkcfg "$1" "$2"
   local out
-  out=$( BKB_BSCFG="$tmp" "$BENCH" $seed $wchg $N $n_repeat $delta $nW $nP $nI $nM \
+  out=$( "$BENCH" $seed $wchg $N $n_repeat $delta $nW $nP $nI $nM "$tmp" \
          2>&1 )
   printf '%s\n' "$out" | dp_time
 }

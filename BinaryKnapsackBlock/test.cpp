@@ -53,6 +53,8 @@
 
 #include "BinaryKnapsackBlock.h"
 
+#include "GreedyRelaxationBinaryKnapsackSolver.h"
+
 #include <random>
 
 #include <chrono>
@@ -94,6 +96,11 @@ std::mt19937 rg;                       // random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
 Index N = 100;                         // number of items
+
+bool check_bounds = false;             // Solver1 is a relaxation: check that
+                                       // its true bounds bracket the optimum
+                                       // of Solver2 rather than the values
+                                       // being equal (chkb command-line arg)
 
 static constexpr Index rangeW = 100;   // range values of weights
 static constexpr double rangeP = 100;  // range values of profits
@@ -211,16 +218,38 @@ bool SolveBoth( void )
   return( false );
   }
 
- // compare optimal values- - - - - - - - - - - - - - - - - - - - - - - - - 
- 
+ // check true bounds - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ if( check_bounds ) {
+  // Solver1 solves a relaxation: rather than comparing the values, check
+  // that its true bounds bracket the exact optimum found by Solver2
+  auto GRS = dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >( Solver1 );
+  if( ! GRS ) {
+   cout << "Error: the bounds check needs a GreedyRelaxationBinaryKnapsackSolver first";
+   return( false );
+   }
+  const double lb = GRS->get_true_lb();
+  const double ub = GRS->get_true_ub();
+  const double tol = 2e-06 * max( abs( Value2 ) , 1.0 );
+  if( ( lb - tol <= Value2 ) && ( Value2 <= ub + tol ) ) {
+   LOG( "OK(b)" );
+   return( true );
+   }
+  cout << "Error: true bounds [ " << lb << " , " << ub
+       << " ] do not bracket the optimum " << Value2;
+  return( false );
+  }
+
+ // compare optimal values- - - - - - - - - - - - - - - - - - - - - - - - -
+
  double gap = ( Value2 - Value1 ) / max( abs( Value1 ) , 1.0 ) ;
  if( abs( gap ) < 2e-06 ) {
   LOG( "OK(f)" );
   return( true );
   }
- 
+
  cout << "Error: Value1 = " << Value1 << ", Value2 = " << Value2;
- return( false );     
+ return( false );
  } 
 
 
@@ -244,7 +273,13 @@ int main( int argc , char **argv )
  // minM defines the minimum absolute number of items that can be modified
  int minM = 10;
 
+ // the BlockSolverConfig file name (used by the batches to switch solvers)
+ std::string bsc_fn = "BSPar.txt";
+ int chkb = 0;
+
  switch( argc ) {
+  case( 12 ): Str2Sthg( argv[ 11 ] , chkb );
+  case( 11 ): bsc_fn = argv[ 10 ];
   case( 10 ): Str2Sthg( argv[ 9 ] , nM );
   case( 9 ): Str2Sthg( argv[ 8 ] , nI );
   case( 8 ): Str2Sthg( argv[ 7 ] , nP );
@@ -256,7 +291,7 @@ int main( int argc , char **argv )
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
              break;
   default: cerr << "Usage: " << argv[ 0 ]
-		<< " seed [wchg N n_repeat delta nW nP nI nM]"
+		<< " seed [wchg N n_repeat delta nW nP nI nM bscfg chkb]"
         << endl << "       wchg: what to change, coded bit-wise [127]"
 	<< endl << "             1 = change sense, 2 = change capacity "
         << endl << "             3 = change profits, 4 = change weights"
@@ -268,9 +303,16 @@ int main( int argc , char **argv )
         << endl << "       nP: percentage of negative profits [0.1]"
         << endl << "       nI: percentage of integer variables [0.5]"
         << endl << "       nM: max percentage of items to modify [0.2]"
-        << endl; 
+        << endl << "       bscfg: BlockSolverConfig file"
+                << " [BSPar.txt]"
+        << endl << "       chkb: 1 = the 1st Solver is a relaxation whose"
+        << endl << "             true bounds must bracket the optimum of"
+        << endl << "             the (exact) 2nd one [0]"
+        << endl;
    return( 1 );
   }
+
+ check_bounds = ( chkb != 0 );
 
  // sanity checks - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  
@@ -398,11 +440,6 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- // the BlockSolverConfig file name defaults to BinaryKnapsackPar.txt, but can
- // be overridden via the BKB_BSCFG environment variable (used by the benchmark
- // batches to switch to the parallel solver configuration)
- const char * bsc_env = std::getenv( "BKB_BSCFG" );
- std::string bsc_fn = bsc_env ? bsc_env : "BinaryKnapsackPar.txt";
  Configuration * bsc = Configuration::deserialize( bsc_fn );
  if( ! bsc ) {
   cerr << "Error: cannot load BSC from " << bsc_fn << endl;

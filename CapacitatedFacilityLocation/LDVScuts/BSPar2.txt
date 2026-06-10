@@ -101,7 +101,7 @@ dblCtOff          0.01 # cut-off factor for pricing in MinQuad
 #str_LDSlv_ISName ParallelBundleSolver # the inner Solver used by LagrangianDualSolver
 str_LDSlv_ISName         BundleSolver # the inner Solver used by LagrangianDualSolver
 str_LagBF_BSCfg      LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
-#                      this is for the Knapsack relaxation, using DPBinaryKnapsackSolver
+#                      this is for the Knapsack relaxation, using CoreDPBinaryKnapsackSolver
 #str_LagBF_BSCfg     LPBSCfg-K-CX.txt # BlockSolverConfig for the LagBFunctions
 #                      this is for the Knapsack relaxation, using a :MILPSolver
 

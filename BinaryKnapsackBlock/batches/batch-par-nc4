@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+#
+# usage: batch-par-nc4 < block_solver exe > [ <nc4 dir> ] [ <reps> ]
+#        < block_solver exe > = path of the SMS++ generic block_solver tool
+#        < nc4 dir >          = dir holding the .nc4 instances
+#                               (default ../../BinaryKnapsackBlock/data/nc4)
+#        < reps >             = timing repetitions, best (min) is kept (default 3)
+#
+# Head-to-head DP timing on real (Pisinger) knapsack .nc4 instances: the exact
+# serial DPBinaryKnapsackSolver vs the multi-threaded
+# ParallelDPBinaryKnapsackSolver (FastFlow engine, intWhichParallel = 1) at
+# 1/2/4/8 workers. This is the fine-grained (inner capacity loop) parallelism;
+# the column to watch is whether more workers ever beat the serial baseline.
+# Wall-clock (block_solver) timing, so each number carries a constant per-run
+# load overhead -- meaningless on tiny instances (n = 50), informative on the
+# larger classes.
+
+set -u
+
+block_solver=${1:-./block_solver}
+here="$(cd "$(dirname "$0")" && pwd)"
+nc4dir=${2:-"$here/../../../BinaryKnapsackBlock/data/nc4"}
+reps=${3:-3}
+
+serial="$here/../BKBSCfg-DP.txt"
+
+# emit a single-solver ParallelDP config with the given worker count
+par_cfg() {  # $1 = intMaxThread
+  cat <<EOF
+BlockSolverConfig
+1
+1
+ParallelDPBinaryKnapsackSolver
+1
+ComputeConfig
+1
+2
+intMaxThread    $1
+intWhichParallel    1
+0
+0
+0
+0
+0
+* # [none]
+EOF
+}
+
+# best-of-reps wall-clock seconds of "block_solver -S <cfg> <nc4>"
+timeit() {  # $1 = config file, $2 = nc4
+  local best="" t s e
+  for ((r = 0; r < reps; ++r)); do
+    s=$(date +%s.%N)
+    "$block_solver" -S "$1" "$2" >/dev/null 2>&1
+    e=$(date +%s.%N)
+    t=$(awk -v a="$s" -v b="$e" 'BEGIN{print b-a}')
+    best=$(awk -v t="$t" -v b="$best" 'BEGIN{print (b==""||t<b)?t:b}')
+  done
+  echo "$best"
+}
+
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+for w in 1 2 4 8; do par_cfg "$w" > "$tmp/ff_$w.txt"; done
+
+shopt -s globstar nullglob
+
+printf '%-28s %10s %10s %10s %10s %10s %9s\n' \
+       instance serial FF-1w FF-2w FF-4w FF-8w bestSpd
+for f in "$nc4dir"/**/*.nc4; do
+  ser=$(timeit "$serial" "$f")
+  f1=$(timeit "$tmp/ff_1.txt" "$f")
+  f2=$(timeit "$tmp/ff_2.txt" "$f")
+  f4=$(timeit "$tmp/ff_4.txt" "$f")
+  f8=$(timeit "$tmp/ff_8.txt" "$f")
+  spd=$(awk -v s="$ser" -v a="$f1" -v b="$f2" -v c="$f4" -v d="$f8" 'BEGIN{
+          m=a; if(b<m)m=b; if(c<m)m=c; if(d<m)m=d;
+          printf "%.2f", (m>0)? s/m : 0 }')
+  printf '%-28s %10.4f %10.4f %10.4f %10.4f %10.4f %8sx\n' \
+         "$(basename "$f")" "$ser" "$f1" "$f2" "$f4" "$f8" "$spd"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

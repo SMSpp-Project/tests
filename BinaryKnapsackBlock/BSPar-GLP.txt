@@ -1,0 +1,117 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-GLP.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a BinaryKnapsackBlock to be
+# solved by two different Solver that both compute the *continuous (LP)
+# relaxation* of the knapsack, so the test's equality oracle is meaningful:
+#   - a GreedyRelaxationBinaryKnapsackSolver (Dantzig continuous-knapsack bound), and
+#   - a :MILPSolver run with intRelaxIntVars == 1 (LP relaxation).
+# The two must agree on the optimal value.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GreedyRelaxationBinaryKnapsackSolver  # name of 1st Solver
+CPXMILPSolver                   # name of 2nd Solver
+#GRBMILPSolver                  # name of 2nd Solver
+#SCIPMILPSolver             # name of 2nd Solver
+#HiGHSMILPSolver                # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intLogVerb           0
+intRelaxIntVars      1   # solve the LP relaxation (integer Variable relaxed)
+
+2  # number of double parameters
+
+# now all the double parameters
+dblRelAcc     1e-08
+
+## All specific CPLEX parameter (uncomment based on 2nd Solver)
+CPXPARAM_MIP_Tolerances_Integrality     1e-07
+
+## All specific GUROBI parameter (uncomment based on 2nd Solver)
+#IntFeasTol  1e-07
+
+0  # number of string parameters
+
+# now all the string parameters
+#strOutputFile bk.lp
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - End BSPar-GLP.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

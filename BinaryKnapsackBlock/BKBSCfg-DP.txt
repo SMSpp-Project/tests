@@ -1,16 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - BinaryKnapsackPar-par.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BKBSCfg-DP.txt - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a BinaryKnapsackBlock to be
-# solved by a single ParallelDPBinaryKnapsackSolver: used by the scaling
-# benchmarks, where the number of workers is swept through the intMaxThread
-# parameter below (0 = all cores, 1 = serial). No :MILPSolver is attached so
-# that the reported timing is the pure dynamic programming one.
-#
-#   Antonio Frangioni
+# Single-Solver BlockSolverConfig: exact DPBinaryKnapsackSolver, used by
+# batch-nc4 to solve the curated Pisinger knapsack .nc4 instances.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -19,7 +13,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-ParallelDPBinaryKnapsackSolver  # name of 1st Solver
+DPBinaryKnapsackSolver  # name of 1st Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -28,20 +22,11 @@ ParallelDPBinaryKnapsackSolver  # name of 1st Solver
 
 ComputeConfig # exact type of the ComputeConfig object
 
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+1  # f_diff == 1 ==> all non-provided parameters are not changed
 
-2  # number of integer parameters
+0  # number of integer parameters
 
-# now all the integer parameters
-intMaxThread    0
-# parallel engine: -1 = auto (serial), 0 = OpenMP, 1 = FastFlow, 2 = thread
-intWhichParallel    1
-
-1  # number of double parameters
-
-# now all the double parameters
-dblReopt        0.3
+0  # number of double parameters
 
 0  # number of string parameters
 
@@ -68,5 +53,5 @@ dblReopt        0.3
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - End BinaryKnapsackPar-par.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - End BKBSCfg-DP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

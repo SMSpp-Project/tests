@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# usage: batch-greedy < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default BinaryKnapsackBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar-GLP.txt
+#        < solver > = unused
+#        < log file > = name of log file, default no log
+#
+# sweeps BinaryKnapsackBlock_test over instance sizes, densities and the
+# four item-type fractions (weights/profits/integers/mixed), with runtime
+# mutations, checking the GreedyRelaxationBinaryKnapsackSolver against a
+# :MILPSolver run on the LP relaxation (intRelaxIntVars == 1) each round:
+# both must agree on the continuous-relaxation optimal value (see
+# BSPar-GLP.txt)
+
+# run from the test directory so BinaryKnapsackBlock_test reads its config
+# files there
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./BinaryKnapsackBlock_test
+DEFAULT_PAR=BSPar-GLP.txt
+parse_batch_args "$@"
+
+# fixed harness parameters - - - - - - - - - - - - - - - - - - - - - - - - -
+seed=264
+wchg=127
+n_repeat=50
+
+# sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for N in 100 500 3000; do
+
+  for delta in 0.005 0.05 0.6; do
+
+    for nW in 0 0.2 0.7 1; do
+
+      for nP in 0 0.2 0.7 1; do
+
+        for nI in 0 0.2 0.8 1; do
+
+          for nM in 0 0.2 0.7 1; do
+
+            run_test "$exe" "$seed" "$wchg" "$N" "$n_repeat" "$delta" "$nW" "$nP" "$nI" "$nM" "$par"
+
+          done
+        done
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

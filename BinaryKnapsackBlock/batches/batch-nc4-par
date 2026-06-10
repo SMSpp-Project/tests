@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#
+# usage: batch-nc4-par < exe file >
+#        < exe file > = path of the SMS++ generic block_solver tool,
+#                       default ./block_solver
+#
+# Reference-free regression of the multi-threaded
+# ParallelDPBinaryKnapsackSolver on the curated Pisinger knapsack instances:
+# for every .nc4 generated under BinaryKnapsackBlock/data/nc4, solve it with
+# the parallel DP solver and with the exact serial full-table
+# DPBinaryKnapsackSolver and check that the two optima agree (see
+# BKBSCfg-PDP.txt / BKBSCfg-DP.txt).
+#
+# The .nc4 instances are produced by the run_bk2nc4 fixture (see the test
+# CMakeLists). Requires the curated txt.tgz to have been published to the
+# Package Registry (see BinaryKnapsackBlock/data/nc4/readme.txt).
+
+set -u
+
+# self-locating paths - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+here="$(cd "$(dirname "$0")" && pwd)"
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./block_solver
+parse_batch_args "$@"
+
+nc4dir="$here/../../../BinaryKnapsackBlock/data/nc4"
+cfg1="$here/../BKBSCfg-PDP.txt"
+cfg2="$here/../BKBSCfg-DP.txt"
+
+# the optimum reported by block_solver for the given config / instance
+bound() { "$exe" -S "$1" "$2" 2>/dev/null | awk '/Lower bound/{print $4}'; }
+
+shopt -s globstar nullglob
+
+n=0; fail=0
+for f in "$nc4dir"/**/*.nc4; do
+  n=$((n + 1))
+  v1=$(bound "$cfg1" "$f")
+  v2=$(bound "$cfg2" "$f")
+  ok=$(awk -v a="$v1" -v b="$v2" 'BEGIN {
+         if( a == "" || b == "" ) { print 0; exit }
+         d = a - b; if( d < 0 ) d = -d;
+         m = (a < 0 ? -a : a); if( m < 1 ) m = 1;
+         print ( d <= 2e-5 * m ) ? 1 : 0 }')
+  if [ "$ok" != "1" ]; then
+    echo "MISMATCH ${f#$nc4dir/}: PDP=$v1 DP=$v2"
+    fail=1
+  fi
+done
+
+echo "checked $n instance(s)"
+if [ "$fail" = "0" ] && [ "$n" -gt 0 ]; then
+  echo -e "${GREEN}All tests passed!!${NC}"
+else
+  echo -e "${RED}Errors happened!!${NC}"
+  exit 1
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
