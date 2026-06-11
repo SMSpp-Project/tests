@@ -21,6 +21,11 @@ if (TARGET SMS++::BinaryKnapsackBlock)
                               SMS++::MILPSolver)
     endif ()
 
+    if (TARGET SMS++::BranchAndXSolver)
+        target_link_libraries(BinaryKnapsackBlock_test PRIVATE
+                              SMS++::BranchAndXSolver)
+    endif ()
+
     smspp_install(BinaryKnapsackBlock_test)
 
     # same driver built with timing on (LOG_LEVEL=1), used by the scaling
@@ -34,6 +39,11 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     if (TARGET SMS++::MILPSolver)
         target_link_libraries(BinaryKnapsackBlock_bench PRIVATE
                               SMS++::MILPSolver)
+    endif ()
+
+    if (TARGET SMS++::BranchAndXSolver)
+        target_link_libraries(BinaryKnapsackBlock_bench PRIVATE
+                              SMS++::BranchAndXSolver)
     endif ()
 
     smspp_install(BinaryKnapsackBlock_bench)
