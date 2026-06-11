@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - - BSPar-BX.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a BinaryKnapsackBlock to be
-# solved by two different Solver: a BranchAndXSolver (GreedyRelaxation
+# solved by two different Solver: a BranchAndXSolver (GreedyRelaxationBinaryKnapsack
 # leaf via InnerBSCfg.txt) and an exact :MILPSolver, used to cross-check the
 # Branch-and-Bound optimum on pure-binary instances (run the harness with
 # nI = 1).

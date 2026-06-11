@@ -2,7 +2,7 @@
 #
 # usage: batch-resilient < exe file > < bpar file > < spar file > < log file >
 #        < exe file > = path of the executable file, default InvestmentBlock_test
-#        < bpar file > = BlockConfig file, default MetaConfig1.txt
+#        < bpar file > = BlockConfig file, default InnerBCfg.txt
 #        < spar file > = BlockSolverConfig file, default BSPar.txt
 #        < log file > = name of log file, default no log
 #
@@ -18,7 +18,7 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./InvestmentBlock_test
-DEFAULT_PAR=MetaConfig1.txt
+DEFAULT_PAR=InnerBCfg.txt
 DEFAULT_SLV=BSPar.txt
 parse_batch_args "$@"
 bpar=$par

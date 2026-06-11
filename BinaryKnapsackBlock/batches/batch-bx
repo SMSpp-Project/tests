@@ -8,7 +8,7 @@
 #
 # sweeps BinaryKnapsackBlock_test over instance sizes, densities and the
 # negative weights/profits fractions, with runtime mutations, checking the
-# BranchAndXSolver (GreedyRelaxationSolver continuous-relaxation leaf, see
+# BranchAndXSolver (GreedyRelaxationBinaryKnapsackSolver leaf, see
 # InnerBSCfg.txt) against an exact :MILPSolver each round: both must agree
 # on the integer optimal value (see BSPar-BX.txt). All the variables are
 # integer (nI = 1), as the Branch-and-X explores binary branchings.
