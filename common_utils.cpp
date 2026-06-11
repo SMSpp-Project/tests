@@ -60,6 +60,9 @@ struct SmsppMpiSafeEnvInit {
   set_default_env( "UCX_TLS"     , "tcp,self" );
   set_default_env( "OMPI_MCA_btl", "tcp,self" );
   set_default_env( "OMPI_MCA_pml", "ob1"      );
+  // the hwloc GL component probes the GPU topology via XOpenDisplay(),
+  // which may hang inside MPI_Init(); no SMS++ target has a use for it
+  set_default_env( "HWLOC_COMPONENTS", "-gl"  );
   }
  };
 
