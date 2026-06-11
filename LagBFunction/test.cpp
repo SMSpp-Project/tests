@@ -239,7 +239,7 @@
 // SKIP_BEAT + 1, so that the input parameter still dictates the number of
 // compute() calls per (Solver per) Block
 
-#define SKIP_BEAT 3
+#define SKIP_BEAT 0
 
 /*--------------------------------------------------------------------------*/
 
@@ -2249,7 +2249,10 @@ int main( int argc , char **argv )
    auto FRO =
         NDOBlock->get_nested_Block( p )->get_objective< FRealObjective >();
    auto LBF = static_cast< LagBFunction * >( FRO->get_function() );
-   LBF->get_nested_Block( 0 )->unregister_Solvers();
+   // The new BundleSolver grafts an easy LagBFunction's inner Block into
+   // its MasterProblemBlock. LegacyBundleSolver leaves it under the LBF.
+   if( auto * inner = LBF->get_inner_block() )
+    inner->unregister_Solvers();
    }
 
  NDOBlock->unregister_Solvers();
