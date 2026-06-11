@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# usage: batch-bx < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default BinaryKnapsackBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar-BX.txt
+#        < solver > = unused
+#        < log file > = name of log file, default no log
+#
+# sweeps BinaryKnapsackBlock_test over instance sizes, densities and the
+# negative weights/profits fractions, with runtime mutations, checking the
+# BranchAndXSolver (GreedyRelaxationSolver continuous-relaxation leaf, see
+# InnerBSCfg.txt) against an exact :MILPSolver each round: both must agree
+# on the integer optimal value (see BSPar-BX.txt). All the variables are
+# integer (nI = 1), as the Branch-and-X explores binary branchings.
+
+# run from the test directory so BinaryKnapsackBlock_test reads its config
+# files there
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./BinaryKnapsackBlock_test
+DEFAULT_PAR=BSPar-BX.txt
+parse_batch_args "$@"
+
+# fixed harness parameters - - - - - - - - - - - - - - - - - - - - - - - - -
+seed=264
+wchg=63
+n_repeat=25
+nI=1
+
+# sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for N in 50 200 500; do
+
+  for delta in 0.005 0.05 0.6; do
+
+    for nW in 0 0.2; do
+
+      for nP in 0 0.2; do
+
+        for nM in 0 0.2; do
+
+          run_test "$exe" "$seed" "$wchg" "$N" "$n_repeat" "$delta" "$nW" "$nP" "$nI" "$nM" "$par"
+
+        done
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
