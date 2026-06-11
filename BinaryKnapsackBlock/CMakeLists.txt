@@ -61,17 +61,16 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     endforeach ()
 
     # ----- Curated Pisinger knapsack .nc4 cross-check ---------------------- #
-    # Solve the curated literature instances (downloaded as txt.tgz and
-    # converted to .nc4 by the run_bk2nc4 fixture) with the exact DP solver
-    # and a :MILPSolver, and cross-check the optima (see batch-nc4). Disabled
-    # by default: enable it only once the curated txt.tgz has been published to
-    # the Package Registry (see BinaryKnapsackBlock/data/nc4/readme.txt).
-    option(BUILD_BKB_BENCHMARK_TESTS
-           "Run the curated Pisinger knapsack .nc4 cross-check tests" OFF)
-    if (BUILD_BKB_BENCHMARK_TESTS AND TARGET block_solver)
-        # fixture: build bk2nc4 and (down)load + convert the instances
+    # Solve the curated literature instances (downloaded as txt.tgz from the
+    # Package Registry and converted to .nc4 by the run_bk2nc4 fixture, see
+    # BinaryKnapsackBlock/data/nc4/readme.txt) with the solver under test and
+    # a reference one, and cross-check the optima (see batches/batch-nc4*).
+    if (TARGET block_solver)
+        # Create a test fixture to generate .nc4 files by running run_bk2nc4.
+        # This test will build and run the run_bk2nc4 target
         add_test(NAME run_bk2nc4
                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_bk2nc4)
+        # Mark run_bk2nc4 as a fixture that sets up "bk2nc4_generated"
         set_tests_properties(run_bk2nc4
                              PROPERTIES FIXTURES_SETUP bk2nc4_generated)
 
