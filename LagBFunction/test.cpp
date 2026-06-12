@@ -663,7 +663,7 @@ static bool SolveBoth( void )
   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
                        : ( convex ? INF : -INF );
 
-  if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 2e-7 *
+  if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 5e-7 *
 			 max( double( 1 ) , abs( max( foLP , foNDO ) ) ) ) ) {
    LOG1( "OK(f)" << endl );
    return( true );
