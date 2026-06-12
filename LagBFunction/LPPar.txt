@@ -17,8 +17,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver    # name of Solver
-#GRBMILPSolver   # name of Solver
+#CPXMILPSolver    # name of Solver
+GRBMILPSolver   # name of Solver
 #SCIPMILPSolver  # name of Solver
 #HiGHSMILPSolver # name of Solver
 
@@ -32,17 +32,20 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-1  # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
+Threads 1
 
-0 # number of double parameters
+1 # number of double parameters
+dblMaxTime 7200.0
 
 # now all the double parameters
 # [none]
 
 0 # number of string parameters
+#strOutputFile entire.lp
 
 # now all the string parameters
 # [none]

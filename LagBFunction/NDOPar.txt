@@ -30,13 +30,13 @@ ComputeConfig       # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-21 # number of integer parameters
+22 # number of integer parameters
 
 # now all the integer parameters
 intMaxIter   100000 # MaxIter, max number of iterations for each call
 intMaxThread      0 # MaxThread, max number of new tasks to spawn
 intEverykIt       1 # periodicity of eEverykIteration events
-intLogVerb        2 # LogVerb, log verbosity of main Bundle algorithm
+intLogVerb        0 # LogVerb, log verbosity of main Bundle algorithm
 intWZNorm         2 # which norm to use in the norm-based stopping condition
 intBPar1         20 # discard items when they have been useless for <this> iterations
 intBPar2        400 # max bundle size per component
@@ -54,10 +54,14 @@ intTrgtMng        0 # bit-wise encoding targets and accuracies management:
                     # bit 1: if upper/lower target is set to each convex/concave component
                     # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                     # bit 4: if Lipschitz constant is used to compute the upper model
+
+## Master Problem related parameters
+
 intMPPrimal       0 # wheter the MP should be considered in its primal form
 intMPV2Form       1 # dual MP storage frame: 0 = displacement, 1 = iterate
-intMPHScaling     0 # hard-component PFB scaling: 0 = none, 1 = local, 2 = global, 3 = both
+intMPHScaling     2 # hard-component PFB scaling: 0 = none, 1 = local, 2 = global, 3 = both
 intMPStbl         0 # stabilization-type: 0=proximal, 1=level, 2=doubly-stabilized
+intDoEasy         1 # Wheter easy components should be treated exactly
 
 15 # number of double parameters
 
