@@ -29,11 +29,11 @@ The following tests are provided:
 
 - [`BundleSolverML`](BundleSolverML), a tester which provides validation
   for `BundleSolverML`, the `BundleSolver` variant whose step-size t is
-  predicted by a neural network (LibTorch) trained online across solves:
+  predicted by a neural network (Torch) trained online across solves:
   the optimal value of a random convex `PolyhedralFunction` is compared
   against the one found by a standard `BundleSolver` at each training
   epoch, and the model save / load round-trip and the shared-network
-  mechanism are tested as well. It requires libTorch [see the BundleSolver
+  mechanism are tested as well. It requires Torch [see the BundleSolver
   README].
 
 - [`CapacitatedFacilityLocation`](CapacitatedFacilityLocation), a tester

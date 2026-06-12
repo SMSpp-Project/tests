@@ -1,6 +1,6 @@
 # ----- Requirements -------------------------------------------------------- #
-# BundleSolverML is only built into BundleSolver if libTorch is available,
-# hence this test is only added if libTorch is found.
+# BundleSolverML is only built into BundleSolver if Torch is available,
+# hence this test is only added if Torch is found.
 find_package(Torch QUIET HINTS ${Torch_ROOT})
 
 if (Torch_FOUND)

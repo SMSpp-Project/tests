@@ -2,7 +2,7 @@
 
 A tester which provides validation for `BundleSolverML`, the `BundleSolver`
 variant whose step-size t is predicted by a neural network (implemented
-with the LibTorch C++ API) instead of the classical rule-based heuristics,
+with the Torch C++ API) instead of the classical rule-based heuristics,
 trained online across successive solves.
 
 This executable, given the input parameter n, constructs a "random" convex
@@ -38,8 +38,8 @@ particular for `BundleSolverML`.
 A makefile is also provided that builds the executable including the
 `BundleSolver` module and all its dependencies, in particular `MILPSolver`
 (and, obviously, the core SMS++ library). Note that `BundleSolverML` is
-only compiled into `BundleSolver` if libTorch is available [see the
-BundleSolver README], hence this test requires libTorch to be installed at
+only compiled into `BundleSolver` if Torch is available [see the
+BundleSolver README], hence this test requires Torch to be installed at
 `$(Torch_ROOT)` (makefile builds) or findable by `find_package(Torch)`
 (CMake builds).
 

@@ -4,8 +4,8 @@
 #                                                                            #
 #   makefile of test (for BundleSolverML)                                    #
 #                                                                            #
-#   Note: BundleSolverML requires libTorch, hence this test can only be      #
-#   built if libTorch is installed at $(Torch_ROOT) (see                     #
+#   Note: BundleSolverML requires Torch, hence this test can only be      #
+#   built if Torch is installed at $(Torch_ROOT) (see                     #
 #   extlib/makefile-default-paths-*)                                         #
 #                                                                            #
 #                               Donato Meoli                                 #
