@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./BundleSolverML_test
+#
+# Tester batch for BundleSolverML. Sweeps over:
+#   - problem sizes (number of variables)
+#   - constraint densities
+#
+# Tunable via environment variables:
+#   - epochs: number of training epochs per instance (default: 5)
+#   - sizes:  list of sizes to test (default: "10 20")
+#   - denss:  list of densities to test (default: "4")
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../batch_common.sh"
+
+epochs=${epochs:-5}
+sizes=${sizes:-"10 20"}
+denss=${denss:-"4"}
+
+BundleSolverML_test=${1:-./BundleSolverML_test}
+
+for size in $sizes; do
+  for dens in $denss; do
+    for (( seed = 0 ; seed < 10 ; seed++ )); do
+
+      run_test "$BundleSolverML_test" "$seed" "$size" "$dens" $epochs
+
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

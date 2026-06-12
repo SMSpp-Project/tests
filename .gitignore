@@ -4,6 +4,7 @@
 
 # --- Project-specific: per-test binaries --------------------
 BoxSolver/BoxSolver_test
+BundleSolverML/BundleSolverML_test
 BinaryKnapsackBlock/BinaryKnapsackBlock_test
 CapacitatedFacilityLocation/CFL_test
 compare_formulations/compare_formulations

@@ -27,6 +27,15 @@ The following tests are provided:
   classes `CPXMILPSolver` and `SCIPMILPSolver`), and for some of the
   mechanics of the SMS++ core library.
 
+- [`BundleSolverML`](BundleSolverML), a tester which provides validation
+  for `BundleSolverML`, the `BundleSolver` variant whose step-size t is
+  predicted by a neural network (LibTorch) trained online across solves:
+  the optimal value of a random convex `PolyhedralFunction` is compared
+  against the one found by a standard `BundleSolver` at each training
+  epoch, and the model save / load round-trip and the shared-network
+  mechanism are tested as well. It requires libTorch [see the BundleSolver
+  README].
+
 - [`CapacitatedFacilityLocation`](CapacitatedFacilityLocation), a tester
   that can be used to test several things together within a slope scaling
   approach to the Capacitated Facility Location (CFL) problem where the

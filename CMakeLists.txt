@@ -81,6 +81,8 @@ add_subdirectory(LagBFunction)
 add_subdirectory(PolyhedralFunction)
 add_subdirectory(PolyhedralFunctionBlock)
 
+add_subdirectory(BundleSolverML)
+
 add_subdirectory(QuadraticTests)
 
 add_subdirectory(Write-Read)
