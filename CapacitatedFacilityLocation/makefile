@@ -55,7 +55,6 @@ include $(LgDSLVSDR)/makefile
 #MCFLESDR = ../../LEMONSolver
 #include $(MCFLESDR)/makefile
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files

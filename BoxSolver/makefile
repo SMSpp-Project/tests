@@ -36,7 +36,6 @@ include $(SMS++SDR)/lib/makefile-c
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-s
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files

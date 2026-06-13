@@ -45,7 +45,6 @@ include $(LgDSLVSDR)/makefile
 #MILPSSDR = ../../MILPSolver
 #include $(MILPSSDR)/makefile-c
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files

@@ -47,7 +47,6 @@ include $(MCFLESDR)/makefile
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-s
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files

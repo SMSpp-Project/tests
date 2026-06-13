@@ -57,7 +57,6 @@ include $(StcBlkSDR)/makefile-s
 TSSBkSDR = ../../TwoStageStochasticBlock
 include $(TSSBkSDR)/makefile
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
