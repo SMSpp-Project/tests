@@ -72,8 +72,8 @@ dp_time() { awk -F' - ' '/^0:/ { split( $1 , a , ": " ) ; print a[ 2 ] }' ; }
 run() {
   mkcfg "$1" "$2"
   local out
-  out=$( "$BENCH" $seed $wchg $N $n_repeat $delta $nW $nP $nI $nM "$tmp" \
-         2>&1 )
+  out=$( "$BENCH" -S "$tmp" -e $seed -k $wchg -N $N -n $n_repeat -d $delta \
+         -W $nW -P $nP -i $nI -M $nM 2>&1 )
   printf '%s\n' "$out" | dp_time
 }
 

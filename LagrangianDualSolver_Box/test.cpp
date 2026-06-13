@@ -408,6 +408,37 @@ static bool SolveBoth( void )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameter (-S BlockSolverConfig) is handled centrally by
+// common_utils. This tester GENERATES its own Block from the seed, so it
+// takes no instance positional (filename_optional = true).
+// (nvar and wchg are declared as globals above.)
+long int seed = 0;
+Index nson = 2;
+double dens = 0.1;
+double p_change = 0.5;
+Index n_change = 10;
+Index n_repeat = 40;
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
+  case( 'N' ): Str2Sthg( optarg , nvar );      return( true );
+  case( 's' ): Str2Sthg( optarg , nson );      return( true );
+  case( 'd' ): Str2Sthg( optarg , dens );      return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
+  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
+  default:                                     return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
@@ -415,57 +446,40 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the standard parameter (-S) is parsed by common_utils; the test only
+ // appends its own knobs and reads no instance file (it generates one)
 
  assert( SKIP_BEAT >= 0 );
 
- long int seed = 0;
- Index nson = 2;
- double dens = 0.1;
- double p_change = 0.5;
- Index n_change = 10;
- Index n_repeat = 40;
- std::string BSC = "BSPar.txt";
+ docopt_desc = "SMS++ LagrangianDualSolver-on-AbstractBlock test.\n";
+ filename_optional = true;
+ short_opts += "e:k:N:s:d:n:m:q:";
+ const std::vector< option > my_opts = {
+   { "seed"   , required_argument , nullptr , 'e' } ,
+   { "wchg"   , required_argument , nullptr , 'k' } ,
+   { "nvar"   , required_argument , nullptr , 'N' } ,
+   { "nson"   , required_argument , nullptr , 's' } ,
+   { "dens"   , required_argument , nullptr , 'd' } ,
+   { "rounds" , required_argument , nullptr , 'n' } ,
+   { "nchng"  , required_argument , nullptr , 'm' } ,
+   { "pchng"  , required_argument , nullptr , 'q' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [15]\n"
+         "  -N, --nvar <n>                  number of variables [10]\n"
+         "  -s, --nson <n>                  number of sub-Blocks [2]\n"
+         "  -d, --dens <x>                  constraints as fraction of "
+         "nvar*nson [0.1]\n"
+         "  -n, --rounds <n>                how many iterations [40]\n"
+         "  -m, --nchng <n>                 number of changes [10]\n"
+         "  -q, --pchng <p>                 probability of changing [0.5]\n";
 
- switch( argc ) {
-  case( 10 ): Str2Sthg( argv[ 9 ] , p_change );
-  case( 9 ): Str2Sthg( argv[ 8 ] , n_change );
-  case( 8 ): BSC = std::string( argv[ 7 ] );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_repeat );
-  case( 6 ): Str2Sthg( argv[ 5 ] , dens );
-  case( 5 ): Str2Sthg( argv[ 4 ] , nson );
-  case( 4 ): Str2Sthg( argv[ 3 ] , nvar );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-  break;
-  default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar nson dens #rounds #chng %chng BSC]"
-		<< endl <<
-           "       wchg: what to change, coded bit-wise [15]"
-		<< endl <<
-           "             0 = bounds, 1 = objective"
-		<< endl <<
-           "             2 = linking coefficients, 3 = linking lhs/rhs"
-		<< endl <<
-           "             4 = only consider a quadratic objective"
-		<< endl <<
-           "             5 = Lagrangian solver is a heuristic"
-		<< endl <<
-           "       nvar: number of variables [10]"
-		<< endl <<
-           "       nson: number of sub-Block [2]"
-		<< endl <<
-           "       dens: number of constraints, fraction of nvar * nson [0.1]"
-		<< endl <<
-           "       #rounds: how many iterations [40]"
-		<< endl <<
-           "       BSC: BlockSolverCOnfig to use [BSPar.txt]"
-		<< endl <<
-           "       #chng: number changes [10]"
-		<< endl <<
-           "       %chng: probability of changing [0.5]"
-		<< endl;
-	   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
 
  if( nvar < 1 ) {
   cout << "error: nvar too small";
@@ -565,12 +579,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- Configuration * bsc = Configuration::deserialize( BSC );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  cerr << "Error: cannot load BSC from " << BSC << endl;
+  cerr << "Error: cannot load BSC from " << sconf_file << endl;
   exit( 1 );
   }
- s_config_Block( TestBlock , bsc , BSC );
+ s_config_Block( TestBlock , bsc , sconf_file );
 
  if( TestBlock->get_registered_solvers().empty() ) {
   cout << endl << "no Solver registered to the Block!" << endl;

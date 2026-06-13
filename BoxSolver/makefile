@@ -30,7 +30,7 @@ include ../makefile_common
 
 # define input macros for SMS++ complete makefile, then include it
 SMS++SDR = ../../SMS++
-include $(SMS++SDR)/lib/makefile-inc
+include $(SMS++SDR)/lib/makefile-c
 
 # MILPSolver, without core SMS++
 MILPSSDR = ../../MILPSolver
@@ -43,25 +43,11 @@ include $(MILPSSDR)/makefile-s
 MOBJ =  $(SMS++OBJ) $(MILPSOBJ) $(CMMNUOBJ)
 
 # libraries
-# note the --force_link, that is used to ensure that BoxSolver (which is
-# never explicitly mentioned in test.cpp if SMSpp_ensure_load() is not
-# called) is properly linked with the final executable and therefore
-# appears in the Solver factory. The ugly C++ mangled name may not be
-# portable: if this does not work on your system run
-#
-#    nm libSMS++.a -j | grep BoxSolver
-#
-# in wherever folder libSMS++.a lives (typically SMS++/lib in the root
-# umbrella folder) and use one of the many names that will come out of
-# it. Be aware, though, that not all names may work and you may get a
-#
-#    what(): BoxSolver not present in Solver factory
-#
-# error, so a bit of experiment may be required. If this is too complicated
-# or does not work, uncomment SMSpp_ensure_load() and be sure that
-# BoxSolver.h is #include-d in test.cpp
-MLIB =  $(SMS++LIB) $(MILPSLIB) \
-	--force-link=__ZTVN17SMSpp_di_unipi_it9BoxSolverE
+# note: linking the SMS++ object files directly (lib/makefile-c above)
+# rather than the static library pulls in SMS++/obj/BoxSolver.o
+# unconditionally, so BoxSolver registers in the Solver factory without any
+# --force-link trick (it is never explicitly mentioned in test.cpp)
+MLIB =  $(SMS++LIB) $(MILPSLIB)
 
 $(DIR)/$(NAME): $(DIR)/test.o $(MOBJ)
 	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)

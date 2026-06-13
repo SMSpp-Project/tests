@@ -471,6 +471,35 @@ static bool SolveBoth( void )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (instance positional, -S BlockSolverConfig, -c/-p
+// prefixes) are handled centrally by common_utils. The same tester can thus
+// drive different solver configurations (e.g. ThermalUnitExtDPSolver vs the
+// nuclear NuclearUnitExtDPSolver) just by passing a different -S file.
+long int seed = 0;
+Index wchg = 135;
+int wf = 1;
+double p_change = 0.6;
+Index n_change = 10;
+Index n_repeat = 100;
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
+  case( 'f' ): Str2Sthg( optarg , wf );        return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
+  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
+  default:                                     return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
@@ -478,67 +507,42 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // standard params (instance positional + -S) are parsed by common_utils;
+ // the test only appends its own knobs
 
  assert( SKIP_BEAT >= 0 );
 
- long int seed = 0;
- Index wchg = 135;
- int wf = 1;
- double p_change = 0.6;
- Index n_change = 10;
- Index n_repeat = 100;
+ docopt_desc = "SMS++ ThermalUnitBlock Solver test.\n";
+ short_opts += "e:k:f:n:m:q:";
+ const std::vector< option > my_opts = {
+   { "seed"   , required_argument , nullptr , 'e' } ,
+   { "wchg"   , required_argument , nullptr , 'k' } ,
+   { "wf"     , required_argument , nullptr , 'f' } ,
+   { "rounds" , required_argument , nullptr , 'n' } ,
+   { "nchng"  , required_argument , nullptr , 'm' } ,
+   { "pchng"  , required_argument , nullptr , 'q' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [135]\n"
+         "  -f, --wf <bits>                 what formulation, bit-wise "
+         "(0=3bin,1=T,2=pt,3=DP,4=SU,5=SD,6=SUSD,+8=P/C) [1]\n"
+         "  -n, --rounds <n>                how many iterations [100]\n"
+         "  -m, --nchng <n>                 number of changes [10]\n"
+         "  -q, --pchng <p>                 probability of changing [0.6]\n";
 
- // the BlockSolverConfig file is passed on the command line (argv[2]), so that
- // the same tester can drive different solver configurations (e.g. the thermal
- // ThermalUnitExtDPSolver vs the nuclear NuclearUnitExtDPSolver) on different
- // instances without editing any file; defaults to "BSCfg.txt"
- std::string bsc_fn = argc >= 3 ? argv[ 2 ] : "BSCfg.txt";
+ process_args( argc , argv , process_specific_arg );
 
- switch( argc ) {
-  case( 9 ): Str2Sthg( argv[ 8 ] , p_change );
-  case( 8 ): Str2Sthg( argv[ 7 ] , n_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_repeat );
-  case( 6 ): Str2Sthg( argv[ 5 ] , wf );
-  case( 5 ): Str2Sthg( argv[ 4 ] , wchg );
-  case( 4 ): Str2Sthg( argv[ 3 ] , seed );
-  case( 3 ):  // argv[2] is the BlockSolverConfig file, read above
-  case( 2 ): break;
-  default: std::cerr << "Usage: " << argv[ 0 ] <<
-	   "file [BSC-file seed wchg wf #rounds #chng %chng]"
-    << std::endl <<
-    "       BSC-file: BlockSolverConfig description [BSCfg.txt]"
-    << std::endl <<
-    "       wchg: what to change, coded bit-wise [135]"
-    << std::endl <<
-    "             0 = fixed costs, 1 = linear costs"
-    << std::endl <<
-    "             2 = quadratic costs"
-    << std::endl <<
-    "             +128 = also change abstract representation"
-    << std::endl <<
-    "       wf:   what formulation, coded bit-wise [1]"
-    << std::endl <<
-    "             0 = 3bin, 1 = T, 2 = pt, 3 = DP"
-    << std::endl <<
-    "             4 = SU, 5 = SD, 6 = SUSD (formulation)"
-    << std::endl <<
-    "             +8 = also use perspective cuts"
-    << std::endl <<
-    "       #rounds: how many iterations [100]"
-    << std::endl <<
-    "       #chng: number changes [10]"
-    << std::endl <<
-    "       %chng: probability of changing [0.6]"
-    << std::endl;
-	   return( 1 );
-  }
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
 
  rg.seed( seed );  // seed the pseudo-random number generator
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- auto block = Block::deserialize( argv[ 1 ] );
+ auto block = Block::deserialize( filename );
  if( ! block ) {
   std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
   exit( 1 );
@@ -590,12 +594,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;
+  std::cerr << "Error: cannot load BSC from " << sconf_file << std::endl;
   exit( 1 );
   }
- s_config_Block( TUBlock , bsc , bsc_fn );
+ s_config_Block( TUBlock , bsc , sconf_file );
 
  if( TUBlock->get_registered_solvers().size() < 2 ) {
   std::cout << std::endl << "too few Solver registered to the Block"

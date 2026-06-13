@@ -37,7 +37,7 @@ for wf in 8 9 10 11 12 13 14; do
 
           what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-          run_test "$TUDPS_test" "$what" "$par" "$seed" "$wchg" "$wf" "$iter"
+          run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" -f "$wf" -n "$iter"
 
         #done
       done

@@ -70,7 +70,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/TSSB_EC_CO_*.nc4 \
       exit 1
     fi
 
-    run_test "$exe" "$what" "$par" "$slv" "$ref"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

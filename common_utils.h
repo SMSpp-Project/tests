@@ -365,6 +365,33 @@ bool process_standard_arg( int opt );
 void process_args( int argc , char ** argv );
 
 /*--------------------------------------------------------------------------*/
+/// processes all command-line arguments, with test-specific options
+/** Same as the two-argument overload, but @p custom_arg is called first for
+ *  each option so that a test can handle its OWN command-line options (the
+ *  ones it appends to short_opts / long_opts) on top of the standard ones
+ *  (the instance positional and -B / -S / -c / -p / -D / -v, handled
+ *  centrally by process_standard_arg()). This is the exact same machinery
+ *  the tools use: the standard parameters live here, every test only adds
+ *  its specific ones. @p custom_arg returns true if it consumed the option.
+ *
+ *  If @p filename_optional is true (set by a test that generates its own
+ *  instance rather than reading one, e.g. the seed-driven testers) a
+ *  missing positional instance is not an error. */
+
+void process_args( int argc , char ** argv , bool ( *custom_arg )( int opt ) );
+
+/*--------------------------------------------------------------------------*/
+/// true if the instance positional argument is optional (generator tests)
+extern bool filename_optional;
+
+/*--------------------------------------------------------------------------*/
+/// require that a BlockSolverConfig was provided (-S); throw otherwise
+void require_solver_config( void );
+
+/// require that a BlockConfig was provided (-B); throw otherwise
+void require_block_config( void );
+
+/*--------------------------------------------------------------------------*/
 
 #endif  /* __TESTS_COMMON_UTILS */
 

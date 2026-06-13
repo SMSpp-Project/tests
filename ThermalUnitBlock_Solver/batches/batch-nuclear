@@ -1,51 +1,28 @@
 #!/usr/bin/env bash
 #
-# usage: batch-nuclear [ exe file ] [ data dir ]
-#        [ exe file ] = path of the executable, default ./TUDPS_test
-#        [ data dir ] = directory holding the single-TUB NuclearUnitBlock .nc4,
-#                       default ../../UCBlock/data/nc4/1UC_Data/singlebus-nuclear
+# usage: batch-nuclear < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
 #
-# Same as batch-singlebus-tpc but for the NUCLEAR units: each single
-# NuclearUnitBlock instance is solved with GRBMILPSolver (1st / reference) and
-# NuclearUnitExtDPSolver (2nd), on the T + Perspective-Cuts formulation
-# (wf = 9), and the two are compared. A NuclearUnitBlock is-a ThermalUnitBlock,
-# so the same tester drives it; the nuclear DP solver only differs in the
-# BlockSolverConfig, passed to the tester on the command line (BSCfg-nuc.txt).
-#
-# The single-TUB nuclear instances are the per-unit, per-iteration
-# NuclearUnitBlocks with Lagrangian costs dumped by ucblock_solver -DSAVE_TUB=1
-# on single-bus UCBlock instances that contain NuclearUnitBlocks. Place them
-# under <data dir> before running this batch.
+# runs the single-bus single-NuclearUnitBlock instances on the T + Perspective-
+# Cuts formulation (wf = 9), solving each with the MILPSolver (1st / reference)
+# and the NuclearUnitExtDPSolver (2nd) and comparing the two. A NuclearUnitBlock
+# is-a ThermalUnitBlock, so the same tester drives it; the nuclear DP solver only
+# differs in the BlockSolverConfig (BSCfg-nuc.txt) of this test directory.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
-TUDPS_test=${1:-./TUDPS_test}
-DATADIR=${2:-../../UCBlock/data/nc4/1UC_Data/singlebus-nuclear}
+DATADIR=../../UCBlock/data/nc4/1UC_Data/singlebus-nuclear
 
+TUDPS_test=${1:-./TUDPS_test}
 par=BSCfg-nuc.txt
+
 seed=0
-wchg=0      # just solve and compare the optimum
+wchg=0      # just solve and compare the optimum (no cost perturbation here)
 wf=9        # T (=1) + Perspective Cuts (+8): the T+P/C formulation
 
-# scaffold: SKIP cleanly (exit 0) until the nuclear single-TUBs are produced
-if [ ! -d "$DATADIR" ]; then
-  echo "batch-nuclear: SKIP - data dir '$DATADIR' not found."
-  echo "  Produce the nuclear single-TUB dumps with ucblock_solver -DSAVE_TUB=1"
-  echo "  on the single-bus nuclear UCBlock instances, then place them under"
-  echo "  '$DATADIR'."
-  exit 0
-fi
-
-shopt -s nullglob
-instances=( "$DATADIR"/*.nc4 "$DATADIR"/*/*.nc4 )
-if [ ${#instances[@]} -eq 0 ]; then
-  echo "batch-nuclear: SKIP - no .nc4 instances under '$DATADIR'"
-  exit 0
-fi
-
-for f in "${instances[@]}"; do
-  run_test "$TUDPS_test" "$f" "$par" "$seed" "$wchg" "$wf"
+for f in "${DATADIR}"/*/*.nc4; do
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -f "$wf"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

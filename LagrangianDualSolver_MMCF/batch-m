@@ -20,7 +20,7 @@ for i in 64; do
 
       what=${DATADIR}/Mnetgen/$i-$j-$h
 
-      run_test "$LDS_MMCF_test" "$what" m
+      run_test "$LDS_MMCF_test" "$what" -B BPar.txt -S BSPar.txt -t m
 
     done
   done
@@ -32,7 +32,7 @@ for i in 128; do
 
       what=${DATADIR}/Mnetgen/$i-$j-$h
 
-      run_test "$LDS_MMCF_test" "$what" m
+      run_test "$LDS_MMCF_test" "$what" -B BPar.txt -S BSPar.txt -t m
 
     done
   done

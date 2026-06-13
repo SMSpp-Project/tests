@@ -20,12 +20,15 @@ sizes=${sizes:-"10 20"}
 denss=${denss:-"4"}
 
 BundleSolverML_test=${1:-./BundleSolverML_test}
+par=${2:-BSPar.txt}
+mlpar=${3:-BSPar-ML.txt}
 
 for size in $sizes; do
   for dens in $denss; do
     for (( seed = 0 ; seed < 10 ; seed++ )); do
 
-      run_test "$BundleSolverML_test" "$seed" "$size" "$dens" $epochs
+      run_test "$BundleSolverML_test" -S "$par" -L "$mlpar" \
+               -e "$seed" -N "$size" -d "$dens" -E "$epochs"
 
     done
   done

@@ -184,7 +184,7 @@ static void PrintSol( CDASolver * slvr , bool first ,
  if( ! wprnt )
   return;
 
- std::string name( globalArgv[ 1 ] );
+ std::string name( filename );
  name = name.substr( name.find_last_of( "/" ) + 1 , name.length() );
  name = name.substr( 0 , name.find( "." ) );
  if( first )
@@ -357,6 +357,24 @@ static bool SolveBoth( void )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (instance positional, -B BlockConfig, -S
+// BlockSolverConfig, -c/-p prefixes) are handled centrally by common_utils
+char filetype = 's';  // type of the input file
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 't' ): filetype = optarg[ 0 ];        return( true );
+  case( 'w' ): Str2Sthg( optarg , wprnt );    return( true );
+  default:                                    return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
@@ -364,50 +382,51 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- 
+ // standard params (instance positional + -B + -S) are parsed by
+ // common_utils; the test only appends its own knobs
+
  globalArgv = argv;
  assert( SKIP_BEAT >= 0 );
 
- char filetype = 's';  // type of the input file;
- 
- switch( argc ) {
-  case( 4 ): Str2Sthg( argv[ 3 ] , wprnt );
-  case( 3 ): filetype = argv[ 2 ][ 0 ];
-  case( 2 ): break;
-  default:   cerr << "Usage: " << argv[ 0 ] << " file_name [typ wprnt]"
-		  << endl
-		  << "        typ = s*, c, p, o, d, u, m (lower or uppercase)"  
-		  << endl 
-		  << "        wprnt: what print into a file, coded bit-wise [0]"
-		  << endl 
-		  << "         0 = nothing, 1 = duals,"
-		  << endl
-		  << "         2 = primal,  4 = time & objective value"
-		  << endl;
-             exit( 1 );
-  }
+ docopt_desc = "SMS++ LagrangianDualSolver-on-MMCFBlock test.\n";
+ short_opts += "t:w:";
+ const std::vector< option > my_opts = {
+   { "type"  , required_argument , nullptr , 't' } ,
+   { "wprnt" , required_argument , nullptr , 'w' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -t, --type <c>                  input file type "
+         "(s*,c,p,o,d,u,m) [s]\n"
+         "  -w, --wprnt <bits>              what to print to file, bit-wise "
+         "[0]\n";
+
+ process_args( argc , argv , process_specific_arg );
+
+ // both the BlockConfig (-B) and the BlockSolverConfig (-S) must be provided
+ // explicitly: the test never falls back to a hardcoded default Configuration
+ require_block_config();
+ require_solver_config();
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  TestBlock = new MMCFBlock;
- 
- TestBlock->load( argv[ 1 ] , filetype );
+
+ TestBlock->load( filename , filetype );
  TestBlock->PreProcess();
- 
+
  // BC may be a plain BlockConfig or a meta-config
  // SimpleConfiguration< std::map< std::string , Configuration * > >;
  // b_config_Block() dispatches on the runtime type.
- std::string bc_fn = "BPar.txt";
- Configuration * cfg = Configuration::deserialize( bc_fn );
+ Configuration * cfg = Configuration::deserialize( bconf_file );
  if( ! cfg ) {
-  cerr << "Error: cannot load BC from " << bc_fn << endl;
+  cerr << "Error: cannot load BC from " << bconf_file << endl;
   exit( 1 );
   }
- b_config_Block( TestBlock , cfg , bc_fn );
+ b_config_Block( TestBlock , cfg , bconf_file );
 
  delete( cfg );
- 
+
  TestBlock->generate_abstract_variables();
 
  // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
@@ -420,13 +439,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- std::string bsc_fn = "BSPar.txt";
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  cerr << "Error: cannot load BSC from " << bsc_fn << endl;
+  cerr << "Error: cannot load BSC from " << sconf_file << endl;
   exit( 1 );
   }
- s_config_Block( TestBlock , bsc , bsc_fn );
+ s_config_Block( TestBlock , bsc , sconf_file );
 
  if( TestBlock->get_registered_solvers().empty() ) {
   cout << endl << "no Solver registered to the Block!" << endl;

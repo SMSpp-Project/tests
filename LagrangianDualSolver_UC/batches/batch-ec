@@ -90,7 +90,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/EC_CO_*.nc4 \
         ;;
     esac
 
-    run_test "$exe" "$what" "$cur_par" "$slv" "$ref"
+    run_test "$exe" "$what" -S "$cur_par" -B InnerBCfg.txt -w "$slv" -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

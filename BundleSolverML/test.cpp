@@ -138,6 +138,33 @@ static double net_norm( Net * nn )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameter (-S BlockSolverConfig, the plain BundleSolver) is
+// handled centrally by common_utils. This tester also needs a SECOND
+// BlockSolverConfig for the ML variant, passed via -L. It GENERATES its own
+// Block from the seed, so it takes no instance positional.
+long int seed = 0;
+Index nvar = 10;
+double dens = 4;
+Index n_epochs = 5;
+std::string ml_bsc_fn;      // the ML BlockSolverConfig (-L), mandatory
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'N' ): Str2Sthg( optarg , nvar );      return( true );
+  case( 'd' ): Str2Sthg( optarg , dens );      return( true );
+  case( 'E' ): Str2Sthg( optarg , n_epochs );  return( true );
+  case( 'L' ): ml_bsc_fn = optarg;             return( true );
+  default:                                     return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char ** argv )
 {
  // override the default terminate handler to print the exception message
@@ -145,28 +172,34 @@ int main( int argc , char ** argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the standard parameter (-S) is parsed by common_utils; the test appends
+ // its own knobs and the -L ML BlockSolverConfig, and reads no instance file
 
- long int seed = 0;
- Index nvar = 10;
- double dens = 4;
- Index n_epochs = 5;
+ docopt_desc = "SMS++ BundleSolver-vs-BundleSolverML test.\n";
+ filename_optional = true;
+ short_opts += "e:N:d:E:L:";
+ const std::vector< option > my_opts = {
+   { "seed"    , required_argument , nullptr , 'e' } ,
+   { "nvar"    , required_argument , nullptr , 'N' } ,
+   { "dens"    , required_argument , nullptr , 'd' } ,
+   { "epochs"  , required_argument , nullptr , 'E' } ,
+   { "ml-cfg"  , required_argument , nullptr , 'L' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
+         "  -N, --nvar <n>                  number of variables [10]\n"
+         "  -d, --dens <x>                  rows / variables [4]\n"
+         "  -E, --epochs <n>                training epochs [5]\n"
+         "  -L, --ml-cfg <file>             ML BlockSolverConfig (mandatory)\n";
 
- switch( argc ) {
-  case( 5 ): Str2Sthg( argv[ 4 ] , n_epochs );
-  case( 4 ): Str2Sthg( argv[ 3 ] , dens );
-  case( 3 ): Str2Sthg( argv[ 2 ] , nvar );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ] << " seed [nvar dens #epochs]"
-		<< endl <<
-	   "       nvar: number of variables [10]"
-		<< endl <<
-	   "       dens: rows / variables [4]"
-		<< endl <<
-	   "       #epochs: training epochs [5]"
-		<< endl;
-	   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // both BlockSolverConfigs must be provided explicitly: the plain one via
+ // -S and the ML one via -L; the test never falls back to a hardcoded default
+ require_solver_config();
+ if( ml_bsc_fn.empty() )
+  throw( std::invalid_argument(
+   "the ML BlockSolverConfig must be provided (did you forget -L?)" ) );
 
  if( nvar < 1 ) {
   cout << "error: nvar too small";
@@ -230,13 +263,13 @@ int main( int argc , char ** argv )
 
  double fi_ref;
  {
-  std::string bsc_fn = "BSPar.txt";
-  Configuration * bsc = Configuration::deserialize( bsc_fn );
+  // the plain BundleSolver BlockSolverConfig comes from -S (sconf_file)
+  Configuration * bsc = Configuration::deserialize( sconf_file );
   if( ! bsc ) {
-   cerr << "Error: cannot load BSC from " << bsc_fn << endl;
+   cerr << "Error: cannot load BSC from " << sconf_file << endl;
    exit( 1 );
    }
-  s_config_Block( NDOBlock , bsc , bsc_fn );
+  s_config_Block( NDOBlock , bsc , sconf_file );
 
   Solver * slvr = ( NDOBlock->get_registered_solvers() ).front();
   #if( LOG_LEVEL >= 2 )
@@ -264,13 +297,13 @@ int main( int argc , char ** argv )
  // training solves with BundleSolverML - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- std::string mlbsc_fn = "BSPar-ML.txt";
- Configuration * mlbsc = Configuration::deserialize( mlbsc_fn );
+ // the ML BlockSolverConfig comes from -L (ml_bsc_fn)
+ Configuration * mlbsc = Configuration::deserialize( ml_bsc_fn );
  if( ! mlbsc ) {
-  cerr << "Error: cannot load BSC from " << mlbsc_fn << endl;
+  cerr << "Error: cannot load BSC from " << ml_bsc_fn << endl;
   exit( 1 );
   }
- s_config_Block( NDOBlock , mlbsc , mlbsc_fn );
+ s_config_Block( NDOBlock , mlbsc , ml_bsc_fn );
 
  auto bml = dynamic_cast< BundleSolverML * >(
 		         ( NDOBlock->get_registered_solvers() ).front() );

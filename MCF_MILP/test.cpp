@@ -302,6 +302,31 @@ static bool SolveBoth( void )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (instance positional, -S BlockSolverConfig, -c/-p
+// prefixes) are handled centrally by common_utils
+long int seed = 1;
+unsigned int wchg = 255;
+double p_change = 0.5;
+Index n_change = 10;
+Index n_repeat = 40;
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
+  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
+  default:                                     return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
@@ -309,45 +334,37 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // standard params (instance positional + -S) are parsed by common_utils;
+ // the test only appends its own knobs
 
- long int seed = 1;
- unsigned int wchg = 255;
- double p_change = 0.5;
- Index n_change = 10;
- Index n_repeat = 40;
+ docopt_desc = "SMS++ MCFBlock-vs-MILP test.\n";
+ short_opts += "e:k:n:m:q:";
+ const std::vector< option > my_opts = {
+   { "seed"    , required_argument , nullptr , 'e' } ,
+   { "wchg"    , required_argument , nullptr , 'k' } ,
+   { "rounds"  , required_argument , nullptr , 'n' } ,
+   { "nchng"   , required_argument , nullptr , 'm' } ,
+   { "pchng"   , required_argument , nullptr , 'q' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [255]\n"
+         "  -n, --rounds <n>                number of changing rounds [40]\n"
+         "  -m, --nchng <n>                 avg number of elements to change "
+         "[10]\n"
+         "  -q, --pchng <p>                 probability of any single change "
+         "[0.5]\n";
 
- switch( argc ) {
-  case( 7 ): Str2Sthg( argv[ 6 ] , p_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_change );
-  case( 5 ): Str2Sthg( argv[ 4 ] , n_repeat );
-  case( 4 ): Str2Sthg( argv[ 3 ] , wchg );
-  case( 3 ): Str2Sthg( argv[ 2 ] , seed );
-  case( 2 ): break;
-  default: std::cerr << "Usage: " << argv[ 0 ] <<
-	   " <file> [seed wchg #rounds #chng %chng]" << std::endl <<
-           "       seed: seed of the pseudo-random generator [1]"
-		     << std::endl <<
-           "       wchg: what to change, coded bit-wise [255]"
-		     << std::endl <<
-           "             0 = cost, 1 = cap, 2 = dfct, 3 = o.arc, 4 = c.arc"
-		     << std::endl <<
-           "             5 = delete arc, 6 = add arc"
-		     << std::endl <<
- 	   "             7 (+128) = also change abstract representation"
-		     << std::endl <<
-           "      #rounds: number of changing rounds [40]"
-		     << std::endl <<
-           "      #chng: average number of elements to change [10]"
-		     << std::endl <<
-           "      %chng: probability of any single change [0.5]"
-		     << std::endl;
-	   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
 
  // construction and loading of the objects - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- std::string fn( argv[ 1 ] );
+ std::string fn( filename );
  if( fn.substr( fn.size() - 4 , 4 ) == ".nc4" ) {
   MCFB = dynamic_cast< MCFBlock * >( Block::deserialize( fn ) );
   if( ! MCFB ) {
@@ -372,13 +389,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- std::string bsc_fn = "BSPar.txt";
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;
+  std::cerr << "Error: cannot load BSC from " << sconf_file << std::endl;
   return( 1 );
   }
- s_config_Block( MCFB , bsc , bsc_fn );
+ s_config_Block( MCFB , bsc , sconf_file );
 
  if( MCFB->get_registered_solvers().size() < 2 ) {
   std::cout << "too few Solver registered to MCFB!" << std::endl;

@@ -24,7 +24,7 @@ parse_batch_args "$@"
 
 for what in ../../UCBlock/data/nc4/plan4res-data/FirstSetofInstances/*.nc4; do
 
-    run_test "$exe" "$what" "$par" "$slv"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv"
 
 done
 
@@ -33,7 +33,7 @@ done
 
 for what in ../../UCBlock/data/nc4/plan4res-data/*.nc4; do
 
-    run_test "$exe" "$what" "$par" "$slv"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv"
 
 done
 

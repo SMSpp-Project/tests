@@ -47,7 +47,7 @@ for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
       if [ $wf -ge 10 ] && [ "$big" = 1 ]; then
         continue
       fi
-      run_test "$TUDPS_test" "$f" "$par" "$seed" "$wchg" "$wf" "$rounds" "$nchg" "$pchg"
+      run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -f "$wf" -n "$rounds" -m "$nchg" -q "$pchg"
     done
   done
 done

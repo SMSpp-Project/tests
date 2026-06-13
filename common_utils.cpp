@@ -522,30 +522,60 @@ bool process_standard_arg( int opt )
 
 /*--------------------------------------------------------------------------*/
 
+bool filename_optional = false;
+
+/*--------------------------------------------------------------------------*/
+
+void require_solver_config( void )
+{
+ if( sconf_file.empty() )
+  throw( std::invalid_argument(
+   "a BlockSolverConfig must be provided (did you forget the -S option?)" ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+void require_block_config( void )
+{
+ if( bconf_file.empty() )
+  throw( std::invalid_argument(
+   "a BlockConfig must be provided (did you forget the -B option?)" ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+
 void process_args( int argc , char ** argv )
 {
+ process_args( argc , argv , nullptr );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+void process_args( int argc , char ** argv , bool ( *custom_arg )( int opt ) )
+{
  exe = get_filename( argv[ 0 ] );
- if( argc < 2 ) {
-  std::cout << exe << ": no input file" << std::endl
-            << "Try '" << exe << " --help' for more information" << std::endl;
-  exit( 1 );
-  }
 
  while( true ) {  // options
   const auto opt = getopt_long( argc , argv , short_opts.data() ,
                                 long_opts.data() , nullptr );
   if( opt == -1 ) break;
 
-  if( ! process_standard_arg( opt ) ) {
-   std::cout << "Try '" << exe << " --help' for more information"
-             << std::endl;
-   exit( 1 );
-   }
+  // test-specific options are processed first: a test that re-defines one
+  // of the standard letters means its own
+  if( custom_arg && custom_arg( opt ) )  // test-specific option
+   continue;                             // next
+
+  if( process_standard_arg( opt ) )      // if it is a standard one
+   continue;                             // next
+
+  std::cout << "Try '" << exe << " --help' for more information"
+            << std::endl;
+  exit( 1 );
   }
 
- if( optind < argc )  // last argument == [Block] filename
+ if( optind < argc )  // last positional argument == [Block] instance file
   filename = std::string( argv[ optind ] );
- else {
+ else if( ! filename_optional ) {
   std::cout << exe << ": no input file" << std::endl
             << "Try '" << exe << " --help' for more information" << std::endl;
   exit( 1 );

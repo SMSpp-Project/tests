@@ -43,7 +43,7 @@ for N in 50 200 500; do
 
         for nM in 0 0.2; do
 
-          run_test "$exe" "$seed" "$wchg" "$N" "$n_repeat" "$delta" "$nW" "$nP" "$nI" "$nM" "$par"
+          run_test "$exe" -S "$par" -e "$seed" -k "$wchg" -N "$N" -n "$n_repeat" -d "$delta" -W "$nW" -P "$nP" -i "$nI" -M "$nM"
 
         done
       done

@@ -14,7 +14,7 @@ LDS_MMCF_test=${1:-./LDS_MMCF_test}
 
 for what in ${DATADIR}/Canad/*.dat; do
 
-  run_test "$LDS_MMCF_test" "$what" s
+  run_test "$LDS_MMCF_test" "$what" -B BPar.txt -S BSPar.txt -t s
 
 done
 

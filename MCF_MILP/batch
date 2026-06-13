@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# usage: batch < exe file >
+# usage: batch < exe file > < par file >
 #        < exe file > = path of the executable file, default ./MCF_MILP_test
+#        < par file >  = BlockSolverConfig file, default BSPar.txt
 #
 # runs net/goto MCF instances of several sizes through the MCFBlock-vs-MILP
 # comparison, over 3 seeds each
@@ -15,6 +16,7 @@ wchg=255
 #rounds=40
 
 MCF_MILP_test=${1:-./MCF_MILP_test}
+par=${2:-BSPar.txt}
 
 for type in net goto; do
 
@@ -26,7 +28,7 @@ for type in net goto; do
 
         what=${DATADIR}/nc4/${type}${sz}_${h}.nc4
 
-        run_test "$MCF_MILP_test" "$what" "$seed" "$wchg" "$rounds"
+        run_test "$MCF_MILP_test" "$what" -S "$par" -e "$seed" -k "$wchg"
 
       done # h
     done   # sz

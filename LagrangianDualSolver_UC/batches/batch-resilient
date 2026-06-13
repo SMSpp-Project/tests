@@ -64,7 +64,7 @@ for wf in 0 1 2; do
           exit 1
         fi
 
-        run_test "$exe" "$what" "$par" "$slv" "$ref" "$wf"
+        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref" -f "$wf"
 
     done
 

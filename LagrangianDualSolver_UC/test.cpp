@@ -198,6 +198,25 @@ static Subset GenerateRand( Index m , Index k )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (instance positional, -B BlockConfig, -S
+// BlockSolverConfig, -c/-p prefixes) are handled centrally by common_utils
+//   -w / --warm-start : 0 = LagrangianDualSolver, 1 = PrimalProximalHeur
+//   -r / --ref        : reference objective value to compare against
+//   -f / --wf         : DCNetworkBlock formulation, overrides the -B one
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'w' ): Str2Sthg( optarg , ProxHeur );     return( true );
+  case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
+  case( 'f' ): Str2Sthg( optarg , wf );           return( true );
+  default:                                         return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char ** argv )
 {
  // override the default terminate handler to print the exception message
@@ -205,69 +224,38 @@ int main( int argc , char ** argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // standard params (instance positional + -B + -S) are parsed by
+ // common_utils; the test only appends its own knobs
 
  assert( SKIP_BEAT >= 0 );
 
- /*!!
- long int seed = 0;
- Index wchg = 127;
- double dens = 4;  
- double p_change = 0.5;
- Index n_change = 10;
- Index n_repeat = 40;
- !!*/
+ docopt_desc = "SMS++ LagrangianDualSolver-on-UCBlock test.\n";
+ short_opts += "w:r:f:";
+ const std::vector< option > my_opts = {
+   { "warm-start" , required_argument , nullptr , 'w' } ,
+   { "ref"        , required_argument , nullptr , 'r' } ,
+   { "wf"         , required_argument , nullptr , 'f' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -w, --warm-start <0|1>          0 = LagrangianDualSolver, "
+         "1 = PrimalProximalHeur [0]\n"
+         "  -r, --ref <value>               reference objective to compare "
+         "against [none]\n"
+         "  -f, --wf <0|1|2>                DCNetworkBlock formulation, "
+         "overrides the -B one [file]\n";
 
- switch( argc ) {
-  /*!!
-  case( 8 ): Str2Sthg( argv[ 7 ] , p_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_repeat );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-	     !!*/
-  case( 6 ): Str2Sthg( argv[ 5 ] , wf );
-  case( 5 ): Str2Sthg( argv[ 4 ] , RefObjective );
-  case( 4 ): Str2Sthg( argv[ 3 ] , ProxHeur );
-  case( 3 ):
-  case( 2 ): break;
-  default: std::cerr << "Usage: " << argv[ 0 ]
-		     << " UC-file [BSC-file ws ref wf]"
-		     << std::endl <<
-	   "       BSC-file: BlockSolverConfig description [BSPar.txt]"
-		     << std::endl <<
-           "       ws: 0 = LagrangianDualSolver, 1 = PrimalProximalHeur [0]"
-		     << std::endl <<
-           "       ref: reference objective value to compare against [none]"
-		     << std::endl <<
-           "       wf: DCNetworkBlock formulation, overrides DCNBCfg.txt [file]"
-		     << std::endl <<
-           "             0 = PTDF, 1 = CYCLE, 2 = KIRCHHOFF"
-	        << std::endl;
-    /*!!
-	   " UC file [BSC file seed wchg #rounds #chng %chng]"
- 		<< std::endl <<
-	   "       seed: random seed generator [0]"
- 		<< std::endl <<
-           "       wchg: what to change, coded bit-wise [127]"
-		<< std::endl <<
-           "             0 = ..., 1 = ...s "
-		<< std::endl <<
-           "             2 = ..., 3 = ..."
-	        << std::endl <<
-           "       #rounds: how many iterations [40]"
-	        << std::endl <<
-           "       #chng: number changes [10]"
-	        << std::endl <<
-           "       %chng: probability of changing [0.5]"
-		!!*/
-	   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // both the BlockConfig (-B, the inner formulation) and the
+ // BlockSolverConfig (-S) must be provided explicitly: the test never falls
+ // back to a hardcoded default Configuration
+ require_block_config();
+ require_solver_config();
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- TestBlock = Block::deserialize( argv[ 1 ] );
+ TestBlock = Block::deserialize( filename );
  if( ! TestBlock ) {
   std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
   exit( 1 );
@@ -279,10 +267,9 @@ int main( int argc , char ** argv )
  // apply() it to the TestBlock; note that the BlockSolverConfig is
  // clear()-ed and kept to do the cleanup at the end
 
- std::string bsc_fn = argc >= 3 ? argv[ 2 ] : "BSPar.txt";
  BlockSolverConfig * bsc;
  {
-  auto c = Configuration::deserialize( bsc_fn );
+  auto c = Configuration::deserialize( sconf_file );
   bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
    std::cerr << "Error: configuration file not a BlockSolverConfig"
@@ -304,9 +291,10 @@ int main( int argc , char ** argv )
   // -> LDCfg-EC -> InnerBSCfg-DP.txt to solve the thermal units with the
   // efficient ThermalUnitExtDPSolver). A HydroSystemUnitBlock is a "hard" component
   // iff that str_LagBF_BSCfg meta configures it; computed below once cc is found.
-  auto ibc = Configuration::deserialize( "InnerBCfg.txt" );
+  auto ibc = Configuration::deserialize( bconf_file );
   if( ! ibc ) {
-   std::cerr << "Error: cannot load InnerBCfg.txt" << std::endl;
+   std::cerr << "Error: cannot load BlockConfig from " << bconf_file
+             << std::endl;
    delete( c );
    exit( 1 );
    }
@@ -530,7 +518,7 @@ int main( int argc , char ** argv )
 
   // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
   // dispatches on the runtime type, applies, and clear()s for cleanup
-  s_config_Block( TestBlock , bsc , bsc_fn );
+  s_config_Block( TestBlock , bsc , sconf_file );
 
   if( TestBlock->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!" << std::endl;

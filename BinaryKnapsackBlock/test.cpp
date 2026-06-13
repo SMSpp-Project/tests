@@ -87,7 +87,7 @@ using c_Subset = Block::c_Subset;
 /*--------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------------*/
-/*------------------------------ GLOBALS -----------------------------------*/
+/*------------------------------- GLOBALS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
 BinaryKnapsackBlock * BKB;          // The Binary Knapsack Block
@@ -253,6 +253,42 @@ bool SolveBoth( void )
  } 
 
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameter (-S BlockSolverConfig) is handled centrally by
+// common_utils. This tester GENERATES its own BinaryKnapsackBlock from the
+// seed, so it takes no instance positional (filename_optional = true).
+// (N and check_bounds are declared as globals above.)
+long int seed = 123123;     // seed
+Index wchg = 127;           // what to change, coded bit-wise
+Index n_repeat = 100;       // number of repetitions
+double delta = 0.01;        // capacity parameter
+double nW = 0.1;            // percentage of negative weights
+double nP = 0.1;            // percentage of negative profits
+double nI = 0.5;            // percentage of integer variables
+double nM = 0.2;            // max percentage of items to modify
+int chkb = 0;               // 1 = check the relaxation true bounds
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
+  case( 'N' ): Str2Sthg( optarg , N );         return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 'd' ): Str2Sthg( optarg , delta );     return( true );
+  case( 'W' ): Str2Sthg( optarg , nW );        return( true );
+  case( 'P' ): Str2Sthg( optarg , nP );        return( true );
+  case( 'i' ): Str2Sthg( optarg , nI );        return( true );
+  case( 'M' ): Str2Sthg( optarg , nM );        return( true );
+  case( 'b' ): Str2Sthg( optarg , chkb );      return( true );
+  default:                                     return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
@@ -260,57 +296,50 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the standard parameter (-S) is parsed by common_utils; the test only
+ // appends its own knobs and reads no instance file (it generates one)
 
- long int seed = 123123;                // seed
- Index wchg = 127;                      // what to change, coded bit-wise
- Index n_repeat = 100;                  // number of repetitions
- double delta = 0.01;                   // capacity parameter
- double nW = 0.1;                       // percentage of negative weights
- double nP = 0.1;                       // percentage of positive weights
- double nI = 0.5;                       // percentage of integer variables
- double nM = 0.2;                       // max percentage of items to modify
- // for small knapsacks nM * N may be too small (always 0 or 1 at most)
- // minM defines the minimum absolute number of items that can be modified
+ // for small knapsacks nM * N may be too small (always 0 or 1 at most):
+ // minM is the minimum absolute number of items that can be modified
  int minM = 10;
 
- // the BlockSolverConfig file name (used by the batches to switch solvers)
- std::string bsc_fn = "BSPar.txt";
- int chkb = 0;
+ docopt_desc = "SMS++ BinaryKnapsackBlock test.\n";
+ filename_optional = true;
+ short_opts += "e:k:N:n:d:W:P:i:M:b:";
+ const std::vector< option > my_opts = {
+   { "seed"   , required_argument , nullptr , 'e' } ,
+   { "wchg"   , required_argument , nullptr , 'k' } ,
+   { "nvar"   , required_argument , nullptr , 'N' } ,
+   { "rounds" , required_argument , nullptr , 'n' } ,
+   { "delta"  , required_argument , nullptr , 'd' } ,
+   { "nW"     , required_argument , nullptr , 'W' } ,
+   { "nP"     , required_argument , nullptr , 'P' } ,
+   { "nI"     , required_argument , nullptr , 'i' } ,
+   { "nM"     , required_argument , nullptr , 'M' } ,
+   { "chkb"   , required_argument , nullptr , 'b' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [127]\n"
+         "  -N, --nvar <n>                  number of variables [100]\n"
+         "  -n, --rounds <n>                number of repetitions [100]\n"
+         "  -d, --delta <x>                 capacity parameter [0.01]\n"
+         "  -W, --nW <x>                    fraction of negative weights "
+         "[0.1]\n"
+         "  -P, --nP <x>                    fraction of negative profits "
+         "[0.1]\n"
+         "  -i, --nI <x>                    fraction of integer variables "
+         "[0.5]\n"
+         "  -M, --nM <x>                    max fraction of items to modify "
+         "[0.2]\n"
+         "  -b, --chkb <0|1>                check the relaxation true bounds "
+         "[0]\n";
 
- switch( argc ) {
-  case( 12 ): Str2Sthg( argv[ 11 ] , chkb );
-  case( 11 ): bsc_fn = argv[ 10 ];
-  case( 10 ): Str2Sthg( argv[ 9 ] , nM );
-  case( 9 ): Str2Sthg( argv[ 8 ] , nI );
-  case( 8 ): Str2Sthg( argv[ 7 ] , nP );
-  case( 7 ): Str2Sthg( argv[ 6 ] , nW );
-  case( 6 ): Str2Sthg( argv[ 5 ] , delta );
-  case( 5 ): Str2Sthg( argv[ 4 ] , n_repeat );
-  case( 4 ): Str2Sthg( argv[ 3 ] , N );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ]
-		<< " seed [wchg N n_repeat delta nW nP nI nM bscfg chkb]"
-        << endl << "       wchg: what to change, coded bit-wise [127]"
-	<< endl << "             1 = change sense, 2 = change capacity "
-        << endl << "             3 = change profits, 4 = change weights"
-        << endl << "             5 = fix, 6 = unfix, 7 = change integrality"
-	<< endl << "       N: number of variables [100]"
-        << endl << "       n_repeat: number of repetitions [100]"
-        << endl << "       delta: Capacity parameter [0.01]"
-        << endl << "       nW: percentage of negative weights [0.1]"
-        << endl << "       nP: percentage of negative profits [0.1]"
-        << endl << "       nI: percentage of integer variables [0.5]"
-        << endl << "       nM: max percentage of items to modify [0.2]"
-        << endl << "       bscfg: BlockSolverConfig file"
-                << " [BSPar.txt]"
-        << endl << "       chkb: 1 = the 1st Solver is a relaxation whose"
-        << endl << "             true bounds must bracket the optimum of"
-        << endl << "             the (exact) 2nd one [0]"
-        << endl;
-   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
 
  check_bounds = ( chkb != 0 );
 
@@ -440,12 +469,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  cerr << "Error: cannot load BSC from " << bsc_fn << endl;
+  cerr << "Error: cannot load BSC from " << sconf_file << endl;
   exit( 1 );
   }
- s_config_Block( BKB , bsc , bsc_fn );
+ s_config_Block( BKB , bsc , sconf_file );
 
  // check Solvers - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
