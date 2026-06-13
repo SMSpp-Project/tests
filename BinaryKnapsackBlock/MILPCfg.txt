@@ -1,9 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - -
 #
 # A ComputeConfig for a :MILPSolver solving a BinaryKnapsackBlock to the exact
-# integer optimum (the reference value of the 2S cross-checks, see BSPar*).
+# integer optimum (the reference value of the cross-checks, see BSPar*).
 # Factored as a fragment shared by BSPar.txt and BSPar-mixed.txt.
+#
+#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -44,3 +46,7 @@ CPXPARAM_MIP_Tolerances_Integrality  1e-07
 * # [none]
 
 # end of ComputeConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - End MILPCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

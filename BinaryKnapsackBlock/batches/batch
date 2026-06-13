@@ -6,7 +6,7 @@
 #        < solver > = unused
 #        < log file > = name of log file, default no log
 #
-# "2S"-style cross-check on PURE-BINARY instances (nI = 1): every solver /
+# Cross-check on PURE-BINARY instances (nI = 1): every solver /
 # formulation that must give the same integer optimum is attached at once (see
 # BSPar.txt) and SolveAll() checks they all agree -- the exact :MILPSolver,
 # the full-table / parallel / core DP, and the BranchAndXSolver in each of its

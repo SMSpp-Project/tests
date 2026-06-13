@@ -8,7 +8,7 @@
 # BundleSolverML defaults, which are already set so that the network
 # actually drives the step-size at every iteration.
 #
-#   Francesca Demelas, Donato Meoli
+#   Francesco Demelas, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

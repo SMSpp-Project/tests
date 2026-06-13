@@ -1,9 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - PDPCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - PDPCfg.txt - - - - - - - - - - - - - - - -
 #
 # A ComputeConfig for the (exact) ParallelDPBinaryKnapsackSolver, selecting the
-# FastFlow parallel engine so the 2S also cross-checks it against the serial DP.
-# Factored as a fragment shared by the 2S configs.
+# FastFlow parallel engine so it is also cross-checked against the serial DP.
+# Factored as a fragment shared by the BSPar.txt / BSPar-mixed.txt configs.
+#
+#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -41,3 +43,7 @@ intWhichParallel 1  # 1 = FastFlow engine
 * # [none]
 
 # end of ComputeConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - End PDPCfg.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

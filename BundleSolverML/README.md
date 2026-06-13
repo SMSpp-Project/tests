@@ -46,7 +46,7 @@ BundleSolver README], hence this test requires Torch to be installed at
 
 ## Authors
 
-- **Francesca Demelas**  
+- **Francesco Demelas**  
   Laboratoire d'Informatique de Paris Nord  
   Université Sorbonne Paris Nord
 

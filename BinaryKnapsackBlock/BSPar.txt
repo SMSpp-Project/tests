@@ -1,9 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
-# 2S-style BlockSolverConfig for a PURE-BINARY BinaryKnapsackBlock: it attaches
-# EVERY solver / formulation that must give the SAME integer optimum, so that a
-# single sweep cross-checks them all (see batch):
+# Cross-check BlockSolverConfig for a PURE-BINARY BinaryKnapsackBlock: it
+# attaches EVERY solver / formulation that must give the SAME integer optimum,
+# so that a single sweep cross-checks them all (see batch):
 #
 #   - :MILPSolver                         exact MIP (the reference optimum)
 #   - DPBinaryKnapsackSolver              exact full-table DP
@@ -21,6 +21,8 @@
 # only the mode-specific parameters via '*BX-baseCfg.txt +': no duplication.
 # NOTE: an overriding ComputeConfig that is not the last in the list must end
 # with the '*' extra-Configuration pointer, or the parser runs into the next.
+#
+#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -230,5 +232,5 @@ intCutRounds 2
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - End BSPar.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

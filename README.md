@@ -50,6 +50,10 @@ The following tests are provided:
   `BlockConfig`-uring in two different ways two copies of the same `:Block`
   and solving them with two copies of the same `:Solver`.
 
+- [`InvestmentBlock`](InvestmentBlock), a tester that solves the investment
+  problem defined by an `InvestmentBlock` (loaded from a netCDF file) with the
+  configured `:Solver`.
+
 - [`LagBFunction`](LagBFunction), a tester which provides very
   comprehensive tests for `LagBFunction`, `PolyhedralFunctionBlock`,
   `PolyhedralFunction`, any `CDASolver` able to handle `C05Function` in the
@@ -125,6 +129,10 @@ The following tests are provided:
   `ThermalUnitExtDPSolver` specialised Dynamic Programming `:Solver` for
   `ThermalUnitBlock` as compared with a `:MILPSolver` on some of the (many)
   different formulations supported by `ThermalUnitBlock`.
+
+- [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
+  `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
+  through a `BlockSolverConfig` and compares their results.
 
 - [`Write-Read`](Write-Read), a tester for the function
   `AbstractBlock::read_mps` and some tests for any  `CDASolver` able 

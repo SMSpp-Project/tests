@@ -99,11 +99,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
 Index N = 100;                         // number of items
 
-bool check_bounds = false;             // Solver1 is a relaxation: check that
-                                       // its true bounds bracket the optimum
-                                       // of Solver2 rather than the values
-                                       // being equal (chkb command-line arg)
-
 static constexpr Index rangeW = 100;   // range values of weights
 static constexpr double rangeP = 100;  // range values of profits
 
@@ -142,7 +137,7 @@ bool SolveAll( void )
 {
  // get ALL the registered Solver: every exact one must agree on the optimal
  // value, every relaxation (GreedyRelaxationBinaryKnapsackSolver) must bracket
- // it. This is the 2S-style cross-check of all the mathematically equivalent
+ // it. This is the cross-check of all the mathematically equivalent
  // formulations / solvers (see batches/batch and batch-mixed), generalizing the original
  // two-Solver comparison (which is just the M = 2 case)
  const auto & reg = BKB->get_registered_solvers();
@@ -247,7 +242,7 @@ bool SolveAll( void )
 // standard parameter (-S BlockSolverConfig) is handled centrally by
 // common_utils. This tester GENERATES its own BinaryKnapsackBlock from the
 // seed, so it takes no instance positional (filename_optional = true).
-// (N and check_bounds are declared as globals above.)
+// (N is declared as a global above.)
 long int seed = 123123;     // seed
 Index wchg = 127;           // what to change, coded bit-wise
 Index n_repeat = 100;       // number of repetitions
@@ -256,7 +251,6 @@ double nW = 0.1;            // percentage of negative weights
 double nP = 0.1;            // percentage of negative profits
 double nI = 0.5;            // percentage of integer variables
 double nM = 0.2;            // max percentage of items to modify
-int chkb = 0;               // 1 = check the relaxation true bounds
 
 /*--------------------------------------------------------------------------*/
 
@@ -272,7 +266,6 @@ static bool process_specific_arg( int opt )
   case( 'P' ): Str2Sthg( optarg , nP );        return( true );
   case( 'i' ): Str2Sthg( optarg , nI );        return( true );
   case( 'M' ): Str2Sthg( optarg , nM );        return( true );
-  case( 'b' ): Str2Sthg( optarg , chkb );      return( true );
   default:                                     return( false );
   }
  }
@@ -295,7 +288,7 @@ int main( int argc , char **argv )
 
  docopt_desc = "SMS++ BinaryKnapsackBlock test.\n";
  filename_optional = true;
- short_opts += "e:k:N:n:d:W:P:i:M:b:";
+ short_opts += "e:k:N:n:d:W:P:i:M:";
  const std::vector< option > my_opts = {
    { "seed"   , required_argument , nullptr , 'e' } ,
    { "wchg"   , required_argument , nullptr , 'k' } ,
@@ -305,8 +298,7 @@ int main( int argc , char **argv )
    { "nW"     , required_argument , nullptr , 'W' } ,
    { "nP"     , required_argument , nullptr , 'P' } ,
    { "nI"     , required_argument , nullptr , 'i' } ,
-   { "nM"     , required_argument , nullptr , 'M' } ,
-   { "chkb"   , required_argument , nullptr , 'b' } };
+   { "nM"     , required_argument , nullptr , 'M' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed\n"
@@ -321,17 +313,13 @@ int main( int argc , char **argv )
          "  -i, --nI <x>                    fraction of integer variables "
          "[0.5]\n"
          "  -M, --nM <x>                    max fraction of items to modify "
-         "[0.2]\n"
-         "  -b, --chkb <0|1>                check the relaxation true bounds "
-         "[0]\n";
+         "[0.2]\n";
 
  process_args( argc , argv , process_specific_arg );
 
  // the BlockSolverConfig (-S) must be provided explicitly: the test never
  // falls back to a hardcoded default Configuration
  require_solver_config();
-
- check_bounds = ( chkb != 0 );
 
  // sanity checks - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  

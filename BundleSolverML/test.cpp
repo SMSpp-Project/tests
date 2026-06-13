@@ -12,7 +12,7 @@
  * values are compared at each epoch. The model save / load round-trip and
  * the shared-network mechanism are tested as well.
  *
- * \author Francesca Demelas \n
+ * \author Francesco Demelas \n
  *         Laboratoire d'Informatique de Paris Nord \n
  *         Universite' Sorbonne Paris Nord \n
  *
@@ -20,7 +20,7 @@
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
  *
- * \copyright &copy; by Francesca Demelas, Donato Meoli
+ * \copyright &copy; by Francesco Demelas, Donato Meoli
  */
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- MACROS ----------------------------------*/

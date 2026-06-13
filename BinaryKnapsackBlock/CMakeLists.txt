@@ -49,7 +49,7 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     smspp_install(BinaryKnapsackBlock_bench)
 
     # Formulation cross-checks on randomly generated instances: a single
-    # "2S"-style batch attaches ALL the mathematically equivalent solvers at
+    # cross-check batch attaches ALL the mathematically equivalent solvers at
     # once and checks they agree (see SolveAll() in test.cpp). batch covers the
     # pure-binary case (every exact solver + the BranchAndXSolver in each
     # exploration mode), batch-mixed the mixed-binary one (the DP/MILP solvers

@@ -6,7 +6,7 @@
 #        < solver > = unused
 #        < log file > = name of log file, default no log
 #
-# "2S"-style cross-check on MIXED-binary instances (some continuous variables,
+# Cross-check on MIXED-binary instances (some continuous variables,
 # 0 < nI < 1): attaches at once every solver that handles continuous variables
 # and must give the same optimum (see BSPar-mixed.txt) -- the exact
 # :MILPSolver, the full-table / parallel / core DP -- while the greedy

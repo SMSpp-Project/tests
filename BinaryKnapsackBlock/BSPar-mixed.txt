@@ -1,17 +1,20 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-mixed.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-mixed.txt - - - - - - - - - - - - - - -
 #
-# 2S-style BlockSolverConfig for a MIXED-binary BinaryKnapsackBlock (some
-# continuous variables): cross-checks every solver that handles continuous
-# variables and must give the SAME optimal value -- :MILPSolver (the exact
-# reference), the full-table DPBinaryKnapsackSolver, the ParallelDPBinary-
-# KnapsackSolver and the core CoreDPBinaryKnapsackSolver -- plus the Greedy
-# relaxation, whose true bounds must BRACKET that optimum (see SolveAll() in
-# test.cpp). The BranchAndXSolver is NOT here: it branches on binary variables,
-# so it only applies to pure-binary instances (see BSPar.txt).
+# Cross-check BlockSolverConfig for a MIXED-binary BinaryKnapsackBlock (some
+# continuous variables): attaches every solver that handles continuous
+# variables and must give the SAME optimal value, i.e., the :MILPSolver (the
+# exact reference), the full-table DPBinaryKnapsackSolver, the
+# ParallelDPBinaryKnapsackSolver and the core CoreDPBinaryKnapsackSolver,
+# plus the Greedy relaxation, whose true bounds must BRACKET that optimum
+# (see SolveAll() in test.cpp). The BranchAndXSolver is NOT here: it branches
+# on binary variables, so it only applies to pure-binary instances (see
+# BSPar.txt).
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments shared
 # with BSPar.txt (included via '*'), so there is no duplicated configuration.
+#
+#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -42,5 +45,5 @@ GreedyRelaxationBinaryKnapsackSolver  # 5th: relaxation, brackets the optimum
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-mixed.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - End BSPar-mixed.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
