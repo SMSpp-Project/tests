@@ -6,8 +6,6 @@
 # so that a single sweep cross-checks them all (see batch):
 #
 #   - :MILPSolver                         exact MIP (the reference optimum)
-#   - DPBinaryKnapsackSolver              exact full-table DP
-#   - ParallelDPBinaryKnapsackSolver      exact parallel DP (FastFlow)
 #   - CoreDPBinaryKnapsackSolver          exact core / non-dominated-state DP
 #   - GreedyRelaxationBinaryKnapsackSolver  relaxation: must BRACKET the optimum
 #   - BranchAndXSolver, once per exploration mode (best-/depth-/breadth-first,
@@ -16,7 +14,7 @@
 #
 # The reoptimization mode (intReoptimize) is intentionally left out for now (a
 # known issue over many re-solve cycles). The per-solver ComputeConfig are
-# factored into the *Cfg.txt fragments (the MILP/DP/PDP/CDP/GR ones are shared
+# factored into the *Cfg.txt fragments (the MILP/DP/CDP/GR ones are shared
 # with BSPar-mixed.txt) and the BX modes share BX-baseCfg.txt, overriding
 # only the mode-specific parameters via '*BX-baseCfg.txt +': no duplication.
 # NOTE: an overriding ComputeConfig that is not the last in the list must end
@@ -31,40 +29,39 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-11 # number of (the names of) Solver in this BlockSolverConfig
+9  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 CPXMILPSolver                         # 1st: the exact reference optimum
 #GRBMILPSolver                        #      (uncomment the available backend)
 #SCIPMILPSolver
 #HiGHSMILPSolver
-DPBinaryKnapsackSolver                # 2nd: exact full-table DP
-ParallelDPBinaryKnapsackSolver        # 3rd: exact parallel DP (FastFlow)
-CoreDPBinaryKnapsackSolver            # 4th: exact core DP
-GreedyRelaxationBinaryKnapsackSolver  # 5th: relaxation, brackets the optimum
-BranchAndXSolver                      # 6th: BX best-first (default)
-BranchAndXSolver                      # 7th: BX depth-first (serial)
-BranchAndXSolver                      # 8th: BX breadth-first
-BranchAndXSolver                      # 9th: BX depth-first parallel
-BranchAndXSolver                      # 10th: BX per-node parallel solvers
-BranchAndXSolver                      # 11th: BX with cut separation
+#DPBinaryKnapsackSolver               # 2nd: full-table DP
+CoreDPBinaryKnapsackSolver            # 2nd: exact core DP
+GreedyRelaxationBinaryKnapsackSolver  # 3rd: relaxation, brackets the optimum
+BranchAndXSolver                      # 4th: BX best-first (default)
+BranchAndXSolver                      # 5th: BX depth-first (serial)
+BranchAndXSolver                      # 6th: BX breadth-first
+BranchAndXSolver                      # 7th: BX depth-first parallel
+BranchAndXSolver                      # 8th: BX per-node parallel solvers
+BranchAndXSolver                      # 9th: BX with cut separation
 
-11 # number of ComputeConfig in this BlockSolverConfig
+9  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# 1-5: the exact DP/MILP solvers + the greedy relaxation (factored fragments,
-# shared with BSPar-mixed.txt)
+# 1-3: the exact MILP / core DP solvers + the greedy relaxation (factored
+# fragments, shared with BSPar-mixed.txt). The full-table *DPCfg.txt is kept
+# but disabled in step with its solver above (the core DP subsumes it).
 *MILPCfg.txt
-*DPCfg.txt
-*PDPCfg.txt
+#*DPCfg.txt
 *CDPCfg.txt
 *GRCfg.txt
 
-# 6: BranchAndXSolver, best-first (the base config, no override)
+# 4: BranchAndXSolver, best-first (the base config, no override)
 *BX-baseCfg.txt
 
-# 7: BranchAndXSolver, depth-first serial
+# 5: BranchAndXSolver, depth-first serial
 *BX-baseCfg.txt +
 
 1  # f_diff == 1 ==> only the entries below are changed
@@ -97,7 +94,7 @@ intMaxThread   1
 # pointer to the "extra" Configuration
 * # [none]
 
-# 8: BranchAndXSolver, breadth-first
+# 6: BranchAndXSolver, breadth-first
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -129,7 +126,7 @@ intSolveMethod 1
 # pointer to the "extra" Configuration
 * # [none]
 
-# 9: BranchAndXSolver, depth-first parallel (4 workers)
+# 7: BranchAndXSolver, depth-first parallel (4 workers)
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -162,7 +159,7 @@ intMaxThread   4
 # pointer to the "extra" Configuration
 * # [none]
 
-# 10: BranchAndXSolver, per-node parallel solvers (two inner relaxations)
+# 8: BranchAndXSolver, per-node parallel solvers (two inner relaxations)
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -197,7 +194,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-2R.txt
 # pointer to the "extra" Configuration
 * # [none]
 
-# 11: BranchAndXSolver, cut separation (2 rounds)
+# 9: BranchAndXSolver, cut separation (2 rounds)
 *BX-baseCfg.txt +
 
 1  # f_diff == 1

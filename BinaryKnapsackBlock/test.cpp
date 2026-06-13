@@ -63,6 +63,8 @@
 
 #include <cstdlib>
 
+#include <fstream>
+
 /*--------------------------------------------------------------------------*/
 /*------------------------------- USING ------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -101,6 +103,11 @@ Index N = 100;                         // number of items
 
 static constexpr Index rangeW = 100;   // range values of weights
 static constexpr double rangeP = 100;  // range values of profits
+
+// when have_ref is true (the Pisinger mode, see -C / run_pisinger()), SolveAll
+// additionally checks the optimum against the published reference value ref_opt
+bool have_ref = false;
+double ref_opt = 0;
 
 /*--------------------------------------------------------------------------*/
 /*----------------------------- FUNCTIONS ----------------------------------*/
@@ -233,10 +240,121 @@ bool SolveAll( void )
    return( false );
    }
   }
+
+ // solver-vs-reference: the optimum must also match the published value, if
+ // one is provided (the Pisinger mode, see run_pisinger())
+ if( have_ref && ( abs( ref - ref_opt ) > tol ) ) {
+  cout << "Error: optimum " << ref << " != published reference " << ref_opt;
+  return( false );
+  }
+
  LOG( "OK" );
  return( true );
  }
 
+/*--------------------------------------------------------------------------*/
+// a Pisinger benchmark instance read from a .csv (see read_pisinger())
+
+struct PisingerInst {
+ std::string name;
+ Index N;
+ double C, z;
+ std::vector< double > W, P;
+ };
+
+/*--------------------------------------------------------------------------*/
+// read every instance of a Pisinger .csv, each a block "knapPI_... / n N /
+// c C / z Z / time T / <idx,profit,weight,xstar> lines / -----"
+
+static std::vector< PisingerInst > read_pisinger( const std::string & path )
+{
+ std::vector< PisingerInst > out;
+ std::ifstream in( path );
+ std::string line;
+ while( std::getline( in , line ) ) {
+  if( line.compare( 0 , 6 , "knapPI" ) != 0 )
+   continue;
+  if( ! line.empty() && line.back() == '\r' )
+   line.pop_back();
+  PisingerInst pi;
+  pi.name = line;
+  unsigned nn = 0;
+  std::getline( in , line ); std::sscanf( line.c_str() , "n %u" , & nn );
+  std::getline( in , line ); std::sscanf( line.c_str() , "c %lf" , & pi.C );
+  std::getline( in , line ); std::sscanf( line.c_str() , "z %lf" , & pi.z );
+  std::getline( in , line );                      // "time ..."
+  pi.N = nn; pi.W.resize( nn ); pi.P.resize( nn );
+  for( Index i = 0 ; i < pi.N ; ++i ) {
+   std::getline( in , line );
+   long idx; double p, w;
+   std::sscanf( line.c_str() , "%ld,%lf,%lf" , & idx , & p , & w );
+   pi.P[ i ] = p; pi.W[ i ] = w;
+   }
+  out.push_back( std::move( pi ) );
+  }
+ return( out );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the Pisinger mode (-C <csv>): test every instance of the .csv with ALL the
+// attached Solver (the SolveAll() solver-vs-solver cross-check) AND against
+// the published optimum z (solver-vs-reference), reusing one Block and one set
+// of Solver across the whole class (the data of each instance is set with the
+// chg_*() Modification, to which the Solver react)
+
+static bool run_pisinger( const std::string & csv , const std::string & sconf )
+{
+ auto insts = read_pisinger( csv );
+ if( insts.empty() ) {
+  cerr << "Error: no instance read from " << csv << endl;
+  return( false );
+  }
+
+ // build the Block from the first instance (Pisinger is pure 0-1: all integer)
+ BKB = new BinaryKnapsackBlock();
+ BKB->load( insts[ 0 ].N , insts[ 0 ].C ,
+            std::vector< double >( insts[ 0 ].W ) ,
+            std::vector< double >( insts[ 0 ].P ) );
+ BKB->generate_abstract_variables();
+ BKB->generate_abstract_constraints();
+ BKB->generate_objective();
+
+ Configuration * bsc = Configuration::deserialize( sconf );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from " << sconf << endl;
+  return( false );
+  }
+ s_config_Block( BKB , bsc , sconf );
+ if( BKB->get_registered_solvers().empty() ) {
+  cerr << "Error: BlockSolverConfig did not register any Solver" << endl;
+  return( false );
+  }
+
+ bool AllPassed = true;
+ have_ref = true;
+ for( std::size_t k = 0 ; k < insts.size() ; ++k ) {
+  N = insts[ k ].N;
+  BKB->chg_weights( insts[ k ].W.begin() );       // all the weights
+  BKB->chg_profits( insts[ k ].P.begin() );       // all the profits
+  BKB->chg_capacity( insts[ k ].C );
+  ref_opt = insts[ k ].z;
+  LOG( insts[ k ].name << ": " );
+  AllPassed &= SolveAll();
+  }
+ have_ref = false;
+
+ if( AllPassed )
+  cout << GREEN( All tests passed!! ) << endl;
+ else
+  cout << RED( Errors happened!! ) << endl;
+
+ s_config_Block( BKB , bsc );
+ delete bsc;
+ delete BKB;
+ return( AllPassed );
+ }
+
+/*--------------------------------------------------------------------------*/
 
 // test-specific command-line knobs, set by process_specific_arg(); the
 // standard parameter (-S BlockSolverConfig) is handled centrally by
@@ -251,6 +369,7 @@ double nW = 0.1;            // percentage of negative weights
 double nP = 0.1;            // percentage of negative profits
 double nI = 0.5;            // percentage of integer variables
 double nM = 0.2;            // max percentage of items to modify
+std::string pisinger_csv;   // if set (-C), test these Pisinger instances vs z
 
 /*--------------------------------------------------------------------------*/
 
@@ -266,6 +385,7 @@ static bool process_specific_arg( int opt )
   case( 'P' ): Str2Sthg( optarg , nP );        return( true );
   case( 'i' ): Str2Sthg( optarg , nI );        return( true );
   case( 'M' ): Str2Sthg( optarg , nM );        return( true );
+  case( 'C' ): pisinger_csv = optarg;          return( true );
   default:                                     return( false );
   }
  }
@@ -288,7 +408,7 @@ int main( int argc , char **argv )
 
  docopt_desc = "SMS++ BinaryKnapsackBlock test.\n";
  filename_optional = true;
- short_opts += "e:k:N:n:d:W:P:i:M:";
+ short_opts += "e:k:N:n:d:W:P:i:M:C:";
  const std::vector< option > my_opts = {
    { "seed"   , required_argument , nullptr , 'e' } ,
    { "wchg"   , required_argument , nullptr , 'k' } ,
@@ -298,7 +418,8 @@ int main( int argc , char **argv )
    { "nW"     , required_argument , nullptr , 'W' } ,
    { "nP"     , required_argument , nullptr , 'P' } ,
    { "nI"     , required_argument , nullptr , 'i' } ,
-   { "nM"     , required_argument , nullptr , 'M' } };
+   { "nM"     , required_argument , nullptr , 'M' } ,
+   { "csv"    , required_argument , nullptr , 'C' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed\n"
@@ -313,13 +434,22 @@ int main( int argc , char **argv )
          "  -i, --nI <x>                    fraction of integer variables "
          "[0.5]\n"
          "  -M, --nM <x>                    max fraction of items to modify "
-         "[0.2]\n";
+         "[0.2]\n"
+         "  -C, --csv <file>                Pisinger .csv: test its instances "
+         "against their published optimum z\n";
 
  process_args( argc , argv , process_specific_arg );
 
  // the BlockSolverConfig (-S) must be provided explicitly: the test never
  // falls back to a hardcoded default Configuration
  require_solver_config();
+
+ // Pisinger mode: instead of generating a random instance and mutating it,
+ // run all the attached Solver on every instance of the given .csv, checking
+ // they agree with one another AND with the published optimum (see
+ // run_pisinger())
+ if( ! pisinger_csv.empty() )
+  return( run_pisinger( pisinger_csv , sconf_file ) ? 0 : 1 );
 
  // sanity checks - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  

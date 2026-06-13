@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - CDPCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - CDPCfg.txt  - - - - - - - - - - - - - - - -
 #
 # A ComputeConfig for the (exact, non-dominated-state) CoreDPBinary-
 # KnapsackSolver: it sets no parameters, and is kept as a factored
@@ -41,5 +41,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of ComputeConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End CDPCfg.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - End CDPCfg.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

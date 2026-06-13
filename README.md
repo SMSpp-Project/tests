@@ -14,8 +14,11 @@ The following tests are provided:
   (CFL) problems.
 
 - [`BinaryKnapsackBlock`](BinaryKnapsackBlock): a tester of the eponymous
-  `Block` for (mixed-integer) binary knapsack problems and their specialised
-  `Solver` (`DPBinaryKnapsackSolver`) against a standard `MILPSolver`.   
+  `Block` for (mixed-integer) binary knapsack problems that cross-checks all
+  its equivalent `Solver` (the core DP, the `BranchAndXSolver` in each
+  exploration mode, with the greedy relaxation bracketing) against a standard
+  `MILPSolver`, both on random instances and against the published optima of
+  the curated Pisinger benchmark.
 
 - [`BoxSolver`](BoxSolver), a tester which provides very
   comprehensive tests for `BoxSolver` (a very simple `CDASolver` for
@@ -40,7 +43,7 @@ The following tests are provided:
   that can be used to test several things together within a slope scaling
   approach to the Capacitated Facility Location (CFL) problem where the
   continuous relaxation can be solved with either standard LP tools (a
-  `MILPSolver`), or via a Minc-Cost Flow relaxation casted as a `MCFBlock`
+  `MILPSolver`), or via a Min-Cost Flow relaxation cast as a `MCFBlock`
   and using custom `MCFSolver`, or, finally, via a Lagrange-friendly
   reformulation as a bunch of `BinaryKnapsackBlock`, so that a
   `LagrangianDualSolver` can be used to compute a stronger bound.
@@ -82,7 +85,7 @@ The following tests are provided:
   which provides initial tests for `LagrangianDualSolver`, `LagBFunction`,
   any `CDASolver` able to handle `C05Function` in the `Objective` (such as
   `BundleSolver`), any `CDASolver` able to handle Linear Programs (such as
-  `CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block`for
+  `CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block` for
   Unit-Commitment problems, as well as for quite a lot of the mechanics
   of the SMS++ core library.
 
@@ -113,7 +116,7 @@ The following tests are provided:
 
 - [`PolyhedralFunctionBlock`](PolyhedralFunctionBlock), a tester
   which provides very comprehensive tests for `PolyhedralFunction` and
-  especially `PolyhedralFunctionBlock`, plus quited some tests for any
+  especially `PolyhedralFunctionBlock`, plus quite a few tests for any
   `CDASolver` able to handle multiple `C05Function` in the objective (such
   as `BundleSolver`) and any `CDASolver` able to handle Linear Programs
   (such as `MILPSolver` and its derived classes `CPXMILPSolver` and
@@ -122,7 +125,7 @@ The following tests are provided:
 
 - [`QuadraticTests`](QuadraticTests), a tester which provides very
   comprehensive tests for any `CDASolver` able to handle Quadratic Programs
-  (such as `MILPSolver` and its derived classes`CPXMILPSolver` ,
+  (such as `MILPSolver` and its derived classes `CPXMILPSolver` ,
   `SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`).
 
 - [`ThermalUnitBlock_Solver`](ThermalUnitBlock_Solver), a tester for the
@@ -135,19 +138,19 @@ The following tests are provided:
   through a `BlockSolverConfig` and compares their results.
 
 - [`Write-Read`](Write-Read), a tester for the function
-  `AbstractBlock::read_mps` and some tests for any  `CDASolver` able 
+  `AbstractBlock::read_mps` and some tests for any  `CDASolver` able
   to handle Linear Programs (such as `MILPSolver` and its derived classes
   `CPXMILPSolver` , `SCIPMILPSolver` , `GRBMILPSolver` and
-  `HiGHSMILPSolver`), as well as for some of the mechanics of the "core" 
+  `HiGHSMILPSolver`), as well as for some of the mechanics of the "core"
   SMS++ library. A random MILP is constructed in an `AbstractBlock` and
   saved to a `.mps` file. A new `AbstractBlock` is created and read back
-  to the file, two `:Solver` are attached to the two `AbstractBlock` and�
-  the results are compared. The first `AbstractBlock` is randomly chamged
+  to the file, two `:Solver` are attached to the two `AbstractBlock` and
+  the results are compared. The first `AbstractBlock` is randomly changed
   many times and the process is repeated.
 
 The tests run as traditional command line executables. Most of the tests
 can also run as a
-[CTest](https://cmake.org/cmake/help/latest/manual/ctest.1.html) suites.
+[CTest](https://cmake.org/cmake/help/latest/manual/ctest.1.html) suite.
 
 
 ## Getting started

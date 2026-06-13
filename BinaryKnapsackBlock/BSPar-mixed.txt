@@ -4,12 +4,12 @@
 # Cross-check BlockSolverConfig for a MIXED-binary BinaryKnapsackBlock (some
 # continuous variables): attaches every solver that handles continuous
 # variables and must give the SAME optimal value, i.e., the :MILPSolver (the
-# exact reference), the full-table DPBinaryKnapsackSolver, the
-# ParallelDPBinaryKnapsackSolver and the core CoreDPBinaryKnapsackSolver,
-# plus the Greedy relaxation, whose true bounds must BRACKET that optimum
-# (see SolveAll() in test.cpp). The BranchAndXSolver is NOT here: it branches
-# on binary variables, so it only applies to pure-binary instances (see
-# BSPar.txt).
+# exact reference) and the core CoreDPBinaryKnapsackSolver, plus the Greedy
+# relaxation, whose true bounds must BRACKET that optimum (see SolveAll() in
+# test.cpp). The full-table DPBinaryKnapsackSolver is kept but disabled (the
+# core DP subsumes it), exactly as in BSPar.txt. The BranchAndXSolver is NOT
+# here: it branches on binary variables, so it only applies to pure-binary
+# instances (see BSPar.txt).
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments shared
 # with BSPar.txt (included via '*'), so there is no duplicated configuration.
@@ -23,22 +23,21 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-5  # number of (the names of) Solver in this BlockSolverConfig
+3  # number of (the names of) Solver in this BlockSolverConfig
+
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 CPXMILPSolver                         # 1st: the exact reference optimum
 #GRBMILPSolver                        #      (uncomment the available backend)
 #SCIPMILPSolver
 #HiGHSMILPSolver
-DPBinaryKnapsackSolver                # 2nd: exact full-table DP
-ParallelDPBinaryKnapsackSolver        # 3rd: exact parallel DP (FastFlow)
-CoreDPBinaryKnapsackSolver            # 4th: exact core DP
-GreedyRelaxationBinaryKnapsackSolver  # 5th: relaxation, brackets the optimum
+#DPBinaryKnapsackSolver               # 2nd: full-table DP
+CoreDPBinaryKnapsackSolver            # 2nd: exact core DP
+GreedyRelaxationBinaryKnapsackSolver  # 3rd: relaxation, brackets the optimum
 
-5  # number of ComputeConfig in this BlockSolverConfig
+3  # number of ComputeConfig in this BlockSolverConfig
 # now all the ComputeConfig (factored, shared with BSPar.txt) - - - - - - -
 *MILPCfg.txt
-*DPCfg.txt
-*PDPCfg.txt
+#*DPCfg.txt
 *CDPCfg.txt
 *GRCfg.txt
 

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BX-baseCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BX-baseCfg.txt  - - - - - - - - - - - - - - -
 #
 # Base ComputeConfig for a BranchAndXSolver on a BinaryKnapsackBlock: it only
 # sets the inner BlockSolverConfig (the GreedyRelaxationBinaryKnapsackSolver
@@ -47,5 +47,5 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg.txt
 # end of ComputeConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - End BX-baseCfg.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - End BX-baseCfg.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
