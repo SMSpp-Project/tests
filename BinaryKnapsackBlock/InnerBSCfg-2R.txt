@@ -1,11 +1,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-BX-P.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBSCfg-2R.txt - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a BinaryKnapsackBlock to be
-# solved by two different Solver: a BranchAndXSolver (GreedyRelaxationBinaryKnapsack
-# leaf via InnerBSCfg.txt) and an exact :MILPSolver, used to cross-check the
-# Branch-and-Bound optimum on pure-binary instances (run the harness with
-# nI = 1).
+# Two-Solver BlockSolverConfig: TWO GreedyRelaxationBinaryKnapsackSolver as
+# the inner relaxations of a BranchAndXSolver, used only to exercise the
+# per-node parallel evaluation of the relaxations (intThreadForDifferentSolvers
+# > 1; see computeRelaxationsParallel()). The two relaxations are identical, so
+# the result must match the single-relaxation one: this validates the parallel
+# reduction, NOT a speedup (the knapsack has one cheap relaxation).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -16,11 +17,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-BranchAndXSolver            # name of 1st Solver
-CPXMILPSolver               # name of 2nd Solver
-#GRBMILPSolver              # name of 2nd Solver
-#SCIPMILPSolver             # name of 2nd Solver
-#HiGHSMILPSolver            # name of 2nd Solver
+GreedyRelaxationBinaryKnapsackSolver  # name of 1st Solver
+GreedyRelaxationBinaryKnapsackSolver  # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -31,18 +29,11 @@ ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> all non-provided parameters are not changed
 
-2  # number of integer parameters
-
-# now all the integer parameters
-intSolveMethod 0  # explore the tree depth-first
-intMaxThread 4    # parallel exploration with 4 workers
+0  # number of integer parameters
 
 0  # number of double parameters
 
-1  # number of string parameters
-
-# now all the string parameters
-strNameOfBlockSolverConfigurationFile InnerBSCfg.txt
+0  # number of string parameters
 
 0  # number of vector-of-int parameters
 
@@ -70,16 +61,9 @@ ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> all non-provided parameters are not changed
 
-1  # number of integer parameters
+0  # number of integer parameters
 
-# now all the integer parameters
-intLogVerb    0
-
-2  # number of double parameters
-
-# now all the double parameters
-dblRelAcc     1e-08
-CPXPARAM_MIP_Tolerances_Integrality     1e-07
+0  # number of double parameters
 
 0  # number of string parameters
 
@@ -104,3 +88,7 @@ CPXPARAM_MIP_Tolerances_Integrality     1e-07
 # end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - End InnerBSCfg-2R.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

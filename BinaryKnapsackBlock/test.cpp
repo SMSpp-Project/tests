@@ -2,8 +2,10 @@
 /*--------------------------- File test.cpp --------------------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * Main for testing BinaryKnapsackBlock, comparing the results of two 
- * different Solvers attached to it.
+ * Main for testing BinaryKnapsackBlock, comparing the results of all the
+ * Solvers attached to it: every exact Solver must agree on the optimal value,
+ * every relaxation Solver must bracket it (see SolveAll() and batches/batch and batch-mixed
+ * for the cross-check of all the mathematically equivalent formulations).
  *
  * \author Federica Di Pasquale \n
  *         Dipartimento di Informatica \n
@@ -136,121 +138,109 @@ Subset generateSubset( Index m )
 
 /*--------------------------------------------------------------------------*/
 
-bool SolveBoth( void )
+bool SolveAll( void )
 {
- // get the two Solvers - - - - - - - - - - - - - - - - - - - - - - - - - -
- // sort of assuming they are different, although they may not be
- auto Solver1 = BKB->get_registered_solvers().front();
- auto Solver2 = BKB->get_registered_solvers().back();
+ // get ALL the registered Solver: every exact one must agree on the optimal
+ // value, every relaxation (GreedyRelaxationBinaryKnapsackSolver) must bracket
+ // it. This is the 2S-style cross-check of all the mathematically equivalent
+ // formulations / solvers (see batches/batch and batch-mixed), generalizing the original
+ // two-Solver comparison (which is just the M = 2 case)
+ const auto & reg = BKB->get_registered_solvers();
+ std::vector< Solver * > Solvers( reg.begin() , reg.end() );
+ const std::size_t M = Solvers.size();
+ if( M < 2 ) {
+  cerr << "Error: SolveAll needs at least two registered Solver";
+  return( false );
+  }
 
- // solve with both Solvers - - - - - - - - - - - - - - - - - - - - - - - -
+ // solve with every Solver (timing each for LOG_LEVEL >= 1) - - - - - - - - -
 
+ std::vector< int > status( M );
  #if( LOG_LEVEL >= 1 )
   auto start = std::chrono::system_clock::now();
  #endif
-
- auto status1 = Solver1->compute();     
-
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  status[ k ] = Solvers[ k ]->compute();
+  #if( LOG_LEVEL >= 1 )
+   auto end = std::chrono::system_clock::now();
+   std::chrono::duration< double > elapsed = end - start;
+   cout.setf( ios::scientific, ios::floatfield );
+   cout << setprecision( 2 ) << ( k ? " - " : "" ) << elapsed.count();
+   start = end;
+  #endif
+  }
  #if( LOG_LEVEL >= 1 )
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration< double > elapsed = end - start;
-  cout.setf( ios::scientific, ios::floatfield );
-  cout << setprecision( 2 ) << elapsed.count();
-  start = std::chrono::system_clock::now();
+  cout << " - ";
  #endif
 
- auto status2 = Solver2->compute();     
+ // feasibility consensus - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- #if( LOG_LEVEL >= 1 )
-  end = std::chrono::system_clock::now();
-  elapsed = end - start;
-  cout.setf( ios::scientific, ios::floatfield );
-  cout << setprecision( 2 ) << " - " << elapsed.count() << " - ";
- #endif
-
- // check status- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-
- if( ( status1 == Solver::kInfeasible ) &&
-     ( status2 == Solver::kInfeasible ) ) {
+ std::size_t nInf = 0;
+ for( std::size_t k = 0 ; k < M ; ++k )
+  if( status[ k ] == Solver::kInfeasible )
+   ++nInf;
+ if( nInf == M ) {                         // all agree: the instance is unfeas
   LOG( "OK(u)" );
   return( true );
   }
-
- if( ( status1 == Solver::kInfeasible ) ||
-     ( status2 == Solver::kInfeasible ) ) {
-  cout << "Error: Solver1 ";
-  if( status1 == Solver::kInfeasible ) cout << "in";
-  cout << "feasible but Solver2 ";
-  if( status2 == Solver::kInfeasible ) cout << "in";
-  cout << "feasible";
+ if( nInf > 0 ) {
+  cout << "Error: " << nInf << " of " << M << " Solver report infeasible, "
+       << "the others feasible";
   return( false );
   }
 
- // get optimal values- - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // read each Solver value and solution, checking the solution matches the
+ // value (self-consistency), and pick the exact reference optimum - - - - - -
 
- double Value1 = Solver1->get_var_value(); 
-
- double Value2 = Solver2->get_var_value();  
-
- // get solutions - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
- Solver1->get_var_solution();
- 
- double checksol = 0;
- for( Index i = 0 ; i < N ; ++i )
-  checksol += BKB->get_x( i ) * BKB->get_Profit( i );
-
- if( abs( checksol - Value1 ) > 1e-06 ) {
-  cerr << "Error computing solution Solver1: " << "checksol " << checksol
-       << " != Value1 " << Value1;
-  return( false );
-  }
-
- Solver2->get_var_solution();
-
- checksol = 0;
- for( Index i = 0 ; i < N ; ++i )
-  checksol += BKB->get_x( i ) * BKB->get_Profit( i );
- 
- if( abs( checksol - Value2 ) > 1e-06 ) {
-  cerr << "Error computing solution Solver2: " << "checksol " << checksol
-       << " != Value2 " << Value2;
-  return( false );
-  }
-
- // check true bounds - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
- if( check_bounds ) {
-  // Solver1 solves a relaxation: rather than comparing the values, check
-  // that its true bounds bracket the exact optimum found by Solver2
-  auto GRS = dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >( Solver1 );
-  if( ! GRS ) {
-   cout << "Error: the bounds check needs a GreedyRelaxationBinaryKnapsackSolver first";
+ std::vector< double > value( M );
+ double ref = 0;
+ bool haveRef = false;
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  value[ k ] = Solvers[ k ]->get_var_value();
+  Solvers[ k ]->get_var_solution();
+  double checksol = 0;
+  for( Index i = 0 ; i < N ; ++i )
+   checksol += BKB->get_x( i ) * BKB->get_Profit( i );
+  if( abs( checksol - value[ k ] ) > 1e-06 * max( abs( value[ k ] ) , 1.0 ) ) {
+   cerr << "Error: Solver " << k << " solution value " << checksol
+        << " != its reported value " << value[ k ];
    return( false );
    }
-  const double lb = GRS->get_true_lb();
-  const double ub = GRS->get_true_ub();
-  const double tol = 2e-06 * max( abs( Value2 ) , 1.0 );
-  if( ( lb - tol <= Value2 ) && ( Value2 <= ub + tol ) ) {
-   LOG( "OK(b)" );
-   return( true );
+  if( ( ! haveRef ) &&
+      ( ! dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >(
+                                                          Solvers[ k ] ) ) ) {
+   ref = value[ k ];                       // the first exact Solver sets z*
+   haveRef = true;
    }
-  cout << "Error: true bounds [ " << lb << " , " << ub
-       << " ] do not bracket the optimum " << Value2;
+  }
+ if( ! haveRef ) {
+  cerr << "Error: SolveAll needs at least one exact (non-relaxation) Solver";
   return( false );
   }
 
- // compare optimal values- - - - - - - - - - - - - - - - - - - - - - - - -
+ // every exact Solver must hit the reference optimum z*, every relaxation
+ // must bracket it - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- double gap = ( Value2 - Value1 ) / max( abs( Value1 ) , 1.0 ) ;
- if( abs( gap ) < 2e-06 ) {
-  LOG( "OK(f)" );
-  return( true );
+ const double tol = 2e-06 * max( abs( ref ) , 1.0 );
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  if( auto GRS = dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >(
+                                                          Solvers[ k ] ) ) {
+   const double lb = GRS->get_true_lb() , ub = GRS->get_true_ub();
+   if( ( lb - tol > ref ) || ( ref > ub + tol ) ) {
+    cout << "Error: Solver " << k << " bounds [ " << lb << " , " << ub
+         << " ] do not bracket the optimum " << ref;
+    return( false );
+    }
+   }
+  else if( abs( value[ k ] - ref ) > tol ) {
+   cout << "Error: Solver " << k << " value " << value[ k ]
+        << " != reference optimum " << ref;
+   return( false );
+   }
   }
-
- cout << "Error: Value1 = " << Value1 << ", Value2 = " << Value2;
- return( false );
- } 
+ LOG( "OK" );
+ return( true );
+ }
 
 
 // test-specific command-line knobs, set by process_specific_arg(); the
@@ -507,7 +497,7 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  LOG( "0: " );
- bool AllPassed = SolveBoth();
+ bool AllPassed = SolveAll();
  
  // modifications loop- - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -758,7 +748,7 @@ int main( int argc , char **argv )
   // finally, re-solve - - - - - - - - - - - - - - - - - - - - - - - - - - -
  
   if( ! ( i % STEP ) )
-   AllPassed &= SolveBoth();
+   AllPassed &= SolveAll();
 
   }  // end( main loop ) - - - - - - - - - - - - - - - - - - - - - - - - - -
      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

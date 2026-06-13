@@ -139,7 +139,6 @@ const FunctionValue INF = SMSpp_di_unipi_it::Inf< FunctionValue >();
 /*--------------------------------------------------------------------------*/
 
 MMCFBlock * TestBlock;         // the [MMCF]Block that is solved
-char **globalArgv;             // the main argv for a global use
 int wprnt = 0;
 
 std::mt19937 rg;               // base random generator
@@ -385,7 +384,6 @@ int main( int argc , char **argv )
  // standard params (instance positional + -B + -S) are parsed by
  // common_utils; the test only appends its own knobs
 
- globalArgv = argv;
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ LagrangianDualSolver-on-MMCFBlock test.\n";

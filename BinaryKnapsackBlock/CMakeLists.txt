@@ -48,35 +48,38 @@ if (TARGET SMS++::BinaryKnapsackBlock)
 
     smspp_install(BinaryKnapsackBlock_bench)
 
-    # Add a test for each batch file (batch-par and batch-par-nc4 are manual
-    # timing benchmarks, so they are intentionally not registered here)
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-greedy"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bounds"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-core"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bx"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bx-p")
-    foreach (BATCH_FILE ${BATCH_FILES})
-        # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/batches/" "" BATCH_NAME ${BATCH_FILE})
+    # Formulation cross-checks on randomly generated instances: a single
+    # "2S"-style batch attaches ALL the mathematically equivalent solvers at
+    # once and checks they agree (see SolveAll() in test.cpp). batch covers the
+    # pure-binary case (every exact solver + the BranchAndXSolver in each
+    # exploration mode), batch-mixed the mixed-binary one (the DP/MILP solvers
+    # that handle continuous variables). The data-preparation / Pisinger
+    # cross-checks live in batches-data/, the parallel timing benchmarks in
+    # batches-bench/ (the latter are NOT registered here).
+    foreach (BATCH_NAME batch batch-mixed)
         if (UNIX)
             add_test(NAME BinaryKnapsackBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/BinaryKnapsackBlock_test
+                     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}
+                             ${CMAKE_CURRENT_BINARY_DIR}/BinaryKnapsackBlock_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME BinaryKnapsackBlock_test/${BATCH_NAME}
                      # using Git for Windows that includes Git Bash
                      COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:BinaryKnapsackBlock_test>"
+                             "${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}"
+                             "$<TARGET_FILE:BinaryKnapsackBlock_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
     endforeach ()
 
-    # ----- Curated Pisinger knapsack .nc4 cross-check ---------------------- #
+    # ----- Curated Pisinger knapsack .nc4 cross-checks (batches-data/) ----- #
     # Solve the curated literature instances (downloaded as txt.tgz from the
     # Package Registry and converted to .nc4 by the run_bk2nc4 fixture, see
-    # BinaryKnapsackBlock/data/nc4/readme.txt) with the solver under test and
-    # a reference one, and cross-check the optima (see batches/batch-nc4*).
+    # BinaryKnapsackBlock/data/nc4/readme.txt) and cross-check the optima:
+    # batch-nc4*    are solver-vs-solver (our solvers must agree with one
+    #               another), batch-nc4-ref is solver-vs-reference (our optimum
+    #               must match the published Pisinger optimum, see
+    #               batches-data/batch-nc4-ref).
     if (TARGET block_solver)
         # Create a test fixture to generate .nc4 files by running run_bk2nc4.
         # This test will build and run the run_bk2nc4 target
@@ -86,19 +89,20 @@ if (TARGET SMS++::BinaryKnapsackBlock)
         set_tests_properties(run_bk2nc4
                              PROPERTIES FIXTURES_SETUP bk2nc4_generated)
 
-        # batch-nc4      : exact DP vs :MILPSolver
-        # batch-nc4-par  : multi-threaded ParallelDP vs exact serial DP
-        # batch-nc4-core : core / non-dominated-state DP vs exact full-table DP
-        foreach (NC4_BATCH batch-nc4 batch-nc4-par batch-nc4-core)
+        # batch-nc4      : exact DP vs :MILPSolver           (solver-vs-solver)
+        # batch-nc4-par  : ParallelDP vs exact serial DP     (solver-vs-solver)
+        # batch-nc4-core : core DP vs exact full-table DP     (solver-vs-solver)
+        # batch-nc4-ref  : our optimum vs the published z    (solver-vs-ref)
+        foreach (NC4_BATCH batch-nc4 batch-nc4-par batch-nc4-core batch-nc4-ref)
             if (UNIX)
                 add_test(NAME BinaryKnapsackBlock_test/${NC4_BATCH}
-                         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/${NC4_BATCH} $<TARGET_FILE:block_solver>
+                         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches-data/${NC4_BATCH} $<TARGET_FILE:block_solver>
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             elseif (WIN32)
                 add_test(NAME BinaryKnapsackBlock_test/${NC4_BATCH}
                          # using Git for Windows that includes Git Bash
                          COMMAND "C:/Program Files/Git/bin/bash.exe"
-                                 "${CMAKE_CURRENT_SOURCE_DIR}/batches/${NC4_BATCH}" "$<TARGET_FILE:block_solver>"
+                                 "${CMAKE_CURRENT_SOURCE_DIR}/batches-data/${NC4_BATCH}" "$<TARGET_FILE:block_solver>"
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             endif ()
             # the cross-check requires the generated .nc4 instances

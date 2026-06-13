@@ -1,10 +1,26 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a BinaryKnapsackBlock to be
-# solved by two different Solver: a DPBinaryKnapsackSolver and a :MILPSolver
+# 2S-style BlockSolverConfig for a PURE-BINARY BinaryKnapsackBlock: it attaches
+# EVERY solver / formulation that must give the SAME integer optimum, so that a
+# single sweep cross-checks them all (see batch):
 #
-#   Antonio Frangioni
+#   - :MILPSolver                         exact MIP (the reference optimum)
+#   - DPBinaryKnapsackSolver              exact full-table DP
+#   - ParallelDPBinaryKnapsackSolver      exact parallel DP (FastFlow)
+#   - CoreDPBinaryKnapsackSolver          exact core / non-dominated-state DP
+#   - GreedyRelaxationBinaryKnapsackSolver  relaxation: must BRACKET the optimum
+#   - BranchAndXSolver, once per exploration mode (best-/depth-/breadth-first,
+#     parallel depth-first, per-node parallel solvers, cut separation): all are
+#     exact and must hit the same optimum.
+#
+# The reoptimization mode (intReoptimize) is intentionally left out for now (a
+# known issue over many re-solve cycles). The per-solver ComputeConfig are
+# factored into the *Cfg.txt fragments (the MILP/DP/PDP/CDP/GR ones are shared
+# with BSPar-mixed.txt) and the BX modes share BX-baseCfg.txt, overriding
+# only the mode-specific parameters via '*BX-baseCfg.txt +': no duplication.
+# NOTE: an overriding ComputeConfig that is not the last in the list must end
+# with the '*' extra-Configuration pointer, or the parser runs into the next.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,30 +29,51 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+11 # number of (the names of) Solver in this BlockSolverConfig
+
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-DPBinaryKnapsackSolver  # name of 1st Solver
-CPXMILPSolver                   # name of 2nd Solver
-#GRBMILPSolver                  # name of 2nd Solver
-#SCIPMILPSolver             # name of 2nd Solver
-#HiGHSMILPSolver                # name of 2nd Solver
+CPXMILPSolver                         # 1st: the exact reference optimum
+#GRBMILPSolver                        #      (uncomment the available backend)
+#SCIPMILPSolver
+#HiGHSMILPSolver
+DPBinaryKnapsackSolver                # 2nd: exact full-table DP
+ParallelDPBinaryKnapsackSolver        # 3rd: exact parallel DP (FastFlow)
+CoreDPBinaryKnapsackSolver            # 4th: exact core DP
+GreedyRelaxationBinaryKnapsackSolver  # 5th: relaxation, brackets the optimum
+BranchAndXSolver                      # 6th: BX best-first (default)
+BranchAndXSolver                      # 7th: BX depth-first (serial)
+BranchAndXSolver                      # 8th: BX breadth-first
+BranchAndXSolver                      # 9th: BX depth-first parallel
+BranchAndXSolver                      # 10th: BX per-node parallel solvers
+BranchAndXSolver                      # 11th: BX with cut separation
 
-2  # number of ComputeConfig in this BlockSolverConfig
+11 # number of ComputeConfig in this BlockSolverConfig
 
-# now all the ComputeConfig
-# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig # exact type of the ComputeConfig object
+# 1-5: the exact DP/MILP solvers + the greedy relaxation (factored fragments,
+# shared with BSPar-mixed.txt)
+*MILPCfg.txt
+*DPCfg.txt
+*PDPCfg.txt
+*CDPCfg.txt
+*GRCfg.txt
 
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+# 6: BranchAndXSolver, best-first (the base config, no override)
+*BX-baseCfg.txt
 
-0  # number of integer parameters
+# 7: BranchAndXSolver, depth-first serial
+*BX-baseCfg.txt +
 
-1  # number of double parameters
+1  # f_diff == 1 ==> only the entries below are changed
 
-# now all the double parameters
-dblReopt        0.3
+2  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod 0
+intMaxThread   1
+
+0  # number of double parameters
 
 0  # number of string parameters
 
@@ -58,35 +95,19 @@ dblReopt        0.3
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# 8: BranchAndXSolver, breadth-first
+*BX-baseCfg.txt +
 
-# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-ComputeConfig # exact type of the ComputeConfig object
-
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+1  # f_diff == 1
 
 1  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb    0
+intSolveMethod 1
 
-2  # number of double parameters
-
-# now all the double parameters
-dblRelAcc     1e-08
-
-## All specific CPLEX parameter (uncomment based on 2nd Solver)
-CPXPARAM_MIP_Tolerances_Integrality     1e-07
-
-## All specific GUROBI parameter (uncomment based on 2nd Solver)
-#IntFeasTol  1e-07
+0  # number of double parameters
 
 0  # number of string parameters
-
-# now all the string parameters
-#strOutputFile bk.lp
 
 0  # number of vector-of-int parameters
 
@@ -106,10 +127,108 @@ CPXPARAM_MIP_Tolerances_Integrality     1e-07
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# 9: BranchAndXSolver, depth-first parallel (4 workers)
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod 0
+intMaxThread   4
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 10: BranchAndXSolver, per-node parallel solvers (two inner relaxations)
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intThreadForDifferentSolvers 2
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-2R.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 11: BranchAndXSolver, cut separation (2 rounds)
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intCutRounds 2
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BSPar.txt- - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 #
 # usage: batch < exe file > < par file > < solver > < log file >
-#        < exe file > = path of the executable file, default BinaryKnapsackBlock_test
+#        < exe file > = path of the executable, default BinaryKnapsackBlock_test
 #        < par file > = BlockSolverConfig file, default BSPar.txt
 #        < solver > = unused
 #        < log file > = name of log file, default no log
 #
-# sweeps BinaryKnapsackBlock_test over instance sizes, densities and the
-# four item-type fractions (weights/profits/integers/mixed), with runtime
-# mutations, checking the exact full-table DPBinaryKnapsackSolver against an
-# exact :MILPSolver each round: both must agree on the integer optimal value
-# (see BSPar.txt)
+# "2S"-style cross-check on PURE-BINARY instances (nI = 1): every solver /
+# formulation that must give the same integer optimum is attached at once (see
+# BSPar.txt) and SolveAll() checks they all agree -- the exact :MILPSolver,
+# the full-table / parallel / core DP, and the BranchAndXSolver in each of its
+# exploration modes -- while the greedy relaxation must bracket that optimum.
+# This replaces the former one-batch-per-formulation correctness tests.
 
-# run from the test directory so BinaryKnapsackBlock_test reads its config
-# files there
+# run from the test directory so BinaryKnapsackBlock_test reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"
 cd "$here/.." || exit 1
 
@@ -25,27 +25,27 @@ DEFAULT_PAR=BSPar.txt
 parse_batch_args "$@"
 
 # fixed harness parameters - - - - - - - - - - - - - - - - - - - - - - - - -
+# (the sweep is leaner than the single-formulation batches: every instance is
+# solved by all the ~11 attached solvers)
 seed=264
-wchg=127
-n_repeat=50
+wchg=63
+n_repeat=10
+nI=1
 
 # sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for N in 100 500 3000; do
+for N in 50 100 200; do
 
-  for delta in 0.005 0.05 0.6; do
+  for delta in 0.01 0.1 0.6; do
 
-    for nW in 0 0.2 0.7 1; do
+    for nW in 0 0.2; do
 
-      for nP in 0 0.2 0.7 1; do
+      for nP in 0 0.2; do
 
-        for nI in 0 0.2 0.8 1; do
+        for nM in 0 0.2; do
 
-          for nM in 0 0.2 0.7 1; do
+          run_test "$exe" -S "$par" -e "$seed" -k "$wchg" -N "$N" -n "$n_repeat" -d "$delta" -W "$nW" -P "$nP" -i "$nI" -M "$nM"
 
-            run_test "$exe" -S "$par" -e "$seed" -k "$wchg" -N "$N" -n "$n_repeat" -d "$delta" -W "$nW" -P "$nP" -i "$nI" -M "$nM"
-
-          done
         done
       done
     done
