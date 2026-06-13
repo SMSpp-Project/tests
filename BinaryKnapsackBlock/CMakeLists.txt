@@ -89,11 +89,11 @@ if (TARGET SMS++::BinaryKnapsackBlock)
         set_tests_properties(run_bk2nc4
                              PROPERTIES FIXTURES_SETUP bk2nc4_generated)
 
-        # batch-nc4      : exact DP vs :MILPSolver           (solver-vs-solver)
-        # batch-nc4-par  : ParallelDP vs exact serial DP     (solver-vs-solver)
-        # batch-nc4-core : core DP vs exact full-table DP     (solver-vs-solver)
-        # batch-nc4-ref  : our optimum vs the published z    (solver-vs-ref)
-        foreach (NC4_BATCH batch-nc4 batch-nc4-par batch-nc4-core batch-nc4-ref)
+        # solver-vs-solver: our solvers must agree with one another on the .nc4
+        # batch-nc4      : exact DP vs :MILPSolver
+        # batch-nc4-par  : ParallelDP vs exact serial DP
+        # batch-nc4-core : core DP vs exact full-table DP
+        foreach (NC4_BATCH batch-nc4 batch-nc4-par batch-nc4-core)
             if (UNIX)
                 add_test(NAME BinaryKnapsackBlock_test/${NC4_BATCH}
                          COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches-data/${NC4_BATCH} $<TARGET_FILE:block_solver>
@@ -109,6 +109,26 @@ if (TARGET SMS++::BinaryKnapsackBlock)
             set_tests_properties(BinaryKnapsackBlock_test/${NC4_BATCH}
                                  PROPERTIES FIXTURES_REQUIRED bk2nc4_generated)
         endforeach ()
+
+        # solver-vs-reference: our optimum must match the published Pisinger z.
+        # batch-nc4-ref runs the in-process bkbench over the curated .csv (which
+        # carry z), so it needs the bkbench tool rather than block_solver.
+        if (TARGET bkbench)
+            if (UNIX)
+                add_test(NAME BinaryKnapsackBlock_test/batch-nc4-ref
+                         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches-data/batch-nc4-ref $<TARGET_FILE:bkbench>
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+            elseif (WIN32)
+                add_test(NAME BinaryKnapsackBlock_test/batch-nc4-ref
+                         COMMAND "C:/Program Files/Git/bin/bash.exe"
+                                 "${CMAKE_CURRENT_SOURCE_DIR}/batches-data/batch-nc4-ref" "$<TARGET_FILE:bkbench>"
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+            endif ()
+            # the cross-check requires the curated data (the raw .csv) extracted
+            # by the same fixture
+            set_tests_properties(BinaryKnapsackBlock_test/batch-nc4-ref
+                                 PROPERTIES FIXTURES_REQUIRED bk2nc4_generated)
+        endif ()
     endif ()
 endif ()
 
