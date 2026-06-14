@@ -63,10 +63,10 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .C + every recursively included .h- - - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(BNDSLVMLINC) $(LgDSLVINC) $(MMCFINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(MMCFINC) $(MCFLEINC)
 
 # includes
-MH =    $(SMS++H) $(BNDSLVH) $(BNDSLVMLH) $(LgDSLVH) $(MMCFH)
+MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(MMCFH) $(MCFLEH)
 
 # compile command
 
