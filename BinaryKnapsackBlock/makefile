@@ -32,10 +32,6 @@ include ../makefile_common
 BKBkSDR = ../../BinaryKnapsackBlock
 include $(BKBkSDR)/makefile-c
 
-# BranchAndXSolver
-BAXSLVSDR = $(BKBkSDR)/../BranchAndXSolver
-include $(BAXSLVSDR)/makefile
-
 # define input macros for MILPSolver complete makefile, then include it
 # use the makefile-s version since the SMS++ stuff has been defined already
 MILPSSDR = $(BKBkSDR)/../MILPSolver
@@ -44,7 +40,7 @@ include $(MILPSSDR)/makefile-s
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BKBkOBJ) $(BAXSLVOBJ) $(MILPSOBJ) $(CMMNUOBJ)
+MOBJ =  $(BKBkOBJ) $(MILPSOBJ) $(CMMNUOBJ)
 
 # libraries
 MLIB =  $(BKBkLIB) $(MILPSLIB) $(libCPLEXLIB)
@@ -55,10 +51,10 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(BKBkINC) $(BAXSLVINC) $(MILPSINC) $(CMMNUINC)
+MINC =  $(BKBkINC) $(MILPSINC) $(CMMNUINC)
 
 # includes
-MH =    $(BKBkH) $(BAXSLVH) $(CMMNUH)
+MH =    $(BKBkH) $(CMMNUH)
 
 # compile command
 
