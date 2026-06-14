@@ -4,7 +4,7 @@
 /** @file
  * Main for testing BinaryKnapsackBlock, comparing the results of all the
  * Solvers attached to it: every exact Solver must agree on the optimal value,
- * every relaxation Solver must bracket it (see SolveAll() and batches/batch and batch-mixed
+ * every relaxation Solver must bracket it (see CrossCheckSolvers() and batches/batch and batch-mixed
  * for the cross-check of all the mathematically equivalent formulations).
  *
  * \author Federica Di Pasquale \n
@@ -104,8 +104,9 @@ Index N = 100;                         // number of items
 static constexpr Index rangeW = 100;   // range values of weights
 static constexpr double rangeP = 100;  // range values of profits
 
-// when have_ref is true (the Pisinger mode, see -C / run_pisinger()), SolveAll
-// additionally checks the optimum against the published reference value ref_opt
+// when have_ref is true (the Pisinger mode, see -C / run_pisinger()),
+// CrossCheckSolvers additionally checks the optimum against the published
+// reference value ref_opt
 bool have_ref = false;
 double ref_opt = 0;
 
@@ -140,115 +141,70 @@ Subset generateSubset( Index m )
 
 /*--------------------------------------------------------------------------*/
 
-bool SolveAll( void )
+bool CrossCheckSolvers( void )
 {
- // get ALL the registered Solver: every exact one must agree on the optimal
- // value, every relaxation (GreedyRelaxationBinaryKnapsackSolver) must bracket
- // it. This is the cross-check of all the mathematically equivalent
- // formulations / solvers (see batches/batch and batch-mixed), generalizing the original
- // two-Solver comparison (which is just the M = 2 case)
+ // cross-check ALL the registered Solver via the shared common_utils engine:
+ // every exact one must agree on the optimal value z*, every relaxation
+ // (GreedyRelaxationBinaryKnapsackSolver) must bracket it, and (in the
+ // Pisinger mode, have_ref) z* must match the published optimum ref_opt. The
+ // engine also prints the uniform per-instance line with every Solver value;
+ // here we only add the BinaryKnapsackBlock-specific classifier (relaxation =>
+ // [lb,ub] bracket) and the self-consistency check (each exact Solver's
+ // reported value equals the value recomputed from its returned solution)
  const auto & reg = BKB->get_registered_solvers();
  std::vector< Solver * > Solvers( reg.begin() , reg.end() );
  const std::size_t M = Solvers.size();
  if( M < 2 ) {
-  cerr << "Error: SolveAll needs at least two registered Solver";
+  cerr << "Error: CrossCheckSolvers needs at least two registered Solver";
   return( false );
   }
 
- // solve with every Solver (timing each for LOG_LEVEL >= 1) - - - - - - - - -
+ // a relaxation brackets z* in [ lb , ub ]; any other Solver is an exact z*.
+ // The classifier is invoked by SolveAll() only for the Solver that found a
+ // solution, so we use it to record which ones to self-consistency-check below
+ // (skipping the infeasible ones, whose primal x cannot be read)
+ std::vector< char > feasible( M , 0 );
+ SolverClassifier classify =
+  [ &feasible ]( Solver * s , std::size_t k ) -> SolverReading {
+   feasible[ k ] = 1;
+   SolverReading r;
+   if( auto GRS =
+       dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >( s ) ) {
+    r.kind = SolverReading::Kind::Bracket;
+    r.lb   = GRS->get_true_lb();
+    r.ub   = GRS->get_true_ub();
+    }
+   else {
+    r.kind  = SolverReading::Kind::Exact;
+    r.value = s->get_var_value();
+    }
+   return( r );
+   };
 
- std::vector< int > status( M );
- #if( LOG_LEVEL >= 1 )
-  auto start = std::chrono::system_clock::now();
- #endif
- for( std::size_t k = 0 ; k < M ; ++k ) {
-  status[ k ] = Solvers[ k ]->compute();
-  #if( LOG_LEVEL >= 1 )
-   auto end = std::chrono::system_clock::now();
-   std::chrono::duration< double > elapsed = end - start;
-   cout.setf( ios::scientific, ios::floatfield );
-   cout << setprecision( 2 ) << ( k ? " - " : "" ) << elapsed.count();
-   start = end;
-  #endif
-  }
- #if( LOG_LEVEL >= 1 )
-  cout << " - ";
- #endif
-
- // feasibility consensus - - - - - - - - - - - - - - - - - - - - - - - - - -
-
- std::size_t nInf = 0;
- for( std::size_t k = 0 ; k < M ; ++k )
-  if( status[ k ] == Solver::kInfeasible )
-   ++nInf;
- if( nInf == M ) {                         // all agree: the instance is unfeas
-  LOG( "OK(u)" );
-  return( true );
-  }
- if( nInf > 0 ) {
-  cout << "Error: " << nInf << " of " << M << " Solver report infeasible, "
-       << "the others feasible";
+ const double ref = have_ref ? ref_opt
+                  : std::numeric_limits< double >::quiet_NaN();
+ if( ! SolveAll( BKB , classify , ref , 2e-06 ) )
   return( false );
-  }
 
- // read each Solver value and solution, checking the solution matches the
- // value (self-consistency), and pick the exact reference optimum - - - - - -
-
- std::vector< double > value( M );
- double ref = 0;
- bool haveRef = false;
+ // BinaryKnapsackBlock-specific self-consistency: every feasible exact Solver's
+ // reported value must equal the value recomputed from its returned solution
  for( std::size_t k = 0 ; k < M ; ++k ) {
-  value[ k ] = Solvers[ k ]->get_var_value();
+  if( ! feasible[ k ] )
+   continue;                               // infeasible: no primal x to read
+  if( dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >( Solvers[ k ] ) )
+   continue;                               // relaxations have no primal x
+  const double value = Solvers[ k ]->get_var_value();
   Solvers[ k ]->get_var_solution();
   double checksol = 0;
   for( Index i = 0 ; i < N ; ++i )
    checksol += BKB->get_x( i ) * BKB->get_Profit( i );
-  if( abs( checksol - value[ k ] ) > 1e-06 * max( abs( value[ k ] ) , 1.0 ) ) {
+  if( abs( checksol - value ) > 1e-06 * max( abs( value ) , 1.0 ) ) {
    cerr << "Error: Solver " << k << " solution value " << checksol
-        << " != its reported value " << value[ k ];
-   return( false );
-   }
-  if( ( ! haveRef ) &&
-      ( ! dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >(
-                                                          Solvers[ k ] ) ) ) {
-   ref = value[ k ];                       // the first exact Solver sets z*
-   haveRef = true;
-   }
-  }
- if( ! haveRef ) {
-  cerr << "Error: SolveAll needs at least one exact (non-relaxation) Solver";
-  return( false );
-  }
-
- // every exact Solver must hit the reference optimum z*, every relaxation
- // must bracket it - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
- const double tol = 2e-06 * max( abs( ref ) , 1.0 );
- for( std::size_t k = 0 ; k < M ; ++k ) {
-  if( auto GRS = dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >(
-                                                          Solvers[ k ] ) ) {
-   const double lb = GRS->get_true_lb() , ub = GRS->get_true_ub();
-   if( ( lb - tol > ref ) || ( ref > ub + tol ) ) {
-    cout << "Error: Solver " << k << " bounds [ " << lb << " , " << ub
-         << " ] do not bracket the optimum " << ref;
-    return( false );
-    }
-   }
-  else if( abs( value[ k ] - ref ) > tol ) {
-   cout << "Error: Solver " << k << " value " << value[ k ]
-        << " != reference optimum " << ref;
+        << " != its reported value " << value;
    return( false );
    }
   }
 
- // solver-vs-reference: the optimum must also match the published value, if
- // one is provided (the Pisinger mode, see run_pisinger())
- if( have_ref && ( abs( ref - ref_opt ) > tol ) ) {
-  cout << "Error: optimum " << ref << " != published reference " << ref_opt;
-  return( false );
-  }
-
- LOG( "OK" );
  return( true );
  }
 
@@ -297,7 +253,7 @@ static std::vector< PisingerInst > read_pisinger( const std::string & path )
 
 /*--------------------------------------------------------------------------*/
 // the Pisinger mode (-C <csv>): test every instance of the .csv with ALL the
-// attached Solver (the SolveAll() solver-vs-solver cross-check) AND against
+// attached Solver (the CrossCheckSolvers() solver-vs-solver cross-check) AND against
 // the published optimum z (solver-vs-reference), reusing one Block and one set
 // of Solver across the whole class (the data of each instance is set with the
 // chg_*() Modification, to which the Solver react)
@@ -339,7 +295,7 @@ static bool run_pisinger( const std::string & csv , const std::string & sconf )
   BKB->chg_capacity( insts[ k ].C );
   ref_opt = insts[ k ].z;
   LOG( insts[ k ].name << ": " );
-  AllPassed &= SolveAll();
+  AllPassed &= CrossCheckSolvers();
   }
  have_ref = false;
 
@@ -615,7 +571,7 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  LOG( "0: " );
- bool AllPassed = SolveAll();
+ bool AllPassed = CrossCheckSolvers();
  
  // modifications loop- - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -866,7 +822,7 @@ int main( int argc , char **argv )
   // finally, re-solve - - - - - - - - - - - - - - - - - - - - - - - - - - -
  
   if( ! ( i % STEP ) )
-   AllPassed &= SolveAll();
+   AllPassed &= CrossCheckSolvers();
 
   }  // end( main loop ) - - - - - - - - - - - - - - - - - - - - - - - - - -
      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

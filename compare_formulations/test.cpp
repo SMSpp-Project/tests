@@ -94,10 +94,7 @@ static bool SolveBoth( double * out_fo1 = nullptr ,
 
   auto end = std::chrono::system_clock::now();
   std::chrono::duration< double > elapsed = end - start;
-
-  std::cout.setf( std::ios::scientific, std::ios::floatfield );
-  std::cout << std::setprecision( 2 ) << elapsed.count() << " - "
-	    << std::flush;
+  double t1 = elapsed.count();
 
   // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
   auto Slvr2 = Block2->get_registered_solvers().front();
@@ -114,35 +111,33 @@ static bool SolveBoth( double * out_fo1 = nullptr ,
   end = std::chrono::system_clock::now();
   elapsed = end - start;
 
-  std::cout.setf( std::ios::scientific, std::ios::floatfield );
-  std::cout << std::setprecision( 2 ) << elapsed.count();
+  double t2 = elapsed.count();
 
-  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-7 *
-			  std::max( double( 1 ) , std::max( abs( fo1st ) ,
-						  abs( fo2nd ) ) ) ) ) {
-   std::cout << " - OK(f)" << std::endl;
-   return( true );
-   }
+  // Pattern A (two separate Blocks): both Solver are exact optima that must
+  // agree (2e-7); defer the verdict and the uniform per-instance line to
+  // common_utils, semantics unchanged
+  std::vector< SolverReading > rd( 2 );
+  std::vector< bool > hs{ hs1st , hs2nd };
+  std::vector< int > status{ rtrn1st , rtrn2nd };
+  if( hs1st ) { rd[ 0 ].kind = SolverReading::Kind::Exact; rd[ 0 ].value = fo1st; }
+  if( hs2nd ) { rd[ 1 ].kind = SolverReading::Kind::Exact; rd[ 1 ].value = fo2nd; }
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   std::cout << " - OK(e)" << std::endl;
-   return( true );
-   }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   std::cout << " - OK(u)" << std::endl;
-   return( true );
-   }
-    
-  std::cout << " - " << std::setprecision( 7 );
-  PrintResults( hs1st , rtrn1st , fo1st );
-  std::cout << " - ";
-  PrintResults( hs2nd , rtrn2nd , fo2nd );
-  std::cout << std::endl;
-
-  return( false );
+  auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
+   if( h )                               return( reading_token( r ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
+  std::string verdict;
+  double diff;
+  bool ok = cross_check( rd , hs , status ,
+                         std::numeric_limits< double >::quiet_NaN() ,
+                         2e-7 , verdict , diff );
+  print_instance_line(
+   { t1 , t2 } ,
+   { tok( hs1st , rtrn1st , rd[ 0 ] ) , tok( hs2nd , rtrn2nd , rd[ 1 ] ) } ,
+   std::numeric_limits< double >::quiet_NaN() , verdict );
+  return( ok );
   }
  catch( std::exception &e ) {
   std::cerr << e.what() << std::endl;

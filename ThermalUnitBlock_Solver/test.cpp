@@ -81,6 +81,8 @@
 
 #include <sstream>
 
+#include <chrono>
+
 #include <random>
 
 #include <iomanip>
@@ -316,7 +318,10 @@ static bool SolveBoth( void )
    TUBlock->unregister_Solver( Slvr1 );
    TUBlock->register_Solver( Slvr1 , true );  // push it to the front
   #endif
+  auto start1 = std::chrono::system_clock::now();
   int rtrn1st = Slvr1->compute( false );
+  auto end1 = std::chrono::system_clock::now();
+  double t1 = std::chrono::duration< double >( end1 - start1 ).count();
   bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
                    && ( rtrn1st != Solver::kUnbounded )
                    && ( rtrn1st != Solver::kInfeasible ) )
@@ -361,7 +366,10 @@ static bool SolveBoth( void )
    TUBlock->unregister_Solver( Slvr2 );
    TUBlock->register_Solver( Slvr2 );  // push it to the back
   #endif
+  auto start2 = std::chrono::system_clock::now();
   int rtrn2nd = Slvr2->compute( false );
+  auto end2 = std::chrono::system_clock::now();
+  double t2 = std::chrono::duration< double >( end2 - start2 ).count();
 
   bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
                    && ( rtrn2nd != Solver::kUnbounded )
@@ -411,10 +419,15 @@ static bool SolveBoth( void )
   // which is why the relatively loose tolerance of 2e-6 here
   //!!  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-6 *
   //!!  emergency version with 1e-4 to find big errors
+  // bespoke verdict (kept intact, including the CHECK_SOLUTIONS dispatch
+  // comparison), restructured to a single exit that prints the unified line
+  bool ok = false;
+  std::string verdict = "KO";
+  bool decided = false;
   if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 1e-4 *
 			  std::max( double( 1 ) , std::max( abs( fo1st ) ,
 						  abs( fo2nd ) ) ) ) ) {
-   LOG1( "OK(f)" << std::endl );
+   ok = true; verdict = "OK(f)"; decided = true;
 
    #if( CHECK_SOLUTIONS & 4 )
     for( Index i = 0 ; i < time_horizon ; ++i ) {
@@ -433,31 +446,31 @@ static bool SolveBoth( void )
      }
    #endif
 
-   return( true );
    }
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
+  if( ( ! decided ) && ( rtrn1st == Solver::kInfeasible ) &&
       ( rtrn2nd == Solver::kInfeasible ) ) {
-    LOG1( "OK(e)" << std::endl );
-    return( true );
-    }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   LOG1( "OK(u)" << std::endl );
-   return( true );
+   ok = true; verdict = "OK(e)"; decided = true;
    }
 
-  #if( LOG_LEVEL >= 1 )
-   std::cout << "Solver1 = ";
-   PrintResults( hs1st , rtrn1st , fo1st );
+  if( ( ! decided ) && ( rtrn1st == Solver::kUnbounded ) &&
+      ( rtrn2nd == Solver::kUnbounded ) ) {
+   ok = true; verdict = "OK(u)"; decided = true;
+   }
 
-   std::cout << " ~ Solver2 = ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   std::cout << std::endl;
-  #endif
-
-  return( false );
+  {
+   auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
+    if( hs )                              return( fmt_obj( fo ) );
+    if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+    if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+    return( "Error!" );
+    };
+   print_instance_line(
+    { t1 , t2 } ,
+    { tok( hs1st , rtrn1st , fo1st ) , tok( hs2nd , rtrn2nd , fo2nd ) } ,
+    std::numeric_limits< double >::quiet_NaN() , verdict );
+   }
+  return( ok );
   }
  catch( std::exception &e ) {
   std::cerr << e.what() << std::endl;

@@ -172,6 +172,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -678,7 +679,10 @@ static bool SolveBoth( void )
    LPBlock->unregister_Solver( slvrLP );
    LPBlock->register_Solver( slvrLP , true );  // push it to the front
   #endif
+  auto startLP = std::chrono::system_clock::now();
   int rtrnLP = slvrLP->compute( false );
+  auto endLP = std::chrono::system_clock::now();
+  double tLP = std::chrono::duration< double >( endLP - startLP ).count();
   bool hsLP = ( ( rtrnLP >= Solver::kOK ) && ( rtrnLP < Solver::kError ) )
               || ( rtrnLP == Solver::kLowPrecision );
   double foLP = hsLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
@@ -700,85 +704,61 @@ static bool SolveBoth( void )
    NDOBlock->unregister_Solver( slvrNDO );
    NDOBlock->register_Solver( slvrNDO );
   #endif
+  auto startNDO = std::chrono::system_clock::now();
   int rtrnNDO = slvrNDO->compute( false );
+  auto endNDO = std::chrono::system_clock::now();
+  double tNDO = std::chrono::duration< double >( endNDO - startNDO ).count();
   bool hsNDO = ( ( rtrnNDO >= Solver::kOK ) && ( rtrnNDO < Solver::kError ) )
               || ( rtrnNDO == Solver::kLowPrecision );
   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
                        : ( convex ? INF : -INF );
 
+  // bespoke verdict (Pattern A, LPBlock vs NDOBlock; the conditional valid-
+  // bound doubling and the dual-mode duality cases are preserved verbatim,
+  // only restructured to a single exit that prints the unified line) - - - -
+  bool ok = false;
+  std::string verdict = "KO";
+  bool decided = false;
+
   // Tolerance choice: the LP solver's default optimality / feasibility
   // tolerances are O(1e-6) relative, the bundle solver's are O(1e-9), and
   // a long iteration loop of accumulated abstract modifications on small,
   // low-density instances can accumulate noticeable drift. We therefore
-  // use 1e-4 relative tolerance for the OK(f) match: tight enough to
-  // catch real bugs (those show as orders-of-magnitude differences) but
-  // realistic for an LP duality comparison between two distinct solver
-  // stacks (CPLEX vs Bundle+Osi) after many iterations.
+  // use 1e-4 relative tolerance for the OK(f) match.
   if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 1e-4 *
 			 max( double( 1 ) , abs( max( foLP , foNDO ) ) ) ) ) {
-   LOG1( "OK(f)" << endl );
-   return( true );
+   ok = true; verdict = "OK(f)"; decided = true;
    }
 
-  // In dual mode, LPBlock is the LP-dual problem solved by CPLEX
-  // (highly reliable) while NDOBlock is the natural primal LP solved by
-  // BundleSolver with an OsiGrb master MP that is known to occasionally
-  // go infeasible on small / numerically tricky instances (OsiGrb prints
-  // "no solution available" warnings). When the BundleSolver explicitly
-  // admits non-convergence (kStopIter / kStopTime / kLowPrecision) but
-  // LPBlock got a definite answer (kOK / kInfeasible / kUnbounded), trust
-  // the LP outcome.
-  if( dual_mode &&
+  // dual mode: trust the (reliable) LP outcome when BundleSolver admits
+  // non-convergence (kStopIter / kStopTime / kLowPrecision)
+  if( ( ! decided ) && dual_mode &&
       ( hsLP || ( rtrnLP == Solver::kInfeasible ) ||
         ( rtrnLP == Solver::kUnbounded ) ) &&
       ( ( rtrnNDO == Solver::kStopIter ) ||
         ( rtrnNDO == Solver::kStopTime ) ||
         ( rtrnNDO == Solver::kLowPrecision ) ) ) {
-   LOG1( "OK(d-trust-LP)" << endl );
-   return( true );
+   ok = true; verdict = "OK(d-trust-LP)"; decided = true;
    }
 
-  // The LP and NDO both claim a feasible solution but their values
-  // disagree wildly: this is the signature of a BundleSolver master MP
-  // infeasibility (OsiGrb "no solution available" warnings) where the
-  // BundleSolver swallows the failure and returns hsNDO == true with a
-  // garbage foNDO of huge magnitude. Detection: |foNDO| has reached or
-  // exceeded the conditional bound (which is itself doubled each time
-  // this branch fires, so the threshold grows with the test's evolving
-  // notion of "obviously too big"). Treat the LP value as authoritative
-  // and double the bound to give BundleSolver more headroom next round.
-  if( hsLP && hsNDO &&
+  // both feasible but values disagree wildly: BundleSolver master MP
+  // infeasibility returning garbage foNDO; trust the LP and double the bound
+  if( ( ! decided ) && hsLP && hsNDO &&
       ( std::abs( foNDO ) >= bound * ( 1 - 1e-9 ) ) &&
       ( std::abs( foNDO ) >= 100 * std::max( double( 1 ) ,
                                              std::abs( foLP ) ) ) ) {
-   LOG1( "OK(?bound?)" << endl );
    bound *= 2;
    if( convex )
     NDOBlock->set_valid_lower_bound( - bound , true );
    else
     NDOBlock->set_valid_upper_bound( bound , true );
-   return( true );
+   ok = true; verdict = "OK(?bound?)"; decided = true;
    }
 
-  if( hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
-   /* Weird case: the LP found an optimal solution but the NDO declared the
-    * problem unbounded. This is the BundleSolver's heuristic
-    * unboundedness detection firing because the value of the function
-    * exceeded the "conditional" valid bound that the test installed via
-    * set_valid_(lower/upper)_bound() -- with no information about what
-    * "unbounded" really means for a PolyhedralFunction, the BundleSolver
-    * uses that bound as a "finite infinity" past which the function is
-    * considered unbounded. The trigger for that detection is one of:
-    *  (a) Bundle returned a finite reported value foNDO that has reached
-    *      (or gone past) the conditional bound, OR
-    *  (b) Bundle returned the unbounded sentinel ( foNDO = +/- INF ),
-    *      which happens when the bound was reached without a feasible
-    *      point being found, OR
-    *  (c) the LP optimum foLP itself is past the conditional bound (so
-    *      Bundle was right that the problem exceeds the bound, even if
-    *      it didn't see a finite foNDO at the bound).
-    * In any of these cases we declare the run a success but double the
-    * bound, so that next time around there is more headroom. */
+  if( ( ! decided ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
+   /* LP optimal but NDO declared unbounded: BundleSolver's heuristic
+    * unboundedness detection firing at the conditional valid bound; accept
+    * and double the bound (cf. PolyhedralFunction test). */
    bool fo_at_or_past_bound =
        convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
               : ( foNDO >= bound * ( 1 - 1e-9 ) );
@@ -788,146 +768,90 @@ static bool SolveBoth( void )
        convex ? ( foLP <= - bound * ( 1 - 1e-9 ) )
               : ( foLP >= bound * ( 1 - 1e-9 ) );
    if( fo_at_or_past_bound || fo_unbounded_sentinel || foLP_past_bound ) {
-    LOG1( "OK(?bound?)" << endl );
     bound *= 2;
     if( convex )
      NDOBlock->set_valid_lower_bound( -bound , true );
     else
      NDOBlock->set_valid_upper_bound( bound , true );
-    return( true );
+    ok = true; verdict = "OK(?bound?)"; decided = true;
     }
    }
 
-  // Check primal infeasibility. If LPBlock is solved in primal mode,
-  // primal infeasibility is reported as LP infeasibility. If LPBlock is
-  // solved in dual mode, primal infeasibility corresponds to dual unboundedness.
-  if( ( rtrnLP == Solver::kInfeasible ) && 
-        ( rtrnNDO == Solver::kInfeasible ) ) {
-    LOG1( "OK(?e?)" << endl );
-    return( true );
-  }
+  // primal infeasibility on both sides
+  if( ( ! decided ) && ( rtrnLP == Solver::kInfeasible ) &&
+      ( rtrnNDO == Solver::kInfeasible ) ) {
+   ok = true; verdict = "OK(?e?)"; decided = true;
+   }
 
-  // Symmetric variant of the OK(?bound?) case above. When the
-  // natural optimum lies past the "globalbound" wrapper's *antibind*
-  // side (which sits at +/- 10 * bound on the non-optimisation
-  // direction, cf. the wrapper invariant described at the top of the
-  // file), the LPBlock LP becomes *infeasible*: e.g. for a convex/min
-  // problem the wrapper is `obj <= +10*bound` and a natural min above
-  // +10*bound has no feasible (x,v); symmetrically for concave/max
-  // with `obj >= -10*bound` and a natural max below -10*bound.
-  // Meanwhile NDOBlock -- BundleSolver in primal mode, MILPSolver on
-  // the dual LP in dual mode -- reports either a finite value past
-  // +/- 10*bound or the unbounded sentinel / kUnbounded. Same root
-  // cause as OK(?bound?): the test-imposed soft cap is too tight;
-  // double it and accept this run as success.
-  if( ( rtrnLP == Solver::kInfeasible ) &&
+  // antibind variant: LP infeasible because the natural optimum lies past the
+  // wrapper's antibind side, NDO past +/-10*bound or unbounded; double bound
+  if( ( ! decided ) && ( rtrnLP == Solver::kInfeasible ) &&
       ( hsNDO || ( rtrnNDO == Solver::kUnbounded ) ) ) {
    bool fo_past_antibind = hsNDO &&
        ( convex ? ( foNDO >=   10 * bound * ( 1 - 1e-9 ) )
                 : ( foNDO <= - 10 * bound * ( 1 - 1e-9 ) ) );
    bool fo_unbounded_sentinel = hsNDO &&
        ( ( foNDO == INF ) || ( foNDO == - INF ) );
-   // master MP infeasibility manifests as a huge |foNDO| (any sign),
-   // typically several orders of magnitude past the conditional bound
    bool fo_master_mp_garbage = hsNDO &&
        ( std::abs( foNDO ) >= 10 * bound * ( 1 - 1e-9 ) );
    if( fo_past_antibind || fo_unbounded_sentinel ||
        fo_master_mp_garbage ||
        ( rtrnNDO == Solver::kUnbounded ) ) {
-    LOG1( "OK(?bound?)" << endl );
     bound *= 2;
     if( convex )
      NDOBlock->set_valid_lower_bound( - bound , true );
     else
      NDOBlock->set_valid_upper_bound( bound , true );
-    return( true );
+    ok = true; verdict = "OK(?bound?)"; decided = true;
     }
    }
 
-  if( ( rtrnLP == Solver::kUnbounded ) &&
+  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
       ( rtrnNDO == Solver::kUnbounded ) ) {
-   LOG1( "OK(u)" << endl );
-   return( true );
+   ok = true; verdict = "OK(u)"; decided = true;
    }
 
-  // Symmetric variant of the OK(?bound?) case for the other
-  // direction: the LP solver declared unboundedness while NDOBlock
-  // returned a finite value at (or past) the *bind* side of the
-  // conditional valid bound (set by set_valid_(lower/upper)_bound()).
-  // For a convex/min problem the bind side is -bound; the NDO
-  // BundleSolver heuristic may either declare kUnbounded explicitly
-  // (handled at the top of SolveBoth()) or stall at foNDO ~= -bound
-  // with hsNDO==true. Symmetrically for concave/max with foNDO ~= +bound.
-  //
-  // Additionally, the master MP inside BundleSolver may go infeasible
-  // for an LP-unbounded problem (OsiGrb prints "no solution available"
-  // warnings), in which case hsNDO remains true but foNDO is *nonsensical*
-  // (a finite value of large magnitude with possibly the "wrong" sign).
-  // The LP is authoritative on unboundedness; treat any |foNDO| past
-  // the conditional bound on either side as a soft-cap-too-tight signal
-  // and double the bound to give NDOBlock more headroom.
-  if( ( rtrnLP == Solver::kUnbounded ) && hsNDO ) {
+  // symmetric bind variant: LP unbounded, NDO finite at/past the bind side
+  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) && hsNDO ) {
    bool fo_at_or_past_bound_correct_side =
        convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
               : ( foNDO >=   bound * ( 1 - 1e-9 ) );
    bool fo_unbounded_sentinel =
        ( foNDO == INF ) || ( foNDO == - INF );
-   // master MP infeasibility manifests as a huge |foNDO| (any sign),
-   // typically several orders of magnitude past the conditional bound
    bool fo_master_mp_garbage =
        std::abs( foNDO ) >= bound * ( 1 - 1e-9 );
    if( fo_at_or_past_bound_correct_side || fo_unbounded_sentinel ||
        fo_master_mp_garbage ) {
-    LOG1( "OK(?bound?)" << endl );
     bound *= 2;
     if( convex )
      NDOBlock->set_valid_lower_bound( - bound , true );
     else
      NDOBlock->set_valid_upper_bound( bound , true );
-    return( true );
+    ok = true; verdict = "OK(?bound?)"; decided = true;
     }
    }
 
-  // in dual mode, LPBlock is the Fenchel dual of NDOBlock, and by
-  // LP weak/strong duality dual-infeasibility corresponds to primal-
-  // unboundedness (and vice versa). Treat these mismatches as success.
-  if( dual_mode &&
+  // dual mode: dual-infeasibility <-> primal-unboundedness (LP duality)
+  if( ( ! decided ) && dual_mode &&
       ( ( ( rtrnLP == Solver::kInfeasible ) &&
           ( rtrnNDO == Solver::kUnbounded ) ) ||
         ( ( rtrnLP == Solver::kUnbounded ) &&
           ( rtrnNDO == Solver::kInfeasible ) ) ) ) {
-   LOG1( "OK(d-duality)" << endl );
-   return( true );
+   ok = true; verdict = "OK(d-duality)"; decided = true;
    }
 
-  #if( LOG_LEVEL >= 1 )
-   cout << "LPBlock = ";
-   if( hsLP )
-    cout << foLP;
-   else
-    if( rtrnLP == Solver::kInfeasible )
-     cout << "    Unfeas(?)";
-    else
-     if( rtrnLP == Solver::kUnbounded )
-      cout << "      Unbounded";
-     else
-      cout << "      Error!";
-
-   cout << " ~ NDOBlock = ";
-   if( hsNDO )
-    cout << foNDO;
-   else
-    if( rtrnNDO == Solver::kInfeasible )
-     cout << "    Unfeas(?)";
-    else
-     if( rtrnNDO == Solver::kUnbounded )
-      cout << "      Unbounded";
-     else
-      cout << "      Error!";
-   cout << endl;
-  #endif
-
-  return( false );
+  // uniform per-instance line (S0 = LPBlock, S1 = NDOBlock) - - - - - - - - -
+  auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
+   if( hs )                              return( fmt_obj( fo ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
+  print_instance_line(
+   { tLP , tNDO } ,
+   { tok( hsLP , rtrnLP , foLP ) , tok( hsNDO , rtrnNDO , foNDO ) } ,
+   std::numeric_limits< double >::quiet_NaN() , verdict );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;

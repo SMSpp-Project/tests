@@ -240,111 +240,77 @@ static void PrintSol( CDASolver * slvr , bool first ,
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) 
+static bool SolveBoth( void )
 {
+ // own solve loop (kept for the per-Solver PrintSol() side output and the
+ // CDASolver check), then the shared common_utils cross_check + uniform line.
+ // Every Solver is an exact optimum read via get_var_value(); they must agree
+ // within 2e-7. The DETACH_* re-ordering is applied up front.
  try {
-  // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  auto Slvr1 = dynamic_cast< CDASolver * >(
-			       TestBlock->get_registered_solvers().front() );
-  if( ! Slvr1 ) {
-   cout << "Error! First solver registred to TestBlock not a CDASolver";
-   exit( 1 );
-   }
   #if DETACH_1ST
-   TestBlock->unregister_Solver( Slvr1 );
-   TestBlock->register_Solver( Slvr1 , true );  // push it to the front
+   { auto s = TestBlock->get_registered_solvers().front();
+     TestBlock->unregister_Solver( s );
+     TestBlock->register_Solver( s , true ); }   // push it to the front
   #endif
-
-  #if( LOG_LEVEL >= 3 )
-   Slvr1->set_par( MILPSolver::strOutputFile , "LPBlock-CPXMILP.lp" );
-  #endif
-
-  auto start = std::chrono::system_clock::now();
-
-  int rtrn1st = Slvr1->compute( false );
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-  double fo1st = hs1st ? Slvr1->get_var_value() : -INF;
-
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration< double > elapsed = end - start;
- 
-  PrintSol( Slvr1 , true , elapsed.count() , fo1st );
-
-  #if( LOG_LEVEL >= 1 )
-   cout.setf( ios::scientific, ios::floatfield );
-   cout << setprecision( 2 ) << elapsed.count() << " - " << flush;
-  #endif
-
-  if( TestBlock->get_registered_solvers().size() == 1 ) {
-   #if( LOG_LEVEL >= 1 )
-    PrintResults( hs1st , rtrn1st , fo1st );
-    cout << endl;
-   #endif
-   return( true );
-   }
-
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  auto Slvr2 = dynamic_cast< CDASolver * >(
-			       TestBlock->get_registered_solvers().back() );
-  if( ! Slvr2 ) {
-   cout << "Error! Last solver registred to TestBlock not a CDASolver";
-   exit( 1 );
-   }
   #if DETACH_2ND
-   TestBlock->unregister_Solver( Slvr2 );
-   TestBlock->register_Solver( Slvr2 );  // push it to the back
+   { auto s = TestBlock->get_registered_solvers().back();
+     TestBlock->unregister_Solver( s );
+     TestBlock->register_Solver( s ); }          // push it to the back
   #endif
 
-  start = std::chrono::system_clock::now();
+  const auto & reg = TestBlock->get_registered_solvers();
+  std::vector< Solver * > S( reg.begin() , reg.end() );
+  const std::size_t M = S.size();
 
-  int rtrn2nd = Slvr2->compute( false );
-  bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
-                   && ( rtrn2nd != Solver::kUnbounded )
-                   && ( rtrn2nd != Solver::kInfeasible ) )
-                 || ( rtrn2nd == Solver::kLowPrecision ) );
-  double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
+  std::vector< int > status( M );
+  std::vector< double > times( M );
+  std::vector< bool > hs( M );
+  std::vector< SolverReading > rd( M );
+  std::vector< std::string > tok( M );
 
-  end = std::chrono::system_clock::now();
-  elapsed = end - start;
+  for( std::size_t k = 0 ; k < M ; ++k ) {
+   auto Slvr = dynamic_cast< CDASolver * >( S[ k ] );
+   if( ! Slvr ) {
+    cout << "Error! Solver registred to TestBlock not a CDASolver";
+    exit( 1 );
+    }
+   #if( LOG_LEVEL >= 3 )
+    if( k == 0 )
+     Slvr->set_par( MILPSolver::strOutputFile , "LPBlock-CPXMILP.lp" );
+   #endif
 
-  PrintSol( Slvr2 , false , elapsed.count() , fo2nd );
+   auto start = std::chrono::system_clock::now();
+   status[ k ] = Slvr->compute( false );
+   auto end = std::chrono::system_clock::now();
+   times[ k ] = std::chrono::duration< double >( end - start ).count();
+   hs[ k ] = ( ( ( status[ k ] >= Solver::kOK )
+                 && ( status[ k ] < Solver::kError )
+                 && ( status[ k ] != Solver::kUnbounded )
+                 && ( status[ k ] != Solver::kInfeasible ) )
+               || ( status[ k ] == Solver::kLowPrecision ) );
+   double fo = hs[ k ] ? Slvr->get_var_value() : -INF;
 
-  #if( LOG_LEVEL >= 1 )
-   cout.setf( ios::scientific, ios::floatfield );
-   cout << setprecision( 2 ) << elapsed.count();
-  #endif
+   PrintSol( Slvr , k == 0 , times[ k ] , fo );
 
-  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-7 *
-			  max( double( 1 ) , max( abs( fo1st ) ,
-						  abs( fo2nd ) ) ) ) ) {
-   LOG1( " - OK(f)" << endl );
-   return( true );
+   if( hs[ k ] ) {
+    rd[ k ].kind  = SolverReading::Kind::Exact;
+    rd[ k ].value = fo;
+    tok[ k ] = reading_token( rd[ k ] );
+    }
+   else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
+   else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
+   else                                           tok[ k ] = "Error!";
    }
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   LOG1( " - OK(e)" << endl );
-   return( true );
-   }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   LOG1( " - OK(u)" << endl );
-   return( true );
-   }
-    
-  #if( LOG_LEVEL >= 1 )
-   cout << " - " << setprecision( 7 );
-   PrintResults( hs1st , rtrn1st , fo1st );
-   cout << " - ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   cout << endl;
-  #endif
-
-  return( false );
+  std::string verdict;
+  double diff;
+  bool ok = cross_check( rd , hs , status ,
+                         std::numeric_limits< double >::quiet_NaN() ,
+                         2e-7 , verdict , diff );
+  print_instance_line( times , tok ,
+                       std::numeric_limits< double >::quiet_NaN() ,
+                       verdict , diff );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;

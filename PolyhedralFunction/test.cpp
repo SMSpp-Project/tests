@@ -118,6 +118,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -803,8 +804,12 @@ static void printAb( const MultiVector & tA , const RealVector & tb ,
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) 
+static bool SolveBoth( void )
 {
+ // Pattern A (two separate Blocks, LPBlock vs NDOBlock): the bespoke verdict
+ // below (including the BundleSolver conditional-bound handling) is kept as is;
+ // only the per-instance display is unified through print_instance_line(), so
+ // S0 = LPBlock value, S1 = NDOBlock value, with the same verdict tokens.
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
@@ -812,7 +817,10 @@ static bool SolveBoth( void )
    LPBlock->unregister_Solver( slvrLP );
    LPBlock->register_Solver( slvrLP , true );  // push it to the front
   #endif
+  auto startLP = std::chrono::system_clock::now();
   int rtrnLP = slvrLP->compute( false );
+  auto endLP = std::chrono::system_clock::now();
+  double tLP = std::chrono::duration< double >( endLP - startLP ).count();
   bool hsLP = ( ( rtrnLP >= Solver::kOK ) && ( rtrnLP < Solver::kError ) )
               || ( rtrnLP == Solver::kLowPrecision );
   double foLP = hsLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
@@ -824,39 +832,32 @@ static bool SolveBoth( void )
    NDOBlock->unregister_Solver( slvrNDO );
    NDOBlock->register_Solver( slvrNDO );
   #endif
+  auto startNDO = std::chrono::system_clock::now();
   int rtrnNDO = slvrNDO->compute( false );
+  auto endNDO = std::chrono::system_clock::now();
+  double tNDO = std::chrono::duration< double >( endNDO - startNDO ).count();
   bool hsNDO = ( ( rtrnNDO >= Solver::kOK ) && ( rtrnNDO < Solver::kError ) )
               || ( rtrnNDO == Solver::kLowPrecision );
   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
                        : ( convex ? INF : -INF );
 
+  // bespoke verdict (sets ok + verdict; the conditional-bound branches keep
+  // their bound-doubling side effects) - - - - - - - - - - - - - - - - - - -
+  bool ok = false;
+  std::string verdict = "KO";
+  bool decided = false;
+
   if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 5e-7 *
 			 max( double( 1 ) , abs( max( foLP , foNDO ) ) ) ) ) {
-   LOG1( "OK(f)" << endl );
-   return( true );
+   ok = true; verdict = "OK(f)"; decided = true;
    }
 
-
-
-  if( hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
+  if( ( ! decided ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
    /* Weird case: the LP found an optimal solution but the NDO declared the
-    * problem unbounded. This is the BundleSolver's heuristic
-    * unboundedness detection firing because the value of the function
-    * exceeded the "conditional" valid bound that the test installed via
-    * set_valid_(lower/upper)_bound() -- with no information about what
-    * "unbounded" really means for a PolyhedralFunction, the BundleSolver
-    * uses that bound as a "finite infinity" past which the function is
-    * considered unbounded. The trigger for that detection is one of:
-    *  (a) Bundle returned a finite reported value foNDO that has reached
-    *      (or gone past) the conditional bound, OR
-    *  (b) Bundle returned the unbounded sentinel ( foNDO = +/- INF ),
-    *      which happens when the bound was reached without a feasible
-    *      point being found, OR
-    *  (c) the LP optimum foLP itself is past the conditional bound (so
-    *      Bundle was right that the problem exceeds the bound, even if
-    *      it didn't see a finite foNDO at the bound).
-    * In any of these cases we declare the run a success but double the
-    * bound, so that next time around there is more headroom. */
+    * problem unbounded -- the BundleSolver's heuristic unboundedness
+    * detection firing because the value reached the "conditional" valid
+    * bound installed via set_valid_(lower/upper)_bound(). Accept and double
+    * the bound for more headroom next time. */
    bool fo_at_or_past_bound =
        convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
               : ( foNDO >= bound * ( 1 - 1e-9 ) );
@@ -866,25 +867,18 @@ static bool SolveBoth( void )
        convex ? ( foLP <= - bound * ( 1 - 1e-9 ) )
               : ( foLP >= bound * ( 1 - 1e-9 ) );
    if( fo_at_or_past_bound || fo_unbounded_sentinel || foLP_past_bound ) {
-    LOG1( "OK(?bound?)" << endl );
     bound *= 2;
     if( convex )
      NDOBlock->set_valid_lower_bound( -bound );
     else
      NDOBlock->set_valid_upper_bound( bound );
-    return( true );
+    ok = true; verdict = "OK(?bound?)"; decided = true;
     }
    }
 
-  if( rtrnLP == Solver::kUnbounded ) {
-   /* Symmetric weird case: the LP says the problem is unbounded. The NDO
-    * may be reporting kUnbounded too (handled by the next branch); it may
-    * have stopped at the conditional valid bound (foNDO = -bound for
-    * convex / +bound for concave); or it may have returned no finite
-    * bound at all (foNDO = +/- INF -- either the default for hsNDO=false,
-    * or the bundle's get_*b() with no information). In all these subcases
-    * the LP being unbounded is a strong signal that the run is "OK
-    * modulo the bound": increase the bound and accept the result. */
+  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) ) {
+   /* Symmetric weird case: the LP says the problem is unbounded; if the NDO
+    * stopped at (or past) the conditional bound, accept and double it. */
    bool foNDO_at_or_past_bound =
        convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
               : ( foNDO >= bound * ( 1 - 1e-9 ) );
@@ -892,56 +886,37 @@ static bool SolveBoth( void )
        convex ? ( foNDO == INF || foNDO == - INF )
               : ( foNDO == INF || foNDO == - INF );
    if( foNDO_at_or_past_bound || foNDO_unbounded ) {
-    LOG1( "OK(?bound?)" << endl );
     bound *= 2;
     if( convex )
      NDOBlock->set_valid_lower_bound( -bound , true );
     else
      NDOBlock->set_valid_upper_bound( bound , true );
-    return( true );
+    ok = true; verdict = "OK(?bound?)"; decided = true;
     }
    }
 
-  if( ( rtrnLP == Solver::kInfeasible ) &&
+  if( ( ! decided ) && ( rtrnLP == Solver::kInfeasible ) &&
       ( rtrnNDO == Solver::kInfeasible ) ) {
-    LOG1( "OK(?e?)" << endl );
-    return( true );
-    }
-
-  if( ( rtrnLP == Solver::kUnbounded ) &&
-      ( rtrnNDO == Solver::kUnbounded ) ) {
-   LOG1( "OK(u)" << endl );
-   return( true );
+   ok = true; verdict = "OK(?e?)"; decided = true;
    }
 
-  #if( LOG_LEVEL >= 1 )
-   cout << "LPBlock = ";
-   if( hsLP )
-    cout << foLP;
-   else
-    if( rtrnLP == Solver::kInfeasible )
-     cout << "    Unfeas(?)";
-    else
-     if( rtrnLP == Solver::kUnbounded )
-      cout << "      Unbounded";
-     else
-      cout << "      Error!";
+  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
+      ( rtrnNDO == Solver::kUnbounded ) ) {
+   ok = true; verdict = "OK(u)"; decided = true;
+   }
 
-   cout << " ~ NDOBlock = ";
-   if( hsNDO )
-    cout << foNDO;
-   else
-    if( rtrnNDO == Solver::kInfeasible )
-     cout << "    Unfeas(?)";
-    else
-     if( rtrnNDO == Solver::kUnbounded )
-      cout << "      Unbounded";
-     else
-      cout << "      Error!";
-   cout << endl;
-  #endif
-
-  return( false );
+  // uniform per-instance line (S0 = LPBlock, S1 = NDOBlock) - - - - - - - - -
+  auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
+   if( hs )                              return( fmt_obj( fo ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
+  print_instance_line(
+   { tLP , tNDO } ,
+   { tok( hsLP , rtrnLP , foLP ) , tok( hsNDO , rtrnNDO , foNDO ) } ,
+   std::numeric_limits< double >::quiet_NaN() , verdict );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;

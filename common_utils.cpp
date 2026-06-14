@@ -233,6 +233,262 @@ double get_obj_value( Solver * slvr , ObjGetter g )
 
 /*--------------------------------------------------------------------------*/
 
+std::string fmt_obj( double v )
+{
+ std::ostringstream os;
+ os.setf( std::ios::scientific , std::ios::floatfield );
+ os << std::setprecision( 7 ) << v;
+ return( os.str() );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+SolverClassifier exact_getter( ObjGetter g )
+{
+ return( [ g ]( Solver * s , std::size_t ) -> SolverReading {
+  SolverReading r;
+  r.kind  = SolverReading::Kind::Exact;
+  r.value = get_obj_value( s , g );
+  return( r );
+  } );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
+                                ObjGetter dflt )
+{
+ return( [ getters = std::move( getters ) , dflt ]
+         ( Solver * s , std::size_t k ) -> SolverReading {
+  SolverReading r;
+  r.kind  = SolverReading::Kind::Exact;
+  r.value = get_obj_value( s , k < getters.size() ? getters[ k ] : dflt );
+  return( r );
+  } );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+void print_instance_line( const std::vector< double > & times ,
+                          const std::vector< std::string > & value_tokens ,
+                          double ref ,
+                          const std::string & verdict ,
+                          double diff )
+{
+ for( std::size_t k = 0 ; k < times.size() ; ++k )
+  std::cout << ( k ? " - " : "" ) << fixd << times[ k ];
+
+ std::cout << " | ";
+ for( std::size_t k = 0 ; k < value_tokens.size() ; ++k )
+  std::cout << ( k ? "  " : "" ) << "S" << k << " = " << value_tokens[ k ];
+
+ if( ! std::isnan( ref ) ) {
+  std::cout << "  ~ Ref = " << fmt_obj( ref );
+  if( ! std::isnan( diff ) )
+   std::cout << " (|diff| = " << fmt_obj( diff ) << ")";
+  }
+
+ std::cout << "  -> " << verdict << std::endl;
+ }
+
+/*--------------------------------------------------------------------------*/
+
+std::string reading_token( const SolverReading & r )
+{
+ if( r.kind == SolverReading::Kind::Bracket )
+  return( "[ " + fmt_obj( r.lb ) + " , " + fmt_obj( r.ub ) + " ]" );
+ return( fmt_obj( r.value ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+bool cross_check( const std::vector< SolverReading > & rd ,
+                  const std::vector< bool > & has_solution ,
+                  const std::vector< int > & status ,
+                  double ref , double tol ,
+                  std::string & verdict_out , double & diff_out )
+{
+ diff_out = std::numeric_limits< double >::quiet_NaN();
+
+ // a ~ b / a <= b within the relative tolerance
+ auto within = [ tol ]( double a , double b ) {
+  return( std::abs( a - b ) <=
+          tol * std::max( double( 1 ) ,
+                          std::max( std::abs( a ) , std::abs( b ) ) ) );
+  };
+ auto le = [ tol ]( double a , double b ) {
+  return( a - b <=
+          tol * std::max( double( 1 ) ,
+                          std::max( std::abs( a ) , std::abs( b ) ) ) );
+  };
+
+ const std::size_t M = has_solution.size();
+ std::size_t nFeas = 0 , nInf = 0 , nUnb = 0;
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  if( has_solution[ k ] )                        ++nFeas;
+  else if( status[ k ] == Solver::kInfeasible )  ++nInf;
+  else if( status[ k ] == Solver::kUnbounded )   ++nUnb;
+  }
+
+ // single Solver, no reference: just "did it find a solution?"
+ if( ( M == 1 ) && std::isnan( ref ) ) {
+  bool ok = has_solution[ 0 ];
+  verdict_out = ok ? "OK" : "KO";
+  return( ok );
+  }
+
+ // unanimous infeasible / unbounded is a pass only when NO reference was given
+ if( nFeas == 0 ) {
+  if( std::isnan( ref ) && nInf == M ) { verdict_out = "OK(e)"; return( true ); }
+  if( std::isnan( ref ) && nUnb == M ) { verdict_out = "OK(u)"; return( true ); }
+  verdict_out = "KO";
+  return( false );
+  }
+
+ // some feasible, some not: disagreement
+ if( nInf > 0 || nUnb > 0 ) { verdict_out = "KO"; return( false ); }
+
+ // all feasible: gather Exact / LowerBound / UpperBound / Bracket readings
+ std::vector< double > exacts , lbs , ubs;
+ for( std::size_t k = 0 ; k < M ; ++k )
+  switch( rd[ k ].kind ) {
+   case SolverReading::Kind::Exact:      exacts.push_back( rd[ k ].value );
+                                         break;
+   case SolverReading::Kind::LowerBound: lbs.push_back( rd[ k ].value );
+                                         break;
+   case SolverReading::Kind::UpperBound: ubs.push_back( rd[ k ].value );
+                                         break;
+   case SolverReading::Kind::Bracket:    lbs.push_back( rd[ k ].lb );
+                                         ubs.push_back( rd[ k ].ub );
+                                         break;
+   }
+
+ bool ok = true;
+
+ // determine z*: from the Exact readings, else from ref, else from the bounds
+ double zstar = std::numeric_limits< double >::quiet_NaN();
+ if( ! exacts.empty() ) {
+  zstar = exacts.front();
+  for( double e : exacts )             // every Exact must agree on z*
+   if( ! within( e , zstar ) )
+    ok = false;
+  }
+ else if( ! std::isnan( ref ) )
+  zstar = ref;
+
+ if( ! std::isnan( zstar ) ) {
+  for( double lb : lbs ) if( ! le( lb , zstar ) ) ok = false;  // LB <= z*
+  for( double ub : ubs ) if( ! le( zstar , ub ) ) ok = false;  // z* <= UB
+  if( ! std::isnan( ref ) && ! exacts.empty() ) {
+   diff_out = std::abs( zstar - ref );
+   if( ! within( zstar , ref ) ) ok = false;  // exact optimum must match Ref
+   }
+  }
+ else {
+  // no Exact reading and no Ref: the bounds must be mutually consistent
+  if( ! lbs.empty() && ! ubs.empty() ) {
+   double maxlb = lbs.front() , minub = ubs.front();
+   for( double v : lbs ) maxlb = std::max( maxlb , v );
+   for( double v : ubs ) minub = std::min( minub , v );
+   if( ! le( maxlb , minub ) ) ok = false;
+   }
+  }
+
+ verdict_out = ok ? ( exacts.empty() ? "OK" : "OK(f)" ) : "KO";
+ return( ok );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+bool SolveAll( Block * block ,
+               const SolverClassifier & classify ,
+               double ref ,
+               double tol ,
+               double * out_fo1 ,
+               bool   * out_hs1 ,
+               double * out_time1 ,
+               long   * out_it1 )
+{
+ constexpr double INF = std::numeric_limits< double >::has_infinity
+                        ? std::numeric_limits< double >::infinity()
+                        : std::numeric_limits< double >::max();
+
+ try {
+  const auto & reg = block->get_registered_solvers();
+  std::vector< Solver * > S( reg.begin() , reg.end() );
+  const std::size_t M = S.size();
+  if( M == 0 ) {
+   std::cout << "no Solver registered to the Block!" << std::endl;
+   return( false );
+   }
+
+  // solve every Solver, timing each, then read the feasible ones - - - - - - -
+  std::vector< int >    status( M );
+  std::vector< double > times( M );
+  std::vector< long >   iters( M );
+  std::vector< bool >   hs( M );
+  std::vector< SolverReading > rd( M );
+  std::vector< std::string > tok( M );
+  for( std::size_t k = 0 ; k < M ; ++k ) {
+   auto start = std::chrono::system_clock::now();
+   status[ k ] = S[ k ]->compute( false );
+   auto end = std::chrono::system_clock::now();
+   times[ k ] = std::chrono::duration< double >( end - start ).count();
+   iters[ k ] = S[ k ]->get_elapsed_iterations();
+   hs[ k ] = ( ( ( status[ k ] >= Solver::kOK )
+                 && ( status[ k ] < Solver::kError )
+                 && ( status[ k ] != Solver::kUnbounded )
+                 && ( status[ k ] != Solver::kInfeasible ) )
+               || ( status[ k ] == Solver::kLowPrecision ) );
+   if( hs[ k ] ) {
+    rd[ k ] = classify( S[ k ] , k );
+    tok[ k ] = reading_token( rd[ k ] );
+    }
+   else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
+   else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
+   else                                           tok[ k ] = "Error!";
+   }
+
+  // out-params from the first Solver - - - - - - - - - - - - - - - - - - - -
+  if( out_fo1 )   *out_fo1   = hs[ 0 ] ? rd[ 0 ].value : -INF;
+  if( out_hs1 )   *out_hs1   = hs[ 0 ];
+  if( out_time1 ) *out_time1 = times[ 0 ];
+  if( out_it1 )   *out_it1   = iters[ 0 ];
+
+  // cross-check + uniform per-instance line - - - - - - - - - - - - - - - - -
+  std::string verdict;
+  double diff;
+  bool ok = cross_check( rd , hs , status , ref , tol , verdict , diff );
+  print_instance_line( times , tok , ref , verdict , diff );
+  return( ok );
+  }
+ catch( std::exception & e ) {
+  std::cerr << e.what() << std::endl;
+  exit( 1 );
+  }
+ catch( ... ) {
+  std::cerr << "Error: unknown exception thrown" << std::endl;
+  exit( 1 );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
+bool SolveAll( Block * block ,
+               double ref ,
+               const std::vector< ObjGetter > & getters ,
+               double tol ,
+               double * out_fo1 ,
+               bool   * out_hs1 ,
+               double * out_time1 ,
+               long   * out_it1 )
+{
+ return( SolveAll( block , exact_getters( getters ) , ref , tol ,
+                   out_fo1 , out_hs1 , out_time1 , out_it1 ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+
 bool SolveBoth( Block * block ,
                 ObjGetter g1 ,
                 ObjGetter g2 ,
@@ -243,99 +499,28 @@ bool SolveBoth( Block * block ,
                 double * out_time1 ,
                 long   * out_it1 )
 {
- constexpr double INF = std::numeric_limits< double >::has_infinity
-                        ? std::numeric_limits< double >::infinity()
-                        : std::numeric_limits< double >::max();
-
- try {
-  // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  auto start = std::chrono::system_clock::now();
-  Solver * Slvr1 = block->get_registered_solvers().front();
-  int rtrn1st = Slvr1->compute( false );
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration< double > elapsed = end - start;
-  auto time1 = elapsed.count();
-
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-
-  double fo1st = hs1st ? get_obj_value( Slvr1 , g1 ) : -INF;
-
-  if( out_fo1 )   *out_fo1   = fo1st;
-  if( out_hs1 )   *out_hs1   = hs1st;
-  if( out_time1 ) *out_time1 = time1;
-  if( out_it1 )   *out_it1   = Slvr1->get_elapsed_iterations();
-
-  if( block->get_registered_solvers().size() == 1 ) {
-   std::cout << fixd << time1 << "\t" << Slvr1->get_elapsed_iterations()
-             << "\t";
-   PrintResults( hs1st , rtrn1st , fo1st );
-   std::cout << std::endl;
-   return( hs1st );
-   }
-
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  start = std::chrono::system_clock::now();
-  Solver * Slvr2 = block->get_registered_solvers().back();
-  int rtrn2nd = Slvr2->compute( false );
-  end = std::chrono::system_clock::now();
-  elapsed = end - start;
-  auto time2 = elapsed.count();
-  std::cout << fixd << time1 << " - " << time2 << " - ";
-
-  bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
-                   && ( rtrn2nd != Solver::kUnbounded )
-                   && ( rtrn2nd != Solver::kInfeasible ) )
-                 || ( rtrn2nd == Solver::kLowPrecision ) );
-  double fo2nd = -INF;
-
-  if( hs1st && hs2nd ) {
-   fo2nd = get_obj_value( Slvr2 , g2 );
-   bool OK;
-   if( one_sided_le )
-    // ProxHeur-style: fo2nd >= fo1st (within absolute tol)
-    OK = ( fo1st - fo2nd <= tol );
-   else
-    OK = ( std::abs( fo1st - fo2nd ) <=
-           tol * std::max( double( 1 ) , std::max( std::abs( fo1st ) ,
-                                                   std::abs( fo2nd ) ) ) );
-
-   if( OK ) {
-    std::cout << "OK(f)" << std::endl;
-    return( true );
+ // SolveBoth is the M <= 2 special case of SolveAll: the first Solver is read
+ // via g1, the second via g2. In the default (two-sided) mode both are Exact
+ // optima that must agree; in the ProxHeur one-sided mode the first is a
+ // lower bound and the second an upper bound, so the verdict becomes LB <= UB.
+ SolverClassifier classify =
+  [ g1 , g2 , one_sided_le ]( Solver * s , std::size_t k ) -> SolverReading {
+   SolverReading r;
+   if( one_sided_le ) {
+    r.kind  = k ? SolverReading::Kind::UpperBound
+                : SolverReading::Kind::LowerBound;
+    r.value = get_obj_value( s , k ? g2 : g1 );
     }
-   }
+   else {
+    r.kind  = SolverReading::Kind::Exact;
+    r.value = get_obj_value( s , k ? g2 : g1 );
+    }
+   return( r );
+   };
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   std::cout << "OK(e)" << std::endl;
-   return( true );
-   }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   std::cout << "OK(u)" << std::endl;
-   return( true );
-   }
-
-  std::cout << "Solver1 = ";
-  PrintResults( hs1st , rtrn1st , fo1st );
-  std::cout << " ~ Solver2 = ";
-  PrintResults( hs2nd , rtrn2nd , fo2nd );
-  std::cout << std::endl;
-
-  return( false );
-  }
- catch( std::exception & e ) {
-  std::cerr << e.what() << std::endl;
-  exit( 1 );
-  }
- catch( ... ) {
-  std::cerr << "Error: unknown exception thrown" << std::endl;
-  exit( 1 );
-  }
+ return( SolveAll( block , classify ,
+                   std::numeric_limits< double >::quiet_NaN() , tol ,
+                   out_fo1 , out_hs1 , out_time1 , out_it1 ) );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -366,41 +551,9 @@ bool SolveAndCheckRef( Block * block , double ref ,
                        ObjGetter g ,
                        double rel_tol )
 {
- constexpr double INF = std::numeric_limits< double >::has_infinity
-                        ? std::numeric_limits< double >::infinity()
-                        : std::numeric_limits< double >::max();
-
- try {
-  auto start = std::chrono::system_clock::now();
-  Solver * Slvr1 = block->get_registered_solvers().front();
-  int rtrn1st = Slvr1->compute( false );
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration< double > elapsed = end - start;
-  auto time1 = elapsed.count();
-
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-
-  if( ! hs1st ) {
-   std::cout << "Solver returned code " << rtrn1st << std::endl;
-   return( false );
-   }
-
-  double fo1st = get_obj_value( Slvr1 , g );
-
-  return( CheckRefValue( fo1st , ref , rel_tol ,
-                         time1 , Slvr1->get_elapsed_iterations() ) );
-  }
- catch( std::exception & e ) {
-  std::cerr << e.what() << std::endl;
-  exit( 1 );
-  }
- catch( ... ) {
-  std::cerr << "Error: unknown exception thrown" << std::endl;
-  exit( 1 );
-  }
+ // single-Solver solve + reference check, expressed as SolveAll() of the only
+ // registered Solver (read via g) against ref
+ return( SolveAll( block , exact_getter( g ) , ref , rel_tol ) );
  }
 
 /*--------------------------------------------------------------------------*/

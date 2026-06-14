@@ -123,6 +123,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -487,7 +488,10 @@ static bool SolveBoth( void )
    BoxBlock->unregister_Solver( Slvr1 );
    BoxBlock->register_Solver( Slvr1 , true );  // push it to the front
   #endif
+  auto start1 = std::chrono::system_clock::now();
   int rtrn1st = Slvr1->compute( false );
+  auto end1 = std::chrono::system_clock::now();
+  double tA = std::chrono::duration< double >( end1 - start1 ).count();
   bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
                    && ( rtrn1st != Solver::kUnbounded )
                    && ( rtrn1st != Solver::kInfeasible ) )
@@ -564,7 +568,10 @@ static bool SolveBoth( void )
     BoxBlock->unregister_Solver( Slvr2 );
     BoxBlock->register_Solver( Slvr2 );  // push it to the back
    #endif
+   auto start2 = std::chrono::system_clock::now();
    int rtrn2nd = Slvr2->compute( false );
+   auto end2 = std::chrono::system_clock::now();
+   double tB = std::chrono::duration< double >( end2 - start2 ).count();
 
    bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
                    && ( rtrn2nd != Solver::kUnbounded )
@@ -572,11 +579,15 @@ static bool SolveBoth( void )
                  || ( rtrn2nd == Solver::kLowPrecision ) );
    double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
 
+   // bespoke verdict (kept intact, including the kInfeasible/kUnbounded
+   // equivalence below), restructured to a single exit that prints the line
+   bool ok = false;
+   std::string verdict = "KO";
+   bool decided = false;
    if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-6 *
 			   max( double( 1 ) , max( abs( fo1st ) ,
 						   abs( fo2nd ) ) ) ) ) {
-    LOG1( "OK(f)" << endl );
-    return( true );
+    ok = true; verdict = "OK(f)"; decided = true;
     }
 
    // note: for a problem that is both potentially unbounded (say, it has
@@ -589,27 +600,30 @@ static bool SolveBoth( void )
    // where we consider kUnbounded and kInfeasible as "equivalent". while
    // this may lead to bona fide errors to be ignored, it seems to be the
    // only reasonable way out
-   if( ( rtrn1st == Solver::kInfeasible ) &&
+   if( ( ! decided ) && ( rtrn1st == Solver::kInfeasible ) &&
        ( ( rtrn2nd == Solver::kInfeasible ) ||
 	 ( rtrn2nd == Solver::kUnbounded ) ) ) {
-    LOG1( "OK(e)" << endl );
-    return( true );
+    ok = true; verdict = "OK(e)"; decided = true;
     }
 
-   if( ( rtrn1st == Solver::kUnbounded ) &&
+   if( ( ! decided ) && ( rtrn1st == Solver::kUnbounded ) &&
        ( rtrn2nd == Solver::kUnbounded ) ) {
-    LOG1( "OK(u)" << endl );
-    return( true );
+    ok = true; verdict = "OK(u)"; decided = true;
     }
 
-   #if( LOG_LEVEL >= 1 )
-    cout << "BOX = ";
-    PrintResults( hs1st , rtrn1st , fo1st );
-
-    cout << " ~ MILP = ";
-    PrintResults( hs2nd , rtrn2nd , fo2nd );
-    cout << endl;
-   #endif
+   {
+    auto tok = []( bool h , int rtrn , double fo ) -> std::string {
+     if( h )                              return( fmt_obj( fo ) );
+     if( rtrn == Solver::kInfeasible )    return( "Unfeas" );
+     if( rtrn == Solver::kUnbounded )     return( "Unbounded" );
+     return( "Error!" );
+     };
+    print_instance_line(
+     { tA , tB } ,
+     { tok( hs1st , rtrn1st , fo1st ) , tok( hs2nd , rtrn2nd , fo2nd ) } ,
+     std::numeric_limits< double >::quiet_NaN() , verdict );
+    }
+   return( ok );
   #endif
 
   return( false );

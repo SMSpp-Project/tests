@@ -232,72 +232,25 @@ static void Compact( Subset & nms , Index m )
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) 
+static bool SolveBoth( void )
 {
- try {
-  // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // optional Solver re-ordering before the cross-check (front/back), then defer
+ // to the common_utils engine: every registered Solver is solved, the uniform
+ // per-instance line with all values is printed, and the two exact optima must
+ // agree (tol 5e-7); the all-infeasible case is accepted as OK(e)
+ #if DETACH_1ST
   auto Slvr1 = MCFB->get_registered_solvers().front();
-  #if DETACH_1ST
-   MCFB->unregister_Solver( Slvr1 );
-   MCFB->register_Solver( Slvr1 , true );  // push it to the front
-  #endif
-
-  int rtrn1st = Slvr1->compute( false );
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-  double fo1st = hs1st ? Slvr1->get_var_value() : -CInf;
-
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  MCFB->unregister_Solver( Slvr1 );
+  MCFB->register_Solver( Slvr1 , true );  // push it to the front
+ #endif
+ #if DETACH_2ND
   auto Slvr2 = MCFB->get_registered_solvers().back();
-  #if DETACH_2ND
-   MCFB->unregister_Solver( Slvr2 );
-   MCFB->register_Solver( Slvr2 );  // push it to the back
-  #endif
+  MCFB->unregister_Solver( Slvr2 );
+  MCFB->register_Solver( Slvr2 );  // push it to the back
+ #endif
 
-  int rtrn2nd = Slvr2->compute( false );
-
-  bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
-                   && ( rtrn2nd != Solver::kUnbounded )
-                   && ( rtrn2nd != Solver::kInfeasible ) )
-                 || ( rtrn2nd == Solver::kLowPrecision ) );
-  double fo2nd = hs2nd ? Slvr2->get_var_value() : -CInf;
-
-  if( hs1st && hs2nd && ( std::abs( fo1st - fo2nd ) <= 5e-7 *
-			  std::max( double( 1 ) ,
-				    std::max( std::abs( fo1st ) ,
-					      std::abs( fo2nd ) ) ) ) ) {
-   LOG1( "OK(f)" << std::endl );
-   return( true );
-   }
-
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   LOG1( "OK(e)" << std::endl );
-   return( true );
-   }
-
-  #if( LOG_LEVEL >= 1 )
-   std::cout << std::setprecision( 7 );
-   PrintResults( hs1st , rtrn1st , fo1st );
-   std::cout << " - ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   std::cout << std::endl;
-  #endif
-
-  return( false );
-  }
- catch( std::exception & e ) {
-  std::cerr << e.what() << std::endl;
-  exit( 1 );
-  }
- catch(...) {
-  std::cerr << "Error: unknown exception thrown" << std::endl;
-  exit( 1 );
-  }
+ return( SolveAll( MCFB , std::numeric_limits< double >::quiet_NaN() ,
+                   std::vector< ObjGetter >{} , 5e-7 ) );
  }
 
 /*--------------------------------------------------------------------------*/

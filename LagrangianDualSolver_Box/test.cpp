@@ -89,6 +89,7 @@
 
 #include <sstream>
 
+#include <chrono>
 #include <random>
 
 #include "AbstractBlock.h"
@@ -313,7 +314,10 @@ static bool SolveBoth( void )
    TestBlock->unregister_Solver( Slvr1 );
    TestBlock->register_Solver( Slvr1 , true );  // push it to the front
   #endif
+  auto start1 = std::chrono::system_clock::now();
   int rtrn1st = Slvr1->compute( false );
+  auto end1 = std::chrono::system_clock::now();
+  double t1 = std::chrono::duration< double >( end1 - start1 ).count();
   bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
                    && ( rtrn1st != Solver::kUnbounded )
                    && ( rtrn1st != Solver::kInfeasible ) )
@@ -321,11 +325,14 @@ static bool SolveBoth( void )
   double fo1st = hs1st ? Slvr1->get_var_value() : -INF;
 
   if( TestBlock->get_registered_solvers().size() == 1 ) {
-   #if( LOG_LEVEL >= 1 )
-    cout << "Solver = ";
-    PrintResults( hs1st , rtrn1st , fo1st );
-    cout << endl;
-   #endif
+   // single Solver: nothing to cross-check, just show its value (as before,
+   // this always "passes")
+   std::string tok0 = hs1st ? fmt_obj( fo1st )
+                    : ( rtrn1st == Solver::kInfeasible ? "Unfeas"
+                      : ( rtrn1st == Solver::kUnbounded ? "Unbounded"
+                                                        : "Error!" ) );
+   print_instance_line( { t1 } , { tok0 } ,
+                        std::numeric_limits< double >::quiet_NaN() , "OK" );
    return( true );
    }
 
@@ -335,7 +342,10 @@ static bool SolveBoth( void )
    TestBlock->unregister_Solver( Slvr2 );
    TestBlock->register_Solver( Slvr2 );  // push it to the back
   #endif
+  auto start2 = std::chrono::system_clock::now();
   int rtrn2nd = Slvr2->compute( false );
+  auto end2 = std::chrono::system_clock::now();
+  double t2 = std::chrono::duration< double >( end2 - start2 ).count();
 
   bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
                    && ( rtrn2nd != Solver::kUnbounded )
@@ -352,49 +362,51 @@ static bool SolveBoth( void )
    *   the reference value (upper bound if you minimise, lower bound if you
    *   maximise) which can be arbitrarily worse (larger if you minimize,
    *   smaller if you maximise) than the optimal value) */
+  // read Solver 2 on the relevant side: for a Lagrangian bound (no flag) the
+  // dual side (get_lb if minimising, get_ub if maximising); for a Lagrangian
+  // heuristic ( wchg & 32 ) the WRONG side (get_ub if minimising, get_lb if
+  // maximising). The cross-check below applies the matching reading kind.
   double fo2nd = -INF;
-  bool OKfo;
+  if( hs2nd )
+   fo2nd = ( wchg & 32 ) ? ( minobj ? Slvr2->get_ub() : Slvr2->get_lb() )
+                         : ( minobj ? Slvr2->get_lb() : Slvr2->get_ub() );
+
+  // build the readings (Solver 1 exact; Solver 2 either an exact-agreeing
+  // Lagrangian bound or a one-sided Lagrangian heuristic) and defer the
+  // verdict + uniform line to common_utils; semantics unchanged
+  std::vector< SolverReading > rd( 2 );
+  std::vector< bool > hs{ hs1st , hs2nd };
+  std::vector< int > status{ rtrn1st , rtrn2nd };
+  if( hs1st ) {
+   rd[ 0 ].kind = SolverReading::Kind::Exact;
+   rd[ 0 ].value = fo1st;
+   }
   if( hs2nd ) {
-   if( wchg & 32 ) {  // a Lagrangian heuristic 
-    fo2nd = minobj ? Slvr2->get_ub() : Slvr2->get_lb();
-    double diff = minobj ? ( fo2nd - fo1st ) : ( fo1st - fo2nd );
-    OKfo = diff >= -1e-4;
-    }
-   else {             // a Lagrangian bound
-    fo2nd = minobj ? Slvr2->get_lb() : Slvr2->get_ub();
-    OKfo = abs( fo1st - fo2nd ) <= 1e-5 *
-                                   max( double( 1 ) , max( abs( fo1st ) ,
-							   abs( fo2nd ) ) );
-    }
+   rd[ 1 ].kind = ( wchg & 32 )
+                  ? ( minobj ? SolverReading::Kind::UpperBound
+                             : SolverReading::Kind::LowerBound )
+                  : SolverReading::Kind::Exact;
+   rd[ 1 ].value = fo2nd;
    }
+  const double tol = ( wchg & 32 ) ? 1e-4 : 1e-5;
 
-  if( hs1st && hs2nd && OKfo ) {
-   LOG1( "OK(f)" << endl );
-   return( true );
-   }
+  std::string verdict;
+  double diff;
+  bool ok = cross_check( rd , hs , status ,
+                         std::numeric_limits< double >::quiet_NaN() ,
+                         tol , verdict , diff );
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-    LOG1( "OK(e)" << endl );
-    return( true );
-    }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   LOG1( "OK(u)" << endl );
-   return( true );
-   }
-
-  #if( LOG_LEVEL >= 0 )
-   cout << "Solver1 = ";
-    PrintResults( hs1st , rtrn1st , fo1st );
-
-   cout << " ~ Solver2 = ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   cout << endl;
-  #endif
-
-  return( false );
+  auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
+   if( h )                               return( reading_token( r ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
+  print_instance_line(
+   { t1 , t2 } ,
+   { tok( hs1st , rtrn1st , rd[ 0 ] ) , tok( hs2nd , rtrn2nd , rd[ 1 ] ) } ,
+   std::numeric_limits< double >::quiet_NaN() , verdict );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;

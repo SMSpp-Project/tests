@@ -73,6 +73,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -169,6 +170,7 @@ std::list< BoxConstraint > * LPbnd;   // BoxConstraint for LPBlock
 int rtrnfirstLP; // status returned by first optimization
 bool hsfirstLP; // wheter or not the first optimization produced an optimal solution
 double fofirstLP; // optimal solution of first optimization
+double tfirstLP = 0; // wall-clock time of the first optimization
 
 int rtrnsecondLP; // status returned by second optimization
 bool hssecondLP; // wheter or not the second optimization produced an optimal solution
@@ -357,7 +359,10 @@ static bool SolveFirst( void )
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
+  auto start = std::chrono::system_clock::now();
   rtrnfirstLP = slvrLP->compute( false );
+  auto end = std::chrono::system_clock::now();
+  tfirstLP = std::chrono::duration< double >( end - start ).count();
   hsfirstLP = ( ( rtrnfirstLP >= Solver::kOK ) && ( rtrnfirstLP < Solver::kError ) )
               || ( rtrnfirstLP == Solver::kLowPrecision );
   fofirstLP = hsfirstLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
@@ -400,7 +405,10 @@ static bool SolveSecond( void )
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Solver * slvrLP = ( secondLPBlock->get_registered_solvers() ).front();
+  auto start = std::chrono::system_clock::now();
   rtrnsecondLP = slvrLP->compute( false );
+  auto end = std::chrono::system_clock::now();
+  double tsecondLP = std::chrono::duration< double >( end - start ).count();
   hssecondLP = ( ( rtrnsecondLP >= Solver::kOK ) && ( rtrnsecondLP < Solver::kError ) )
               || ( rtrnsecondLP == Solver::kLowPrecision );
 
@@ -420,34 +428,46 @@ static bool SolveSecond( void )
                      : ( convex ? INF : -INF );
   #endif
 
-  if( hssecondLP ) {
-   LOG1( "OK(f) - " );
+  if( hssecondLP )
    LOG1( "Second optimization produced an optimal solution : " << fosecondLP << endl );
-   }
-
-  if( rtrnsecondLP == Solver::kInfeasible ) {
-    LOG1( "OK(?e?) - " );
+  else if( rtrnsecondLP == Solver::kInfeasible )
     LOG1( "Second optimization produced an unfeasible model" << endl );
-    }
-
-  if( rtrnsecondLP == Solver::kUnbounded ) {
-   LOG1( "OK(u) - " );
+  else if( rtrnsecondLP == Solver::kUnbounded )
    LOG1( "Second optimization produced an unbounded model" << endl );
+
+  // verdict: the written model (S0) and the read-back model (S1) must give the
+  // same result (value agreement, or matching infeasible/unbounded status)
+  auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
+   if( hs )                              return( fmt_obj( fo ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
+
+  bool ok;
+  std::string verdict;
+  if( hsfirstLP && hssecondLP && ( abs( fofirstLP - fosecondLP ) <= 2e-7 *
+                 max( double( 1 ) , abs( max( fofirstLP , fosecondLP ) ) ) ) ) {
+   ok = true; verdict = "OK(f)";
+   }
+  else if( ( rtrnfirstLP == Solver::kInfeasible ) &&
+           ( rtrnsecondLP == Solver::kInfeasible ) ) {
+   ok = true; verdict = "OK(e)";
+   }
+  else if( ( rtrnfirstLP == Solver::kUnbounded ) &&
+           ( rtrnsecondLP == Solver::kUnbounded ) ) {
+   ok = true; verdict = "OK(u)";
+   }
+  else {
+   ok = false; verdict = "KO";
    }
 
-   if( hsfirstLP && hssecondLP && ( abs( fofirstLP - fosecondLP ) <= 2e-7 *
-			 max( double( 1 ) , abs( max( fofirstLP , fosecondLP ) ) ) ) )
-    return( true );
-
-  if( ( rtrnfirstLP == Solver::kInfeasible ) &&
-      ( rtrnsecondLP == Solver::kInfeasible ) )
-    return( true );
-
-  if( ( rtrnfirstLP == Solver::kUnbounded ) &&
-      ( rtrnsecondLP == Solver::kUnbounded ) )
-   return( true );
-
-  return( false );
+  print_instance_line(
+   { tfirstLP , tsecondLP } ,
+   { tok( hsfirstLP , rtrnfirstLP , fofirstLP ) ,
+     tok( hssecondLP , rtrnsecondLP , fosecondLP ) } ,
+   std::numeric_limits< double >::quiet_NaN() , verdict );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;

@@ -383,92 +383,53 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ) {
 
   bool all_passed = hs1st;
 
-  if( solvers.size() > 1 ) {
-#if( LOG_LEVEL >= 1 )
-   start = std::chrono::system_clock::now();
-#endif
+  // build readings for every registered Solver (each an exact optimum read
+  // via get_solver_objective_value); Solver 0 was already solved above, the
+  // rest are solved here. The cross-check verdict and the uniform per-instance
+  // line, including the optional RefObjective, are produced by common_utils
+  std::vector< Solver * > S( solvers.begin() , solvers.end() );
+  const std::size_t M = S.size();
+  std::vector< double > times( M , 0.0 );
+  std::vector< std::string > toks( M );
+  std::vector< SolverReading > rd( M );
+  std::vector< bool > hsv( M , false );
+  std::vector< int > statusv( M , Solver::kOK );
 
-   auto second_solver = solvers.back();
+  auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
+   if( h )                               return( reading_token( r ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
 
-   int rtrn2nd = Solver::kOK;
+  times[ 0 ] = time1; hsv[ 0 ] = hs1st; statusv[ 0 ] = rtrn1st;
+  if( hs1st ) { rd[ 0 ].kind = SolverReading::Kind::Exact; rd[ 0 ].value = fo1st; }
+  toks[ 0 ] = tok( hs1st , rtrn1st , rd[ 0 ] );
+
+  for( std::size_t k = 1 ; k < M ; ++k ) {
+   auto st = std::chrono::system_clock::now();
    if( ! dryrun )
-    rtrn2nd = second_solver->compute();
-
-#if( LOG_LEVEL >= 1 )
-   end = std::chrono::system_clock::now();
-   elapsed = end - start;
-   double time2 = elapsed.count();
-   std::cout << fixd << time1 << " - " << time2 << " - ";
-#endif
-
-   bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) &&
-     ( rtrn2nd < Solver::kError ) &&
-     ( rtrn2nd != Solver::kUnbounded ) &&
-     ( rtrn2nd != Solver::kInfeasible ) )
-    || ( rtrn2nd == Solver::kLowPrecision ) );
-
-   double fo2nd = hs2nd
-                   ? get_solver_objective_value( second_solver )
-                   : -Inf< double >();
-
-   if( hs1st && hs2nd ) {
-    bool OK = ( std::abs( fo1st - fo2nd ) <=
-     1e-5 * std::max( double( 1 ) ,
-                      std::max( std::abs( fo1st ) ,
-                                std::abs( fo2nd ) ) ) );
-
-    if( OK ) {
-     LOG1( "OK(f)" << std::endl );
-     all_passed = true;
+    statusv[ k ] = S[ k ]->compute();
+   auto en = std::chrono::system_clock::now();
+   times[ k ] = std::chrono::duration< double >( en - st ).count();
+   hsv[ k ] = ( ( ( statusv[ k ] >= Solver::kOK ) &&
+                  ( statusv[ k ] < Solver::kError ) &&
+                  ( statusv[ k ] != Solver::kUnbounded ) &&
+                  ( statusv[ k ] != Solver::kInfeasible ) )
+                || ( statusv[ k ] == Solver::kLowPrecision ) );
+   if( hsv[ k ] ) {
+    rd[ k ].kind = SolverReading::Kind::Exact;
+    rd[ k ].value = get_solver_objective_value( S[ k ] );
     }
-    else {
-#if( LOG_LEVEL >= 1 )
-     std::cout << "Solver1 = ";
-     PrintResults( hs1st , rtrn1st , fo1st );
+   toks[ k ] = tok( hsv[ k ] , statusv[ k ] , rd[ k ] );
+   }
 
-     std::cout << " ~ Solver2 = ";
-     PrintResults( hs2nd , rtrn2nd , fo2nd );
-     std::cout << std::endl;
-#endif
-     all_passed = false;
-    }
-   }
-   else if( ( rtrn1st == Solver::kInfeasible ) &&
-    ( rtrn2nd == Solver::kInfeasible ) ) {
-    LOG1( "OK(e)" << std::endl );
-    all_passed = true;
-   }
-   else if( ( rtrn1st == Solver::kUnbounded ) &&
-    ( rtrn2nd == Solver::kUnbounded ) ) {
-    LOG1( "OK(u)" << std::endl );
-    all_passed = true;
-   }
-   else {
-#if( LOG_LEVEL >= 1 )
-    std::cout << "Solver1 = ";
-    PrintResults( hs1st , rtrn1st , fo1st );
-
-    std::cout << " ~ Solver2 = ";
-    PrintResults( hs2nd , rtrn2nd , fo2nd );
-    std::cout << std::endl;
-#endif
-    all_passed = false;
-   }
-  }
-  else {
-#if( LOG_LEVEL >= 1 )
-   std::cout << fixd << time1 << "\t" << it1 << "\t";
-   PrintResults( hs1st , rtrn1st , fo1st );
-   std::cout << std::endl;
-#endif
-  }
-
-  if( ! std::isnan( RefObjective ) ) {
-   if( hs1st )
-    all_passed &= CheckRefValue( fo1st , RefObjective , 1e-5 , time1 , it1 );
-   else
-    all_passed = false;
-  }
+  std::string verdict;
+  double diff;
+  all_passed = cross_check( rd , hsv , statusv , RefObjective , 1e-5 ,
+                            verdict , diff );
+  print_instance_line( times , toks , RefObjective , verdict , diff );
+  (void) it1;
 
 #if( LOG_LEVEL >= 0 )
   if( all_passed )

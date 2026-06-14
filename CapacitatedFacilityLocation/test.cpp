@@ -401,38 +401,37 @@ static bool SolveBoth( void )
 
   int rtrn2nd = Slvr2->compute( false );
 
-  if( ! niter ) {  // solve once and compare results- - - - - - - - - - - - -
+  if( ! niter ) {  // solve once and compare lower bounds - - - - - - - - - -
 
    double fo2nd = Slvr2->get_lb();  // only compare lower bounds
 
-   #if( LOG_LEVEL >= 1 )
-    end = std::chrono::system_clock::now();
-    elapsed = end - start;
-    cout.setf( ios::scientific, ios::floatfield );
-    cout << setprecision( 2 ) << " - " << elapsed.count();
-   #endif
+   // both bounds are exact lower bounds that must agree (cmp_tol); defer the
+   // verdict and the uniform per-instance line to common_utils
+   std::vector< SolverReading > rd( 2 );
+   std::vector< bool > hs{ has_solution( rtrn1st ) , has_solution( rtrn2nd ) };
+   std::vector< int > status{ rtrn1st , rtrn2nd };
+   if( hs[ 0 ] ) { rd[ 0 ].kind = SolverReading::Kind::Exact;
+                   rd[ 0 ].value = fo1st; }
+   if( hs[ 1 ] ) { rd[ 1 ].kind = SolverReading::Kind::Exact;
+                   rd[ 1 ].value = fo2nd; }
 
-   if( abs( fo1st - fo2nd ) <
-       cmp_tol *  max( double( 1 ) , max( abs( fo1st ) , abs( fo2nd ) ) ) ) {
-    LOG1( " - OK(f)" << endl );
-    return( true );
-    }
-
-   if( ( rtrn1st == Solver::kInfeasible ) &&
-       ( rtrn2nd == Solver::kInfeasible ) ) {
-    LOG1( " - OK(e)" << endl );
-    return( true );
-    }
-
-   #if( LOG_LEVEL >= 1 )
-    cout << " - " << setprecision( 7 );
-    PrintResults( has_solution( rtrn1st ) , rtrn1st , fo1st );
-    cout << " - ";
-    PrintResults( has_solution( rtrn2nd ) , rtrn2nd , fo2nd );
-    cout << endl;
-   #endif
-
-   return( false );
+   auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
+    if( h )                              return( reading_token( r ) );
+    if( rtrn == Solver::kInfeasible )    return( "Unfeas" );
+    if( rtrn == Solver::kUnbounded )     return( "Unbounded" );
+    return( "Error!" );
+    };
+   std::string verdict;
+   double diff;
+   bool ok = cross_check( rd , hs , status ,
+                          std::numeric_limits< double >::quiet_NaN() ,
+                          cmp_tol , verdict , diff );
+   print_instance_line(
+    { 0.0 , 0.0 } ,
+    { tok( hs[ 0 ] , rtrn1st , rd[ 0 ] ) ,
+      tok( hs[ 1 ] , rtrn2nd , rd[ 1 ] ) } ,
+    std::numeric_limits< double >::quiet_NaN() , verdict );
+   return( ok );
    }
   else {  // run the Slope Scaling- - - - - - - - - - - - - - - - - - - - - -
 
