@@ -16,24 +16,8 @@ NAME = LDS_MMCF_test
 # basic directory
 DIR = .
 
-# debug switches
-#SW = -g3 -glldb -fno-inline -std=c++17 -DHAVE_CPLEX -DHAVE_MFSMX -DCLANG_1200_0_32_27_PATCH -ferror-limit=1 -Wno-enum-compare
-# debug switches with address sanitizer and extra pedantic warning
-#SW = -g3 -glldb -fno-inline -std=c++17 -DHAVE_CPLEX -DHAVE_MFSMX -DCLANG_1200_0_32_27_PATCH -ferror-limit=1 -fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -Wpedantic -Wextra -Wno-unused-parameter -Wno-enum-compare
-# production switches
-SW = -O3 -std=c++17 -DNDEBUG -DHAVE_CPLEX -DHAVE_MFSMX -DCLANG_1200_0_32_27_PATCH -Wno-enum-compare
-
-# compiler
-CC = clang++
-
-# default target- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-default: $(DIR)/$(NAME)
-
-# clean - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-clean::
-	rm -f $(DIR)/*.o $(DIR)/*~ $(DIR)/$(NAME)
+# common stuff
+include ../makefile_common
 
 # define & include the necessary modules- - - - - - - - - - - - - - - - - - -
 # if a module is not used in the current configuration, just comment out the
@@ -52,15 +36,9 @@ include $(SMS++SDR)/lib/makefile-inc
 MMCFSDR = ../../MMCFBlock
 include $(MMCFSDR)/makefile-s
 
-BNDSLVSDR = ../../BundleSolver
-
-
 # BundleSolver
-BNDSLVMLSDR = ../../BundleSolverML
-include $(BNDSLVMLSDR)/makefile-s
-
-# not necessary, BundleSolverML does that already
-#include $(BNDSLVSDR)/makefile-s
+BNDSLVSDR = ../../BundleSolver
+include $(BNDSLVSDR)/makefile-s
 
 # LagrangianDualSolver
 LgDSLVSDR = ../../LagrangianDualSolver
@@ -74,10 +52,10 @@ include $(LgDSLVSDR)/makefile
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVMLOBJ) $(BNDSLVOBJ) $(LgDSLVOBJ) $(MMCFOBJ) $(SMS++OBJ)
+MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(MMCFOBJ) $(SMS++OBJ) $(MCFLEOBJ)
 
 # libraries
-MLIB =  $(BNDSLVMLLIB) $(BNDSLVLIB) $(LgDSLVLIB) $(MMCFLIB) $(SMS++LIB)
+MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(MMCFLIB) $(SMS++LIB) $(MCFLELIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
