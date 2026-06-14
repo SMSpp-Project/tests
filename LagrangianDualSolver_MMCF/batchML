@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# usage: batchML < exe file >
+#        < exe file > = path of the executable file, default ./LDS_MMCF_test
+#
+# runs the Canad MMCF instances through LagrangianDualSolver with the ML-based
+# step-size heuristic of BundleSolverML (the inner Solver is configured by
+# BSPar-ML.txt with intMLTrainOnline / intNTrainRounds), asking to dump time &
+# objective value (-w 7) so the online-training behaviour can be inspected.
+#
+# Requires Torch: BundleSolverML is only registered in the Solver factory when
+# BundleSolver is built with Torch, so this batch fails (unknown Solver name)
+# on a Torch-less build.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../batch_common.sh"
+
+DATADIR=../MMCFBlock/data
+
+LDS_MMCF_test=${1:-./LDS_MMCF_test}
+
+# Canad - - - - - - - - - - - - - - - - - - - -
+
+for what in ${DATADIR}/Canad/*.dat; do
+
+  run_test "$LDS_MMCF_test" "$what" -B BPar-ML.txt -S BSPar-ML.txt -t s -w 7
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

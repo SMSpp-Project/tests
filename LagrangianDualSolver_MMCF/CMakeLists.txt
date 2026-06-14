@@ -36,10 +36,20 @@ if (TARGET SMS++::MMCFBlock)
 
     smspp_install(LDS_MMCF_test)
 
+    # The ML batch (batchML) drives the inner BundleSolverML, which is only
+    # registered in the Solver factory when BundleSolver is built with Torch;
+    # register it as a test only in that case.
+    find_package(Torch QUIET HINTS ${Torch_ROOT})
+    set(ML_BATCH "")
+    if (Torch_FOUND)
+        set(ML_BATCH "${CMAKE_CURRENT_SOURCE_DIR}/batchML")
+    endif ()
+
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batch-c"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-m")
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-m"
+                          ${ML_BATCH})
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})

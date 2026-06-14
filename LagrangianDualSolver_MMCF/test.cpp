@@ -99,6 +99,8 @@
 
 #include "CDASolver.h"
 
+#include "LagrangianDualSolver.h"
+
 #include "MMCFBlock.h"
 
 //!!#include "MILPSolver.h"
@@ -361,6 +363,12 @@ static bool SolveBoth( void )
 // BlockSolverConfig, -c/-p prefixes) are handled centrally by common_utils
 char filetype = 's';  // type of the input file
 
+// number of times the instance is (re-)solved; 0 means "not set on the
+// command line", in which case the value is taken from the inner Solver's
+// intNTrainRounds parameter (if it has one) and otherwise defaults to 1. A
+// BundleSolverML configured with intMLTrainOnline trains once per re-solve.
+int n_epochs = 0;
+
 /*--------------------------------------------------------------------------*/
 
 static bool process_specific_arg( int opt )
@@ -368,6 +376,7 @@ static bool process_specific_arg( int opt )
  switch( opt ) {
   case( 't' ): filetype = optarg[ 0 ];        return( true );
   case( 'w' ): Str2Sthg( optarg , wprnt );    return( true );
+  case( 'e' ): Str2Sthg( optarg , n_epochs ); return( true );
   default:                                    return( false );
   }
  }
@@ -387,16 +396,21 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ LagrangianDualSolver-on-MMCFBlock test.\n";
- short_opts += "t:w:";
+ short_opts += "t:w:e:";
  const std::vector< option > my_opts = {
-   { "type"  , required_argument , nullptr , 't' } ,
-   { "wprnt" , required_argument , nullptr , 'w' } };
+   { "type"   , required_argument , nullptr , 't' } ,
+   { "wprnt"  , required_argument , nullptr , 'w' } ,
+   { "epochs" , required_argument , nullptr , 'e' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -t, --type <c>                  input file type "
          "(s*,c,p,o,d,u,m) [s]\n"
          "  -w, --wprnt <bits>              what to print to file, bit-wise "
-         "[0]\n";
+         "[0]\n"
+         "  -e, --epochs <n>                times the instance is re-solved "
+         "(training rounds);\n"
+         "                                  overrides the inner Solver's "
+         "intNTrainRounds [1]\n";
 
  process_args( argc , argv , process_specific_arg );
 
@@ -467,11 +481,30 @@ int main( int argc , char **argv )
   #endif
  #endif
 
- // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+ // solver call(s) - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the instance is solved n_rounds times: this is a no-op repetition for a
+ // plain Solver, but it drives online training when the inner Solver is a
+ // BundleSolverML with intMLTrainOnline set. The count comes from -e if given,
+ // else from the inner Solver's intNTrainRounds parameter, else 1.
 
- bool AllPassed = SolveBoth();
- 
+ int n_rounds = 1;
+ if( n_epochs > 0 )
+  n_rounds = n_epochs;
+ else if( auto * lds = dynamic_cast< LagrangianDualSolver * >(
+			    TestBlock->get_registered_solvers().back() ) )
+  if( Solver * inner = lds->get_inner_Solver() ) {
+   const auto idx = inner->int_par_str2idx( "intNTrainRounds" );
+   if( idx < inner->get_num_int_par() )
+    n_rounds = inner->get_int_par( idx );
+   }
+
+ bool AllPassed = false;
+ for( int r = 0 ; r < n_rounds ; ++r ) {
+  CLOG1( n_rounds > 1 , "[round " << r << "] " );
+  AllPassed = SolveBoth();
+  }
+
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // now, for n_repeat times:
