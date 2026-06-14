@@ -3,7 +3,7 @@
 #
 # A txt description of a BlockConfig for MMCFBlock
 #
-#   Francesco Demelas
+#   Francesca Demelas
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

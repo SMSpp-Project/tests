@@ -13,7 +13,7 @@
  * repeatedly randomly modified and re-solved several times, but this is not
  * done yet.
  *
- * \author Francesco Demelas \n
+ * \author Francesca Demelas \n
  *         Laboratoire d'Informatique de Paris Nord \n
  *         Universite' Sorbonne Paris Nord \n
  *
