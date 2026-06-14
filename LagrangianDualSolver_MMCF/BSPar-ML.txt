@@ -7,11 +7,12 @@
 # with a neural network) as the inner Solver.
 #
 # It is the ML counterpart of BSPar.txt: it reuses the same LDCfg.txt base
-# and only overrides, via the cascade-override mechanism, the entries that
-# make the inner Solver a self-training BundleSolverML driving t with the
-# network (str_LDSlv_ISName, the network-friendly t-strategy parameters,
-# intMLTrainOnline / intMLSeed / intNTrainRounds), plus the Knapsack
-# relaxation used by the LagBFunctions.
+# and the same (flow) relaxation as BSPar.txt, so that the Lagrangian dual
+# bound matches the reference, and only overrides, via the cascade-override
+# mechanism, the entries that make the inner Solver a self-training
+# BundleSolverML driving t with the network (str_LDSlv_ISName, the
+# network-friendly t-strategy parameters, intMLTrainOnline / intMLSeed /
+# intNTrainRounds).
 #
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
@@ -58,7 +59,7 @@ intMnNSC            0 # ML: t may change after every NS (network-driven)
 inttSPar1           3 # ML: bit 0 on => the network drives t, no long-term strategy
 intMLTrainOnline    1 # train the network online at the end of each compute()
 intMLSeed           0 # seed Torch RNG and re-init the net for reproducibility
-intNTrainRounds    12 # times the instance is re-solved for online training
+intNTrainRounds     3 # times the instance is re-solved for online training
 
 2 # number of double parameters
 
@@ -68,7 +69,7 @@ dblmnDecr           1 # ML: ~1 so the network, not the rule, sets the new t
 2 # number of string parameters
 
 str_LDSlv_ISName  BundleSolverML   # inner Solver: the ML-based BundleSolver
-str_LagBF_BSCfg   LPBSCfg-K-DP.txt # Knapsack relaxation, CoreDPBinaryKnapsackSolver
+str_LagBF_BSCfg   LPBSCfg-K-CX.txt # same relaxation as the non-ML BSPar.txt
 
 0 # number of vector-of-int parameters
 
