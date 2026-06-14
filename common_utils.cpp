@@ -269,6 +269,27 @@ SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
 
 /*--------------------------------------------------------------------------*/
 
+SolverClassifier relaxation_aware_getter( void )
+{
+ return( []( Solver * s , std::size_t ) -> SolverReading {
+  SolverReading r;
+  // a relaxation Solver (classname() containing "Relaxation") only brackets
+  // z* in [ get_lb() , get_ub() ]; any other Solver is an exact optimum
+  if( s->classname().find( "Relaxation" ) != std::string::npos ) {
+   r.kind = SolverReading::Kind::Bracket;
+   r.lb   = get_obj_value( s , ObjGetter::LowerBound );
+   r.ub   = get_obj_value( s , ObjGetter::UpperBound );
+   }
+  else {
+   r.kind  = SolverReading::Kind::Exact;
+   r.value = get_obj_value( s , ObjGetter::VarValue );
+   }
+  return( r );
+  } );
+ }
+
+/*--------------------------------------------------------------------------*/
+
 void print_instance_line( const std::vector< double > & times ,
                           const std::vector< std::string > & value_tokens ,
                           double ref ,

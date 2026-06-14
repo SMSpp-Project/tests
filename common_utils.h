@@ -266,10 +266,10 @@ struct SolverReading {
 /// classify+read a Solver: maps (Solver*, index) to a SolverReading
 /** Called by SolveAll() once per feasible Solver, after it has compute()d, to
  *  decide how to read and cross-check its result. The default classifiers
- *  below cover the common case (every Solver is an Exact optimum); tests with
- *  relaxations or one-sided bounds (e.g. BinaryKnapsackBlock, PrimalProximal-
- *  Heur) pass their own, keeping the solver-specific dynamic_cast out of
- *  common_utils. */
+ *  below cover the common cases (every Solver an Exact optimum, or a relaxation
+ *  bracketing z* recognised by its classname()); tests with bespoke needs
+ *  (e.g. one-sided bounds, or extra per-Solver bookkeeping) wrap these or pass
+ *  their own. */
 
 using SolverClassifier =
  std::function< SolverReading ( Solver * , std::size_t ) >;
@@ -283,6 +283,15 @@ SolverClassifier exact_getter( ObjGetter g = ObjGetter::VarValue );
 
 SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
                                 ObjGetter dflt = ObjGetter::VarValue );
+
+/// classifier: read a Solver as a [ get_lb() , get_ub() ] Bracket when its
+/// classname() contains "Relaxation", else as an Exact get_var_value() optimum
+
+/** Encodes the :RelaxationSolver naming convention so that any relaxation
+ *  Solver is cross-checked uniformly (it only brackets z*) without the test
+ *  depending on its concrete type. */
+
+SolverClassifier relaxation_aware_getter( void );
 
 /*--------------------------------------------------------------------------*/
 /// print the uniform per-instance log line

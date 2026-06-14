@@ -163,22 +163,16 @@ bool CrossCheckSolvers( void )
  // (skipping the infeasible ones, whose primal x cannot be read)
  std::vector< char > feasible( M , 0 );
  std::vector< char > bracket( M , 0 );
+ // the generic relaxation-aware reading (relaxation => [lb,ub] bracket, else
+ // exact) lives in common_utils; here we only wrap it to record, per Solver,
+ // feasibility and whether it is a bracket (needed by the BinaryKnapsackBlock-
+ // specific self-consistency check below)
+ auto read = relaxation_aware_getter();
  SolverClassifier classify =
-  [ &feasible , &bracket ]( Solver * s , std::size_t k ) -> SolverReading {
+  [ &feasible , &bracket , read ]( Solver * s , std::size_t k ) -> SolverReading {
    feasible[ k ] = 1;
-   SolverReading r;
-   // a relaxation Solver (classname() containing "Relaxation") only provides
-   // a [ lb , ub ] bracket on z*; any other Solver is an exact z*
-   if( s->classname().find( "Relaxation" ) != std::string::npos ) {
-    bracket[ k ] = 1;
-    r.kind = SolverReading::Kind::Bracket;
-    r.lb   = s->get_lb();
-    r.ub   = s->get_ub();
-    }
-   else {
-    r.kind  = SolverReading::Kind::Exact;
-    r.value = s->get_var_value();
-    }
+   SolverReading r = read( s , k );
+   bracket[ k ] = ( r.kind == SolverReading::Kind::Bracket );
    return( r );
    };
 
