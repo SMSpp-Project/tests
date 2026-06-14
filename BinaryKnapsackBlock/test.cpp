@@ -55,8 +55,6 @@
 
 #include "BinaryKnapsackBlock.h"
 
-#include "GreedyRelaxationBinaryKnapsackSolver.h"
-
 #include <random>
 
 #include <chrono>
@@ -145,12 +143,12 @@ bool CrossCheckSolvers( void )
 {
  // cross-check ALL the registered Solver via the shared common_utils engine:
  // every exact one must agree on the optimal value z*, every relaxation
- // (GreedyRelaxationBinaryKnapsackSolver) must bracket it, and (in the
- // Pisinger mode, have_ref) z* must match the published optimum ref_opt. The
- // engine also prints the uniform per-instance line with every Solver value;
- // here we only add the BinaryKnapsackBlock-specific classifier (relaxation =>
- // [lb,ub] bracket) and the self-consistency check (each exact Solver's
- // reported value equals the value recomputed from its returned solution)
+ // Solver must bracket it, and (in the Pisinger mode, have_ref) z* must match
+ // the published optimum ref_opt. The engine also prints the uniform
+ // per-instance line with every Solver value; here we only add the
+ // BinaryKnapsackBlock-specific classifier (relaxation => [lb,ub] bracket) and
+ // the self-consistency check (each exact Solver's reported value equals the
+ // value recomputed from its returned solution)
  const auto & reg = BKB->get_registered_solvers();
  std::vector< Solver * > Solvers( reg.begin() , reg.end() );
  const std::size_t M = Solvers.size();
@@ -164,15 +162,18 @@ bool CrossCheckSolvers( void )
  // solution, so we use it to record which ones to self-consistency-check below
  // (skipping the infeasible ones, whose primal x cannot be read)
  std::vector< char > feasible( M , 0 );
+ std::vector< char > bracket( M , 0 );
  SolverClassifier classify =
-  [ &feasible ]( Solver * s , std::size_t k ) -> SolverReading {
+  [ &feasible , &bracket ]( Solver * s , std::size_t k ) -> SolverReading {
    feasible[ k ] = 1;
    SolverReading r;
-   if( auto GRS =
-       dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >( s ) ) {
+   // a relaxation Solver (classname() containing "Relaxation") only provides
+   // a [ lb , ub ] bracket on z*; any other Solver is an exact z*
+   if( s->classname().find( "Relaxation" ) != std::string::npos ) {
+    bracket[ k ] = 1;
     r.kind = SolverReading::Kind::Bracket;
-    r.lb   = GRS->get_true_lb();
-    r.ub   = GRS->get_true_ub();
+    r.lb   = s->get_lb();
+    r.ub   = s->get_ub();
     }
    else {
     r.kind  = SolverReading::Kind::Exact;
@@ -191,7 +192,7 @@ bool CrossCheckSolvers( void )
  for( std::size_t k = 0 ; k < M ; ++k ) {
   if( ! feasible[ k ] )
    continue;                               // infeasible: no primal x to read
-  if( dynamic_cast< GreedyRelaxationBinaryKnapsackSolver * >( Solvers[ k ] ) )
+  if( bracket[ k ] )
    continue;                               // relaxations have no primal x
   const double value = Solvers[ k ]->get_var_value();
   Solvers[ k ]->get_var_solution();
