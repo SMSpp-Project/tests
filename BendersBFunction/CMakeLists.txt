@@ -5,18 +5,23 @@ if (NOT hasParent)
     # Blocks
     find_package(MCFBlock)
     # Solvers
+    find_package(MCFClassSolver)
     find_package(BundleSolver)
     find_package(MILPSolver)
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
-if (TARGET SMS++::MCFBlock)
+# BendersBFunction_test pairs the BendersBFunction with a min-cost flow built
+# directly through MCFClass, so it needs the MCFClassSolver module (which
+# carries MCFClass and pulls in MCFBlock); BendersBFunction_test2 only needs
+# MCFBlock.
+if (TARGET SMS++::MCFClassSolver)
 
     add_executable(BendersBFunction_test test.cpp
                                          cwl-mcf/cwl-mcf.cpp
                                          ../common_utils.cpp)
     target_include_directories(BendersBFunction_test PRIVATE ..)
-    target_link_libraries(BendersBFunction_test PRIVATE SMS++::MCFBlock)
+    target_link_libraries(BendersBFunction_test PRIVATE SMS++::MCFClassSolver)
 
     if (TARGET SMS++::BundleSolver)
         target_link_libraries(BendersBFunction_test PRIVATE SMS++::BundleSolver)
@@ -27,6 +32,9 @@ if (TARGET SMS++::MCFBlock)
     endif ()
 
     smspp_install(BendersBFunction_test)
+endif ()
+
+if (TARGET SMS++::MCFBlock)
 
     add_executable(BendersBFunction_test2 test2.cpp ../common_utils.cpp)
     target_include_directories(BendersBFunction_test2 PRIVATE ..)
