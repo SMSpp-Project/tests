@@ -6,6 +6,9 @@
 # runs the tests with the PrimalProximalHeur over a range of sizes, number of
 # sub-blocks, densities and seeds
 
+# shared CLI/run helpers (print_header, run_test)
+source "$(dirname "$0")/../batch_common.sh"
+
 what=63
 iter=40
 
@@ -17,7 +20,7 @@ for nvar in 2 10 50; do
     for dens in 0.05 0.1; do
       for (( seed = 7 ; seed < 13 ; seed++ )); do
 
-        printf "[$seed $what $nvar $nson $dens $iter]: "
+        print_header "$seed $what $nvar $nson $dens $iter"
 
         "$LDS_Box_test" $seed $what $nvar $nson $dens $iter ProxHeur.txt
 

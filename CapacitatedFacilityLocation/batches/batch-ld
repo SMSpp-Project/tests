@@ -9,12 +9,13 @@
 # driving the dual, an LP leaf via :MILPSolver on the subproblems); runs the small
 # ORLib instances
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
 # run from the LD config directory so CFL_test reads its config files
 # (BPar*, BSPar*, R3BCfg) there
 cd "$(dirname "$0")/../LD" || exit 1
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../../CapacitatedFacilityLocationBlock/data
 

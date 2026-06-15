@@ -9,12 +9,13 @@
 # whose hidden BendersBFunction separates cuts from an inner MCFBlock; runs
 # the small ORLib instances and checks that the two LP bounds coincide
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
 # run from the Ben config directory so CFL_test reads the BenForm config
 # files (BPar*, BSPar*, R3BCfg) there
 cd "$(dirname "$0")/../Ben" || exit 1
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../../CapacitatedFacilityLocationBlock/data
 

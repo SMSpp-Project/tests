@@ -290,12 +290,36 @@ SolverClassifier relaxation_aware_getter( void )
 
 /*--------------------------------------------------------------------------*/
 
+// verbose is on either via -v (verbosity_level, only for tests that parse
+// their options through process_args) or, uniformly for *all* tests regardless
+// of how they parse their arguments, via the `verbose` environment variable
+// (e.g. `verbose=1 ./batch ...` or `verbose=1 ctest ...`), which the child test
+// processes inherit. The latter is what makes the verbose log consistent
+// across the whole test suite, including the tests that read positional
+// arguments by hand and so do not understand -v.
+static bool tests_verbose()
+{
+ static const bool env_on = []() {
+   const char * e = std::getenv( "verbose" );
+   return e && ( e[ 0 ] != '\0' ) && ( std::string( e ) != "0" );
+   }();
+ return ( verbosity_level >= 1 ) || env_on;
+}
+
 void print_instance_line( const std::vector< double > & times ,
                           const std::vector< std::string > & value_tokens ,
                           double ref ,
                           const std::string & verdict ,
                           double diff )
 {
+ // the detailed per-round line (times, solver values, verdict) is "extended"
+ // output: print it only when verbose, keeping the default output terse (just
+ // the per-instance header from the batch and the final summary printed by the
+ // test). Failing comparisons (KO) are always shown, so that a failure is
+ // visible without re-running in verbose mode
+ if( ( ! tests_verbose() ) && ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
+  return;
+
  for( std::size_t k = 0 ; k < times.size() ; ++k )
   std::cout << ( k ? " - " : "" ) << fixd << times[ k ];
 
@@ -320,6 +344,36 @@ std::string reading_token( const SolverReading & r )
   return( "[ " + fmt_obj( r.lb ) + " , " + fmt_obj( r.ub ) + " ]" );
  return( fmt_obj( r.value ) );
  }
+
+/*--------------------------------------------------------------------------*/
+/*--- mutual-infeasibility watchdog ----------------------------------------*/
+/*--------------------------------------------------------------------------*/
+// A multi-Solver cross-check where *all* Solvers report infeasible (or all
+// unbounded) and no reference is given is accepted as a pass (OK(e) / OK(u)):
+// the Solvers agree, so there is nothing to flag per se. However, if a whole
+// run degenerates into such "everybody agrees it is infeasible" comparisons,
+// the test is no longer really comparing any solution and silently passes for
+// the wrong reason. We therefore count these cases and, at process exit, emit
+// a warning on stderr if they dominate the run (without altering any verdict
+// or exit code, so that legitimately-infeasible tests keep working).
+
+namespace {
+ struct MutualInfWatchdog {
+  std::size_t n_total = 0;  // multi-Solver cross-checks performed
+  std::size_t n_inf   = 0;  // ... of which unanimously infeasible (OK(e))
+  std::size_t n_unb   = 0;  // ... of which unanimously unbounded  (OK(u))
+  ~MutualInfWatchdog() {
+   if( ( n_total >= 4 ) && ( 2 * ( n_inf + n_unb ) > n_total ) )
+    std::cerr << ANSI_YELLOW << "[WARNING] " << ( n_inf + n_unb )
+              << " of " << n_total << " multi-Solver comparisons were "
+                 "unanimously " << ( n_unb > n_inf ? "unbounded" : "infeasible" )
+              << ": this run passed mostly via solver agreement on the "
+                 "absence of a solution, not by comparing solutions."
+              << ANSI_RESET << "\n";
+   }
+  };
+ MutualInfWatchdog mutual_inf_watchdog;
+}
 
 /*--------------------------------------------------------------------------*/
 
@@ -351,6 +405,11 @@ bool cross_check( const std::vector< SolverReading > & rd ,
   else if( status[ k ] == Solver::kUnbounded )   ++nUnb;
   }
 
+ // count genuine multi-Solver comparisons for the mutual-infeasibility
+ // watchdog (see above)
+ if( M >= 2 )
+  ++mutual_inf_watchdog.n_total;
+
  // single Solver, no reference: just "did it find a solution?"
  if( ( M == 1 ) && std::isnan( ref ) ) {
   bool ok = has_solution[ 0 ];
@@ -360,8 +419,14 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 
  // unanimous infeasible / unbounded is a pass only when NO reference was given
  if( nFeas == 0 ) {
-  if( std::isnan( ref ) && nInf == M ) { verdict_out = "OK(e)"; return( true ); }
-  if( std::isnan( ref ) && nUnb == M ) { verdict_out = "OK(u)"; return( true ); }
+  if( std::isnan( ref ) && nInf == M ) {
+   if( M >= 2 ) ++mutual_inf_watchdog.n_inf;
+   verdict_out = "OK(e)"; return( true );
+   }
+  if( std::isnan( ref ) && nUnb == M ) {
+   if( M >= 2 ) ++mutual_inf_watchdog.n_unb;
+   verdict_out = "OK(u)"; return( true );
+   }
   verdict_out = "KO";
   return( false );
   }
@@ -601,7 +666,7 @@ double RefObjective = std::numeric_limits< double >::quiet_NaN();
 // Minimal getopt baseline shared by tests that opt in. Tests that need
 // extra switches override short_opts / long_opts / help in their main()
 // before calling process_args().
-std::string short_opts = "B:S:p:c:Dv:h";
+std::string short_opts = "B:S:p:c:Dv::h";
 
 std::vector< option > long_opts = {
  { "help"            , no_argument       , nullptr , 'h' } ,

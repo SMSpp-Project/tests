@@ -8,12 +8,13 @@
 # runs ORLib, Yang and TBED instances and checks that the natural-formulation
 # LP bound and the MCF flow-relaxation bound coincide
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
 # run from the MCF config directory so CFL_test reads its config files
 # (BPar*, BSPar*, R3BCfg) there
 cd "$(dirname "$0")/../MCF" || exit 1
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../../CapacitatedFacilityLocationBlock/data
 
