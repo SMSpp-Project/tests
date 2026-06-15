@@ -8,6 +8,7 @@ if (NOT hasParent)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
     find_package(MILPSolver)
+    find_package(MCFClassSolver)
     find_package(MCFLemonSolver)
 endif ()
 
@@ -29,6 +30,10 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
 
     if (TARGET SMS++::MILPSolver)
         target_link_libraries(CFL_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    if (TARGET SMS++::MCFClassSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::MCFClassSolver)
     endif ()
 
     if (TARGET SMS++::MCFLemonSolver)

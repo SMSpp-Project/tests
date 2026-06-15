@@ -37,6 +37,16 @@ include ../makefile_common
 MCFBkSDR = ../../MCFBlock
 include $(MCFBkSDR)/makefile-c
 
+# MCFClass, needed by MCFClassSolver
+MCFC_NO_PATHS = 0
+libMCFClDIR = ../../MCFClassSolver/MCFClass
+include $(libMCFClDIR)/lib/makefile-inc
+
+# MCFClassSolver, assuming all dependencies (SMS++, MCFBlock, MCFClass) are
+# there already (comment out if not required)
+MCFCSSDR = ../../MCFClassSolver
+include $(MCFCSSDR)/makefile
+
 # MCFLemonSolver, assuming all dependencies (MCFBlock) are there already
 # (comment out if not required)
 # note: -std=c++20 is required if this is included
@@ -50,10 +60,11 @@ include $(MILPSSDR)/makefile-s
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(CMMNUOBJ) $(MCFLEOBJ) $(MILPSOBJ) $(MCFBkOBJ)
+MOBJ =  $(CMMNUOBJ) $(MCFCSOBJ) $(libMCFClOBJ) $(MCFLEOBJ) $(MILPSOBJ) \
+        $(MCFBkOBJ)
 
 # libraries
-MLIB =  $(MCFBkLIB) $(MCFLELIB) $(MILPSLIB)
+MLIB =  $(MCFBkLIB) $(libMCFClLIB) $(MCFLELIB) $(MILPSLIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $(DIR)/test.o $(MOBJ) $(MLIB) $(SW)
@@ -63,10 +74,11 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(MCFBkINC) $(MCFLEINC) $(MILPSINC) $(CMMNUINC)
+MINC =  $(MCFBkINC) $(MCFCSINC) $(libMCFClINC) $(MCFLEINC) $(MILPSINC) \
+        $(CMMNUINC)
 
 # includes
-MH =    $(MCFBkH) $(MCFLEH) $(MILPSH) $(CMMNUH)
+MH =    $(MCFBkH) $(MCFCSH) $(MCFLEH) $(MILPSH) $(CMMNUH)
 
 # compile command
 
