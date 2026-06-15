@@ -27,12 +27,13 @@
 # line below that passes cmptol=2e-3 (just above the 1.906e-3 max) and comment
 # out the default one.
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
 # run from the LDVScuts config directory so CFL_test reads its config files
 # (BPar*, BSPar*, R3BCfg) there
 cd "$(dirname "$0")/../LDVScuts" || exit 1
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../../CapacitatedFacilityLocationBlock/data
 

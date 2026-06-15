@@ -8,12 +8,13 @@
 # relaxation; runs a largish set of ORLib, Yang and TBED instances and checks
 # that the two lower bounds coincide along a sequence of random modifications
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
 # run from the test root (one level up) so CFL_test reads the default config
 # files (BPar*, BSPar*, R3BCfg) there
 cd "$(dirname "$0")/.." || exit 1
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../CapacitatedFacilityLocationBlock/data
 
