@@ -352,7 +352,7 @@ std::string reading_token( const SolverReading & r )
 // unbounded) and no reference is given is accepted as a pass (OK(e) / OK(u)):
 // the Solvers agree, so there is nothing to flag per se. However, if a whole
 // run degenerates into such "everybody agrees it is infeasible" comparisons,
-// the test is no longer really comparing any solution and silently passes for
+// the test is not really comparing any solution and silently passes for
 // the wrong reason. We therefore count these cases and, at process exit, emit
 // a warning on stderr if they dominate the run (without altering any verdict
 // or exit code, so that legitimately-infeasible tests keep working).

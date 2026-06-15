@@ -60,9 +60,8 @@ parse_batch_args() {
 # Usage: print_header <label>
 # Prints the "[<label>]:" header on its own line (to $mlf if set, else stdout),
 # so the per-round output of the test below it starts on a fresh line. Batches
-# whose displayed label differs from the actual executable arguments (or that
-# do not exit on error) can reuse this directly instead of hand-rolling the
-# header with a literal newline.
+# whose displayed label differs from the actual executable arguments, or that
+# do not exit on error, can reuse this directly.
 print_header() {
     if [ -z "${mlf}" ]; then
         printf "[%s]:\n" "$1"
