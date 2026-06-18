@@ -20,7 +20,6 @@ EXE=${1:-./FWS_test}
 # its sibling FWS_mcf_test in the same directory
 MCFEXE=${2:-${EXE%/*}/FWS_mcf_test}
 [ "$MCFEXE" = "$EXE" ] && MCFEXE=./FWS_mcf_test
-export DYLD_LIBRARY_PATH=/Users/frangio/Applications/StOpt/lib:/Users/frangio/Applications/FPP/lib:/Users/frangio/Applications/HiGHS/build/lib:/Users/frangio/Applications/scip/lib
 DATA=../../MCFClassSolver/test/data
 CFG=FWCfg.txt
 

@@ -10,7 +10,6 @@
 set -u
 
 EXE=${1:-./FWS_test}
-export DYLD_LIBRARY_PATH=/Users/frangio/Applications/StOpt/lib:/Users/frangio/Applications/FPP/lib:/Users/frangio/Applications/HiGHS/build/lib:/Users/frangio/Applications/scip/lib
 DATA=../../MCFBlock/data/nc4
 CFG=FWCfg.txt
 
