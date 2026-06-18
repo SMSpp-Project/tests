@@ -102,6 +102,8 @@ add_subdirectory(TwoStageStochasticBlock)
 
 add_subdirectory(LukFiBlock)
 
+add_subdirectory(FrankWolfeSolver)
+
 
 add_subdirectory(compare_formulations)
 
