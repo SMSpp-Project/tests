@@ -1,0 +1,25 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# MILPCfg.txt : ComputeConfig of the :MILPSolver solving the monolithic QP.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> only the listed parameters are changed
+
+1  # number of integer parameters
+
+intLogVerb 0          # log verbosity of the MILPSolver
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+*  # no "extra" Configuration
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

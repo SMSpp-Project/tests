@@ -1,0 +1,24 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# FatherBSCfg.txt : BlockSolverConfig for the father AbstractBlock.
+# Two Solver are registered: a :MILPSolver solving the monolithic convex QP,
+# and a FrankWolfeSolver solving it by Frank-Wolfe decomposition. SolveAll()
+# cross-checks that the two optima agree.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver
+
+CPXMILPSolver         # 1st Solver: monolithic QP
+#GRBMILPSolver
+#HiGHSMILPSolver
+FrankWolfeSolver      # 2nd Solver: Frank-Wolfe decomposition
+
+2  # number of ComputeConfig
+
+*MILPCfg.txt          # ComputeConfig of the :MILPSolver
+*FWCfg.txt            # ComputeConfig of the FrankWolfeSolver
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

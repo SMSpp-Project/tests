@@ -1,0 +1,18 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# FatherBSCfg-fw.txt : BlockSolverConfig registering only a FrankWolfeSolver
+# to the father AbstractBlock (copy1 of the Polyhedral test).
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver
+
+FrankWolfeSolver      # Frank-Wolfe decomposition
+
+1  # number of ComputeConfig
+
+*FWCfg.txt            # ComputeConfig of the FrankWolfeSolver
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

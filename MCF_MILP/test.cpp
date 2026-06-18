@@ -156,6 +156,10 @@ MCFBlock * MCFB = nullptr;     // the MCFBlock
 std::mt19937 rg;               // base random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
+// set by SolveBoth(): did the just-solved instance admit a (primal) solution?
+// used by the emergency feasibility-recovery mechanism in the main loop
+bool last_round_feasible = true;
+
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -249,8 +253,43 @@ static bool SolveBoth( void )
   MCFB->register_Solver( Slvr2 );  // push it to the back
  #endif
 
- return( SolveAll( MCFB , std::numeric_limits< double >::quiet_NaN() ,
-                   std::vector< ObjGetter >{} , 5e-7 ) );
+ bool hs1 = false;
+ bool ok = SolveAll( MCFB , std::numeric_limits< double >::quiet_NaN() ,
+                     std::vector< ObjGetter >{} , 5e-7 , nullptr , & hs1 );
+ last_round_feasible = hs1;  // the 1st (physical) Solver found a solution
+ return( ok );
+ }
+
+/*--------------------------------------------------------------------------*/
+// emergency feasibility-recovery helpers: roll specific pieces of the
+// instance data back to the values saved right after deserialization (with
+// which the instance is assumed feasible). See the main loop for the staging.
+
+static void restore_deficits( const MCFBlock::Vec_FNumber & orig )
+{
+ // deficits are per-node and the node count never changes in this test, so
+ // the saved vector always aligns; this undoes the deficit drift that is the
+ // usual cause of permanent infeasibility
+ MCFB->chg_dfcts( orig.begin() , Range( 0 , orig.size() ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static void restore_capacities( const MCFBlock::Vec_FNumber & orig )
+{
+ // restore the original capacity of every arc that still exists at its
+ // original index, undoing the capacity drift. Arc indices are stable except
+ // for deleted slots (skipped here) and slots later reused by add_arc (only
+ // possible when arcs were deleted first, i.e. never in the no-deletion runs);
+ // a reused slot gets an arbitrary-but-harmless value. With no deletions the
+ // whole capacity vector is restored exactly, so combined with the deficit
+ // restore and the arc re-opening the original instance is fully recovered.
+ if( orig.empty() )  // uncapacitated instance: nothing to restore
+  return;
+ Index m = std::min( Index( orig.size() ) , MCFB->get_NArcs() );
+ for( Index i = 0 ; i < m ; ++i )
+  if( ! MCFB->is_deleted( i ) )
+   MCFB->chg_ucap( orig[ i ] , i );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -354,6 +393,13 @@ int main( int argc , char **argv )
   return( 1 );
   }
 
+ // save the original deficits and capacities, with which the instance is
+ // assumed feasible: used by the emergency feasibility-recovery mechanism in
+ // the main loop (see there). Taken right after deserialization, before any
+ // change is applied.
+ const MCFBlock::Vec_FNumber orig_dfct( MCFB->get_B() );
+ const MCFBlock::Vec_FNumber orig_ucap( MCFB->get_U() );
+
  // compute min/max cost & max deficit- - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -412,7 +458,11 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  bool AllPassed = SolveBoth();
- 
+
+ // number of consecutive infeasible solves; drives the staged emergency
+ // feasibility recovery in the main loop. Seeded from the very first solve.
+ unsigned int consec_infeas = last_round_feasible ? 0 : 1;
+
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // now, for n_repeat times:
@@ -846,8 +896,25 @@ int main( int argc , char **argv )
   // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -
   // ... every SKIP_BEAT + 1 rounds
 
-  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) )
+  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) ) {
+   // emergency feasibility recovery - - - - - - - - - - - - - - - - - - - - -
+   // if recent solves were infeasible, progressively roll the instance back
+   // toward the original (feasible) data *before* re-solving, so the rollback
+   // overrides this cycle's changes. Stage 1 (>= 1 consecutive infeasible
+   // solve) restores the original deficits, the usual culprit; stage 2 also
+   // restores the original static-arc capacities; stage 3 also re-opens every
+   // closed arc. With deficits + capacities + all arcs restored the original
+   // feasible region is recovered, so feasibility should return (barring
+   // original dynamic arcs permanently deleted meanwhile, which cannot be
+   // brought back). The staging both isolates the culprit and self-heals.
+   if( consec_infeas >= 1 ) restore_deficits( orig_dfct );
+   if( consec_infeas >= 2 ) restore_capacities( orig_ucap );
+   if( consec_infeas >= 3 ) MCFB->open_arcs();
+
    AllPassed &= SolveBoth();
+
+   consec_infeas = last_round_feasible ? 0 : ( consec_infeas + 1 );
+   }
   #if( LOG_LEVEL >= 1 )
   else
    std::cout << std::endl;

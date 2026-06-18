@@ -1,0 +1,41 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# FWCfg-tub.txt : ComputeConfig of the FrankWolfeSolver for the TUB test.
+#
+# intLMOObj = 2 (LMOFull): the oracle (ThermalUnitDPSolver) keeps the unit's
+# true convex-quadratic cost and adds the father gradient -- it returns true
+# integer unit schedules (vertices of the unit's convex hull).
+# intCvxComb = 1 (eObjCvxComb): the sub-Block cost is the convex combination of
+# those vertex costs, i.e. the Dantzig-Wolfe / perspective bound -- exactly what
+# the DPForm+P/C reference (MILPSolver, intRelaxIntVars=2) computes. This is the
+# whole point of the test: F-W as a decomposition alternative to DPForm+P/C.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> only the listed parameters are changed
+
+7  # number of integer parameters
+
+intLMOObj      2      # LMOFull (keep the unit cost exact in the oracle)
+intLineSearch  0      # auto (exact: father is DQuad, child cost linear in gamma)
+intMaxIter     100000 # safety cap on Frank-Wolfe iterations
+intAlgorithm   0      # 0 vanilla, 1 Away-step, 2 Blended Pairwise (BPCG)
+intMaxAtoms    0      # 0 unbounded; else cap (aggregation)
+intMaxThread   1      # parallel LMO threads
+intCvxComb     1      # eObjCvxComb: Dantzig-Wolfe / perspective bound (= P/C)
+
+1  # number of double parameters
+
+dblRelAcc      1e-7   # relative accuracy on the Frank-Wolfe gap
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+*  # no "extra" Configuration
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

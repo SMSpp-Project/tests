@@ -1,0 +1,4 @@
+SimpleConfiguration<std::map<std::string,Configuration*>>
+2 # elements
+AbstractBlock   *FatherBSCfg-warm.txt
+MCFBlock        *MCFBSCfg.txt

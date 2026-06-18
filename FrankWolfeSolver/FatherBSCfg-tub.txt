@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# FatherBSCfg-tub.txt : BlockSolverConfig for the father AbstractBlock of the
+# TUB test. Two Solver are registered: a :MILPSolver solving the monolithic
+# DPForm+P/C relaxation (the reference), and a FrankWolfeSolver solving it by
+# Frank-Wolfe decomposition with ThermalUnitDPSolver oracles. SolveAll()
+# cross-checks that the two optima agree.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver
+
+CPXMILPSolver         # 1st Solver: monolithic DPForm+P/C relaxation
+FrankWolfeSolver      # 2nd Solver: Frank-Wolfe decomposition
+
+2  # number of ComputeConfig
+
+*MILPCfg-tub.txt      # ComputeConfig of the :MILPSolver
+*FWCfg-tub.txt        # ComputeConfig of the FrankWolfeSolver
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

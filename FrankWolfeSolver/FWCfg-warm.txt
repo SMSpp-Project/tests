@@ -1,0 +1,35 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# FWCfg-warm.txt : FrankWolfeSolver ComputeConfig for the warm-start /
+# Modification tests: Away-step active set kept warm across re-solves, with the
+# fine Modification handling (eModFine) that re-checks atom feasibility.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> only the listed parameters are changed
+
+7  # number of integer parameters
+
+intLMOObj      2      # LMOFull
+intLineSearch  0      # auto
+intMaxIter     100000 # safety cap
+intAlgorithm   1      # Away-step (active set, warm-startable)
+intMaxAtoms    0      # unbounded
+intMaxThread   1      # parallel LMO threads
+intHandleMod   1      # eModFine: keep the warm start, re-check feasibility
+
+1  # number of double parameters
+
+dblRelAcc      1e-7   # relative accuracy on the Frank-Wolfe gap
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+*  # no "extra" Configuration
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

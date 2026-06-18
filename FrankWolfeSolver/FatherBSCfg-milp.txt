@@ -1,0 +1,20 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# FatherBSCfg-milp.txt : BlockSolverConfig registering only a :MILPSolver to
+# the father AbstractBlock (copy2, the reference, of the Polyhedral test).
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver
+
+CPXMILPSolver         # monolithic (linearized) MILP/QP
+#GRBMILPSolver
+#HiGHSMILPSolver
+
+1  # number of ComputeConfig
+
+*MILPCfg.txt          # ComputeConfig of the :MILPSolver
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
