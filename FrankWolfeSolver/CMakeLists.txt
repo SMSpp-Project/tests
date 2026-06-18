@@ -38,13 +38,32 @@ if (TARGET SMS++::FrankWolfeSolver)
 
     smspp_install(FWS_test)
 
+    # FWS_mcf_test: the MCFBlock-specific tester for the feasible-region
+    # Modification handling (it changes arc capacities / fixing natively, which
+    # requires knowing the sub-Block type). Built only when MCFBlock is present.
+    if (TARGET SMS++::MCFBlock)
+        add_executable(FWS_mcf_test test-mcf.cpp ../common_utils.cpp)
+        target_include_directories(FWS_mcf_test PRIVATE ..)
+        target_link_libraries(FWS_mcf_test PRIVATE SMS++::FrankWolfeSolver
+                                                   SMS++::MCFBlock)
+        if (TARGET SMS++::MCFClassSolver)
+            target_link_libraries(FWS_mcf_test PRIVATE SMS++::MCFClassSolver)
+        endif ()
+        if (TARGET SMS++::MILPSolver)
+            target_link_libraries(FWS_mcf_test PRIVATE SMS++::MILPSolver)
+        endif ()
+        smspp_install(FWS_mcf_test)
+    endif ()
+
     # the fast regression suite (cross-checks vs a :MILPSolver on small MCFBlock
     # instances); the script defaults its data/config paths relative to the
-    # source directory, and takes the executable as its first argument
+    # source directory, and takes the FWS_test executable as its first argument
+    # and the FWS_mcf_test executable as its second (skipped if not built)
     if (UNIX)
         add_test(NAME FWS_test/regression
                  COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/regression
                          ${CMAKE_CURRENT_BINARY_DIR}/FWS_test
+                         ${CMAKE_CURRENT_BINARY_DIR}/FWS_mcf_test
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     elseif (WIN32)
         add_test(NAME FWS_test/regression
@@ -52,6 +71,7 @@ if (TARGET SMS++::FrankWolfeSolver)
                  COMMAND "C:/Program Files/Git/bin/bash.exe"
                          "${CMAKE_CURRENT_SOURCE_DIR}/regression"
                          "$<TARGET_FILE:FWS_test>"
+                         "${CMAKE_CURRENT_BINARY_DIR}/FWS_mcf_test"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 endif ()

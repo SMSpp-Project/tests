@@ -146,11 +146,16 @@ int main( int argc , char ** argv )
   orig_costs[ a ] = mcf->get_C( a );
   }
 
- for( int r = 0 ; ( r < mod_rounds ) && ok ; ++r ) {
-  int what = int( 3 * fwtest::pos( rg ) );          // 0 costs, 1 caps, 2 both
-  const char * desc = what == 0 ? "cost" : ( what == 1 ? "cap" : "cost+cap" );
+ // the first sub-Block's flow ColVariables, in arc order, are the first na
+ // entries collected into vars; used to close/reopen arcs (variable fixing)
+ std::vector< bool > closed( na , false );
 
-  if( what != 1 ) {                                 // change costs (objective)
+ for( int r = 0 ; ( r < mod_rounds ) && ok ; ++r ) {
+  int what = int( 4 * fwtest::pos( rg ) );  // 0 cost, 1 cap, 2 both, 3 fix-toggle
+  const char * desc = what == 0 ? "cost" : ( what == 1 ? "cap" :
+                      ( what == 2 ? "cost+cap" : "fix" ) );
+
+  if( ( what == 0 ) || ( what == 2 ) ) {           // change costs (objective)
    MCFBlock::Vec_CNumber costs( na );
    for( Index a = 0 ; a < na ; ++a )
     costs[ a ] = std::round( double( orig_costs[ a ] ) *
@@ -158,7 +163,7 @@ int main( int argc , char ** argv )
    mcf->chg_costs( costs.begin() , MCFBlock::Range( 0 , na ) , eModBlck ,
                    eModBlck );
    }
-  if( what != 0 ) {                                 // change caps (feasibility)
+  if( ( what == 1 ) || ( what == 2 ) ) {           // change caps (feasibility)
    MCFBlock::Vec_FNumber caps( na );
    for( Index a = 0 ; a < na ; ++a )
     caps[ a ] = MCFBlock::FNumber( std::max( 1.0 ,
@@ -166,6 +171,18 @@ int main( int argc , char ** argv )
                                ( 0.85 + 0.45 * fwtest::pos( rg ) ) ) ) );
    mcf->chg_ucaps( caps.begin() , MCFBlock::Range( 0 , na ) , eModBlck ,
                    eModBlck );
+   }
+  if( what == 3 ) {                                // toggle one arc's fix status
+   Index a = Index( na * fwtest::pos( rg ) ) % na; // (a VariableMod: closing an
+   if( ! closed[ a ] ) {                           //  arc shrinks the region,
+    vars[ a ]->set_value( 0 );                     //  reopening relaxes it)
+    vars[ a ]->is_fixed( true );
+    closed[ a ] = true;
+    }
+   else {
+    vars[ a ]->is_fixed( false );
+    closed[ a ] = false;
+    }
    }
 
   bool okr = SolveAll( father , exact_getter( ObjGetter::VarValue ) ,
