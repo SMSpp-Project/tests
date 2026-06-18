@@ -510,11 +510,11 @@ int main( int argc , char **argv )
  		<< endl <<
            "       wchg: what to change, coded bit-wise [31]"
 		<< endl <<
-           "             0 = add rows, 1 = delete rows "
+           "             1 = add rows, 2 = delete rows"
 		<< endl <<
-           "             2 = modify rows, 3 = modify constants"
+           "             4 = modify rows, 8 = modify constants"
 		<< endl <<
-           "             4 = change global lower/upper bound"
+           "             16 = change global lower/upper bound"
         << endl <<
         "       nvar: number of variables [10]"
         << endl <<

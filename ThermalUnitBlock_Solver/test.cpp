@@ -537,9 +537,16 @@ int main( int argc , char **argv )
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [135]\n"
-         "  -f, --wf <bits>                 what formulation, bit-wise "
-         "(0=3bin,1=T,2=pt,3=DP,4=SU,5=SD,6=SUSD,+8=P/C) [1]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [135]:\n"
+         "                                    1 fixed costs, 2 quadratic\n"
+         "                                    coefficients, 4 linear\n"
+         "                                    coefficients,\n"
+         "                                    128 also via abstract\n"
+         "                                    representation\n"
+         "  -f, --wf <bits>                 what formulation [1]:\n"
+         "                                    0 3bin, 1 T, 2 pt, 3 DP,\n"
+         "                                    4 SU, 5 SD, 6 SUSD;\n"
+         "                                    +8 also use perspective cuts\n"
          "  -n, --rounds <n>                how many iterations [100]\n"
          "  -m, --nchng <n>                 number of changes [10]\n"
          "  -q, --pchng <p>                 probability of changing [0.6]\n";

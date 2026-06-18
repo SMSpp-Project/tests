@@ -692,8 +692,9 @@ int main( int argc , char **argv )
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
-         "  -k, --wchg <bits>               what to change "
-         "(0=bounds,1=objective) [3]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [3]:\n"
+         "                                    1 bounds, 2 objective coefficients"
+         "\n"
          "  -N, --nvar <n>                  number of variables [10]\n"
          "  -n, --rounds <n>                how many iterations [100]\n"
          "  -m, --nchng <n>                 number of changes [10]\n"

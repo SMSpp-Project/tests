@@ -478,7 +478,13 @@ int main( int argc , char **argv )
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [15]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [15]:\n"
+         "                                    1 bounds, 2 obj coeffs, "
+         "4 linking constraints,\n"
+         "                                    8 linking lhs/rhs, "
+         "16 force quadratic obj,\n"
+         "                                    32 Lagrangian heuristic "
+         "(one-sided bound)\n"
          "  -N, --nvar <n>                  number of variables [10]\n"
          "  -s, --nson <n>                  number of sub-Blocks [2]\n"
          "  -d, --dens <x>                  constraints as fraction of "
