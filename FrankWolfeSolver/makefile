@@ -76,11 +76,23 @@ MH =    $(MCFBkH) $(MCFCSH) $(MILPSH) $(FWSlvH) $(UCBckH) $(CMMNUH)
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $(DIR)/test.o $(MOBJ) $(MLIB) $(SW)
 
+# second executable: the MCFBlock-specific Modification tester. Built on demand
+# with "make mcf" (which sets the release compile flags, like the default
+# "release" target does for the main executable)
+mcf: SW = $(SW_RELEASE)
+mcf: $(DIR)/FWS_mcf_test
+
+$(DIR)/FWS_mcf_test: $(MOBJ) $(DIR)/test-mcf.o
+	$(CC) -o $(DIR)/FWS_mcf_test $(DIR)/test-mcf.o $(MOBJ) $(MLIB) $(SW)
+
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # compile command
 
-$(DIR)/test.o: $(DIR)/test.cpp $(MH)
+$(DIR)/test.o: $(DIR)/test.cpp $(DIR)/fw_test_common.h $(MH)
+	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)
+
+$(DIR)/test-mcf.o: $(DIR)/test-mcf.cpp $(DIR)/fw_test_common.h $(MH)
 	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)
 
 ############################ End of makefile ################################
