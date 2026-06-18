@@ -1,0 +1,21 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# TUBSCfg.txt : BlockSolverConfig registering the LMO :Solver to each
+# ThermalUnitBlock sub-Block. ThermalUnitDPSolver solves the single-unit
+# commitment problem exactly by dynamic programming, returning a true integer
+# schedule (a vertex of the unit's convex hull) that minimizes the unit's own
+# convex-quadratic cost plus the (scattered) father gradient.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver
+
+ThermalUnitDPSolver       # the LMO of the ThermalUnitBlock
+
+1  # number of ComputeConfig
+
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

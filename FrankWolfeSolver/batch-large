@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# batch-large : a large-scale stress run for FrankWolfeSolver on big MCFBlock
+# instances (the "goto" family, ~8k-65k arcs). Cross-check vs a :MILPSolver for
+# the DQuad/Quad father. Expect this to take a while (tens of minutes): each
+# goto10_8 run is several minutes, goto10_64 considerably more.
+#
+# usage:  ./batch-large [ <exe> ]      ( default ./FWS_test )
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+set -u
+
+EXE=${1:-./FWS_test}
+DATA=../../MCFBlock/data/nc4
+CFG=FWCfg.txt
+
+SAVE=$( cat "$CFG" )
+trap 'printf "%s" "$SAVE" > "$CFG"' EXIT
+
+setpar() { sed -i '' "s/^$1 *[0-9-][0-9]*/$1   $2/" "$CFG"; }
+algo()    { setpar intAlgorithm "$1"; }
+threads() { setpar intMaxThread "$1"; }
+
+pass=0 ; fail=0
+run() {  # $1 = description ; rest = tester arguments
+  local desc=$1 ; shift
+  echo "=== $desc ==="
+  local t0=$( date +%s )
+  local out ; out=$( "$EXE" "$@" 2>&1 )
+  local t1=$( date +%s )
+  printf "%s\n" "$out" | grep -E "FW val|passed|Shit|S0 =" | tail -3 | sed 's/^/    /'
+  printf "    elapsed: %ds\n" "$(( t1 - t0 ))"
+  if printf "%s" "$out" | grep -q "passed" ; then pass=$(( pass + 1 ))
+  else fail=$(( fail + 1 )) ; fi
+}
+
+# run the LMO of the (2) sub-Block in parallel
+threads 4
+
+echo "########## goto10_8 ( ~8k arcs/child ) ##########"
+algo 0
+run "goto10_8_1 DQuad k=2 vanilla"  -S BSPar.txt -o 0 -k 2 -e 1 $DATA/goto10_8_1.nc4
+run "goto10_8_2 DQuad k=2 vanilla"  -S BSPar.txt -o 0 -k 2 -e 1 $DATA/goto10_8_2.nc4
+run "goto10_8_1 Quad  k=2 vanilla"  -S BSPar.txt -o 1 -k 2 -e 1 $DATA/goto10_8_1.nc4
+algo 1
+run "goto10_8_1 DQuad k=2 away"     -S BSPar.txt -o 0 -k 2 -e 1 $DATA/goto10_8_1.nc4
+
+echo "########## goto10_64 ( ~65k arcs/child, slow ) ##########"
+algo 0
+run "goto10_64_1 DQuad k=2 vanilla" -S BSPar.txt -o 0 -k 2 -e 1 $DATA/goto10_64_1.nc4
+
+echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+printf "BATCH-LARGE: %d passed, %d failed\n" "$pass" "$fail"
+[ "$fail" -eq 0 ]

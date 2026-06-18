@@ -6,13 +6,27 @@
 #
 # runs net/goto MCF instances of several sizes through the MCFBlock-vs-MILP
 # comparison, over 3 seeds each
+#
+# each instance is run twice, with two "what to change" masks:
+# - 255 = change everything, arc deletions included: this exercises the full
+#         remove_arc/add_arc Modification path, but deletions can permanently
+#         drop arcs needed for feasibility (the emergency recovery can re-open
+#         closed arcs but cannot un-delete removed ones), so a run may degrade
+#         into mostly-infeasible cross-checks;
+# - 223 = everything *except* arc deletions (255 & ~32): the instance always
+#         stays feasible, so this is the run that delivers the meaningful
+#         solution-vs-solution comparisons.
+# the two are complementary: 255 for code-path coverage, 223 for comparison
+# value.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
 
 DATADIR=../../MCFBlock/data
 
-wchg=255
+# "what to change" masks: 255 = all (with arc deletions), 223 = all but
+# deletions (255 & ~32); see the header for the rationale
+wchg_list="255 223"
 #rounds=40
 
 MCF_MILP_test=${1:-./MCF_MILP_test}
@@ -28,7 +42,9 @@ for type in net goto; do
 
         what=${DATADIR}/nc4/${type}${sz}_${h}.nc4
 
-        run_test "$MCF_MILP_test" "$what" -S "$par" -e "$seed" -k "$wchg"
+        for wchg in $wchg_list; do
+          run_test "$MCF_MILP_test" "$what" -S "$par" -e "$seed" -k "$wchg"
+        done # wchg
 
       done # h
     done   # sz

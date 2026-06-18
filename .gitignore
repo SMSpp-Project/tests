@@ -7,6 +7,8 @@ BoxSolver/BoxSolver_test
 BinaryKnapsackBlock/BinaryKnapsackBlock_test
 CapacitatedFacilityLocation/CFL_test
 compare_formulations/compare_formulations
+FrankWolfeSolver/FWS_test
+FrankWolfeSolver/FWS_mcf_test
 InvestmentBlock/IB_test
 LagBFunction/LagBFunction_test
 LagrangianDualSolver_Box/LDS_Box_test
