@@ -16,7 +16,7 @@ CFG=FWCfg.txt
 SAVE=$( cat "$CFG" )
 trap 'printf "%s" "$SAVE" > "$CFG"' EXIT
 
-setpar() { sed -i '' "s/^$1 *[0-9-][0-9]*/$1   $2/" "$CFG"; }
+setpar() { sed -i.bak "s/^$1 *[0-9-][0-9]*/$1   $2/" "$CFG" && rm -f "$CFG.bak"; }
 algo()    { setpar intAlgorithm "$1"; }
 threads() { setpar intMaxThread "$1"; }
 
