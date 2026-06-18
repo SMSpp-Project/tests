@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# regression : a narrow, fast regression suite for FrankWolfeSolver.
+#
+# Covers the main code paths on small MCFBlock instances (static and with
+# dynamic arcs): the cross-check against a :MILPSolver for the DQuad/Quad
+# father (vanilla / Away-step / BPCG, bounded active set, parallel LMO) and the
+# two-block bracket check for the Polyhedral father. Meant to be EXPANDED as the
+# solver evolves.
+#
+# usage:  ./regression [ <exe> ]      ( default ./FWS_test )
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+set -u
+
+EXE=${1:-./FWS_test}
+export DYLD_LIBRARY_PATH=/Users/frangio/Applications/StOpt/lib:/Users/frangio/Applications/FPP/lib:/Users/frangio/Applications/HiGHS/build/lib:/Users/frangio/Applications/scip/lib
+DATA=../../MCFClassSolver/test/data
+CFG=FWCfg.txt
+
+# FWCfg.txt is edited in place to vary the algorithm/active-set/threads; save it
+# and restore on exit
+SAVE=$( cat "$CFG" )
+trap 'printf "%s" "$SAVE" > "$CFG"' EXIT
+
+setpar() { sed -i '' "s/^$1 *[0-9-][0-9]*/$1   $2/" "$CFG"; }
+algo()    { setpar intAlgorithm "$1"; }
+atoms()   { setpar intMaxAtoms  "$1"; }
+threads() { setpar intMaxThread "$1"; }
+
+pass=0 ; fail=0
+run() {  # $1 = description ; rest = tester arguments
+  local desc=$1 ; shift
+  local out ; out=$( "$EXE" "$@" 2>&1 )
+  if printf "%s" "$out" | grep -q "passed" ; then
+    pass=$(( pass + 1 )) ; printf "  OK   %s\n" "$desc"
+  else
+    fail=$(( fail + 1 )) ; printf "  FAIL %s\n" "$desc"
+    printf "%s\n" "$out" | tail -3 | sed 's/^/        /'
+  fi
+}
+
+echo "== DQuad / Quad father, cross-check vs :MILPSolver =="
+algo 0 ; atoms 0 ; threads 1
+for inst in N3-5-0-0-0 N3-5-5-2-2 ; do
+  for o in 0 1 ; do
+    run "$inst obj=$o vanilla" -S BSPar.txt -o $o -k 2 -e 1 $DATA/$inst.nc4
+  done
+done
+
+echo "== Away-step (1) and BPCG (2) =="
+for a in 1 2 ; do
+  algo $a
+  run "N3-5-0-0-0 obj=1 algo=$a" -S BSPar.txt -o 1 -k 3 -e 1 $DATA/N3-5-0-0-0.nc4
+done
+
+echo "== bounded active set (aggregation, intMaxAtoms=8) =="
+algo 1 ; atoms 8
+run "N3-5-0-0-0 obj=1 away maxAtoms=8" -S BSPar.txt -o 1 -k 3 -e 1 $DATA/N3-5-0-0-0.nc4
+atoms 0
+
+echo "== parallel LMO (intMaxThread=4) =="
+algo 0 ; threads 4
+run "N3-5-5-2-2 obj=1 vanilla threads=4" -S BSPar.txt -o 1 -k 3 -e 1 $DATA/N3-5-5-2-2.nc4
+threads 1
+
+echo "== Polyhedral father, two-block bracket vs :MILPSolver =="
+algo 0
+for inst in N3-5-0-0-0 N3-5-5-2-2 ; do
+  run "$inst poly k=2" -S BSPar-fw.txt -R BSPar-milp.txt -o 2 -k 2 -e 1 $DATA/$inst.nc4
+done
+
+echo "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+printf "REGRESSION: %d passed, %d failed\n" "$pass" "$fail"
+[ "$fail" -eq 0 ]

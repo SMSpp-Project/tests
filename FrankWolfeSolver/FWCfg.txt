@@ -1,0 +1,38 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# FWCfg.txt : ComputeConfig of the FrankWolfeSolver.
+#
+# intLMOObj = 2 (LMOFull): the oracle keeps the sub-Block (MCF) linear cost and
+# adds the father gradient, so FrankWolfeSolver minimizes exactly the Block-tree
+# total objective (= what the :MILPSolver minimizes).
+# intLineSearch = 0 (auto): exact line search, since the father is a pure
+# DQuadFunction and the sub-Block objectives are linear.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> only the listed parameters are changed
+
+6  # number of integer parameters
+
+intLMOObj      2      # LMOFull
+intLineSearch  0      # auto (exact for [D]Quad father + linear children)
+intMaxIter     100000 # safety cap on Frank-Wolfe iterations
+intAlgorithm   0      # 0 vanilla, 1 Away-step, 2 Blended Pairwise (BPCG)
+intMaxAtoms    0      # 0 unbounded; else cap (aggregation)
+intMaxThread   1      # parallel LMO threads
+
+1  # number of double parameters
+
+dblRelAcc      1e-7   # relative accuracy on the Frank-Wolfe gap
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+*  # no "extra" Configuration
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

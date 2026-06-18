@@ -1,0 +1,43 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# TUBCfg.txt : a BlockConfig for the ThermalUnitBlock sub-Block selecting the
+# formulation. The static-variables Configuration carries the formulation bits:
+#   3 = DPForm (dynamic-programming formulation), + 8 = P/C (perspective cuts),
+# i.e. 11 = DPForm + P/C, which characterizes the convex hull of the unit's
+# integer solutions -- so the continuous (cut-separated) relaxation solved by
+# the reference :MILPSolver equals the integer optimum and the Dantzig-Wolfe
+# value FrankWolfeSolver computes via the DP oracles.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+# static_constraints
+*    # [none]
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+SimpleConfiguration<int>
+11   # DPForm (3) + P/C (8)
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
