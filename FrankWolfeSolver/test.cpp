@@ -160,10 +160,25 @@ int main( int argc , char ** argv )
    exit( 1 );
    }
   s_config_Block( father , bsc , sconf_file );
+  // optional reference solver(s) via -R, registered *additively* so SolveAll
+  // cross-checks them against the solver(s) under test in -S. Without -R the
+  // single solver in -S runs alone: this is how FrankWolfeSolver is profiled
+  // without the (possibly very slow) reference solve. The solver log can be set
+  // straight from the ComputeConfig via the standard strLogFileName parameter.
+  Configuration * rbsc = nullptr;
+  if( ! refconf.empty() ) {
+   rbsc = Configuration::deserialize( refconf );
+   if( ! rbsc ) {
+    cerr << "Error: cannot load reference BSC from " << refconf << endl;
+    exit( 1 );
+    }
+   s_config_Block( father , rbsc , refconf );
+   }
   if( father->get_registered_solvers().empty() ) {
    cout << endl << "no Solver registered to the father Block!" << endl;
    exit( 1 );
    }
+  fwtest::apply_solver_verbosity( father );  // -v drives Solver::intLogVerb
 
   bool ok = SolveAll( father , exact_getter( ObjGetter::VarValue ) ,
                       std::numeric_limits< double >::quiet_NaN() , 1e-5 );
@@ -209,6 +224,7 @@ int main( int argc , char ** argv )
   cout << ( ok ? GREEN( All tests passed!! ) : RED( Shit happened!! ) ) << endl;
 
   s_config_Block( father , bsc );
+  if( rbsc ) { s_config_Block( father , rbsc ); delete rbsc; }
   delete bsc;
   delete father;
   return( ok ? 0 : 1 );
@@ -284,6 +300,8 @@ int main( int argc , char ** argv )
   cerr << "Error: no Solver registered" << endl;
   exit( 1 );
   }
+ fwtest::apply_solver_verbosity( father1 );  // -v drives Solver::intLogVerb
+ fwtest::apply_solver_verbosity( father2 );
 
  Solver * fwslv = father1->get_registered_solvers().front();
  Solver * mlslv = father2->get_registered_solvers().front();

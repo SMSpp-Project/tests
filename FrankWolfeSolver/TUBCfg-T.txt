@@ -1,0 +1,48 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  TUBCfg-T.txt - - - - - - - - - - - - - - - - -
+#
+# BlockConfig for the ThermalUnitBlock: the plain T formulation, NO Perspective
+# Cuts (static_variables = 1 = TForm). This is the cheap formulation: it does NOT
+# build the (expensive) DP + P/C abstract representation. FrankWolfeSolver does
+# not need it -- its LMO (ThermalUnitDPSolver) solves the unit by its own internal
+# DP regardless of the abstract formulation -- so FW-only runs (profiling,
+# batch-tub-style sweeps without the reference) get the SAME result much faster
+# (e.g. ~2s vs ~28s on a 96-period unit). Use TUBCfg-DP.txt only when the
+# reference :MILPSolver must solve the monolithic DP + P/C relaxation.
+#
+#   Antonio Frangioni
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+# static_constraints
+*    # [none]
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+SimpleConfiguration<int>
+1    # TForm (no Perspective Cuts)
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - -  END TUBCfg-T.txt - - - - - - - - - - - - -

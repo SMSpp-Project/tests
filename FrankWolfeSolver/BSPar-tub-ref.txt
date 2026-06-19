@@ -1,0 +1,6 @@
+# meta-BlockSolverConfig: register only the reference :MILPSolver on the father.
+# The ThermalUnitBlock children get no Solver (the monolithic MILP solves the
+# whole tree). Pair with -B TUBCfg-DP.txt (the MILP needs the DP + P/C formulation).
+SimpleConfiguration<std::map<std::string,Configuration*>>
+1
+AbstractBlock      *FatherBSCfg-tub-ref.txt

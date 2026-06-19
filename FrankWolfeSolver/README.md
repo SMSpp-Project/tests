@@ -57,17 +57,40 @@ Several ready-made configuration files are provided:
   is the monolithic cross-check;
 
 - the `ThermalUnitBlock` family (`BSPar-tub.txt`, `FatherBSCfg-tub.txt`,
-  `TUBSCfg.txt`, `MILPCfg-tub.txt`, `FWCfg-tub.txt`, `TUBCfg.txt`): a
-  `ThermalUnitDPSolver` is the LMO of each unit, the units are in the
-  DP + Perspective-Cuts formulation (`BlockConfig` `TUBCfg.txt`), and the
-  reference `:MILPSolver` solves the continuous relaxation *with* the cut
-  separation loop (`intRelaxIntVars = 2`). Since DP + P/C characterizes the
-  convex hull of the unit's integer solutions, this checks that the
-  Dantzig-Wolfe value `FrankWolfeSolver` computes (`intCvxComb = 1`) equals the
-  perspective bound — i.e. that Frank-Wolfe is a decomposition alternative to
-  DP + P/C.
+  `TUBSCfg.txt`, `MILPCfg-tub.txt`, `FWCfg-tub.txt`, and the two formulation
+  `BlockConfig`s `TUBCfg-DP.txt` / `TUBCfg-T.txt`): a `ThermalUnitDPSolver` is the
+  LMO of each unit, and the reference `:MILPSolver` solves the continuous
+  relaxation *with* the cut separation loop (`intRelaxIntVars = 2`). Since
+  DP + P/C characterizes the convex hull of the unit's integer solutions, this
+  checks that the Dantzig-Wolfe value `FrankWolfeSolver` computes
+  (`intCvxComb = 1`) equals the perspective bound — i.e. that Frank-Wolfe is a
+  decomposition alternative to DP + P/C.
 
-Two batch scripts are also provided:
+  **Two formulation `BlockConfig`s.** `TUBCfg-DP.txt` selects the DP + P/C
+  formulation (`static_variables = 11`); it is needed **only** for the reference
+  `:MILPSolver` (which solves the monolithic DP + P/C relaxation), and building
+  that abstract formulation is expensive. `FrankWolfeSolver` does **not** use it —
+  its `ThermalUnitDPSolver` LMO has its own internal DP — so any FW-only run
+  should pass `-B TUBCfg-T.txt` (the plain `T` formulation, `static_variables = 1`,
+  no Perspective Cuts), which gives the identical result much faster (e.g. ~2s vs
+  ~28s on a 96-period unit). Use `TUBCfg-DP.txt` only for the cross-check or the
+  reference-only timing. `BSPar-tub-fwonly.txt` registers only the
+  `FrankWolfeSolver`; `BSPar-tub-ref.txt` registers only the reference
+  `:MILPSolver` (the MIQP-only run, for time comparison).
+
+**Single solver vs cross-check.** The single-block path runs every `:Solver`
+registered to the father and cross-checks them. The reference `:MILPSolver` can
+be either bundled in the `-S` config (e.g. `BSPar-tub.txt`) or supplied
+separately via the optional `-R` config (registered *additively*). Omitting the
+reference runs the solver under test **alone** — useful to profile
+`FrankWolfeSolver` without the (possibly very slow) reference solve:
+`BSPar-tub-fwonly.txt` registers only the `FrankWolfeSolver` (its
+`ThermalUnitDPSolver` LMOs) on the units. The solver's own log can be driven
+straight from the `ComputeConfig` via the standard `strLogFileName` (the file to
+write) plus `intLogVerb` (1 = per-call summary, 2 = per-iteration) parameters —
+no `-v` needed; `-v` remains available to send the log to `stdout`.
+
+Three batch scripts are also provided:
 
 - [regression](regression): a fast suite (small `MCFBlock` instances, static
   and dynamic arcs) covering vanilla / Away-step / BPCG, the bounded active set,
@@ -76,6 +99,9 @@ Two batch scripts are also provided:
 
 - [batch-large](batch-large): a large-scale stress run on big `MCFBlock`
   instances (the "goto" family); expect it to take a long time.
+
+- [batch-tub](batch-tub): the `ThermalUnitBlock` cross-check (Frank-Wolfe vs the
+  DP + P/C reference); slow, since the reference solves a monolithic relaxation.
 
 A makefile is also provided that builds the executable including the `MCFBlock`,
 `MCFClassSolver`, `UCBlock`, `MILPSolver` and `FrankWolfeSolver` modules (and,

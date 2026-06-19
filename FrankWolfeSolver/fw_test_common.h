@@ -60,6 +60,23 @@ inline double pos( std::mt19937 & rg )
 
 /*--------------------------------------------------------------------------*/
 
+/// if the tester was asked to be verbose (the standard `-v` option of
+/// common_utils, which sets verbosity_level), make every Solver registered to
+/// @p b log to std::cout at that verbosity via the standard Solver::intLogVerb
+/// parameter. This overrides, from the command line, the per-Solver value read
+/// from the ComputeConfig (default 0), as -v is an explicit user request.
+inline void apply_solver_verbosity( Block * b )
+{
+ if( verbosity_level <= 0 )
+  return;
+ for( auto s : b->get_registered_solvers() ) {
+  s->set_log( & std::cout );
+  s->set_par( Solver::intLogVerb , verbosity_level );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 /// collect the ColVariables that the father objective will be built over: the
 /// named static-variable groups of @p b (if @p groups is non-empty), else the
 /// variables active in @p b's Objective.
