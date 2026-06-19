@@ -87,7 +87,7 @@ void print_help( const char * program_name ) {
       << endl;
 }
 
-/*------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
 
 GeneratorConfig parse_arguments( int argc , char * argv[] ) {
  GeneratorConfig config;
