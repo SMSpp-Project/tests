@@ -54,4 +54,8 @@ if (TARGET SMS++::MCFBlock)
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif ()
 
+# Tag this directory's tests with their per-module CI labels
+# (the label map lives in cmake/TestLabels.cmake).
+smspp_label_tests()
+
 # --------------------------------------------------------------------------- #

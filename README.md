@@ -217,6 +217,18 @@ or you can choose a specific one from the batch test list and run it with:
 ctest -V -R <batch-test-name> -C Release
 ```
 
+Each test is also tagged, via CTest labels, with the modules it exercises, so
+you can run all and only the tests relevant to one module with:
+
+```sh
+ctest -V -C Release -L <module>
+```
+
+This is what each module's continuous integration uses to run its own tests
+(and only those) without referring to any test path. The map from each test to
+its modules is kept in a single place, [`cmake/TestLabels.cmake`](cmake/TestLabels.cmake);
+extend it when adding a test.
+
 ## Getting help
 
 If you need support, you want to submit bugs or propose a new feature, you can

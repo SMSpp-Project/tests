@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ec-3s < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default MSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-MS.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs all the THREE-stage energy community instances and checks that the
+# objective value of their extensive form matches the EnergyCommunity.jl
+# @stochastic reference one. A three-stage MultiStageStochasticBlock aggregates
+# one inner TwoStageStochasticBlock per long-period (scen_s) scenario; the inner
+# Block additionally ties the day-ahead aggregated declared-dispatch bid
+# (ECNetworkBlock's p_agg_dec) across the short-period (scen_eps) scenarios,
+# while the dispatch and the imbalance vary per short-period one. This is
+# exactly EnergyCommunity.jl@stochastic's three-stage model (a two-stage
+# program with an scen_s-indexed first-stage bid), so the reference values are
+# those of the corresponding three-stage EnergyCommunity.jl run.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./MSSB_test
+DEFAULT_PAR=BSPar-MS.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ filename ] = | EnergyCommunity.jl@stochastic three-stage
+# objective value |, obtained from
+# UCBlock/tools/csv2netCDF/test_instance_with_EC_jl.jl run on the matching
+# energy_community_model_<MODE>_three_stage.yml (n_s = 3, n_eps = 3).
+
+declare -A REF_OBJ
+
+REF_OBJ[MSSB_EC_CO_Test_TUB_3S.nc4]=3.6017774142201548e+06
+REF_OBJ[MSSB_EC_NC_Test_TUB_3S.nc4]=3.764374354168912e+06
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/EC_Data/MSSB_EC_CO_*_3S.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NA_*_3S.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NC_*_3S.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
