@@ -22,6 +22,8 @@
  * \copyright &copy; by Antonio Frangioni
  */
 /*--------------------------------------------------------------------------*/
+/*------------------------------ INCLUDES ----------------------------------*/
+/*--------------------------------------------------------------------------*/
 
 #include "fw_test_common.h"   // collect_vars / build_father / make_father_objective
 
@@ -30,19 +32,32 @@
 #include <random>
 #include <vector>
 
+/*--------------------------------------------------------------------------*/
+/*-------------------------------- USING -----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
 using namespace std;
 using namespace SMSpp_di_unipi_it;
 
 using Index = Block::Index;
 
-int n_children = 2;     // -k
-double obj_scale = 1.0; // -a
-long seed = 1;          // -e
-int mod_rounds = 5;     // -M : capacity-change rounds
+/*--------------------------------------------------------------------------*/
+/*------------------------------- GLOBALS ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+// test-specific command-line options (set by process_specific_arg)
+int n_children = 2;     // -k : number of MCFBlock sub-Block (copies)
+double obj_scale = 1.0; // -a : scale of the (random) father objective
+long seed = 1;          // -e : random seed
+int mod_rounds = 5;     // -M : number of cost/capacity Modification rounds
 
 std::mt19937 rg;
 
 /*--------------------------------------------------------------------------*/
+/*------------------------------ FUNCTIONS ---------------------------------*/
+/*--------------------------------------------------------------------------*/
+// the father-building / objective scaffolding lives in fw_test_common.h
+// (namespace fwtest), shared with test.cpp.
 
 static bool process_specific_arg( int opt )
 {

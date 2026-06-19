@@ -1,11 +1,17 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# TUBCfg.txt : a BlockConfig for the ThermalUnitBlock sub-Block selecting the
-# formulation. The static-variables Configuration carries the formulation bits:
+# - - - - - - - - - - - - - - -  TUBCfg.txt - - - - - - - - - - - - - - - - -
+#
+# A BlockConfig for the ThermalUnitBlock sub-Block selecting the formulation.
+# The static-variables Configuration carries the formulation bits:
 #   3 = DPForm (dynamic-programming formulation), + 8 = P/C (perspective cuts),
 # i.e. 11 = DPForm + P/C, which characterizes the convex hull of the unit's
-# integer solutions -- so the continuous (cut-separated) relaxation solved by
-# the reference :MILPSolver equals the integer optimum and the Dantzig-Wolfe
-# value FrankWolfeSolver computes via the DP oracles.
+# integer solutions, so the continuous (cut-separated) relaxation solved by the
+# reference :MILPSolver equals the integer optimum and the Dantzig-Wolfe value
+# FrankWolfeSolver computes via the DP oracles.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockConfig # exact type of the Configuration object
@@ -40,4 +46,6 @@ SimpleConfiguration<int>
 # extra
 *    # [none]
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END TUBCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

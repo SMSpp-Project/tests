@@ -1,23 +1,43 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# FatherBSCfg-tub.txt : BlockSolverConfig for the father AbstractBlock of the
-# TUB test. Two Solver are registered: a :MILPSolver solving the monolithic
-# DPForm+P/C relaxation (the reference), and a FrankWolfeSolver solving it by
-# Frank-Wolfe decomposition with ThermalUnitDPSolver oracles. SolveAll()
-# cross-checks that the two optima agree.
+# - - - - - - - - - - - - -  FatherBSCfg-tub.txt  - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig for the father AbstractBlock of the ThermalUnitBlock test.
+# Two Solver are registered: a :MILPSolver solving the monolithic DPForm + P/C
+# relaxation (the reference), and a FrankWolfeSolver solving it by Frank-Wolfe
+# decomposition with ThermalUnitDPSolver oracles. SolveAll() cross-checks that
+# the two optima agree.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of (the names of) Solver
+2 # number of (the names of) Solver in this BlockSolverConfig
 
-CPXMILPSolver         # 1st Solver: monolithic DPForm+P/C relaxation
-FrankWolfeSolver      # 2nd Solver: Frank-Wolfe decomposition
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CPXMILPSolver         # name of 1st Solver: monolithic DPForm + P/C relaxation
+#GRBMILPSolver        # name of 1st Solver
+#SCIPMILPSolver       # name of 1st Solver
+#HiGHSMILPSolver      # name of 1st Solver
+FrankWolfeSolver      # name of 2nd Solver: Frank-Wolfe decomposition
 
-2  # number of ComputeConfig
+2 # number of ComputeConfig in this BlockSolverConfig
 
-*MILPCfg-tub.txt      # ComputeConfig of the :MILPSolver
-*FWCfg-tub.txt        # ComputeConfig of the FrankWolfeSolver
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
 
+*MILPCfg-tub.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the FrankWolfeSolver
+
+*FWCfg-tub.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END FatherBSCfg-tub.txt  - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

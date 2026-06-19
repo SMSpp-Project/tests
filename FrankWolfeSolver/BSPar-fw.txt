@@ -1,8 +1,18 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BSPar-fw.txt : "meta" BlockSolverConfig for copy1 of the Polyhedral test:
-# a FrankWolfeSolver on the father, the MCF LMO on each sub-Block.
+# - - - - - - - - - - - - - - - BSPar-fw.txt  - - - - - - - - - - - - - - - -
+#
+# A "meta"-BlockSolverConfig for copy1 of the Polyhedral test: a
+# FrankWolfeSolver on the father AbstractBlock, the MCF LMO on each sub-Block.
+#
+#   AbstractBlock  -> FatherBSCfg-fw.txt  (only a FrankWolfeSolver)
+#   MCFBlock       -> MCFBSCfg.txt        (the LMO of each sub-Block)
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+# a "meta"-BlockSolverConfig , i.e., a map classname --> its BlockSolverConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
 2 # the number of elements in the map
@@ -10,4 +20,6 @@ SimpleConfiguration<std::map<std::string,Configuration*>>
 AbstractBlock   *FatherBSCfg-fw.txt
 MCFBlock        *MCFBSCfg.txt
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-fw.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,38 +1,64 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# FWCfg.txt : ComputeConfig of the FrankWolfeSolver.
+# - - - - - - - - - - - - - - - - FWCfg.txt - - - - - - - - - - - - - - - - -
+#
+# A ComputeConfig of the FrankWolfeSolver (MCFBlock test).
 #
 # intLMOObj = 2 (LMOFull): the oracle keeps the sub-Block (MCF) linear cost and
 # adds the father gradient, so FrankWolfeSolver minimizes exactly the Block-tree
-# total objective (= what the :MILPSolver minimizes).
-# intLineSearch = 0 (auto): exact line search, since the father is a pure
-# DQuadFunction and the sub-Block objectives are linear.
+# total objective (= what the :MILPSolver minimizes). intLineSearch = 0 (auto):
+# exact line search, since the father is a pure DQuadFunction and the sub-Block
+# objectives are linear.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ComputeConfig         # exact type of the ComputeConfig object
 
-1  # f_diff == 1 ==> only the listed parameters are changed
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
 
-6  # number of integer parameters
+6 # number of integer parameters
 
-intLMOObj      2      # LMOFull
-intLineSearch  0      # auto (exact for [D]Quad father + linear children)
-intMaxIter     100000 # safety cap on Frank-Wolfe iterations
+# now all the integer parameters
+intLMOObj      2      # LMOFull (exact Block-tree objective in the oracle)
+intLineSearch  0      # auto (exact for a [D]Quad father + linear children)
+intMaxIter     100000 # safety cap on the Frank-Wolfe iterations
 intAlgorithm   0      # 0 vanilla, 1 Away-step, 2 Blended Pairwise (BPCG)
-intMaxAtoms    0      # 0 unbounded; else cap (aggregation)
-intMaxThread   1      # parallel LMO threads
+intMaxAtoms    0      # 0 unbounded; else cap on the active set (aggregation)
+intMaxThread   1      # number of parallel LMO threads
 
-1  # number of double parameters
+1 # number of double parameters
 
+# now all the double parameters
 dblRelAcc      1e-7   # relative accuracy on the Frank-Wolfe gap
 
-0  # number of string parameters
+0 # number of string parameters
 
-0  # number of vector-of-int parameters
+# now all the string parameters
+# [none]
 
-0  # number of vector-of-double parameters
+0 # number of vector-of-int parameters
 
-0  # number of vector-of-string parameters
+# now all the vector-of-int parameters
+# [none]
 
-*  # no "extra" Configuration
+0 # number of vector-of-double parameters
 
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END FWCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

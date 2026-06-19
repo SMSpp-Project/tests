@@ -1,22 +1,31 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# MCFBSCfg.txt : BlockSolverConfig registering the LMO :Solver to each
-# MCFBlock sub-Block. The LMO minimizes the (modified) linear objective over
-# the min-cost-flow polytope; a network-simplex MCFSolver does it with no
-# external dependency.
+# - - - - - - - - - - - - - - - MCFBSCfg.txt  - - - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig registering the LMO :Solver to each MCFBlock sub-Block.
+# The LMO minimizes the (modified) linear objective over the min-cost-flow
+# polytope; a network-simplex MCFSolver does it with no external dependency.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1  # number of (the names of) Solver
+1 # number of (the names of) Solver in this BlockSolverConfig
 
-MCFSolver<MCFSimplex>     # the LMO of the MCFBlock
-#MCFSolver<MCFCplex>
-#CPXMILPSolver
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+MCFSolver<MCFSimplex>     # name of Solver: the LMO of the MCFBlock
+#MCFSolver<MCFCplex>      # name of Solver
+#CPXMILPSolver            # name of Solver
 
-1  # number of ComputeConfig
+1 # number of ComputeConfig in this BlockSolverConfig
 
-*  # [none]
+# now all the ComputeConfig
+* # [none]
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MCFBSCfg.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
