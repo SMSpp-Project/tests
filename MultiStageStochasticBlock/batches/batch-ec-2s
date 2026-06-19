@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# usage: batch-ec < exe file > < par file > < solver > < log file >
+# usage: batch-ec-2s < exe file > < par file > < solver > < log file >
 #        < exe file > = path of the executable file, default MSSB_test
 #        < par file > = BlockSolverConfig file, default BSPar-MS.txt
 #        < solver > = 0 or 1, default 0

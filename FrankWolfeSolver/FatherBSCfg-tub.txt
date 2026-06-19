@@ -19,10 +19,10 @@ BlockSolverConfig     # exact type of the Configuration object
 2 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver         # name of 1st Solver: monolithic DPForm + P/C relaxation
+#CPXMILPSolver        # name of 1st Solver: monolithic DPForm + P/C relaxation
 #GRBMILPSolver        # name of 1st Solver
 #SCIPMILPSolver       # name of 1st Solver
-#HiGHSMILPSolver      # name of 1st Solver
+HiGHSMILPSolver       # name of 1st Solver
 FrankWolfeSolver      # name of 2nd Solver: Frank-Wolfe decomposition
 
 2 # number of ComputeConfig in this BlockSolverConfig

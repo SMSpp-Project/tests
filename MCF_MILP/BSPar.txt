@@ -19,10 +19,10 @@ BlockSolverConfig     # exact type of the Configuration object
 #MCFSolver<RelaxIV>     # name of 1st Solver
 MCFSolver<MCFCplex>     # name of 1st Solver
 #MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>     # name of 1st Solver
-CPXMILPSolver                   # name of 2nd Solver
+#CPXMILPSolver                  # name of 2nd Solver
 #GRBMILPSolver                  # name of 2nd Solver
 #SCIPMILPSolver             # name of 2nd Solver
-#HiGHSMILPSolver                # name of 2nd Solver
+HiGHSMILPSolver                 # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
