@@ -1,0 +1,48 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  TUBCfg-DP.txt - - - - - - - - - - - - - - - - -
+#
+# BlockConfig for the ThermalUnitBlock: the DP formulation with Perspective Cuts
+# (static_variables = 3 (DPForm) + 8 (P/C) = 11). This characterizes the convex
+# hull of the unit's integer solutions, so the continuous, cut-separated
+# relaxation solved by the reference :MILPSolver equals the bound FrankWolfeSolver
+# computes via the DP oracles. Use this ONLY when the reference :MILPSolver is in
+# play (the cross-check); building this abstract formulation is expensive and
+# FrankWolfeSolver does not use it (its LMO, ThermalUnitDPSolver, has its own DP).
+# For FW-only runs use TUBCfg-T.txt instead.
+#
+#   Antonio Frangioni
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+# static_constraints
+*    # [none]
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+SimpleConfiguration<int>
+11   # DPForm (3) + P/C (8)
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - -  END TUBCfg-DP.txt - - - - - - - - - - - - -

@@ -134,6 +134,7 @@ int main( int argc , char ** argv )
   cerr << "no Solver registered to the father Block!" << endl;
   exit( 1 );
   }
+ fwtest::apply_solver_verbosity( father );  // -v drives Solver::intLogVerb
 
  bool ok = SolveAll( father , exact_getter( ObjGetter::VarValue ) ,
                      std::numeric_limits< double >::quiet_NaN() , 1e-5 );

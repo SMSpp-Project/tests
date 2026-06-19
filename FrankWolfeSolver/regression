@@ -26,16 +26,23 @@ CFG=FWCfg.txt
 # FWCfg.txt is edited in place to vary the algorithm/active-set/threads; save it
 # and restore on exit
 SAVE=$( cat "$CFG" )
-trap 'printf "%s" "$SAVE" > "$CFG"' EXIT
+trap '[ -n "$SAVE" ] && printf "%s\n" "$SAVE" > "$CFG"' EXIT
 
 setpar() { sed -i.bak "s/^$1 *[0-9-][0-9]*/$1   $2/" "$CFG" && rm -f "$CFG.bak"; }
-algo()    { setpar intAlgorithm "$1"; }
-atoms()   { setpar intMaxAtoms  "$1"; }
-threads() { setpar intMaxThread "$1"; }
+algo()    { setpar intAlgorithm "$1"; CUR_ALGO=$1; }
+atoms()   { setpar intMaxAtoms  "$1"; CUR_ATOMS=$1; }
+threads() { setpar intMaxThread "$1"; CUR_THREADS=$1; }
+CUR_ALGO=0 ; CUR_ATOMS=0 ; CUR_THREADS=1
 
 pass=0 ; fail=0
 run() {  # $1 = description ; rest = tester arguments
   local desc=$1 ; shift
+  # exact command line to reproduce this run; for the FWS_test runs also the
+  # in-place FWCfg.txt overrides (the mcf runs use FWCfg-warm.txt, not mutated)
+  printf "  [%s %s]\n" "${RUNEXE:-$EXE}" "$*"
+  [ -z "${RUNEXE:-}" ] && \
+    printf "  [FWCfg.txt: intAlgorithm=%s intMaxAtoms=%s intMaxThread=%s]\n" \
+           "$CUR_ALGO" "$CUR_ATOMS" "$CUR_THREADS"
   local out ; out=$( "${RUNEXE:-$EXE}" "$@" 2>&1 )
   if printf "%s" "$out" | grep -q "passed" ; then
     pass=$(( pass + 1 )) ; printf "  OK   %s\n" "$desc"

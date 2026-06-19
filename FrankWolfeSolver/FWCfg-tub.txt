@@ -27,10 +27,10 @@ ComputeConfig         # exact type of the ComputeConfig object
 intLMOObj      2      # LMOFull (keep the unit cost exact in the oracle)
 intLineSearch  0      # auto (exact: father DQuad, child cost linear in gamma)
 intMaxIter     100000 # safety cap on the Frank-Wolfe iterations
-intAlgorithm   0      # 0 vanilla, 1 Away-step, 2 Blended Pairwise (BPCG)
-intMaxAtoms    0      # 0 unbounded; else cap on the active set (aggregation)
+intAlgorithm   1      # 0 vanilla, 1 Away-step, 2 Blended Pairwise (BPCG)
+intMaxAtoms    50     # 0 unbounded; else cap on the active set (aggregation)
 intMaxThread   1      # number of parallel LMO threads
-intCvxComb     1      # eObjCvxComb: Dantzig-Wolfe / perspective bound (= P/C)
+intCvxComb     1      # eObjCvxComb: Dantzig-Wolfe / perspective bound 
 
 1 # number of double parameters
 

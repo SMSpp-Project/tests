@@ -14,16 +14,23 @@ DATA=../../MCFBlock/data/nc4
 CFG=FWCfg.txt
 
 SAVE=$( cat "$CFG" )
-trap 'printf "%s" "$SAVE" > "$CFG"' EXIT
+trap '[ -n "$SAVE" ] && printf "%s\n" "$SAVE" > "$CFG"' EXIT
 
 setpar() { sed -i.bak "s/^$1 *[0-9-][0-9]*/$1   $2/" "$CFG" && rm -f "$CFG.bak"; }
-algo()    { setpar intAlgorithm "$1"; }
-threads() { setpar intMaxThread "$1"; }
+algo()    { setpar intAlgorithm "$1"; CUR_ALGO=$1; }
+atoms()   { setpar intMaxAtoms  "$1"; CUR_ATOMS=$1; }
+threads() { setpar intMaxThread "$1"; CUR_THREADS=$1; }
+CUR_ALGO=0 ; CUR_ATOMS=0 ; CUR_THREADS=1
 
 pass=0 ; fail=0
 run() {  # $1 = description ; rest = tester arguments
   local desc=$1 ; shift
   echo "=== $desc ==="
+  # exact command line + the in-place FWCfg.txt overrides, so a failing run can
+  # be reproduced verbatim (FWCfg.txt is mutated in place and restored on exit)
+  printf "    [%s %s]\n" "$EXE" "$*"
+  printf "    [FWCfg.txt: intAlgorithm=%s intMaxAtoms=%s intMaxThread=%s]\n" \
+         "$CUR_ALGO" "$CUR_ATOMS" "$CUR_THREADS"
   local t0=$( date +%s )
   local out ; out=$( "$EXE" "$@" 2>&1 )
   local t1=$( date +%s )
