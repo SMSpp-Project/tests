@@ -135,6 +135,11 @@ The following tests are provided:
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
   through a `BlockSolverConfig` and compares their results.
 
+- [`MultiStageStochasticBlock`](MultiStageStochasticBlock), a tester that loads
+  a `MultiStageStochasticBlock` from a netCDF file, attaches a `:Solver`
+  through a `BlockSolverConfig` and compares its result against a reference
+  objective value.
+
 - [`Write-Read`](Write-Read), a tester for the function
   `AbstractBlock::read_mps` and some tests for any  `CDASolver` able
   to handle Linear Programs (such as `MILPSolver` and its derived classes

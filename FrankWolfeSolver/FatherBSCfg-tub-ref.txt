@@ -3,6 +3,7 @@
 BlockSolverConfig
 1
 1 # number of Solver
-CPXMILPSolver
+#CPXMILPSolver
+HiGHSMILPSolver
 1 # number of ComputeConfig
 *MILPCfg-tub.txt
