@@ -33,16 +33,29 @@ parse_batch_args "$@"
 
 declare -A REF_OBJ
 
+# the _NB variants only make the ECNetworkBlock(s) explicit, which is
+# LP-equivalent, so they share the reference of their non-_NB counterpart.
+
+REF_OBJ[MSSB_EC_CO_Test_3S.nc4]=3.637558907757495e+06
+REF_OBJ[MSSB_EC_CO_Test_NB_3S.nc4]=3.637558907757495e+06
+
 REF_OBJ[MSSB_EC_CO_Test_TUB_3S.nc4]=3.6017774142201548e+06
+REF_OBJ[MSSB_EC_CO_Test_TUB_NB_3S.nc4]=3.6017774142201548e+06
+
+REF_OBJ[MSSB_EC_NA_Test_3S.nc4]=4.0519255403697263e+06
+REF_OBJ[MSSB_EC_NA_Test_NB_3S.nc4]=4.0519255403697263e+06
+
+REF_OBJ[MSSB_EC_NC_Test_3S.nc4]=3.804086491147877e+06
+REF_OBJ[MSSB_EC_NC_Test_NB_3S.nc4]=3.804086491147877e+06
+
 REF_OBJ[MSSB_EC_NC_Test_TUB_3S.nc4]=3.764374354168912e+06
+REF_OBJ[MSSB_EC_NC_Test_TUB_NB_3S.nc4]=3.764374354168912e+06
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# only the _TUB instances have an EnergyCommunity.jl@stochastic three-stage
-# reference value so far; the other variants (no-thermal, _NB, NA) are added as
-# their reference is computed.
-for what in ../../UCBlock/data/nc4/EC_Data/MSSB_EC_CO_*_TUB_3S.nc4 \
-            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NC_*_TUB_3S.nc4; do
+for what in ../../UCBlock/data/nc4/EC_Data/MSSB_EC_CO_*_3S.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NA_*_3S.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NC_*_3S.nc4; do
 
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then
