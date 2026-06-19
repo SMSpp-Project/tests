@@ -44,6 +44,13 @@ The following tests are provided:
   `BlockConfig`-uring in two different ways two copies of the same `:Block`
   and solving them with two copies of the same `:Solver`.
 
+- [`FrankWolfeSolver`](FrankWolfeSolver), a generic tester for
+  `FrankWolfeSolver`: a "leaf" `Block` is read `K` times into a father
+  `AbstractBlock` with a random `FRealObjective`, which is then solved both by
+  a `FrankWolfeSolver` (using the `:Solver` registered to each sub-`Block` as a
+  Linear Minimization Oracle) and by a monolithic `:MILPSolver`, cross-checking
+  the two optima.
+
 - [`InvestmentBlock`](InvestmentBlock), a tester that solves the investment
   problem defined by an `InvestmentBlock` (loaded from a netCDF file) with the
   configured `:Solver`.
@@ -245,13 +252,13 @@ conduct, and the process for submitting merge requests to us.
 
 ### Current Lead Authors
 
-- **Enrico Calandrini**  
-  Dipartimento di Informatica  
-  Universita' di Pisa
-
 - **Antonio Frangioni**  
   Dipartimento di Informatica  
   Università di Pisa
+
+- **Enrico Calandrini**  
+  Dipartimento di Informatica  
+  Universita' di Pisa
 
 - **Rafael Durbano Lobato**  
   Dipartimento di Informatica  
