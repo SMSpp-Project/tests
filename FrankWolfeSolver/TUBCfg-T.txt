@@ -4,8 +4,8 @@
 # BlockConfig for the ThermalUnitBlock: the plain T formulation, NO Perspective
 # Cuts (static_variables = 1 = TForm). This is the cheap formulation: it does NOT
 # build the (expensive) DP + P/C abstract representation. FrankWolfeSolver does
-# not need it -- its LMO (ThermalUnitDPSolver) solves the unit by its own internal
-# DP regardless of the abstract formulation -- so FW-only runs (profiling,
+# not need it, its LMO (ThermalUnitDPSolver) solves the unit by its own internal
+# DP regardless of the abstract formulation, so FW-only runs (profiling,
 # batch-tub-style sweeps without the reference) get the SAME result much faster
 # (e.g. ~2s vs ~28s on a 96-period unit). Use TUBCfg-DP.txt only when the
 # reference :MILPSolver must solve the monolithic DP + P/C relaxation.

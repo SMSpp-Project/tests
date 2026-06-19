@@ -10,7 +10,7 @@
 # the Dantzig-Wolfe value) against a monolithic :MILPSolver solving the
 # continuous, cut-separated relaxation (intRelaxIntVars = 2). Since DP + P/C
 # characterizes the convex hull of the unit's integer solutions, the two values
-# must agree -- i.e. Frank-Wolfe is a decomposition alternative to DP + P/C.
+# must agree, i.e. Frank-Wolfe is a decomposition alternative to DP + P/C.
 #
 # This is a SLOW batch (the reference :MILPSolver solves a monolithic relaxation
 # with a cut-separation loop, and Frank-Wolfe converges sublinearly): expect
