@@ -18,8 +18,8 @@ BlockSolverConfig     # exact type of the Configuration object
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver                  # name of 1st Solver
 #GRBMILPSolver                  # name of 1st Solver
-#SCIPMILPSolver             # name of 1st Solver
-HiGHSMILPSolver                 # name of 1st Solver
+SCIPMILPSolver              # name of 1st Solver (SCIP solves the AC SOCP/QCP)
+#HiGHSMILPSolver                # name of 1st Solver (cannot solve QCP)
 LagrangianDualSolver    # name of 2nd Solver
 
 2 # number of ComputeConfig in this BlockSolverConfig
@@ -53,23 +53,23 @@ intCutSepPar           7 # separate user cuts + lazy constraints
 #Presolve            0    # 0 = off, 1 = conservative, 2 = aggressive (default -1)
 #NumericFocus        3    # 0 = auto (default), 1..3 = increasing precision focus
 
-2 # number of double parameters
+0 # number of double parameters
 
 # now all the double parameters
 # [none]
 
 # All specific HiGHS parameter (uncomment based on Solver)
-primal_feasibility_tolerance  1e-9
-dual_feasibility_tolerance    1e-9
+#primal_feasibility_tolerance  1e-9
+#dual_feasibility_tolerance    1e-9
 
-2 # number of string parameters
+0 # number of string parameters
 
 # now all the string parameters
 # [none]
 
 # All specific HiGHS parameter (uncomment based on Solver)
-presolve  off    # disable presolve for reproducibility
-solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
+#presolve  off    # disable presolve for reproducibility
+#solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
                   # (ipm = interior point: converges to analytic center, unique x*)
 
 0 # number of vector-of-int parameters
