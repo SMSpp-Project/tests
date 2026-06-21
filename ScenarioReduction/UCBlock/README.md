@@ -26,11 +26,6 @@ Both are produced under `<build-dir>/tests/ScenarioReduction/UC`.
   point of `uc_scenario_reduction_test`.
 - `UCScenarioGenerator.cpp`: implementation of `uc_scenario_generator`.
 
-Note: the generic, problem agnostic solvers live one level up in
-`tests/ScenarioReduction/src` (`ScenarioReductionSolver` for the heuristics and
-`CSSCScenarioReductionSolver` for CSSC). They are compiled into this test and
-shared with the CFL test.
-
 ### Configuration
 
 Solver configuration files live in the parent directory
@@ -163,11 +158,3 @@ version, so cssc cannot run on it.
 The `UCBlock/data/nc4/1UC_Data` directory holds the standard UC benchmark
 library (no renewables); it is not used for the demand versus renewable
 comparison here.
-
-## Notes
-
-- cssc is slow on UC: roughly a few minutes at N=20, around ten minutes at
-  N=50, much longer at N=100. Use a modest N when including it, or drop it from
-  `--methods` for a quick heuristic sweep.
-- The in sample gap is not monotone in K and does not by itself rank methods by
-  decision quality; it only measures the objective value approximation.
