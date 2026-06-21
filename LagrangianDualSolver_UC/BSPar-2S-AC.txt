@@ -17,10 +17,10 @@ BlockSolverConfig     # exact type of the Configuration object
 2 # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver                  # name of 1st Solver
-#GRBMILPSolver                  # name of 1st Solver
-SCIPMILPSolver              # name of 1st Solver (SCIP solves the AC SOCP/QCP)
+GRBMILPSolver                   # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver (SCIP solves the AC SOCP/QCP)
 #HiGHSMILPSolver                # name of 1st Solver (cannot solve QCP)
-LagrangianDualSolver    # name of 2nd Solver
+LagrangianDualSolver            # name of 2nd Solver
 
 2 # number of ComputeConfig in this BlockSolverConfig
 
@@ -33,12 +33,15 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-3 # number of integer parameters
+6 # number of integer parameters
 
 # now all the integer parameters
 intLogVerb             0 # log verbosity of the MILPSolver
 intRelaxIntVars        1 # nonzero if the continuous relaxation is solved
 intCutSepPar           7 # separate user cuts + lazy constraints
+
+# All specific SCIP parameter (uncomment based on Solver)
+#lp/checkstability      0 # 0 = accept unstable LP, 1 = abort node (default)
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_LPMethod                2    # 0 = auto (default), 1 = primal, 2 = dual,
@@ -48,15 +51,19 @@ intCutSepPar           7 # separate user cuts + lazy constraints
 #CPXPARAM_Emphasis_Numerical      1    # 0 = off (default), 1 = extreme numerical caution
 
 # All specific GUROBI parameter (uncomment based on Solver)
-#Method              1    # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
+Method              2    # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
                          # 3 = barrier + crossover, 4 = network
-#Presolve            0    # 0 = off, 1 = conservative, 2 = aggressive (default -1)
-#NumericFocus        3    # 0 = auto (default), 1..3 = increasing precision focus
+Presolve            0    # 0 = off, 1 = conservative, 2 = aggressive (default -1)
+NumericFocus        3    # 0 = auto (default), 1..3 = increasing precision focus
 
 0 # number of double parameters
 
 # now all the double parameters
-# [none]
+
+# All specific SCIP parameter (uncomment based on Solver)
+#numerics/feastol    1e-4 # feasibility tolerance (default 1e-6); loosen it so
+                         # SoPlex stops returning spurious pfeas=0 on the
+                         # ill-conditioned nonconvex node LPs
 
 # All specific HiGHS parameter (uncomment based on Solver)
 #primal_feasibility_tolerance  1e-9
@@ -178,7 +185,8 @@ dblCtOff            0.01 # cut-off factor for pricing in MinQuad
 # now all the string parameters
 #str_LDSlv_ISName  ParallelBundleSolver # the inner Solver used by LagrangianDualSolver
 str_LDSlv_ISName           BundleSolver # the inner Solver used by LagrangianDualSolver
-str_LagBF_BSCfg             InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
+str_LagBF_BSCfg          InnerBSCfg-AC.txt # BlockSolverConfig for the LagBFunctions
+                                            # (AC: ThermalUnitBlock QCP -> SCIP)
 
 0 # number of vector-of-int parameters
 

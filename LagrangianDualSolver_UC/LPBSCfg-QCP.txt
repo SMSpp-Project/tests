@@ -1,0 +1,81 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LPBSCfg-QCP.txt - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for any Block that is a simple
+# LP / QP / QCP (continuous, convex, separable) and can be solved by a
+# :MILPSolver. The AC counterpart of LPBSCfg.txt: on AC instances the inner
+# Block (e.g. an ACNetworkBlock) carries the reactive-power / voltage
+# quadratic constraints, i.e. it is a QCP, which HiGHS cannot solve; SCIP is
+# used instead. It is otherwise identical to LPBSCfg.txt (HiGHS, non-QCP case).
+#
+#   Enrico Gorgone
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver
+#HiGHSMILPSolver
+#SCIPMILPSolver        # SCIP solves the AC QCP inner Block (HiGHS cannot)
+GRBMILPSolver
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+2 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0 # log verbosity of the MILPSolver
+intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+
+# All specific SCIP parameter (uncomment based on Solver)
+#lp/checkstability 0 # 0 = accept unstable LP, 1 = abort node (default)
+
+0 # number of double parameters
+
+# now all the double parameters
+
+# All specific SCIP parameter (uncomment based on Solver)
+#numerics/feastol 1e-4 # feasibility tolerance (default 1e-6); loosen it so
+                      # SoPlex stops returning spurious pfeas=0 on the
+                      # ill-conditioned nonconvex node LPs
+
+0 # number of string parameters
+
+# now all the string parameters
+#strOutputFile  unit.lp
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END LPBSCfg-QCP.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
