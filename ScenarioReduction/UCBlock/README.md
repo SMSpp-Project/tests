@@ -6,11 +6,6 @@ problem, runs a chosen scenario reduction method, solves the reduced problem,
 and reports the in sample gap between them. A scenario generator and a batch
 sweep script complete the workflow.
 
-The UC uncertainty is a time series: the electricity demand per node per time
-period, and the available renewable power per intermittent unit per time
-period. This is different from the CFL test, whose uncertainty is a static
-vector of customer demands.
-
 ## Components
 
 ### Executables
@@ -69,13 +64,8 @@ The test reports:
 
 ## Reduction methods
 
-Selected with `-m`: `baseline`, `dupacova`, `bestfit`, `firstfit`, `milp`,
-`cssc`.
+Selected with `-m`: `baseline`, `dupacova`, `bestfit`, `firstfit`, `cssc`.
 
-`cssc` (Consistent Scenario Subset Clustering) builds an N by N cost matrix and
-solves a partitioning MILP. For UC it builds a fresh inner block for every cell
-of that matrix (the only reliable path on this block type), so it is much slower
-than the heuristics, and it requires a `_TUB` instance (see Instances).
 
 ## Building
 
