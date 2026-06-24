@@ -898,23 +898,23 @@ int main( int argc , char **argv )
  		<< endl <<
            "       wchg: what to change, coded bit-wise [319]"
 		<< endl <<
-           "             0 = add rows, 1 = delete rows "
+           "             1 = add rows, 2 = delete rows"
 		<< endl <<
-           "             2 = modify rows, 3 = modify constants"
+           "             4 = modify rows, 8 = modify constants"
 		<< endl <<
-           "             4 = change local lower/upper bound"
+           "             16 = change local lower/upper bound"
 		<< endl <<
-           "             5 = change linear objective"
+           "             32 = change linear objective"
 		<< endl <<
-           "             6 = change global lower/upper bound"
+           "             64 = change global lower/upper bound"
   #if DYNAMIC_VARS > 0  
 		<< endl <<
-           "             7 = add variables, 8 = delete variables"
+           "             128 = add variables, 256 = delete variables"
   #endif
 		<< endl <<
-           "             9 (+512) = do \"abstract\" changes"
+           "             512 = do \"abstract\" changes"
 		<< endl <<
-           "             10 (+1024) = use the *dual* (Fenchel) "
+           "             1024 = use the *dual* (Fenchel) "
                                           "representation for the LPBlock"
 	        << endl <<
            "       nvar: number of variables [10]"

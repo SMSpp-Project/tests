@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ec-2s < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default MSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-MS.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs all the multi-stage energy community instances and checks that the
+# objective value of their extensive form matches the EnergyCommunity.jl
+# reference one. A MultiStageStochasticBlock that aggregates one inner
+# TwoStageStochasticBlock per long-period (scen_s) scenario has, for the
+# instances produced by csv2nc4.jl --multistage, the same extensive form as
+# the flattened TwoStageStochasticBlock (the inner short-period probabilities
+# P(eps|s) times the outer long-period marginals P(s) reproduce the joint
+# probabilities), so the reference values are exactly those of the
+# corresponding TSSB_EC_* instances.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./MSSB_test
+DEFAULT_PAR=BSPar-MS.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ filename ] = | EnergyCommunity.jl@stochastic objective value |
+# (see more at https://github.com/SPSUnipi/EnergyCommunity.jl, branch
+# `stochastic`); identical to the corresponding TSSB_EC_* values, since the
+# multi-stage extensive form coincides with the flattened two-stage one for
+# these instances.
+
+declare -A REF_OBJ
+
+REF_OBJ[MSSB_EC_CO_Test_2S.nc4]=3.587882697e+06
+REF_OBJ[MSSB_EC_CO_Test_NB_2S.nc4]=3.587882697e+06
+
+REF_OBJ[MSSB_EC_CO_Test_TUB_2S.nc4]=3.552484027e+06
+REF_OBJ[MSSB_EC_CO_Test_TUB_NB_2S.nc4]=3.552484027e+06
+
+REF_OBJ[MSSB_EC_NA_Test_2S.nc4]=3.981238724e+06
+REF_OBJ[MSSB_EC_NA_Test_NB_2S.nc4]=3.981238724e+06
+
+REF_OBJ[MSSB_EC_NC_Test_2S.nc4]=3.757252611e+06
+REF_OBJ[MSSB_EC_NC_Test_NB_2S.nc4]=3.757252611e+06
+
+REF_OBJ[MSSB_EC_NC_Test_TUB_2S.nc4]=3.717360943e+06
+REF_OBJ[MSSB_EC_NC_Test_TUB_NB_2S.nc4]=3.717360943e+06
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/EC_Data/MSSB_EC_CO_*_2S.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NA_*_2S.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NC_*_2S.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

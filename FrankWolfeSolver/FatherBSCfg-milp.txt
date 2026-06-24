@@ -1,20 +1,33 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# FatherBSCfg-milp.txt : BlockSolverConfig registering only a :MILPSolver to
-# the father AbstractBlock (copy2, the reference, of the Polyhedral test).
+# - - - - - - - - - - - - - FatherBSCfg-milp.txt  - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig registering only a :MILPSolver to the father AbstractBlock
+# (copy2, the reference, of the Polyhedral test).
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1  # number of (the names of) Solver
+1 # number of (the names of) Solver in this BlockSolverConfig
 
-CPXMILPSolver         # monolithic (linearized) MILP/QP
-#GRBMILPSolver
-#HiGHSMILPSolver
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver        # name of Solver: monolithic (linearized) MILP / QP
+#GRBMILPSolver        # name of Solver
+#SCIPMILPSolver       # name of Solver
+HiGHSMILPSolver       # name of Solver
 
-1  # number of ComputeConfig
+1 # number of ComputeConfig in this BlockSolverConfig
 
-*MILPCfg.txt          # ComputeConfig of the :MILPSolver
+# now all the ComputeConfig
+# ComputeConfig of the :MILPSolver
 
+*MILPCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END FatherBSCfg-milp.txt  - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

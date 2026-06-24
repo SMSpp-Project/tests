@@ -17,6 +17,10 @@
 #ifndef __fw_test_common
  #define __fw_test_common
 
+/*--------------------------------------------------------------------------*/
+/*------------------------------ INCLUDES ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
 #include "common_utils.h"
 
 #include "AbstractBlock.h"
@@ -31,6 +35,8 @@
 #include <vector>
 
 /*--------------------------------------------------------------------------*/
+/*-------------------------------- USING -----------------------------------*/
+/*--------------------------------------------------------------------------*/
 
 namespace fwtest {
 
@@ -41,6 +47,8 @@ using FunctionValue = Function::FunctionValue;
 using Coefficient = DQuadFunction::Coefficient;
 
 /*--------------------------------------------------------------------------*/
+/*------------------------------ FUNCTIONS ---------------------------------*/
+/*--------------------------------------------------------------------------*/
 
 /// a random number in [-1,1] drawn from rg
 inline double rnd( std::mt19937 & rg )
@@ -49,6 +57,23 @@ inline double rnd( std::mt19937 & rg )
 /// a random number in [0,1) drawn from rg
 inline double pos( std::mt19937 & rg )
 { std::uniform_real_distribution<> d( 0.0 , 1.0 ); return( d( rg ) ); }
+
+/*--------------------------------------------------------------------------*/
+
+/// if the tester was asked to be verbose (the standard `-v` option of
+/// common_utils, which sets verbosity_level), make every Solver registered to
+/// @p b log to std::cout at that verbosity via the standard Solver::intLogVerb
+/// parameter. This overrides, from the command line, the per-Solver value read
+/// from the ComputeConfig (default 0), as -v is an explicit user request.
+inline void apply_solver_verbosity( Block * b )
+{
+ if( verbosity_level <= 0 )
+  return;
+ for( auto s : b->get_registered_solvers() ) {
+  s->set_log( & std::cout );
+  s->set_par( Solver::intLogVerb , verbosity_level );
+  }
+ }
 
 /*--------------------------------------------------------------------------*/
 

@@ -1,38 +1,51 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# FWCfg.txt : ComputeConfig of the FrankWolfeSolver.
+# - - - - - - - - - - - - - - - - FWCfg.txt - - - - - - - - - - - - - - - - -
 #
-# intLMOObj = 2 (LMOFull): the oracle keeps the sub-Block (MCF) linear cost and
-# adds the father gradient, so FrankWolfeSolver minimizes exactly the Block-tree
-# total objective (= what the :MILPSolver minimizes).
-# intLineSearch = 0 (auto): exact line search, since the father is a pure
-# DQuadFunction and the sub-Block objectives are linear.
+# A ComputeConfig of the FrankWolfeSolver for the MCFBlock cross-check test.
+# The sub-Block (MCFBlock) have a linear arc-cost objective, so intLMOObj = 2
+# (LMOFull) keeps that cost exact in the oracle (the network-simplex MCFSolver),
+# making the Frank-Wolfe value the true Block-tree objective that the monolithic
+# :MILPSolver computes. The batch / regression scripts edit intAlgorithm,
+# intMaxAtoms and intMaxThread in place to sweep the variants.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ComputeConfig         # exact type of the ComputeConfig object
 
-1  # f_diff == 1 ==> only the listed parameters are changed
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
 
-6  # number of integer parameters
+7 # number of integer parameters
 
-intLMOObj      2      # LMOFull
-intLineSearch  0      # auto (exact for [D]Quad father + linear children)
-intMaxIter     100000 # safety cap on Frank-Wolfe iterations
-intAlgorithm   0      # 0 vanilla, 1 Away-step, 2 Blended Pairwise (BPCG)
-intMaxAtoms    0      # 0 unbounded; else cap (aggregation)
-intMaxThread   1      # parallel LMO threads
+# now all the integer parameters
+intLMOObj      2      # LMOFull (keep the linear arc cost exact in the oracle)
+intLineSearch  0      # auto (exact for a [D]Quad father + linear children)
+intMaxIter     100000 # safety cap on the Frank-Wolfe iterations
+intAlgorithm   1      # 0 vanilla, 1 Away-step, 2 Blended Pairwise (BPCG)
+intMaxAtoms    50      # 0 unbounded; else cap on the active set (aggregation)
+intMaxThread   1      # number of parallel LMO threads
+intCvxComb     1      # eObjCvxComb (P2); == P1 here, children being linear
 
-1  # number of double parameters
+1 # number of double parameters
 
+# now all the double parameters
 dblRelAcc      1e-7   # relative accuracy on the Frank-Wolfe gap
 
-0  # number of string parameters
+0 # number of string parameters
 
-0  # number of vector-of-int parameters
+0 # number of vector-of-int parameters
 
-0  # number of vector-of-double parameters
+0 # number of vector-of-double parameters
 
-0  # number of vector-of-string parameters
+0 # number of vector-of-string parameters
 
-*  # no "extra" Configuration
+* # [none]  pointer to the "extra" Configuration
 
+# end of ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END FWCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

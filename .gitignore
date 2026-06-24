@@ -26,6 +26,7 @@ PolyhedralFunctionBlock/PolyhedralFunctionBlock_test
 QuadraticTests/quad_test
 ThermalUnitBlock_Solver/TUDPS_test
 TwoStageStochasticBlock/TSSB_test
+MultiStageStochasticBlock/MSSB_test
 Write-Read/writeandread_test
 
 # Large data / generated inputs

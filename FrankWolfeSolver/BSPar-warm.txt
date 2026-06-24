@@ -1,4 +1,26 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-warm.txt - - - - - - - - - - - - - - - -
+#
+# A "meta"-BlockSolverConfig for the warm-start / Modification test: as
+# BSPar.txt, but the father registers a FrankWolfeSolver whose Away-step active
+# set is kept warm across re-solves (see FWCfg-warm.txt).
+#
+#   AbstractBlock  -> FatherBSCfg-warm.txt  (a :MILPSolver + a FrankWolfeSolver)
+#   MCFBlock       -> MCFBSCfg.txt          (the LMO of each sub-Block)
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig , i.e., a map classname --> its BlockSolverConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
-2 # elements
+
+2 # the number of elements in the map
+
 AbstractBlock   *FatherBSCfg-warm.txt
 MCFBlock        *MCFBSCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-warm.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

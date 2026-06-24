@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ec-2s-tree < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default MSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-MS.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# Same as batch-ec-2s but for the SHARED-TREE instances (MSSB_EC_*_2S_tree.nc4
+# produced by csv2nc4.jl --multistage --shared-tree): the scenario data lives
+# in a single shared MultiStageDiscreteScenarioSet consumed by the inner
+# TwoStageStochasticBlock through views, instead of one baked DiscreteScenarioSet
+# per inner Block. The extensive form is identical, so the reference objective
+# values are exactly those of the corresponding baked MSSB_EC_*_2S instances
+# (the ref is looked up by stripping the `_tree` suffix).
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./MSSB_test
+DEFAULT_PAR=BSPar-MS.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
+
+# reference objective values dictionary (keyed by the BAKED filename, since the
+# shared-tree extensive form coincides with it) - - - - - - - - - - - - - - -
+
+declare -A REF_OBJ
+
+REF_OBJ[MSSB_EC_CO_Test_2S.nc4]=3.587882697e+06
+REF_OBJ[MSSB_EC_CO_Test_NB_2S.nc4]=3.587882697e+06
+
+REF_OBJ[MSSB_EC_CO_Test_TUB_2S.nc4]=3.552484027e+06
+REF_OBJ[MSSB_EC_CO_Test_TUB_NB_2S.nc4]=3.552484027e+06
+
+REF_OBJ[MSSB_EC_NA_Test_2S.nc4]=3.981238724e+06
+REF_OBJ[MSSB_EC_NA_Test_NB_2S.nc4]=3.981238724e+06
+
+REF_OBJ[MSSB_EC_NC_Test_2S.nc4]=3.757252611e+06
+REF_OBJ[MSSB_EC_NC_Test_NB_2S.nc4]=3.757252611e+06
+
+REF_OBJ[MSSB_EC_NC_Test_TUB_2S.nc4]=3.717360943e+06
+REF_OBJ[MSSB_EC_NC_Test_TUB_NB_2S.nc4]=3.717360943e+06
+
+# run all the shared-tree instances - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/EC_Data/MSSB_EC_CO_*_2S_tree.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NA_*_2S_tree.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NC_*_2S_tree.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    # the reference is that of the baked instance (drop the `_tree` suffix)
+    baked=${base/_tree/}
+    ref=${REF_OBJ[$baked]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -61,4 +61,8 @@ if (TARGET SMS++::MCFBlock)
     endforeach ()
 endif ()
 
+# Tag this directory's tests with their per-module CI labels
+# (the label map lives in cmake/TestLabels.cmake).
+smspp_label_tests()
+
 # --------------------------------------------------------------------------- #

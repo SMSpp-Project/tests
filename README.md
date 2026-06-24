@@ -44,6 +44,13 @@ The following tests are provided:
   `BlockConfig`-uring in two different ways two copies of the same `:Block`
   and solving them with two copies of the same `:Solver`.
 
+- [`FrankWolfeSolver`](FrankWolfeSolver), a generic tester for
+  `FrankWolfeSolver`: a "leaf" `Block` is read `K` times into a father
+  `AbstractBlock` with a random `FRealObjective`, which is then solved both by
+  a `FrankWolfeSolver` (using the `:Solver` registered to each sub-`Block` as a
+  Linear Minimization Oracle) and by a monolithic `:MILPSolver`, cross-checking
+  the two optima.
+
 - [`InvestmentBlock`](InvestmentBlock), a tester that solves the investment
   problem defined by an `InvestmentBlock` (loaded from a netCDF file) with the
   configured `:Solver`.
@@ -127,6 +134,11 @@ The following tests are provided:
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
   through a `BlockSolverConfig` and compares their results.
+
+- [`MultiStageStochasticBlock`](MultiStageStochasticBlock), a tester that loads
+  a `MultiStageStochasticBlock` from a netCDF file, attaches a `:Solver`
+  through a `BlockSolverConfig` and compares its result against a reference
+  objective value.
 
 - [`Write-Read`](Write-Read), a tester for the function
   `AbstractBlock::read_mps` and some tests for any  `CDASolver` able
@@ -217,6 +229,18 @@ or you can choose a specific one from the batch test list and run it with:
 ctest -V -R <batch-test-name> -C Release
 ```
 
+Each test is also tagged, via CTest labels, with the modules it exercises, so
+you can run all and only the tests relevant to one module with:
+
+```sh
+ctest -V -C Release -L <module>
+```
+
+This is what each module's continuous integration uses to run its own tests
+(and only those) without referring to any test path. The map from each test to
+its modules is kept in a single place, [`cmake/TestLabels.cmake`](cmake/TestLabels.cmake);
+extend it when adding a test.
+
 ## Getting help
 
 If you need support, you want to submit bugs or propose a new feature, you can
@@ -233,13 +257,13 @@ conduct, and the process for submitting merge requests to us.
 
 ### Current Lead Authors
 
-- **Enrico Calandrini**  
-  Dipartimento di Informatica  
-  Universita' di Pisa
-
 - **Antonio Frangioni**  
   Dipartimento di Informatica  
   Università di Pisa
+
+- **Enrico Calandrini**  
+  Dipartimento di Informatica  
+  Universita' di Pisa
 
 - **Rafael Durbano Lobato**  
   Dipartimento di Informatica  

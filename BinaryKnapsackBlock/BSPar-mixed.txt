@@ -27,14 +27,13 @@ BlockSolverConfig     # exact type of the Configuration object
 5  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver                                  # 1st: exact reference optimum
-#GRBMILPSolver                                 # (uncomment available backend)
+#CPXMILPSolver                        # 1st: the exact reference optimum
+#GRBMILPSolver                        #      (uncomment the available backend)
 #SCIPMILPSolver
-#HiGHSMILPSolver
-DPBinaryKnapsackSolver                         # 2nd: exact full-table DP
-CoreDPBinaryKnapsackSolver                     # 3rd: exact core DP
-GreedyRelaxationBinaryKnapsackSolver           # 4th: relaxation, brackets
-IncrementalGreedyRelaxationBinaryKnapsackSolver # 5th: incremental relaxation
+HiGHSMILPSolver
+#DPBinaryKnapsackSolver               # 2nd: full-table DP
+CoreDPBinaryKnapsackSolver            # 2nd: exact core DP
+GreedyRelaxationBinaryKnapsackSolver  # 3rd: relaxation, brackets the optimum
 
 5  # number of ComputeConfig in this BlockSolverConfig
 # now all the ComputeConfig (factored, shared with BSPar.txt) - - - - - - -

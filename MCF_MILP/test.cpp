@@ -340,7 +340,12 @@ int main( int argc , char **argv )
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [255]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [255]:\n"
+         "                                    1 costs, 2 capacities, "
+         "4 deficits, 8 close arcs,\n"
+         "                                    16 re-open arcs, 32 delete arcs, "
+         "64 create arcs,\n"
+         "                                    128 use abstract representation\n"
          "  -n, --rounds <n>                number of changing rounds [40]\n"
          "  -m, --nchng <n>                 avg number of elements to change "
          "[10]\n"

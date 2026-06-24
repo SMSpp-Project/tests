@@ -375,7 +375,10 @@ int main( int argc , char **argv )
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [127]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [127]:\n"
+         "                                    1 sense, 2 capacity, 4 profits,\n"
+         "                                    8 weights, 16 fix, 32 unfix,\n"
+         "                                    64 integrality\n"
          "  -N, --nvar <n>                  number of variables [100]\n"
          "  -n, --rounds <n>                number of repetitions [100]\n"
          "  -d, --delta <x>                 capacity parameter [0.01]\n"

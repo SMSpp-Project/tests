@@ -1,0 +1,9 @@
+# BlockSolverConfig for the father AbstractBlock: ONLY the reference :MILPSolver
+# (the monolithic DP + P/C relaxation). No FrankWolfeSolver -> pure MIQP timing.
+BlockSolverConfig
+1
+1 # number of Solver
+#CPXMILPSolver
+HiGHSMILPSolver
+1 # number of ComputeConfig
+*MILPCfg-tub.txt

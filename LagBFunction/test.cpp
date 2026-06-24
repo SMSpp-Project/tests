@@ -785,9 +785,10 @@ int main( int argc , char **argv )
 		<< endl <<
            "                 exercises dense->sparse auto-promotion + "
                                               "per-Function Mod dispatch)"
-  #if DYNAMIC_VARS > 0  
+  #if DYNAMIC_VARS > 0
 		<< endl <<
-           "             7 = add variables rows, 8 = delete variables"
+           "             (with DYNAMIC_VARS, bit 7 = add variables, "
+                                              "bit 8 = delete variables)"
   #endif
 	        << endl <<
            "       nvar: number of variables [10]"

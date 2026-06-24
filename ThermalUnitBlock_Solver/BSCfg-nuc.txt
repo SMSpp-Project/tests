@@ -2,9 +2,9 @@
 # - - - - - - - - - - - - - - - - BSCfg-nuc.txt - - - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig that attaches, to a (single-TUB) NuclearUnitBlock,
-# GRBMILPSolver as the 1st (reference) Solver and the EXT DP solver
+# a :MILPSolver as the 1st (reference) Solver and the EXT DP solver
 # (NuclearUnitExtDPSolver) as the 2nd Solver, so the batch compares the nuclear ext DP
-# against Gurobi on the T+PC formulation (the DP is the 2nd / "back" Solver).
+# against the MILP on the T+PC formulation (the DP is the 2nd / "back" Solver).
 #
 #   Antonio Frangioni, Donato Meoli
 #
@@ -17,7 +17,10 @@ BlockSolverConfig     # exact type of the Configuration object
 
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-GRBMILPSolver                   # name of 1st Solver (the reference)
+#CPXMILPSolver                  # name of 1st Solver (the reference)
+#GRBMILPSolver                  # name of 1st Solver (the reference)
+#SCIPMILPSolver                 # name of 1st Solver (the reference)
+HiGHSMILPSolver                 # name of 1st Solver (the reference)
 NuclearUnitExtDPSolver          # name of 2nd Solver (the nuclear ext DP under test)
 
 2  # number of ComputeConfig in this BlockSolverConfig
@@ -42,8 +45,8 @@ intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
 
 # now all the double parameters
 
-## All specific GUROBI parameter
-#FeasibilityTol 1e-9
+## All specific HiGHS parameter
+#primal_feasibility_tolerance 1e-9
 
 0 # number of string parameters
 

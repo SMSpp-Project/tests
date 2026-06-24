@@ -17,10 +17,10 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver    # name of Solver
+#CPXMILPSolver   # name of Solver
 #GRBMILPSolver   # name of Solver
 #SCIPMILPSolver  # name of Solver
-#HiGHSMILPSolver # name of Solver
+HiGHSMILPSolver  # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -45,12 +45,16 @@ intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 # cranking to 11 Cplex LP (simplex) tolerance
-CPXPARAM_Simplex_Tolerances_Optimality  1e-9
-CPXPARAM_Simplex_Tolerances_Feasibility 1e-9
+#CPXPARAM_Simplex_Tolerances_Optimality  1e-9
+#CPXPARAM_Simplex_Tolerances_Feasibility 1e-9
 
 ## All specific GUROBI parameter (uncomment based on Solver)
 #IntFeasTol 1e-9
 #OptimalityTol 1e-9
+
+# All specific HiGHS parameter (uncomment based on Solver)
+primal_feasibility_tolerance  1e-9
+dual_feasibility_tolerance    1e-9
 
 0 # number of string parameters
 

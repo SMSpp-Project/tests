@@ -1,21 +1,31 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# TUBSCfg.txt : BlockSolverConfig registering the LMO :Solver to each
-# ThermalUnitBlock sub-Block. ThermalUnitDPSolver solves the single-unit
-# commitment problem exactly by dynamic programming, returning a true integer
-# schedule (a vertex of the unit's convex hull) that minimizes the unit's own
-# convex-quadratic cost plus the (scattered) father gradient.
+# - - - - - - - - - - - - - - -  TUBSCfg.txt  - - - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig registering the LMO :Solver to each ThermalUnitBlock
+# sub-Block. ThermalUnitDPSolver solves the single-unit commitment problem
+# exactly by dynamic programming, returning a true integer schedule (a vertex of
+# the unit's convex hull) that minimizes the unit's own convex-quadratic cost
+# plus the (scattered) father gradient.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1  # number of (the names of) Solver
+1 # number of (the names of) Solver in this BlockSolverConfig
 
-ThermalUnitDPSolver       # the LMO of the ThermalUnitBlock
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+ThermalUnitDPSolver       # name of Solver: the LMO of the ThermalUnitBlock
 
-1  # number of ComputeConfig
+1 # number of ComputeConfig in this BlockSolverConfig
 
-*  # [none]
+# now all the ComputeConfig
+* # [none]
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END TUBSCfg.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

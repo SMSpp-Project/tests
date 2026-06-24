@@ -19,11 +19,11 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 intLogVerb 0  # silence the solver
 
-2  # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
 dblRelAcc                            1e-08
-CPXPARAM_MIP_Tolerances_Integrality  1e-07
+#CPXPARAM_MIP_Tolerances_Integrality  1e-07
 
 0  # number of string parameters
 
