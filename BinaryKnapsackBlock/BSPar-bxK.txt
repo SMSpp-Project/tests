@@ -9,13 +9,13 @@ BlockSolverConfig
 2
 
 # names
-CoreDPBinaryKnapsackSolver
+GreedyRelaxationBinaryKnapsackSolver
 BranchAndXSolver
 
 2
 
 # ComputeConfig
-*CDPCfg.txt
+*GRCfg.txt
 
 # BranchAndXSolver, depth-first, intMaxThread swept
 *BX-baseCfg.txt +
@@ -25,7 +25,7 @@ BranchAndXSolver
 2
 
 # integer parameters
-intSolveMethod 0
+intSolveMethod 3
 intMaxThread   1
 
 0

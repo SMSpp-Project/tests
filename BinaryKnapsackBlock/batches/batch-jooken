@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+#
+# usage: batch-jooken [ <exe> ] [ <timeout s> ] [ <memcap KB> ] [ <cap filter> ]
+#        <exe>        = path of the executable, default BinaryKnapsackBlock_test
+#        <timeout s>  = per-run wall-clock limit, default 60
+#        <memcap KB>  = per-run address-space cap (ulimit -v), default 8 GB
+#        <cap filter> = only instances whose capacity substring matches, e.g.
+#                       1000000 (1e6), 100000000 (1e8); default all
+#
+# Coverage / performance benchmark on the Jooken-Leyman-De Causmaecker hard 0-1
+# knapsack instances (data/jooken, see data/fetch-jooken). Unlike the Pisinger
+# cross-check, this is NOT pass/fail: these instances are engineered to defeat
+# every standard exact method, so each solver is expected to solve only part of
+# them. Each instance is handed, ONE SOLVER PER PROCESS, to every solver of the
+# lineup under a time limit and a memory cap, so one solver running out of time
+# or memory does not take the others (or the machine) down. The outcome is
+#   OK <t>s     finished and matched the published optimum,
+#   TIMEOUT     exceeded the time limit,
+#   OOM         hit the memory cap (killed cleanly by the kernel),
+#   FAIL(rc)    anything else.
+# What each solver can and cannot crack, and where, is the result.
+
+set -u
+
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+source "$here/../../batch_common.sh"   # colors only
+
+exe="${1:-./BinaryKnapsackBlock_test}"
+TIMEOUT="${2:-60}"
+MEMCAP="${3:-8388608}"
+CAPF="${4:-}"
+
+jdir="../../BinaryKnapsackBlock/data/jooken"
+shopt -s nullglob
+# the capacity is delimited by "c_<cap>_g_" in the instance name, so a bare
+# substring filter would also match longer capacities (1e6 is a prefix of 1e8);
+# anchor it between "c_" and "_g_"
+if [ -n "$CAPF" ]; then
+  csvs=( "$jdir"/*c_${CAPF}_g_*.csv )
+else
+  csvs=( "$jdir"/*.csv )
+fi
+if [ "${#csvs[@]}" -eq 0 ]; then
+  echo "SKIP batch-jooken: no Jooken .csv under $jdir (run data/fetch-jooken)"
+  exit 0
+fi
+
+# the lineup: the toughest exact solvers we have, each as "label:config". The
+# core DP and the MILP are state-of-the-art baselines; the BranchAndXSolver is
+# the relaxation-agnostic B&B, in its parallel depth-first and best-first-dive
+# modes (the greedy relaxation only brackets, so it is folded into each config)
+lineup=(
+  "CoreDP   :BSPar-coredp.txt"
+  "CPLEX    :BSPar-milp.txt"
+  "BX-parDFS:BSPar-bx-pardfs.txt"
+  "BX-dive  :BSPar-bx-dive.txt"
+)
+
+declare -A solved   # per-label count of OK outcomes
+total=0
+fail=0   # set iff a solver FINISHES but disagrees with the published optimum;
+         # TIMEOUT / OOM are expected on these hard instances and are tolerated
+
+for csv in $(printf '%s\n' "${csvs[@]}" | sort); do
+  name=$( basename "$csv" .csv | sed 's/^knapPI_jooken_//' )
+  z=$( awk '/^z /{print $2; exit}' "$csv" )
+  echo "=== $name  (opt $z) ==="
+  total=$(( total + 1 ))
+  for entry in "${lineup[@]}"; do
+    label="${entry%%:*}"; cfg="${entry##*:}"
+    t0=$( date +%s.%N )
+    out=$( ( ulimit -v "$MEMCAP"; timeout "$TIMEOUT" \
+             "$exe" -S "$cfg" -C "$csv" ) 2>&1 )
+    rc=$?
+    t1=$( date +%s.%N )
+    dt=$( awk "BEGIN{printf \"%.1f\", $t1-$t0}" )
+    if [ $rc -eq 124 ]; then
+      st="${RED}TIMEOUT${NC}"
+    elif echo "$out" | grep -qi "passed"; then
+      st="${GREEN}OK ${dt}s${NC}"; solved[$label]=$(( ${solved[$label]:-0} + 1 ))
+    elif echo "$out" | grep -qiE "bad_alloc|out of memory|std::bad"; then
+      st="${RED}OOM${NC}"
+    else
+      st="${RED}FAIL(rc=$rc)${NC}"; fail=1   # finished, but wrong: a real failure
+    fi
+    printf "  %-10s -> %b\n" "$label" "$st"
+  done
+done
+
+echo "------------------------------------------------------------"
+echo "solved / $total instances (timeout ${TIMEOUT}s, memcap $(( MEMCAP/1024 )) MB):"
+for entry in "${lineup[@]}"; do
+  label="${entry%%:*}"
+  printf "  %-10s : %d\n" "$label" "${solved[$label]:-0}"
+done
+
+# ctest verdict: green unless a solver finished with the wrong optimum
+exit $fail
