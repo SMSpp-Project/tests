@@ -35,19 +35,21 @@ BlockSolverConfig     # exact type of the Configuration object
 12  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-#CPXMILPSolver                        # 1st: the exact reference optimum
+CPXMILPSolver                         # 1st: the exact reference optimum
 #GRBMILPSolver                        #      (uncomment the available backend)
 #SCIPMILPSolver
-HiGHSMILPSolver
-#DPBinaryKnapsackSolver               # 2nd: full-table DP
-CoreDPBinaryKnapsackSolver            # 2nd: exact core DP
-GreedyRelaxationBinaryKnapsackSolver  # 3rd: relaxation, brackets the optimum
-BranchAndXSolver                      # 4th: BX best-first (default)
-BranchAndXSolver                      # 5th: BX depth-first (serial)
-BranchAndXSolver                      # 6th: BX breadth-first
-BranchAndXSolver                      # 7th: BX depth-first parallel
-BranchAndXSolver                      # 8th: BX per-node parallel solvers
-BranchAndXSolver                      # 9th: BX with cut separation
+#HiGHSMILPSolver
+DPBinaryKnapsackSolver                # 2nd: exact full-table DP
+CoreDPBinaryKnapsackSolver            # 3rd: exact core DP
+GreedyRelaxationBinaryKnapsackSolver  # 4th: relaxation, brackets the optimum
+BranchAndXSolver                      # 5th: BX best-first (default)
+BranchAndXSolver                      # 6th: BX depth-first (serial)
+BranchAndXSolver                      # 7th: BX breadth-first
+BranchAndXSolver                      # 8th: BX depth-first parallel
+BranchAndXSolver                      # 9th: BX per-node parallel solvers
+BranchAndXSolver                      # 10th: BX best-first, incremental inner
+BranchAndXSolver                      # 11th: BX depth-first, incremental inner
+BranchAndXSolver                      # 12th: BX depth-first parallel, incremental
 
 12  # number of ComputeConfig in this BlockSolverConfig
 
