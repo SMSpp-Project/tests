@@ -17,7 +17,7 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./TSSB_test
-DEFAULT_PAR=BSPar-2S-resilient.txt
+DEFAULT_PAR=BSPar-2S.txt
 DEFAULT_SLV=0
 parse_batch_args "$@"
 
