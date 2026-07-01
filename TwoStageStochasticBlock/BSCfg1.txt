@@ -29,14 +29,18 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-5 # number of integer parameters
+4 # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 
+# All specific CPLEX parameter (uncomment based on Solver)
+#CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
+                                      # disable presolve for reproducibility
+#CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme numerical caution
+
 # All specific GUROBI parameter (uncomment based on Solver)
-Method        2   # 0 = primal, 1 = dual simplex, 2 = barrier (analytic center, no degeneracy)
 Presolve      0   # 0 = off, 1 = conservative, 2 = aggressive (default -1)
 NumericFocus  3   # 0 = auto (default), 1..3 = increasing precision focus
 
