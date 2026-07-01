@@ -44,6 +44,7 @@ REF_OBJ[smspp_3n_3c_2gext_1l_1ml.nc]=1.302415551e+10
 REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.147874238e+07
 REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-6.883586038e+04
 REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=2.399258678e+05
+REF_OBJ[smspp_test_sector_coupled_complete_temp.nc]=1.627534159e+10
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

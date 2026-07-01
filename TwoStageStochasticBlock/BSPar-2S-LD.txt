@@ -19,9 +19,9 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
-#GRBMILPSolver        # name of 1st Solver
+GRBMILPSolver        # name of 1st Solver
 #SCIPMILPSolver       # name of 1st Solver
-HiGHSMILPSolver       # name of 1st Solver
+#HiGHSMILPSolver       # name of 1st Solver
 LagrangianDualSolver  # name of 2nd Solver
 
 2 # number of ComputeConfig in this BlockSolverConfig
