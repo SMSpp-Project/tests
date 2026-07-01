@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+#
+# usage: batch-resilient < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default TSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-2S-resilient.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs all the stochastic RESILIENT instances and checks that the PyPsa
+# objective value matches the given reference one.
+#
+# these sector-coupled instances are badly scaled: HiGHS aborts on the inner
+# LagBFunction LPs, so the default BlockSolverConfig here (BSPar-2S-resilient.txt)
+# solves the LagrangianDual inner with Gurobi and tightens the bundle stopping.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./TSSB_test
+DEFAULT_PAR=BSPar-2S-resilient.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ perturbation ] = PyPsa objective value
+# (Obj_PyPSA column of the summary_all_cases.csv produced by the
+# transformation_pypsa_smspp harness; same single instance
+# network_small_fewsectors__snap100__scen3 perturbed in four ways).
+
+declare -A REF_OBJ
+
+REF_OBJ[test_tssb_demand]=4.822693602e+09
+REF_OBJ[test_tssb_maxpower]=3.812776176e+09
+REF_OBJ[test_tssb_hydroinflow]=3.742200254e+09
+REF_OBJ[test_tssb_complete]=4.920921646e+09
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the four perturbed instances share the same file name, so they are kept in
+# separate sub-folders and the reference is keyed by the sub-folder name.
+
+for what in ../../UCBlock/data/nc4/resilient-data/test_tssb_*/smspp_*_temp.nc; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    pert=$(basename "$(dirname "$what")")
+    ref=${REF_OBJ[$pert]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for instance: $pert"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
