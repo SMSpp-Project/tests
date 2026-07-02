@@ -747,22 +747,46 @@ int main( int argc , char **argv )
       // actually is a Range and in case convert it
       LOG1( "(r,a) - " );
 
-      std::vector< double > lincsts( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       lincsts[ i ] = TUBlock->get_linear_term( strt + i );
+      if( wf & 8 ) {
+       // with perspective cuts the quadratic term is the *linear*
+       // coefficient of the cut variables; only the tbin/T/pt formulations
+       // have them time-indexed and active in the Objective, for the others
+       // (DP/SU/SD/SUSD) fall back to the physical setter
+       if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
+	Subset nms( tochange );
+	for( Index i = 0 ; i < tochange ; ++i )
+	 nms[ i ] = of->is_active( cut + ( strt + i ) );
 
-      Subset nms( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
-				 + ( strt + i ) );
+	std::sort( nms.begin() , nms.end() );
+	if( nms.back() - nms.front() + 1 == nms.size() )
+	 of->modify_linear_coefficients( std::move( newcsts ) ,
+					 Range( nms.front() ,
+						nms.back() + 1 ) );
+	else
+	 of->modify_linear_coefficients( std::move( newcsts ) ,
+					 std::move( nms ) );
+        }
+       else
+	TUBlock->set_quad_term( newcsts.begin() , Range( strt , stp ) );
+       }
+      else {
+       std::vector< double > lincsts( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	lincsts[ i ] = TUBlock->get_linear_term( strt + i );
 
-      std::sort( nms.begin() , nms.end() );
-      if( nms.back() - nms.front() + 1 == nms.size() )
-       of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			 Range( nms.front() , nms.back() + 1 ) );
-      else
-       of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			 std::move( nms ) );
+       Subset nms( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
+				  + ( strt + i ) );
+
+       std::sort( nms.begin() , nms.end() );
+       if( nms.back() - nms.front() + 1 == nms.size() )
+	of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			  Range( nms.front() , nms.back() + 1 ) );
+       else
+	of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			  std::move( nms ) );
+       }
       }
      else {  // change via call to set_* method
       LOG1( "(r) - " );
@@ -779,15 +803,32 @@ int main( int argc , char **argv )
       // change via abstract representation
       LOG1( "(s,a) - " );
 
-      std::vector< double > lincsts( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       lincsts[ i ] = TUBlock->get_linear_term( nms[ i ] );
+      if( wf & 8 ) {
+       // with perspective cuts the quadratic term is the *linear*
+       // coefficient of the cut variables; only the tbin/T/pt formulations
+       // have them time-indexed and active in the Objective, for the others
+       // (DP/SU/SD/SUSD) fall back to the physical setter
+       if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
+	for( Index i = 0 ; i < tochange ; ++i )
+	 nms[ i ] = of->is_active( cut + nms[ i ] );
 
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) + nms[ i ] );
+	of->modify_linear_coefficients( std::move( newcsts ) ,
+					std::move( nms ) , false );
+        }
+       else
+	TUBlock->set_quad_term( newcsts.begin() , std::move( nms ) , false );
+       }
+      else {
+       std::vector< double > lincsts( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	lincsts[ i ] = TUBlock->get_linear_term( nms[ i ] );
 
-      of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			std::move( nms ) , false );
+       for( Index i = 0 ; i < tochange ; ++i )
+	nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) + nms[ i ] );
+
+       of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			 std::move( nms ) , false );
+       }
       }
      else {  // change via call to set_* method
       LOG1( "(s) - " );
