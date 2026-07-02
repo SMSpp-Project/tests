@@ -57,4 +57,20 @@ function(smspp_label_tests)
     endif ()
 endfunction()
 
+# Skip the whole suite unless every module its labels declare is in the build:
+# the labels are exactly the modules the tests exercise, and a test registered
+# with some of them missing only dies at run time with "<module> not present
+# in Solver factory". A macro so that return() leaves the calling directory.
+macro(smspp_require_labelled_modules)
+    get_filename_component(_dir "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+    if (DEFINED SMSPP_TEST_LABELS_${_dir})
+        foreach (_mod IN LISTS SMSPP_TEST_LABELS_${_dir})
+            if (NOT (_mod STREQUAL "SMS++") AND NOT TARGET SMS++::${_mod})
+                message(STATUS "Skipping tests/${_dir}: ${_mod} not in build")
+                return()
+            endif ()
+        endforeach ()
+    endif ()
+endmacro()
+
 # --------------------------------------------------------------------------- #

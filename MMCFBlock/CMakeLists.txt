@@ -47,6 +47,9 @@ add_custom_target(run_mnetgen
 # Ensure that run_mnetgen is executed after the build
 add_dependencies(run_mnetgen mnetgen)
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::MMCFBlock AND
     TARGET MMCFClass AND

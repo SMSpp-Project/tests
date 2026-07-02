@@ -10,6 +10,9 @@ if (NOT hasParent)
     find_package(MILPSolver)
 endif ()
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 # BendersBFunction_test pairs the BendersBFunction with a min-cost flow built
 # directly through MCFClass, so it needs the MCFClassSolver module (which

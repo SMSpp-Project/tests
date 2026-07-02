@@ -8,6 +8,9 @@ if (NOT hasParent)
     find_package(MILPSolver)
 endif ()
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 add_executable(quad_test test.cpp ../common_utils.cpp)
 target_include_directories(quad_test PRIVATE ..)

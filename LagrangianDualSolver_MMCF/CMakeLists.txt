@@ -11,6 +11,9 @@ if (NOT hasParent)
     find_package(MCFLemonSolver)
 endif ()
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::MMCFBlock)
 

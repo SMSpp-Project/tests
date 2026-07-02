@@ -5,6 +5,9 @@ if (NOT hasParent)
     find_package(SMS++)
 endif ()
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 add_executable(compare_formulations test.cpp ../common_utils.cpp)
 target_include_directories(compare_formulations PRIVATE ..)
