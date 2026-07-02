@@ -67,6 +67,17 @@ if (TARGET SMS++::MMCFBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:LDS_MMCF_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
+        # Make each batch test require the data fixtures it reads
+        # (set up in ../MMCFBlock)
+        if (BATCH_NAME STREQUAL "batch")
+            set(BATCH_FIXTURES "canad_fetched;mnetgen_generated")
+        elseif (BATCH_NAME STREQUAL "batch-m")
+            set(BATCH_FIXTURES "mnetgen_generated")
+        else ()
+            set(BATCH_FIXTURES "canad_fetched")
+        endif ()
+        set_tests_properties(LDS_MMCF_test/${BATCH_NAME}
+                             PROPERTIES FIXTURES_REQUIRED "${BATCH_FIXTURES}")
     endforeach ()
 endif ()
 
