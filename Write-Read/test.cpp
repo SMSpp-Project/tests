@@ -413,15 +413,18 @@ static bool SolveSecond( void )
               || ( rtrnsecondLP == Solver::kLowPrecision );
 
   /* NOTE:
-  ** When a model is saved in a .mps format, it is assumed to be a minimization
-  ** problem. Thus, if the original problem was a maximization one, the 
-  ** inverse of objective coefficients are evaluated and then printed. 
-  ** However, to have a complete equivalence between the printed model and 
-  ** the read one we need to take the inverse of the objective value 
-  ** obtained. For this reason, if the starting model is not convex, we 
-  ** consider as objective value of the read model: - slvrLP->get_lb() */
+  ** Some writers (e.g. CPLEX) save a maximization model in .mps format as a
+  ** minimization one with negated objective coefficients, while others
+  ** (e.g. Gurobi, HiGHS) keep the original sense via the OBJSENSE section.
+  ** The sense of the read-back model tells the two cases apart: if it is a
+  ** maximization the value is taken as-is, otherwise a maximization
+  ** original has been negated and the objective value must be negated
+  ** back. */
   #if TEST_FILE_TYPE == 1
-    fosecondLP = hssecondLP ? ( convex ? slvrLP->get_ub() : - slvrLP->get_lb() )
+    fosecondLP = hssecondLP ?
+     ( secondLPBlock->get_objective()->get_sense() == Objective::eMax ?
+       slvrLP->get_lb() :
+       ( convex ? slvrLP->get_ub() : - slvrLP->get_lb() ) )
                      : ( convex ? INF : -INF );
   #else
     fosecondLP = hssecondLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
