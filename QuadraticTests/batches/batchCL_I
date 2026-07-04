@@ -16,6 +16,12 @@ quad_test=${1:-./quad_test}
 
 for what in "$DATADIR"/*; do
 
+  # QPLib_4270 needs more memory than the CI runners provide (the solve
+  # gets OOM-killed there): skip it in CI only, keeping local coverage
+  if [ -n "$CI" ] && [ "$(basename "$what")" = "QPLib_4270.lp" ]; then
+    continue
+  fi
+
   run_test "$quad_test" "$what" "$TYPE"
 
 done

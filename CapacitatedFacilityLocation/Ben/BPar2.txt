@@ -87,7 +87,7 @@ BlockSolverConfig
 1  # differential
 
 1  # number of Solver names
-CPXMILPSolver
+GRBMILPSolver
 
 1  # number of ComputeConfig
 
