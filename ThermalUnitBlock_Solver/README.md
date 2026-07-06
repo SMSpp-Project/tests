@@ -24,7 +24,7 @@ The usage of the executable is the following:
        %chng: probability of changing [0.6]
 
 Two sets of batch files are provided in the [batches](batches) and
-[cuts](cuts) that solve different sets of the available single-unit
+[cuts](batches) that solve different sets of the available single-unit
 instances with some of the (many) different formulations supported
 by `ThermalUnitBlock`, in particular without and with "Perspective
 Cuts".

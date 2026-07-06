@@ -1,0 +1,6 @@
+BlockSolverConfig
+1
+1 # number of Solver
+FrankWolfeSolver
+1 # number of ComputeConfig
+*FWCfg-tub.txt

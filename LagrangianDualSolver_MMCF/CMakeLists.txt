@@ -8,8 +8,11 @@ if (NOT hasParent)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
     find_package(MILPSolver)
-    find_package(LEMONSolver)
+    find_package(MCFLemonSolver)
 endif ()
+
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
 
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::MMCFBlock)
@@ -30,16 +33,26 @@ if (TARGET SMS++::MMCFBlock)
         target_link_libraries(LDS_MMCF_test PRIVATE SMS++::MILPSolver)
     endif ()
 
-    if (TARGET SMS++::LEMONSolver)
-        target_link_libraries(LDS_MMCF_test PRIVATE SMS++::LEMONSolver)
+    if (TARGET SMS++::MCFLemonSolver)
+        target_link_libraries(LDS_MMCF_test PRIVATE SMS++::MCFLemonSolver)
     endif ()
 
     smspp_install(LDS_MMCF_test)
 
+    # The ML batch (batchML) drives the inner BundleSolverML, which is only
+    # registered in the Solver factory when BundleSolver is built with Torch;
+    # register it as a test only in that case.
+    find_package(Torch QUIET HINTS ${Torch_ROOT})
+    set(ML_BATCH "")
+    if (Torch_FOUND)
+        set(ML_BATCH "${CMAKE_CURRENT_SOURCE_DIR}/batchML")
+    endif ()
+
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batch-c"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-m")
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-m"
+                          ${ML_BATCH})
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
@@ -54,7 +67,22 @@ if (TARGET SMS++::MMCFBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:LDS_MMCF_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
+        # Make each batch test require the data fixtures it reads
+        # (set up in ../MMCFBlock)
+        if (BATCH_NAME STREQUAL "batch")
+            set(BATCH_FIXTURES "canad_fetched;mnetgen_generated")
+        elseif (BATCH_NAME STREQUAL "batch-m")
+            set(BATCH_FIXTURES "mnetgen_generated")
+        else ()
+            set(BATCH_FIXTURES "canad_fetched")
+        endif ()
+        set_tests_properties(LDS_MMCF_test/${BATCH_NAME}
+                             PROPERTIES FIXTURES_REQUIRED "${BATCH_FIXTURES}")
     endforeach ()
 endif ()
+
+# Tag this directory's tests with their per-module CI labels
+# (the label map lives in cmake/TestLabels.cmake).
+smspp_label_tests()
 
 # --------------------------------------------------------------------------- #

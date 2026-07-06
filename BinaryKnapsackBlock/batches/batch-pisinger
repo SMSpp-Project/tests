@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pisinger < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable, default BinaryKnapsackBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < solver > = unused
+#        < log file > = name of log file, default no log
+#
+# Solver-vs-solver AND solver-vs-reference cross-check on the curated Pisinger
+# instances, all in one: each curated class is a single .csv that carries, per
+# instance, the PUBLISHED Pisinger optimum z (and x*). With -C the test loads
+# every instance of a .csv in ONE process (no per-instance start-up) and runs
+# it through ALL the equivalent solvers attached by the par file (see BSPar.txt:
+# the exact MILP, the full-table / core DP, and the BranchAndXSolver in each of
+# its exploration modes, with the greedy relaxation bracketing the optimum),
+# checking they agree with one another AND that their optimum matches z. This is
+# orders of magnitude faster than launching one block_solver process per
+# instance, and unlike the standalone bkbench it exercises every solver.
+#
+# The raw .csv are kept next to the stripped instances by data/fetch-txt and
+# shipped in the curated txt.tgz (fetched by the fetch_bk_data fixture, see the
+# test CMakeLists). If no .csv is found the check is skipped.
+
+set -u
+
+# run from the test directory so the configuration files are read there
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./BinaryKnapsackBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+csvdir="../../BinaryKnapsackBlock/data/txt"
+
+shopt -s globstar nullglob
+csvs=( "$csvdir"/*.csv )
+
+if [ "${#csvs[@]}" -eq 0 ]; then
+  echo "SKIP batch-pisinger: no curated Pisinger .csv under $csvdir"
+  echo "  (regenerate the curated data with data/fetch-txt, which keeps the"
+  echo "   raw .csv carrying the published optima, to enable this cross-check)"
+  exit 0
+fi
+
+# sweep: each .csv class is solved, in one process, by every attached solver - -
+for csv in "${csvs[@]}"; do
+  run_test "$exe" -S "$par" -C "$csv"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

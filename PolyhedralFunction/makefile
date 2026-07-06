@@ -45,7 +45,6 @@ include $(BNDSLVSDR)/makefile-s
 #SBGSLVSDR = ../../SubGradSolver
 #include $(SBGSLVSDR)/makefile
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files

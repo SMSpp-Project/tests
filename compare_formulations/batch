@@ -11,7 +11,7 @@ set=plan4res-data/FirstSetofInstances/*.nc4
 
 for what in ../../UCBlock/data/nc4/$set; do
 
-    run_test ./compare_formulations "$what" MetaConfig1.txt MetaConfig2.txt BSCfg1.txt BSCfg2.txt
+    run_test ./compare_formulations "$what" -B MetaConfig1.txt -X MetaConfig2.txt -S BSCfg1.txt -Y BSCfg2.txt
 
 done
 

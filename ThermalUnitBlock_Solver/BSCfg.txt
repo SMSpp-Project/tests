@@ -1,14 +1,14 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSCfg.txt - - - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a "very simple" Block
-# containing only box constraints, so that it can be solved by a BoxSolver
-# as well as a :MILPSolver
+# BlockSolverConfig that attaches, to a (single-TUB) ThermalUnitBlock,
+# a :MILPSolver as the 1st (reference) Solver and the EXT DP solver
+# (ThermalUnitExtDPSolver) as the 2nd Solver, so the batch compares the ext DP
+# against the MILP on the T+PC formulation (the DP is the 2nd / "back" Solver).
 #
-#   Antonio Frangioni
+#   Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -17,37 +17,41 @@ BlockSolverConfig     # exact type of the Configuration object
 
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-ThermalUnitDPSolver      # name of 1st Solver
-CPXMILPSolver                   # name of 2nd Solver
-#GRBMILPSolver                  # name of 2nd Solver
-#SCIPMILPSolver             # name of 2nd Solver
-#HiGHSMILPSolver                # name of 2nd Solver
+#CPXMILPSolver                  # name of 1st Solver
+GRBMILPSolver                   # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
+#HiGHSMILPSolver                # name of 1st Solver
+ThermalUnitExtDPSolver          # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# this is the ComputeConfig of ThermalUnitDPSolver
+# this is the ComputeConfig of GRBMILPSolver
 
 ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-0  # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
-# [none]
+intLogVerb      0 # log verbosity of the MILPSolver
+intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
+intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
 
 0 # number of double parameters
 
 # now all the double parameters
-# [none]
+
+## All specific HiGHS parameter
+#primal_feasibility_tolerance 1e-9
 
 0 # number of string parameters
 
 # now all the string parameters
-# [none]
+#strOutputFile  1tub.lp
 
 0 # number of vector-of-int parameters
 
@@ -68,33 +72,27 @@ ComputeConfig # exact type of the ComputeConfig object
 * # [none]
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is the ComputeConfig of ThermalUnitExtDPSolver
 
 ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-3  # number of integer parameters
+0  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
-intCutSepPar    7 # separate user cuts + lazy constraints
+# [none]
 
 0 # number of double parameters
 
 # now all the double parameters
-
-## All specific CPLEX parameter (uncomment based on 2nd Solver)
-#CPXPARAM_Simplex_Tolerances_Feasibility 1e-9
-
-## All specific GUROBI parameter (uncomment based on 2nd Solver)
-#FeasibilityTol 1e-9
+# [none]
 
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile  1tub.lp
+# [none]
 
 0 # number of vector-of-int parameters
 

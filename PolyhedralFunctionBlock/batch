@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./PolyhedralFunctionBlock_test
+#
 # Tester batch for PolyhedralFunctionBlock. Sweeps over:
 #   - problem sizes (number of variables)
 #   - constraint densities
@@ -58,6 +61,9 @@ seeds=${seeds:-20}
 PolyhedralFunctionBlock_test=${1:-./PolyhedralFunctionBlock_test}
 cases=0
 failures=0
+
+# shared CLI/run helpers (print_header, run_test)
+source "$(dirname "$0")/../batch_common.sh"
 
 for dual in $duals; do
   if [ "$dual" -eq 1 ]; then

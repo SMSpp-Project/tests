@@ -1,0 +1,19 @@
+# BlockConfig for B1: "natural" formulation (wf == 0).
+
+BlockConfig
+
+1  # differential
+
+*  # static_constraints
+*  # dynamic_constraints
+
+# static_variables: SimpleConfiguration< int > with value 0 = StdForm
+SimpleConfiguration<int>
+0
+
+*  # dynamic_variables
+*  # objective
+*  # is_feasible
+*  # is_optimal
+*  # solution
+*  # extra

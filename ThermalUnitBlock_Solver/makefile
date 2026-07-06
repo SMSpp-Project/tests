@@ -40,7 +40,6 @@ include $(MILPSSDR)/makefile-s
 UCBckDIR = ../../UCBlock
 include $(UCBckDIR)/lib/makefile
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files

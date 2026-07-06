@@ -65,7 +65,7 @@ This is why different BlockConfig [TUBCfg\*] and BlockSolverConfig
   to be used and P/Cs to be separated, which means that the
   :MILPSolver provides the same strong bound as the Lagrangian Dual
   where the ThermalUnitBlock are solved to integer optimality (this
-  should be done by the more efficient ThermalUnitDPSolver, but
+  should be done by the more efficient ThermalUnitExtDPSolver, but
   using a :MILPSolver ran to integer optimality is mathematically
   equivalent and it may be nice to further test the equivalence
   between the "abstract" and the "physical" solution);

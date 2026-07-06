@@ -8,7 +8,7 @@
 #
 # runs only "small" pure thermal academic instances, intended for being used
 # when the ThermalUnitBlock subproblems are solved to integer optimality
-# (typically using ThermalUnitDPSolver, although a :MILPSolver would
+# (typically using ThermalUnitExtDPSolver, although a :MILPSolver would
 # be a less efficient option)
 #
 # for LagrangianDualSolver + BundleSolver:
@@ -31,7 +31,9 @@ for size in 10 20 50; do
 
     what=${DATADIR}/${size}_0_${seed}_w.nc4
 
-    run_test "$exe" "$what" "$par" "$slv"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv"
 
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

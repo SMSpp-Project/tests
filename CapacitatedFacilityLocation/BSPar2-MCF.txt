@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar2.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar2-MCF.txt- - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
 # CapacitatedFacilityLocationBlock to be solved by a :MCFSolver
@@ -7,7 +7,6 @@
 #   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -16,9 +15,9 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-#MCFSolver<MCFSimplex>     # name of Solver
+MCFSolver<MCFSimplex>     # name of Solver
 #MCFSolver<RelaxIV>     # name of Solver
-MCFSolver<MCFCplex>     # name of Solver
+#MCFSolver<MCFCplex>    # name of Solver
 #MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>     # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
@@ -43,5 +42,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar2.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar2-MCF.txt- - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -41,7 +41,6 @@ include $(BNDSLVSDR)/makefile-s
 #MILPSSDR = ../../../MILPSolver
 #include $(MILPSSDR)/makefile
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files

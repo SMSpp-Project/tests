@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - LPBSCfg-K-DP.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LPBSCfg-K-CX.txt- - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a BinaryKnapsackBlock solved
 # by a :MILPSolver
@@ -7,7 +7,6 @@
 #   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -16,8 +15,9 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver
+#CPXMILPSolver
 #GRBMILPSolver
+HiGHSMILPSolver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -61,5 +61,5 @@ intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END LPBSCfg-K-DP.txt- - - - - - - - - - - - -
+# - - - - - - - - - - - - - END LPBSCfg-K-CX.txt- - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

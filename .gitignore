@@ -7,6 +7,8 @@ BoxSolver/BoxSolver_test
 BinaryKnapsackBlock/BinaryKnapsackBlock_test
 CapacitatedFacilityLocation/CFL_test
 compare_formulations/compare_formulations
+FrankWolfeSolver/FWS_test
+FrankWolfeSolver/FWS_mcf_test
 InvestmentBlock/IB_test
 LagBFunction/LagBFunction_test
 LagrangianDualSolver_Box/LDS_Box_test
@@ -24,13 +26,14 @@ PolyhedralFunctionBlock/PolyhedralFunctionBlock_test
 QuadraticTests/quad_test
 ThermalUnitBlock_Solver/TUDPS_test
 TwoStageStochasticBlock/TSSB_test
+MultiStageStochasticBlock/MSSB_test
 Write-Read/writeandread_test
 
 # Large data / generated inputs
 MMCFBlock/data/*
 MMCFBlock/gen/Canad.tgz
 InvestmentBlock/investment_candidates.txt
-CapacitatedFacilityLocation/CFL*.txt
+CapacitatedFacilityLocation/LD/CFL*.txt
 
 # Solver-side run output
 # *.bn = BundleSolver log; *.lp = MILPSolver LP dump
@@ -83,6 +86,7 @@ _deps/
 .vscode/
 *.iml
 *.iws
+*.xcode*
 out/
 *.xcodeproj
 

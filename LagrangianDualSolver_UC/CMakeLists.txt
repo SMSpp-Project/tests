@@ -10,6 +10,9 @@ if (NOT hasParent)
     find_package(MILPSolver)
 endif ()
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::UCBlock)
 
@@ -68,5 +71,9 @@ if (TARGET SMS++::UCBlock)
                              PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
     endforeach ()
 endif ()
+
+# Tag this directory's tests with their per-module CI labels
+# (the label map lives in cmake/TestLabels.cmake).
+smspp_label_tests()
 
 # --------------------------------------------------------------------------- #

@@ -1,0 +1,25 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-milp.txt - - - - - - - - - - - - - - - -
+#
+# A "meta"-BlockSolverConfig for copy2 of the Polyhedral test: a single
+# :MILPSolver on the father AbstractBlock, which solves the monolithic
+# (linearized PolyhedralFunctionBlock) problem, so the sub-Block need no own
+# :Solver.
+#
+#   AbstractBlock  -> FatherBSCfg-milp.txt  (only a :MILPSolver)
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig , i.e., a map classname --> its BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+1 # the number of elements in the map
+
+AbstractBlock   *FatherBSCfg-milp.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-milp.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

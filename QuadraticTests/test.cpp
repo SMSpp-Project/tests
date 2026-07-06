@@ -39,6 +39,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -133,12 +134,15 @@ static bool search_opt( std::string file_name , double* opt_value , char type )
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveModel( bool is_found , double opt_value ) 
+static bool SolveModel( bool is_found , double opt_value )
 {
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
+  auto start = std::chrono::system_clock::now();
   int rtrnLP = slvrLP->compute( false );
+  auto end = std::chrono::system_clock::now();
+  double t = std::chrono::duration< double >( end - start ).count();
   bool hsLP = ( ( rtrnLP >= Solver::kOK ) && ( rtrnLP < Solver::kError ) )
               || ( rtrnLP == Solver::kLowPrecision );
   double foLP = hsLP ? ( slvrLP->get_ub() ) : ( INF );
@@ -147,53 +151,52 @@ static bool SolveModel( bool is_found , double opt_value )
     LOG1( "The known optimal solution of the model is : " << opt_value << endl );
   else
     LOG1( "No known optimal solution available" << endl );
-  
+
+  // determine the value token, the pass/fail verdict and (for the uniform
+  // per-instance line) the reference, keeping the original semantics
+  bool ok;
+  std::string tok;
+  double ref = is_found ? opt_value
+             : std::numeric_limits< double >::quiet_NaN();
+
   if( rtrnLP == Solver::kStopTime ) {
     double boundLP = hsLP ? ( slvrLP->get_lb() ) : ( INF );
     LOG1( "Optimization stopped due to time limit." << endl );
-
+    tok = fmt_obj( foLP );
     if( opt_value == 0 && abs(foLP) <= 1e-4 ) {
       LOG1( "The best solution found is " << foLP << endl );
-
-      return( true );
+      ok = true;
     }
-    
-    LOG1( "The best solution found is " << foLP << " and the best bound is " 
-      << boundLP << endl );
-
-    if( ( opt_value <= foLP + abs(foLP)*1e-4 && opt_value >= boundLP ) || 
-          ( opt_value >= foLP - abs(foLP)*1e-4 && opt_value <= boundLP ) )
-      return( true );
-    return( false );
+    else {
+      LOG1( "The best solution found is " << foLP << " and the best bound is "
+        << boundLP << endl );
+      ok = ( ( opt_value <= foLP + abs(foLP)*1e-4 && opt_value >= boundLP ) ||
+             ( opt_value >= foLP - abs(foLP)*1e-4 && opt_value <= boundLP ) );
+    }
   }
-  
-  if( hsLP ) {
+  else if( hsLP ) {
    LOG1( "The returned value of the solution found is : " << foLP << endl );
-   
-   if( is_found && abs( foLP - opt_value ) >= 1e-3 * std::max( double( 1 ) , 
-        std::max( abs( foLP ) , abs( opt_value ) ) ) )
-    return( false );
-   return( true );
+   tok = fmt_obj( foLP );
+   ok = ! ( is_found && abs( foLP - opt_value ) >= 1e-3 * std::max( double( 1 ) ,
+            std::max( abs( foLP ) , abs( opt_value ) ) ) );
   }
-
-  if( rtrnLP == Solver::kInfeasible ) {
+  else if( rtrnLP == Solver::kInfeasible ) {
     LOG1( "The model hs been proven to be infeasible" << endl );
-
-    if( is_found )
-      return( false );
-    else
-      return( true );
-    }
-
-  if( rtrnLP == Solver::kUnbounded ) {
+    tok = "Unfeas";
+    ok = ! is_found;
+  }
+  else if( rtrnLP == Solver::kUnbounded ) {
    LOG1( "The model hs been proven to be unbounded" << endl );
-   
-   if( is_found )
-      return( false );
-   return( true );
+   tok = "Unbounded";
+   ok = ! is_found;
+  }
+  else {
+   tok = "Error!";
+   ok = false;
   }
 
-  return( false );
+  print_instance_line( { t } , { tok } , ref , ok ? "OK" : "KO" );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;

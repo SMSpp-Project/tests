@@ -57,20 +57,39 @@ parse_batch_args() {
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # run a single test invocation and check its return value
 #
+# Usage: print_header <label>
+# Prints the "[<label>]:" header on its own line (to $mlf if set, else stdout),
+# so the per-round output of the test below it starts on a fresh line. Batches
+# whose displayed label differs from the actual executable arguments, or that
+# do not exit on error, can reuse this directly.
+print_header() {
+    if [ -z "${mlf}" ]; then
+        printf "[%s]:\n" "$1"
+    else
+        printf "[%s]:\n" "$1" >> "${mlf}"
+    fi
+}
+
 # Usage: run_test <exe> <args...>
 # Effects:
-#   - prints "[<args>]: " prefix (matches pre-existing batch convention)
+#   - prints the "[<args>]:" header on its own line (via print_header)
 #   - tees stdout/stderr to $mlf if set (else stdout only)
 #   - exits 1 if the invocation returns non-zero
+#
+# The extended per-round log is enabled uniformly, for every test, via the
+# `verbose` environment variable (e.g. `verbose=1 ./batch ...` or
+# `verbose=1 ctest ...`): the test binaries read it from the inherited
+# environment, so it works regardless of whether a test understands the -v
+# option. Do NOT append -v here: tests that parse positional arguments by hand
+# would mis-read it.
 
 run_test() {
     local _exe=$1
     shift
+    print_header "$*"
     if [ -z "${mlf}" ]; then
-        printf "[%s]: " "$*"
         "${_exe}" "$@"
     else
-        printf "[%s]: " "$*" >> "${mlf}"
         "${_exe}" "$@" >> "${mlf}"
     fi
     local _rv=$?

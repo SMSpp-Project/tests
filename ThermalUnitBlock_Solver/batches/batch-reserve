@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+#
+# usage: batch-reserve < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#
+# runs the 1UC instances with spinning-reserve requirements
+#
+# batch-reserve: run TUDPS on the plan4res "1UC_TUB" single-unit instances.
+#
+# These are single ThermalUnitBlocks extracted from the L_B_C_26 / L_B_C_31 /
+# L_B_C_32 / L_H_C_34 UCBlock instances; unlike the academic 1UC_Data ones,
+# they carry primary and (for L_B_C_32 / L_H_C_34) secondary spinning-reserve
+# data (PrimaryRho / SecondaryRho). The test enables the reserve variables via
+# set_reserve_vars(3) and checks the DP solver against the MILP solver.
+#
+# Families and sizes:
+#   L_B_C_26  TimeHorizon 216   151 units   (primary reserve)
+#   L_B_C_31  TimeHorizon 216   151 units   (primary reserve)
+#   L_B_C_32  TimeHorizon  24   114 units   (primary + secondary reserve)
+#   L_H_C_34  TimeHorizon  24   978 units   (primary + secondary reserve)
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../UCBlock/data/nc4/plan4res-data/1UC_TUB
+
+TUDPS_test=${1:-./TUDPS_test}
+par=BSCfg.txt
+
+seed=0
+wchg=135    # change fixed + linear + quadratic costs (+128: also regen the
+            # abstract representation, exercising the Modification path)
+rounds=10   # re-solves per instance (exercises the Modification path)
+nchg=10
+pchg=0.6
+
+# wf is bit-wise: 0-6 select the formulation (3bin/T/pt/DP/SU/SD/SUSD), +8
+# (PCuts) adds the perspective cuts. We test every formulation with cuts, i.e.
+# wf in 8..14. On the large-horizon families (L_B_C_26 / L_B_C_31, TimeHorizon
+# 216) the interval-based formulations (pt/DP/SU/SD/SUSD, base wf >= 2, i.e.
+# wf >= 10) are too expensive, so we skip them and keep only 3bin/T (wf 8,9).
+for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
+  case "$fam" in L_B_C_26|L_B_C_31) big=1 ;; *) big=0 ;; esac
+  for f in "${DATADIR}"/${fam}_*.nc4; do
+    for wf in 8 9 10 11 12 13 14; do
+      # skip the expensive interval-based formulations on large instances
+      if [ $wf -ge 10 ] && [ "$big" = 1 ]; then
+        continue
+      fi
+      run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -f "$wf" -n "$rounds" -m "$nchg" -q "$pchg"
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

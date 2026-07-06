@@ -28,6 +28,10 @@ get_directory_property(hasParent PARENT_DIRECTORY)
 # allowing us to use our modules.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+# The per-module CI test-label map and the smspp_label_tests() helper that each
+# test directory calls to tag its tests (see cmake/TestLabels.cmake).
+include(TestLabels)
+
 # Utility function to standardize installation and runtime dependency handling
 # for SMS++ tests.
 function(smspp_install target_name)
@@ -99,8 +103,11 @@ add_subdirectory(LagrangianDualSolver_UC)
 add_subdirectory(ThermalUnitBlock_Solver)
 add_subdirectory(InvestmentBlock)
 add_subdirectory(TwoStageStochasticBlock)
+add_subdirectory(MultiStageStochasticBlock)
 
 add_subdirectory(LukFiBlock)
+
+add_subdirectory(FrankWolfeSolver)
 
 
 add_subdirectory(compare_formulations)

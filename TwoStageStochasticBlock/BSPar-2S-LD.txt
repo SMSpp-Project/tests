@@ -1,15 +1,14 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -BSPar-2S-LD.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-2S-LD.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a TwoStageStochasticBlock to
 # be solved by two different Solver: a :MILPSolver on the deterministic
 # equivalent and a LagrangianDualSolver using a BundleSolver as the inner
 # Solver
 #
-#   Donato Meoli, Antonio Frangioni
+#   Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -20,9 +19,9 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
-GRBMILPSolver         # name of 1st Solver
+GRBMILPSolver        # name of 1st Solver
 #SCIPMILPSolver       # name of 1st Solver
-#HiGHSMILPSolver      # name of 1st Solver
+#HiGHSMILPSolver       # name of 1st Solver
 LagrangianDualSolver  # name of 2nd Solver
 
 2 # number of ComputeConfig in this BlockSolverConfig

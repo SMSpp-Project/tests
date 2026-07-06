@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./MMCF_test
+#
+# runs the MMCFBlock tester over the JLF, Canad/PPRN and Mnetgen multicommodity
+# flow instance collections under data/
 
 MMCF_test=${1:-./MMCF_test}
 
@@ -57,3 +63,5 @@ done
 for what in data/Canad/*.dat; do
   "$MMCF_test" $what s
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

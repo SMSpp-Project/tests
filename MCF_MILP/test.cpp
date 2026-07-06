@@ -156,6 +156,10 @@ MCFBlock * MCFB = nullptr;     // the MCFBlock
 std::mt19937 rg;               // base random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
+// set by SolveBoth(): did the just-solved instance admit a (primal) solution?
+// used by the emergency feasibility-recovery mechanism in the main loop
+bool last_round_feasible = true;
+
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -232,71 +236,84 @@ static void Compact( Subset & nms , Index m )
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) 
+static bool SolveBoth( void )
 {
- try {
-  // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // optional Solver re-ordering before the cross-check (front/back), then defer
+ // to the common_utils engine: every registered Solver is solved, the uniform
+ // per-instance line with all values is printed, and the two exact optima must
+ // agree (tol 5e-7); the all-infeasible case is accepted as OK(e)
+ #if DETACH_1ST
   auto Slvr1 = MCFB->get_registered_solvers().front();
-  #if DETACH_1ST
-   MCFB->unregister_Solver( Slvr1 );
-   MCFB->register_Solver( Slvr1 , true );  // push it to the front
-  #endif
-
-  int rtrn1st = Slvr1->compute( false );
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-  double fo1st = hs1st ? Slvr1->get_var_value() : -CInf;
-
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  MCFB->unregister_Solver( Slvr1 );
+  MCFB->register_Solver( Slvr1 , true );  // push it to the front
+ #endif
+ #if DETACH_2ND
   auto Slvr2 = MCFB->get_registered_solvers().back();
-  #if DETACH_2ND
-   MCFB->unregister_Solver( Slvr2 );
-   MCFB->register_Solver( Slvr2 );  // push it to the back
-  #endif
+  MCFB->unregister_Solver( Slvr2 );
+  MCFB->register_Solver( Slvr2 );  // push it to the back
+ #endif
 
-  int rtrn2nd = Slvr2->compute( false );
+ bool hs1 = false;
+ bool ok = SolveAll( MCFB , std::numeric_limits< double >::quiet_NaN() ,
+                     std::vector< ObjGetter >{} , 5e-7 , nullptr , & hs1 );
+ last_round_feasible = hs1;  // the 1st (physical) Solver found a solution
+ return( ok );
+ }
 
-  bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
-                   && ( rtrn2nd != Solver::kUnbounded )
-                   && ( rtrn2nd != Solver::kInfeasible ) )
-                 || ( rtrn2nd == Solver::kLowPrecision ) );
-  double fo2nd = hs2nd ? Slvr2->get_var_value() : -CInf;
+/*--------------------------------------------------------------------------*/
+// emergency feasibility-recovery helpers: roll specific pieces of the
+// instance data back to the values saved right after deserialization (with
+// which the instance is assumed feasible). See the main loop for the staging.
 
-  if( hs1st && hs2nd && ( std::abs( fo1st - fo2nd ) <= 5e-7 *
-			  std::max( double( 1 ) ,
-				    std::max( std::abs( fo1st ) ,
-					      std::abs( fo2nd ) ) ) ) ) {
-   LOG1( "OK(f)" << std::endl );
-   return( true );
-   }
+static void restore_deficits( const MCFBlock::Vec_FNumber & orig )
+{
+ // deficits are per-node and the node count never changes in this test, so
+ // the saved vector always aligns; this undoes the deficit drift that is the
+ // usual cause of permanent infeasibility
+ MCFB->chg_dfcts( orig.begin() , Range( 0 , orig.size() ) );
+ }
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   LOG1( "OK(e)" << std::endl );
-   return( true );
-   }
+/*--------------------------------------------------------------------------*/
 
-  #if( LOG_LEVEL >= 1 )
-   std::cout << std::setprecision( 7 );
-   PrintResults( hs1st , rtrn1st , fo1st );
-   std::cout << " - ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   std::cout << std::endl;
-  #endif
+static void restore_capacities( const MCFBlock::Vec_FNumber & orig )
+{
+ // restore the original capacity of every arc that still exists at its
+ // original index, undoing the capacity drift. Arc indices are stable except
+ // for deleted slots (skipped here) and slots later reused by add_arc (only
+ // possible when arcs were deleted first, i.e. never in the no-deletion runs);
+ // a reused slot gets an arbitrary-but-harmless value. With no deletions the
+ // whole capacity vector is restored exactly, so combined with the deficit
+ // restore and the arc re-opening the original instance is fully recovered.
+ if( orig.empty() )  // uncapacitated instance: nothing to restore
+  return;
+ Index m = std::min( Index( orig.size() ) , MCFB->get_NArcs() );
+ for( Index i = 0 ; i < m ; ++i )
+  if( ! MCFB->is_deleted( i ) )
+   MCFB->chg_ucap( orig[ i ] , i );
+ }
 
-  return( false );
-  }
- catch( std::exception & e ) {
-  std::cerr << e.what() << std::endl;
-  exit( 1 );
-  }
- catch(...) {
-  std::cerr << "Error: unknown exception thrown" << std::endl;
-  exit( 1 );
+/*--------------------------------------------------------------------------*/
+
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (instance positional, -S BlockSolverConfig, -c/-p
+// prefixes) are handled centrally by common_utils
+long int seed = 1;
+unsigned int wchg = 255;
+double p_change = 0.5;
+Index n_change = 10;
+Index n_repeat = 40;
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
+  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
+  default:                                     return( false );
   }
  }
 
@@ -309,45 +326,42 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // standard params (instance positional + -S) are parsed by common_utils;
+ // the test only appends its own knobs
 
- long int seed = 1;
- unsigned int wchg = 255;
- double p_change = 0.5;
- Index n_change = 10;
- Index n_repeat = 40;
+ docopt_desc = "SMS++ MCFBlock-vs-MILP test.\n";
+ short_opts += "e:k:n:m:q:";
+ const std::vector< option > my_opts = {
+   { "seed"    , required_argument , nullptr , 'e' } ,
+   { "wchg"    , required_argument , nullptr , 'k' } ,
+   { "rounds"  , required_argument , nullptr , 'n' } ,
+   { "nchng"   , required_argument , nullptr , 'm' } ,
+   { "pchng"   , required_argument , nullptr , 'q' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [255]:\n"
+         "                                    1 costs, 2 capacities, "
+         "4 deficits, 8 close arcs,\n"
+         "                                    16 re-open arcs, 32 delete arcs, "
+         "64 create arcs,\n"
+         "                                    128 use abstract representation\n"
+         "  -n, --rounds <n>                number of changing rounds [40]\n"
+         "  -m, --nchng <n>                 avg number of elements to change "
+         "[10]\n"
+         "  -q, --pchng <p>                 probability of any single change "
+         "[0.5]\n";
 
- switch( argc ) {
-  case( 7 ): Str2Sthg( argv[ 6 ] , p_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_change );
-  case( 5 ): Str2Sthg( argv[ 4 ] , n_repeat );
-  case( 4 ): Str2Sthg( argv[ 3 ] , wchg );
-  case( 3 ): Str2Sthg( argv[ 2 ] , seed );
-  case( 2 ): break;
-  default: std::cerr << "Usage: " << argv[ 0 ] <<
-	   " <file> [seed wchg #rounds #chng %chng]" << std::endl <<
-           "       seed: seed of the pseudo-random generator [1]"
-		     << std::endl <<
-           "       wchg: what to change, coded bit-wise [255]"
-		     << std::endl <<
-           "             0 = cost, 1 = cap, 2 = dfct, 3 = o.arc, 4 = c.arc"
-		     << std::endl <<
-           "             5 = delete arc, 6 = add arc"
-		     << std::endl <<
- 	   "             7 (+128) = also change abstract representation"
-		     << std::endl <<
-           "      #rounds: number of changing rounds [40]"
-		     << std::endl <<
-           "      #chng: average number of elements to change [10]"
-		     << std::endl <<
-           "      %chng: probability of any single change [0.5]"
-		     << std::endl;
-	   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
 
  // construction and loading of the objects - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- std::string fn( argv[ 1 ] );
+ std::string fn( filename );
  if( fn.substr( fn.size() - 4 , 4 ) == ".nc4" ) {
   MCFB = dynamic_cast< MCFBlock * >( Block::deserialize( fn ) );
   if( ! MCFB ) {
@@ -372,18 +386,24 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- std::string bsc_fn = "BSPar.txt";
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;
+  std::cerr << "Error: cannot load BSC from " << sconf_file << std::endl;
   return( 1 );
   }
- s_config_Block( MCFB , bsc , bsc_fn );
+ s_config_Block( MCFB , bsc , sconf_file );
 
  if( MCFB->get_registered_solvers().size() < 2 ) {
   std::cout << "too few Solver registered to MCFB!" << std::endl;
   return( 1 );
   }
+
+ // save the original deficits and capacities, with which the instance is
+ // assumed feasible: used by the emergency feasibility-recovery mechanism in
+ // the main loop (see there). Taken right after deserialization, before any
+ // change is applied.
+ const MCFBlock::Vec_FNumber orig_dfct( MCFB->get_B() );
+ const MCFBlock::Vec_FNumber orig_ucap( MCFB->get_U() );
 
  // compute min/max cost & max deficit- - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -443,7 +463,11 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  bool AllPassed = SolveBoth();
- 
+
+ // number of consecutive infeasible solves; drives the staged emergency
+ // feasibility recovery in the main loop. Seeded from the very first solve.
+ unsigned int consec_infeas = last_round_feasible ? 0 : 1;
+
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // now, for n_repeat times:
@@ -877,8 +901,25 @@ int main( int argc , char **argv )
   // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -
   // ... every SKIP_BEAT + 1 rounds
 
-  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) )
+  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) ) {
+   // emergency feasibility recovery - - - - - - - - - - - - - - - - - - - - -
+   // if recent solves were infeasible, progressively roll the instance back
+   // toward the original (feasible) data *before* re-solving, so the rollback
+   // overrides this cycle's changes. Stage 1 (>= 1 consecutive infeasible
+   // solve) restores the original deficits, the usual culprit; stage 2 also
+   // restores the original static-arc capacities; stage 3 also re-opens every
+   // closed arc. With deficits + capacities + all arcs restored the original
+   // feasible region is recovered, so feasibility should return (barring
+   // original dynamic arcs permanently deleted meanwhile, which cannot be
+   // brought back). The staging both isolates the culprit and self-heals.
+   if( consec_infeas >= 1 ) restore_deficits( orig_dfct );
+   if( consec_infeas >= 2 ) restore_capacities( orig_ucap );
+   if( consec_infeas >= 3 ) MCFB->open_arcs();
+
    AllPassed &= SolveBoth();
+
+   consec_infeas = last_round_feasible ? 0 : ( consec_infeas + 1 );
+   }
   #if( LOG_LEVEL >= 1 )
   else
    std::cout << std::endl;

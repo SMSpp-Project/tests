@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# usage: batch-singlebus-tpc < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#
+# runs the single-bus single-TUB instances on the T + Perspective-Cuts
+# formulation (wf = 9), solving each with the MILPSolver (1st / reference)
+# and the ext DP solver ThermalUnitExtDPSolver (2nd) and comparing the two.
+# The solver pair comes from the default BSCfg.txt of this test directory.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../UCBlock/data/nc4/1UC_Data/singlebus
+
+TUDPS_test=${1:-./TUDPS_test}
+par=BSCfg.txt
+
+seed=0
+wchg=0      # just solve and compare the optimum (no cost perturbation here)
+wf=9        # T (=1) + Perspective Cuts (+8): the T+P/C formulation
+
+for f in "${DATADIR}"/*/*.nc4; do
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -f "$wf"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

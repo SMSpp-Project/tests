@@ -59,7 +59,7 @@
 static constexpr double INF = SMSpp_di_unipi_it::Inf< double >();
 
 /*--------------------------------------------------------------------------*/
-/*------------------------------ GLOBALS -----------------------------------*/
+/*------------------------------- GLOBALS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
 Block * Block1;
@@ -94,10 +94,7 @@ static bool SolveBoth( double * out_fo1 = nullptr ,
 
   auto end = std::chrono::system_clock::now();
   std::chrono::duration< double > elapsed = end - start;
-
-  std::cout.setf( std::ios::scientific, std::ios::floatfield );
-  std::cout << std::setprecision( 2 ) << elapsed.count() << " - "
-	    << std::flush;
+  double t1 = elapsed.count();
 
   // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
   auto Slvr2 = Block2->get_registered_solvers().front();
@@ -114,35 +111,33 @@ static bool SolveBoth( double * out_fo1 = nullptr ,
   end = std::chrono::system_clock::now();
   elapsed = end - start;
 
-  std::cout.setf( std::ios::scientific, std::ios::floatfield );
-  std::cout << std::setprecision( 2 ) << elapsed.count();
+  double t2 = elapsed.count();
 
-  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-7 *
-			  std::max( double( 1 ) , std::max( abs( fo1st ) ,
-						  abs( fo2nd ) ) ) ) ) {
-   std::cout << " - OK(f)" << std::endl;
-   return( true );
-   }
+  // Pattern A (two separate Blocks): both Solver are exact optima that must
+  // agree (2e-7); defer the verdict and the uniform per-instance line to
+  // common_utils, semantics unchanged
+  std::vector< SolverReading > rd( 2 );
+  std::vector< bool > hs{ hs1st , hs2nd };
+  std::vector< int > status{ rtrn1st , rtrn2nd };
+  if( hs1st ) { rd[ 0 ].kind = SolverReading::Kind::Exact; rd[ 0 ].value = fo1st; }
+  if( hs2nd ) { rd[ 1 ].kind = SolverReading::Kind::Exact; rd[ 1 ].value = fo2nd; }
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   std::cout << " - OK(e)" << std::endl;
-   return( true );
-   }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   std::cout << " - OK(u)" << std::endl;
-   return( true );
-   }
-    
-  std::cout << " - " << std::setprecision( 7 );
-  PrintResults( hs1st , rtrn1st , fo1st );
-  std::cout << " - ";
-  PrintResults( hs2nd , rtrn2nd , fo2nd );
-  std::cout << std::endl;
-
-  return( false );
+  auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
+   if( h )                               return( reading_token( r ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
+  std::string verdict;
+  double diff;
+  bool ok = cross_check( rd , hs , status ,
+                         std::numeric_limits< double >::quiet_NaN() ,
+                         2e-7 , verdict , diff );
+  print_instance_line(
+   { t1 , t2 } ,
+   { tok( hs1st , rtrn1st , rd[ 0 ] ) , tok( hs2nd , rtrn2nd , rd[ 1 ] ) } ,
+   std::numeric_limits< double >::quiet_NaN() , verdict );
+  return( ok );
   }
  catch( std::exception &e ) {
   std::cerr << e.what() << std::endl;
@@ -156,47 +151,78 @@ static bool SolveBoth( double * out_fo1 = nullptr ,
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line config/knobs, set by process_specific_arg().
+// This test compares two FORMULATIONS of the same instance, so it needs two
+// BlockConfigs and two BlockSolverConfigs: formulation 1 uses the standard
+// -B / -S (handled by common_utils), formulation 2 uses -X / -Y here.
+std::string bconf2;          // BlockConfig of formulation 2 (-X)
+std::string sconf2;          // BlockSolverConfig of formulation 2 (-Y)
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'X' ): bconf2 = optarg;                   return( true );
+  case( 'Y' ): sconf2 = optarg;                   return( true );
+  case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
+  default:                                        return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
  std::set_terminate( smspp_terminate );
 
  // read command line parameters- - - - - - - - - - - - - - - - - - - - - - -
+ // the instance positional and the formulation-1 configs (-B / -S) are
+ // parsed by common_utils; the test appends the formulation-2 configs
+ // (-X / -Y) and the optional reference objective (-r)
 
- if( argc < 2 ) {
-  std::cerr << "Usage: " << argv[ 0 ]
-	    << " block_filename [BlockConfig1 BlockConfig2 "
-	    << "BlockSolverConfig1 BlockSolverConfig2 RefObj]"
-	    << std::endl
-	    << "       default filenames: RBlockConfig1.txt RBlockConfig2.txt"
-	    << " BSCfg1.txt BSCfg2.txt" << std::endl
-	    << "       (if BSCfg1 is given but BSCfg2 is not, they are "
-	    << "the same)"  << std::endl
-	    << "       RefObj: optional reference objective; if passed, fo1st"
-	    << " is compared against it with relative tolerance 1e-5"
-	    << std::endl;
-  return( 1 );
-  }
+ docopt_desc = "SMS++ compare-two-formulations test.\n";
+ short_opts += "X:Y:r:";
+ const std::vector< option > my_opts = {
+   { "blockcfg2"  , required_argument , nullptr , 'X' } ,
+   { "solvercfg2" , required_argument , nullptr , 'Y' } ,
+   { "ref"        , required_argument , nullptr , 'r' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -X, --blockcfg2 <file>          BlockConfig of formulation 2 "
+         "(mandatory)\n"
+         "  -Y, --solvercfg2 <file>         BlockSolverConfig of formulation "
+         "2 [same as -S]\n"
+         "  -r, --ref <value>               reference objective to compare "
+         "against [none]\n";
 
- // read optional reference objective- - - - - - - - - - - - - - - - - - - -
+ process_args( argc , argv , process_specific_arg );
 
- if( argc >= 7 )
-  Str2Sthg( argv[ 6 ] , RefObjective );
+ // all the configs must be explicit: -B / -X (the two formulations) and -S
+ // (the solver); -Y defaults to -S when only one solver config is given
+ require_block_config();    // -B (formulation 1)
+ require_solver_config();    // -S
+ if( bconf2.empty() )
+  throw( std::invalid_argument(
+   "the BlockConfig of formulation 2 must be provided (forgot -X?)" ) );
+ if( sconf2.empty() )
+  sconf2 = sconf_file;
 
  // load both Block out of the same netCDF file- - - - - - - - - - - - - - - -
 
- Block1 = Block::deserialize( argv[ 1 ] );
+ Block1 = Block::deserialize( filename );
  if( ! Block1 ) {
-  std::cerr << "error: cannot load Block from " << argv[ 1 ] << std::endl;
+  std::cerr << "error: cannot load Block from " << filename << std::endl;
   return( 1 );
   }
 
- Block2 = Block::deserialize( argv[ 1 ] );
+ Block2 = Block::deserialize( filename );
  // this reasonably should not fail ...
 
  // load two BlockConfig from file- - - - - - - - - - - - - - - - - - - - - -
 
- std::string fn1 = argc >= 3 ? argv[ 2 ] : "RBlockConfig1.txt";
+ std::string fn1 = bconf_file;   // -B, formulation 1
  auto cfg1 = Configuration::deserialize( fn1 );
  if( ! cfg1 ) {
   std::cerr << "error: cannot load BlockConfig " << fn1 << std::endl;
@@ -206,7 +232,7 @@ int main( int argc , char **argv )
  b_config_Block( Block1 , cfg1 , fn1 );
  delete( cfg1 );
 
- std::string fn2 = argc >= 4 ? argv[ 3 ] : "RBlockConfig2.txt";
+ std::string fn2 = bconf2;       // -X, formulation 2
  auto cfg2 = Configuration::deserialize( fn2 );
  if( ! cfg2 ) {
   std::cerr << "error: cannot load BlockConfig " << fn2 << std::endl;
@@ -218,7 +244,7 @@ int main( int argc , char **argv )
 
  // load two BlockSolverConfig from file- - - - - - - - - - - - - - - - - - -
 
- fn1 = argc >= 5 ? argv[ 4 ] : "BSCfg1.txt";
+ fn1 = sconf_file;   // -S, solver of formulation 1
  if( ! ( cfg1 = Configuration::deserialize( fn1 ) ) ) {
   std::cerr << "error: cannot load BlockSolverConfig " << fn1 << std::endl;
   return( 1 );
@@ -230,7 +256,7 @@ int main( int argc , char **argv )
   exit( 1 );
   }
 
- fn2 = argc >= 6 ? argv[ 5 ] : ( argc >= 5 ? fn1 : "BSCfg2.txt" );
+ fn2 = sconf2;       // -Y (defaults to -S), solver of formulation 2
  if( ! ( cfg2 = Configuration::deserialize( fn2 ) ) ) {
   std::cerr << "error: cannot load BlockSolverConfig " << fn2  << std::endl;
   return( 1 );

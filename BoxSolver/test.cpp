@@ -123,6 +123,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -487,7 +488,10 @@ static bool SolveBoth( void )
    BoxBlock->unregister_Solver( Slvr1 );
    BoxBlock->register_Solver( Slvr1 , true );  // push it to the front
   #endif
+  auto start1 = std::chrono::system_clock::now();
   int rtrn1st = Slvr1->compute( false );
+  auto end1 = std::chrono::system_clock::now();
+  double tA = std::chrono::duration< double >( end1 - start1 ).count();
   bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
                    && ( rtrn1st != Solver::kUnbounded )
                    && ( rtrn1st != Solver::kInfeasible ) )
@@ -564,7 +568,10 @@ static bool SolveBoth( void )
     BoxBlock->unregister_Solver( Slvr2 );
     BoxBlock->register_Solver( Slvr2 );  // push it to the back
    #endif
+   auto start2 = std::chrono::system_clock::now();
    int rtrn2nd = Slvr2->compute( false );
+   auto end2 = std::chrono::system_clock::now();
+   double tB = std::chrono::duration< double >( end2 - start2 ).count();
 
    bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
                    && ( rtrn2nd != Solver::kUnbounded )
@@ -572,11 +579,15 @@ static bool SolveBoth( void )
                  || ( rtrn2nd == Solver::kLowPrecision ) );
    double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
 
+   // bespoke verdict (kept intact, including the kInfeasible/kUnbounded
+   // equivalence below), restructured to a single exit that prints the line
+   bool ok = false;
+   std::string verdict = "KO";
+   bool decided = false;
    if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-6 *
 			   max( double( 1 ) , max( abs( fo1st ) ,
 						   abs( fo2nd ) ) ) ) ) {
-    LOG1( "OK(f)" << endl );
-    return( true );
+    ok = true; verdict = "OK(f)"; decided = true;
     }
 
    // note: for a problem that is both potentially unbounded (say, it has
@@ -589,27 +600,30 @@ static bool SolveBoth( void )
    // where we consider kUnbounded and kInfeasible as "equivalent". while
    // this may lead to bona fide errors to be ignored, it seems to be the
    // only reasonable way out
-   if( ( rtrn1st == Solver::kInfeasible ) &&
+   if( ( ! decided ) && ( rtrn1st == Solver::kInfeasible ) &&
        ( ( rtrn2nd == Solver::kInfeasible ) ||
 	 ( rtrn2nd == Solver::kUnbounded ) ) ) {
-    LOG1( "OK(e)" << endl );
-    return( true );
+    ok = true; verdict = "OK(e)"; decided = true;
     }
 
-   if( ( rtrn1st == Solver::kUnbounded ) &&
+   if( ( ! decided ) && ( rtrn1st == Solver::kUnbounded ) &&
        ( rtrn2nd == Solver::kUnbounded ) ) {
-    LOG1( "OK(u)" << endl );
-    return( true );
+    ok = true; verdict = "OK(u)"; decided = true;
     }
 
-   #if( LOG_LEVEL >= 1 )
-    cout << "BOX = ";
-    PrintResults( hs1st , rtrn1st , fo1st );
-
-    cout << " ~ MILP = ";
-    PrintResults( hs2nd , rtrn2nd , fo2nd );
-    cout << endl;
-   #endif
+   {
+    auto tok = []( bool h , int rtrn , double fo ) -> std::string {
+     if( h )                              return( fmt_obj( fo ) );
+     if( rtrn == Solver::kInfeasible )    return( "Unfeas" );
+     if( rtrn == Solver::kUnbounded )     return( "Unbounded" );
+     return( "Error!" );
+     };
+    print_instance_line(
+     { tA , tB } ,
+     { tok( hs1st , rtrn1st , fo1st ) , tok( hs2nd , rtrn2nd , fo2nd ) } ,
+     std::numeric_limits< double >::quiet_NaN() , verdict );
+    }
+   return( ok );
   #endif
 
   return( false );
@@ -626,6 +640,33 @@ static bool SolveBoth( void )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameter (-S BlockSolverConfig) is handled centrally by
+// common_utils. This tester GENERATES its own BoxBlock from the seed, so it
+// takes no instance positional (filename_optional = true).
+long int seed = 0;
+Index wchg = 3;
+double p_change = 0.6;
+Index n_change = 10;
+Index n_repeat = 100;
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
+  case( 'N' ): Str2Sthg( optarg , nvar );      return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
+  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
+  default:                                     return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
@@ -633,40 +674,37 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the standard parameter (-S) is parsed by common_utils; the test only
+ // appends its own knobs and reads no instance file (it generates one)
 
  assert( SKIP_BEAT >= 0 );
 
- long int seed = 0;
- Index wchg = 3;
- double p_change = 0.6;
- Index n_change = 10;
- Index n_repeat = 100;
+ docopt_desc = "SMS++ BoxSolver test.\n";
+ filename_optional = true;
+ short_opts += "e:k:N:n:m:q:";
+ const std::vector< option > my_opts = {
+   { "seed"   , required_argument , nullptr , 'e' } ,
+   { "wchg"   , required_argument , nullptr , 'k' } ,
+   { "nvar"   , required_argument , nullptr , 'N' } ,
+   { "rounds" , required_argument , nullptr , 'n' } ,
+   { "nchng"  , required_argument , nullptr , 'm' } ,
+   { "pchng"  , required_argument , nullptr , 'q' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [3]:\n"
+         "                                    1 bounds, 2 objective coefficients"
+         "\n"
+         "  -N, --nvar <n>                  number of variables [10]\n"
+         "  -n, --rounds <n>                how many iterations [100]\n"
+         "  -m, --nchng <n>                 number of changes [10]\n"
+         "  -q, --pchng <p>                 probability of changing [0.6]\n";
 
- switch( argc ) {
-  case( 7 ): Str2Sthg( argv[ 6 ] , p_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_change );
-  case( 5 ): Str2Sthg( argv[ 4 ] , n_repeat );
-  case( 4 ): Str2Sthg( argv[ 3 ] , nvar );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar #rounds #chng %chng]"
- 		<< endl <<
-           "       wchg: what to change, coded bit-wise [3]"
-		<< endl <<
-           "             0 = bounds, 1 = objective "
-		<< endl <<
-           "       nvar: number of variables [10]"
-	        << endl <<
-           "       #rounds: how many iterations [100]"
-	        << endl <<
-           "       #chng: number changes [10]"
-	        << endl <<
-           "       %chng: probability of changing [0.6]"
-	        << endl;
-	   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
 
  if( nvar < 1 ) {
   cout << "error: nvar too small";
@@ -731,13 +769,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- std::string bsc_fn = "BSCfg.txt";
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  cerr << "Error: cannot load BSC from " << bsc_fn << endl;
+  cerr << "Error: cannot load BSC from " << sconf_file << endl;
   exit( 1 );
   }
- s_config_Block( BoxBlock , bsc , bsc_fn );
+ s_config_Block( BoxBlock , bsc , sconf_file );
 
  if( BoxBlock->get_registered_solvers().empty() ) {
   cout << endl << "no Solver registered to the Block!" << endl;

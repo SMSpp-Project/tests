@@ -1,0 +1,82 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - TUBSCfg-QCP.txt - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a ThermalUnitBlock whose
+# continuous relaxation is being solved (to optimality) by a :MILPSolver,
+# for the AC case where the reactive-power terms make that relaxation a QCP:
+# SCIP is used (HiGHS cannot solve QCP models). It is otherwise identical to
+# TUBSCfg-CLP.txt, which uses HiGHS for the non-QCP (DC) case.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver
+GRBMILPSolver
+#SCIPMILPSolver        # SCIP solves the AC QCP relaxation (HiGHS cannot)
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+3 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0 # log verbosity of the MILPSolver
+intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+intCutSepPar    7 # separate user cuts at the root node & sub-nodes
+                  # and lazy constraints (everywhere); this has no
+                  # effect if P/C are not activated in the TUBCfg
+
+# All specific SCIP parameter (uncomment based on Solver)
+#lp/checkstability 0 # 0 = accept unstable LP, 1 = abort node (default)
+
+1 # number of double parameters
+
+# now all the double parameters
+dblRelAcc       1e-8 # relative accuracy required to solution = mipmap
+                     # must be tighter than the accuracy required to
+                     # the Lagrangian Dual, but not too much so
+
+# All specific SCIP parameter (uncomment based on Solver)
+#numerics/feastol 1e-4 # feasibility tolerance (default 1e-6); loosen it so
+                      # SoPlex stops returning spurious pfeas=0 on the
+                      # ill-conditioned nonconvex node LPs
+
+0 # number of string parameters
+
+# now all the string parameters
+#strOutputFile  thermal.lp
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -END TUBSCfg-QCP.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

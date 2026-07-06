@@ -9,6 +9,9 @@ if (NOT hasParent)
     find_package(MILPSolver)
 endif ()
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 add_executable(PolyhedralFunction_test test.cpp ../common_utils.cpp)
 target_include_directories(PolyhedralFunction_test PRIVATE ..)
@@ -41,5 +44,9 @@ foreach (BATCH_FILE ${BATCH_FILES})
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 endforeach ()
+
+# Tag this directory's tests with their per-module CI labels
+# (the label map lives in cmake/TestLabels.cmake).
+smspp_label_tests()
 
 # --------------------------------------------------------------------------- #

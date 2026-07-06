@@ -7,7 +7,6 @@
 #   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ComputeConfig         # exact type of the ComputeConfig object
@@ -53,5 +52,9 @@ dblRelAcc       1e-8 # relative accuracy required to solution
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<<<<<<< HEAD
 # - - - - - - - - - - - - - -END MILPCfg.txt- - - - - - - - - - - - - - - - -
+=======
+# - - - - - - - - - - - - - - END MILPCfg.txt - - - - - - - - - - - - - - - -
+>>>>>>> 9117b5c7602a1644ac1e5dec8cf25319e7e0c048
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

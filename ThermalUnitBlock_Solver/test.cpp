@@ -81,11 +81,20 @@
 
 #include <sstream>
 
+#include <chrono>
+
 #include <random>
 
 #include <iomanip>
 
 #include "ThermalUnitBlock.h"
+
+// NuclearUnitBlock derives from ThermalUnitBlock; this same tester also drives
+// the nuclear instances (a NuclearUnitBlock deserialises and casts to a
+// ThermalUnitBlock), printing the modulation indicators when present. The
+// nuclear DP solver (NuclearUnitExtDPSolver) is selected through the
+// BlockSolverConfig (BSCFG), not hard-wired here.
+#include "NuclearUnitBlock.h"
 
 #include "common_utils.h"
 
@@ -178,6 +187,20 @@ static void PrintSolution( void )
    std::cout << ", ";
   }
  std::cout << " ]" << std::endl;
+
+ // modulation profile, only for a nuclear unit
+ if( auto NUBlock = dynamic_cast< NuclearUnitBlock * >( TUBlock ) )
+  if( auto m = NUBlock->get_modulation() ) {
+   std::cout << "m = [ ";
+   for( Index i = 0 ; ; ++m ) {
+    std::cout << int( m->get_value() );
+    if( ++i >= time_horizon )
+     break;
+    else
+     std::cout << ", ";
+    }
+   std::cout << " ]" << std::endl;
+   }
  }
 
 /*--------------------------------------------------------------------------*/
@@ -295,7 +318,10 @@ static bool SolveBoth( void )
    TUBlock->unregister_Solver( Slvr1 );
    TUBlock->register_Solver( Slvr1 , true );  // push it to the front
   #endif
+  auto start1 = std::chrono::system_clock::now();
   int rtrn1st = Slvr1->compute( false );
+  auto end1 = std::chrono::system_clock::now();
+  double t1 = std::chrono::duration< double >( end1 - start1 ).count();
   bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
                    && ( rtrn1st != Solver::kUnbounded )
                    && ( rtrn1st != Solver::kInfeasible ) )
@@ -340,7 +366,10 @@ static bool SolveBoth( void )
    TUBlock->unregister_Solver( Slvr2 );
    TUBlock->register_Solver( Slvr2 );  // push it to the back
   #endif
+  auto start2 = std::chrono::system_clock::now();
   int rtrn2nd = Slvr2->compute( false );
+  auto end2 = std::chrono::system_clock::now();
+  double t2 = std::chrono::duration< double >( end2 - start2 ).count();
 
   bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
                    && ( rtrn2nd != Solver::kUnbounded )
@@ -390,10 +419,15 @@ static bool SolveBoth( void )
   // which is why the relatively loose tolerance of 2e-6 here
   //!!  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-6 *
   //!!  emergency version with 1e-4 to find big errors
+  // bespoke verdict (kept intact, including the CHECK_SOLUTIONS dispatch
+  // comparison), restructured to a single exit that prints the unified line
+  bool ok = false;
+  std::string verdict = "KO";
+  bool decided = false;
   if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 1e-4 *
 			  std::max( double( 1 ) , std::max( abs( fo1st ) ,
 						  abs( fo2nd ) ) ) ) ) {
-   LOG1( "OK(f)" << std::endl );
+   ok = true; verdict = "OK(f)"; decided = true;
 
    #if( CHECK_SOLUTIONS & 4 )
     for( Index i = 0 ; i < time_horizon ; ++i ) {
@@ -412,31 +446,31 @@ static bool SolveBoth( void )
      }
    #endif
 
-   return( true );
    }
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
+  if( ( ! decided ) && ( rtrn1st == Solver::kInfeasible ) &&
       ( rtrn2nd == Solver::kInfeasible ) ) {
-    LOG1( "OK(e)" << std::endl );
-    return( true );
-    }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   LOG1( "OK(u)" << std::endl );
-   return( true );
+   ok = true; verdict = "OK(e)"; decided = true;
    }
 
-  #if( LOG_LEVEL >= 1 )
-   std::cout << "Solver1 = ";
-   PrintResults( hs1st , rtrn1st , fo1st );
+  if( ( ! decided ) && ( rtrn1st == Solver::kUnbounded ) &&
+      ( rtrn2nd == Solver::kUnbounded ) ) {
+   ok = true; verdict = "OK(u)"; decided = true;
+   }
 
-   std::cout << " ~ Solver2 = ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   std::cout << std::endl;
-  #endif
-
-  return( false );
+  {
+   auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
+    if( hs )                              return( fmt_obj( fo ) );
+    if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+    if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+    return( "Error!" );
+    };
+   print_instance_line(
+    { t1 , t2 } ,
+    { tok( hs1st , rtrn1st , fo1st ) , tok( hs2nd , rtrn2nd , fo2nd ) } ,
+    std::numeric_limits< double >::quiet_NaN() , verdict );
+   }
+  return( ok );
   }
  catch( std::exception &e ) {
   std::cerr << e.what() << std::endl;
@@ -450,6 +484,35 @@ static bool SolveBoth( void )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (instance positional, -S BlockSolverConfig, -c/-p
+// prefixes) are handled centrally by common_utils. The same tester can thus
+// drive different solver configurations (e.g. ThermalUnitExtDPSolver vs the
+// nuclear NuclearUnitExtDPSolver) just by passing a different -S file.
+long int seed = 0;
+Index wchg = 135;
+int wf = 1;
+double p_change = 0.6;
+Index n_change = 10;
+Index n_repeat = 100;
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
+  case( 'f' ): Str2Sthg( optarg , wf );        return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
+  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
+  default:                                     return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
@@ -457,58 +520,49 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // standard params (instance positional + -S) are parsed by common_utils;
+ // the test only appends its own knobs
 
  assert( SKIP_BEAT >= 0 );
 
- long int seed = 0;
- Index wchg = 135;
- int wf = 1;
- double p_change = 0.6;
- Index n_change = 10;
- Index n_repeat = 100;
+ docopt_desc = "SMS++ ThermalUnitBlock Solver test.\n";
+ short_opts += "e:k:f:n:m:q:";
+ const std::vector< option > my_opts = {
+   { "seed"   , required_argument , nullptr , 'e' } ,
+   { "wchg"   , required_argument , nullptr , 'k' } ,
+   { "wf"     , required_argument , nullptr , 'f' } ,
+   { "rounds" , required_argument , nullptr , 'n' } ,
+   { "nchng"  , required_argument , nullptr , 'm' } ,
+   { "pchng"  , required_argument , nullptr , 'q' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [135]:\n"
+         "                                    1 fixed costs, 2 quadratic\n"
+         "                                    coefficients, 4 linear\n"
+         "                                    coefficients,\n"
+         "                                    128 also via abstract\n"
+         "                                    representation\n"
+         "  -f, --wf <bits>                 what formulation [1]:\n"
+         "                                    0 3bin, 1 T, 2 pt, 3 DP,\n"
+         "                                    4 SU, 5 SD, 6 SUSD;\n"
+         "                                    +8 also use perspective cuts\n"
+         "  -n, --rounds <n>                how many iterations [100]\n"
+         "  -m, --nchng <n>                 number of changes [10]\n"
+         "  -q, --pchng <p>                 probability of changing [0.6]\n";
 
- switch( argc ) {
-  case( 8 ): Str2Sthg( argv[ 7 ] , p_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_repeat );
-  case( 5 ): Str2Sthg( argv[ 4 ] , wf );
-  case( 4 ): Str2Sthg( argv[ 3 ] , wchg );
-  case( 3 ): Str2Sthg( argv[ 2 ] , seed );
-  case( 2 ): break;
-  default: std::cerr << "Usage: " << argv[ 0 ] <<
-	   "file [seed wchg wf #rounds #chng %chng]"
-    << std::endl <<
-    "       wchg: what to change, coded bit-wise [135]"
-    << std::endl <<
-    "             0 = fixed costs, 1 = linear costs"
-    << std::endl <<
-    "             2 = quadratic costs"
-    << std::endl <<
-    "             +128 = also change abstract representation"
-    << std::endl <<
-    "       wf:   what formulation, coded bit-wise [1]"
-    << std::endl <<
-    "             0 = 3bin, 1 = T, 2 = pt, 3 = DP"
-    << std::endl <<
-    "             4 = SU, 5 = SD, 6 = SUSD (formulation)"
-    << std::endl <<
-    "             +8 = also use perspective cuts"
-    << std::endl <<
-    "       #rounds: how many iterations [100]"
-    << std::endl <<
-    "       #chng: number changes [10]"
-    << std::endl <<
-    "       %chng: probability of changing [0.6]"
-    << std::endl;
-	   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
 
  rg.seed( seed );  // seed the pseudo-random number generator
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- auto block = Block::deserialize( argv[ 1 ] );
+ auto block = Block::deserialize( filename );
  if( ! block ) {
   std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
   exit( 1 );
@@ -524,6 +578,12 @@ int main( int argc , char **argv )
  auto bc = new BlockConfig;
  bc->f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
  TUBlock->set_BlockConfig( bc );
+
+ // enable primary + secondary spinning-reserve variables: when the unit is
+ // solved standalone there is no UCBlock parent to do it, so the reserve
+ // variables/constraints would otherwise never be generated. This is a
+ // no-op for instances with no PrimaryRho/SecondaryRho data.
+ TUBlock->set_reserve_vars( 3 );
 
  TUBlock->generate_abstract_variables();
  TUBlock->generate_objective( nullptr );
@@ -554,13 +614,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- std::string bsc_fn = "BSCfg.txt";
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;
+  std::cerr << "Error: cannot load BSC from " << sconf_file << std::endl;
   exit( 1 );
   }
- s_config_Block( TUBlock , bsc , bsc_fn );
+ s_config_Block( TUBlock , bsc , sconf_file );
 
  if( TUBlock->get_registered_solvers().size() < 2 ) {
   std::cout << std::endl << "too few Solver registered to the Block"
@@ -688,22 +747,46 @@ int main( int argc , char **argv )
       // actually is a Range and in case convert it
       LOG1( "(r,a) - " );
 
-      std::vector< double > lincsts( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       lincsts[ i ] = TUBlock->get_linear_term( strt + i );
+      if( wf & 8 ) {
+       // with perspective cuts the quadratic term is the *linear*
+       // coefficient of the cut variables; only the tbin/T/pt formulations
+       // have them time-indexed and active in the Objective, for the others
+       // (DP/SU/SD/SUSD) fall back to the physical setter
+       if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
+	Subset nms( tochange );
+	for( Index i = 0 ; i < tochange ; ++i )
+	 nms[ i ] = of->is_active( cut + ( strt + i ) );
 
-      Subset nms( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
-				 + ( strt + i ) );
+	std::sort( nms.begin() , nms.end() );
+	if( nms.back() - nms.front() + 1 == nms.size() )
+	 of->modify_linear_coefficients( std::move( newcsts ) ,
+					 Range( nms.front() ,
+						nms.back() + 1 ) );
+	else
+	 of->modify_linear_coefficients( std::move( newcsts ) ,
+					 std::move( nms ) );
+        }
+       else
+	TUBlock->set_quad_term( newcsts.begin() , Range( strt , stp ) );
+       }
+      else {
+       std::vector< double > lincsts( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	lincsts[ i ] = TUBlock->get_linear_term( strt + i );
 
-      std::sort( nms.begin() , nms.end() );
-      if( nms.back() - nms.front() + 1 == nms.size() )
-       of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			 Range( nms.front() , nms.back() + 1 ) );
-      else
-       of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			 std::move( nms ) );
+       Subset nms( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
+				  + ( strt + i ) );
+
+       std::sort( nms.begin() , nms.end() );
+       if( nms.back() - nms.front() + 1 == nms.size() )
+	of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			  Range( nms.front() , nms.back() + 1 ) );
+       else
+	of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			  std::move( nms ) );
+       }
       }
      else {  // change via call to set_* method
       LOG1( "(r) - " );
@@ -720,15 +803,32 @@ int main( int argc , char **argv )
       // change via abstract representation
       LOG1( "(s,a) - " );
 
-      std::vector< double > lincsts( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       lincsts[ i ] = TUBlock->get_linear_term( nms[ i ] );
+      if( wf & 8 ) {
+       // with perspective cuts the quadratic term is the *linear*
+       // coefficient of the cut variables; only the tbin/T/pt formulations
+       // have them time-indexed and active in the Objective, for the others
+       // (DP/SU/SD/SUSD) fall back to the physical setter
+       if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
+	for( Index i = 0 ; i < tochange ; ++i )
+	 nms[ i ] = of->is_active( cut + nms[ i ] );
 
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) + nms[ i ] );
+	of->modify_linear_coefficients( std::move( newcsts ) ,
+					std::move( nms ) , false );
+        }
+       else
+	TUBlock->set_quad_term( newcsts.begin() , std::move( nms ) , false );
+       }
+      else {
+       std::vector< double > lincsts( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	lincsts[ i ] = TUBlock->get_linear_term( nms[ i ] );
 
-      of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			std::move( nms ) , false );
+       for( Index i = 0 ; i < tochange ; ++i )
+	nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) + nms[ i ] );
+
+       of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			 std::move( nms ) , false );
+       }
       }
      else {  // change via call to set_* method
       LOG1( "(s) - " );

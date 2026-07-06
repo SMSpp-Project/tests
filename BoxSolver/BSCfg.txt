@@ -8,7 +8,6 @@
 #   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -18,10 +17,10 @@ BlockSolverConfig     # exact type of the Configuration object
 2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 BoxSolver               # name of 1st Solver
-CPXMILPSolver                   # name of 2nd Solver
-#GRBMILPSolver                  # name of 2nd Solver
-#SCIPMILPSolver             # name of 2nd Solver
-#HiGHSMILPSolver                # name of 2nd Solver
+#CPXMILPSolver          # name of 2nd Solver
+GRBMILPSolver           # name of 2nd Solver
+#SCIPMILPSolver         # name of 2nd Solver
+#HiGHSMILPSolver        # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -81,13 +80,13 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 intLogVerb    0 # LogVerb, log verbosity of the MILPSolver
 
-0 # number of double parameters
+1 # number of double parameters
 
 # Specific SCIP parameters
 #limits/time    30     # Time limit
 
 # now all the double parameters
-# [none]
+dblRelAcc     1e-9 # relative accuracy required to solution
 
 0 # number of string parameters
 

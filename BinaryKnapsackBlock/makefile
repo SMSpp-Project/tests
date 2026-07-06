@@ -37,7 +37,6 @@ include $(BKBkSDR)/makefile-c
 MILPSSDR = $(BKBkSDR)/../MILPSolver
 include $(MILPSSDR)/makefile-s
 
-
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files

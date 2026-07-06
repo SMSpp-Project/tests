@@ -18,13 +18,18 @@
  * dispatch to every nested sub-Block matching the classname() key.
  *
  * Solver-comparison and reference-objective helpers cover Pattern B (one
- * Block with 1 or 2 Solver registered): SolveBoth() runs Slvr1, optionally
- * Slvr2, prints timings + cross-check verdict; CheckRefValue() prints the
- * comparison against a reference objective; SolveAndCheckRef() is the
- * single-Solver convenience that bundles solve + ref-check in one call.
- * Pattern A (two separate Block each with one Solver, as in
- * compare_formulations) is structurally different and still lives in that
- * test.cpp.
+ * Block with an arbitrary number of Solver registered): SolveAll() is the
+ * general engine, it runs every registered Solver, prints the uniform
+ * per-instance line (timings + every Solver value, and the reference if any)
+ * via print_instance_line(), and returns the cross-check verdict; SolveBoth()
+ * is the 1-or-2-Solver wrapper over it, CheckRefValue() prints the comparison
+ * against a reference objective, and SolveAndCheckRef() is the single-Solver
+ * convenience that bundles solve + ref-check in one call. The classifier
+ * (SolverClassifier / SolverReading) lets a test say how each Solver's result
+ * enters the cross-check (exact, lower/upper bound, or relaxation bracket)
+ * without pulling any solver-specific dependency into common_utils. Pattern A
+ * (two separate Block each with one Solver, as in compare_formulations) is
+ * structurally different and still lives in that test.cpp.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -51,9 +56,16 @@
 #if( USECOLORS )
  #define RED( x ) "\x1B[31m" #x "\033[0m"
  #define GREEN( x ) "\x1B[32m" #x "\033[0m"
+ #define YELLOW( x ) "\x1B[33m" #x "\033[0m"
+ // raw on/off codes, for colouring runtime (non-literal) messages
+ #define ANSI_YELLOW "\x1B[33m"
+ #define ANSI_RESET  "\033[0m"
 #else
  #define RED( x ) #x
  #define GREEN( x ) #x
+ #define YELLOW( x ) #x
+ #define ANSI_YELLOW ""
+ #define ANSI_RESET  ""
 #endif
 
 /*--------------------------------------------------------------------------*/
@@ -63,8 +75,11 @@
 #include <getopt.h>
 #include <filesystem>
 
+#include <cstddef>
+#include <functional>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -230,6 +245,154 @@ enum class ObjGetter {
 double get_obj_value( Solver * slvr , ObjGetter g );
 
 /*--------------------------------------------------------------------------*/
+/// format an objective value the canonical way (scientific, 7 digits)
+
+std::string fmt_obj( double v );
+
+/*--------------------------------------------------------------------------*/
+/// how a single Solver's result enters the per-instance cross-check
+/** The objective getters (ObjGetter) only say WHERE a Solver stores its
+ *  answer; SolverReading::Kind says HOW that answer is compared against the
+ *  others when more than one Solver is registered:
+ *
+ *  - Exact:      an exact optimum; all Exact readings must agree on z*;
+ *  - LowerBound: a valid lower bound (LB <= z*);
+ *  - UpperBound: a valid upper bound (UB >= z*);
+ *  - Bracket:    a relaxation that brackets z* in [ lb , ub ]. */
+
+struct SolverReading {
+ enum class Kind { Exact , LowerBound , UpperBound , Bracket };
+
+ Kind   kind  = Kind::Exact;
+ double value = std::numeric_limits< double >::quiet_NaN();   ///< Exact/LB/UB
+ double lb    = - std::numeric_limits< double >::infinity();  ///< Bracket only
+ double ub    =   std::numeric_limits< double >::infinity();  ///< Bracket only
+ };
+
+/*--------------------------------------------------------------------------*/
+/// classify+read a Solver: maps (Solver*, index) to a SolverReading
+/** Called by SolveAll() once per feasible Solver, after it has compute()d, to
+ *  decide how to read and cross-check its result. The default classifiers
+ *  below cover the common cases (every Solver an Exact optimum, or a relaxation
+ *  bracketing z* recognised by its classname()); tests with bespoke needs
+ *  (e.g. one-sided bounds, or extra per-Solver bookkeeping) wrap these or pass
+ *  their own. */
+
+using SolverClassifier =
+ std::function< SolverReading ( Solver * , std::size_t ) >;
+
+/*--------------------------------------------------------------------------*/
+/// default classifier: read every Solver via @p g as an Exact optimum
+
+SolverClassifier exact_getter( ObjGetter g = ObjGetter::VarValue );
+
+/// per-Solver classifier: read Solver k via getters[k] (Exact), else @p dflt
+
+SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
+                                ObjGetter dflt = ObjGetter::VarValue );
+
+/// classifier: read a Solver as a [ get_lb() , get_ub() ] Bracket when its
+/// classname() contains "Relaxation", else as an Exact get_var_value() optimum
+
+/** Encodes the :RelaxationSolver naming convention so that any relaxation
+ *  Solver is cross-checked uniformly (it only brackets z*) without the test
+ *  depending on its concrete type. */
+
+SolverClassifier relaxation_aware_getter( void );
+
+/*--------------------------------------------------------------------------*/
+/// print the uniform per-instance log line
+/** Prints "<t0> - <t1> - ... | S0 = <tok0>  S1 = <tok1>  ... [ ~ Ref = <r>
+ *  (|diff| = <d>) ]  -> <verdict>". @p times and @p value_tokens must have the
+ *  same length (one entry per Solver); a Ref is printed only if @p ref is not
+ *  NaN, and the "(|diff| = ...)" detail only if @p diff is also not NaN. Used
+ *  both by SolveAll() and by the tests that keep their own solve loop (so every
+ *  test prints the same line). */
+
+void print_instance_line( const std::vector< double > & times ,
+                          const std::vector< std::string > & value_tokens ,
+                          double ref ,
+                          const std::string & verdict ,
+                          double diff =
+                           std::numeric_limits< double >::quiet_NaN() );
+
+/*--------------------------------------------------------------------------*/
+/// format a SolverReading as a value token ("v" or "[ lb , ub ]")
+
+std::string reading_token( const SolverReading & r );
+
+/*--------------------------------------------------------------------------*/
+/// cross-check per-Solver readings against each other and an optional reference
+/** Pure verdict logic shared by SolveAll() and by tests that run their own
+ *  solve loop (so the cross-check is implemented once). For each Solver k:
+ *  @p has_solution[k] says whether it found a solution, @p status[k] is its
+ *  return code (for infeasible/unbounded parity), and @p rd[k] is its reading
+ *  (consulted only when has_solution[k]).
+ *
+ *  Verdict (relative tolerance @p tol, a ~ b iff |a-b| <= tol*max(1,|a|,|b|)):
+ *  - 1 Solver, no @p ref: passes iff it found a solution;
+ *  - all-infeasible / all-unbounded and no @p ref: OK(e) / OK(u);
+ *  - otherwise every Exact reading must agree on z*, every LowerBound <= z*,
+ *    every UpperBound >= z*, every Bracket must contain z*, and (if given)
+ *    @p ref must match z* (z* is taken from the Exact readings, else from
+ *    @p ref, else from the bounds' mutual consistency).
+ *
+ *  @p verdict_out receives the token ("OK(f)"/"OK(e)"/"OK(u)"/"OK"/"KO");
+ *  @p diff_out receives |z* - ref| when both are defined, else NaN. */
+
+bool cross_check( const std::vector< SolverReading > & rd ,
+                  const std::vector< bool > & has_solution ,
+                  const std::vector< int > & status ,
+                  double ref , double tol ,
+                  std::string & verdict_out , double & diff_out );
+
+/*--------------------------------------------------------------------------*/
+/// run EVERY Solver registered on @p block and cross-check the results
+/** Generalizes SolveBoth() to an arbitrary number M >= 1 of registered
+ *  Solver. For each instance it computes every Solver (timing each), prints
+ *  the uniform per-instance line via print_instance_line() showing ALL the
+ *  Solver values (and @p ref, if given), and returns the pass/fail verdict:
+ *
+ *  - M == 1, no @p ref: passes iff the Solver found a solution (the plain
+ *    "solve and show the value" case);
+ *  - M == 1, with @p ref: the value must match @p ref within @p tol;
+ *  - M >= 2: feasibility must be unanimous (all-infeasible -> OK(e),
+ *    all-unbounded -> OK(u), mixed -> KO); among the feasible Solver every
+ *    Exact reading must agree on z*, every LowerBound must be <= z*, every
+ *    UpperBound >= z*, every Bracket must contain z*, and (if given) @p ref
+ *    must match z*. When no Exact reading exists, z* is taken from @p ref if
+ *    provided, otherwise the bounds must be mutually consistent
+ *    (max LB <= min UB).
+ *
+ *  Tolerances are relative: a ~ b iff |a - b| <= tol * max(1,|a|,|b|).
+ *  Out-params, if non-null, are populated from the FIRST Solver (value,
+ *  has-solution flag, elapsed time, elapsed iterations). */
+
+bool SolveAll( Block * block ,
+               const SolverClassifier & classify ,
+               double ref = std::numeric_limits< double >::quiet_NaN() ,
+               double tol = 1e-5 ,
+               double * out_fo1 = nullptr ,
+               bool   * out_hs1 = nullptr ,
+               double * out_time1 = nullptr ,
+               long   * out_it1 = nullptr );
+
+/*--------------------------------------------------------------------------*/
+/// convenience SolveAll(): read every Solver via @p getters as Exact optima
+/** @p getters is matched positionally to the registered Solver; if empty,
+ *  every Solver is read via get_var_value(); if shorter than the number of
+ *  Solver, the missing entries default to get_var_value(). */
+
+bool SolveAll( Block * block ,
+               double ref = std::numeric_limits< double >::quiet_NaN() ,
+               const std::vector< ObjGetter > & getters = {} ,
+               double tol = 1e-5 ,
+               double * out_fo1 = nullptr ,
+               bool   * out_hs1 = nullptr ,
+               double * out_time1 = nullptr ,
+               long   * out_it1 = nullptr );
+
+/*--------------------------------------------------------------------------*/
 /// Pattern B: run the Solver(s) registered on a single Block
 /** If @p block has just one registered Solver, this calls compute() on it,
  *  prints "<time>\\t<iters>\\t<fo>\\n" and returns the has-solution flag.
@@ -363,6 +526,33 @@ bool process_standard_arg( int opt );
  *  and exits 1 with a usage hint on error. */
 
 void process_args( int argc , char ** argv );
+
+/*--------------------------------------------------------------------------*/
+/// processes all command-line arguments, with test-specific options
+/** Same as the two-argument overload, but @p custom_arg is called first for
+ *  each option so that a test can handle its OWN command-line options (the
+ *  ones it appends to short_opts / long_opts) on top of the standard ones
+ *  (the instance positional and -B / -S / -c / -p / -D / -v, handled
+ *  centrally by process_standard_arg()). This is the exact same machinery
+ *  the tools use: the standard parameters live here, every test only adds
+ *  its specific ones. @p custom_arg returns true if it consumed the option.
+ *
+ *  If @p filename_optional is true (set by a test that generates its own
+ *  instance rather than reading one, e.g. the seed-driven testers) a
+ *  missing positional instance is not an error. */
+
+void process_args( int argc , char ** argv , bool ( *custom_arg )( int opt ) );
+
+/*--------------------------------------------------------------------------*/
+/// true if the instance positional argument is optional (generator tests)
+extern bool filename_optional;
+
+/*--------------------------------------------------------------------------*/
+/// require that a BlockSolverConfig was provided (-S); throw otherwise
+void require_solver_config( void );
+
+/// require that a BlockConfig was provided (-B); throw otherwise
+void require_block_config( void );
 
 /*--------------------------------------------------------------------------*/
 

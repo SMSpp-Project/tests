@@ -16,15 +16,15 @@
  * the third positional argument is therefore kept as a placeholder for
  * symmetry with the LDS_UC batch invocation.
  *
- * \author Donato Meoli \n
- *         Dipartimento di Informatica \n
- *         Universita' di Pisa \n
- *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
  *
- * \copyright &copy; by Donato Meoli, Antonio Frangioni
+ * \author Donato Meoli \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
+ *
+ * \copyright &copy; by Antonio Frangioni, Donato Meoli
  */
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- MACROS ----------------------------------*/
@@ -93,6 +93,23 @@ const double RefTolerance = 1e-5;
 bool ProxHeur = false;     // false = LagrangianDualSolver
                            // true  = PrimalProximalHeur
 
+/*--------------------------------------------------------------------------*/
+
+// test-specific command-line options, appended to the standard ones handled
+// by common_utils (the instance positional and -B / -S / -c / -p / -D / -v):
+//   -w / --warm-start  : 0 = LagrangianDualSolver, 1 = PrimalProximalHeur
+//   -r / --ref         : reference objective value to compare against
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'w' ): Str2Sthg( optarg , ProxHeur );    return( true );
+  case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
+  default:                                        return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char ** argv )
 {
@@ -100,27 +117,31 @@ int main( int argc , char ** argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the standard parameters (instance positional, -B BlockConfig, -S
+ // BlockSolverConfig, -c/-p prefixes) are parsed centrally by common_utils;
+ // the test only appends its own -w / -r options
 
- switch( argc ) {
-  case( 5 ): Str2Sthg( argv[ 4 ] , RefObjective );
-  case( 4 ): Str2Sthg( argv[ 3 ] , ProxHeur );
-  case( 3 ):
-  case( 2 ): break;
-  default:
-   std::cerr << "Usage: " << argv[ 0 ]
-             << " TSSB-file [BSC-file ws ref]" << std::endl
-             << "       BSC-file: BlockSolverConfig description [BSPar.txt]"
-             << std::endl
-             << "       ws:  0 = LagrangianDualSolver, 1 = PrimalProximalHeur"
-                " [0]" << std::endl
-             << "       ref: reference objective value to compare against "
-                "[none]" << std::endl;
-   return( 1 );
-  }
+ docopt_desc = "SMS++ TwoStageStochasticBlock test.\n";
+ short_opts += "w:r:";
+ const std::vector< option > my_opts = {
+   { "warm-start" , required_argument , nullptr , 'w' } ,
+   { "ref"        , required_argument , nullptr , 'r' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -w, --warm-start <0|1>          0 = LagrangianDualSolver, "
+         "1 = PrimalProximalHeur [0]\n"
+         "  -r, --ref <value>               reference objective to compare "
+         "against [none]\n";
+
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) is mandatory; the BlockConfig (-B, the inner
+ // formulation) is optional and applied only if provided
+ require_solver_config();
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- TestBlock = Block::deserialize( argv[ 1 ] );
+ TestBlock = Block::deserialize( filename );
  if( ! TestBlock ) {
   std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
   exit( 1 );
@@ -140,14 +161,26 @@ int main( int argc , char ** argv )
  // SimpleConfiguration< std::map< std::string , Configuration * > >;
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
- std::string bsc_fn = argc >= 3 ? argv[ 2 ] : "BSPar.txt";
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  std::cerr << "Error: cannot load BSC from " << bsc_fn << std::endl;
+  std::cerr << "Error: cannot load BSC from " << sconf_file << std::endl;
   delete TestBlock;
   exit( 1 );
   }
- s_config_Block( TestBlock , bsc , bsc_fn );
+
+ // apply the inner (meta-)BlockConfig (formulation) by classname recursively
+ // over the whole Block tree: the scenarios contain UCBlocks whose
+ // ThermalUnitBlock (and DCNetworkBlock) sit arbitrarily deep, and
+ // b_config_Block reaches them all. The inner Solvers are NOT attached here:
+ // they descend from the LagrangianDualSolver str_LagBF_BSCfg (InnerBSCfg.txt)
+ // when bsc is applied below.
+ if( ! bconf_file.empty() )
+  if( auto ibc = Configuration::deserialize( bconf_file ) ) {
+   b_config_Block( TestBlock , ibc , bconf_file );
+   delete( ibc );
+   }
+
+ s_config_Block( TestBlock , bsc , sconf_file );
 
  if( TestBlock->get_registered_solvers().empty() ) {
   std::cout << std::endl
@@ -223,6 +256,7 @@ int main( int argc , char ** argv )
 
  // destroy the Block - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+ TestBlock->unregister_Solvers( true );
  delete( bsc );
  delete( TestBlock );
 

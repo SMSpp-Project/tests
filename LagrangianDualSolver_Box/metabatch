@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+#
+# usage: metabatch
+#
+# meta-sweep wrapper: loops over the long-term t-strategy and its parameter,
+# invoking the underlying test for each combination
 
 # loop 1: long-term t-strategy
 
@@ -107,3 +112,5 @@ for LT in 0 4 8 12; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

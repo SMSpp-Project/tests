@@ -13,7 +13,7 @@
  * repeatedly randomly modified and re-solved several times, but this is not
  * done yet.
  *
- * \author Francesco Demelas \n
+ * \author Francesca Demelas \n
  *         Laboratoire d'Informatique de Paris Nord \n
  *         Universite' Sorbonne Paris Nord \n
  *
@@ -99,6 +99,8 @@
 
 #include "CDASolver.h"
 
+#include "LagrangianDualSolver.h"
+
 #include "MMCFBlock.h"
 
 //!!#include "MILPSolver.h"
@@ -139,7 +141,6 @@ const FunctionValue INF = SMSpp_di_unipi_it::Inf< FunctionValue >();
 /*--------------------------------------------------------------------------*/
 
 MMCFBlock * TestBlock;         // the [MMCF]Block that is solved
-char **globalArgv;             // the main argv for a global use
 int wprnt = 0;
 
 std::mt19937 rg;               // base random generator
@@ -184,7 +185,7 @@ static void PrintSol( CDASolver * slvr , bool first ,
  if( ! wprnt )
   return;
 
- std::string name( globalArgv[ 1 ] );
+ std::string name( filename );
  name = name.substr( name.find_last_of( "/" ) + 1 , name.length() );
  name = name.substr( 0 , name.find( "." ) );
  if( first )
@@ -239,111 +240,77 @@ static void PrintSol( CDASolver * slvr , bool first ,
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) 
+static bool SolveBoth( void )
 {
+ // own solve loop (kept for the per-Solver PrintSol() side output and the
+ // CDASolver check), then the shared common_utils cross_check + uniform line.
+ // Every Solver is an exact optimum read via get_var_value(); they must agree
+ // within 2e-7. The DETACH_* re-ordering is applied up front.
  try {
-  // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  auto Slvr1 = dynamic_cast< CDASolver * >(
-			       TestBlock->get_registered_solvers().front() );
-  if( ! Slvr1 ) {
-   cout << "Error! First solver registred to TestBlock not a CDASolver";
-   exit( 1 );
-   }
   #if DETACH_1ST
-   TestBlock->unregister_Solver( Slvr1 );
-   TestBlock->register_Solver( Slvr1 , true );  // push it to the front
+   { auto s = TestBlock->get_registered_solvers().front();
+     TestBlock->unregister_Solver( s );
+     TestBlock->register_Solver( s , true ); }   // push it to the front
   #endif
-
-  #if( LOG_LEVEL >= 3 )
-   Slvr1->set_par( MILPSolver::strOutputFile , "LPBlock-CPXMILP.lp" );
-  #endif
-
-  auto start = std::chrono::system_clock::now();
-
-  int rtrn1st = Slvr1->compute( false );
-  bool hs1st = ( ( ( rtrn1st >= Solver::kOK ) && ( rtrn1st < Solver::kError )
-                   && ( rtrn1st != Solver::kUnbounded )
-                   && ( rtrn1st != Solver::kInfeasible ) )
-                 || ( rtrn1st == Solver::kLowPrecision ) );
-  double fo1st = hs1st ? Slvr1->get_var_value() : -INF;
-
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration< double > elapsed = end - start;
- 
-  PrintSol( Slvr1 , true , elapsed.count() , fo1st );
-
-  #if( LOG_LEVEL >= 1 )
-   cout.setf( ios::scientific, ios::floatfield );
-   cout << setprecision( 2 ) << elapsed.count() << " - " << flush;
-  #endif
-
-  if( TestBlock->get_registered_solvers().size() == 1 ) {
-   #if( LOG_LEVEL >= 1 )
-    PrintResults( hs1st , rtrn1st , fo1st );
-    cout << endl;
-   #endif
-   return( true );
-   }
-
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  auto Slvr2 = dynamic_cast< CDASolver * >(
-			       TestBlock->get_registered_solvers().back() );
-  if( ! Slvr2 ) {
-   cout << "Error! Last solver registred to TestBlock not a CDASolver";
-   exit( 1 );
-   }
   #if DETACH_2ND
-   TestBlock->unregister_Solver( Slvr2 );
-   TestBlock->register_Solver( Slvr2 );  // push it to the back
+   { auto s = TestBlock->get_registered_solvers().back();
+     TestBlock->unregister_Solver( s );
+     TestBlock->register_Solver( s ); }          // push it to the back
   #endif
 
-  start = std::chrono::system_clock::now();
+  const auto & reg = TestBlock->get_registered_solvers();
+  std::vector< Solver * > S( reg.begin() , reg.end() );
+  const std::size_t M = S.size();
 
-  int rtrn2nd = Slvr2->compute( false );
-  bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
-                   && ( rtrn2nd != Solver::kUnbounded )
-                   && ( rtrn2nd != Solver::kInfeasible ) )
-                 || ( rtrn2nd == Solver::kLowPrecision ) );
-  double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
+  std::vector< int > status( M );
+  std::vector< double > times( M );
+  std::vector< bool > hs( M );
+  std::vector< SolverReading > rd( M );
+  std::vector< std::string > tok( M );
 
-  end = std::chrono::system_clock::now();
-  elapsed = end - start;
+  for( std::size_t k = 0 ; k < M ; ++k ) {
+   auto Slvr = dynamic_cast< CDASolver * >( S[ k ] );
+   if( ! Slvr ) {
+    cout << "Error! Solver registred to TestBlock not a CDASolver";
+    exit( 1 );
+    }
+   #if( LOG_LEVEL >= 3 )
+    if( k == 0 )
+     Slvr->set_par( MILPSolver::strOutputFile , "LPBlock-CPXMILP.lp" );
+   #endif
 
-  PrintSol( Slvr2 , false , elapsed.count() , fo2nd );
+   auto start = std::chrono::system_clock::now();
+   status[ k ] = Slvr->compute( false );
+   auto end = std::chrono::system_clock::now();
+   times[ k ] = std::chrono::duration< double >( end - start ).count();
+   hs[ k ] = ( ( ( status[ k ] >= Solver::kOK )
+                 && ( status[ k ] < Solver::kError )
+                 && ( status[ k ] != Solver::kUnbounded )
+                 && ( status[ k ] != Solver::kInfeasible ) )
+               || ( status[ k ] == Solver::kLowPrecision ) );
+   double fo = hs[ k ] ? Slvr->get_var_value() : -INF;
 
-  #if( LOG_LEVEL >= 1 )
-   cout.setf( ios::scientific, ios::floatfield );
-   cout << setprecision( 2 ) << elapsed.count();
-  #endif
+   PrintSol( Slvr , k == 0 , times[ k ] , fo );
 
-  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-7 *
-			  max( double( 1 ) , max( abs( fo1st ) ,
-						  abs( fo2nd ) ) ) ) ) {
-   LOG1( " - OK(f)" << endl );
-   return( true );
+   if( hs[ k ] ) {
+    rd[ k ].kind  = SolverReading::Kind::Exact;
+    rd[ k ].value = fo;
+    tok[ k ] = reading_token( rd[ k ] );
+    }
+   else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
+   else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
+   else                                           tok[ k ] = "Error!";
    }
 
-  if( ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   LOG1( " - OK(e)" << endl );
-   return( true );
-   }
-
-  if( ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   LOG1( " - OK(u)" << endl );
-   return( true );
-   }
-    
-  #if( LOG_LEVEL >= 1 )
-   cout << " - " << setprecision( 7 );
-   PrintResults( hs1st , rtrn1st , fo1st );
-   cout << " - ";
-   PrintResults( hs2nd , rtrn2nd , fo2nd );
-   cout << endl;
-  #endif
-
-  return( false );
+  std::string verdict;
+  double diff;
+  bool ok = cross_check( rd , hs , status ,
+                         std::numeric_limits< double >::quiet_NaN() ,
+                         2e-7 , verdict , diff );
+  print_instance_line( times , tok ,
+                       std::numeric_limits< double >::quiet_NaN() ,
+                       verdict , diff );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;
@@ -357,6 +324,31 @@ static bool SolveBoth( void )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (instance positional, -B BlockConfig, -S
+// BlockSolverConfig, -c/-p prefixes) are handled centrally by common_utils
+char filetype = 's';  // type of the input file
+
+// number of times the instance is (re-)solved; 0 means "not set on the
+// command line", in which case the value is taken from the inner Solver's
+// intNTrainRounds parameter (if it has one) and otherwise defaults to 1. A
+// BundleSolverML configured with intMLTrainOnline trains once per re-solve.
+int n_epochs = 0;
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 't' ): filetype = optarg[ 0 ];        return( true );
+  case( 'w' ): Str2Sthg( optarg , wprnt );    return( true );
+  case( 'e' ): Str2Sthg( optarg , n_epochs ); return( true );
+  default:                                    return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char **argv )
 {
  // override the default terminate handler to print the exception message
@@ -364,50 +356,57 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- 
- globalArgv = argv;
+ // standard params (instance positional + -B + -S) are parsed by
+ // common_utils; the test only appends its own knobs
+
  assert( SKIP_BEAT >= 0 );
 
- char filetype = 's';  // type of the input file;
- 
- switch( argc ) {
-  case( 4 ): Str2Sthg( argv[ 3 ] , wprnt );
-  case( 3 ): filetype = argv[ 2 ][ 0 ];
-  case( 2 ): break;
-  default:   cerr << "Usage: " << argv[ 0 ] << " file_name [typ wprnt]"
-		  << endl
-		  << "        typ = s*, c, p, o, d, u, m (lower or uppercase)"  
-		  << endl 
-		  << "        wprnt: what print into a file, coded bit-wise [0]"
-		  << endl 
-		  << "         0 = nothing, 1 = duals,"
-		  << endl
-		  << "         2 = primal,  4 = time & objective value"
-		  << endl;
-             exit( 1 );
-  }
+ docopt_desc = "SMS++ LagrangianDualSolver-on-MMCFBlock test.\n";
+ short_opts += "t:w:e:";
+ const std::vector< option > my_opts = {
+   { "type"   , required_argument , nullptr , 't' } ,
+   { "wprnt"  , required_argument , nullptr , 'w' } ,
+   { "epochs" , required_argument , nullptr , 'e' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -t, --type <c>                  input file type "
+         "(s*,c,p,o,d,u,m) [s]\n"
+         "  -w, --wprnt <bits>              what to print to file, bit-wise "
+         "[0]:\n"
+         "                                    1 duals, 2 primal, "
+         "4 time & objective value\n"
+         "  -e, --epochs <n>                times the instance is re-solved "
+         "(training rounds);\n"
+         "                                  overrides the inner Solver's "
+         "intNTrainRounds [1]\n";
+
+ process_args( argc , argv , process_specific_arg );
+
+ // both the BlockConfig (-B) and the BlockSolverConfig (-S) must be provided
+ // explicitly: the test never falls back to a hardcoded default Configuration
+ require_block_config();
+ require_solver_config();
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  TestBlock = new MMCFBlock;
- 
- TestBlock->load( argv[ 1 ] , filetype );
+
+ TestBlock->load( filename , filetype );
  TestBlock->PreProcess();
- 
+
  // BC may be a plain BlockConfig or a meta-config
  // SimpleConfiguration< std::map< std::string , Configuration * > >;
  // b_config_Block() dispatches on the runtime type.
- std::string bc_fn = "BPar.txt";
- Configuration * cfg = Configuration::deserialize( bc_fn );
+ Configuration * cfg = Configuration::deserialize( bconf_file );
  if( ! cfg ) {
-  cerr << "Error: cannot load BC from " << bc_fn << endl;
+  cerr << "Error: cannot load BC from " << bconf_file << endl;
   exit( 1 );
   }
- b_config_Block( TestBlock , cfg , bc_fn );
+ b_config_Block( TestBlock , cfg , bconf_file );
 
  delete( cfg );
- 
+
  TestBlock->generate_abstract_variables();
 
  // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
@@ -420,13 +419,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- std::string bsc_fn = "BSPar.txt";
- Configuration * bsc = Configuration::deserialize( bsc_fn );
+ Configuration * bsc = Configuration::deserialize( sconf_file );
  if( ! bsc ) {
-  cerr << "Error: cannot load BSC from " << bsc_fn << endl;
+  cerr << "Error: cannot load BSC from " << sconf_file << endl;
   exit( 1 );
   }
- s_config_Block( TestBlock , bsc , bsc_fn );
+ s_config_Block( TestBlock , bsc , sconf_file );
 
  if( TestBlock->get_registered_solvers().empty() ) {
   cout << endl << "no Solver registered to the Block!" << endl;
@@ -451,11 +449,30 @@ int main( int argc , char **argv )
   #endif
  #endif
 
- // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+ // solver call(s) - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the instance is solved n_rounds times: this is a no-op repetition for a
+ // plain Solver, but it drives online training when the inner Solver is a
+ // BundleSolverML with intMLTrainOnline set. The count comes from -e if given,
+ // else from the inner Solver's intNTrainRounds parameter, else 1.
 
- bool AllPassed = SolveBoth();
- 
+ int n_rounds = 1;
+ if( n_epochs > 0 )
+  n_rounds = n_epochs;
+ else if( auto * lds = dynamic_cast< LagrangianDualSolver * >(
+			    TestBlock->get_registered_solvers().back() ) )
+  if( Solver * inner = lds->get_inner_Solver() ) {
+   const auto idx = inner->int_par_str2idx( "intNTrainRounds" );
+   if( idx < inner->get_num_int_par() )
+    n_rounds = inner->get_int_par( idx );
+   }
+
+ bool AllPassed = false;
+ for( int r = 0 ; r < n_rounds ; ++r ) {
+  CLOG1( n_rounds > 1 , "[round " << r << "] " );
+  AllPassed = SolveBoth();
+  }
+
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // now, for n_repeat times:

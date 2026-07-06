@@ -8,7 +8,6 @@
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -33,6 +32,7 @@ LagrangianDualSolver  # name of Solver
 
 3 # number of integer parameters
 
+# now all the integer parameters
 intDoEasy         3 # do easy components for (some) LagBFunction
                     # (bit 0 + bit 1 = enable easy + ChgCosts)
 intMaxIter      100 # max number of iterations for each call
@@ -40,12 +40,14 @@ intLogVerb        0 # log verbosity of main Bundle algorithm
 
 2 # number of double parameters
 
+# now all the double parameters
 dblRelAcc       1e-4 # relative accuracy required to solution
 dbltInit        1e+0 # initial value for t
 
 1 # number of string parameters
 
-str_LagBF_BSCfg BSCfg1.txt # BlockSolverConfig for the LagBFunctions
+# now all the string parameters
+str_LagBF_BSCfg InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
 
 0 # number of vector-of-int parameters
 

@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
+#
+# usage: batchCL_I < exe file >
+#        < exe file > = path of the executable file, default ./quad_test
+#
+# runs quad_test over the CL_I instance set (objective/constraints combination
+# encoded in this script's DATADIR and TYPE)
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=./ObjC_ConsL
@@ -9,6 +16,14 @@ quad_test=${1:-./quad_test}
 
 for what in "$DATADIR"/*; do
 
+  # QPLib_4270 needs more memory than the CI runners provide (the solve
+  # gets OOM-killed there): skip it in CI only, keeping local coverage
+  if [ -n "$CI" ] && [ "$(basename "$what")" = "QPLib_4270.lp" ]; then
+    continue
+  fi
+
   run_test "$quad_test" "$what" "$TYPE"
 
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

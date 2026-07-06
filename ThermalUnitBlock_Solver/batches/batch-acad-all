@@ -1,34 +1,51 @@
 #!/usr/bin/env bash
+#
+# usage: batch-acad-all < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#
+# runs all 1UC academic instances across thermal formulations
 
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../UCBlock/data/nc4/1UC_Data
 
-wchg=7
+wchg=135    # change fixed + linear + quadratic costs (+128: also regen the
+            # abstract representation, exercising the Modification path)
 #iter=0
 
 TUDPS_test=${1:-./TUDPS_test}
+par=BSCfg.txt
 
 # ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
 
-#for wf in 0 1 2 3 4 5 6; do
-for wf in 9 25; do
+# wf is bit-wise: 0-6 select the formulation (3bin/T/pt/DP/SU/SD/SUSD), +8
+# (PCuts) adds the perspective cuts. We test every formulation with cuts, i.e.
+# wf in 8..14. The interval-based formulations (pt/DP/SU/SD/SUSD, base wf >= 2,
+# i.e. wf >= 10) are too expensive on large-horizon instances, so there we skip
+# them and keep only 3bin/T (wf 8,9).
+for wf in 8 9 10 11 12 13 14; do
   for i in 24 96; do
-    # skip DP, pt, SU, SD and SUSD formulations for 96 problems
-    #if [ $wf -ge 2 ] && [ $i -eq 96 ]; then
-    #  continue
-    #fi
+    # skip the expensive interval-based formulations on large instances
+    if [ $wf -ge 10 ] && [ $i -eq 96 ]; then
+      continue
+    fi
     for j in 1 12 16 23; do
-      for (( h = 1 ; h <= 100 ; h++ )); do
+      # in CI only 5 of the 100 ramp profiles are run (they are variations of
+      # the same shape); the local sweep stays exhaustive
+      if [ -n "$CI" ]; then hlist="1 25 50 75 100"; else hlist=$(seq 1 100); fi
+      for h in $hlist; do
         #for (( seed = 0 ; seed < 20 ; seed++ )); do
           seed=0
 
           what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-          run_test "$TUDPS_test" "$what" "$seed" "$wchg" "$wf" "$iter"
+          run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" -f "$wf" -n "$iter"
 
         #done
       done
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

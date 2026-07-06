@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar-1s.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-1s.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
 # a LagrangianDualSolver using a BundleSolver as the inner Solver
@@ -7,7 +7,6 @@
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -42,7 +41,7 @@ LagrangianDualSolver  # name of Solver
 
 1 # number of string parameters
 
-str_LagBF_BSCfg LPBSCfg-K-DP.txt # Knapsack relaxation, using DPBinaryKnapsackSolver
+str_LagBF_BSCfg LPBSCfg-K-DP.txt # Knapsack relaxation, using CoreDPBinaryKnapsackSolver
 
 0 # number of vector-of-int parameters
 
@@ -62,5 +61,5 @@ str_LagBF_BSCfg LPBSCfg-K-DP.txt # Knapsack relaxation, using DPBinaryKnapsackSo
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END BSPar-1s.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-1s.txt- - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

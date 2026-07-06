@@ -13,18 +13,18 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+4  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-#MCFSolver<MCFSimplex>  # name of 1st Solver
-#MCFSolver<RelaxIV>     # name of 1st Solver
-MCFSolver<MCFCplex>     # name of 1st Solver
-#MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>     # name of 1st Solver
-CPXMILPSolver                   # name of 2nd Solver
-#GRBMILPSolver                  # name of 2nd Solver
-#SCIPMILPSolver             # name of 2nd Solver
-#HiGHSMILPSolver                # name of 2nd Solver
+MCFSolver<MCFSimplex>   # name of 1st Solver
+MCFSolver<RelaxIV>      # name of 2nd Solver
+#MCFSolver<MCFCplex>    # name of Solver
+MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # name of 3rd Solver
+#CPXMILPSolver                  # name of 4th Solver
+#GRBMILPSolver                  # name of 4th Solver
+#SCIPMILPSolver             # name of 4th Solver
+HiGHSMILPSolver                 # name of 4th Solver
 
-2  # number of ComputeConfig in this BlockSolverConfig
+4  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -74,6 +74,92 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MCFSolver (RelaxIV); default parameters
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MCFSolver (MCFLemon); default parameters
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 3rd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the :MILPSolver
 
 ComputeConfig # exact type of the ComputeConfig object

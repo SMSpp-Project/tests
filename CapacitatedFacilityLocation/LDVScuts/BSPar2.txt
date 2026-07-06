@@ -54,9 +54,9 @@ intFrcLstSS          0 # if all the components need be computed at the optimum
 15 # number of double parameters
 
 # now all the double parameters
-dblRelAcc         1e-6 # relative accuracy required to solution
+dblRelAcc         1e-8 # relative accuracy required to solution
 dblNZEps          1e-8 # stopping parameter: threshold to declare 0 the || residual ||
-dbltStar          1e+3 # stopping parameter: multiplied to || residual || to estimate gap
+dbltStar          1e+6 # stopping parameter: multiplied to || residual || to estimate gap
 #dbltStar         1e+4 # stopping parameter: multiplied to || residual || to estimate gap
 dblBPar5             4 # first parameter for dynamic max n. of items per iteration
 dblm1            -0.30 # a NS is possible if (~) Fi( Lambda1 ) >= Fi( Lambda ) + | m1 | v*
@@ -79,7 +79,7 @@ str_LDSlv_ISName BundleSolver # the inner Solver used by LagrangianDualSolver
 strMPBSolverCfg                 MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
 #str_LDSlv_ISName         LegacyBundleSolver # the inner Solver used by LagrangianDualSolver 
 str_LagBF_BSCfg      LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
-#                      this is for the Knapsack relaxation, using DPBinaryKnapsackSolver
+#                      this is for the Knapsack relaxation, using CoreDPBinaryKnapsackSolver
 #str_LagBF_BSCfg     LPBSCfg-K-CX.txt # BlockSolverConfig for the LagBFunctions
 #                      this is for the Knapsack relaxation, using a :MILPSolver
 

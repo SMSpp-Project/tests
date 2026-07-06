@@ -6,10 +6,9 @@
 # equivalent and a LagrangianDualSolver using a BundleSolver as the inner
 # Solver
 #
-#   Donato Meoli, Antonio Frangioni
+#   Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -20,9 +19,9 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
-GRBMILPSolver         # name of 1st Solver
+GRBMILPSolver        # name of 1st Solver
 #SCIPMILPSolver       # name of 1st Solver
-#HiGHSMILPSolver      # name of 1st Solver
+#HiGHSMILPSolver       # name of 1st Solver
 LagrangianDualSolver  # name of 2nd Solver
 
 2 # number of ComputeConfig in this BlockSolverConfig
@@ -43,6 +42,7 @@ LagrangianDualSolver  # name of 2nd Solver
 
 3 # number of integer parameters
 
+# now all the integer parameters
 int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
 intLogVerb        0 # log verbosity of main Bundle algorithm
 intTrgtMng       31 # bit-wise encoding targets and accuracies management:
@@ -53,12 +53,14 @@ intTrgtMng       31 # bit-wise encoding targets and accuracies management:
 
 2 # number of double parameters
 
+# now all the double parameters
 dbltStar         -1e+0 # stopping parameter: multiplied to || residual || to estimate gap
 dbltInit          1e-3 # initial value for t
 
 1 # number of string parameters
 
-str_LagBF_BSCfg  BSCfg1.txt # BlockSolverConfig for the LagBFunctions
+# now all the string parameters
+str_LagBF_BSCfg  InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
 
 0 # number of vector-of-int parameters
 

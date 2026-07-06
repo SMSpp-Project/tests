@@ -28,7 +28,7 @@ for size in 20_10 50_20 75_35 100_50 150_75 200_100; do
 
     what=${DATADIR}/${size}_${seed}_w.nc4
 
-    run_test "$exe" "$what" "$par" "$slv"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv"
 
   done
 done

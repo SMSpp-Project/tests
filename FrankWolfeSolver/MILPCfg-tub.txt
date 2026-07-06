@@ -1,0 +1,65 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  MILPCfg-tub.txt  - - - - - - - - - - - - - - -
+#
+# A ComputeConfig of the :MILPSolver solving the monolithic DPForm + P/C
+# reference. intRelaxIntVars = 2 solves the continuous relaxation *with* the
+# external perspective-cut separation loop (the :MILPSolver does not separate
+# cuts on a pure-continuous problem by itself): this realises the convex hull of
+# the unit's integer solutions, whose optimum equals the Dantzig-Wolfe value that
+# FrankWolfeSolver computes.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+4 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb        0   # log verbosity of the :MILPSolver
+intRelaxIntVars   2   # continuous relaxation WITH the P/C cut-separation loop
+# With P/C the unit's quadratic cost is replaced by its linear epigraph + cut
+# constraints, so each separation round solves an LP (the only quadratic left is
+# the father DQuadFunction -> a tiny Q). Use the DUAL SIMPLEX so each re-solve
+# after adding cuts warm-starts from the previous optimal basis (barrier cannot).
+CPXPARAM_LPMethod 2   # 2 = dual simplex (LP rounds)
+CPXPARAM_QPMethod 2   # 2 = dual simplex (in case the father-Q keeps it a QP)
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END MILPCfg-tub.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

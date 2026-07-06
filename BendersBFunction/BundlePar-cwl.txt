@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BundlePar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BundlePar-cwl.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block having a single
 # BundleSolver attached, and no sub-Block
@@ -7,7 +7,6 @@
 #   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 0  # the BlockSolverConfig is not a "differential" one: values are being set
@@ -87,5 +86,5 @@ strMPBSolverCfg  MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Sol
 # end 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BundlePar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BundlePar-cwl.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

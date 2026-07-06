@@ -6,8 +6,12 @@ if (NOT hasParent)
     find_package(MCFBlock)
     # Solvers
     find_package(MILPSolver)
-    find_package(LEMONSolver)
+    find_package(MCFClassSolver)
+    find_package(MCFLemonSolver)
 endif ()
+
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
 
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::MCFBlock)
@@ -20,18 +24,22 @@ if (TARGET SMS++::MCFBlock)
         target_link_libraries(MCF_MILP_test PRIVATE SMS++::MILPSolver)
     endif ()
 
-    if (TARGET SMS++::LEMONSolver)
-        target_link_libraries(MCF_MILP_test PRIVATE SMS++::LEMONSolver)
+    if (TARGET SMS++::MCFClassSolver)
+        target_link_libraries(MCF_MILP_test PRIVATE SMS++::MCFClassSolver)
+    endif ()
+
+    if (TARGET SMS++::MCFLemonSolver)
+        target_link_libraries(MCF_MILP_test PRIVATE SMS++::MCFLemonSolver)
     endif ()
 
     smspp_install(MCF_MILP_test)
 
     # Create a test fixture to generate .nc4 files by running run_dmx2nc4.
     # This test will build and run the run_dmx2nc4 target
-    add_test(NAME run_dmx2nc4
+    add_test(NAME MCF_MILP_run_dmx2nc4
              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_dmx2nc4)
-    # Mark run_dmx2nc4 as a fixture that sets up "dmx2nc4_generated"
-    set_tests_properties(run_dmx2nc4
+    # Mark it as a fixture that sets up "dmx2nc4_generated"
+    set_tests_properties(MCF_MILP_run_dmx2nc4
                          PROPERTIES FIXTURES_SETUP dmx2nc4_generated)
 
     # Add a test for each batch file
@@ -55,5 +63,9 @@ if (TARGET SMS++::MCFBlock)
                              PROPERTIES FIXTURES_REQUIRED dmx2nc4_generated)
     endforeach ()
 endif ()
+
+# Tag this directory's tests with their per-module CI labels
+# (the label map lives in cmake/TestLabels.cmake).
+smspp_label_tests()
 
 # --------------------------------------------------------------------------- #

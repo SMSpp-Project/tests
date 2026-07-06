@@ -8,6 +8,9 @@ if (NOT hasParent)
     find_package(MILPSolver)
 endif ()
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::UCBlock)
 
@@ -22,8 +25,7 @@ if (TARGET SMS++::UCBlock)
     smspp_install(TUDPS_test)
 
     # Add a test for each batch file
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/cuts/*")
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
@@ -40,5 +42,9 @@ if (TARGET SMS++::UCBlock)
         endif ()
     endforeach ()
 endif ()
+
+# Tag this directory's tests with their per-module CI labels
+# (the label map lives in cmake/TestLabels.cmake).
+smspp_label_tests()
 
 # --------------------------------------------------------------------------- #

@@ -271,6 +271,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <chrono>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -645,7 +646,10 @@ static bool SolveBoth( void )
    LPBlock->unregister_Solver( slvrLP );
    LPBlock->register_Solver( slvrLP , true );  // push it to the front
   #endif
+  auto startLP = std::chrono::system_clock::now();
   int rtrnLP = slvrLP->compute( false );
+  auto endLP = std::chrono::system_clock::now();
+  double tLP = std::chrono::duration< double >( endLP - startLP ).count();
   bool hsLP = ( ( rtrnLP >= Solver::kOK ) && ( rtrnLP < Solver::kError ) )
               || ( rtrnLP == Solver::kLowPrecision );
   double foLP = hsLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
@@ -657,7 +661,10 @@ static bool SolveBoth( void )
    NDOBlock->unregister_Solver( slvrNDO );
    NDOBlock->register_Solver( slvrNDO );
   #endif
+  auto startNDO = std::chrono::system_clock::now();
   int rtrnNDO = slvrNDO->compute( false );
+  auto endNDO = std::chrono::system_clock::now();
+  double tNDO = std::chrono::duration< double >( endNDO - startNDO ).count();
   bool hsNDO = ( ( rtrnNDO >= Solver::kOK ) && ( rtrnNDO < Solver::kError ) )
               || ( rtrnNDO == Solver::kLowPrecision );
   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
@@ -665,67 +672,45 @@ static bool SolveBoth( void )
 
   if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 5e-7 *
 			 max( double( 1 ) , abs( max( foLP , foNDO ) ) ) ) ) {
-   LOG1( "OK(f)" << endl );
-   return( true );
+   ok = true; verdict = "OK(f)"; decided = true;
    }
 
-  if( hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
+  if( ( ! decided ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
    /* Weird case: the LP found an optimal solution but the NDO declared the
-    * problem unbounded below. This may be because the tentative lb is too
-    * high, check it this actually is the case and if so declare the
-    * run a success (but also decrease the lb). */
+    * problem unbounded below, because the tentative lb is too high; if so,
+    * accept the run and lower (double) the bound. */
    if( ( convex && ( foNDO <= bound * ( 1 + 1e-9 ) ) ) ||
        ( ( ! convex ) && ( foNDO >= bound * ( 1 + 1e-9 ) ) ) ) {
-    LOG1( "OK(?bound?)" << endl );
     bound *= 2;
     if( convex )
      NDOBlock->set_valid_lower_bound( -bound );
     else
      NDOBlock->set_valid_upper_bound( bound );
-    return( true );
+    ok = true; verdict = "OK(?bound?)"; decided = true;
     }
    }
 
-  if( ( rtrnLP == Solver::kInfeasible ) &&
+  if( ( ! decided ) && ( rtrnLP == Solver::kInfeasible ) &&
       ( rtrnNDO == Solver::kInfeasible ) ) {
-    LOG1( "OK(?e?)" << endl );
-    return( true );
-    }
-
-  if( ( rtrnLP == Solver::kUnbounded ) &&
-      ( rtrnNDO == Solver::kUnbounded ) ) {
-   LOG1( "OK(u)" << endl );
-   return( true );
+   ok = true; verdict = "OK(?e?)"; decided = true;
    }
 
-  #if( LOG_LEVEL >= 1 )
-   cout << "LPBlock = ";
-   if( hsLP )
-    cout << foLP;
-   else
-    if( rtrnLP == Solver::kInfeasible )
-     cout << "    Unfeas(?)";
-    else
-     if( rtrnLP == Solver::kUnbounded )
-      cout << "      Unbounded";
-     else
-      cout << "      Error!";
+  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
+      ( rtrnNDO == Solver::kUnbounded ) ) {
+   ok = true; verdict = "OK(u)"; decided = true;
+   }
 
-   cout << " ~ NDOBlock = ";
-   if( hsNDO )
-    cout << foNDO;
-   else
-    if( rtrnNDO == Solver::kInfeasible )
-     cout << "    Unfeas(?)";
-    else
-     if( rtrnNDO == Solver::kUnbounded )
-      cout << "      Unbounded";
-     else
-      cout << "      Error!";
-   cout << endl;
-  #endif
-
-  return( false );
+  auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
+   if( hs )                              return( fmt_obj( fo ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
+  print_instance_line(
+   { tLP , tNDO } ,
+   { tok( hsLP , rtrnLP , foLP ) , tok( hsNDO , rtrnNDO , foNDO ) } ,
+   std::numeric_limits< double >::quiet_NaN() , verdict );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;
@@ -794,9 +779,10 @@ int main( int argc , char **argv )
 		<< endl <<
            "                 exercises dense->sparse auto-promotion + "
                                               "per-Function Mod dispatch)"
-  #if DYNAMIC_VARS > 0  
+  #if DYNAMIC_VARS > 0
 		<< endl <<
-           "             7 = add variables rows, 8 = delete variables"
+           "             (with DYNAMIC_VARS, bit 7 = add variables, "
+                                              "bit 8 = delete variables)"
   #endif
 	        << endl <<
            "       nvar: number of variables [10]"

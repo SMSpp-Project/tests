@@ -8,7 +8,6 @@
 #   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
@@ -20,7 +19,7 @@ BlockSolverConfig     # exact type of the Configuration object
 #CPXMILPSolver    # name of Solver
 GRBMILPSolver   # name of Solver
 #SCIPMILPSolver  # name of Solver
-#HiGHSMILPSolver # name of Solver
+HiGHSMILPSolver  # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 

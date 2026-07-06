@@ -49,7 +49,7 @@ for what in ${DATADIR}/*.nc4; do
       *_24h_*) continue ;;
     esac
 
-    run_test "$exe" "$what" "$par" "$slv"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv"
 
 done
 

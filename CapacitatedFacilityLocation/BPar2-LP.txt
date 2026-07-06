@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BPar2.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BPar2-LP.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockConfig for CapacitatedFacilityLocationBlock
 #
@@ -46,5 +46,5 @@ SimpleConfiguration<int>
 *    # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BPar2.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BPar2-LP.txt- - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -42,6 +42,7 @@
 
 #include "cwl-mcf/cwl-mcf.h"
 
+#include <chrono>
 #include <iostream>
 #include <iomanip>
 
@@ -174,6 +175,7 @@ void compare( std::string data_dir_path ,
   std::cout << "Solving instance " << file_path.filename() << ": ";
   std::flush( std::cout );
 
+  auto start = std::chrono::system_clock::now();
   if( solver_type == SolverType::MILPSolver )
    status = solve_with_MILPSolver( file_path , continuous_relaxation ,
                                    & solution_value );
@@ -184,26 +186,27 @@ void compare( std::string data_dir_path ,
    std::cerr << "\nUnknown Solver type: " << solver_type << std::endl;
    exit( 1 );
   }
+  auto end = std::chrono::system_clock::now();
+  double t = std::chrono::duration< double >( end - start ).count();
 
-  if( status != ThinComputeInterface::kOK )
-   std::cout << "FAILED" << std::endl;
-  else {
-   auto cwl_mcf_value = cwl_mcf( file_path.string() );
-   auto diff = std::abs( solution_value - cwl_mcf_value );
-   auto max_diff = std::max( epsilon , epsilon *
-                             std::min( abs( solution_value ),
-                                       abs( cwl_mcf_value ) ) );
-
-   if( diff > max_diff ) {
-    std::cout << "FAILED" << std::endl;
-    std::cout << "  Solution found:    " << std::setprecision( 20 )
-              << solution_value << std::endl;
-    std::cout << "  Expected solution: " << std::setprecision( 20 )
-              << cwl_mcf_value << std::endl;
+  // uniform per-instance line: the Solver value (S0) against the cwl-mcf
+  // reference; the "Solving instance <name>: " prefix above plays the role of
+  // the batch prefix
+  double ref = std::numeric_limits< double >::quiet_NaN();
+  std::string tok , verdict;
+  if( status != ThinComputeInterface::kOK ) {
+   tok = "Error!"; verdict = "KO";
    }
-   else
-    std::cout << "OK" << std::endl;
-  }
+  else {
+   ref = cwl_mcf( file_path.string() );
+   auto diff = std::abs( solution_value - ref );
+   auto max_diff = std::max( epsilon , epsilon *
+                             std::min( abs( solution_value ) , abs( ref ) ) );
+   tok = fmt_obj( solution_value );
+   verdict = ( diff > max_diff ) ? "KO" : "OK";
+   }
+
+  print_instance_line( { t } , { tok } , ref , verdict );
  }
 }
 

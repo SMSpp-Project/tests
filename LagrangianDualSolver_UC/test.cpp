@@ -91,6 +91,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include <cmath>
+#include <cstdlib>
 #include <random>
 
 #include "common_utils.h"
@@ -147,8 +148,12 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 bool ProxHeur = false;     // false = LagrangianDualSolver
                            // true  = PrimalProximalHeur
 
-int wf = 0;                // DCNetworkBlock formulation selector
-                           // 0 = PTDF (default), 1 = CYCLE, 2 = KIRCHHOFF
+int wf = -1;               // DCNetworkBlock formulation selector
+                           // 0 = PTDF, 1 = CYCLE, 2 = KIRCHHOFF
+                           // < 0 (default) = use the value set in the meta-
+                           // BlockConfig InnerBCfg.txt (-> DCNBCfg.txt); when
+                           // passed on the command line it overrides that file
+                           // (used by batch-resilient to iterate over all wf)
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
@@ -193,6 +198,25 @@ static Subset GenerateRand( Index m , Index k )
 
 /*--------------------------------------------------------------------------*/
 
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (instance positional, -B BlockConfig, -S
+// BlockSolverConfig, -c/-p prefixes) are handled centrally by common_utils
+//   -w / --warm-start : 0 = LagrangianDualSolver, 1 = PrimalProximalHeur
+//   -r / --ref        : reference objective value to compare against
+//   -f / --wf         : DCNetworkBlock formulation, overrides the -B one
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'w' ): Str2Sthg( optarg , ProxHeur );     return( true );
+  case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
+  case( 'f' ): Str2Sthg( optarg , wf );           return( true );
+  default:                                         return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char ** argv )
 {
  // override the default terminate handler to print the exception message
@@ -200,69 +224,38 @@ int main( int argc , char ** argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // standard params (instance positional + -B + -S) are parsed by
+ // common_utils; the test only appends its own knobs
 
  assert( SKIP_BEAT >= 0 );
 
- /*!!
- long int seed = 0;
- Index wchg = 127;
- double dens = 4;  
- double p_change = 0.5;
- Index n_change = 10;
- Index n_repeat = 40;
- !!*/
+ docopt_desc = "SMS++ LagrangianDualSolver-on-UCBlock test.\n";
+ short_opts += "w:r:f:";
+ const std::vector< option > my_opts = {
+   { "warm-start" , required_argument , nullptr , 'w' } ,
+   { "ref"        , required_argument , nullptr , 'r' } ,
+   { "wf"         , required_argument , nullptr , 'f' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -w, --warm-start <0|1>          0 = LagrangianDualSolver, "
+         "1 = PrimalProximalHeur [0]\n"
+         "  -r, --ref <value>               reference objective to compare "
+         "against [none]\n"
+         "  -f, --wf <0|1|2>                DCNetworkBlock formulation, "
+         "overrides the -B one [file]\n";
 
- switch( argc ) {
-  /*!!
-  case( 8 ): Str2Sthg( argv[ 7 ] , p_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_repeat );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-	     !!*/
-  case( 6 ): Str2Sthg( argv[ 5 ] , wf );
-  case( 5 ): Str2Sthg( argv[ 4 ] , RefObjective );
-  case( 4 ): Str2Sthg( argv[ 3 ] , ProxHeur );
-  case( 3 ):
-  case( 2 ): break;
-  default: std::cerr << "Usage: " << argv[ 0 ]
-		     << " UC-file [BSC-file ws ref wf]"
-		     << std::endl <<
-	   "       BSC-file: BlockSolverConfig description [BSPar.txt]"
-		     << std::endl <<
-           "       ws: 0 = LagrangianDualSolver, 1 = PrimalProximalHeur [0]"
-		     << std::endl <<
-           "       ref: reference objective value to compare against [none]"
-		     << std::endl <<
-           "       wf: DCNetworkBlock formulation [0]"
-		     << std::endl <<
-           "             0 = PTDF, 1 = CYCLE, 2 = KIRCHHOFF"
-	        << std::endl;
-    /*!!
-	   " UC file [BSC file seed wchg #rounds #chng %chng]"
- 		<< std::endl <<
-	   "       seed: random seed generator [0]"
- 		<< std::endl <<
-           "       wchg: what to change, coded bit-wise [127]"
-		<< std::endl <<
-           "             0 = ..., 1 = ...s "
-		<< std::endl <<
-           "             2 = ..., 3 = ..."
-	        << std::endl <<
-           "       #rounds: how many iterations [40]"
-	        << std::endl <<
-           "       #chng: number changes [10]"
-	        << std::endl <<
-           "       %chng: probability of changing [0.5]"
-		!!*/
-	   return( 1 );
-  }
+ process_args( argc , argv , process_specific_arg );
+
+ // both the BlockConfig (-B, the inner formulation) and the
+ // BlockSolverConfig (-S) must be provided explicitly: the test never falls
+ // back to a hardcoded default Configuration
+ require_block_config();
+ require_solver_config();
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- TestBlock = Block::deserialize( argv[ 1 ] );
+ TestBlock = Block::deserialize( filename );
  if( ! TestBlock ) {
   std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
   exit( 1 );
@@ -274,10 +267,9 @@ int main( int argc , char ** argv )
  // apply() it to the TestBlock; note that the BlockSolverConfig is
  // clear()-ed and kept to do the cleanup at the end
 
- std::string bsc_fn = argc >= 3 ? argv[ 2 ] : "BSPar.txt";
  BlockSolverConfig * bsc;
  {
-  auto c = Configuration::deserialize( bsc_fn );
+  auto c = Configuration::deserialize( sconf_file );
   bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
    std::cerr << "Error: configuration file not a BlockSolverConfig"
@@ -286,45 +278,43 @@ int main( int argc , char ** argv )
    exit( 1 );
    }
 
-  // load the BlockConfig for ThermalUnitBlock
-  auto tc = Configuration::deserialize( "TUBCfg.txt" );
-  auto tbc = dynamic_cast< BlockConfig * >( tc );
-  if( ! tbc ) {
-   std::cerr << "Error: TUBCfg.txt does not contain a BlockSolverConfig"
+  // load the inner (meta-)BlockConfig that drives the *formulation* of the
+  // sub-Blocks: a SimpleConfiguration< map< classname, Configuration* >>
+  // mapping a Block classname to the BlockConfig to apply to every sub-Block of
+  // that class, dispatched by b_config_Block (see tests/compare_formulations):
+  //   InnerBCfg.txt -> ThermalUnitBlock formulation (TUBCfg.txt) and
+  //                    DCNetworkBlock formulation (DCNBCfg.txt)
+  // How the sub-Blocks are *solved* inside the Lagrangian Dual is NOT set here:
+  // it descends entirely from the main BSC stack via the LagrangianDualSolver
+  // str_LagBF_BSCfg parameter (BSPar -> LDCfg -> InnerBSCfg.txt), so the inner
+  // Solver of the LagBFunction is the single source of truth (e.g. BSPar-2S-EC
+  // -> LDCfg-EC -> InnerBSCfg-DP.txt to solve the thermal units with the
+  // efficient ThermalUnitExtDPSolver). A HydroSystemUnitBlock is a "hard" component
+  // iff that str_LagBF_BSCfg meta configures it; computed below once cc is found.
+  auto ibc = Configuration::deserialize( bconf_file );
+  if( ! ibc ) {
+   std::cerr << "Error: cannot load BlockConfig from " << bconf_file
              << std::endl;
    delete( c );
-   delete( tc );
    exit( 1 );
    }
+  bool hydro_hard = false;
 
-  // load the BlockSolverConfig for ThermalUnitBlock
-  auto ct = Configuration::deserialize( "TUBSCfg-CLP.txt" );
-  auto tbsc = dynamic_cast< BlockSolverConfig * >( ct );
-  if( ! tbsc ) {
-   std::cerr << "Error: TUBSCfg-CLP.txt does not contain a BlockSolverConfig"
-             << std::endl;
-   delete( c );
-   delete( tc );
-   delete( ct );
-   exit( 1 );
-   }
-
-  // load the BlockSolverConfig for HydroSystemUnitBlock; note that
-  // this can be "empty", and indeed even not there, in which case
-  // the HydroSystemUnitBlock will be treated as "easy"
-  auto ch = Configuration::deserialize( "HSUBSCfg.txt" );
-  auto hbsc = dynamic_cast< BlockSolverConfig * >( ch );
-  if( ( ! hbsc ) || ( ! hbsc->num_ComputeConfig() ) ) {
-   delete( ch );
-   hbsc = nullptr;
-   }
-
-  // per-classname BlockConfig that drives the DCNetworkBlock formulation
-  // selector (read by DCNetworkBlock::generate_abstract_variables): 0=PTDF,
-  // 1=CYCLE, 2=KIRCHHOFF. A no-op on instances without a DCNetworkBlock.
-  // Dispatched below via the meta_bc map (same pattern used for tbc).
-  auto dcbc = new BlockConfig;
-  dcbc->f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
+  // optional command-line override of the DCNetworkBlock formulation: when wf
+  // is passed (>= 0) it replaces the static-variables Configuration of the
+  // DCNetworkBlock entry of the meta-BlockConfig, overriding DCNBCfg.txt (used
+  // by batch-resilient to iterate over all formulations)
+  if( wf >= 0 )
+   if( auto m = dynamic_cast< SimpleConfiguration<
+        std::map< std::string , Configuration * > > * >( ibc ) ) {
+    auto it = m->f_value.find( "DCNetworkBlock" );
+    if( it != m->f_value.end() )
+     if( auto dcbc = dynamic_cast< BlockConfig * >( it->second ) ) {
+      delete dcbc->f_static_variables_Configuration;
+      dcbc->f_static_variables_Configuration =
+       new SimpleConfiguration< int >( wf );
+      }
+    }
 
   #if USE_BundleSolver
    auto nbsc = bsc->num_ComputeConfig();
@@ -377,37 +367,32 @@ int main( int argc , char ** argv )
     else                               // otherwise
      DoEasy = true;                    // assume it is true (default)
 
+    // the inner Solver of each LagBFunction descends from str_LagBF_BSCfg; a
+    // HydroSystemUnitBlock is a "hard" component iff that (meta-)BSC configures
+    // it. Peek at the file to decide (no-op when it is a plain BSC or absent)
+    auto bit = std::find_if( cc->str_pars.begin() , cc->str_pars.end() ,
+			     []( auto & pair ) {
+			      return( pair.first == "str_LagBF_BSCfg" );
+			      } );
+    if( bit != cc->str_pars.end() )
+     if( auto lbc = Configuration::deserialize( bit->second ) ) {
+      if( auto m = dynamic_cast< SimpleConfiguration<
+           std::map< std::string , Configuration * > > * >( lbc ) )
+       hydro_hard = m->f_value.count( "HydroSystemUnitBlock" ) > 0;
+      delete( lbc );
+      }
+
     break;  // note that we assume this happens *at most* once
     }
 
    auto sb = TestBlock->get_nested_Blocks();
 
-   // dispatch the per-classname configurations loaded above to all the
-   // matching sub-Blocks via a (meta) BlockConfig / BlockSolverConfig that
-   // b_config_Block / s_config_Block resolve by classname:
-   //   tbc  -> every ThermalUnitBlock           (BlockConfig)
-   //   tbsc -> every ThermalUnitBlock           (BlockSolverConfig)
-   //   hbsc -> every HydroSystemUnitBlock       (BlockSolverConfig, optional)
-   // obsc remains code-driven (catch-all on non-Thermal/non-HSUB) and is
-   // applied below only in the DoEasy=false branch.
-   {
-    // NB: SimpleConfiguration<map<string,Configuration*>>::guts_of_destructor
-    // delete()s every value in the map; we f_value.clear() before scope-exit
-    // so tbc / tbsc / hbsc / dcbc are NOT double-deleted (they survive for
-    // the explicit delete() at end of this configuration block).
-    SimpleConfiguration< std::map< std::string , Configuration * > > meta_bc;
-    meta_bc.f_value[ "ThermalUnitBlock" ] = tbc;
-    meta_bc.f_value[ "DCNetworkBlock" ] = dcbc;
-    b_config_Block( TestBlock , &meta_bc , "" );
-    meta_bc.f_value.clear();
-
-    SimpleConfiguration< std::map< std::string , Configuration * > > meta_bsc;
-    meta_bsc.f_value[ "ThermalUnitBlock" ] = tbsc;
-    if( hbsc )
-     meta_bsc.f_value[ "HydroSystemUnitBlock" ] = hbsc;
-    s_config_Block( TestBlock , &meta_bsc , "" , false );  // deferred clear
-    meta_bsc.f_value.clear();
-    }
+   // apply the inner (meta-)BlockConfig (formulation) by classname over the
+   // sub-Blocks; b_config_Block clones each BlockConfig before applying, so ibc
+   // keeps ownership. The inner Solvers are NOT attached here: they descend from
+   // the LagrangianDualSolver str_LagBF_BSCfg when bsc is applied below. The
+   // OUBSCfg catch-all stays code-driven (DoEasy=false branch).
+   b_config_Block( TestBlock , ibc , "InnerBCfg.txt" );
 
    // Configure_HSUB the linearised PolyhedralFunctionBlock inside every
    // HydroSystemUnitBlock; runtime block-mutation, not config-driven
@@ -429,7 +414,7 @@ int main( int argc , char ** argv )
        NoEasy.push_back( i );
       }
      else if( dynamic_cast< HydroSystemUnitBlock * >( sb[ i ] ) ) {
-      if( hbsc )
+      if( hydro_hard )
        NoEasy.push_back( i );
       }
      }
@@ -527,15 +512,13 @@ int main( int argc , char ** argv )
     }
   #endif
 
-  // cleanup
-  delete( tbc );
-  delete( tbsc );
-  delete( hbsc );
-  delete( dcbc );
+  // cleanup the inner (meta-)BlockConfig (its destructor deletes the contained
+  // per-classname BlockConfig)
+  delete( ibc );
 
   // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
   // dispatches on the runtime type, applies, and clear()s for cleanup
-  s_config_Block( TestBlock , bsc , bsc_fn );
+  s_config_Block( TestBlock , bsc , sconf_file );
 
   if( TestBlock->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!" << std::endl;

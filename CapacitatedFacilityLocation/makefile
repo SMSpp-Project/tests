@@ -49,20 +49,31 @@ include $(LgDSLVSDR)/makefile
 #MILPSSDR = ../../MILPSolver
 #include $(MILPSSDR)/makefile-c
 
-# LEMONSolver, assuming all dependencies (MCFBlock) are there already
+# MCFClass, needed by MCFClassSolver
+MCFC_NO_PATHS = 0
+libMCFClDIR = ../../MCFClassSolver/MCFClass
+include $(libMCFClDIR)/lib/makefile-inc
+
+# MCFClassSolver, assuming all dependencies (SMS++, MCFBlock, MCFClass) are
+# there already (comment out if not required)
+MCFCSSDR = ../../MCFClassSolver
+include $(MCFCSSDR)/makefile
+
+# MCFLemonSolver, assuming all dependencies (MCFBlock) are there already
 # (comment out if not required)
 # note: -std=c++20 is required if this is included
-#MCFLESDR = ../../LEMONSolver
+#MCFLESDR = ../../MCFLemonSolver
 #include $(MCFLESDR)/makefile
-
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(CFLBkOBJ) $(SMS++OBJ) $(MCFBkOBJ) $(MCFLEOBJ) $(CMMNUOBJ)
+MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(CFLBkOBJ) $(SMS++OBJ) $(MCFBkOBJ) \
+        $(MCFCSOBJ) $(libMCFClOBJ) $(MCFLEOBJ) $(CMMNUOBJ)
 
 # libraries
-MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(CFLBkLIB) $(SMS++LIB) $(MCFBkLIB) $(MCFLELIB)
+MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(CFLBkLIB) $(SMS++LIB) $(MCFBkLIB) \
+        $(libMCFClLIB) $(MCFLELIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
@@ -70,10 +81,12 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(CFLBkINC) $(MCFBkINC) $(MCFLEINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(CFLBkINC) $(MCFBkINC) \
+        $(MCFCSINC) $(libMCFClINC) $(MCFLEINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CFLBkH) $(MCFBkH) $(MCFLEH) $(CMMNUH)
+MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CFLBkH) $(MCFBkH) $(MCFCSH) \
+        $(MCFLEH) $(CMMNUH)
 
 # compile command
 

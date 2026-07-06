@@ -183,6 +183,12 @@ Configuration * r3bc;  // the R3Block Configuration
 
 Index niter = 0;  // how many iterations of Slope Scaling have to be done
 
+double cmp_tol = 1e-5;  // relative tolerance used to compare the two bounds;
+                        // 1e-5 by default, but a batch may pass a looser value
+                        // (last command-line argument) when the two Solver
+                        // legitimately compute *different* bounds (e.g. a
+                        // Lagrangian dual vs a cut-strengthened LP)
+
 std::mt19937 rg;               // base random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
@@ -395,38 +401,37 @@ static bool SolveBoth( void )
 
   int rtrn2nd = Slvr2->compute( false );
 
-  if( ! niter ) {  // solve once and compare results- - - - - - - - - - - - -
+  if( ! niter ) {  // solve once and compare lower bounds - - - - - - - - - -
 
    double fo2nd = Slvr2->get_lb();  // only compare lower bounds
 
-   #if( LOG_LEVEL >= 1 )
-    end = std::chrono::system_clock::now();
-    elapsed = end - start;
-    cout.setf( ios::scientific, ios::floatfield );
-    cout << setprecision( 2 ) << " - " << elapsed.count();
-   #endif
+   // both bounds are exact lower bounds that must agree (cmp_tol); defer the
+   // verdict and the uniform per-instance line to common_utils
+   std::vector< SolverReading > rd( 2 );
+   std::vector< bool > hs{ has_solution( rtrn1st ) , has_solution( rtrn2nd ) };
+   std::vector< int > status{ rtrn1st , rtrn2nd };
+   if( hs[ 0 ] ) { rd[ 0 ].kind = SolverReading::Kind::Exact;
+                   rd[ 0 ].value = fo1st; }
+   if( hs[ 1 ] ) { rd[ 1 ].kind = SolverReading::Kind::Exact;
+                   rd[ 1 ].value = fo2nd; }
 
-   if( abs( fo1st - fo2nd ) <
-       1e-5 *  max( double( 1 ) , max( abs( fo1st ) , abs( fo2nd ) ) ) ) {
-    LOG1( " - OK(f)" << endl );
-    return( true );
-    }
-
-   if( ( rtrn1st == Solver::kInfeasible ) &&
-       ( rtrn2nd == Solver::kInfeasible ) ) {
-    LOG1( " - OK(e)" << endl );
-    return( true );
-    }
-
-   #if( LOG_LEVEL >= 1 )
-    cout << " - " << setprecision( 7 );
-    PrintResults( has_solution( rtrn1st ) , rtrn1st , fo1st );
-    cout << " - ";
-    PrintResults( has_solution( rtrn2nd ) , rtrn2nd , fo2nd );
-    cout << endl;
-   #endif
-
-   return( false );
+   auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
+    if( h )                              return( reading_token( r ) );
+    if( rtrn == Solver::kInfeasible )    return( "Unfeas" );
+    if( rtrn == Solver::kUnbounded )     return( "Unbounded" );
+    return( "Error!" );
+    };
+   std::string verdict;
+   double diff;
+   bool ok = cross_check( rd , hs , status ,
+                          std::numeric_limits< double >::quiet_NaN() ,
+                          cmp_tol , verdict , diff );
+   print_instance_line(
+    { 0.0 , 0.0 } ,
+    { tok( hs[ 0 ] , rtrn1st , rd[ 0 ] ) ,
+      tok( hs[ 1 ] , rtrn2nd , rd[ 1 ] ) } ,
+    std::numeric_limits< double >::quiet_NaN() , verdict );
+   return( ok );
    }
   else {  // run the Slope Scaling- - - - - - - - - - - - - - - - - - - - - -
 
@@ -590,6 +595,7 @@ int main( int argc , char **argv )
  Index n_repeat = 40;
 
  switch( argc ) {
+  case( 10 ): Str2Sthg( argv[ 9 ] , cmp_tol );
   case( 9 ): Str2Sthg( argv[ 8 ] , p_change );
   case( 8 ): Str2Sthg( argv[ 7 ] , n_change );
   case( 7 ): Str2Sthg( argv[ 6 ] , n_repeat );
@@ -599,7 +605,7 @@ int main( int argc , char **argv )
   case( 3 ): filetype = argv[ 2 ][ 0 ];
   case( 2 ): break;
   default:   cerr << "Usage: " << argv[ 0 ]
-		  << " name [typ niter seed wchg #rounds #chng %chng]"
+		  << " name [typ niter seed wchg #rounds #chng %chng cmptol]"
 		  << endl
 		  << "      typ = [C], F, L, ignored if name ends in .nc4"
 		  << endl 
