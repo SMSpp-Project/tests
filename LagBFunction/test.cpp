@@ -239,7 +239,7 @@
 // SKIP_BEAT + 1, so that the input parameter still dictates the number of
 // compute() calls per (Solver per) Block
 
-#define SKIP_BEAT 0
+#define SKIP_BEAT 3
 
 /*--------------------------------------------------------------------------*/
 
@@ -670,7 +670,13 @@ static bool SolveBoth( void )
   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
                        : ( convex ? INF : -INF );
 
-  if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 5e-7 *
+  // bespoke verdict (Pattern A, LPBlock vs NDOBlock; keeps the conditional
+  // valid-bound doubling), then the unified per-instance line - - - - - - - -
+  bool ok = false;
+  std::string verdict = "KO";
+  bool decided = false;
+
+  if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 2e-7 *
 			 max( double( 1 ) , abs( max( foLP , foNDO ) ) ) ) ) {
    ok = true; verdict = "OK(f)"; decided = true;
    }
@@ -2235,10 +2241,7 @@ int main( int argc , char **argv )
    auto FRO =
         NDOBlock->get_nested_Block( p )->get_objective< FRealObjective >();
    auto LBF = static_cast< LagBFunction * >( FRO->get_function() );
-   // The new BundleSolver grafts an easy LagBFunction's inner Block into
-   // its MasterProblemBlock. LegacyBundleSolver leaves it under the LBF.
-   if( auto * inner = LBF->get_inner_block() )
-    inner->unregister_Solvers();
+   LBF->get_nested_Block( 0 )->unregister_Solvers();
    }
 
  NDOBlock->unregister_Solvers();
