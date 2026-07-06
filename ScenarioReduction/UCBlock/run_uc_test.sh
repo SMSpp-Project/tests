@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-# defaults (override via flags) 
+# ---- defaults (override via flags) ----------------------------------------
 WDIR=~/smspp-project/build/tests/ScenarioReduction/UC
 IDIR=~/smspp-project/UCBlock/data/nc4
 SDIR=/tmp/uc_scenarios
@@ -9,15 +9,15 @@ CFGDIR=~/smspp-project/tests/ScenarioReduction   # where the BSPar_*.txt configs
 
 INSTANCES="EC_CO_Test_TUB"
 N_VALUES="20"
-K_VALUES="5"
-SEEDS="2"
+K_VALUES="5 10"
+SEEDS="10"
 METHODS="baseline dupacova bestfit firstfit cssc"
 SOLVER=BSPar_CPLEX.txt                 # bare name (looked up in CFGDIR) or a full path
-VARIATION="0.3"
+VARIATION="0.5"
 UNCERTAINTY="demand"                  # demand | renewable | both
-OUTPUT_CSV="uc_results_seed_2.csv"
+OUTPUT_CSV="uc_results_seed_20.csv"
 
-# parse flags 
+# ---- parse flags ----------------------------------------------------------
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --instances)   INSTANCES="$2";   shift 2 ;;
@@ -39,8 +39,8 @@ TEST="$WDIR/uc_scenario_reduction_test"
 [ ! -x "$GEN" ]    && { echo "ERROR: $GEN not found (build uc_scenario_generator)"; exit 1; }
 [ ! -x "$TEST" ]   && { echo "ERROR: $TEST not found (build uc_scenario_reduction_test)"; exit 1; }
 
-# allow a bare filename for SOLVER (e.g. BSPar_CPLEX.txt): resolve under CFGDIR
-# A value containing a slash is treated as a path and used as is
+# allow a bare filename for SOLVER (e.g. BSPar_CPLEX.txt): resolve under CFGDIR.
+# A value containing a slash is treated as a path and used as is.
 [[ "$SOLVER" != */* ]] && SOLVER="$CFGDIR/$SOLVER"
 [ ! -f "$SOLVER" ] && { echo "ERROR: solver config not found: $SOLVER"; exit 1; }
 

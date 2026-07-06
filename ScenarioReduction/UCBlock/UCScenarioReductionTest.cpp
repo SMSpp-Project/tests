@@ -42,6 +42,16 @@ using namespace SMSpp_di_unipi_it;
 using namespace ScenarioReductionTesting;
 
 /*--------------------------------------------------------------------------*/
+/// expose TwoStageStochasticBlock::get_stochastic_block(), which became
+/// protected in the SMS++ core header (off-limits to edit); the CSSC branch
+/// only needs read access to the StochasticBlock applicator.
+struct TSSBExposer : public TwoStageStochasticBlock {
+ StochasticBlock * expose_stochastic_block() const {
+  return get_stochastic_block();
+ }
+};
+
+/*--------------------------------------------------------------------------*/
 /*----------------------- nc_copy_group_recursive --------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -451,14 +461,14 @@ void UCScenarioReductionTest::run_cssc( ScenarioReductionBlock * srb ,
   } );
 
  // All uncertainty types use a fresh inner UCBlock per V-matrix cell.  This is
- // forced by TWO independent limitations of the reused-block incremental path:
+ // forced by two independent limitations of the reused-block incremental path:
  //   (1) demand reaches the model via UCBlock::set_active_power_demand, whose
  //       incremental abstract update has an out-of-bounds index bug in
- //       ECNetworkBlock (number_nodes != number_intervals); and
+ //       ECNetworkBlock (number_nodes != number_intervals)
  //   (2) fixing the first-stage commitment on a live block needs a VariableMod,
- //       which ThermalUnitBlock REJECTS ("VariableMod not supported").
+ //       which ThermalUnitBlock rejects ("VariableMod not supported").
  // Baking the scenario into a fresh block, fixing the commitment with eNoBlck,
- // and reading everything through the constraint-GENERATION path sidesteps
+ // and reading everything through the constraint-generation path sidesteps
  // both.  Cost: N^2 deserializations (heavy; OOMs for N >~ 30, a memory leak
  // in the per-cell rebuild still needs addressing to scale further)
  solver->set_fix_with_modification( false );
@@ -529,7 +539,7 @@ UCScenarioReductionTest::create_srb( int K , const std::string & method )
                            "/tmp/uc_srb_tssb.nc4" , uncertainty_type_ );
 
   auto * stoch_app = dynamic_cast< StochasticBlock * >(
-   srb_tssb_->get_stochastic_block() );
+   static_cast< TSSBExposer * >( srb_tssb_.get() )->expose_stochastic_block() );
   if( !stoch_app )
    throw std::runtime_error(
     "create_srb: TwoStageStochasticBlock has no StochasticBlock applicator" );
