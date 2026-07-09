@@ -50,8 +50,12 @@ if (TARGET SMS++::UCBlock)
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ac"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-p4r"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-resilient"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/metabatch"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/metabatch-PPH")
+# NOTE: metabatch (slv=0) is deliberately NOT registered: it just re-runs the
+# individual batch-* above (all slv=0), so it would double the suite runtime;
+# the granular individual tests are kept for per-batch failure reporting, and
+# metabatch-PPH is kept because it exercises the DIFFERENT slv=1 (PrimalProximalHeur)
+# path. The metabatch script itself stays for local "run everything" use.
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
