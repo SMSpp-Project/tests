@@ -17,9 +17,9 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver   # name of Solver
-#GRBMILPSolver   # name of Solver
+GRBMILPSolver    # name of Solver
 #SCIPMILPSolver  # name of Solver
-HiGHSMILPSolver  # name of Solver
+#HiGHSMILPSolver # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -31,10 +31,12 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-1  # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
+Presolve   0 # disable presolve so row/bound infeasibility yields a Farkas ray
+Method     1 # dual simplex: basic (extreme-point) duals for the Benders cuts
 
 ## All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Preprocessing_Presolve  0  # 0 = off, 1 = on (default)
@@ -54,14 +56,14 @@ intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 #CPXPARAM_Simplex_Tolerances_Feasibility      1.0e-15
 #CPXPARAM_Simplex_Tolerances_Optimality       1.0e-15
 
-2 # number of string parameters
+0 # number of string parameters
 
 # now all the string parameters
 # [none]
 
 # All specific HiGHS parameter (uncomment based on Solver)
-presolve  off    # disable presolve for reproducibility
-solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
+#presolve  off
+#solver    ipm
              # (ipm = interior point: converges to analytic center, unique x*)
 
 0 # number of vector-of-int parameters
