@@ -28,6 +28,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -375,6 +376,18 @@ static Index cssc_pick( const std::string & orig_file ,
  if( ! stoch )
   throw std::runtime_error( "cssc_pick: no StochasticBlock applicator" );
 
+ // Re-resolve every DataMapping caller against this StochasticBlock's own
+ // inner block. StochasticBlock::deserialize sets the caller via
+ // AbstractPath::get_element(), which returns nullptr for an EMPTY path (the
+ // demand mapping, whose caller is the UCBlock itself). set_caller_from_reference()
+ // instead maps an empty path to the reference block. Without this, Strategy B's
+ // set_data() would invoke set_active_power_demand() on a null UCBlock (segfault);
+ // Strategy A is unaffected (it never injects through this applicator) but the
+ // fix-up is harmless for it.
+ if( auto * inner = stoch->get_inner_block() )
+  for( const auto & m : stoch->get_data_mappings() )
+   m->set_caller_from_reference( inner );
+
  // verify the concrete UCBlock design-variable extractor returns exactly the
  // StaticAbstractPath first-stage set (same ColVariable instances)
  tssb->generate_abstract_variables();
@@ -396,30 +409,22 @@ static Index cssc_pick( const std::string & orig_file ,
  srb->set_stochastic_block( tssb );
  srb->set_scenario_applicator( stoch );
 
- const std::string bf_tmp = "/tmp/uc_inv_cssc_bf.nc4";
-
  auto solver = std::make_unique< CSSCScenarioReductionSolver >();
  solver->set_milp_config(
   static_cast< BlockSolverConfig * >( bsc->clone() ) );   // takes ownership
  solver->set_nb_reduced( 1 );
+
+ // Single reused inner block + generic StochasticBlock::set_data() injection
+ // (driven by DataMapping, no problem-specific setter calls). uc_design_vars
+ // handles both a raw UCBlock and a StochasticBlock wrapping one.
  solver->set_var_extractor( []( Block * inner ) -> std::vector< ColVariable * > {
-  if( auto * t = dynamic_cast< TwoStageStochasticBlock * >( inner ) )
-   return uc_first_stage_vars( t );
   return uc_design_vars( inner );
   } );
+ solver->set_fix_with_modification( false );
 
- // fresh Block per V-matrix cell (N^2 deserializations)
- solver->set_block_factory(
-  [ orig_file , bf_tmp ]( const std::vector< double > & scen )
-    -> std::unique_ptr< Block > {
-   write_reduced_tssb( orig_file , { scen } , { 1.0 } , bf_tmp );
-   return std::unique_ptr< Block >( Block::deserialize( bf_tmp ) );
-   } );
  solver->set_Block( srb.get() );
  solver->compute();
  solver->get_var_solution();
-
- std::remove( bf_tmp.c_str() );
 
  const auto & sol = srb->get_solution();
  if( sol.selected_indices.empty() )

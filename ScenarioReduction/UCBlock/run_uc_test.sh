@@ -8,10 +8,10 @@ SDIR=/tmp/uc_scenarios
 CFGDIR=~/smspp-project/tests/ScenarioReduction   # where the BSPar_*.txt configs live
 
 INSTANCES="EC_CO_Test_TUB"
-N_VALUES="20"
-K_VALUES="5 10"
+N_VALUES="25"
+K_VALUES="5"
 SEEDS="10"
-METHODS="baseline dupacova bestfit firstfit cssc"
+METHODS="cssc"
 SOLVER=BSPar_CPLEX.txt                 # bare name (looked up in CFGDIR) or a full path
 VARIATION="0.5"
 UNCERTAINTY="demand"                  # demand | renewable | both
@@ -39,7 +39,7 @@ TEST="$WDIR/uc_scenario_reduction_test"
 [ ! -x "$GEN" ]    && { echo "ERROR: $GEN not found (build uc_scenario_generator)"; exit 1; }
 [ ! -x "$TEST" ]   && { echo "ERROR: $TEST not found (build uc_scenario_reduction_test)"; exit 1; }
 
-# allow a bare filename for SOLVER (e.g. BSPar_CPLEX.txt): resolve under CFGDIR.
+# allow a bare filename for solver (e.g. BSPar_CPLEX.txt): resolve under CFGDIR.
 # A value containing a slash is treated as a path and used as is.
 [[ "$SOLVER" != */* ]] && SOLVER="$CFGDIR/$SOLVER"
 [ ! -f "$SOLVER" ] && { echo "ERROR: solver config not found: $SOLVER"; exit 1; }

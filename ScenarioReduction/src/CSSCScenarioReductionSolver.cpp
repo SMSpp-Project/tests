@@ -2,7 +2,9 @@
 /*----------- File CSSCScenarioReductionSolver.cpp -----------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * Implementation of CSSCScenarioReductionSolver.
+ * Implementation of CSSCScenarioReductionSolver: the Cost-Space Scenario
+ * Clustering (CSSC), applied to reduce a pool of N scenarios of a
+ * two-stage stochastic program down to K representative ones.
  *
  * \author Minh Duc Pham \n
  *         Dipartimento di Informatica \n
@@ -18,8 +20,8 @@
 #include "FRowConstraint.h"
 #include "LinearFunction.h"
 #include "Modification.h"
-
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <limits>
 #include <numeric>
@@ -147,9 +149,11 @@ int CSSCScenarioReductionSolver::compute( bool /*changedvars*/ )
 /*------------------- compute_generic_V_matrix ----------------------------*/
 /*--------------------------------------------------------------------------*/
 
-// Shared post-processing diagnostics for the V matrix (infeasible count, 4×4
-// corner sample, max deviation, sign check), identical for both fill
-// strategies below
+// Post-processing diagnostics for the V matrix: infeasible-pair count, a 4x4
+// corner sample for a quick visual sanity check, and the max deviation from
+// V[0][0] (near-zero deviation means every scenario has almost the same
+// optimal cost, in which case CSSC has no real signal to cluster on and its
+// choice of representatives is effectively arbitrary)
 static void log_V_diagnostics( const std::vector< std::vector< double > > & V ,
                                int n )
 {
@@ -186,19 +190,13 @@ static void log_V_diagnostics( const std::vector< std::vector< double > > & V ,
  for( int j = 0 ; j < n ; ++j )
   for( int i = 0 ; i < n ; ++i )
    if( i != j && V[j][i] >= 0.0 && V[j][i] - V[j][j] < -1e-6 ) ++neg_count;
- std::cout << "  Step 1 complete.  Sign check: "
-           << neg_count << "/" << n*(n-1)
-           << " feasible d_ij negative\n";
 }
 
 // Build the N×N cost-space matrix V, where V[i][j] is the cost of applying the
-// optimal first-stage solution of scenario i (y*_i) to scenario j's data.  Two
-// fill strategies share this one routine (selected by whether a block factory
-// is registered), both produce the same matrix, they differ only in HOW each
-// scenario is loaded into a solvable block:
-//   A) block factory  : a fresh inner block per cell (correct for blocks whose
-//                        incremental data update is unreliable, e.g. UC);
-//   B) incremental     : one reused inner block + DataInjector (fast, e.g. CFL)
+// optimal first-stage solution of scenario i (y*_i) to scenario j's data.
+// A single inner Block is generated once and reused for the whole loop, each
+// scenario is loaded via incremental injection (StochasticBlock::set_data(),
+// optionally followed by the registered DataInjector)
 std::vector< std::vector< double > >
 CSSCScenarioReductionSolver::compute_generic_V_matrix()
 {
@@ -211,122 +209,13 @@ CSSCScenarioReductionSolver::compute_generic_V_matrix()
 
  std::vector< std::vector< double > > V( n , std::vector< double >( n , 0.0 ) );
 
- // Fetch scenario s (relative pool index) as a flat data vector.
- auto fetch = [ & ]( int s ) {
-  std::vector< double > d( scenario_size );
-  for( std::size_t k = 0 ; k < scenario_size ; ++k )
-   d[ k ] = dss->get_scenario_value( f_pool_map[ s ] , k );
-  return d;
-  };
-
- /*----- Strategy A: a brand-new inner block per cell (block factory) -------*/
- // Used when set_block_factory() is registered (e.g. UC on ECNetworkBlock,
- // whose incremental set_active_demand abstract update is buggy).  Each
- // scenario is baked into a fresh block and read via the correct
- // constraint-GENERATION path.  Diagonal V[i][i]: MIP solve, record y*_i.
- // Off-diagonal V[i][j]: fresh block with scenario j, relax+fix here-and-now
- // at y*_i, then solve.  Cost: N^2 fresh blocks.
- if( f_block_factory ) {
-
-  std::cout << "  Step 1: building " << n << "×" << n
-            << " V matrix  (fresh block per cell)..." << std::endl;
-
-  // Generate the abstract model of a fresh block, attach a fresh solver,
-  // solve, and return (status, value); cfg/solver torn down before return.
-  auto solve_block = [ & ]( Block * blk ) -> std::pair< int , double > {
-   blk->generate_abstract_constraints();
-   blk->generate_objective();
-   auto * cfg = static_cast< BlockSolverConfig * >( f_milp_config->clone() );
-   cfg->apply( blk );
-   Solver * slv = blk->get_registered_solvers().empty()
-    ? nullptr : blk->get_registered_solvers().front();
-   if( ! slv ) { cfg->clear(); delete cfg; return { Solver::kError , 0.0 }; }
-   const int st = slv->compute();
-   double val = 0.0;
-   if( st == Solver::kOK || st == Solver::kLowPrecision ) {
-    slv->get_var_solution();
-    val = slv->get_var_value();
-    }
-   cfg->clear(); delete cfg;
-   return { st , val };
-   };
-
-  std::vector< double > y_star;
-
-  for( int i = 0 ; i < n ; ++i ) {
-
-   // (a) Diagonal: fresh block with scenario i, full MIP solve.
-   {
-    std::unique_ptr< Block > blk = f_block_factory( fetch( i ) );
-    blk->generate_abstract_variables();
-
-    const auto [ st , val ] = solve_block( blk.get() );
-    if( st != Solver::kOK && st != Solver::kLowPrecision )
-     throw std::runtime_error(
-      "CSSCScenarioReductionSolver::compute_generic_V_matrix: "
-      "MIP diagonal solve failed (status=" + std::to_string( st ) +
-      ") for scenario i=" + std::to_string( i ) );
-    V[ i ][ i ] = val;
-
-    std::vector< ColVariable * > fs = f_var_extractor( blk.get() );
-    if( fs.empty() )
-     throw std::runtime_error(
-      "CSSCScenarioReductionSolver::compute_generic_V_matrix: "
-      "VarExtractor returned no variables" );
-    y_star.resize( fs.size() );
-    for( std::size_t k = 0 ; k < fs.size() ; ++k )
-     y_star[ k ] = fs[ k ]->get_value();
-   }
-
-   // (b) Off-diagonal: fresh block with scenario j, fix here-and-now at y*_i.
-   for( int j = 0 ; j < n ; ++j ) {
-    if( j == i ) continue;
-    std::unique_ptr< Block > blk = f_block_factory( fetch( j ) );
-    blk->generate_abstract_variables();
-
-    std::vector< ColVariable * > fs = f_var_extractor( blk.get() );
-    // Relax binary -> continuous so fixing at slightly off-integer y*_i is
-    // feasible, then fix (silent eNoBlck; the fresh load reads the state).
-    for( std::size_t k = 0 ; k < fs.size() ; ++k ) {
-     const auto ot = fs[ k ]->get_type();
-     const auto rt = static_cast< ColVariable::var_type >(
-      static_cast< int >( ot ) & ~1 );
-     fs[ k ]->set_type( rt , eNoMod );
-     fs[ k ]->set_value( y_star[ k ] );
-     fs[ k ]->is_fixed( true , eNoBlck );
-     }
-
-    const auto [ st , val ] = solve_block( blk.get() );
-    if( st == Solver::kOK || st == Solver::kLowPrecision )
-     V[ i ][ j ] = val;
-    else {
-     static int first_inf_msg = 0;
-     if( ++first_inf_msg <= 3 )
-      std::cout << "    [DIAG] V[" << i << "][" << j
-                << "] infeasible (status=" << st << ")\n";
-     V[ i ][ j ] = -1.0;  // sentinel: x_ij forced to 0 in MILP
-     }
-    }
-
-   std::cout << "    row " << (i+1) << "/" << n
-             << "  V[i][i]=" << std::fixed << std::setprecision(2)
-             << V[i][i] << std::endl;
-   }
-
-  log_V_diagnostics( V , n );
-  return V;
-  }
-
- /*----- Strategy B: one reused inner block, incremental injection ----------*/
- // Used for blocks whose incremental data update is reliable (e.g. CFL via its
- // DataInjector): a single attached solver serves the whole loop (fast).
  Block * inner = f_stoch_applicator->get_inner_block();
  inner->generate_abstract_variables();
  inner->generate_abstract_constraints();
  inner->generate_objective();
 
  // Identify here-and-now variables via the caller-provided extractor.
- // Called after generate_abstract_variables() so pointers are stable.
+ // Called after generate_abstract_variables() so pointers are stable
  std::vector< ColVariable * > fs_vars = f_var_extractor( inner );
  if( fs_vars.empty() )
   throw std::runtime_error(
@@ -350,10 +239,10 @@ CSSCScenarioReductionSolver::compute_generic_V_matrix()
    "failed to attach solver to inner block" );
   }
 
- // Save original types; build continuous-relaxed types for the off-diagonal LP.
+ // Save original types, build continuous-relaxed types for the off-diagonal LP.
  // For kBinary(11) -> kPosUnitary(10): clear the integer bit.
  // This lets the solver treat fixed 0/1 vars as continuous bounds, avoiding
- // unnecessary MIP branching in the off-diagonal solves.
+ // unnecessary MIP branching in the off-diagonal solves
  std::vector< ColVariable::var_type > orig_types( fs_vars.size() );
  std::vector< ColVariable::var_type > relax_types( fs_vars.size() );
  for( std::size_t k = 0 ; k < fs_vars.size() ; ++k ) {
@@ -364,46 +253,24 @@ CSSCScenarioReductionSolver::compute_generic_V_matrix()
 
  std::vector< double > y_star( fs_vars.size() );
 
- // Scenario injection strategy:
- //
- // CFL mode (f_fix_with_mod=true): set_data(eNoBlck,eNoBlck) suppresses the
- // automatic solver notification; DataInjector then sends it explicitly via
- // chg_customer_demands(eModBlck), a targeted FunctionMod (fast, no full
- // reload).  Variable fixing is communicated via is_fixed(eModBlck) which
- // sends VariableMod directly to the solver
- //
- // UC mode (f_fix_with_mod=false): set_data(eModBlck,eModBlck) updates the
- // physical data arrays (v_ActiveDemand etc.) and the abstract model
- // (FRowConstraint RHS via set_both).  We then explicitly send an
- // NBModification from the inner Block so that the next compute() call
- // triggers load_problem(), which rescans the full abstract model including
- // is_fixed() flags set silently via eNoBlck.  This is needed because
- // incremental modifications from ECNetworkBlock children may not reliably
- // propagate to the solver attached at the UCBlock level.
- // Cost: one load_problem() per V-matrix cell (N^2 total for UC).
- //
- // KNOWN-BAD for EC UCBlock instances: see compute_generic_V_matrix() header
- // note.  This path produces an invalid V matrix for ECNetworkBlock-based UC
- // (the persistent-solver + NBModification stream accumulates demand, so the
- // matrix degenerates into a pure injection counter).  A correct fix requires
- // a fresh inner block per scenario (mirroring the extensive-form build); it is
- // not yet implemented.  CFL is unaffected (it uses the DataInjector branch).
  auto inject_scenario = [ & ]( const std::vector< double > & data ) {
   if( f_fix_with_mod ) {
-   // CFL: suppress set_data notification, DataInjector sends it explicitly.
    f_stoch_applicator->set_data( data , eNoBlck , eNoBlck );
    if( f_data_injector ) f_data_injector( inner , data );
   } else {
-   // UC: update physical + abstract data, then queue NBModification so that
-   // the next compute() call triggers load_problem() and reads current state.
    f_stoch_applicator->set_data( data , eModBlck , eModBlck );
    inner->add_Modification( std::make_shared< NBModification >( inner ) );
   }
   };
 
- // reload_solver: no-op (retained only so call sites compile unchanged).
- auto reload_solver = [ ]() {};
-
+ // Main an opportinity cost matrix (V-matrix) loop. For each row i:
+ //   (a) solve scenario i on its own (diagonal V[i][i]), recording its
+ //       optimal here-and-now solution y*_i;
+ //   (b) fix the here-and-now variables at y*_i;
+ //   (c) for every other scenario j, inject j's data and re-solve with y*_i
+ //       fixed (off-diagonal V[i][j]), this measures how much scenario i's
+ //       decision would cost if scenario j were the one that occurred;
+ //   (d) unfix, ready for the next row
  for( int i = 0 ; i < n ; ++i ) {
 
   // (a) Inject scenario i and solve as MIP (original binary types).
@@ -430,21 +297,15 @@ CSSCScenarioReductionSolver::compute_generic_V_matrix()
    y_star[ k ] = fs_vars[ k ]->get_value();
 
   // (b) Relax first-stage vars to continuous and fix them at y*_i.
-  //     Use eNoMod for set_type so the change is applied to the Block
-  //     without sending a VariableMod up the block hierarchy (some block
-  //     types, e.g. ThermalUnitBlock, do not support VariableMod).
-  //     CFL: is_fixed(eModBlck) sends VariableMod directly to solver.
-  //     UC:  is_fixed(eNoBlck) + reload_solver() -> load_problem reads state.
+  //     Relaxing binary->continuous lets us fix at a slightly-off-integer y*_i
+  //     (MIP solver tolerance) without spurious infeasibility, and avoids
+  //     branching on the fixed vars in the off-diagonal LP
   for( std::size_t k = 0 ; k < fs_vars.size() ; ++k )
    fs_vars[ k ]->set_type( relax_types[ k ] , eNoMod );
   for( std::size_t k = 0 ; k < fs_vars.size() ; ++k )
    fs_vars[ k ]->set_value( y_star[ k ] );
-  {
-   const int fix_flag = f_fix_with_mod ? eModBlck : eNoBlck;
-   for( auto * v : fs_vars )
-    v->is_fixed( true , fix_flag );
-  }
-  reload_solver();  // no-op for CFL; reattaches for UC -> load_problem sees fixed y
+  for( auto * v : fs_vars )
+   v->is_fixed( true , eModBlck );
 
   // (c) Off-diagonal: inject scenario j, solve with y* fixed.
   for( int j = 0 ; j < n ; ++j ) {
@@ -466,15 +327,14 @@ CSSCScenarioReductionSolver::compute_generic_V_matrix()
     }
    }
 
-  // (d) Unfix and restore original types for the next row's MIP.
-  {
-   const int fix_flag = f_fix_with_mod ? eModBlck : eNoBlck;
-   for( auto * v : fs_vars )
-    v->is_fixed( false , fix_flag );
-  }
+  // (d) Unfix and restore the original (binary) types for the next row's
+  //     diagonal MIP. Type restore is silent (eNoMod), mirroring the silent
+  //     relax in (b), the next row's inject_scenario() call is what makes the
+  //     solver observe the restored types
+  for( auto * v : fs_vars )
+   v->is_fixed( false , eModBlck );
   for( std::size_t k = 0 ; k < fs_vars.size() ; ++k )
    fs_vars[ k ]->set_type( orig_types[ k ] , eNoMod );
-  reload_solver();  // no-op for CFL; reattaches for UC -> load_problem sees free binary y
 
   std::cout << "    row " << (i+1) << "/" << n
             << "  V[i][i]=" << std::fixed << std::setprecision(2)
@@ -503,11 +363,6 @@ CSSCScenarioReductionSolver::compute_generic_V_matrix()
 //        sum_j x_ij = 1,  sum_j u_j = K                        (eq. 28)
 //        x_ij, u_j ∈ {0,1},  t_j >= 0 continuous               (eq. 29)
 //        x_ij = 0  for infeasible pairs (V[j][i] < 0)
-//
-// NOTE: with mixed-sign deviations the LP relaxation is weaker than the
-// sum-of-abs variant (fractional x can cancel S_j to ~0), so larger instances
-// may take longer in branch-and-bound; this is the price of paper fidelity and
-// of preserving the cancellation behaviour.
 
 void CSSCScenarioReductionSolver::solve_cssc_milp(
  const std::vector< std::vector< double > > & V )
@@ -609,7 +464,7 @@ void CSSCScenarioReductionSolver::solve_cssc_milp(
  // candidate representative j let
  //     S_j = sum_{i: feasible} (V[j][i] - V[j][j]) * x_ij
  // be the *signed* clustering discrepancy of cluster j (the goodness of fit:
- // how well representative j's cost reproduces the AGGREGATE cost of its
+ // how well representative j's cost reproduces the aggregate cost of its
  // members, note the absolute value is taken outside the sum, so members
  // whose deviations have opposite signs cancel, which is the essential
  // "mid-ground" property of CSSC).  We model t_j >= |S_j| with two rows:
@@ -677,7 +532,7 @@ void CSSCScenarioReductionSolver::solve_cssc_milp(
   }
 
  // Bound the abs-of-sum MILP so a weak LP relaxation cannot make it hang;
- // on time-out we accept the best incumbent found (a valid clustering).
+ // on time-out we accept the best incumbent found (a valid clustering)
  if( f_milp_time_limit > 0.0 )
   milp_solver->set_par( Solver::dblMaxTime , f_milp_time_limit );
 
@@ -704,7 +559,7 @@ void CSSCScenarioReductionSolver::solve_cssc_milp(
  std::cout << "  CSSC discrepancy (MILP obj) = "
            << std::fixed << std::setprecision(4) << cssc_obj << std::endl;
 
- // Extract representatives (u_j = 1).
+ // Extract representatives (u_j = 1)
  ind_red.clear();
  f_representatives.clear();
  for( int j = 0 ; j < n ; ++j )
@@ -712,7 +567,7 @@ void CSSCScenarioReductionSolver::solve_cssc_milp(
    ind_red.push_back( static_cast< Index >(j) );
  f_representatives = ind_red;
 
- // Fallback: if MILP solution is fractional, take K highest u_j values.
+ // Fallback: if MILP solution is fractional, take K highest u_j values
  if( static_cast< int >( ind_red.size() ) != K ) {
   std::vector< int > all(n);
   std::iota( all.begin() , all.end() , 0 );
@@ -726,7 +581,7 @@ void CSSCScenarioReductionSolver::solve_cssc_milp(
   f_representatives = ind_red;
   }
 
- // Assignments: x_ij = 1 -> scenario i assigned to representative j.
+ // Assignments: x_ij = 1 -> scenario i assigned to representative j
  f_assignments.assign( n , ind_red[0] );
  for( int i = 0 ; i < n ; ++i )
   for( int j = 0 ; j < n ; ++j )
@@ -743,7 +598,7 @@ void CSSCScenarioReductionSolver::solve_cssc_milp(
 
  update_reduced_atoms();
 
- // Wasserstein distance using Euclidean distances between scenario vectors.
+ // Wasserstein distance using Euclidean distances between scenario vectors
  double wasserstein = 0.0;
  for( int i = 0 ; i < n ; ++i ) {
   double min_d = std::numeric_limits< double >::infinity();
@@ -753,9 +608,6 @@ void CSSCScenarioReductionSolver::solve_cssc_milp(
   }
  f_solution_value = wasserstein;
 
- std::cout << "  CSSC: Wasserstein = "
-           << std::fixed << std::setprecision(6) << f_solution_value
-           << std::endl;
 }
 
 /*--------------------------------------------------------------------------*/

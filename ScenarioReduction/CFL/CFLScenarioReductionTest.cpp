@@ -33,6 +33,16 @@
 using namespace SMSpp_di_unipi_it;
 
 /*--------------------------------------------------------------------------*/
+/// expose TwoStageStochasticBlock::get_stochastic_block(), which became
+/// protected in the SMS++ core header (off-limits to edit); the CSSC branch
+/// only needs read access to the StochasticBlock applicator.
+struct TSSBExposer : public TwoStageStochasticBlock {
+ StochasticBlock * expose_stochastic_block() const {
+  return get_stochastic_block();
+ }
+};
+
+/*--------------------------------------------------------------------------*/
 
 static void print_usage( const char * prog ) {
  std::cout
@@ -253,7 +263,8 @@ int main( int argc , char * argv[] )
   if( method == "cssc" ) {
    auto tssb_cssc = build_tssb( cfl.get() , dss.get() , "/tmp/tssb_cssc.nc4" );
 
-   auto * stoch_app = tssb_cssc->get_stochastic_block();
+   auto * stoch_app =
+    static_cast< TSSBExposer * >( tssb_cssc.get() )->expose_stochastic_block();
    if( ! stoch_app )
     throw std::runtime_error(
      "CSSC: TwoStageStochasticBlock has no StochasticBlock applicator." );

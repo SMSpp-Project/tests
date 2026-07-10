@@ -2,13 +2,30 @@
 /*------------ File CSSCScenarioReductionSolver.h ------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * Fully generic CSSC scenario reduction solver.
+ * Fully generic implementation of the Cost-Space Scenario Clustering (CSSC)
+ * algorithm of Keutchayan given a pool of N scenarios of a two-stage stochastic programming, 
+ * select K representativescenarios (and an assignment of every scenario to the 
+ * so that solving the reduced K-scenario problem is a good proxy for
+ * representative that best approximates it) solving the full N-scenario one.
  *
- * Implements the Cost-Space Scenario Clustering (CSSC) algorithm of
- * Keutchayan et al. (2023) with NO dependency on any specific Block type.
- * It works with any TwoStageStochasticBlock whose inner block can be solved
- * by a registered MILPSolver.
+ * This class works with any TwoStageStochasticBlock whose inner Block can be 
+ * solved by a registered MILPSolver. The only piece of problem-specific
+ * knowledge it needs from the caller is a VarExtractor (see set_var_extractor())
+ * that says which ColVariable(s) of the inner Block are here-and-now (first-stage).
+ * This is unavoidably a modelling choice, not something a generic solver can
+ * infer on its own.
  *
+ * ### Algorithm
+ *
+ * -  compute_generic_V_matrix() (Step 1): build the N x N cost-space matrix
+ *    V, where V[i][j] is the cost of solving scenario j's recourse problem
+ *    with the here-and-now decision fixed at scenario i's own optimum
+ *    (V[i][i] is scenario i solved on its own, nothing fixed).
+ * -  solve_cssc_milp() (Step 2): given V, solve a small MILP (Keutchayan et
+ *    al., eq. 24-29) that partitions the N scenarios into K clusters, one
+ *    representative per cluster, minimizing the average within-cluster cost
+ *    discrepancy.
+ * 
  * ### How to use
  *
  * @code
@@ -72,11 +89,15 @@ public:
  using Index    = unsigned int;
  using OFValue  = RealObjective::OFValue;
 
- /** Callable: receives the inner Block (after generate_abstract_variables)
-  * and returns pointers to all here-and-now (first-stage) ColVariables
-  * Examples:
-  *   - CFL:  pointers to y[0]…y[nf-1] of CapacitatedFacilityLocationBlock
-  *   - UC:   pointers to u[0]…u[T-1] of each ThermalUnitBlock */
+ /** Callable: receives the inner Block (after generate_abstract_variables())
+  * and returns pointers to all here-and-now (first-stage) ColVariables.
+  * This is the one piece of problem-specific knowledge the caller must
+  * supply, there is no generic way to tell "first-stage" variables apart
+  * from the rest without knowing what the Block represents. Examples:
+  *   - a facility-location problem: pointers to the y[0]...y[nf-1] "open
+  *     facility f?" variables of CapacitatedFacilityLocationBlock;
+  *   - a unit-commitment problem: pointers to the u[0]...u[T-1] commitment
+  *     variables of each ThermalUnitBlock. */
  using VarExtractor = std::function< std::vector< ColVariable * >( Block * ) >;
 
 /*--------------------------------------------------------------------------*/
@@ -86,9 +107,10 @@ public:
 
 /*--------------------------------------------------------------------------*/
 
- /** Attach to a ScenarioReductionBlock.
-  * Requires: TwoStageStochasticBlock, StochasticBlock applicator, and
-  * DiscreteScenarioSet.  No CapacitatedFacilityLocationBlock needed
+ /** Attach to a ScenarioReductionBlock. \p block must be a
+  * ScenarioReductionBlock carrying a TwoStageStochasticBlock, a
+  * StochasticBlock scenario applicator, and a DiscreteScenarioSet -- nothing
+  * more specific is required, regardless of the underlying problem type.
   * Call set_nb_reduced() and set_milp_config() before this. */
  void set_Block( Block * block ) override;
 
@@ -121,17 +143,13 @@ public:
   f_var_extractor = std::move( extractor );
   }
 
- /** Optional: register a problem-specific data injector.
-  *
-  * The default data injection path (StochasticBlock::set_data with
-  * eNoBlck flags) is sufficient for some block types (e.g. UC) where
-  * set_data triggers an NBModification that causes the solver to reload.
-  * For other block types (e.g. CFL) the DataMapping does not send a solver
-  * notification, so the solver reads stale LP data.
-  *
-  * When registered, the injector is called AFTER set_data() for every
-  * scenario injection and is responsible for sending the solver-visible
-  * modification. */
+ /** Required in direct-notification mode (set_fix_with_modification(true),
+  * the default); unused in reload mode. Registers the callable responsible
+  * for telling the inner Block's attached Solver that scenario data just
+  * changed, using whatever targeted Modification the Block type exposes for
+  * the purpose (e.g. CapacitatedFacilityLocationBlock::chg_customer_demands).
+  * Called right after every StochasticBlock::set_data(), with the inner
+  * Block and the just-injected scenario data vector. */
  using DataInjector = std::function< void( Block * ,
                                            const std::vector< double > & ) >;
  void set_data_injector( DataInjector injector ) {
@@ -145,24 +163,7 @@ public:
  /** Wall-clock time limit (seconds) for the Step-2 partitioning MILP*/
  void set_milp_time_limit( double seconds ) { f_milp_time_limit = seconds; }
 
- /** Control how variable fixing/unfixing is communicated to solvers.
-  *
-  * When true (default, CFL-compatible): is_fixed() is called with eModBlck
-  * so the registered solver receives an explicit modification and updates
-  * variable bounds immediately.
-  *
-  * When false (UC-compatible): is_fixed() is called with eNoBlck (no
-  * modification sent up the block hierarchy).  The solver learns about the
-  * fixed state through the NBModification triggered by the next set_data()
-  * call, which causes load_problem() to rescan all variable states.
-  * Use this mode when the inner block type rejects VariableMod */
  void set_fix_with_modification( bool fwm ) { f_fix_with_mod = fwm; }
-
- using BlockFactory =
-  std::function< std::unique_ptr< Block >( const std::vector< double > & ) >;
- void set_block_factory( BlockFactory factory ) {
-  f_block_factory = std::move( factory );
-  }
 
 /*--------------------------------------------------------------------------*/
 
@@ -172,9 +173,8 @@ private:
  StochasticBlock         * f_stoch_applicator = nullptr;
  BlockSolverConfig       * f_milp_config      = nullptr;
  VarExtractor              f_var_extractor;
- DataInjector              f_data_injector;   ///< optional: forces solver notification after set_data
- BlockFactory              f_block_factory;   ///< optional: per-scenario fresh inner block (UC)
- bool                      f_fix_with_mod = true;  ///< if false, is_fixed() uses eNoBlck (UC mode)
+ DataInjector              f_data_injector;   ///< direct-notification mode: sends the targeted Modification after set_data()
+ bool                      f_fix_with_mod = true;  ///< true = direct-notification mode, false = reload mode (see set_fix_with_modification())
  double                    f_milp_time_limit = 120.0;  ///< Step-2 MILP wall-clock limit (s); <=0 disables
 
  int f_N = 0;  ///< total scenarios in pool
@@ -201,10 +201,9 @@ private:
  std::vector< std::vector< double > > f_V_matrix;
 
  /** Step 1: build the NxN cost-space matrix V (V[i][j] = cost of scenario i's
-  * optimal first-stage applied to scenario j).  One routine, two interchange-
-  * able fill strategies selected internally: a fresh inner block per cell when
-  * a block factory is registered (set_block_factory), else one reused inner
-  * block with incremental injection (DataInjector). */
+  * optimal first-stage applied to scenario j), reusing one inner Block with
+  * incremental scenario injection (StochasticBlock::set_data(), optionally
+  * followed by the registered DataInjector). */
  std::vector< std::vector< double > > compute_generic_V_matrix();
 
  /** Step 2: solve the MILP partitioning problem (fully generic, uses only
