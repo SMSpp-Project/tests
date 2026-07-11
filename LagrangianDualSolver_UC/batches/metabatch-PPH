@@ -35,8 +35,13 @@ slv=1
 # run hydrothermal academic instances
 ./batches/batch-acadh "$exe" "$par" "$slv" "$mlf"
 
-# run plan4res instances
-./batches/batch-p4r "$exe" "$par" "$slv" "$mlf"
+# run plan4res instances. Under PPH these are the slowest part of the metabatch;
+# the smoke sample already runs them under slv=0 in the standalone batch-p4r
+# test, so skip them here in CI to stay under the 3h shared-runner cap. Local
+# still exercises the full plan4res set under PrimalProximalHeur.
+if [ -z "$CI" ]; then
+    ./batches/batch-p4r "$exe" "$par" "$slv" "$mlf"
+fi
 
 # run energy community instances
 ./batches/batch-ec "$exe" "$par" "$slv" "$mlf"

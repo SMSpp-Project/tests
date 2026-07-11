@@ -34,21 +34,28 @@ parse_batch_args "$@"
 
 DATADIR=../../UCBlock/data/nc4/plan4res-data
 
-# the 25 SecondSetofInstances (~11MB each, hydro systems with over a thousand
-# units on several nodes) take many minutes apiece and blow the 3h GitLab.com
-# shared-runner cap on their own; run only the light sets in CI. Local runs all.
+# each plan4res solve takes minutes under LagrangianDualSolver + BundleSolver
+# with a MILP reference, so the full set (54 instances) runs for hours and blows
+# the 3h GitLab.com shared-runner cap. In CI run a small smoke sample covering
+# the instance families (thermal L_B_C, hydrothermal L_B_H, nuclear L_B_N, and a
+# pHydro cascade); local runs every instance of all three sets.
 if [ -n "$CI" ]; then
-    sets="FirstSetofInstances pHydro"
+    instances="FirstSetofInstances/L_B_C_24.nc4
+               FirstSetofInstances/L_B_H_19.nc4
+               FirstSetofInstances/L_B_N_1.nc4
+               FirstSetofInstances/L_B_N_9.nc4
+               pHydro/20090907_pHydro_4_none.nc4"
+    for rel in $instances; do
+        run_test "$exe" "${DATADIR}/${rel}" -S "$par" -B InnerBCfg.txt -w "$slv"
+    done
 else
-    sets="FirstSetofInstances SecondSetofInstances pHydro"
-fi
-
-for s in $sets; do
-    for what in "${DATADIR}/${s}"/*.nc4; do
+    for what in "${DATADIR}"/FirstSetofInstances/*.nc4 \
+                "${DATADIR}"/SecondSetofInstances/*.nc4 \
+                "${DATADIR}"/pHydro/*.nc4; do
 
         run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv"
 
     done
-done
+fi
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
