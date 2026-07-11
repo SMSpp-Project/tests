@@ -34,12 +34,21 @@ parse_batch_args "$@"
 
 DATADIR=../../UCBlock/data/nc4/plan4res-data
 
-for what in "${DATADIR}"/FirstSetofInstances/*.nc4 \
-            "${DATADIR}"/SecondSetofInstances/*.nc4 \
-            "${DATADIR}"/pHydro/*.nc4; do
+# the 25 SecondSetofInstances (~11MB each, hydro systems with over a thousand
+# units on several nodes) take many minutes apiece and blow the 3h GitLab.com
+# shared-runner cap on their own; run only the light sets in CI. Local runs all.
+if [ -n "$CI" ]; then
+    sets="FirstSetofInstances pHydro"
+else
+    sets="FirstSetofInstances SecondSetofInstances pHydro"
+fi
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv"
+for s in $sets; do
+    for what in "${DATADIR}/${s}"/*.nc4; do
 
+        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv"
+
+    done
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
