@@ -2,14 +2,11 @@
 /*---------------- File UCScenarioReductionTest.h -------------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * UC-specific implementation of AbstractScenarioReductionTest.
- *
- * Implements the two pure virtual methods added by the refactoring:
- *  - create_srb()                  builds a ScenarioReductionBlock
- *  - build_tssb_for_current_pool() builds a TSSB from the current pool
- *
- * Everything else (caching, VPI, warmstart, print_results) is inherited
- * from AbstractScenarioReductionTest.
+ * UC-specific hook functions plugged into the shared scenario-reduction
+ * driver (see ScenarioReductionCommon.h). There is no UC test class here on
+ * purpose: main() builds a ProblemHooks value from the free functions below
+ * and calls run_scenario_reduction_test(); everything else (caching, VPI,
+ * warmstart, print_results) lives once in ScenarioReductionCommon.
  *
  * \author Benoît Tran \n
  *         Dipartimento di Informatica \n
@@ -22,7 +19,7 @@
 #ifndef __UCScenarioReductionTest
 #define __UCScenarioReductionTest
 
-#include "AbstractScenarioReductionTest.h"
+#include "ScenarioReductionCommon.h"
 #include "CSSCScenarioReductionSolver.h"
 #include "IntermittentUnitBlock.h"
 #include "ThermalUnitBlock.h"
@@ -32,89 +29,80 @@
 #include <string>
 #include <vector>
 
-namespace ScenarioReductionTesting {
-
- using namespace SMSpp_di_unipi_it;
+namespace SMSpp_di_unipi_it {
 
 /*--------------------------------------------------------------------------*/
-/*---------------------- CLASS UCScenarioReductionTest ---------------------*/
+/*------------------------------ struct UCState -----------------------------*/
 /*--------------------------------------------------------------------------*/
+/** UC-specific data captured by the ProblemHooks lambdas built in main();
+ *  replaces what used to be private members of a UCScenarioReductionTest
+ *  subclass. Plain data, nothing virtual: see ScenarioReductionCommon.h for
+ *  why the whole framework is free functions + hooks rather than a class
+ *  hierarchy. */
 
- class UCScenarioReductionTest : public AbstractScenarioReductionTest {
-
- public:
-
-  UCScenarioReductionTest()  = default;
-  ~UCScenarioReductionTest() override = default;
-
- protected:
-
-  // ===================== Pure virtuals from AbstractSRT ==================
-
-  /** Load base UCBlock instance. Sets base_block and stochastic_block */
-  void load_problem_instance( const std::string & path ) override;
-
-  /** Build a fully configured ScenarioReductionBlock.
-   *
-   *  Always sets: scenario_generator, sub_problem_block (synthetic CFLB).
-   *  For CSSC also sets: stochastic_block (TSSB), scenario_applicator
-   *
-   *  Owns the synthetic CFLB and (for CSSC) the TSSB through member
-   *  variables so they stay alive as long as the SRB is alive
-   */
-  std::unique_ptr< ScenarioReductionBlock >
-  create_srb( int K , const std::string & method ) override;
-
-  /** Build a TSSB from the base UCBlock + current scenario_set pool */
-  std::unique_ptr< TwoStageStochasticBlock >
-  build_tssb_for_current_pool( const std::string & tmp ) override;
-
-  /** @return "UC" */
-  std::string get_problem_type() const override { return "UC"; }
-
-  /** UC CSSC: uses CSSCScenarioReductionSolver with a UC-specific
-   *  VarExtractor lambda that identifies commitment variables */
-  void run_cssc( ScenarioReductionBlock * srb ,
-                 BlockSolverConfig      * bsc ,
-                 int                      K  ) override;
-
-  /** @return "../scenarios/UCBlock/" */
-  std::string get_scenarios_directory() const override {
-   return "../scenarios/UCBlock/";
-  }
-
- private:
+ struct UCState {
 
   /** Which uncertain parameters appear in the scenario vectors */
   enum class UncertaintyType { kDemandOnly , kRenewableOnly , kBoth };
 
-  /** Detect uncertainty type from scenario vector size */
-  UncertaintyType infer_uncertainty_type( size_t scenario_dim ) const;
+  UncertaintyType             uncertainty_type = UncertaintyType::kRenewableOnly;
+  std::vector< Index >        intermittent_units;
+  size_t                      num_time_periods = 0;
+  size_t                      num_nodes        = 0;
+  std::string                 instance_file_path;  // for EC Block copy workaround
 
-  /** Indices of IntermittentUnitBlock children of the loaded UCBlock */
-  static std::vector< Index > get_intermittent_indices( UCBlock * uc );
+  // Owned object that must outlive the SRB (for CSSC); reset at the start
+  // of each uc_create_srb() call
+  std::unique_ptr< TwoStageStochasticBlock > srb_tssb;
 
-  /** Internal build_tssb: takes an explicit DSS (for create_srb CSSC path) */
-  std::unique_ptr< TwoStageStochasticBlock >
-  build_tssb( UCBlock * uc ,
-              DiscreteScenarioSet * dss ,
-              const std::string & tmp ,
-              UncertaintyType utype ) const;
+ };  // struct UCState
 
-  // State set by load_problem_instance() 
-  UncertaintyType             uncertainty_type_ = UncertaintyType::kRenewableOnly;
-  std::vector< Index >        intermittent_units_;
-  size_t                      num_time_periods_ = 0;
-  size_t                      num_nodes_        = 0;
-  std::string                 instance_file_path_;  // for EC Block copy workaround
+/*--------------------------------------------------------------------------*/
+/*--------------------------- UC hook functions ------------------------------*/
+/*--------------------------------------------------------------------------*/
+/** Build a ProblemHooks from these in main(), e.g.:
+ *
+ *   UCState uc_state;
+ *   ProblemHooks hooks;
+ *   hooks.problem_type = "UC";
+ *   hooks.load_problem_instance = [&]( auto & st , auto & path ) {
+ *    uc_load_problem_instance( st , uc_state , path ); };
+ *   hooks.create_srb = [&]( auto & st , int K , auto & method ) {
+ *    return uc_create_srb( st , uc_state , K , method ); };
+ *   hooks.build_tssb_for_current_pool = [&]( auto & st , auto & tmp ) {
+ *    return uc_build_tssb_for_current_pool( st , uc_state , tmp ); };
+ *   hooks.run_cssc = [&]( auto & st , auto * srb , auto * bsc , int K ) {
+ *    uc_run_cssc( st , uc_state , srb , bsc , K ); };
+ *   hooks.get_scenarios_directory = [] { return "../scenarios/UCBlock/"; };
+ *   return run_scenario_reduction_test( argc , argv , hooks ); */
 
-  // Owned objects that must outlive the SRB (for CSSC) 
-  // Reset at the start of each create_srb() call
-  std::unique_ptr< TwoStageStochasticBlock >          srb_tssb_;
+ /** Load base UCBlock instance. Sets state.base_block, state.stochastic_block,
+  *  and populates uc_state (time horizon, nodes, intermittent units...). */
+ void uc_load_problem_instance( ScenarioReductionState & state ,
+                                UCState & uc_state ,
+                                const std::string & path );
 
- };  // class UCScenarioReductionTest
+ /** Build a fully configured ScenarioReductionBlock.
+  *
+  *  Always sets: scenario_generator (state.scenario_set).
+  *  For CSSC additionally builds a TwoStageStochasticBlock + applicator,
+  *  owned by uc_state.srb_tssb so it stays alive as long as the SRB is. */
+ std::unique_ptr< ScenarioReductionBlock >
+ uc_create_srb( ScenarioReductionState & state , UCState & uc_state ,
+               int K , const std::string & method );
 
-}  // namespace ScenarioReductionTesting
+ /** Build a TSSB from the base UCBlock + current state.scenario_set pool */
+ std::unique_ptr< TwoStageStochasticBlock >
+ uc_build_tssb_for_current_pool( ScenarioReductionState & state ,
+                                 UCState & uc_state , const std::string & tmp );
+
+ /** UC CSSC: uses CSSCScenarioReductionSolver with a UC-specific
+  *  VarExtractor lambda that identifies commitment variables */
+ void uc_run_cssc( ScenarioReductionState & state , UCState & uc_state ,
+                   ScenarioReductionBlock * srb , BlockSolverConfig * bsc ,
+                   int K );
+
+}  
 
 #endif /* __UCScenarioReductionTest */
 
