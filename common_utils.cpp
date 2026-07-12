@@ -29,6 +29,8 @@
 
 #include <SMSTypedefs.h>
 
+#include <Configuration.h>
+
 /*--------------------------------------------------------------------------*/
 /*--------------------- MPI / UCX SAFE-DEFAULTS ----------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -745,7 +747,13 @@ bool process_standard_arg( int opt )
    Block::set_filename_prefix( std::string( block_prefix ) );
    break;
    }
-  case 'c': conf_prefix = normalize_prefix( std::string( optarg ) ); break;
+  case 'c': conf_prefix = normalize_prefix( std::string( optarg ) );
+            // also hand the -c prefix to Configuration, so filenames referenced
+            // from inside a Configuration file (the "*filename" includes and the
+            // strInnerBSC / str_LagBF_BSCfg meta-config chains) are resolved
+            // against it, exactly as Block::set_filename_prefix() does for -p
+            Configuration::set_filename_prefix( std::string( conf_prefix ) );
+            break;
   case 'D': dryrun = true; break;
   case 'v': {
    sol_verbose = true;
