@@ -23,8 +23,14 @@ parse_batch_args "$@"
 
 DATADIR=../../UCBlock/data/nc4/UC_Data/HT-Ramp
 
-for size in 20_10 50_20 75_35 100_50 150_75 200_100; do
-  for (( seed = 1 ; seed < 3 ; seed++ )); do
+# under PrimalProximalHeur (slv=1, via metabatch-PPH) each solve is far slower
+# and the full grid blows the 3h shared-runner cap; CI runs a representative
+# small/medium/large sample, local runs the whole grid.
+if [ -n "$CI" ]; then sizes="20_10 100_50 200_100"; seeds="1"
+else                  sizes="20_10 50_20 75_35 100_50 150_75 200_100"; seeds="1 2"; fi
+
+for size in $sizes; do
+  for seed in $seeds; do
 
     what=${DATADIR}/${size}_${seed}_w.nc4
 
