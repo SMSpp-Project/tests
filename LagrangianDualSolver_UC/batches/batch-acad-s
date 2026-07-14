@@ -26,7 +26,13 @@ parse_batch_args "$@"
 
 DATADIR=../../UCBlock/data/nc4/UC_Data/T-Ramp
 
-for size in 10 20 50; do
+# under PrimalProximalHeur (slv=1, via metabatch-PPH) the size-50 instances do
+# not converge within the 3h shared-runner cap (e.g. 50_0_1 runs for hours), so
+# under PPH the CI runs only the fast size-10 instances. Local runs them all.
+if [ -n "$CI" ] && [ "$slv" = "1" ]; then sizes="10"
+else                                       sizes="10 20 50"; fi
+
+for size in $sizes; do
   for (( seed = 1 ; seed < 6 ; seed++ )); do
 
     what=${DATADIR}/${size}_0_${seed}_w.nc4

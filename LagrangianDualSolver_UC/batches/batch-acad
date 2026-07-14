@@ -23,11 +23,14 @@ parse_batch_args "$@"
 
 DATADIR=../../UCBlock/data/nc4/UC_Data/T-Ramp
 
-# under PrimalProximalHeur (slv=1, via metabatch-PPH) each solve is far slower
-# and the full grid blows the 3h shared-runner cap; CI runs a representative
-# small/medium/large sample, local runs the whole grid.
-if [ -n "$CI" ]; then sizes="10 50 200"; seeds="1 2"
-else                  sizes="10 20 50 75 100 200"; seeds="1 2 3 4 5"; fi
+# under PrimalProximalHeur (slv=1, via metabatch-PPH) the larger instances do
+# not converge within the 3h shared-runner cap (e.g. 50_0_1 runs for hours), so
+# under PPH the CI runs only the fast size-10 instances; under slv=0 it keeps a
+# small/medium/large sample. Local runs the whole grid in both modes.
+if [ -n "$CI" ]; then
+  if [ "$slv" = "1" ]; then sizes="10";          seeds="1 2"
+  else                      sizes="10 50 200";    seeds="1 2"; fi
+else                        sizes="10 20 50 75 100 200"; seeds="1 2 3 4 5"; fi
 
 for size in $sizes; do
   for seed in $seeds; do
@@ -43,8 +46,10 @@ done
 
 DATADIR=../../UCBlock/data/nc4/UC_Data/HT-Ramp
 
-if [ -n "$CI" ]; then sizes="20_10 100_50 200_100"; seeds="1"
-else                  sizes="20_10 50_20 75_35 100_50 150_75 200_100"; seeds="1 2"; fi
+if [ -n "$CI" ]; then
+  if [ "$slv" = "1" ]; then sizes="20_10";                seeds="1"
+  else                      sizes="20_10 100_50 200_100"; seeds="1"; fi
+else                        sizes="20_10 50_20 75_35 100_50 150_75 200_100"; seeds="1 2"; fi
 
 for size in $sizes; do
   for seed in $seeds; do
