@@ -15,6 +15,7 @@
 #include "CSSCScenarioReductionSolver.h"
 
 #include "AbstractBlock.h"
+#include "AbstractPath.h"
 #include "ColVariable.h"
 #include "FRealObjective.h"
 #include "FRowConstraint.h"
@@ -86,7 +87,7 @@ void CSSCScenarioReductionSolver::set_Block( Block * block )
 
  f_N = N;
 
- // Uniform weights 1/N.
+ // Uniform weights 1/N
  f_weights.assign( N , 1.0 / static_cast< double >( N ) );
 
  // Pairwise Euclidean distances between scenario feature vectors
@@ -129,11 +130,6 @@ int CSSCScenarioReductionSolver::compute( bool /*changedvars*/ )
    "CSSCScenarioReductionSolver::compute: "
    "call set_milp_config() before compute()" );
 
- if( ! f_var_extractor )
-  throw std::logic_error(
-   "CSSCScenarioReductionSolver::compute: "
-   "call set_var_extractor() before compute()" );
-
  mod_clear();
 
  std::cout << "CSSC: reducing " << f_N << " -> " << f_K
@@ -143,6 +139,33 @@ int CSSCScenarioReductionSolver::compute( bool /*changedvars*/ )
  solve_cssc_milp( f_V_matrix );
 
  return kOK;
+}
+
+/*--------------------------------------------------------------------------*/
+/*------------------- generic_var_extractor -------------------------------*/
+/*--------------------------------------------------------------------------*/
+// Default VarExtractor: reads the here-and-now AbstractPaths straight from
+// the TwoStageStochasticBlock and resolves them against \p block. Each path
+// is a relative description ("go into nested Block #k, then Variable group
+// X"), not tied to any particular live object, so the same list resolves
+// correctly whether \p block is one of the TSSB's own scenario copies or a
+// separate Block with the same structure (e.g. the live Block the solver
+// reuses in Step 1). No knowledge of the concrete Block type is needed.
+std::vector< ColVariable * >
+CSSCScenarioReductionSolver::generic_var_extractor( Block * block ) const
+{
+ std::vector< ColVariable * > vars;
+ if( ! f_tssb )
+  return vars;
+
+ for( const auto & path : f_tssb->get_paths_to_static_here_and_now_vars() ) {
+  const auto num = path->get_number_elements< ColVariable >( block );
+  auto * first = path->get_element< ColVariable >( block );
+  for( Index j = 0 ; j < num ; ++j )
+   vars.push_back( first + j );
+  }
+
+ return vars;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -214,9 +237,11 @@ CSSCScenarioReductionSolver::compute_generic_V_matrix()
  inner->generate_abstract_constraints();
  inner->generate_objective();
 
- // Identify here-and-now variables via the caller-provided extractor.
- // Called after generate_abstract_variables() so pointers are stable
- std::vector< ColVariable * > fs_vars = f_var_extractor( inner );
+ // Identify here-and-now variables: the caller-provided extractor if set,
+ // else the generic AbstractPath-based fallback. Called after
+ // generate_abstract_variables() so pointers are stable
+ std::vector< ColVariable * > fs_vars = f_var_extractor
+  ? f_var_extractor( inner ) : generic_var_extractor( inner );
  if( fs_vars.empty() )
   throw std::runtime_error(
    "CSSCScenarioReductionSolver::compute_generic_V_matrix: "

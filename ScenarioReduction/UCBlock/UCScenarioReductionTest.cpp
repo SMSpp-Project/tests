@@ -4,7 +4,7 @@
 /** @file
  * Implementation of the UC hook functions declared in
  * UCScenarioReductionTest.h, and main() wiring them into a ProblemHooks
- * consumed by run_scenario_reduction_test() (ScenarioReductionCommon.h).
+ * consumed by run_scenario_reduction_test() (ScenarioReductionCommon.h)
  *
  * \author Benoît Tran \n
  *         Dipartimento di Informatica \n
@@ -53,7 +53,7 @@ namespace SMSpp_di_unipi_it {
 /*--------------------------------------------------------------------------*/
 /// expose TwoStageStochasticBlock::get_stochastic_block(), which became
 /// protected in the SMS++ core header (off-limits to edit); the CSSC branch
-/// only needs read access to the StochasticBlock applicator.
+/// only needs read access to the StochasticBlock applicator
 struct TSSBExposer : public TwoStageStochasticBlock {
  StochasticBlock * expose_stochastic_block() const {
   return get_stochastic_block();
@@ -225,7 +225,7 @@ void uc_load_problem_instance(
 /* Internal helper (not in the header): builds a TSSB from an explicit DSS.
  * Used both by uc_build_tssb_for_current_pool() (full/reduced solves) and by
  * uc_create_srb()'s CSSC branch (needs a TSSB over the current pool to hand
- * to the ScenarioReductionBlock as its stochastic_block/applicator). */
+ * to the ScenarioReductionBlock as its stochastic_block/applicator)*/
 
 static std::unique_ptr< TwoStageStochasticBlock >
 build_tssb( UCBlock * uc , DiscreteScenarioSet * dss , const std::string & tmp ,
@@ -246,27 +246,55 @@ build_tssb( UCBlock * uc , DiscreteScenarioSet * dss , const std::string & tmp ,
   g.addDim("NumberScenarios" , N);
 
   // ---- StaticAbstractPath: commitment variables of ThermalUnitBlocks ----
+  // One 2-node path per ThermalUnitBlock: 'B' navigates to the unit's own
+  // nested Block (group index u, matching get_unit_block(u) == v_Block[u]),
+  // then 'V' selects the whole "u_thermal" (commitment) static variable
+  // group in one shot via a range (element_index=0, range_index=T). Named
+  // group lookup ("u_thermal") is used instead of a numeric index so this
+  // does not depend on ThermalUnitBlock's variable registration order
   {
-   int num_thermal = 0;
+   std::vector< Index > thermal_units;
    for( Index u = 0 ; u < uc->get_number_units() ; ++u )
     if( dynamic_cast< ThermalUnitBlock * >( uc->get_unit_block(u) ) )
-     num_thermal++;
-   const int path_len = num_thermal * T;
+     thermal_units.push_back( u );
+   const int num_thermal = static_cast< int >( thermal_units.size() );
 
    auto pg    = g.addGroup("StaticAbstractPath");
-   auto pdim  = pg.addDim("PathDim"        , 1);
-   auto tldim = pg.addDim("PathTotalLength" , path_len);
+   auto pdim  = pg.addDim("PathDim"        , num_thermal );
+   auto tldim = pg.addDim("PathTotalLength" , num_thermal * 2 );
 
-   std::vector< unsigned int > starts = { 0 };
-   pg.addVar("PathStart"          , netCDF::NcUint() , pdim  ).putVar(starts.data());
-   pg.addVar("PathNodeTypes"      , netCDF::NcChar() , tldim )
-     .putVar( std::vector< char >(path_len,'V').data() );
-   pg.addVar("PathGroupIndices"   , netCDF::NcUint() , tldim )
-     .putVar( std::vector< unsigned int >(path_len,0).data() );
-   std::vector< unsigned int > idx(path_len);
-   std::iota(idx.begin(),idx.end(),0);
-   pg.addVar("PathElementIndices" , netCDF::NcUint() , tldim ).putVar(idx.data());
-   pg.addVar("PathRangeIndices"   , netCDF::NcUint() , tldim ).putVar(idx.data());
+   std::vector< unsigned int > starts( num_thermal );
+   for( int k = 0 ; k < num_thermal ; ++k )
+    starts[ k ] = static_cast< unsigned int >( k * 2 );
+
+   std::vector< char > node_types( num_thermal * 2 );
+   std::vector< std::string > group_names( num_thermal * 2 );
+   std::vector< unsigned int > elem_idx( num_thermal * 2 , 0 );
+   std::vector< unsigned int > range_idx( num_thermal * 2 , 0 );
+
+   for( int k = 0 ; k < num_thermal ; ++k ) {
+    node_types[ 2*k ]     = 'B';
+    group_names[ 2*k ]    = std::to_string( thermal_units[ k ] );
+    // element/range indices for the 'B' node are unused (Block selection
+    // uses only the group index), left at 0.
+
+    node_types[ 2*k + 1 ]  = 'V';
+    group_names[ 2*k + 1 ] = "u_thermal";
+    elem_idx[ 2*k + 1 ]    = 0;
+    range_idx[ 2*k + 1 ]   = static_cast< unsigned int >( T );
+    }
+
+   pg.addVar("PathStart"     , netCDF::NcUint() , pdim  ).putVar(starts.data());
+   pg.addVar("PathNodeTypes" , netCDF::NcChar() , tldim ).putVar(node_types.data());
+   {
+    auto gv = pg.addVar("PathGroupIndices" , netCDF::NcString() , tldim );
+    std::vector< const char * > cptrs( group_names.size() );
+    for( size_t i = 0 ; i < group_names.size() ; ++i )
+     cptrs[ i ] = group_names[ i ].c_str();
+    gv.putVar( cptrs.data() );
+   }
+   pg.addVar("PathElementIndices" , netCDF::NcUint() , tldim ).putVar(elem_idx.data());
+   pg.addVar("PathRangeIndices"   , netCDF::NcUint() , tldim ).putVar(range_idx.data());
   }
 
   // ---- StochasticBlock: inner UCBlock + DataMappings --------------------
@@ -278,7 +306,7 @@ build_tssb( UCBlock * uc , DiscreteScenarioSet * dss , const std::string & tmp ,
 
    // EC instances hit a bug in ECNetworkBlock::serialize (v_ActiveDemand.size()
    // returns NumberIntervals=96 instead of NumberNodes=10). Detect by checking
-   // for NumberIntervals in Block_0 of the source file, then copy directly.
+   // for NumberIntervals in Block_0 of the source file, then copy directly
    bool use_copy = false;
    if( !uc_state.instance_file_path.empty() ) {
     netCDF::NcFile probe( uc_state.instance_file_path , netCDF::NcFile::read );
@@ -387,8 +415,8 @@ build_tssb( UCBlock * uc , DiscreteScenarioSet * dss , const std::string & tmp ,
     apg.addVar( "PathStart"         , netCDF::NcUint() , ap_pdim )
        .putVar( path_starts.data() );
 
-    // PathRangeIndices intentionally omitted, 'B' nodes have no range;
-    // deserializer defaults to Inf for absent PathRangeIndices.
+    // PathRangeIndices intentionally omitted, 'B' nodes have no range
+    // deserializer defaults to Inf for absent PathRangeIndices
     if( total_len > 0 ) {
      apg.addVar( "PathNodeTypes"      , netCDF::NcChar() , ap_tdim )
         .putVar( node_types.data() );
@@ -450,31 +478,16 @@ void uc_run_cssc(
  auto * uc_base = dynamic_cast< UCBlock * >( state.base_block );
  if( ! uc_base )
   throw std::runtime_error( "run_cssc: base_block is not UCBlock" );
- const Index T = static_cast< Index >( uc_base->get_time_horizon() );
 
  auto solver = std::make_unique< CSSCScenarioReductionSolver >();
  solver->set_milp_config( bsc );  // takes ownership of bsc
  solver->set_nb_reduced( K );
  solver->set_Block( srb );
 
- // Tell CSSC which variables are here-and-now (first-stage): the on/off
- // commitment status u[t] of each ThermalUnitBlock, for every hour t.
- solver->set_var_extractor( [T]( Block * inner ) -> std::vector< ColVariable * > {
-  auto * uc = dynamic_cast< UCBlock * >( inner );
-  if( ! uc ) return {};
-  std::vector< ColVariable * > vars;
-  const Index num_units = uc->get_number_units();
-  for( Index u = 0 ; u < num_units ; ++u ) {
-   auto * tub = dynamic_cast< ThermalUnitBlock * >( uc->get_unit_block(u) );
-   if( tub ) {
-    ColVariable * cv = tub->get_commitment( 0 );
-    if( cv )
-     for( Index t = 0 ; t < T ; ++t )
-      vars.push_back( cv + t );
-    }
-   }
-  return vars;
-  } );
+ // No set_var_extractor call: the solver's generic AbstractPath-based
+ // fallback reads the commitment variables directly from the TSSB's
+ // StaticAbstractPath (see build_tssb()'s 'B'+'V' path per ThermalUnitBlock),
+ // verified to match the old hand-rolled extractor exactly
 
  // UCBlock cannot  tell its Solver about every incremental data
  // change, so CSSC must use reload mode: after each set_data(), the whole

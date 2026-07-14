@@ -383,7 +383,7 @@ static Index cssc_pick( const std::string & orig_file ,
  // instead maps an empty path to the reference block. Without this, Strategy B's
  // set_data() would invoke set_active_power_demand() on a null UCBlock (segfault);
  // Strategy A is unaffected (it never injects through this applicator) but the
- // fix-up is harmless for it.
+ // fix-up is harmless for it
  if( auto * inner = stoch->get_inner_block() )
   for( const auto & m : stoch->get_data_mappings() )
    m->set_caller_from_reference( inner );
@@ -414,12 +414,9 @@ static Index cssc_pick( const std::string & orig_file ,
   static_cast< BlockSolverConfig * >( bsc->clone() ) );   // takes ownership
  solver->set_nb_reduced( 1 );
 
- // Single reused inner block + generic StochasticBlock::set_data() injection
- // (driven by DataMapping, no problem-specific setter calls). uc_design_vars
- // handles both a raw UCBlock and a StochasticBlock wrapping one.
- solver->set_var_extractor( []( Block * inner ) -> std::vector< ColVariable * > {
-  return uc_design_vars( inner );
-  } );
+ // No set_var_extractor call: the solver's generic AbstractPath-based
+ // fallback (generic_var_extractor) reads the here-and-now variables
+ // directly from the TSSB, verified to match uc_design_vars exactly.
  solver->set_fix_with_modification( false );
 
  solver->set_Block( srb.get() );

@@ -3,17 +3,18 @@
 /*--------------------------------------------------------------------------*/
 /** @file
  * Fully generic implementation of the Cost-Space Scenario Clustering (CSSC)
- * algorithm of Keutchayan given a pool of N scenarios of a two-stage stochastic programming, 
+ * algorithm given a pool of N scenarios of a two-stage stochastic programming, 
  * select K representativescenarios (and an assignment of every scenario to the 
  * so that solving the reduced K-scenario problem is a good proxy for
  * representative that best approximates it) solving the full N-scenario one.
  *
- * This class works with any TwoStageStochasticBlock whose inner Block can be 
- * solved by a registered MILPSolver. The only piece of problem-specific
- * knowledge it needs from the caller is a VarExtractor (see set_var_extractor())
- * that says which ColVariable(s) of the inner Block are here-and-now (first-stage).
- * This is unavoidably a modelling choice, not something a generic solver can
- * infer on its own.
+ * This class works with any TwoStageStochasticBlock whose inner Block can be
+ * solved by a registered MILPSolver. It reads which ColVariable(s) are
+ * here-and-now (first-stage) directly from the TwoStageStochasticBlock's own
+ * AbstractPath metadata, so no problem-specific code is required in the
+ * common case. A custom VarExtractor (see set_var_extractor()) can still be
+ * supplied to override this, e.g. when that metadata is known to be
+ * unreliable for a given instance.
  *
  * ### Algorithm
  *
@@ -32,16 +33,21 @@
  *   auto cssc = std::make_unique<CSSCScenarioReductionSolver>();
  *   cssc->set_milp_config( bsc );            // solver config
  *   cssc->set_nb_reduced( K );               // number of representatives
+ *   cssc->set_Block( srb );                  // ScenarioReductionBlock
+ *   cssc->compute();                         // uses the generic extractor
+ *   cssc->get_var_solution();
+ * @endcode
+ *
+ * set_var_extractor() only needs to be called to override the generic
+ * behaviour, e.g.:
+ *
+ * @code
  *   cssc->set_var_extractor( []( Block * inner ) {
- *       // problem-specific: collect here-and-now ColVariable pointers
  *       auto * my_block = dynamic_cast< MyBlock * >( inner );
  *       std::vector< ColVariable * > vars;
  *       // ...
  *       return vars;
  *   } );
- *   cssc->set_Block( srb );                  // ScenarioReductionBlock
- *   cssc->compute();
- *   cssc->get_var_solution();
  * @endcode
  *
  * The ScenarioReductionBlock requires:
@@ -109,7 +115,7 @@ public:
 
  /** Attach to a ScenarioReductionBlock. \p block must be a
   * ScenarioReductionBlock carrying a TwoStageStochasticBlock, a
-  * StochasticBlock scenario applicator, and a DiscreteScenarioSet -- nothing
+  * StochasticBlock scenario applicator, and a DiscreteScenarioSet, nothing
   * more specific is required, regardless of the underlying problem type.
   * Call set_nb_reduced() and set_milp_config() before this. */
  void set_Block( Block * block ) override;
@@ -135,10 +141,17 @@ public:
   f_milp_config = cfg;
   }
 
- /** Register the problem-specific variable extractor (must be called before
-  * compute()).  The lambda receives the inner Block (fully initialised via
-  * generate_abstract_variables) and must return ColVariable* pointers to all
-  * here-and-now variables. */
+ /** Optional: register a problem-specific variable extractor. The lambda
+  * receives the inner Block (fully initialised via generate_abstract_variables)
+  * and must return ColVariable* pointers to all here-and-now variables.
+  *
+  * If never called, the solver falls back to a generic extractor that reads
+  * the here-and-now AbstractPaths directly from the TwoStageStochasticBlock
+  * (see set_Block()) and resolves them against the inner Block it is
+  * actually solving. This works for any problem type, provided the TSSB's
+  * StaticAbstractPath metadata is correct, only override this if you need to
+  * bypass that (e.g. metadata known to be broken, or a custom selection of
+  * variables). */
  void set_var_extractor( VarExtractor extractor ) {
   f_var_extractor = std::move( extractor );
   }
@@ -147,8 +160,7 @@ public:
   * the default); unused in reload mode. Registers the callable responsible
   * for telling the inner Block's attached Solver that scenario data just
   * changed, using whatever targeted Modification the Block type exposes for
-  * the purpose (e.g. CapacitatedFacilityLocationBlock::chg_customer_demands).
-  * Called right after every StochasticBlock::set_data(), with the inner
+  * the purpose. Called right after every StochasticBlock::set_data(), with the inner
   * Block and the just-injected scenario data vector. */
  using DataInjector = std::function< void( Block * ,
                                            const std::vector< double > & ) >;
@@ -199,6 +211,14 @@ private:
  double f_solution_value = 0.0;  ///< Wasserstein distance
 
  std::vector< std::vector< double > > f_V_matrix;
+
+ /** Generic fallback for set_var_extractor(): resolves the TSSB's own
+  * here-and-now AbstractPaths (get_paths_to_static_here_and_now_vars())
+  * against the given Block. The paths are relative descriptions ("go into
+  * nested Block #k, then Variable group X"), so the same list resolves
+  * correctly whether \p block is one of the TSSB's own scenario copies or
+  * the separate live Block the solver actually reuses in Step 1. */
+ std::vector< ColVariable * > generic_var_extractor( Block * block ) const;
 
  /** Step 1: build the NxN cost-space matrix V (V[i][j] = cost of scenario i's
   * optimal first-stage applied to scenario j), reusing one inner Block with

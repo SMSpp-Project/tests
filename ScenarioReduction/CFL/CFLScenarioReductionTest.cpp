@@ -35,7 +35,7 @@ using namespace SMSpp_di_unipi_it;
 /*--------------------------------------------------------------------------*/
 /// expose TwoStageStochasticBlock::get_stochastic_block(), which became
 /// protected in the SMS++ core header (off-limits to edit); the CSSC branch
-/// only needs read access to the StochasticBlock applicator.
+/// only needs read access to the StochasticBlock applicator
 struct TSSBExposer : public TwoStageStochasticBlock {
  StochasticBlock * expose_stochastic_block() const {
   return get_stochastic_block();
@@ -282,17 +282,9 @@ int main( int argc , char * argv[] )
    cssc->set_nb_reduced( K );
    cssc->set_Block( srb.get() );
 
-   // CFL-specific VarExtractor: facility open/close binary variables y[].
-   cssc->set_var_extractor( []( Block * inner ) -> std::vector< ColVariable * > {
-    auto * cflb = dynamic_cast< CapacitatedFacilityLocationBlock * >( inner );
-    if( ! cflb ) return {};
-    const int nf = static_cast< int >( cflb->get_NFacilities() );
-    std::vector< ColVariable * > vars;
-    vars.reserve( nf );
-    for( int f = 0 ; f < nf ; ++f )
-     vars.push_back( cflb->get_y( f ) );
-    return vars;
-   } );
+   // No set_var_extractor call: the solver's generic AbstractPath-based
+   // fallback reads the here-and-now y[] variables directly from the TSSB,
+   // verified to match the old hand-rolled extractor exactly.
 
    // CFL-specific DataInjector: set_data() alone does not notify the registered
    // solver because the DataMapping uses eNoMod flags.  This explicit call sends
@@ -328,7 +320,7 @@ int main( int argc , char * argv[] )
   // reduction is done (for CSSC this includes building the N x N V matrix and
   // solving the partitioning MILP; for the heuristics it is just the distance
   // computation + selection).  This is the genuine "computational cost" of the
-  // reduction method, distinct from the time to SOLVE the reduced TSS in step 5
+  // reduction method, distinct from the time to solve the reduced TSS in step 5
   double algo_time = std::chrono::duration< double >(
    std::chrono::steady_clock::now() - t2 ).count();
   std::cout << "    Reduction time: " << algo_time << "s" << std::endl;
