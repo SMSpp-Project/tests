@@ -16,12 +16,7 @@ program.
 - `run_cfl_tests.sh` : a batch script that runs the generate and solve
   steps for many combinations of instance, number of scenarios, number of
   representatives, and method. It writes a CSV of results.
-- `CFLImplementationErrorTest.cpp`, `CFLImplementationErrorNoPenaltyTest.cpp`,
-  `CFLOutOfSampleTest.cpp` : separate tools that measure things the generic
-  solve program does not measure, such as implementation error and out of
-  sample performance. These are kept on purpose, they are not part of the
-  generic pipeline.
-
+- 
 The generic solve program itself is not in this folder. It lives in
 `tests/ScenarioReduction/src/ScenarioReductionTest.cpp`, and the built
 binary is called `scenario_reduction_solve`. It is shared between CFL and
