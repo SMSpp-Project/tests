@@ -16,9 +16,6 @@ a TSSB file. Then solve, using the shared generic program.
 - `run_uc_test.sh` : a batch script that runs the generate and solve steps
   for many combinations of instance, seed, number of scenarios, number of
   representatives, and method. It writes a CSV of results.
-- `UCInvestmentTest/` : a separate tool for a different UC problem, the
-  investment problem. See the note below, it does not use the generic
-  solve program.
 
 The generic solve program itself is a separate file. It lives in
 `tests/ScenarioReduction/src/ScenarioReductionTest.cpp`, and the built
