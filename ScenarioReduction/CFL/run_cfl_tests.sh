@@ -1,18 +1,28 @@
 #!/usr/bin/env bash
 set -u
 
-WDIR=~/smspp-project/build/tests/ScenarioReduction/CFL
+# Option B (generate/solve split): generate step uses CFLScenarioGenerator
+# (per-domain, writes a TSSB file fixed at N scenarios); solve step uses the
+# generic scenario_reduction_solve binary (built in UC/CMakeLists.txt, but
+# works for any domain including CFL -- no dynamic_cast to a concrete Block
+# anywhere in its source). Unlike the old cfl_scenario_reduction_test, the
+# generic solver has no "-n" flag to subselect from a larger pool: N is fixed
+# at generate time, so a separate TSSB is generated per N value.
+
+GENDIR=~/smspp-project/build/tests/ScenarioReduction/CFL
+SOLVEDIR=~/smspp-project/build/tests/ScenarioReduction/UC
 IDIR=~/smspp-project/CapacitatedFacilityLocationBlock/data/nc4/ORLib
 SDIR=/tmp/cfl_scenarios
+CFGDIR=~/smspp-project/tests/ScenarioReduction   # where the BSPar_*.txt configs live
 
-INSTANCES="cap91"
-N_VALUES="20 50 100"
+INSTANCES="cap102"
+N_VALUES="200"
 K_VALUES="5 10"
 METHODS="baseline dupacova bestfit firstfit cssc"
 SOLVER="BSPar_CPLEX.txt"
-SEED=42
-VARIATION="0.6"
-OUTPUT_CSV="insample_results_cap91_seed_42.csv"
+SEED=1
+VARIATION="0.5"
+OUTPUT_CSV="insample_results_cap102_seed_1_200.csv"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -28,10 +38,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-cd "$WDIR" || exit 1
-mkdir -p "$SDIR"
+# allow a bare filename for SOLVER (e.g. BSPar_CPLEX.txt): resolve under CFGDIR.
+# A value containing a slash is treated as a path and used as is.
+[[ "$SOLVER" != */* ]] && SOLVER="$CFGDIR/$SOLVER"
+[ ! -f "$SOLVER" ] && { echo "ERROR: solver config not found: $SOLVER"; exit 1; }
 
-MAXN=0; for n in $N_VALUES; do [ "$n" -gt "$MAXN" ] && MAXN="$n"; done
+mkdir -p "$SDIR"
 
 echo "Instance,N,K,Method,Full_Obj,Reduced_Obj,Gap_Pct,RedTime_s,AlgoTime_s" > "$OUTPUT_CSV"
 printf "\n%-8s %-5s %-4s %-10s %16s %16s %10s %15s %15s\n" \
@@ -40,23 +52,38 @@ printf '%.0s=' {1..106}; printf "\n"
 
 for INST in $INSTANCES; do
     INSTANCE="$IDIR/${INST}.nc4"
-    SCEN="$SDIR/${INST}_n${MAXN}_s${SEED}_v${VARIATION}.nc4"
-    [ ! -f "$SCEN" ] && ./CFLScenarioGenerator -i "$INSTANCE" -o "$SCEN" -n "$MAXN" -s "$SEED" -v "$VARIATION" >/dev/null 2>&1
 
     for N in $N_VALUES; do
+        TSSB="$SDIR/${INST}_n${N}_s${SEED}_v${VARIATION}_tssb.nc4"
+        [ ! -f "$TSSB" ] && (
+            cd "$GENDIR" || exit 1
+            ./CFLScenarioGenerator -i "$INSTANCE" \
+                -o "$SDIR/${INST}_n${N}_s${SEED}_v${VARIATION}.nc4" \
+                --tssb-output "$TSSB" \
+                -n "$N" -s "$SEED" -v "$VARIATION" \
+                --no-validate --verbose 0 >/dev/null 2>&1
+        )
+
         for K in $K_VALUES; do
             [ "$K" -ge "$N" ] && continue
             for M in $METHODS; do
-                OUT=$(./cfl_scenario_reduction_test -i "$INSTANCE" -f "$SCEN" -n "$N" -r "$K" -m "$M" -c "$SOLVER" 2>&1)
+                OUT=$(cd "$SOLVEDIR" && ./scenario_reduction_solve -i "$TSSB" -r "$K" -m "$M" -c "$SOLVER" 2>&1)
 
-                FULL=$(echo "$OUT" | grep -oP 'Full TSS[^:]*:\s*\K[0-9.eE+-]+' | head -1)
-                RED=$(echo "$OUT" | grep -oP 'Reduced TSS[^:]*:\s*\K[0-9.eE+-]+' | head -1)
-                GAP=$(echo "$OUT" | grep -oP 'Gap \(absolute\):[^(]*\(\K[0-9.eE+-]+' | head -1)
-                
-                RTIME=$(echo "$OUT" | grep -oP 'Reduced TSS[^:]*:\s*[0-9.eE+-]+\s*\(\K[0-9.]+(?=s\))' | head -1)
+                FULL=$(echo "$OUT" | grep -oP 'Full\s+\(N=[0-9]+\):\s*\K[0-9.eE+-]+' | head -1)
+                RED=$(echo "$OUT"  | grep -oP 'Reduced \(K=[0-9]+\):\s*\K[0-9.eE+-]+' | head -1)
+                GAP=$(echo "$OUT"  | grep -oP 'Gap:\s*\K[0-9.eE+-]+' | head -1)
+                RTIME_MS=$(echo "$OUT" | grep -oP 'Reduced \(K=[0-9]+\):[^(]*\(\K[0-9.]+(?=\s*ms\))' | head -1)
+                : ${FULL:=NA}; : ${RED:=NA}; : ${GAP:=NA}; : ${RTIME_MS:=NA}
 
-                ALGOTIME=$(echo "$OUT" | grep -oP 'Reduction time:\s*\K[0-9.]+' | head -1)
-                : ${FULL:=NA}; : ${RED:=NA}; : ${GAP:=NA}; : ${RTIME:=NA}; : ${ALGOTIME:=NA}
+                # RedTime_s/AlgoTime_s: the generic solver only reports one
+                # timing (the reduction step itself, in ms); kept in both
+                # columns for CSV-format compatibility with old runs.
+                if [ "$RTIME_MS" != "NA" ]; then
+                    RTIME=$(awk -v ms="$RTIME_MS" 'BEGIN{printf "%.4f", ms/1000}')
+                else
+                    RTIME=NA
+                fi
+                ALGOTIME="$RTIME"
 
                 printf "%-8s %-5s %-4s %-10s %16s %16s %10s %15s %15s\n" \
                     "$INST" "$N" "$K" "$M" "$FULL" "$RED" "$GAP" "$RTIME" "$ALGOTIME"

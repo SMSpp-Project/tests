@@ -1,160 +1,139 @@
-# UC Scenario Reduction Test
+# UC Scenario Reduction
 
-This directory contains the Unit Commitment (UC) test for scenario reduction.
-A single self contained executable solves the full two stage stochastic
-problem, runs a chosen scenario reduction method, solves the reduced problem,
-and reports the in sample gap between them. A scenario generator and a batch
-sweep script complete the workflow.
+This folder handles the Unit Commitment (UC) problem. The uncertainty here
+is a time series. It can be electricity demand over time, renewable power
+available over time, or both. This is different from CFL, where the
+uncertainty is a single static demand vector.
 
-## Components
+Work is split into two steps, the same as CFL. First generate scenarios and
+a TSSB file. Then solve, using the shared generic program.
 
-### Executables
+## Files in this folder
 
-- `uc_scenario_reduction_test`: the main test. In ONE run it loads a UC
-  instance, loads a scenario set, solves the full two stage problem (N
-  scenarios), applies a reduction method to pick K representatives, solves the
-  reduced problem, and prints the objectives plus the in sample gap and the
-  timings. All methods (including cssc) go through this one binary.
-- `uc_scenario_generator`: standalone tool that generates a
-  `DiscreteScenarioSet` of demand and/or renewable scenarios for a UC instance.
+- `UCScenarioGenerator.cpp` : reads a UC instance, creates demand and or
+  renewable scenarios, and writes a TSSB file. This is the only file here
+  that knows anything about UC.
+- `run_uc_test.sh` : a batch script that runs the generate and solve steps
+  for many combinations of instance, seed, number of scenarios, number of
+  representatives, and method. It writes a CSV of results.
+- `UCInvestmentTest/` : a separate tool for a different UC problem, the
+  investment problem. See the note below, it does not use the generic
+  solve program.
 
-Both are produced under `<build-dir>/tests/ScenarioReduction/UC`.
+The generic solve program itself is a separate file. It lives in
+`tests/ScenarioReduction/src/ScenarioReductionTest.cpp`, and the built
+binary is called `scenario_reduction_solve`. It is built here, in this
+folder's CMakeLists.txt, but it also works on CFL files without any
+change.
 
-### Source files
+## Types of uncertainty
 
-- `UCScenarioReductionTest.cpp`, `uc_test_main.cpp`: implementation and entry
-  point of `uc_scenario_reduction_test`.
-- `UCScenarioGenerator.cpp`: implementation of `uc_scenario_generator`.
+A UC scenario is a vector. Its length depends on what varies. With `T` time
+periods, `nd` demand nodes and `ni` intermittent (renewable) units.
 
-### Configuration
+- Demand only: length `nd * T`. Generated with `--no-maxpower`.
+- Renewable only: length `ni * T`. Generated with `--no-demand`.
+- Both: length `nd*T + ni*T`. This is the default, no flag needed.
 
-Solver configuration files live in the parent directory
-`tests/ScenarioReduction` (`BSPar_CPLEX.txt`, `BSPar_HiGHS.txt`,
-`BSPar_GRB.txt`, `BSPar_SCIP.txt`).
-
-## Uncertainty types
-
-A UC scenario is a flat vector whose layout depends on what varies. With T time
-periods, nd demand nodes and ni intermittent units:
-
-- demand only: length `nd * T`, generated with `--no-maxpower`
-- renewable only: length `ni * T`, generated with `--no-demand`
-- both: length `nd*T + ni*T`, generated with neither flag (the default)
-
-The test infers the type automatically from the scenario vector length.
-
-## What the test measures
-
-The extensive form is a genuine two stage stochastic program: the unit
-commitment (on and off schedule of the generating units) is the first stage
-(here and now) decision shared by all scenarios through non anticipativity
-constraints, while the dispatch is the second stage (recourse) that adapts to
-each scenario demand and renewable availability.
-
-The test reports:
-
-- `Full_Obj`: optimum of the full problem over all N scenarios.
-- `Reduced_Obj`: optimum of the reduced problem over the K selected scenarios.
-- `Gap`: the in sample gap, `|Reduced_Obj - Full_Obj| / |Full_Obj|`.
-
-## Reduction methods
-
-Selected with `-m`: `baseline`, `dupacova`, `bestfit`, `firstfit`, `cssc`.
-
-
-## Building
+## Step 1: build
 
 ```bash
 cd <build-dir>
-cmake ..
-cmake --build . --target uc_scenario_reduction_test --target uc_scenario_generator -j$(nproc)
+cmake --build . --target uc_scenario_generator -j1
+cmake --build . --target scenario_reduction_solve -j1
 ```
 
-## Workflow
-
-### Step 1: generate scenarios
+## Step 2: generate scenarios and a TSSB file
 
 ```bash
-# demand only
-./uc_scenario_generator -i <instance.nc4> -o <scen.nc4> -n 20 -v 0.3 -s 42 --no-maxpower --no-validate
-
-# renewable only
-./uc_scenario_generator -i <instance.nc4> -o <scen.nc4> -n 20 -v 0.3 -s 42 --no-demand --no-validate
-
-# both (default)
-./uc_scenario_generator -i <instance.nc4> -o <scen.nc4> -n 20 -v 0.3 -s 42 --no-validate
+cd tests/ScenarioReduction/UCBlock
+./UCScenarioGenerator -i <instance.nc4> -o <scenarios.nc4> \
+    --tssb-output <tssb.nc4> -n 20 -v 0.3 -s 42 --no-maxpower --no-validate
 ```
 
-Always pass `--no-validate`: the validation step solves each scenario and is
-known to crash on demand uncertainty, and it also makes generation non
-deterministic.
+Main options.
 
-### Step 2: run one test
+- `-i` : path to the base UC instance. Required.
+- `-o` : where to save the plain scenario file.
+- `--tssb-output` : where to save the TSSB file. This is the file the solve
+  program reads. If you skip this flag, no TSSB file is written.
+- `-n` : number of scenarios to generate.
+- `-v` : how much demand or renewable power varies between scenarios.
+- `-s` : random seed.
+- `--no-demand` / `--no-maxpower` : disable one of the two uncertainty
+  types, see the section above.
+- `--no-validate` : always use this. The validation step is slow, can crash
+  with demand uncertainty, and makes generation non repeatable.
+
+Note that the number of scenarios `N` is fixed at generation time. If you
+want to test several values of `N`, generate a separate TSSB file for each
+one.
+
+## Step 3: solve
 
 ```bash
-./uc_scenario_reduction_test \
-    -i <instance.nc4> -f <scen.nc4> \
-    -n 20 -r 5 -m cssc -c ../../BSPar_CPLEX.txt --verbose 1
+./scenario_reduction_solve -i <tssb.nc4> -m cssc -r 5 -c ../BSPar_CPLEX.txt
 ```
 
-Options:
+Main options.
 
-- `-i`: UC instance netCDF file (required)
-- `-f`: scenario netCDF file
-- `-n`: number of full scenarios to use (default: all in the file)
-- `-r`: number of reduced scenarios K (default 3)
-- `-m`: reduction method (default `dupacova`)
-- `-c`: solver config file (default `BSPar_HiGHS.txt`)
-- `--verbose`: verbosity 0 to 2
-- `--skip-full`: skip solving the full problem (no gap reported)
+- `-i` : the TSSB file produced in step 2.
+- `-m` : reduction method. One of `baseline`, `dupacova`, `bestfit`,
+  `firstfit`, `cssc`.
+- `-r` : how many representative scenarios to keep.
+- `-c` : solver configuration file, in the parent folder, for example
+  `BSPar_CPLEX.txt`.
 
-## Batch experiments
+`cssc` needs an instance that has a ThermalUnitBlock (a `_TUB` instance).
+Without it, only the heuristic methods work.
 
-`run_uc_test.sh` sweeps over instances, seeds, N, K and methods for one chosen
-uncertainty type, then prints an aligned table and writes a CSV. It generates
-the scenario file once per `(instance, uncertainty, N, seed)` and parses the gap
-and timings straight from the test output.
+## Batch runs
+
+`run_uc_test.sh` automates steps 2 and 3 over many combinations, for one
+chosen uncertainty type at a time.
 
 ```bash
 bash run_uc_test.sh --uncertainty demand
 bash run_uc_test.sh --instances "EC_CO_Test_TUB EC_NC_Test_TUB" \
-     --n "20 30" --k "5 10" --seeds "42 7" \
-     --methods "dupacova cssc" --uncertainty renewable
+    --n "20 30" --k "5 10" --seeds "42 7" \
+    --methods "dupacova cssc" --uncertainty renewable
 ```
 
 Flags: `--instances --n --k --seeds --methods --solver --variation
 --uncertainty --output`.
 
-## Output format
-
-The table and the CSV have one row per `(instance, uncertainty, seed, N, K,
-method)` with columns:
-
-- `Full_Obj`: full problem objective (N scenarios)
-- `Reduced_Obj`: reduced problem objective (K scenarios)
-- `Gap_Pct`: in sample gap percentage
-- `RedTime_s`: time to solve the reduced problem (seconds)
-- `AlgoTime_s`: time of the reduction algorithm itself (seconds)
-
-The raw test prints the timings in microseconds; the script converts them to
-seconds. `AlgoTime_s` is the genuine computational cost of the reduction
-method, tiny for the heuristics and large for cssc.
-
 ## Instances
 
 UC instances with renewables live in `UCBlock/data/nc4/EC_Data`. Only the
-`_TUB` instances (with a ThermalUnitBlock, hence commitment variables) support
-cssc:
+`_TUB` instances have a ThermalUnitBlock, so only they support `cssc`.
 
-- cssc capable (`_TUB`): `EC_CO_Test_TUB`, `EC_CO_Test_TUB_NB`,
-  `EC_NC_Test_TUB`, `EC_NC_Test_TUB_NB`
-- heuristics only (no `_TUB`): `EC_CO_Test`, `EC_CO_Test_NB`, `EC_NA_Test`,
-  `EC_NA_Test_NB`, `EC_NC_Test`, `EC_NC_Test_NB`
+- Support cssc (`_TUB`): `EC_CO_Test_TUB`, `EC_CO_Test_TUB_NB`,
+  `EC_NC_Test_TUB`, `EC_NC_Test_TUB_NB`.
+- Heuristics only (no `_TUB`): `EC_CO_Test`, `EC_CO_Test_NB`, `EC_NA_Test`,
+  `EC_NA_Test_NB`, `EC_NC_Test`, `EC_NC_Test_NB`.
 
-Name decoding: `EC` energy community, `CO`/`NA`/`NC` network variants, `_TUB`
-has a thermal unit block, `_NB` no battery. The `NA` family has no `_TUB`
-version, so cssc cannot run on it.
+Name decoding: `EC` energy community, `CO`/`NA`/`NC` are network variants,
+`_TUB` has a thermal unit block, `_NB` means no battery. The `NA` family has
+no `_TUB` version, so `cssc` cannot run on it.
 
-The `UCBlock/data/nc4/1UC_Data` directory holds the standard UC benchmark
-library (no renewables); it is not used for the demand versus renewable
-comparison here.
+## A note on cssc
+
+`cssc` is much slower than the other methods, and slower on UC than on CFL.
+Expect a few minutes at N=20, and much longer as N grows. Use a small N
+when testing it, and avoid running several instances of it at the same
+time on a machine with limited memory.
+
+## UC-Investment (kept separate)
+
+`UCInvestmentTest/` handles a different UC problem, about long term
+investment decisions rather than day to day commitment. It uses its own
+program, `uc_investment_test`, instead of the shared
+`scenario_reduction_solve`.
+
+The reason is that this tool computes an extra number, the implementation
+error. It takes the decision built from the reduced scenarios, and checks
+how well that decision performs when applied back to the full scenario
+set. This is different from the usual gap, which only compares objective
+values on the reduced set. The generic solve program does not compute this
+number, so this tool was kept separate. See `UCInvestmentTest/` for its own
+usage.

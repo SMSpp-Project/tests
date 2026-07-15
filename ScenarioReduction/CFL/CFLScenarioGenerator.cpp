@@ -25,7 +25,10 @@
 #include "BlockSolverConfig.h"
 #include "CapacitatedFacilityLocationBlock.h"
 #include "Configuration.h"
+#include "DiscreteScenarioSet.h"
 #include "Solver.h"
+#include "StochasticBlock.h"
+#include "TwoStageStochasticBlock.h"
 
 using namespace std;
 using namespace SMSpp_di_unipi_it;
@@ -37,6 +40,8 @@ using namespace SMSpp_di_unipi_it;
 struct GeneratorConfig {
  string instance_path;             // Path to base CFL instance
  string output_path;               // Output path for scenarios
+ string tssb_output_path;          // Output path for a full TSSB file
+                                    // (the "generate" step); empty = don't write
  int num_scenarios = 20;           // Number of scenarios to generate
  double variation_factor = 0.2;    // Variation factor for demands
  unsigned seed = 42;               // Random seed
@@ -76,6 +81,10 @@ void print_help( const char * program_name ) {
       << endl;
  cout << "  --solver-config <path>    Solver configuration file (default: "
   "BSPar_HiGHS.txt)"
+      << endl;
+ cout << "  --tssb-output <path>      Also write a full TSSB file (the\n"
+  "                            \"generate\" step) readable by the generic\n"
+  "                            scenario_reduction_solve program"
       << endl;
  cout << "  -h, --help               Show this help message" << endl;
  cout << "\nExamples:" << endl;
@@ -188,6 +197,15 @@ GeneratorConfig parse_arguments( int argc , char * argv[] ) {
   else if( arg == "--solver-config" ) {
    if( i + 1 < argc ) {
     config.solver_config = argv[ ++i ];
+   }
+   else{
+    cerr << "Missing value after " << arg << endl;
+    exit( 1 );
+   }
+  }
+  else if( arg == "--tssb-output" ) {
+   if( i + 1 < argc ) {
+    config.tssb_output_path = argv[ ++i ];
    }
    else{
     cerr << "Missing value after " << arg << endl;
@@ -522,6 +540,113 @@ void save_scenarios_netcdf(
 }
 
 /*--------------------------------------------------------------------------*/
+/*----------------------------- save_tssb_netcdf ----------------------------*/
+/*--------------------------------------------------------------------------*/
+/* Generate step: write a full, self-contained TwoStageStochastic-
+ * Block file (base CFL instance + StaticAbstractPath to the y[] here-and-now
+ * variables + StochasticBlock/DataMapping for customer demands + the
+ * DiscreteScenarioSet), in the generic "Block_0" + SMS++_file_type=1 format
+ * that Block::deserialize(filename) expects. This is what makes the file
+ * readable by the fully generic scenario_reduction_solve program: everything
+ * problem-specific (what a CFL instance is, which variables are here-and-now,
+ * how a scenario maps onto customer demands) is baked into the file itself,
+ * once, here -- not into the code that later solves it. */
+
+void save_tssb_netcdf(
+  const string & filename ,
+  CapacitatedFacilityLocationBlock * cfl ,
+  const vector< vector< double > > & scenarios ,
+  const GeneratorConfig & config ) {
+ if( config.verbose >= 1 )
+  cout << "\nSaving TSSB to: " << filename << endl;
+
+ filesystem::path filepath( filename );
+ if( filepath.has_parent_path( ) )
+  filesystem::create_directories( filepath.parent_path( ) );
+
+ const int N  = static_cast< int >( scenarios.size( ) );
+ const int nc = static_cast< int >( cfl->get_NCustomers( ) );
+ const int nf = static_cast< int >( cfl->get_NFacilities( ) );
+
+ netCDF::NcFile f( filename , netCDF::NcFile::replace );
+ f.putAtt( "SMS++_file_type" , netCDF::NcInt( ) , 1 );
+
+ auto g = f.addGroup( "Block_0" );
+ g.putAtt( "type" , "TwoStageStochasticBlock" );
+ g.putAtt( "id" , "0" );
+ g.addDim( "NumberScenarios" , N );
+
+ // StaticAbstractPath: y[] are the here-and-now (first-stage) variables.
+ // One path, a single 'V' node selecting the whole y[] group (group 0, the
+ // first static variable group of the CFLB) via a range [0, nf).
+ {
+  auto pg    = g.addGroup( "StaticAbstractPath" );
+  auto pdim  = pg.addDim( "PathDim" , 1 );
+  auto tldim = pg.addDim( "PathTotalLength" , 1 );
+  unsigned int u0 = 0 , unf = static_cast< unsigned int >( nf );
+  char vtype = 'V';
+  pg.addVar( "PathStart"          , netCDF::NcUint( ) , pdim  ).putVar( &u0 );
+  pg.addVar( "PathNodeTypes"      , netCDF::NcChar( ) , tldim ).putVar( &vtype );
+  pg.addVar( "PathGroupIndices"   , netCDF::NcUint( ) , tldim ).putVar( &u0 );
+  pg.addVar( "PathElementIndices" , netCDF::NcUint( ) , tldim ).putVar( &u0 );
+  pg.addVar( "PathRangeIndices"   , netCDF::NcUint( ) , tldim ).putVar( &unf );
+ }
+
+ // StochasticBlock: inner CFLB + DataMapping for customer demands
+ {
+  auto sg = g.addGroup( "StochasticBlock" );
+  sg.putAtt( "type" , "StochasticBlock" );
+
+  auto bg = sg.addGroup( "Block" );
+  cfl->serialize( bg );
+
+  auto ndm = sg.addDim( "NumberDataMappings" , 1 );
+  char dt = 'D'; sg.addVar( "DataType" , netCDF::NcChar( ) , ndm ).putVar( &dt );
+  char cl = 'B'; sg.addVar( "Caller"   , netCDF::NcChar( ) , ndm ).putVar( &cl );
+
+  string fn = "CapacitatedFacilityLocationBlock::chg_customer_demands";
+  sg.addVar( "FunctionName" , netCDF::NcString( ) , ndm ).putVar( {0} , &fn );
+
+  auto ssd = sg.addDim( "SetSizeDim" , 2 );
+  vector< unsigned int > ss = { 0 , 0 };
+  sg.addVar( "SetSize" , netCDF::NcUint( ) , ssd ).putVar( ss.data( ) );
+
+  unsigned char ord = 0;
+  sg.addVar( "Ordered" , netCDF::NcUbyte( ) , ndm ).putVar( &ord );
+
+  auto sed = sg.addDim( "SetElementsDim" , 4 );
+  vector< unsigned int > se =
+   { 0 , (unsigned int) nc , 0 , (unsigned int) nc };
+  sg.addVar( "SetElements" , netCDF::NcUint( ) , sed ).putVar( se.data( ) );
+
+  // AbstractPath (empty = Block itself)
+  auto apg     = sg.addGroup( "AbstractPath" );
+  auto apdim   = apg.addDim( "PathDim" , 1 );
+  auto aptldim = apg.addDim( "PathTotalLength" , 0 );
+  unsigned int ps = 0;
+  apg.addVar( "PathStart"          , netCDF::NcUint( ) , apdim   ).putVar( &ps );
+  apg.addVar( "PathNodeTypes"      , netCDF::NcChar( ) , aptldim );
+  apg.addVar( "PathGroupIndices"   , netCDF::NcUint( ) , aptldim );
+  apg.addVar( "PathElementIndices" , netCDF::NcUint( ) , aptldim );
+  apg.addVar( "PathRangeIndices"   , netCDF::NcUint( ) , aptldim );
+ }
+
+ // DiscreteScenarioSet: reuse the class's own (proven-correct) serializer
+ // rather than hand-writing the netCDF fields again.
+ {
+  DiscreteScenarioSet dss;
+  vector< double > weights( N , 1.0 / N );
+  dss.load_from_memory( scenarios , weights );
+  auto dg = g.addGroup( "DiscreteScenarioSet" );
+  dss.serialize( dg );
+ }
+
+ if( config.verbose >= 1 )
+  cout << "Successfully saved TSSB (" << N << " scenarios, " << nf
+       << " facilities, " << nc << " customers)" << endl;
+}
+
+/*--------------------------------------------------------------------------*/
 
 void save_scenarios_text(
   const string & filename ,
@@ -774,6 +899,11 @@ int main( int argc , char * argv[] ) {
   // Also save as text for inspection
   if( config.verbose >= 1 ) {
    save_scenarios_text( config.output_path , scenarios , config );
+  }
+
+  // Generate step: also write a full TSSB file, if requested
+  if( ! config.tssb_output_path.empty( ) ) {
+   save_tssb_netcdf( config.tssb_output_path , cfl , scenarios , config );
   }
 
   // Clean up

@@ -24,10 +24,12 @@
 #include <iomanip>
 #include <iostream>
 #include <netcdf>
+#include <netcdf.h>   // NC_STRING, NC_CHAR, nc_free_string
 #include <random>
 
 #include "BlockSolverConfig.h"
 #include "Configuration.h"
+#include "DiscreteScenarioSet.h"
 #include "IntermittentUnitBlock.h"
 #include "Solver.h"
 #include "UCBlock.h"
@@ -43,6 +45,8 @@ namespace fs = std::filesystem;
 struct UCGeneratorConfig {
  string instance_path;   // Path to base UC instance
  string output_path;     // Output path for scenarios
+ string tssb_output_path; // Output path for a full TSSB file (the generate/solve split,
+                          // "generate" step); empty = don't write
  int num_scenarios = 20; // Number of scenarios to generate
  double variation_factor =
    0.3;                        // Variation factor for both demand and renewable
@@ -208,6 +212,15 @@ UCGeneratorConfig parse_arguments( int argc , char * argv[] ) {
     exit( 1 );
    }
   }
+  else if( arg == "--tssb-output" ) {
+   if( i + 1 < argc ) {
+    config.tssb_output_path = argv[ ++i ];
+   }
+   else{
+    cerr << "Missing value after " << arg << endl;
+    exit( 1 );
+   }
+  }
   else{
    cerr << "Unknown option: " << arg << endl;
    cerr << "Use -h or --help for usage information" << endl;
@@ -257,6 +270,8 @@ struct UCData {
  vector< double > demand_profile;             // ActivePowerDemand flattened
  vector< vector< double > > renewable_profiles; // MaxPower for each renewable unit
  vector< int > renewable_unit_indices;        // Indices of intermittent units
+ vector< int > thermal_unit_indices;          // Indices of ThermalUnitBlock units
+                                              // (here-and-now commitment vars)
  int num_periods = 0;
  int num_nodes = 0;
  int num_renewable_units = 0;
@@ -382,6 +397,34 @@ UCData load_uc_instance(
    if( config.verbose >= 2 ) {
     cout << "  Loaded renewable profiles: " << data.num_renewable_units
          << " units × " << data.num_periods << " periods" << endl;
+   }
+  }
+
+  // Find all ThermalUnitBlock groups (needed for the TSSB's
+  // StaticAbstractPath: their commitment variables are the here-and-now
+  // decisions CSSC fixes). Always scanned, independent of enable_renewable.
+  {
+   auto groups = block.getGroups( );
+   for(const auto &[ name , group ] : groups) {
+    if( name.find( "UnitBlock_" ) != string::npos ) {
+     int unit_index = -1;
+     size_t underscore_pos = name.find( "_" );
+     if( underscore_pos != string::npos ) {
+      try { unit_index = stoi( name.substr( underscore_pos + 1 )); }
+      catch( ... ) { continue; }
+     }
+     auto type_attr = group.getAtt( "type" );
+     if( ! type_attr.isNull( )) {
+      string unit_type;
+      type_attr.getValues( unit_type );
+      if( unit_type == "ThermalUnitBlock" ) {
+       data.thermal_unit_indices.push_back( unit_index );
+       if( config.verbose >= 2 )
+        cout << "    Found thermal unit " << name << " at index "
+             << unit_index << endl;
+      }
+     }
+    }
    }
   }
 
@@ -812,6 +855,282 @@ vector< double > regenerate_scenario(
 
 /*--------------------------------------------------------------------------*/
 
+/*--------------------------------------------------------------------------*/
+/*------------------------ nc_copy_group_recursive --------------------------*/
+/*--------------------------------------------------------------------------*/
+/* Deep-copy a netCDF group (attributes, dimensions, variables, sub-groups).
+ * Used to clone the base instance's Block_0 group verbatim into the TSSB
+ * file's StochasticBlock/Block sub-group, sidestepping any block-specific
+ * serialize() call entirely (this generator never deserializes the instance
+ * into a live UCBlock object at all, it only ever reads raw netCDF). */
+
+static void nc_copy_group_recursive( const netCDF::NcGroup & src ,
+                                     netCDF::NcGroup & dst ) {
+ for( const auto & [ name , att ] : src.getAtts() ) {
+  try { string val; att.getValues( val ); dst.putAtt( name , val ); }
+  catch( ... ) {}  // skip non-string attributes
+ }
+
+ for( const auto & [ name , dim ] : src.getDims() )
+  dst.addDim( name , dim.getSize() );
+
+ for( const auto & [ name , var ] : src.getVars() ) {
+  auto type  = var.getType();
+  auto sdims = var.getDims();
+
+  size_t total = 1;
+  for( const auto & d : sdims ) total *= d.getSize();
+
+  vector< netCDF::NcDim > ddims;
+  for( const auto & d : sdims ) {
+   auto found = dst.getDim( d.getName() , netCDF::NcGroup::ParentsAndCurrent );
+   if( found.isNull() )
+    throw runtime_error( "nc_copy_group_recursive: dim not found: "
+                         + d.getName() );
+   ddims.push_back( found );
+  }
+
+  auto dvar = dst.addVar( name , type , ddims );
+  if( total == 0 ) continue;
+
+  auto tid = type.getId();
+  if( tid == NC_STRING ) {
+   vector< char * > ptrs( total , nullptr );
+   var.getVar( ptrs.data() );
+   vector< const char * > cptrs( total );
+   for( size_t i = 0 ; i < total ; ++i )
+    cptrs[ i ] = ptrs[ i ] ? ptrs[ i ] : "";
+   dvar.putVar( cptrs.data() );
+   nc_free_string( static_cast< size_t >( total ) , ptrs.data() );
+  }
+  else if( tid == NC_CHAR ) {
+   // NC_CHAR is the only "text" type netCDF-cxx4's char* get/putVar overload
+   // accepts; NC_BYTE/NC_UBYTE are numeric and must use the generic branch
+   // below, or the library throws "Attempt to convert between text & numbers".
+   vector< char > buf( total );
+   var.getVar( buf.data() );
+   dvar.putVar( buf.data() );
+  }
+  else {
+   vector< double > buf( total );
+   var.getVar( buf.data() );
+   dvar.putVar( buf.data() );
+  }
+ }
+
+ for( const auto & [ name , child ] : src.getGroups() ) {
+  auto dst_child = dst.addGroup( name );
+  nc_copy_group_recursive( child , dst_child );
+ }
+}
+
+/*--------------------------------------------------------------------------*/
+/*------------------------------ save_tssb_netcdf ----------------------------*/
+/*--------------------------------------------------------------------------*/
+/* Generate step: write a full, self-contained TwoStageStochastic-
+ * Block file (base UC instance + StaticAbstractPath to the ThermalUnitBlock
+ * commitment variables + StochasticBlock/DataMapping(s) for demand and/or
+ * renewable + the DiscreteScenarioSet), in the generic "Block_0" +
+ * SMS++_file_type=1 format Block::deserialize(filename) expects. Everything
+ * problem-specific is baked into the file here, once; the generic
+ * scenario_reduction_solve program never needs to know it is UC at all. */
+
+static void save_tssb_netcdf(
+  const string & filename ,
+  const string & instance_path ,
+  const vector< vector< double > > & scenarios ,
+  const UCGeneratorConfig & config ,
+  const UCData & data ) {
+ if( config.verbose >= 1 )
+  cout << "\nSaving TSSB to: " << filename << endl;
+
+ fs::path filepath( filename );
+ if( filepath.has_parent_path() )
+  fs::create_directories( filepath.parent_path() );
+
+ const int N  = static_cast< int >( scenarios.size() );
+ const int T  = data.num_periods;
+ const int nd = data.num_nodes;
+ const auto & thermal = data.thermal_unit_indices;
+ const int nth = static_cast< int >( thermal.size() );
+ const auto & intermittent = data.renewable_unit_indices;
+ const int ni = static_cast< int >( intermittent.size() );
+ const bool has_demand    = config.enable_demand;
+ const bool has_renewable = config.enable_renewable;
+
+ netCDF::NcFile f( filename , netCDF::NcFile::replace );
+ f.putAtt( "SMS++_file_type" , netCDF::NcInt() , 1 );
+
+ auto g = f.addGroup( "Block_0" );
+ g.putAtt( "type" , "TwoStageStochasticBlock" );
+ g.putAtt( "id" , "0" );
+ g.addDim( "NumberScenarios" , N );
+
+ // ---- StaticAbstractPath: one 2-node 'B'+'V' path per ThermalUnitBlock ----
+ // 'B' navigates to the unit's own nested Block (group index = its index
+ // among UCBlock's units), 'V' selects the whole "u_thermal" (commitment)
+ // static variable group via a range [0, T). Named group lookup avoids
+ // depending on ThermalUnitBlock's variable registration order.
+ {
+  auto pg    = g.addGroup( "StaticAbstractPath" );
+  auto pdim  = pg.addDim( "PathDim" , nth );
+  auto tldim = pg.addDim( "PathTotalLength" , nth * 2 );
+
+  vector< unsigned int > starts( nth );
+  for( int k = 0 ; k < nth ; ++k ) starts[ k ] = static_cast< unsigned int >( k * 2 );
+
+  vector< char > node_types( nth * 2 );
+  vector< string > group_names( nth * 2 );
+  vector< unsigned int > elem_idx( nth * 2 , 0 );
+  vector< unsigned int > range_idx( nth * 2 , 0 );
+
+  for( int k = 0 ; k < nth ; ++k ) {
+   node_types[ 2*k ]      = 'B';
+   group_names[ 2*k ]     = to_string( thermal[ k ] );
+   node_types[ 2*k + 1 ]  = 'V';
+   group_names[ 2*k + 1 ] = "u_thermal";
+   elem_idx[ 2*k + 1 ]    = 0;
+   range_idx[ 2*k + 1 ]   = static_cast< unsigned int >( T );
+  }
+
+  pg.addVar( "PathStart"     , netCDF::NcUint() , pdim  ).putVar( starts.data() );
+  pg.addVar( "PathNodeTypes" , netCDF::NcChar() , tldim ).putVar( node_types.data() );
+  {
+   auto gv = pg.addVar( "PathGroupIndices" , netCDF::NcString() , tldim );
+   vector< const char * > cptrs( group_names.size() );
+   for( size_t i = 0 ; i < group_names.size() ; ++i ) cptrs[ i ] = group_names[ i ].c_str();
+   gv.putVar( cptrs.data() );
+  }
+  pg.addVar( "PathElementIndices" , netCDF::NcUint() , tldim ).putVar( elem_idx.data() );
+  pg.addVar( "PathRangeIndices"   , netCDF::NcUint() , tldim ).putVar( range_idx.data() );
+ }
+
+ // ---- StochasticBlock: inner UCBlock (raw copy) + DataMapping(s) ----------
+ {
+  auto sg = g.addGroup( "StochasticBlock" );
+  sg.putAtt( "type" , "StochasticBlock" );
+
+  // Raw netCDF copy of the base instance's own Block_0, instead of
+  // deserializing to a live UCBlock and calling ->serialize(): sidesteps
+  // the ECNetworkBlock::serialize() bug entirely, whether or not it has
+  // been fixed upstream yet.
+  auto bg = sg.addGroup( "Block" );
+  {
+   netCDF::NcFile src( instance_path , netCDF::NcFile::read );
+   nc_copy_group_recursive( src.getGroup( "Block_0" ) , bg );
+  }
+
+  int num_mappings = 0;
+  if( has_demand    ) num_mappings += 1;
+  if( has_renewable ) num_mappings += ni;
+
+  auto ndm = sg.addDim( "NumberDataMappings" , num_mappings );
+  vector< char > dtypes( num_mappings , 'D' );
+  vector< char > callers( num_mappings , 'B' );
+  sg.addVar( "DataType" , netCDF::NcChar() , ndm ).putVar( dtypes.data() );
+  sg.addVar( "Caller"   , netCDF::NcChar() , ndm ).putVar( callers.data() );
+
+  vector< string > fn;
+  if( has_demand )
+   fn.push_back( "UCBlock::set_active_power_demand" );
+  if( has_renewable )
+   for( int k = 0 ; k < ni ; ++k )
+    fn.push_back( "IntermittentUnitBlock::set_maximum_power" );
+  {
+   auto fv = sg.addVar( "FunctionName" , netCDF::NcString() , ndm );
+   for( int m = 0 ; m < num_mappings ; ++m )
+    fv.putVar( { static_cast< size_t >( m ) } , fn[ m ] );
+  }
+
+  vector< unsigned int > ss_vec( 2 * num_mappings , 0u );
+  auto ssd = sg.addDim( "SetSizeDim" , ss_vec.size() );
+  sg.addVar( "SetSize" , netCDF::NcUint() , ssd ).putVar( ss_vec.data() );
+
+  // SetElements: 4 values per mapping -> {from_start, from_end, to_start, to_end}
+  // Scenario vector layout: [demand: nd*T][renewable_0: T]...[renewable_{ni-1}: T]
+  vector< unsigned int > se_vec;
+  {
+   const unsigned int T_u  = static_cast< unsigned int >( T );
+   const unsigned int ndT  = static_cast< unsigned int >( nd * T );
+   unsigned int roff = 0u;
+   if( has_demand ) {
+    se_vec.insert( se_vec.end() , { 0u , ndT , 0u , ndT } );
+    roff = ndT;
+   }
+   if( has_renewable )
+    for( int k = 0 ; k < ni ; ++k )
+     se_vec.insert( se_vec.end() ,
+      { roff + k * T_u , roff + (k+1) * T_u , 0u , T_u } );
+  }
+  auto sed = sg.addDim( "SetElementsDim" , se_vec.size() );
+  sg.addVar( "SetElements" , netCDF::NcUint() , sed ).putVar( se_vec.data() );
+
+  // AbstractPath for the DataMapping targets themselves:
+  // - demand mapping:    empty path (caller is the UCBlock itself)
+  // - renewable mapping: length-1 'B' path to the IntermittentUnitBlock child
+  {
+   vector< unsigned int > path_starts;
+   vector< char >         path_node_types;
+   vector< string >       path_group_names;
+   vector< unsigned int > path_elem_idx;
+
+   unsigned int cur = 0;
+   if( has_demand )
+    path_starts.push_back( cur );  // empty path: length 0
+   if( has_renewable )
+    for( int k = 0 ; k < ni ; ++k ) {
+     path_starts.push_back( cur );
+     path_node_types.push_back( 'B' );
+     path_group_names.push_back( to_string( intermittent[ k ] ) );
+     path_elem_idx.push_back( 0 );
+     ++cur;
+    }
+
+   const size_t num_paths = path_starts.size();
+   const size_t total_len = path_node_types.size();
+
+   auto apg     = sg.addGroup( "AbstractPath" );
+   auto ap_pdim = apg.addDim( "PathDim" , num_paths );
+   auto ap_tdim = apg.addDim( "PathTotalLength" , total_len );
+
+   apg.addVar( "PathStart" , netCDF::NcUint() , ap_pdim ).putVar( path_starts.data() );
+   if( total_len > 0 ) {
+    apg.addVar( "PathNodeTypes" , netCDF::NcChar() , ap_tdim )
+       .putVar( path_node_types.data() );
+    {
+     auto gv = apg.addVar( "PathGroupIndices" , netCDF::NcString() , ap_tdim );
+     vector< const char * > cptrs( path_group_names.size() );
+     for( size_t i = 0 ; i < path_group_names.size() ; ++i )
+      cptrs[ i ] = path_group_names[ i ].c_str();
+     gv.putVar( cptrs.data() );
+    }
+    apg.addVar( "PathElementIndices" , netCDF::NcUint() , ap_tdim )
+       .putVar( path_elem_idx.data() );
+   }
+   else {
+    apg.addVar( "PathNodeTypes"      , netCDF::NcChar() , ap_tdim );
+    apg.addVar( "PathGroupIndices"   , netCDF::NcString() , ap_tdim );
+    apg.addVar( "PathElementIndices" , netCDF::NcUint() , ap_tdim );
+   }
+  }
+ }
+
+ // ---- DiscreteScenarioSet: reuse the class's own serializer ---------------
+ {
+  DiscreteScenarioSet dss;
+  vector< double > weights( N , 1.0 / N );
+  dss.load_from_memory( scenarios , weights );
+  auto dg = g.addGroup( "DiscreteScenarioSet" );
+  dss.serialize( dg );
+ }
+
+ if( config.verbose >= 1 )
+  cout << "Successfully saved TSSB (" << N << " scenarios, " << nth
+       << " thermal units, " << ni << " intermittent units)" << endl;
+}
+
+/*--------------------------------------------------------------------------*/
+
 void save_scenarios_netcdf(
   const string & filename ,
   const vector< vector< double > > & scenarios ,
@@ -1112,6 +1431,12 @@ int main( int argc , char * argv[] ) {
   }
   save_scenarios_netcdf( config.output_path , combined_scenarios , config , data
     );
+
+  // Generate step: also write a full TSSB file, if requested
+  if( ! config.tssb_output_path.empty( ) ) {
+   save_tssb_netcdf( config.tssb_output_path , config.instance_path ,
+                     combined_scenarios , config , data );
+  }
 
   if( config.verbose >= 1 ) { cout << "\nGeneration complete" << endl; }
 

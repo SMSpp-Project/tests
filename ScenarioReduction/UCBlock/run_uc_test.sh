@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 set -u
 
-# ---- defaults (override via flags) ----------------------------------------
+# Option B (generate/solve split): generate step uses uc_scenario_generator
+# (per-domain, writes a TSSB file fixed at N scenarios); solve step uses the
+# generic scenario_reduction_solve binary. Unlike the old
+# uc_scenario_reduction_test, the generic solver has no "-n" flag to
+# subselect from a larger pool: N is fixed at generate time, so a separate
+# TSSB is generated per (instance, uncertainty, N, seed, variation).
+
 WDIR=~/smspp-project/build/tests/ScenarioReduction/UC
 IDIR=~/smspp-project/UCBlock/data/nc4
 SDIR=/tmp/uc_scenarios
@@ -35,9 +41,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 GEN="$WDIR/uc_scenario_generator"
-TEST="$WDIR/uc_scenario_reduction_test"
-[ ! -x "$GEN" ]    && { echo "ERROR: $GEN not found (build uc_scenario_generator)"; exit 1; }
-[ ! -x "$TEST" ]   && { echo "ERROR: $TEST not found (build uc_scenario_reduction_test)"; exit 1; }
+SOLVE="$WDIR/scenario_reduction_solve"
+[ ! -x "$GEN" ]   && { echo "ERROR: $GEN not found (build uc_scenario_generator)"; exit 1; }
+[ ! -x "$SOLVE" ] && { echo "ERROR: $SOLVE not found (build scenario_reduction_solve)"; exit 1; }
 
 # allow a bare filename for solver (e.g. BSPar_CPLEX.txt): resolve under CFGDIR.
 # A value containing a slash is treated as a path and used as is.
@@ -71,30 +77,36 @@ for INST in $INSTANCES; do
 
     for SEED in $SEEDS; do
         for N in $N_VALUES; do
-            # one scenario file per (instance, uncertainty, N, seed, variation)
-            SCEN="$SDIR/${INST}_${UNCERTAINTY}_n${N}_s${SEED}_v${VARIATION}.nc4"
-            if [ ! -f "$SCEN" ]; then
-                "$GEN" -i "$IPATH" -o "$SCEN" -n "$N" -v "$VARIATION" -s "$SEED" \
+            # one TSSB file per (instance, uncertainty, N, seed, variation)
+            TSSB="$SDIR/${INST}_${UNCERTAINTY}_n${N}_s${SEED}_v${VARIATION}_tssb.nc4"
+            if [ ! -f "$TSSB" ]; then
+                "$GEN" -i "$IPATH" -o "$SDIR/${INST}_${UNCERTAINTY}_n${N}_s${SEED}_v${VARIATION}.nc4" \
+                       --tssb-output "$TSSB" \
+                       -n "$N" -v "$VARIATION" -s "$SEED" \
                        $GEN_FLAG --no-validate --verbose 0 >/dev/null 2>&1
             fi
-            [ ! -f "$SCEN" ] && { echo "  skip: scenario gen failed ($INST N=$N seed=$SEED)"; continue; }
+            [ ! -f "$TSSB" ] && { echo "  skip: TSSB gen failed ($INST N=$N seed=$SEED)"; continue; }
 
             for K in $K_VALUES; do
                 [ "$K" -ge "$N" ] && continue
                 for M in $METHODS; do
-                    OUT=$("$TEST" -i "$IPATH" -f "$SCEN" -n "$N" -r "$K" -m "$M" \
-                                  -c "$SOLVER" --verbose 1 2>&1)
+                    OUT=$("$SOLVE" -i "$TSSB" -r "$K" -m "$M" -c "$SOLVER" 2>&1)
 
-                    FULL=$(echo "$OUT" | grep -oP 'Full\.\.\.:\s*\K[0-9.eE+-]+'        | head -1)
-                    RED=$( echo "$OUT" | grep -oP 'Reduced:\s*\K[0-9.eE+-]+'           | head -1)
-                    GAP=$( echo "$OUT" | grep -oP 'Gap \(absolute\):.*\(\K[0-9.]+'     | head -1)
-                    AUS=$( echo "$OUT" | grep -oP 'Reduction time\.:\s*\K[0-9]+'       | head -1)  # us
-                    RUS=$( echo "$OUT" | grep -oP 'Reduced solve t:\s*\K[0-9]+'        | head -1)  # us
-
-                    # microseconds -> seconds
-                    RTIME="NA";    [ -n "${RUS:-}" ] && RTIME=$(awk "BEGIN{printf \"%.3f\", $RUS/1e6}")
-                    ALGOTIME="NA"; [ -n "${AUS:-}" ] && ALGOTIME=$(awk "BEGIN{printf \"%.3f\", $AUS/1e6}")
+                    FULL=$(echo "$OUT" | grep -oP 'Full\s+\(N=[0-9]+\):\s*\K[0-9.eE+-]+' | head -1)
+                    RED=$( echo "$OUT" | grep -oP 'Reduced \(K=[0-9]+\):\s*\K[0-9.eE+-]+' | head -1)
+                    GAP=$( echo "$OUT" | grep -oP 'Gap:\s*\K[0-9.eE+-]+'                  | head -1)
+                    RTIME_MS=$(echo "$OUT" | grep -oP 'Reduced \(K=[0-9]+\):[^(]*\(\K[0-9.]+(?=\s*ms\))' | head -1)
                     : ${FULL:=NA}; : ${RED:=NA}; : ${GAP:=NA}
+
+                    # RedTime_s/AlgoTime_s: the generic solver only reports one
+                    # timing (the reduction step itself, in ms); kept in both
+                    # columns for CSV-format compatibility with old runs.
+                    if [ -n "${RTIME_MS:-}" ]; then
+                        RTIME=$(awk -v ms="$RTIME_MS" 'BEGIN{printf "%.3f", ms/1000}')
+                    else
+                        RTIME=NA
+                    fi
+                    ALGOTIME="$RTIME"
 
                     printf "%-16s %-10s %-5s %-4s %-3s %-9s %15s %15s %9s %11s %11s\n" \
                         "$INST" "$UNCERTAINTY" "$SEED" "$N" "$K" "$M" "$FULL" "$RED" "$GAP" "$RTIME" "$ALGOTIME"

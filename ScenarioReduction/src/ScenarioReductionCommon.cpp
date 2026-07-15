@@ -26,9 +26,8 @@
 #include "Solver.h"
 
 using namespace std;
-using namespace SMSpp_di_unipi_it;
 
-namespace ScenarioReductionTesting {
+namespace SMSpp_di_unipi_it {
 
 /*--------------------------------------------------------------------------*/
 /*----------------------- ScenarioReductionState ----------------------------*/
@@ -1107,7 +1106,7 @@ int run_scenario_reduction_test( int argc , char * argv[] , ProblemHooks hooks )
 }
 
 /*--------------------------------------------------------------------------*/
-}  // namespace ScenarioReductionTesting
+}  // namespace SMSpp_di_unipi_it
 
 /*--------------------------------------------------------------------------*/
 /*---------- End File ScenarioReductionCommon.cpp --------------------------*/

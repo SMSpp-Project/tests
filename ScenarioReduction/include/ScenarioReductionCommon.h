@@ -64,9 +64,7 @@
 /*------------------------------ NAMESPACE ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-namespace ScenarioReductionTesting {
-
- using namespace SMSpp_di_unipi_it;
+namespace SMSpp_di_unipi_it {
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ STRUCTURES --------------------------------*/
@@ -209,7 +207,7 @@ std::string get_str_config( ComputeConfig * config , const std::string & name );
 int run_scenario_reduction_test( int argc , char * argv[] , ProblemHooks hooks );
 
 /*--------------------------------------------------------------------------*/
-}  // namespace ScenarioReductionTesting
+}  // namespace SMSpp_di_unipi_it
 
 #endif /* __ScenarioReductionCommon */
 
