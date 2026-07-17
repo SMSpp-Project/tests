@@ -67,7 +67,7 @@ the `-m` flag in the solve program.
 - `baseline` : a simple default selection.
 - `dupacova` : a greedy forward selection method.
 - `bestfit` and `firstfit` : local search methods.
-- `cssc` : Consistent Scenario Subset Clustering. This one is slower because
+- `cssc` : Cost Space Scenario Clustering. This one is slower because
   it solves many optimization problems to build a cost aware clustering,
   but it can give a better reduction, especially for harder problems.
 
