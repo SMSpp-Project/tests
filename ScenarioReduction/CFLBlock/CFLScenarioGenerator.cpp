@@ -85,7 +85,7 @@ void print_help( const char * program_name ) {
   << endl;
  cout << "  --tssb-output <path>      Also write a full TSSB file (the\n"
   "                            \"generate\" step) readable by the generic\n"
-  "                            scenario_reduction_solve program"
+  "                            ScenarioReductionSolver_test program"
   << endl;
  cout << "  -h, --help               Show this help message" << endl;
  cout << "\nExamples:" << endl;
@@ -540,7 +540,7 @@ void save_scenarios_netcdf(
  * variables + StochasticBlock/DataMapping for customer demands + the
  * DiscreteScenarioSet), in the generic "Block_0" + SMS++_file_type=1 format
  * that Block::deserialize(filename) expects. This is what makes the file
- * readable by the fully generic scenario_reduction_solve program: everything
+ * readable by the fully generic ScenarioReductionSolver_test program: everything
  * problem-specific (what a CFL instance is, which variables are here-and-now,
  * how a scenario maps onto customer demands) is baked into the file itself,
  * once, here -- not into the code that later solves it. */

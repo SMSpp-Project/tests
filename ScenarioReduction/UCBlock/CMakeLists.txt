@@ -12,7 +12,7 @@ endif ()
 
 # ----- Tests --------------------------------------------------------------- #
 # UCScenarioGenerator writes a scenario file that the generic
-# scenario_reduction_solve program (ScenarioReductionSolver module) then reduces
+# ScenarioReductionSolver_test program (ScenarioReductionSolver module) then reduces
 # and solves; see run_uc_test.sh for the generate->solve flow.
 if (TARGET SMS++::UCBlock)
 

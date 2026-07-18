@@ -926,7 +926,7 @@ static void nc_copy_group_recursive( const netCDF::NcGroup & src ,
  * renewable + the DiscreteScenarioSet), in the generic "Block_0" +
  * SMS++_file_type=1 format Block::deserialize(filename) expects. Everything
  * problem-specific is baked into the file here, once; the generic
- * scenario_reduction_solve program never needs to know it is UC at all. */
+ * ScenarioReductionSolver_test program never needs to know it is UC at all. */
 
 static void save_tssb_netcdf(
   const string & filename ,

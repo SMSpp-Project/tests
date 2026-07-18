@@ -18,7 +18,7 @@ program.
   representatives, and method. It writes a CSV of results.
 
 The generic solve program itself is not in this folder: it is provided by the
-`ScenarioReductionSolver` module (its `scenario_reduction_solve` binary). It is
+`ScenarioReductionSolver` module (its `ScenarioReductionSolver_test` binary). It is
 shared between CFL and UC and works on CFL files exactly the same way.
 
 ## Step 1: build
@@ -26,7 +26,7 @@ shared between CFL and UC and works on CFL files exactly the same way.
 ```bash
 cd <build-dir>
 cmake --build . --target CFLScenarioGenerator -j1
-cmake --build . --target scenario_reduction_solve -j1
+cmake --build . --target ScenarioReductionSolver_test -j1
 ```
 
 ## Step 2: generate scenarios and a TSSB file
@@ -56,7 +56,7 @@ file for each one.
 ## Step 3: solve
 
 ```bash
-./scenario_reduction_solve -i <tssb.nc4> -m cssc -r 5 -c ../BSCfg.txt
+./ScenarioReductionSolver_test -i <tssb.nc4> -m cssc -r 5 -c ../BSCfg.txt
 ```
 
 Main options.

@@ -18,7 +18,7 @@ a TSSB file. Then solve, using the shared generic program.
   representatives, and method. It writes a CSV of results.
 
 The generic solve program itself is not in this folder: it is provided by the
-`ScenarioReductionSolver` module (its `scenario_reduction_solve` binary). It
+`ScenarioReductionSolver` module (its `ScenarioReductionSolver_test` binary). It
 also works on CFL files without any change.
 
 ## Types of uncertainty
@@ -35,7 +35,7 @@ periods, `nd` demand nodes and `ni` intermittent (renewable) units.
 ```bash
 cd <build-dir>
 cmake --build . --target uc_scenario_generator -j1
-cmake --build . --target scenario_reduction_solve -j1
+cmake --build . --target ScenarioReductionSolver_test -j1
 ```
 
 ## Step 2: generate scenarios and a TSSB file
@@ -67,7 +67,7 @@ one.
 ## Step 3: solve
 
 ```bash
-./scenario_reduction_solve -i <tssb.nc4> -m cssc -r 5 -c ../BSCfg.txt
+./ScenarioReductionSolver_test -i <tssb.nc4> -m cssc -r 5 -c ../BSCfg.txt
 ```
 
 Main options.

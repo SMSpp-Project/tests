@@ -59,7 +59,7 @@ for INST in $INSTANCES; do
         for K in $K_VALUES; do
             [ "$K" -ge "$N" ] && continue
             for M in $METHODS; do
-                OUT=$(cd "$SOLVEDIR" && ./scenario_reduction_solve -i "$TSSB" -r "$K" -m "$M" -c "$SOLVER" 2>&1)
+                OUT=$(cd "$SOLVEDIR" && ./ScenarioReductionSolver_test -i "$TSSB" -r "$K" -m "$M" -c "$SOLVER" 2>&1)
 
                 FULL=$(echo "$OUT" | grep -oP 'Full\s+\(N=[0-9]+\):\s*\K[0-9.eE+-]+' | head -1)
                 RED=$(echo "$OUT"  | grep -oP 'Reduced \(K=[0-9]+\):\s*\K[0-9.eE+-]+' | head -1)

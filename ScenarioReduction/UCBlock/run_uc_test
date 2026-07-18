@@ -35,9 +35,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 GEN="$WDIR/uc_scenario_generator"
-SOLVE="$WDIR/scenario_reduction_solve"
+SOLVE="$WDIR/ScenarioReductionSolver_test"
 [ ! -x "$GEN" ]   && { echo "ERROR: $GEN not found (build uc_scenario_generator)"; exit 1; }
-[ ! -x "$SOLVE" ] && { echo "ERROR: $SOLVE not found (build scenario_reduction_solve)"; exit 1; }
+[ ! -x "$SOLVE" ] && { echo "ERROR: $SOLVE not found (build ScenarioReductionSolver_test)"; exit 1; }
 
 # allow a bare filename for solver (e.g. BSCfg.txt): resolve under CFGDIR.
 # A value containing a slash is treated as a path and used as is.

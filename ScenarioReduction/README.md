@@ -80,7 +80,7 @@ cd <build-dir>
 cmake ..
 cmake --build . --target CFLScenarioGenerator -j1
 cmake --build . --target uc_scenario_generator -j1
-cmake --build . --target scenario_reduction_solve -j1
+cmake --build . --target ScenarioReductionSolver_test -j1
 ```
 
 Use `-j1` on machines with limited memory. Building with many parallel jobs
