@@ -32,7 +32,7 @@ cmake --build . --target scenario_reduction_solve -j1
 ## Step 2: generate scenarios and a TSSB file
 
 ```bash
-cd tests/ScenarioReduction/CFL
+cd tests/ScenarioReduction/CFLBlock
 ./CFLScenarioGenerator -i <instance.nc4> -o <scenarios.nc4> \
     --tssb-output <tssb.nc4> -n 50 -v 0.5 -s 1 --no-validate
 ```

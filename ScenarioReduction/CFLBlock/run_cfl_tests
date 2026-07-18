@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-GENDIR=~/smspp-project/build/tests/ScenarioReduction/CFL
+GENDIR=~/smspp-project/build/tests/ScenarioReduction/CFLBlock
 SOLVEDIR=~/smspp-project/build/tests/ScenarioReduction/UC
 IDIR=~/smspp-project/CapacitatedFacilityLocationBlock/data/nc4/ORLib
 SDIR=/tmp/cfl_scenarios

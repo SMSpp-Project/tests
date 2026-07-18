@@ -32,17 +32,16 @@ generate program. The solve program never needs to change.
 
 ## Folder structure
 
-- `CFL/` : the CFL generator, plus the batch script and configuration files
+- `CFLBlock/` : the CFL generator, plus the batch script and configuration files
   for CFL experiments.
 - `UCBlock/` : the UC-Thermal generator, plus its batch script.
 - `UCBlock/UCInvestmentTest/` : a separate tool for the UC-Investment
   problem. See the note below about why this one is kept separate.
-- `src/` : the shared code used by everything. This includes the CSSC
-  algorithm, the heuristic reduction algorithms, and the one generic solve
-  program.
-- `include/` : headers for the shared code in `src/`.
+- The shared reduction code (the CSSC algorithm, the heuristic reduction
+  algorithms, and the generic solve program) lives in the ScenarioReductionSolver
+  module, not here.
 
-Each of `CFL/` and `UCBlock/` has its own README with exact commands and
+Each of `CFLBlock/` and `UCBlock/` has its own README with exact commands and
 options.
 
 ## A note on the UC-Investment tool
@@ -87,5 +86,5 @@ cmake --build . --target scenario_reduction_solve -j1
 Use `-j1` on machines with limited memory. Building with many parallel jobs
 can run out of memory and corrupt the build.
 
-See `CFL/README.md` and `UCBlock/README.md` for the exact generate and
+See `CFLBlock/README.md` and `UCBlock/README.md` for the exact generate and
 solve commands for each problem.

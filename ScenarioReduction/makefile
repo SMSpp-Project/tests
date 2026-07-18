@@ -14,7 +14,7 @@
 ##############################################################################
 
 # subdirectories with a makefile
-SUBDIRS = CFL UCBlock UCBlock/UCInvestmentTest
+SUBDIRS = CFLBlock UCBlock UCBlock/UCInvestmentTest
 
 # default target - build all subdirectories in release mode
 default:
