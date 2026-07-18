@@ -1,0 +1,75 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSCfg_SR.txt- - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig that reduces the scenarios of a
+# ScenarioReductionBlock with a ScenarioReductionSolver. The reduction method
+# is chosen via intAlgorithm; comment it out and uncomment the desired one.
+#
+#   Minh Duc Pham
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now the name of the Solver - - - - - - - - - - - - - - - - - - - - - - - - -
+ScenarioReductionSolver  # name of the Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the ScenarioReductionSolver
+
+ComputeConfig     # exact type of the Configuration object
+
+1  # the ComputeConfig is a "differential" one
+
+5 # number of integer parameters
+
+# now all the integer parameters
+# reduction method: comment this one and uncomment the desired one
+#intAlgorithm    0 # Baseline: highest-probability selection
+intAlgorithm     1 # Dupacova: forward selection (default)
+#intAlgorithm    2 # BestFit: local search, best improvement
+#intAlgorithm    3 # FirstFit: local search, first improvement
+intUseWarmstart  0 # use warm start for local search (0 = no, 1 = yes)
+intShuffle       0 # shuffle representatives in FirstFit (0 = no, 1 = yes)
+intRandomSeed    0 # random seed for shuffling (0 = default seed)
+intLogVerb       2 # log verbosity (0 = silent, 1 = normal, 2 = detailed)
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+* # no extra Configuration
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSCfg_SR.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
