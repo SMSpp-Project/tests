@@ -14,7 +14,9 @@ endif ()
 # UCScenarioGenerator writes a scenario file that the generic
 # ScenarioReductionSolver_test program (ScenarioReductionSolver module) then reduces
 # and solves; see run_uc_test.sh for the generate->solve flow.
-if (TARGET SMS++::UCBlock)
+# It links SMS++::StochasticBlock, so require it too: a build that enables
+# UCBlock but not StochasticBlock (e.g. the ucblock module CI) must skip it.
+if (TARGET SMS++::UCBlock AND TARGET SMS++::StochasticBlock)
 
     add_executable(UCScenarioGenerator
                    UCScenarioGenerator.cpp ../../common_utils.cpp)
