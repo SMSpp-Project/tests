@@ -431,7 +431,7 @@ static bool SolveBoth( void )
 
    #if( CHECK_SOLUTIONS & 4 )
     for( Index i = 0 ; i < time_horizon ; ++i ) {
-     if( abs( p1[ i ] - p2[ i ] ) > 1e-6 * max( abs( p1[ i ] ) ,
+     if( std::abs( p1[ i ] - p2[ i ] ) > 1e-6 * std::max( std::abs( p1[ i ] ) ,
 						double( 1 ) ) ) {
       std::cerr << "p1[ " << i << " ] = " << p1[ i ] << " != p2[ " << i
 	   << " ] = " << p2[ i ] << std::endl;
@@ -616,6 +616,17 @@ int main( int argc , char **argv )
   std::vector< double > qcost( time_horizon , std::atof( qcost_env ) );
   TUBlock->set_reactive_linear_term( qcost.begin() ,
                                      Range( 0 , time_horizon ) );
+  }
+
+ // env-gated: price the spinning reserves with a constant (negative) cost, so
+ // the reserve-rewarded multi-piece per-period cost path of the DP solvers is
+ // exercised (for profiling the reserve overhead of the base solver).
+ if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
+  std::vector< double > rcv( time_horizon , std::atof( rc ) );
+  TUBlock->set_primary_spinning_reserve_cost( rcv.begin() ,
+                                              Range( 0 , time_horizon ) );
+  TUBlock->set_secondary_spinning_reserve_cost( rcv.begin() ,
+                                                Range( 0 , time_horizon ) );
   }
 
  // attach the Solver(s) to the ThermalUnitBlock- - - - - - - - - - - - - - -
