@@ -15,8 +15,11 @@
 # --------------------------------------------------------------------------- #
 cmake_minimum_required(VERSION 3.21)
 cmake_policy(VERSION 3.15)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/DeriveVersion.cmake)
+smspp_derive_version(SMSPP_MODULE_VERSION)
+
 project(SMS++_tests
-        VERSION 0.6.0
+        VERSION ${SMSPP_MODULE_VERSION}
         DESCRIPTION "SMS++ tests"
         HOMEPAGE_URL https://gitlab.com/smspp/tests
         LANGUAGES C CXX)
