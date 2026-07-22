@@ -71,7 +71,7 @@ The following tests are provided:
   `SCIPMILPSolver`), as well as for quite a lot of the mechanics of the
   SMS++ core library.
 
-- [`LagrangianDualSolver_MMCF`](LagrangianDualSolver_MMCF),
+- [`MMCFBlock`](MMCFBlock),
   a tester which provides  initial tests for `LagrangianDualSolver`,
   `LagBFunction`, any `CDASolver` able to handle `C05Function` in the
   `Objective` (such as `BundleSolver`), any `CDASolver` able to handle
@@ -79,7 +79,7 @@ The following tests are provided:
   `CPXMILPSolver` and `SCIPMILPSolver`), `MMCFBlock` and `MCFBlock`,
   as well as for quite a lot of the mechanics of the SMS++ core library.
 
-- [`LagrangianDualSolver_UC`](LagrangianDualSolver_UC), a tester
+- [`UCBlock`](UCBlock), a tester
   which provides initial tests for `LagrangianDualSolver`, `LagBFunction`,
   any `CDASolver` able to handle `C05Function` in the `Objective` (such as
   `BundleSolver`), any `CDASolver` able to handle Linear Programs (such as
@@ -91,7 +91,7 @@ The following tests are provided:
   [LukFiBlock](https://gitlab.com/smspp/lukfiblock). It just creates one
   and loads it from a stream; little more than a compilation check.
 
-- [`MCF_MILP`](MCF_MILP): solve a `MCFBlock` with both a `MILPSolver` and a
+- [`MCFBlock`](MCFBlock): solve a `MCFBlock` with both a `MILPSolver` and a
   `MCFSolver` and compare the results. This is a test for `MCFBlock`,
   `MCFSolver`, `MILPSolver` and its derived classes (`CPXMILPSolver` and
   `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++

@@ -9,7 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
+- eps_getter() in common_utils: every Solver enters the cross-check as
+  its [get_lb(), get_ub()] interval, valid by the base Solver contract,
+  and a per-Solver optimality tolerance (positional with respect to the
+  BlockSolverConfig) declares which ones are exact; an infinite entry
+  claims nothing beyond correctness, covering pure relaxations and pure
+  heuristics with no Solver type or name ever inspected
+
 ### Changed 
+
+- the solve-a-Block-with-Solvers cross-check testers renamed after the
+  Block they exercise: UCBlock (was LagrangianDualSolver_UC, executable
+  UCBlock_test) and MCFBlock (was MCF_MILP, executable MCFBlock_test);
+  LagrangianDualSolver_MMCF was merged into MMCFBlock as a second
+  executable (MMCFBlock_test) alongside the existing MMCF_test, sharing
+  its instance data
+
+- UCBlock cross-checks every Solver of its BlockSolverConfig at once,
+  rather than selecting one of them from the command line: the meta-
+  batches are gone and each batch is a ctest test of its own
 
 ### Fixed 
 

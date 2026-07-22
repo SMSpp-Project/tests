@@ -1,9 +1,18 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-ML.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
 # two different Solver: a :MILPSolver and a LagrangianDualSolver using a
-# BundleSolver as the inner Solver
+# BundleSolverML (the ML-based BundleSolver that predicts the step-size t
+# with a neural network) as the inner Solver.
+#
+# It is the ML counterpart of BSPar.txt: it reuses the same LDCfg.txt base
+# and the same (flow) relaxation as BSPar.txt, so that the Lagrangian dual
+# bound matches the reference, and only overrides, via the cascade-override
+# mechanism, the entries that make the inner Solver a self-training
+# BundleSolverML driving t with the network (str_LDSlv_ISName, the
+# network-friendly t-strategy parameters, intMLTrainOnline / intMLSeed /
+# intNTrainRounds).
 #
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
@@ -32,27 +41,35 @@ LagrangianDualSolver  # name of 2nd Solver
 *MILPCfg.txt
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the LagrangianDualSolver; it mostly is the
-# ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver
+# ComputeConfig of the LagrangianDualSolver; it reuses LDCfg.txt and
+# overrides the entries needed to turn the inner Solver into a self-training
+# BundleSolverML
 
 *LDCfg.txt +
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-3 # number of integer parameters
+9 # number of integer parameters
 
 int_InnerS_WVarSCfg 0 # use first Configuration in the "cache"
 int_LDSlv_iBCopy    0 # 1 if sub-Block must be R3B-copied
 intPushCostToOwner  0 # the value of intPushCostToOwner for the LagBF
+intMnSSC            0 # ML: t may change after every SS (network-driven)
+intMnNSC            0 # ML: t may change after every NS (network-driven)
+inttSPar1           3 # ML: bit 0 on => the network drives t, no long-term strategy
+intMLTrainOnline    1 # train the network online at the end of each compute()
+intMLSeed           0 # seed Torch RNG and re-init the net for reproducibility
+intNTrainRounds     3 # times the instance is re-solved for online training
 
-0 # number of double parameters
+2 # number of double parameters
 
-# now all the double parameters
-# [none]
+dblmnIncr    1.000001 # ML: ~1 so the network, not the rule, sets the new t
+dblmnDecr           1 # ML: ~1 so the network, not the rule, sets the new t
 
-1 # number of string parameters
+2 # number of string parameters
 
-str_LagBF_BSCfg     LPBSCfg-K-CX.txt # Flow relaxation, using a :MILPSolver
+str_LDSlv_ISName  BundleSolverML   # inner Solver: the ML-based BundleSolver
+str_LagBF_BSCfg   LPBSCfg-K-CX.txt # same relaxation as the non-ML BSPar.txt
 
 0 # number of vector-of-int parameters
 
@@ -75,5 +92,5 @@ GetInnerVarSolConfig.txt
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-ML.txt- - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# usage: batch-acad < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs all pure thermal and hydrothermal academic instances
+#
+# for LagrangianDualSolver + BundleSolver:
+# correct value of tStar: 1e+0
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+#  pure thermal academic instances- - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/UC_Data/T-Ramp
+
+if [ -n "$CI" ]; then sizes="10 50 200";              seeds="1 2"
+else                  sizes="10 20 50 75 100 200";    seeds="1 2 3 4 5"; fi
+
+for size in $sizes; do
+  for seed in $seeds; do
+
+    what=${DATADIR}/${size}_0_${seed}_w.nc4
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
+
+  done
+done
+
+# hydrothermal academic instances - - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/UC_Data/HT-Ramp
+
+if [ -n "$CI" ]; then sizes="20_10 100_50 200_100";                seeds="1"
+else                  sizes="20_10 50_20 75_35 100_50 150_75 200_100"; seeds="1 2"; fi
+
+for size in $sizes; do
+  for seed in $seeds; do
+
+    what=${DATADIR}/${size}_${seed}_w.nc4
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

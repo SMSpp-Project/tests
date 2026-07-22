@@ -10,7 +10,7 @@
  * Solver (when two are registered) or against a reference objective value
  * passed on the command line.
  *
- * The CLI mirrors that of tests/LagrangianDualSolver_UC/test.cpp, except
+ * The CLI mirrors that of tests/UCBlock/test.cpp, except
  * that for TwoStageStochasticBlock the second Solver is always a
  * LagrangianDualSolver (there is no PrimalProximalHeur counterpart yet);
  * the third positional argument is therefore kept as a placeholder for

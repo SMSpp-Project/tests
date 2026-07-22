@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# usage: batch < exe file >
+# usage: batch-m < exe file >
 #        < exe file > = path of the executable file, default ./MMCFBlock_test
 #
-# runs the Canad and Mnetgen MMCF instances through LagrangianDualSolver
+# runs the Mnetgen MMCF instances through LagrangianDualSolver
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../batch_common.sh"
@@ -11,14 +11,6 @@ source "$(dirname "$0")/../batch_common.sh"
 DATADIR=data
 
 MMCFBlock_test=${1:-./MMCFBlock_test}
-
-# Canad - - - - - - - - - - - - - - - - - - - -
-
-for what in ${DATADIR}/Canad/*.dat; do
-
-  run_test "$MMCFBlock_test" "$what" -B BPar.txt -S BSPar.txt -t s
-
-done
 
 # Mnetgen - - - - - - - - - - - - - - - - - - - -
 

@@ -152,7 +152,7 @@ int main( int argc , char **argv )
 
  BlockSolverConfig * bsc;
  {
-  auto c = Configuration::deserialize( "BSPar.txt" );
+  auto c = Configuration::deserialize( "BSPar-ref.txt" );
   bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
    cerr << "Error: configuration file not a BlockSolverConfig" << endl;

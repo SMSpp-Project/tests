@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# usage: batch-acad-s < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs only "small" pure thermal academic instances, intended for being used
+# when the ThermalUnitBlock subproblems are solved to integer optimality
+# (typically using ThermalUnitExtDPSolver, although a :MILPSolver would
+# be a less efficient option)
+#
+# for LagrangianDualSolver + BundleSolver:
+# correct value of tStar: 1e+0
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+# small thermal academic instances- - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/UC_Data/T-Ramp
+
+sizes="10 20 50"
+
+for size in $sizes; do
+  for (( seed = 1 ; seed < 6 ; seed++ )); do
+
+    what=${DATADIR}/${size}_0_${seed}_w.nc4
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

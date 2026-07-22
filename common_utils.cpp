@@ -271,20 +271,28 @@ SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
 
 /*--------------------------------------------------------------------------*/
 
-SolverClassifier relaxation_aware_getter( void )
+SolverClassifier eps_getter( std::vector< double > eps )
 {
- return( []( Solver * s , std::size_t ) -> SolverReading {
+ return( [ eps = std::move( eps ) ]( Solver * s ,
+                                     std::size_t k ) -> SolverReading {
   SolverReading r;
-  // a relaxation Solver (classname() containing "Relaxation") only brackets
-  // z* in [ get_lb() , get_ub() ]; any other Solver is an exact optimum
-  if( s->classname().find( "Relaxation" ) != std::string::npos ) {
+  const double e = k < eps.size() ? eps[ k ]
+                 : std::numeric_limits< double >::quiet_NaN();
+  const double lb = get_obj_value( s , ObjGetter::LowerBound );
+  const double ub = get_obj_value( s , ObjGetter::UpperBound );
+  if( std::isinf( e ) ) {
+   // no optimality claim: just the base-contract interval around z*
    r.kind = SolverReading::Kind::Bracket;
-   r.lb   = get_obj_value( s , ObjGetter::LowerBound );
-   r.ub   = get_obj_value( s , ObjGetter::UpperBound );
+   r.lb   = lb;
+   r.ub   = ub;
    }
   else {
+   // exact up to e (NaN = up to the cross_check tol): the claimed optimum
+   // is the finite bound (a Solver exposing only get_lb(), such as a
+   // LagrangianDualSolver, claims it AS the optimum; ditto for get_ub())
    r.kind  = SolverReading::Kind::Exact;
-   r.value = get_obj_value( s , ObjGetter::VarValue );
+   r.value = std::isfinite( lb ) ? lb : ub;
+   r.eps   = e;
    }
   return( r );
   } );
@@ -387,11 +395,15 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 {
  diff_out = std::numeric_limits< double >::quiet_NaN();
 
- // a ~ b / a <= b within the relative tolerance
- auto within = [ tol ]( double a , double b ) {
+ // a ~ b / a <= b within the relative tolerance @p t (@p tol by default: a
+ // per-reading optimality eps, when one was declared, overrides it)
+ auto within_t = []( double a , double b , double t ) {
   return( std::abs( a - b ) <=
-          tol * std::max( double( 1 ) ,
-                          std::max( std::abs( a ) , std::abs( b ) ) ) );
+          t * std::max( double( 1 ) ,
+                        std::max( std::abs( a ) , std::abs( b ) ) ) );
+  };
+ auto within = [ tol , within_t ]( double a , double b ) {
+  return( within_t( a , b , tol ) );
   };
  auto le = [ tol ]( double a , double b ) {
   return( a - b <=
@@ -437,10 +449,13 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  if( nInf > 0 || nUnb > 0 ) { verdict_out = "KO"; return( false ); }
 
  // all feasible: gather Exact / LowerBound / UpperBound / Bracket readings
- std::vector< double > exacts , lbs , ubs;
+ // (an Exact carries its own optimality eps, NaN = the global @p tol)
+ std::vector< std::pair< double , double > > exacts;
+ std::vector< double > lbs , ubs;
  for( std::size_t k = 0 ; k < M ; ++k )
   switch( rd[ k ].kind ) {
-   case SolverReading::Kind::Exact:      exacts.push_back( rd[ k ].value );
+   case SolverReading::Kind::Exact:      exacts.emplace_back( rd[ k ].value ,
+                                                              rd[ k ].eps );
                                          break;
    case SolverReading::Kind::LowerBound: lbs.push_back( rd[ k ].value );
                                          break;
@@ -456,9 +471,13 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  // determine z*: from the Exact readings, else from ref, else from the bounds
  double zstar = std::numeric_limits< double >::quiet_NaN();
  if( ! exacts.empty() ) {
-  zstar = exacts.front();
-  for( double e : exacts )             // every Exact must agree on z*
-   if( ! within( e , zstar ) )
+  zstar = exacts.front().first;
+  const double eps0 = std::isnan( exacts.front().second )
+                    ? tol : exacts.front().second;
+  for( const auto & [ e , epsk ] : exacts )  // every Exact must agree on z*,
+   // each up to the larger of the two declared optimality tolerances
+   if( ! within_t( e , zstar ,
+                   std::max( eps0 , std::isnan( epsk ) ? tol : epsk ) ) )
     ok = false;
   }
  else if( ! std::isnan( ref ) )

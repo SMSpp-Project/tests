@@ -93,16 +93,15 @@ add_subdirectory(QuadraticTests)
 add_subdirectory(Write-Read)
 
 add_subdirectory(BendersBFunction)
-add_subdirectory(MCF_MILP)
+add_subdirectory(MCFBlock)
 
 add_subdirectory(BinaryKnapsackBlock)
 
 add_subdirectory(CapacitatedFacilityLocation)
 
 add_subdirectory(MMCFBlock)
-add_subdirectory(LagrangianDualSolver_MMCF)
 
-add_subdirectory(LagrangianDualSolver_UC)
+add_subdirectory(UCBlock)
 add_subdirectory(ThermalUnitBlock_Solver)
 add_subdirectory(InvestmentBlock)
 add_subdirectory(TwoStageStochasticBlock)

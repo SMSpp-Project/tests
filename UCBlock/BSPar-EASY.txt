@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-EASY.txt  - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a UCBlock whose components are
+# all "easy" for BundleSolver, to be cross-checked by a :MILPSolver and a
+# LagrangianDualSolver (using a BundleSolver as the inner Solver): it is
+# BSPar.txt with intDoEasy=0 (these instances have no non-easy component).
+#
+# Unlike BSPar.txt this variant does NOT attach the PrimalProximalHeur: on
+# the all-easy instances it has no integer decision to recover anyway, and on
+# the resilient ones with expandable assets (e.g.
+# smspp_2n_1c_1gext_1bext_2lext.nc) it crashes outright with a segmentation
+# fault, so it stays out until that is fixed.
+#
+#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver        # name of 1st Solver
+GRBMILPSolver         # name of 1st Solver
+#SCIPMILPSolver       # name of 1st Solver
+#HiGHSMILPSolver      # name of 1st Solver
+LagrangianDualSolver  # name of 2nd Solver
+
+2 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+
+*MILPCfg.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver; it mostly is the
+# ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver.
+# LDCfg.txt already has intDoEasy=0, which is what these all-easy instances
+# need, so no override is required here.
+
+*LDCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-EASY.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

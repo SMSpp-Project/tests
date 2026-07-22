@@ -3,7 +3,7 @@
 /*--------------------------------------------------------------------------*/
 /** @file
  * Common utilities shared by the SMS++ test programs (compare_formulations,
- * LagrangianDualSolver_UC, TwoStageStochasticBlock, InvestmentBlock, ...).
+ * UCBlock, TwoStageStochasticBlock, InvestmentBlock, ...).
  *
  * Pure helpers that are bit-fedeli copies of code previously duplicated across
  * the four test.cpp files: ostream manipulators (def, fixd), string->T parser
@@ -267,6 +267,9 @@ struct SolverReading {
  double value = std::numeric_limits< double >::quiet_NaN();   ///< Exact/LB/UB
  double lb    = - std::numeric_limits< double >::infinity();  ///< Bracket only
  double ub    =   std::numeric_limits< double >::infinity();  ///< Bracket only
+
+ /// optimality tolerance of an Exact reading; NaN = use the cross_check tol
+ double eps   = std::numeric_limits< double >::quiet_NaN();
  };
 
 /*--------------------------------------------------------------------------*/
@@ -291,14 +294,29 @@ SolverClassifier exact_getter( ObjGetter g = ObjGetter::VarValue );
 SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
                                 ObjGetter dflt = ObjGetter::VarValue );
 
-/// classifier: read a Solver as a [ get_lb() , get_ub() ] Bracket when its
-/// classname() contains "Relaxation", else as an Exact get_var_value() optimum
+/// classifier from the per-Solver optimality tolerances
+/** Every Solver, by the base contract, returns a valid interval
+ *  [ get_lb() , get_ub() ] around the optimum of the problem; the only piece
+ *  of information the cross-check cannot infer is how tight each Solver
+ *  claims to be, and that is exactly what @p eps declares, positionally with
+ *  respect to the registration order (= the Solver order in the
+ *  BlockSolverConfig):
+ *
+ *  - eps[ k ] finite   => Solver k is exact up to eps[ k ]: its claimed
+ *    optimum is its finite bound (get_lb() when that is finite, e.g. a
+ *    :MILPSolver or a LagrangianDualSolver closing the gap, else get_ub()),
+ *    and it enters the cross-check as an Exact reading with that tolerance;
+ *  - eps[ k ] infinite => nothing is claimed beyond the base contract:
+ *    Solver k enters as the Bracket [ get_lb() , get_ub() ], which must
+ *    contain the optimum. A pure relaxation ([ lb , +inf ]), a pure
+ *    heuristic ([ -inf , ub ]) and a Solver that found nothing at all
+ *    ([ -inf , +inf ]) are all just special cases of this, so no Solver
+ *    type or name is ever inspected;
+ *  - entries beyond eps.size() default to "exact up to the SolveAll() tol",
+ *    so appending further exact Solver to the BlockSolverConfig needs no
+ *    change here. */
 
-/** Encodes the :RelaxationSolver naming convention so that any relaxation
- *  Solver is cross-checked uniformly (it only brackets z*) without the test
- *  depending on its concrete type. */
-
-SolverClassifier relaxation_aware_getter( void );
+SolverClassifier eps_getter( std::vector< double > eps );
 
 /*--------------------------------------------------------------------------*/
 /// print the uniform per-instance log line

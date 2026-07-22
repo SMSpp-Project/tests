@@ -157,17 +157,22 @@ bool CrossCheckSolvers( void )
   return( false );
   }
 
- // a relaxation brackets z* in [ lb , ub ]; any other Solver is an exact z*.
+ // the relaxation brackets z* in [ lb , ub ]; any other Solver is an exact z*.
  // The classifier is invoked by SolveAll() only for the Solver that found a
  // solution, so we use it to record which ones to self-consistency-check below
  // (skipping the infeasible ones, whose primal x cannot be read)
  std::vector< char > feasible( M , 0 );
  std::vector< char > bracket( M , 0 );
- // the generic relaxation-aware reading (relaxation => [lb,ub] bracket, else
- // exact) lives in common_utils; here we only wrap it to record, per Solver,
- // feasibility and whether it is a bracket (needed by the BinaryKnapsackBlock-
- // specific self-consistency check below)
- auto read = relaxation_aware_getter();
+ // the generic per-Solver-eps reading lives in common_utils; the eps below
+ // are positional with respect to the Solver order of BSPar.txt and
+ // BSPar-mixed.txt (which agree: 3rd = GreedyRelaxationBinaryKnapsackSolver,
+ // the relaxation, for which nothing beyond the base-contract bracket is
+ // claimed; every other Solver, the BranchAndXSolver variants included via
+ // the eps_getter() default, is exact up to the test tolerance). Here we
+ // only wrap it to record, per Solver, feasibility and whether it is a
+ // bracket (needed by the BinaryKnapsackBlock-specific self-consistency
+ // check below)
+ auto read = eps_getter( { 2e-06 , 2e-06 , Inf< double >() } );
  SolverClassifier classify =
   [ &feasible , &bracket , read ]( Solver * s , std::size_t k ) -> SolverReading {
    feasible[ k ] = 1;

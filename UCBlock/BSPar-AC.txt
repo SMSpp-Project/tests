@@ -1,0 +1,168 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-AC.txt- - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a UCBlock with an ACNetworkBlock,
+# cross-checked by a :MILPSolver and a LagrangianDualSolver (using a
+# BundleSolver as the inner Solver).
+#
+# Unlike the other BSPar variants this one does NOT attach the
+# PrimalProximalHeur: on the AC (QCP) instances its configuration path
+# triggers the known LagBFunction<->ThermalUnitBlock objective bug (the solve
+# dies at once with "ThermalUnitBlock::add_Modification: the coefficients of
+# the schedule-deviation variables cannot change"), so it stays out until
+# that is fixed. It is BSPar-EASY.txt without the heuristic and with the two
+# differences the AC case needs, both expressed as overrides of the shared
+# *Cfg.txt fragments:
+#
+#   - the LP-reproducibility recipe for the :MILPSolver (Method, Presolve,
+#     NumericFocus), since the AC LP relaxations are more degenerate than the
+#     DC ones (SOCP cone + McCormick envelopes) and the default settings can
+#     pick a different optimal vertex than the LagrangianDualSolver, producing
+#     a small gap between the two;
+#   - InnerBSCfg-AC.txt as the BlockSolverConfig of the LagBFunctions (the AC
+#     ThermalUnitBlock is a QCP, solved by SCIP).
+#
+#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver        # name of 1st Solver
+GRBMILPSolver         # name of 1st Solver
+#SCIPMILPSolver       # name of 1st Solver (SCIP solves the AC SOCP/QCP)
+#HiGHSMILPSolver      # name of 1st Solver (cannot solve QCP)
+LagrangianDualSolver  # name of 2nd Solver
+
+2 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver, with the LP-reproducibility recipe on top
+# NOTE: an overriding ComputeConfig that is not the last in the list must end
+# with the '*' extra-Configuration pointer, or the parser runs into the next.
+
+*MILPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+3 # number of integer parameters
+
+# now all the integer parameters
+
+# All specific SCIP parameter (uncomment based on Solver)
+#lp/checkstability      0 # 0 = accept unstable LP, 1 = abort node (default)
+
+# All specific CPLEX parameter (uncomment based on Solver)
+#CPXPARAM_LPMethod                2    # 0 = auto (default), 1 = primal, 2 = dual,
+                                       # 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
+#CPXPARAM_Preprocessing_Presolve  0    # 0 = off, 1 = on (default)
+                                       # disable presolve for reproducibility
+#CPXPARAM_Emphasis_Numerical      1    # 0 = off (default), 1 = extreme numerical caution
+
+# All specific GUROBI parameter (uncomment based on Solver)
+Method              2    # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
+                         # 3 = barrier + crossover, 4 = network
+Presolve            0    # 0 = off, 1 = conservative, 2 = aggressive (default -1)
+NumericFocus        3    # 0 = auto (default), 1..3 = increasing precision focus
+
+0 # number of double parameters
+
+# now all the double parameters
+
+# All specific SCIP parameter (uncomment based on Solver)
+#numerics/feastol    1e-4 # feasibility tolerance (default 1e-6); loosen it so
+                         # SoPlex stops returning spurious pfeas=0 on the
+                         # ill-conditioned nonconvex node LPs
+
+# All specific HiGHS parameter (uncomment based on Solver)
+#primal_feasibility_tolerance  1e-9
+#dual_feasibility_tolerance    1e-9
+
+0 # number of string parameters
+
+# now all the string parameters
+
+# All specific HiGHS parameter (uncomment based on Solver)
+#presolve  off    # disable presolve for reproducibility
+#solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
+                  # (ipm = interior point: converges to analytic center, unique x*)
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver; it mostly is the
+# ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver. Only
+# the BlockSolverConfig of the LagBFunctions changes for the AC case (the
+# ThermalUnitBlock QCP is solved by SCIP), so override just that string; the
+# rest, str_LDSlv_ISName included, comes from the shared LDCfg.txt fragment.
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+0 # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1 # number of string parameters
+
+# now all the string parameters
+str_LagBF_BSCfg          InnerBSCfg-AC.txt # BlockSolverConfig for the LagBFunctions
+                                           # (AC: ThermalUnitBlock QCP -> SCIP)
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-AC.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
