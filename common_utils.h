@@ -18,18 +18,33 @@
  * dispatch to every nested sub-Block matching the classname() key.
  *
  * Solver-comparison and reference-objective helpers cover Pattern B (one
- * Block with an arbitrary number of Solver registered): SolveAll() is the
- * general engine, it runs every registered Solver, prints the uniform
- * per-instance line (timings + every Solver value, and the reference if any)
- * via print_instance_line(), and returns the cross-check verdict; SolveBoth()
- * is the 1-or-2-Solver wrapper over it, CheckRefValue() prints the comparison
- * against a reference objective, and SolveAndCheckRef() is the single-Solver
- * convenience that bundles solve + ref-check in one call. The classifier
- * (SolverClassifier / SolverReading) lets a test say how each Solver's result
- * enters the cross-check (exact, lower/upper bound, or relaxation bracket)
- * without pulling any solver-specific dependency into common_utils. Pattern A
- * (two separate Block each with one Solver, as in compare_formulations) is
- * structurally different and still lives in that test.cpp.
+ * Block with an arbitrary number of Solver registered). The whole machinery
+ * is this call chain:
+ *
+ *     test main()
+ *      -> SolveAll( block , eps_getter( { eps_0 , eps_1 , ... } ) , ref )
+ *          |    the eps vector is THE declaration of which Solver is exact:
+ *          |    eps_k finite = Solver k claims an optimum, exact up to eps_k;
+ *          |    eps_k = inf  = no claim beyond [ get_lb() , get_ub() ] ∋ z*.
+ *          |    Positional in registration order (= the BlockSolverConfig).
+ *          |    It is declared here, and not deduced from the Solver type,
+ *          |    because exactness is a property of the configuration and of
+ *          |    the instance, not of the class (e.g. a LagrangianDualSolver
+ *          |    is exact only when the relaxation it solves is tight).
+ *          -> compute() each Solver, map it to a SolverReading via the
+ *          |  classifier (eps_getter() or a bespoke SolverClassifier)
+ *          -> cross_check(): the pairwise agreement test between the
+ *          |  readings, lb_i <= ub_j ( 1 + eps ); see its comment
+ *          -> print_instance_line(): the uniform per-instance log line
+ *
+ * SolveBoth() is the 1-or-2-Solver wrapper over SolveAll(), CheckRefValue()
+ * prints the comparison against a reference objective, and SolveAndCheckRef()
+ * is the single-Solver convenience that bundles solve + ref-check in one
+ * call. Tests with their own solve loop skip SolveAll() and call
+ * cross_check() + print_instance_line() directly, so verdict and log format
+ * are implemented once anyway. Pattern A (two separate Block each with one
+ * Solver, as in compare_formulations) is structurally different and still
+ * lives in that test.cpp.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -347,16 +362,37 @@ std::string reading_token( const SolverReading & r );
  *  return code (for infeasible/unbounded parity), and @p rd[k] is its reading
  *  (consulted only when has_solution[k]).
  *
- *  Verdict (relative tolerance @p tol, a ~ b iff |a-b| <= tol*max(1,|a|,|b|)):
- *  - 1 Solver, no @p ref: passes iff it found a solution;
- *  - all-infeasible / all-unbounded and no @p ref: OK(e) / OK(u);
- *  - otherwise every Exact reading must agree on z*, every LowerBound <= z*,
- *    every UpperBound >= z*, every Bracket must contain z*, and (if given)
- *    @p ref must match z* (z* is taken from the Exact readings, else from
- *    @p ref, else from the bounds' mutual consistency).
+ *  Feasibility must be unanimous: with no @p ref, a single Solver passes iff
+ *  it found a solution, all-infeasible passes as OK(e) and all-unbounded as
+ *  OK(u); any mix (or any errored Solver) is KO.
  *
- *  @p verdict_out receives the token ("OK(f)"/"OK(e)"/"OK(u)"/"OK"/"KO");
- *  @p diff_out receives |z* - ref| when both are defined, else NaN. */
+ *  All feasible is the mutual-agreement check between Solver. Every reading
+ *  is the interval \f$[ lb_k , ub_k ]\f$ it claims contains the optimum,
+ *  with an optimality tolerance \f$\varepsilon_k\f$: an Exact reading v is
+ *  \f$[ v , v ]\f$ with its declared eps (NaN = @p tol), a LowerBound v is
+ *  \f$[ v , +\infty )\f$, an UpperBound v is \f$( -\infty , v ]\f$, a
+ *  Bracket is \f$[ lb , ub ]\f$ (all with eps = @p tol), and @p ref, if
+ *  given, is one more \f$[ ref , ref ]\f$. Readings i and j agree iff their
+ *  intervals overlap up to the larger of the two tolerances:
+ *
+ *  \f[
+ *   lb_i \leq ub_j ( 1 + \varepsilon ) \;\; , \;\;
+ *   lb_j \leq ub_i ( 1 + \varepsilon ) \;\; , \;\;
+ *   \varepsilon = \max( \varepsilon_i , \varepsilon_j )
+ *  \f]
+ *
+ *  in the relative form \f$ lb - ub \leq \varepsilon \max( 1 , | lb | ,
+ *  | ub | ) \f$, and the check passes iff every pair agrees (i = j included,
+ *  which is the sanity check \f$ lb_k \leq ub_k \f$). The special cases all
+ *  follow: two Exact agree iff their optima are equal up to eps, an Exact vs
+ *  a Bracket iff the bracket contains the optimum, two Bracket iff
+ *  max lb <= min ub, and a pure relaxation \f$[ lb , +\infty )\f$ or a pure
+ *  heuristic \f$( -\infty , ub ]\f$ is just a Bracket with one side missing.
+ *
+ *  @p verdict_out receives the token ("OK(f)"/"OK(e)"/"OK(u)"/"OK"/"KO",
+ *  where OK(f) means at least one Exact reading fixed the optimum);
+ *  @p diff_out receives |z* - ref| when both are defined (z* being the first
+ *  Exact reading), else NaN. */
 
 bool cross_check( const std::vector< SolverReading > & rd ,
                   const std::vector< bool > & has_solution ,
@@ -367,22 +403,12 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 /*--------------------------------------------------------------------------*/
 /// run EVERY Solver registered on @p block and cross-check the results
 /** Generalizes SolveBoth() to an arbitrary number M >= 1 of registered
- *  Solver. For each instance it computes every Solver (timing each), prints
- *  the uniform per-instance line via print_instance_line() showing ALL the
- *  Solver values (and @p ref, if given), and returns the pass/fail verdict:
+ *  Solver. For each instance it computes every Solver (timing each), maps
+ *  each result to a SolverReading via @p classify, hands the readings to
+ *  cross_check() (see its comment for the agreement criterion), prints the
+ *  uniform per-instance line via print_instance_line() showing ALL the
+ *  Solver values (and @p ref, if given), and returns the pass/fail verdict.
  *
- *  - M == 1, no @p ref: passes iff the Solver found a solution (the plain
- *    "solve and show the value" case);
- *  - M == 1, with @p ref: the value must match @p ref within @p tol;
- *  - M >= 2: feasibility must be unanimous (all-infeasible -> OK(e),
- *    all-unbounded -> OK(u), mixed -> KO); among the feasible Solver every
- *    Exact reading must agree on z*, every LowerBound must be <= z*, every
- *    UpperBound >= z*, every Bracket must contain z*, and (if given) @p ref
- *    must match z*. When no Exact reading exists, z* is taken from @p ref if
- *    provided, otherwise the bounds must be mutually consistent
- *    (max LB <= min UB).
- *
- *  Tolerances are relative: a ~ b iff |a - b| <= tol * max(1,|a|,|b|).
  *  Out-params, if non-null, are populated from the FIRST Solver (value,
  *  has-solution flag, elapsed time, elapsed iterations). */
 

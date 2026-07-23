@@ -395,20 +395,11 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 {
  diff_out = std::numeric_limits< double >::quiet_NaN();
 
- // a ~ b / a <= b within the relative tolerance @p t (@p tol by default: a
- // per-reading optimality eps, when one was declared, overrides it)
- auto within_t = []( double a , double b , double t ) {
-  return( std::abs( a - b ) <=
+ // a <= b up to the relative tolerance t
+ auto le = []( double a , double b , double t ) {
+  return( a - b <=
           t * std::max( double( 1 ) ,
                         std::max( std::abs( a ) , std::abs( b ) ) ) );
-  };
- auto within = [ tol , within_t ]( double a , double b ) {
-  return( within_t( a , b , tol ) );
-  };
- auto le = [ tol ]( double a , double b ) {
-  return( a - b <=
-          tol * std::max( double( 1 ) ,
-                          std::max( std::abs( a ) , std::abs( b ) ) ) );
   };
 
  const std::size_t M = has_solution.size();
@@ -424,9 +415,12 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  if( M >= 2 )
   ++mutual_inf_watchdog.n_total;
 
- // single Solver, no reference: just "did it find a solution?"
+ // single Solver, no reference: just "did it find a solution?" (with the
+ // lb <= ub sanity check when the reading is a bracket)
  if( ( M == 1 ) && std::isnan( ref ) ) {
   bool ok = has_solution[ 0 ];
+  if( ok && ( rd[ 0 ].kind == SolverReading::Kind::Bracket ) )
+   ok = le( rd[ 0 ].lb , rd[ 0 ].ub , tol );
   verdict_out = ok ? "OK" : "KO";
   return( ok );
   }
@@ -445,63 +439,71 @@ bool cross_check( const std::vector< SolverReading > & rd ,
   return( false );
   }
 
- // some feasible, some not: disagreement
- if( nInf > 0 || nUnb > 0 ) { verdict_out = "KO"; return( false ); }
+ // some feasible, some not: disagreement (an errored Solver counts as
+ // disagreeing with the feasible ones, too)
+ if( nFeas < M ) { verdict_out = "KO"; return( false ); }
 
- // all feasible: gather Exact / LowerBound / UpperBound / Bracket readings
- // (an Exact carries its own optimality eps, NaN = the global @p tol)
- std::vector< std::pair< double , double > > exacts;
- std::vector< double > lbs , ubs;
+ // all feasible: the mutual-agreement check. Every reading is turned into
+ // the interval [ lb_k , ub_k ] that it claims contains the optimum, with
+ // the optimality tolerance eps_k it was declared with:
+ //
+ //   Exact( v )        ->  [ v , v ]       eps = its declared eps (NaN = tol)
+ //   LowerBound( v )   ->  [ v , +inf ]    eps = tol
+ //   UpperBound( v )   ->  [ -inf , v ]    eps = tol
+ //   Bracket           ->  [ lb , ub ]     eps = tol
+ //   ref (if given)    ->  [ ref , ref ]   eps = tol
+ //
+ // and readings i and j agree iff their intervals overlap up to the larger
+ // of the two tolerances:
+ //
+ //   lb_i <= ub_j ( 1 + eps )  and  lb_j <= ub_i ( 1 + eps ) ,
+ //   eps = max( eps_i , eps_j )
+ //
+ // (in the relative form lb - ub <= eps * max( 1 , | lb | , | ub | )). The
+ // check passes iff EVERY pair agrees, the pair i == j included (which is
+ // the sanity check lb_k <= ub_k). The familiar special cases all follow:
+ // two Exact overlap iff their optima are equal up to eps, an Exact vs a
+ // Bracket iff the bracket contains the optimum, two Bracket iff
+ // max lb <= min ub.
+ struct Interval { double lb , ub , eps; };
+ constexpr double INF = std::numeric_limits< double >::infinity();
+ std::vector< Interval > itv;
+ itv.reserve( M + 1 );
+ double zstar = std::numeric_limits< double >::quiet_NaN();  // 1st Exact optimum
  for( std::size_t k = 0 ; k < M ; ++k )
   switch( rd[ k ].kind ) {
-   case SolverReading::Kind::Exact:      exacts.emplace_back( rd[ k ].value ,
-                                                              rd[ k ].eps );
-                                         break;
-   case SolverReading::Kind::LowerBound: lbs.push_back( rd[ k ].value );
-                                         break;
-   case SolverReading::Kind::UpperBound: ubs.push_back( rd[ k ].value );
-                                         break;
-   case SolverReading::Kind::Bracket:    lbs.push_back( rd[ k ].lb );
-                                         ubs.push_back( rd[ k ].ub );
-                                         break;
+   case SolverReading::Kind::Exact:
+    itv.push_back( { rd[ k ].value , rd[ k ].value ,
+                     std::isnan( rd[ k ].eps ) ? tol : rd[ k ].eps } );
+    if( std::isnan( zstar ) )
+     zstar = rd[ k ].value;
+    break;
+   case SolverReading::Kind::LowerBound:
+    itv.push_back( { rd[ k ].value , INF , tol } );
+    break;
+   case SolverReading::Kind::UpperBound:
+    itv.push_back( { - INF , rd[ k ].value , tol } );
+    break;
+   case SolverReading::Kind::Bracket:
+    itv.push_back( { rd[ k ].lb , rd[ k ].ub , tol } );
+    break;
    }
+ if( ! std::isnan( ref ) )
+  itv.push_back( { ref , ref , tol } );
 
  bool ok = true;
-
- // determine z*: from the Exact readings, else from ref, else from the bounds
- double zstar = std::numeric_limits< double >::quiet_NaN();
- if( ! exacts.empty() ) {
-  zstar = exacts.front().first;
-  const double eps0 = std::isnan( exacts.front().second )
-                    ? tol : exacts.front().second;
-  for( const auto & [ e , epsk ] : exacts )  // every Exact must agree on z*,
-   // each up to the larger of the two declared optimality tolerances
-   if( ! within_t( e , zstar ,
-                   std::max( eps0 , std::isnan( epsk ) ? tol : epsk ) ) )
+ for( std::size_t i = 0 ; i < itv.size() ; ++i )
+  for( std::size_t j = i ; j < itv.size() ; ++j ) {
+   const double eps = std::max( itv[ i ].eps , itv[ j ].eps );
+   if( ( ! le( itv[ i ].lb , itv[ j ].ub , eps ) ) ||
+       ( ! le( itv[ j ].lb , itv[ i ].ub , eps ) ) )
     ok = false;
-  }
- else if( ! std::isnan( ref ) )
-  zstar = ref;
-
- if( ! std::isnan( zstar ) ) {
-  for( double lb : lbs ) if( ! le( lb , zstar ) ) ok = false;  // LB <= z*
-  for( double ub : ubs ) if( ! le( zstar , ub ) ) ok = false;  // z* <= UB
-  if( ! std::isnan( ref ) && ! exacts.empty() ) {
-   diff_out = std::abs( zstar - ref );
-   if( ! within( zstar , ref ) ) ok = false;  // exact optimum must match Ref
    }
-  }
- else {
-  // no Exact reading and no Ref: the bounds must be mutually consistent
-  if( ! lbs.empty() && ! ubs.empty() ) {
-   double maxlb = lbs.front() , minub = ubs.front();
-   for( double v : lbs ) maxlb = std::max( maxlb , v );
-   for( double v : ubs ) minub = std::min( minub , v );
-   if( ! le( maxlb , minub ) ) ok = false;
-   }
-  }
 
- verdict_out = ok ? ( exacts.empty() ? "OK" : "OK(f)" ) : "KO";
+ if( ( ! std::isnan( zstar ) ) && ( ! std::isnan( ref ) ) )
+  diff_out = std::abs( zstar - ref );
+
+ verdict_out = ok ? ( std::isnan( zstar ) ? "OK" : "OK(f)" ) : "KO";
  return( ok );
  }
 
