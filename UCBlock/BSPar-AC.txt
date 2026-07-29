@@ -3,11 +3,7 @@
 #
 # A txt description of a BlockSolverConfig for a UCBlock with an ACNetworkBlock,
 # cross-checked by a :MILPSolver, a LagrangianDualSolver (using a BundleSolver
-# as the inner Solver) and a PrimalProximalHeur. NB: the heuristic can only
-# run here with intPushCostToOwner 0 (set in PPHCfg.txt): the AC
-# ThermalUnitBlock has a reference schedule and forbids any change to the
-# schedule-deviation coefficients of its objective, so the Lagrangian costs
-# must never be written into the sub-Block objectives.
+# as the inner Solver) and a PrimalProximalHeur.
 #
 # It is BSPar-EASY.txt with the two differences the AC case needs, both
 # expressed as overrides of the shared *Cfg.txt fragments:

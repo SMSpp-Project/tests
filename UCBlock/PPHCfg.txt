@@ -15,20 +15,13 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-25 # number of integer parameters
+24 # number of integer parameters
 
 # now all the integer parameters
 intMaxIterPPH      10 # max number of outer PPH iterations (default = Inf<int>())
                       # set explicitly for the test battery so the heuristic
                       # terminates even when penalty < 1e-3 is unreachable on
                       # large instances (NumStatVar * R >> 1e-3)
-intPushCostToOwner  0 # keep the Lagrangian costs on the root only, NEVER
-                      # writing them into the sub-Block objectives (same as
-                      # LDCfg.txt): a ThermalUnitBlock with a reference
-                      # schedule (the AC instances) forbids any change to the
-                      # schedule-deviation coefficients and aborts on the
-                      # write, and on the resilient instances with expandable
-                      # assets the write ends in a segmentation fault
 intDoEasy           1 # do easy components for (some) LagBFunction
 intMaxIter          1 # max number of iterations for each call
 intMaxThread        1 # MaxThread, max number of new tasks to spawn

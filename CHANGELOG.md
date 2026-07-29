@@ -30,9 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-round lines of the tests that re-solve in a loop of modifications
   remain verbose-only
 
-- PrimalProximalHeur runs with intPushCostToOwner 0 (the Lagrangian
-  costs stay on the root, the sub-Block objectives are never written),
-  which lets it be attached to the AC and resilient batteries too
+- PrimalProximalHeur is attached to the AC and resilient batteries too
   (BSPar-AC.txt and BSPar-EASY.txt now cross-check it as well)
 
 - UCBlock cross-checks every Solver of its BlockSolverConfig at once,

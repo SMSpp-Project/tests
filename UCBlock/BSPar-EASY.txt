@@ -5,10 +5,7 @@
 # all "easy" for BundleSolver, to be cross-checked by a :MILPSolver, a
 # LagrangianDualSolver (using a BundleSolver as the inner Solver) and a
 # PrimalProximalHeur: it is BSPar.txt with intDoEasy=0 throughout (these
-# instances have no non-easy component). NB: the heuristic can only run on
-# the resilient instances with expandable assets with intPushCostToOwner 0
-# (set in PPHCfg.txt), or the write of the Lagrangian costs into the
-# sub-Block objectives ends in a segmentation fault.
+# instances have no non-easy component).
 #
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
