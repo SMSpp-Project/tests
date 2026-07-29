@@ -340,14 +340,21 @@ SolverClassifier eps_getter( std::vector< double > eps );
  *  same length (one entry per Solver); a Ref is printed only if @p ref is not
  *  NaN, and the "(|diff| = ...)" detail only if @p diff is also not NaN. Used
  *  both by SolveAll() and by the tests that keep their own solve loop (so every
- *  test prints the same line). */
+ *  test prints the same line).
+ *
+ *  With @p always == false the line is only printed when verbose (the -v
+ *  option or the `verbose` environment variable) or on a KO verdict: this is
+ *  what the tests that re-solve in a loop of modification rounds use, so
+ *  their default output stays terse. SolveAll() passes true instead, so the
+ *  one cross-check line per instance is always visible. */
 
 void print_instance_line( const std::vector< double > & times ,
                           const std::vector< std::string > & value_tokens ,
                           double ref ,
                           const std::string & verdict ,
                           double diff =
-                           std::numeric_limits< double >::quiet_NaN() );
+                           std::numeric_limits< double >::quiet_NaN() ,
+                          bool always = false );
 
 /*--------------------------------------------------------------------------*/
 /// format a SolverReading as a value token ("v" or "[ lb , ub ]")

@@ -25,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   executable (MMCFBlock_test) alongside the existing MMCF_test, sharing
   its instance data
 
+- the one-per-instance cross-check line of SolveAll() (timings, every
+  Solver value, reference, verdict) is now always printed; only the
+  per-round lines of the tests that re-solve in a loop of modifications
+  remain verbose-only
+
+- PrimalProximalHeur runs with intPushCostToOwner 0 (the Lagrangian
+  costs stay on the root, the sub-Block objectives are never written),
+  which lets it be attached to the AC and resilient batteries too
+  (BSPar-AC.txt and BSPar-EASY.txt now cross-check it as well)
+
 - UCBlock cross-checks every Solver of its BlockSolverConfig at once,
   rather than selecting one of them from the command line: the meta-
   batches are gone and each batch is a ctest test of its own

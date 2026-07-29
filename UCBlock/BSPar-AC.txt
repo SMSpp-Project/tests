@@ -2,17 +2,15 @@
 # - - - - - - - - - - - - - - - BSPar-AC.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a UCBlock with an ACNetworkBlock,
-# cross-checked by a :MILPSolver and a LagrangianDualSolver (using a
-# BundleSolver as the inner Solver).
+# cross-checked by a :MILPSolver, a LagrangianDualSolver (using a BundleSolver
+# as the inner Solver) and a PrimalProximalHeur. NB: the heuristic can only
+# run here with intPushCostToOwner 0 (set in PPHCfg.txt): the AC
+# ThermalUnitBlock has a reference schedule and forbids any change to the
+# schedule-deviation coefficients of its objective, so the Lagrangian costs
+# must never be written into the sub-Block objectives.
 #
-# Unlike the other BSPar variants this one does NOT attach the
-# PrimalProximalHeur: on the AC (QCP) instances its configuration path
-# triggers the known LagBFunction<->ThermalUnitBlock objective bug (the solve
-# dies at once with "ThermalUnitBlock::add_Modification: the coefficients of
-# the schedule-deviation variables cannot change"), so it stays out until
-# that is fixed. It is BSPar-EASY.txt without the heuristic and with the two
-# differences the AC case needs, both expressed as overrides of the shared
-# *Cfg.txt fragments:
+# It is BSPar-EASY.txt with the two differences the AC case needs, both
+# expressed as overrides of the shared *Cfg.txt fragments:
 #
 #   - the LP-reproducibility recipe for the :MILPSolver (Method, Presolve,
 #     NumericFocus), since the AC LP relaxations are more degenerate than the
@@ -31,7 +29,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2 # number of (the names of) Solver in this BlockSolverConfig
+3 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
@@ -39,8 +37,9 @@ GRBMILPSolver         # name of 1st Solver
 #SCIPMILPSolver       # name of 1st Solver (SCIP solves the AC SOCP/QCP)
 #HiGHSMILPSolver      # name of 1st Solver (cannot solve QCP)
 LagrangianDualSolver  # name of 2nd Solver
+PrimalProximalHeur    # name of 3rd Solver
 
-2 # number of ComputeConfig in this BlockSolverConfig
+3 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -160,6 +159,47 @@ str_LagBF_BSCfg          InnerBSCfg-AC.txt # BlockSolverConfig for the LagBFunct
 * # [none]
 
 # end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the PrimalProximalHeur, overriding intDoEasy=0 (its default
+# PPHCfg.txt uses intDoEasy=1) and, like the LagrangianDualSolver above,
+# InnerBSCfg-AC.txt as the BlockSolverConfig of the LagBFunctions (AC QCP)
+
+*PPHCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+intDoEasy 0 # the AC continuous relaxation has no non-easy component
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1 # number of string parameters
+
+# now all the string parameters
+str_LagBF_BSCfg          InnerBSCfg-AC.txt # BlockSolverConfig for the LagBFunctions
+                                           # (AC: ThermalUnitBlock QCP -> SCIP)
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# end of 3rd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -2,15 +2,13 @@
 # - - - - - - - - - - - - - - - BSPar-EASY.txt  - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a UCBlock whose components are
-# all "easy" for BundleSolver, to be cross-checked by a :MILPSolver and a
-# LagrangianDualSolver (using a BundleSolver as the inner Solver): it is
-# BSPar.txt with intDoEasy=0 (these instances have no non-easy component).
-#
-# Unlike BSPar.txt this variant does NOT attach the PrimalProximalHeur: on
-# the all-easy instances it has no integer decision to recover anyway, and on
-# the resilient ones with expandable assets (e.g.
-# smspp_2n_1c_1gext_1bext_2lext.nc) it crashes outright with a segmentation
-# fault, so it stays out until that is fixed.
+# all "easy" for BundleSolver, to be cross-checked by a :MILPSolver, a
+# LagrangianDualSolver (using a BundleSolver as the inner Solver) and a
+# PrimalProximalHeur: it is BSPar.txt with intDoEasy=0 throughout (these
+# instances have no non-easy component). NB: the heuristic can only run on
+# the resilient instances with expandable assets with intPushCostToOwner 0
+# (set in PPHCfg.txt), or the write of the Lagrangian costs into the
+# sub-Block objectives ends in a segmentation fault.
 #
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
@@ -21,7 +19,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2 # number of (the names of) Solver in this BlockSolverConfig
+3 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
@@ -29,8 +27,9 @@ GRBMILPSolver         # name of 1st Solver
 #SCIPMILPSolver       # name of 1st Solver
 #HiGHSMILPSolver      # name of 1st Solver
 LagrangianDualSolver  # name of 2nd Solver
+PrimalProximalHeur    # name of 3rd Solver
 
-2 # number of ComputeConfig in this BlockSolverConfig
+3 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -45,6 +44,46 @@ LagrangianDualSolver  # name of 2nd Solver
 # need, so no override is required here.
 
 *LDCfg.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the PrimalProximalHeur, overriding only intDoEasy=0 (its
+# default PPHCfg.txt uses intDoEasy=1, which would raise "all components are
+# easy" on these instances)
+
+*PPHCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+intDoEasy 0 # these instances have no non-easy component
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# end of 3rd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

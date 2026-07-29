@@ -320,14 +320,17 @@ void print_instance_line( const std::vector< double > & times ,
                           const std::vector< std::string > & value_tokens ,
                           double ref ,
                           const std::string & verdict ,
-                          double diff )
+                          double diff ,
+                          bool always )
 {
- // the detailed per-round line (times, solver values, verdict) is "extended"
- // output: print it only when verbose, keeping the default output terse (just
- // the per-instance header from the batch and the final summary printed by the
- // test). Failing comparisons (KO) are always shown, so that a failure is
- // visible without re-running in verbose mode
- if( ( ! tests_verbose() ) && ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
+ // the detailed per-round line (times, solver values, verdict) of a test
+ // that re-solves in a loop of modification rounds is "extended" output:
+ // print it only when verbose, keeping the default output terse. The
+ // one-per-instance cross-check line of SolveAll() (@p always) and any
+ // failing comparison (KO) are always shown instead, so that what was
+ // compared, and a failure, are visible without re-running in verbose mode
+ if( ( ! always ) && ( ! tests_verbose() ) &&
+     ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
   return;
 
  for( std::size_t k = 0 ; k < times.size() ; ++k )
@@ -568,7 +571,7 @@ bool SolveAll( Block * block ,
   std::string verdict;
   double diff;
   bool ok = cross_check( rd , hs , status , ref , tol , verdict , diff );
-  print_instance_line( times , tok , ref , verdict , diff );
+  print_instance_line( times , tok , ref , verdict , diff , true );
   return( ok );
   }
  catch( std::exception & e ) {
