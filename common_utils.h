@@ -366,7 +366,14 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  *
  *  Tolerances are relative: a ~ b iff |a - b| <= tol * max(1,|a|,|b|).
  *  Out-params, if non-null, are populated from the FIRST Solver (value,
- *  has-solution flag, elapsed time, elapsed iterations). */
+ *  has-solution flag, elapsed time, elapsed iterations).
+ *
+ *  If @p bsc is given, the Solver that are run are those that @p bsc has
+ *  registered to @p block [see BlockSolverConfig::get_Solvers()], in that
+ *  order, rather than ALL the Solver registered to the Block: this keeps
+ *  the cross-check to the Solver the test itself attached even when
+ *  somebody else (say, an enumerative Solver under test) has registered
+ *  further Solver of its own to the same Block. */
 
 bool SolveAll( Block * block ,
                const SolverClassifier & classify ,
@@ -375,13 +382,16 @@ bool SolveAll( Block * block ,
                double * out_fo1 = nullptr ,
                bool   * out_hs1 = nullptr ,
                double * out_time1 = nullptr ,
-               long   * out_it1 = nullptr );
+               long   * out_it1 = nullptr ,
+               BlockSolverConfig * bsc = nullptr );
 
 /*--------------------------------------------------------------------------*/
 /// convenience SolveAll(): read every Solver via @p getters as Exact optima
 /** @p getters is matched positionally to the registered Solver; if empty,
  *  every Solver is read via get_var_value(); if shorter than the number of
- *  Solver, the missing entries default to get_var_value(). */
+ *  Solver, the missing entries default to get_var_value(). The optional
+ *  @p bsc restricts the run to the Solver it registered [see the main
+ *  SolveAll()]. */
 
 bool SolveAll( Block * block ,
                double ref = std::numeric_limits< double >::quiet_NaN() ,
@@ -390,7 +400,8 @@ bool SolveAll( Block * block ,
                double * out_fo1 = nullptr ,
                bool   * out_hs1 = nullptr ,
                double * out_time1 = nullptr ,
-               long   * out_it1 = nullptr );
+               long   * out_it1 = nullptr ,
+               BlockSolverConfig * bsc = nullptr );
 
 /*--------------------------------------------------------------------------*/
 /// Pattern B: run the Solver(s) registered on a single Block

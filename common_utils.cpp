@@ -493,15 +493,26 @@ bool SolveAll( Block * block ,
                double * out_fo1 ,
                bool   * out_hs1 ,
                double * out_time1 ,
-               long   * out_it1 )
+               long   * out_it1 ,
+               BlockSolverConfig * bsc )
 {
  constexpr double INF = std::numeric_limits< double >::has_infinity
                         ? std::numeric_limits< double >::infinity()
                         : std::numeric_limits< double >::max();
 
  try {
-  const auto & reg = block->get_registered_solvers();
-  std::vector< Solver * > S( reg.begin() , reg.end() );
+  // with a BlockSolverConfig at hand the cross-check runs exactly the
+  // Solver it registered to the Block [see BlockSolverConfig::
+  // get_Solvers()]; otherwise, all the Solver registered to the Block
+  std::vector< Solver * > S;
+  if( bsc ) {
+   const auto & mine = bsc->get_Solvers( block );
+   S.assign( mine.begin() , mine.end() );
+   }
+  else {
+   const auto & reg = block->get_registered_solvers();
+   S.assign( reg.begin() , reg.end() );
+   }
   const std::size_t M = S.size();
   if( M == 0 ) {
    std::cout << "no Solver registered to the Block!" << std::endl;
@@ -567,10 +578,11 @@ bool SolveAll( Block * block ,
                double * out_fo1 ,
                bool   * out_hs1 ,
                double * out_time1 ,
-               long   * out_it1 )
+               long   * out_it1 ,
+               BlockSolverConfig * bsc )
 {
  return( SolveAll( block , exact_getters( getters ) , ref , tol ,
-                   out_fo1 , out_hs1 , out_time1 , out_it1 ) );
+                   out_fo1 , out_hs1 , out_time1 , out_it1 , bsc ) );
  }
 
 /*--------------------------------------------------------------------------*/
