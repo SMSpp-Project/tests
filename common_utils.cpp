@@ -29,6 +29,8 @@
 
 #include <SMSTypedefs.h>
 
+#include <Configuration.h>
+
 /*--------------------------------------------------------------------------*/
 /*--------------------- MPI / UCX SAFE-DEFAULTS ----------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -269,20 +271,28 @@ SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
 
 /*--------------------------------------------------------------------------*/
 
-SolverClassifier relaxation_aware_getter( void )
+SolverClassifier eps_getter( std::vector< double > eps )
 {
- return( []( Solver * s , std::size_t ) -> SolverReading {
+ return( [ eps = std::move( eps ) ]( Solver * s ,
+                                     std::size_t k ) -> SolverReading {
   SolverReading r;
-  // a relaxation Solver (classname() containing "Relaxation") only brackets
-  // z* in [ get_lb() , get_ub() ]; any other Solver is an exact optimum
-  if( s->classname().find( "Relaxation" ) != std::string::npos ) {
+  const double e = k < eps.size() ? eps[ k ]
+                 : std::numeric_limits< double >::quiet_NaN();
+  const double lb = get_obj_value( s , ObjGetter::LowerBound );
+  const double ub = get_obj_value( s , ObjGetter::UpperBound );
+  if( std::isinf( e ) ) {
+   // no optimality claim: just the base-contract interval around z*
    r.kind = SolverReading::Kind::Bracket;
-   r.lb   = get_obj_value( s , ObjGetter::LowerBound );
-   r.ub   = get_obj_value( s , ObjGetter::UpperBound );
+   r.lb   = lb;
+   r.ub   = ub;
    }
   else {
+   // exact up to e (NaN = up to the cross_check tol): the claimed optimum
+   // is the finite bound (a Solver exposing only get_lb(), such as a
+   // LagrangianDualSolver, claims it AS the optimum; ditto for get_ub())
    r.kind  = SolverReading::Kind::Exact;
-   r.value = get_obj_value( s , ObjGetter::VarValue );
+   r.value = std::isfinite( lb ) ? lb : ub;
+   r.eps   = e;
    }
   return( r );
   } );
@@ -310,14 +320,17 @@ void print_instance_line( const std::vector< double > & times ,
                           const std::vector< std::string > & value_tokens ,
                           double ref ,
                           const std::string & verdict ,
-                          double diff )
+                          double diff ,
+                          bool always )
 {
- // the detailed per-round line (times, solver values, verdict) is "extended"
- // output: print it only when verbose, keeping the default output terse (just
- // the per-instance header from the batch and the final summary printed by the
- // test). Failing comparisons (KO) are always shown, so that a failure is
- // visible without re-running in verbose mode
- if( ( ! tests_verbose() ) && ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
+ // the detailed per-round line (times, solver values, verdict) of a test
+ // that re-solves in a loop of modification rounds is "extended" output:
+ // print it only when verbose, keeping the default output terse. The
+ // one-per-instance cross-check line of SolveAll() (@p always) and any
+ // failing comparison (KO) are always shown instead, so that what was
+ // compared, and a failure, are visible without re-running in verbose mode
+ if( ( ! always ) && ( ! tests_verbose() ) &&
+     ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
   return;
 
  for( std::size_t k = 0 ; k < times.size() ; ++k )
@@ -385,16 +398,11 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 {
  diff_out = std::numeric_limits< double >::quiet_NaN();
 
- // a ~ b / a <= b within the relative tolerance
- auto within = [ tol ]( double a , double b ) {
-  return( std::abs( a - b ) <=
-          tol * std::max( double( 1 ) ,
-                          std::max( std::abs( a ) , std::abs( b ) ) ) );
-  };
- auto le = [ tol ]( double a , double b ) {
+ // a <= b up to the relative tolerance t
+ auto le = []( double a , double b , double t ) {
   return( a - b <=
-          tol * std::max( double( 1 ) ,
-                          std::max( std::abs( a ) , std::abs( b ) ) ) );
+          t * std::max( double( 1 ) ,
+                        std::max( std::abs( a ) , std::abs( b ) ) ) );
   };
 
  const std::size_t M = has_solution.size();
@@ -410,9 +418,12 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  if( M >= 2 )
   ++mutual_inf_watchdog.n_total;
 
- // single Solver, no reference: just "did it find a solution?"
+ // single Solver, no reference: just "did it find a solution?" (with the
+ // lb <= ub sanity check when the reading is a bracket)
  if( ( M == 1 ) && std::isnan( ref ) ) {
   bool ok = has_solution[ 0 ];
+  if( ok && ( rd[ 0 ].kind == SolverReading::Kind::Bracket ) )
+   ok = le( rd[ 0 ].lb , rd[ 0 ].ub , tol );
   verdict_out = ok ? "OK" : "KO";
   return( ok );
   }
@@ -431,56 +442,71 @@ bool cross_check( const std::vector< SolverReading > & rd ,
   return( false );
   }
 
- // some feasible, some not: disagreement
- if( nInf > 0 || nUnb > 0 ) { verdict_out = "KO"; return( false ); }
+ // some feasible, some not: disagreement (an errored Solver counts as
+ // disagreeing with the feasible ones, too)
+ if( nFeas < M ) { verdict_out = "KO"; return( false ); }
 
- // all feasible: gather Exact / LowerBound / UpperBound / Bracket readings
- std::vector< double > exacts , lbs , ubs;
+ // all feasible: the mutual-agreement check. Every reading is turned into
+ // the interval [ lb_k , ub_k ] that it claims contains the optimum, with
+ // the optimality tolerance eps_k it was declared with:
+ //
+ //   Exact( v )        ->  [ v , v ]       eps = its declared eps (NaN = tol)
+ //   LowerBound( v )   ->  [ v , +inf ]    eps = tol
+ //   UpperBound( v )   ->  [ -inf , v ]    eps = tol
+ //   Bracket           ->  [ lb , ub ]     eps = tol
+ //   ref (if given)    ->  [ ref , ref ]   eps = tol
+ //
+ // and readings i and j agree iff their intervals overlap up to the larger
+ // of the two tolerances:
+ //
+ //   lb_i <= ub_j ( 1 + eps )  and  lb_j <= ub_i ( 1 + eps ) ,
+ //   eps = max( eps_i , eps_j )
+ //
+ // (in the relative form lb - ub <= eps * max( 1 , | lb | , | ub | )). The
+ // check passes iff EVERY pair agrees, the pair i == j included (which is
+ // the sanity check lb_k <= ub_k). The familiar special cases all follow:
+ // two Exact overlap iff their optima are equal up to eps, an Exact vs a
+ // Bracket iff the bracket contains the optimum, two Bracket iff
+ // max lb <= min ub.
+ struct Interval { double lb , ub , eps; };
+ constexpr double INF = std::numeric_limits< double >::infinity();
+ std::vector< Interval > itv;
+ itv.reserve( M + 1 );
+ double zstar = std::numeric_limits< double >::quiet_NaN();  // 1st Exact optimum
  for( std::size_t k = 0 ; k < M ; ++k )
   switch( rd[ k ].kind ) {
-   case SolverReading::Kind::Exact:      exacts.push_back( rd[ k ].value );
-                                         break;
-   case SolverReading::Kind::LowerBound: lbs.push_back( rd[ k ].value );
-                                         break;
-   case SolverReading::Kind::UpperBound: ubs.push_back( rd[ k ].value );
-                                         break;
-   case SolverReading::Kind::Bracket:    lbs.push_back( rd[ k ].lb );
-                                         ubs.push_back( rd[ k ].ub );
-                                         break;
+   case SolverReading::Kind::Exact:
+    itv.push_back( { rd[ k ].value , rd[ k ].value ,
+                     std::isnan( rd[ k ].eps ) ? tol : rd[ k ].eps } );
+    if( std::isnan( zstar ) )
+     zstar = rd[ k ].value;
+    break;
+   case SolverReading::Kind::LowerBound:
+    itv.push_back( { rd[ k ].value , INF , tol } );
+    break;
+   case SolverReading::Kind::UpperBound:
+    itv.push_back( { - INF , rd[ k ].value , tol } );
+    break;
+   case SolverReading::Kind::Bracket:
+    itv.push_back( { rd[ k ].lb , rd[ k ].ub , tol } );
+    break;
    }
+ if( ! std::isnan( ref ) )
+  itv.push_back( { ref , ref , tol } );
 
  bool ok = true;
-
- // determine z*: from the Exact readings, else from ref, else from the bounds
- double zstar = std::numeric_limits< double >::quiet_NaN();
- if( ! exacts.empty() ) {
-  zstar = exacts.front();
-  for( double e : exacts )             // every Exact must agree on z*
-   if( ! within( e , zstar ) )
+ for( std::size_t i = 0 ; i < itv.size() ; ++i )
+  for( std::size_t j = i ; j < itv.size() ; ++j ) {
+   const double eps = std::max( itv[ i ].eps , itv[ j ].eps );
+   if( ( ! le( itv[ i ].lb , itv[ j ].ub , eps ) ) ||
+       ( ! le( itv[ j ].lb , itv[ i ].ub , eps ) ) )
     ok = false;
-  }
- else if( ! std::isnan( ref ) )
-  zstar = ref;
-
- if( ! std::isnan( zstar ) ) {
-  for( double lb : lbs ) if( ! le( lb , zstar ) ) ok = false;  // LB <= z*
-  for( double ub : ubs ) if( ! le( zstar , ub ) ) ok = false;  // z* <= UB
-  if( ! std::isnan( ref ) && ! exacts.empty() ) {
-   diff_out = std::abs( zstar - ref );
-   if( ! within( zstar , ref ) ) ok = false;  // exact optimum must match Ref
    }
-  }
- else {
-  // no Exact reading and no Ref: the bounds must be mutually consistent
-  if( ! lbs.empty() && ! ubs.empty() ) {
-   double maxlb = lbs.front() , minub = ubs.front();
-   for( double v : lbs ) maxlb = std::max( maxlb , v );
-   for( double v : ubs ) minub = std::min( minub , v );
-   if( ! le( maxlb , minub ) ) ok = false;
-   }
-  }
 
- verdict_out = ok ? ( exacts.empty() ? "OK" : "OK(f)" ) : "KO";
+ if( ( ! std::isnan( zstar ) ) && ( ! std::isnan( ref ) ) )
+  diff_out = std::abs( zstar - ref );
+
+ verdict_out = ok ? ( std::isnan( zstar ) ? "OK" : "OK(f)" ) : "KO";
  return( ok );
  }
 
@@ -556,7 +582,7 @@ bool SolveAll( Block * block ,
   std::string verdict;
   double diff;
   bool ok = cross_check( rd , hs , status , ref , tol , verdict , diff );
-  print_instance_line( times , tok , ref , verdict , diff );
+  print_instance_line( times , tok , ref , verdict , diff , true );
   return( ok );
   }
  catch( std::exception & e ) {
@@ -757,7 +783,13 @@ bool process_standard_arg( int opt )
    Block::set_filename_prefix( std::string( block_prefix ) );
    break;
    }
-  case 'c': conf_prefix = normalize_prefix( std::string( optarg ) ); break;
+  case 'c': conf_prefix = normalize_prefix( std::string( optarg ) );
+            // also hand the -c prefix to Configuration, so filenames referenced
+            // from inside a Configuration file (the "*filename" includes and the
+            // strInnerBSC / str_LagBF_BSCfg meta-config chains) are resolved
+            // against it, exactly as Block::set_filename_prefix() does for -p
+            Configuration::set_filename_prefix( std::string( conf_prefix ) );
+            break;
   case 'D': dryrun = true; break;
   case 'v': {
    sol_verbose = true;

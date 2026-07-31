@@ -33,8 +33,13 @@ for wf in 8 9 10 11 12 13 14; do
     #fi
     j=1
     #for j in 1 12 16 23; do
-      for (( h = 1 ; h <= 100 ; h++ )); do
-        for (( seed = 0 ; seed < 20 ; seed++ )); do
+      # in CI only 5 of the 100 ramp profiles are run (they are variations of
+      # the same shape); the local sweep stays exhaustive
+      if [ -n "$CI" ]; then hlist="1 25 50 75 100"; else hlist=$(seq 1 100); fi
+      for h in $hlist; do
+        # in CI a single seed is enough; the local sweep stays exhaustive
+        if [ -n "$CI" ]; then slist="0"; else slist=$(seq 0 19); fi
+        for seed in $slist; do
           #seed=0
 
           what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4

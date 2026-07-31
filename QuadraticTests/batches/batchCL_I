@@ -12,9 +12,19 @@ source "$(dirname "$0")/../../batch_common.sh"
 DATADIR=./ObjC_ConsL
 TYPE=I
 
+# instances whose dense quadratic term exhausts the CI runners' memory
+CI_OOM_SKIP="QPLib_4270.lp QPLib_8845.lp QPLib_8906.lp QPLib_8991.lp"
+
 quad_test=${1:-./quad_test}
 
 for what in "$DATADIR"/*; do
+
+  # a few dense-Q instances need more memory than the CI runners provide
+  # (the solve gets OOM-killed there): skip them in CI only, keeping local
+  # coverage. Difficulty tracks the density of Q, not the file size.
+  case " $CI_OOM_SKIP " in
+    *" $(basename "$what") "*) [ -n "$CI" ] && continue ;;
+  esac
 
   run_test "$quad_test" "$what" "$TYPE"
 

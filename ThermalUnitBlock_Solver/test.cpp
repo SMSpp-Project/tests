@@ -431,7 +431,7 @@ static bool SolveBoth( void )
 
    #if( CHECK_SOLUTIONS & 4 )
     for( Index i = 0 ; i < time_horizon ; ++i ) {
-     if( abs( p1[ i ] - p2[ i ] ) > 1e-6 * max( abs( p1[ i ] ) ,
+     if( std::abs( p1[ i ] - p2[ i ] ) > 1e-6 * std::max( std::abs( p1[ i ] ) ,
 						double( 1 ) ) ) {
       std::cerr << "p1[ " << i << " ] = " << p1[ i ] << " != p2[ " << i
 	   << " ] = " << p2[ i ] << std::endl;
@@ -585,6 +585,14 @@ int main( int argc , char **argv )
  // no-op for instances with no PrimaryRho/SecondaryRho data.
  TUBlock->set_reserve_vars( 3 );
 
+ // env-gated validation of commitment-gated reactive power: with TUDPS_QCOST
+ // set, enable q[t] (the standalone unit has no UCBlock parent to do it) and,
+ // below, price it with a constant dualized reactive term, so the DP-vs-MILP
+ // check exercises the box q in [Qmin_off+Qmin_on u, Qmax_off+Qmax_on u].
+ const char * qcost_env = std::getenv( "TUDPS_QCOST" );
+ if( qcost_env )
+  TUBlock->set_reactive_power( true );
+
  TUBlock->generate_abstract_variables();
  TUBlock->generate_objective( nullptr );
 
@@ -602,6 +610,23 @@ int main( int argc , char **argv )
   c[ i ] = TUBlock->get_const_term( i );
   // l[ i ] = TUBlock->get_operational_min_power( i );
   u[ i ] = TUBlock->get_operational_max_power( i );
+  }
+
+ if( qcost_env ) {
+  std::vector< double > qcost( time_horizon , std::atof( qcost_env ) );
+  TUBlock->set_reactive_linear_term( qcost.begin() ,
+                                     Range( 0 , time_horizon ) );
+  }
+
+ // env-gated: price the spinning reserves with a constant (negative) cost, so
+ // the reserve-rewarded multi-piece per-period cost path of the DP solvers is
+ // exercised (for profiling the reserve overhead of the base solver).
+ if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
+  std::vector< double > rcv( time_horizon , std::atof( rc ) );
+  TUBlock->set_primary_spinning_reserve_cost( rcv.begin() ,
+                                              Range( 0 , time_horizon ) );
+  TUBlock->set_secondary_spinning_reserve_cost( rcv.begin() ,
+                                                Range( 0 , time_horizon ) );
   }
 
  // attach the Solver(s) to the ThermalUnitBlock- - - - - - - - - - - - - - -
@@ -747,22 +772,46 @@ int main( int argc , char **argv )
       // actually is a Range and in case convert it
       LOG1( "(r,a) - " );
 
-      std::vector< double > lincsts( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       lincsts[ i ] = TUBlock->get_linear_term( strt + i );
+      if( wf & 8 ) {
+       // with perspective cuts the quadratic term is the *linear*
+       // coefficient of the cut variables; only the tbin/T/pt formulations
+       // have them time-indexed and active in the Objective, for the others
+       // (DP/SU/SD/SUSD) fall back to the physical setter
+       if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
+	Subset nms( tochange );
+	for( Index i = 0 ; i < tochange ; ++i )
+	 nms[ i ] = of->is_active( cut + ( strt + i ) );
 
-      Subset nms( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
-				 + ( strt + i ) );
+	std::sort( nms.begin() , nms.end() );
+	if( nms.back() - nms.front() + 1 == nms.size() )
+	 of->modify_linear_coefficients( std::move( newcsts ) ,
+					 Range( nms.front() ,
+						nms.back() + 1 ) );
+	else
+	 of->modify_linear_coefficients( std::move( newcsts ) ,
+					 std::move( nms ) );
+        }
+       else
+	TUBlock->set_quad_term( newcsts.begin() , Range( strt , stp ) );
+       }
+      else {
+       std::vector< double > lincsts( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	lincsts[ i ] = TUBlock->get_linear_term( strt + i );
 
-      std::sort( nms.begin() , nms.end() );
-      if( nms.back() - nms.front() + 1 == nms.size() )
-       of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			 Range( nms.front() , nms.back() + 1 ) );
-      else
-       of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			 std::move( nms ) );
+       Subset nms( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
+				  + ( strt + i ) );
+
+       std::sort( nms.begin() , nms.end() );
+       if( nms.back() - nms.front() + 1 == nms.size() )
+	of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			  Range( nms.front() , nms.back() + 1 ) );
+       else
+	of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			  std::move( nms ) );
+       }
       }
      else {  // change via call to set_* method
       LOG1( "(r) - " );
@@ -779,15 +828,32 @@ int main( int argc , char **argv )
       // change via abstract representation
       LOG1( "(s,a) - " );
 
-      std::vector< double > lincsts( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       lincsts[ i ] = TUBlock->get_linear_term( nms[ i ] );
+      if( wf & 8 ) {
+       // with perspective cuts the quadratic term is the *linear*
+       // coefficient of the cut variables; only the tbin/T/pt formulations
+       // have them time-indexed and active in the Objective, for the others
+       // (DP/SU/SD/SUSD) fall back to the physical setter
+       if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
+	for( Index i = 0 ; i < tochange ; ++i )
+	 nms[ i ] = of->is_active( cut + nms[ i ] );
 
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) + nms[ i ] );
+	of->modify_linear_coefficients( std::move( newcsts ) ,
+					std::move( nms ) , false );
+        }
+       else
+	TUBlock->set_quad_term( newcsts.begin() , std::move( nms ) , false );
+       }
+      else {
+       std::vector< double > lincsts( tochange );
+       for( Index i = 0 ; i < tochange ; ++i )
+	lincsts[ i ] = TUBlock->get_linear_term( nms[ i ] );
 
-      of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			std::move( nms ) , false );
+       for( Index i = 0 ; i < tochange ; ++i )
+	nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) + nms[ i ] );
+
+       of->modify_terms( newcsts.begin() , lincsts.begin() ,
+			 std::move( nms ) , false );
+       }
       }
      else {  // change via call to set_* method
       LOG1( "(s) - " );

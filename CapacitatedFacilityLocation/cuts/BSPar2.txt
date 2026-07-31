@@ -15,8 +15,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver    # name of Solver
-#GRBMILPSolver   # name of Solver
+#CPXMILPSolver   # name of Solver
+GRBMILPSolver    # name of Solver
 #SCIPMILPSolver  # name of Solver
 #HiGHSMILPSolver # name of Solver
 
@@ -31,7 +31,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-10 # number of integer parameters
+6 # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
@@ -39,22 +39,25 @@ intRelaxIntVars 2 # pure LP with the MILPSolver user-cut separation loop
 intCutSepPar    1 # run the separation loop (separate the strong constraints)
 intMaxCutPasses 10000 # raise the cut-pass cap so the bound can converge
 
-## All specific CPLEX parameter (uncomment based on Solver)
-CPXPARAM_Threads                        1            # avoid parallel
-CPXPARAM_MIP_Display                3        # more verbose log
-CPXPARAM_ScreenOutput               0        # output on screen
-CPXPARAM_MIP_Limits_Nodes               0            # only do root node
-CPXPARAM_MIP_Limits_EachCutLimit        0            # disable standard cuts
-CPXPARAM_MIP_Strategy_HeuristicFreq     0            # disable heuristic
-#CPXPARAM_LPMethod                      3            # 0 = auto (default), 1 = primal, 2 = dual, 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
-
 ## All specific GUROBI parameter (uncomment based on Solver)
+Threads         1 # avoid parallel
+Cuts            0 # disable standard cuts
 #Method 4  # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier, 3 = barrier + crossover, 4 = network
 
-1 # number of double parameters
+## All specific CPLEX parameter (uncomment based on Solver)
+#CPXPARAM_Threads                        1           # avoid parallel
+#CPXPARAM_MIP_Display                3        # more verbose log
+#CPXPARAM_ScreenOutput               0        # output on screen
+#CPXPARAM_MIP_Limits_Nodes               0           # only do root node
+#CPXPARAM_MIP_Limits_EachCutLimit        0           # disable standard cuts
+#CPXPARAM_MIP_Strategy_HeuristicFreq     0           # disable heuristic
+#CPXPARAM_LPMethod                      3            # 0 = auto (default), 1 = primal, 2 = dual, 3 = network, 4 = barrier, 5 = sifting, 6 = concurrent
+
+2 # number of double parameters
 
 # now all the double parameters
 dblMaxTime      60 # max time: 1 minute
+NodeLimit        0 # only do root node
 
 0 # number of string parameters
 

@@ -17,8 +17,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver    # name of Solver
-#GRBMILPSolver   # name of Solver
+#CPXMILPSolver   # name of Solver
+GRBMILPSolver    # name of Solver
 #SCIPMILPSolver  # name of Solver
 #HiGHSMILPSolver # name of Solver
 
@@ -33,18 +33,18 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-4 # number of integer parameters
+3 # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      2 # log verbosity of the MILPSolver
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    0 # do not separate user cuts
-CPXPARAM_MIP_Limits_Nodes               0  # only do root node
 
-1 # number of double parameters
+2 # number of double parameters
 
 # now all the double parameters
 dblMaxTime      600 # max time: 10 minute
+NodeLimit         0 # only do root node
 
 1 # number of string parameters
 

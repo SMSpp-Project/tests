@@ -11,6 +11,9 @@ if (NOT hasParent)
     find_package(MILPSolver)
 endif ()
 
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::TwoStageStochasticBlock)
 
@@ -54,7 +57,7 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
         # Re-use the same `uc_data_extracted` fixture set up by
-        # tests/LagrangianDualSolver_UC/CMakeLists.txt: it builds the
+        # tests/UCBlock/CMakeLists.txt: it builds the
         # extract_uc_nc4 target which produces the EC nc4 files used here.
         # CTest fixtures are global, so referencing it from a different
         # subdirectory just adds a dependency without redefining the test.
