@@ -1,0 +1,48 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-LD.txt  - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a SVMBlock whose abstract
+# representation encodes the decomposed formulation of the training problem,
+# to be solved by three different Solver: a :MILPSolver, which flattens the
+# whole tree and therefore solves the consensus reformulation as a whole, the
+# ad hoc SMOSolver, which rather ignores the abstract representation and
+# solves the training problem out of the data, and a LagrangianDualSolver,
+# which relaxes the consensus constraints and solves the Lagrangian dual with
+# a BundleSolver, each subproblem being the SVM of one chunk
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+3  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver                  # name of 1st Solver
+GRBMILPSolver                   # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
+#HiGHSMILPSolver                # name of 1st Solver
+SMOSolver                       # name of 2nd Solver
+LagrangianDualSolver            # name of 3rd Solver
+
+3  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+*LPCCfg.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the SMOSolver
+*SMOCfg.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver
+*LDCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BSPar-LD.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

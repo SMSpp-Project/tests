@@ -46,6 +46,7 @@ set(SMSPP_TEST_LABELS_InvestmentBlock           "BundleSolver;InvestmentBlock;MI
 set(SMSPP_TEST_LABELS_TwoStageStochasticBlock   "BundleSolver;LagrangianDualSolver;TwoStageStochasticBlock;UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_MultiStageStochasticBlock "BundleSolver;LagrangianDualSolver;MultiStageStochasticBlock;TwoStageStochasticBlock;UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_LukFiBlock                "BundleSolver;LukFiBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SVMBlock                  "BundleSolver;LagrangianDualSolver;SVMBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_FrankWolfeSolver          "FrankWolfeSolver;MCFBlock;MCFClassSolver;UCBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test

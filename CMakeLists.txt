@@ -110,6 +110,8 @@ add_subdirectory(ScenarioReduction)
 
 add_subdirectory(LukFiBlock)
 
+add_subdirectory(SVMBlock)
+
 add_subdirectory(FrankWolfeSolver)
 
 

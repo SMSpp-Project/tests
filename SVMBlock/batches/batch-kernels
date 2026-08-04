@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# usage: batch-kernels < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# sweeps the kernels, which only the Wolfe dual formulation supports since no
+# other one has an explicit finite-dimensional feature map, cross-checking the
+# ad hoc SMOSolver against a general-purpose :MILPSolver on the dense
+# quadratic program the dual is
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+# 0 = linear, 1 = polynomial, 2 = gaussian, 3 = laplacian, 4 = sigmoid; the
+# sigmoid one is not a Mercer kernel, hence the dual may well be indefinite
+# and the two Solver need not agree, so it is left out
+for K in 0 1 2 3; do
+
+  # wf: the Wolfe dual (0), with the linear (0) or the quadratic (+4) penalty
+  # of the training errors, and with the bias free (0) or regularised (+8)
+  for wf in 0 4 8 12; do
+    for task in "" "-g"; do
+      for C in 0.1 1 10; do
+
+        run_test "$exe" -S "$par" -f "$wf" -K "$K" -C "$C" \
+                 -N 40 -M 3 -n 2 -e 1 $task
+
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
