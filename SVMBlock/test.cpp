@@ -5,13 +5,16 @@
  * Main for testing SVMBlock, SVCBlock, SVRBlock and SMOSolver.
  *
  * A data set is generated out of a seed, a SVCBlock or a SVRBlock is loaded
- * with it and its abstract representation is generated in one of the
- * formulations of the training problem, which the bit-wise value \p wf
- * selects together with the loss and with how the bias is dealt with. All the
+ * with it and its abstract representation is generated for the problem that
+ * the BlockConfig asks for, the Wolfe dual or the training problem itself,
+ * with the loss and the treatment of the bias that the bit-wise value \p wf
+ * selects; with more than one chunk the training problem is rather rewritten
+ * as the consensus reformulation that make_consensus_Block() assembles, which
+ * is what a Lagrangian Solver attacks. All the
  * :Solver of the given BlockSolverConfig are then registered to the Block and
  * the results they obtain are cross-checked against each other, which is the
  * test: the ad hoc SMOSolver, a general-purpose :MILPSolver and, on the
- * decomposed formulation, a LagrangianDualSolver all have to agree on the
+ * consensus rewriting, a LagrangianDualSolver all have to agree on the
  * optimal value of the same training problem, whichever formulation of it the
  * abstract representation encodes.
  *
@@ -52,14 +55,11 @@ using doubleVec = SVMBlock::doubleVec;
 /*----------------------------- CONSTANTS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-/// bits 0-1 of wf: which formulation of the training problem
-static constexpr Index FormMsk = 3;
+/// bit 0 of wf: the training errors are penalised quadratically
+static constexpr Index SqrLoss = 1;
 
-/// bit 2 of wf: the training errors are penalised quadratically
-static constexpr Index SqrLoss = 4;
-
-/// bit 3 of wf: the bias is regularised together with the weights
-static constexpr Index RegBias = 8;
+/// bit 1 of wf: the bias is regularised together with the weights
+static constexpr Index RegBias = 2;
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------- GLOBALS ----------------------------------*/
@@ -73,7 +73,7 @@ static constexpr Index RegBias = 8;
 long int seed = 1;          ///< seed of the pseudo-random generator
 Index nsample = 60;         ///< number of samples of the generated data set
 Index nfeature = 4;         ///< number of features of each sample
-Index nchunk = 4;           ///< chunks of the decomposed formulation
+Index nchunk = 1;           ///< chunks of the consensus rewriting, 1 = none
 Index wf = 0;               ///< what formulation, coded bit-wise
 int kernel = SVMBlock::kLinear;   ///< which kernel
 bool regression = false;    ///< if the model is a regression one
@@ -165,23 +165,33 @@ static bool run_round( unsigned sd )
 {
  auto svm = construct( sd );
 
- // which formulation the abstract representation encodes is a Configuration
- // matter, and so is the number of chunks the decomposed one is split into
- SimpleConfiguration< std::pair< int , int > >
-  fcfg( { int( wf & FormMsk ) , int( nchunk ) } );
+ /* Which problem the abstract representation encodes is a Configuration
+  * matter; writing it as chunks tied by consensus constraints is not, it is a
+  * way of solving it, and it is assembled out of the SVMBlock. */
+ Block * block = svm;
 
- svm->generate_abstract_variables( & fcfg );
- svm->generate_abstract_constraints();
- svm->generate_objective();
+ if( nchunk > 1 )
+  block = make_consensus_Block( svm , nchunk );
+ else {
+  // the BlockConfig is what says which problem to encode
+  if( ! bconf_file.empty() ) {
+   auto bc = Configuration::deserialize( bconf_file );
+   b_config_Block( svm , bc , bconf_file );
+   }
+
+  svm->generate_abstract_variables();
+  svm->generate_abstract_constraints();
+  svm->generate_objective();
+  }
 
  // attach the Solver by reading a BlockSolverConfig from file and apply()-ing
  // it to the SVMBlock; the BlockSolverConfig is clear()-ed and kept to do the
  // cleanup at the end. It may be a plain BlockSolverConfig or a meta-config
  // SimpleConfiguration< std::map< std::string , Configuration * > >
  auto bsc = Configuration::deserialize( sconf_file );
- s_config_Block( svm , bsc , sconf_file );
+ s_config_Block( block , bsc , sconf_file );
 
- if( svm->get_registered_solvers().empty() ) {
+ if( block->get_registered_solvers().empty() ) {
   std::cerr << "Error: the BlockSolverConfig registered no Solver"
             << std::endl;
   return( false );
@@ -191,11 +201,14 @@ static bool run_round( unsigned sd )
   * from the finite one of the bounds it returns: this covers a :MILPSolver
   * and SMOSolver, which close the gap, as well as a LagrangianDualSolver,
   * whose lower bound is the optimal value itself since the training problem
-  * is convex and the decomposed formulation is an exact reformulation of it. */
- const bool ok = SolveAll( svm , eps_getter( {} ) , RefObjective , tol );
+  * is convex and the consensus rewriting is an exact one. */
+ const bool ok = SolveAll( block , eps_getter( {} ) , RefObjective , tol );
 
- s_config_Block( svm , bsc );  // remove the Solver by re-apply()-ing the
- delete bsc;                   // clear()-ed BlockSolverConfig
+ s_config_Block( block , bsc );  // remove the Solver by re-apply()-ing the
+ delete bsc;                     // clear()-ed BlockSolverConfig
+
+ if( block != svm )
+  delete block;
  delete svm;
 
  return( ok );
@@ -255,13 +268,13 @@ int main( int argc , char ** argv )
  help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
          "  -N, --nsample <n>               number of samples [60]\n"
          "  -M, --nfeature <n>              number of features [4]\n"
-         "  -s, --nchunk <n>                chunks of the decomposed "
-         "formulation [4]\n"
-         "  -f, --wf <bits>                 what formulation, bit-wise [0]:\n"
-         "                                    0-1 = 0 Wolfe dual, 1 primal,\n"
-         "                                          2 decomposed\n"
-         "                                    +4  = squared loss\n"
-         "                                    +8  = regularised bias\n"
+         "  -s, --nchunk <n>                rewrite the training problem as "
+         "n chunks tied\n"
+         "                                  by consensus constraints [1]\n"
+         "  -f, --wf <bits>                 the loss and the bias, bit-wise "
+         "[0]:\n"
+         "                                    1 = squared loss\n"
+         "                                    2 = regularised bias\n"
          "  -K, --kernel <n>                kernel: 0 linear, 1 poly,\n"
          "                                  2 gaussian, 3 laplacian, "
          "4 sigmoid [0]\n"
@@ -281,17 +294,6 @@ int main( int argc , char ** argv )
  // falls back to a hardcoded default Configuration
  require_solver_config();
 
- if( ( wf & FormMsk ) > SVMBlock::kDecomposed ) {
-  std::cerr << "Error: unknown formulation " << ( wf & FormMsk ) << std::endl;
-  return( 1 );
-  }
-
- if( ( ( wf & FormMsk ) != SVMBlock::kWolfeDual ) &&
-     ( kernel != SVMBlock::kLinear ) ) {
-  std::cerr << "Error: the primal formulations require the linear kernel"
-            << std::endl;
-  return( 1 );
-  }
 
  bool AllPassed = true;
 
