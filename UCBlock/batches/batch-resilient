@@ -36,7 +36,7 @@ REF_OBJ[smspp_3n_3c_2gext_1l_1ml.nc]=1.302415551e+10
 REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.147874238e+07
 REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-6.883586038e+04
 REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=2.399258678e+05
-REF_OBJ[smspp_test_sector_coupled_complete_temp.nc]=1.627534159e+10
+REF_OBJ[smspp_network_sector_coupled_complete_temp.nc]=2.3213758e+10
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -50,20 +50,6 @@ for wf in 0 1 2; do
         fi
 
         base=$(basename "$what")
-
-        # the sector-coupled "complete" case currently fails under the
-        # LagrangianDualSolver: the instance carries huge design sentinels
-        # from the converter (line MaxCapacityDesign 1e13, converter 1e10,
-        # MaxPower/MinPower 1e9) that make the Lagrangian value explode
-        # (Fi ~ -1e20) and kill the BundleSolver master ("unrecoverable MP
-        # failure" -> kError), and even with physical caps the bundle does
-        # not converge on this multi-vector network; the monolithic solve is
-        # unaffected. Skip it in CI only, keeping it in local coverage until
-        # the instance is regenerated with sane bounds and the LD side is
-        # sorted out.
-        if [ -n "$CI" ] && [ "$base" = "smspp_test_sector_coupled_complete_temp.nc" ]; then
-          continue
-        fi
 
         ref=${REF_OBJ[$base]}
 
