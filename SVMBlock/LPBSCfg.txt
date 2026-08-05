@@ -1,8 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - LPBSCfg.txt - - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a sub-Block of the decomposed
-# formulation of a SVMBlock, which is the SVM training problem of one chunk
+# A txt description of a BlockSolverConfig for a sub-Block of the consensus
+# rewriting of a SVMBlock, which is the SVM training problem of one chunk
 #
 #   Donato Meoli
 #

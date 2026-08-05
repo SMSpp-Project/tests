@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - - - LDCfg.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for the LagrangianDualSolver relaxing
-# the consensus constraints of the decomposed formulation of a SVMBlock; it
+# the consensus constraints tying the chunks a SVMBlock is split into; it
 # basically is the ComputeConfig of the inner Solver, which is a BundleSolver
 #
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
