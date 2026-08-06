@@ -806,10 +806,10 @@ static void printAb( const MultiVector & tA , const RealVector & tb ,
 
 static bool SolveBoth( void )
 {
- // Pattern A (two separate Blocks, LPBlock vs NDOBlock): the bespoke verdict
- // below (including the BundleSolver conditional-bound handling) is kept as is;
- // only the per-instance display is unified through print_instance_line(), so
- // S0 = LPBlock value, S1 = NDOBlock value, with the same verdict tokens.
+ // two separate Block with one Solver each, LPBlock against NDOBlock: the
+ // verdict below is bespoke (it handles the conditional bound of
+ // BundleSolver), while the per-instance line is that of common_utils, with
+ // S0 = the LPBlock value and S1 = the NDOBlock one.
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();

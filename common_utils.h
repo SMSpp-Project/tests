@@ -2,49 +2,29 @@
 /*--------------------------- common_utils.h -------------------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * Common utilities shared by the SMS++ test programs (compare_formulations,
- * UCBlock, TwoStageStochasticBlock, InvestmentBlock, ...).
+ * Common utilities shared by the SMS++ test programs.
  *
- * Pure helpers that are bit-fedeli copies of code previously duplicated across
- * the four test.cpp files: ostream manipulators (def, fixd), string->T parser
- * (Str2Sthg), pretty-printing of Solver return codes (PrintResults), the
- * std::terminate handler that dumps the active exception (smspp_terminate),
- * and the meta-configuration BFS helpers (b_config_Block, s_config_Block)
- * which apply a BlockConfig / BlockSolverConfig to a Block or, if the
- * Configuration is a
+ * Three groups of helpers:
  *
- *   SimpleConfiguration< std::map< std::string , Configuration * > >
+ * - output and parsing: the ostream manipulators def() and fixd(), the
+ *   string-to-T parser Str2Sthg(), the pretty-printer of Solver return codes
+ *   PrintResults(), and the std::terminate handler smspp_terminate();
  *
- * dispatch to every nested sub-Block matching the classname() key.
+ * - configuration: b_config_Block() and s_config_Block() apply a BlockConfig
+ *   or a BlockSolverConfig to a Block, dispatching to the nested sub-Block
+ *   when the Configuration is a meta-configuration (see there);
  *
- * Solver-comparison and reference-objective helpers cover Pattern B (one
- * Block with an arbitrary number of Solver registered). The whole machinery
- * is this call chain:
- *
- *     test main()
- *      -> SolveAll( block , eps_getter( { eps_0 , eps_1 , ... } ) , ref )
- *          |    the eps vector is THE declaration of which Solver is exact:
- *          |    eps_k finite = Solver k claims an optimum, exact up to eps_k;
- *          |    eps_k = inf  = no claim beyond [ get_lb() , get_ub() ] ∋ z*.
- *          |    Positional in registration order (= the BlockSolverConfig).
- *          |    It is declared here, and not deduced from the Solver type,
- *          |    because exactness is a property of the configuration and of
- *          |    the instance, not of the class (e.g. a LagrangianDualSolver
- *          |    is exact only when the relaxation it solves is tight).
- *          -> compute() each Solver, map it to a SolverReading via the
- *          |  classifier (eps_getter() or a bespoke SolverClassifier)
- *          -> cross_check(): the pairwise agreement test between the
- *          |  readings, lb_i <= ub_j ( 1 + eps ); see its comment
- *          -> print_instance_line(): the uniform per-instance log line
- *
- * SolveBoth() is the 1-or-2-Solver wrapper over SolveAll(), CheckRefValue()
- * prints the comparison against a reference objective, and SolveAndCheckRef()
- * is the single-Solver convenience that bundles solve + ref-check in one
- * call. Tests with their own solve loop skip SolveAll() and call
- * cross_check() + print_instance_line() directly, so verdict and log format
- * are implemented once anyway. Pattern A (two separate Block each with one
- * Solver, as in compare_formulations) is structurally different and still
- * lives in that test.cpp.
+ * - the cross-check: SolveAll() computes every Solver registered to a Block,
+ *   reads each one as the interval [ get_lb() , get_ub() ] that, by the base
+ *   Solver contract, contains the optimum, and checks each of them against
+ *   the best bounds the whole set provides (a reference objective value,
+ *   when known, being one more Solver): correctness always, and the quality
+ *   it declares when it says it delivered it. See cross_check() for the
+ *   criterion and @ref solver_eps for where that declaration comes from.
+ *   The result is one uniform log line per instance, printed by
+ *   print_instance_line(). Tests that need their own solve loop call
+ *   cross_check() and print_instance_line() directly, so verdict and log
+ *   format are implemented once anyway.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -90,6 +70,7 @@
 #include <getopt.h>
 #include <filesystem>
 
+#include <cmath>
 #include <cstddef>
 #include <functional>
 #include <iomanip>
@@ -136,6 +117,34 @@ extern int verbosity_level;         ///< verbosity level (0 = silent, >0 = verbo
  *  different conventions for the option letter. */
 extern double RefObjective;
 
+/// the optimality tolerances declared by -E, NaN where none was declared
+/** The gap that each Solver is allowed to leave, positionally with respect
+ *  to the registration order (= the Solver order in the BlockSolverConfig),
+ *  with the empty field meaning "not declared here":
+ *
+ *      -E ,,5e-2
+ *
+ *  A single value applies to every Solver, and eps = inf declares nothing
+ *  beyond the base contract, i.e. only that [ get_lb() , get_ub() ] contains
+ *  the optimum, which is also what a Solver returning kLowPrecision is held
+ *  to whatever its tolerance. -E is only needed where the accuracy a Solver
+ *  was asked for is not what it can be held to, which is the case of the
+ *  heuristics; see eps_of(). */
+extern std::vector< double > solver_eps;
+
+/// the optimality tolerance of Solver @p k
+/** What -E declares for @p k if it declares anything, else the accuracy
+ *  Solver @p s was asked for, i.e. its dblRelAcc, which is the number that
+ *  counts for a Solver that delivers what it is asked. @p dflt is returned
+ *  when there is neither: pass no Solver and infinity for a reading that
+ *  claims nothing unless -E says otherwise, such as the one-sided bound of
+ *  a heuristic, whose dblRelAcc drives its stopping condition and says
+ *  nothing about the quality of the solution it returns. */
+
+double eps_of( std::size_t k , Solver * s = nullptr ,
+               double dflt = std::numeric_limits< double >::quiet_NaN() );
+
+/*--------------------------------------------------------------------------*/
 /// default short command-line options string used by process_standard_arg()
 /** Tests that need extra options override this (and long_opts / help) in
  *  their main() before calling process_args(), then handle the
@@ -266,72 +275,77 @@ std::string fmt_obj( double v );
 
 /*--------------------------------------------------------------------------*/
 /// how a single Solver's result enters the per-instance cross-check
-/** The objective getters (ObjGetter) only say WHERE a Solver stores its
- *  answer; SolverReading::Kind says HOW that answer is compared against the
- *  others when more than one Solver is registered:
+/** The interval [ lb , ub ] that the Solver claims contains the optimum,
+ *  plus the gap eps it is allowed to leave.
  *
- *  - Exact:      an exact optimum; all Exact readings must agree on z*;
- *  - LowerBound: a valid lower bound (LB <= z*);
- *  - UpperBound: a valid upper bound (UB >= z*);
- *  - Bracket:    a relaxation that brackets z* in [ lb , ub ]. */
+ *  Both bounds are valid by the base Solver contract, so they are compared
+ *  against those of the other Solver at face value. eps is instead a claim
+ *  about the quality of the answer, and it is what a heuristic returning
+ *  ( -inf , ub ], or a relaxation returning [ lb , +inf ), is held to: how
+ *  close its one bound has to come to the best opposite bound anybody
+ *  proved, see cross_check(). eps = inf claims nothing, eps = NaN means
+ *  "the tolerance the cross-check is called with". */
 
 struct SolverReading {
- enum class Kind { Exact , LowerBound , UpperBound , Bracket };
+ double lb  = - std::numeric_limits< double >::infinity();  ///< z* >= lb
+ double ub  =   std::numeric_limits< double >::infinity();  ///< z* <= ub
+ double eps =   std::numeric_limits< double >::quiet_NaN(); ///< allowed gap
 
- Kind   kind  = Kind::Exact;
- double value = std::numeric_limits< double >::quiet_NaN();   ///< Exact/LB/UB
- double lb    = - std::numeric_limits< double >::infinity();  ///< Bracket only
- double ub    =   std::numeric_limits< double >::infinity();  ///< Bracket only
+ /// an optimum @p v claimed up to @p e
+ static SolverReading exact( double v ,
+                             double e =
+                              std::numeric_limits< double >::quiet_NaN() )
+ { return( SolverReading{ v , v , e } ); }
 
- /// optimality tolerance of an Exact reading; NaN = use the cross_check tol
- double eps   = std::numeric_limits< double >::quiet_NaN();
+ /// a lower bound on z*, tight up to @p e (by default, no claim at all)
+ static SolverReading lower_bound( double v , double e = s_inf() )
+ { return( SolverReading{ v , s_inf() , e } ); }
+
+ /// an upper bound on z*, tight up to @p e (by default, no claim at all)
+ static SolverReading upper_bound( double v , double e = s_inf() )
+ { return( SolverReading{ - s_inf() , v , e } ); }
+
+ /// the value the Solver reports, i.e. its finite bound (lb first)
+
+ double claimed( void ) const
+ { return( std::isfinite( lb ) ? lb : ub ); }
+
+ private:
+
+ static constexpr double s_inf( void )
+ { return( std::numeric_limits< double >::infinity() ); }
  };
 
 /*--------------------------------------------------------------------------*/
 /// classify+read a Solver: maps (Solver*, index) to a SolverReading
 /** Called by SolveAll() once per feasible Solver, after it has compute()d, to
- *  decide how to read and cross-check its result. The default classifiers
- *  below cover the common cases (every Solver an Exact optimum, or a relaxation
- *  bracketing z* recognised by its classname()); tests with bespoke needs
- *  (e.g. one-sided bounds, or extra per-Solver bookkeeping) wrap these or pass
- *  their own. */
+ *  decide how to read and cross-check its result. The default is
+ *  read_bounds(), which needs no knowledge of the Solver; tests with needs
+ *  (a value that only get_var_value() exposes, or extra per-Solver
+ *  bookkeeping) wrap it or pass their own. */
 
 using SolverClassifier =
  std::function< SolverReading ( Solver * , std::size_t ) >;
 
 /*--------------------------------------------------------------------------*/
-/// default classifier: read every Solver via @p g as an Exact optimum
+/// default reading of Solver @p k: its [ get_lb() , get_ub() ] and its -E eps
+/** No Solver type or name is ever inspected: a Solver that closes the gap
+ *  gives a point, a pure relaxation gives [ lb , +inf ), a pure heuristic
+ *  gives ( -inf , ub ], and a Solver that found nothing gives the whole line.
+ *  How tight each one is held to be is not deduced here but declared by
+ *  @ref solver_eps, because exactness is a property of the configuration and
+ *  of the instance, not of the class: a LagrangianDualSolver is exact only
+ *  when the relaxation it solves happens to be tight. */
+
+SolverReading read_bounds( Solver * s , std::size_t k );
+
+/*--------------------------------------------------------------------------*/
+/// classifier reading every Solver via @p g as a claimed optimum
+/** For the Solver that publish their result only through get_var_value(),
+ *  which the [ get_lb() , get_ub() ] interval of read_bounds() would not
+ *  see. The -E tolerance of each Solver still applies. */
 
 SolverClassifier exact_getter( ObjGetter g = ObjGetter::VarValue );
-
-/// per-Solver classifier: read Solver k via getters[k] (Exact), else @p dflt
-
-SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
-                                ObjGetter dflt = ObjGetter::VarValue );
-
-/// classifier from the per-Solver optimality tolerances
-/** Every Solver, by the base contract, returns a valid interval
- *  [ get_lb() , get_ub() ] around the optimum of the problem; the only piece
- *  of information the cross-check cannot infer is how tight each Solver
- *  claims to be, and that is exactly what @p eps declares, positionally with
- *  respect to the registration order (= the Solver order in the
- *  BlockSolverConfig):
- *
- *  - eps[ k ] finite   => Solver k is exact up to eps[ k ]: its claimed
- *    optimum is its finite bound (get_lb() when that is finite, e.g. a
- *    :MILPSolver or a LagrangianDualSolver closing the gap, else get_ub()),
- *    and it enters the cross-check as an Exact reading with that tolerance;
- *  - eps[ k ] infinite => nothing is claimed beyond the base contract:
- *    Solver k enters as the Bracket [ get_lb() , get_ub() ], which must
- *    contain the optimum. A pure relaxation ([ lb , +inf ]), a pure
- *    heuristic ([ -inf , ub ]) and a Solver that found nothing at all
- *    ([ -inf , +inf ]) are all just special cases of this, so no Solver
- *    type or name is ever inspected;
- *  - entries beyond eps.size() default to "exact up to the SolveAll() tol",
- *    so appending further exact Solver to the BlockSolverConfig needs no
- *    change here. */
-
-SolverClassifier eps_getter( std::vector< double > eps );
 
 /*--------------------------------------------------------------------------*/
 /// print the uniform per-instance log line
@@ -358,6 +372,8 @@ void print_instance_line( const std::vector< double > & times ,
 
 /*--------------------------------------------------------------------------*/
 /// format a SolverReading as a value token ("v" or "[ lb , ub ]")
+/** The bounds are printed as the Solver returned them, the tolerance it
+ *  declares playing no part here. */
 
 std::string reading_token( const SolverReading & r );
 
@@ -373,33 +389,42 @@ std::string reading_token( const SolverReading & r );
  *  it found a solution, all-infeasible passes as OK(e) and all-unbounded as
  *  OK(u); any mix (or any errored Solver) is KO.
  *
- *  All feasible is the mutual-agreement check between Solver. Every reading
- *  is the interval \f$[ lb_k , ub_k ]\f$ it claims contains the optimum,
- *  with an optimality tolerance \f$\varepsilon_k\f$: an Exact reading v is
- *  \f$[ v , v ]\f$ with its declared eps (NaN = @p tol), a LowerBound v is
- *  \f$[ v , +\infty )\f$, an UpperBound v is \f$( -\infty , v ]\f$, a
- *  Bracket is \f$[ lb , ub ]\f$ (all with eps = @p tol), and @p ref, if
- *  given, is one more \f$[ ref , ref ]\f$. Readings i and j agree iff their
- *  intervals overlap up to the larger of the two tolerances:
+ *  All feasible is the agreement check between Solver. The optimum is not
+ *  known, so what each of them is measured against is the best knowledge the
+ *  whole set provides, i.e. \f$ LB^* \f$ the largest of the lower bounds and
+ *  \f$ UB^* \f$ the smallest of the upper bounds, @p ref being one more
+ *  Solver returning \f$[ ref , ref ]\f$. Every Solver owes correctness, i.e.
+ *  that its bounds do not contradict the others,
  *
  *  \f[
- *   lb_i \leq ub_j ( 1 + \varepsilon ) \;\; , \;\;
- *   lb_j \leq ub_i ( 1 + \varepsilon ) \;\; , \;\;
- *   \varepsilon = \max( \varepsilon_i , \varepsilon_j )
+ *   ub_k \geq LB^* \;\; , \;\; lb_k \leq UB^*
  *  \f]
  *
- *  in the relative form \f$ lb - ub \leq \varepsilon \max( 1 , | lb | ,
- *  | ub | ) \f$, and the check passes iff every pair agrees (i = j included,
- *  which is the sanity check \f$ lb_k \leq ub_k \f$). The special cases all
- *  follow: two Exact agree iff their optima are equal up to eps, an Exact vs
- *  a Bracket iff the bracket contains the optimum, two Bracket iff
- *  max lb <= min ub, and a pure relaxation \f$[ lb , +\infty )\f$ or a pure
- *  heuristic \f$( -\infty , ub ]\f$ is just a Bracket with one side missing.
+ *  up to @p tol, which is the numerical noise floor. A Solver that returns
+ *  kOK, i.e. that says it delivered what it was asked, also owes quality,
+ *  each of its bounds being within its declared \f$\varepsilon_k\f$ of the
+ *  best opposite one,
+ *
+ *  \f[
+ *   ub_k - LB^* \leq \varepsilon_k s \;\; , \;\;
+ *   UB^* - lb_k \leq \varepsilon_k s \;\; , \;\;
+ *   s = \max( 1 , | \cdot | )
+ *  \f]
+ *
+ *  where \f$\varepsilon_k\f$ is never taken smaller than @p tol, below
+ *  which the comparison would only measure the noise of the cross-check
+ *  itself. This is what holds a heuristic to the quality, and a relaxation
+ *  to the gap, that it claims: an exact Solver returns \f$[ v , v ]\f$ and
+ *  both reduce to agreeing with everybody else on the optimum. A Solver that
+ *  returns kLowPrecision, or that stopped on any other condition, promised
+ *  nothing and owes nothing beyond correctness, exactly as one whose
+ *  \f$\varepsilon_k\f$ is infinite. Infinite bounds are not compared,
+ *  there being nothing to compare.
  *
  *  @p verdict_out receives the token ("OK(f)"/"OK(e)"/"OK(u)"/"OK"/"KO",
- *  where OK(f) means at least one Exact reading fixed the optimum);
- *  @p diff_out receives |z* - ref| when both are defined (z* being the first
- *  Exact reading), else NaN. */
+ *  where OK(f) means at least one reading pinned the optimum from both
+ *  sides); @p diff_out receives |z* - ref| when both are defined (z* being
+ *  the value of the first such reading), else NaN. */
 
 bool cross_check( const std::vector< SolverReading > & rd ,
                   const std::vector< bool > & has_solution ,
@@ -409,12 +434,16 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 
 /*--------------------------------------------------------------------------*/
 /// run EVERY Solver registered on @p block and cross-check the results
-/** Generalizes SolveBoth() to an arbitrary number M >= 1 of registered
- *  Solver. For each instance it computes every Solver (timing each), maps
- *  each result to a SolverReading via @p classify, hands the readings to
+/** For each instance it computes every Solver (timing each), maps each
+ *  result to a SolverReading via @p classify, hands the readings to
  *  cross_check() (see its comment for the agreement criterion), prints the
  *  uniform per-instance line via print_instance_line() showing ALL the
  *  Solver values (and @p ref, if given), and returns the pass/fail verdict.
+ *
+ *  @p tol is the numerical tolerance of the comparisons, i.e. how much of a
+ *  difference is attributed to floating-point noise rather than to a
+ *  disagreement; how much of a gap each Solver may leave is instead declared
+ *  per Solver by -E (@ref solver_eps).
  *
  *  Out-params, if non-null, are populated from the FIRST Solver (value,
  *  has-solution flag, elapsed time, elapsed iterations). */
@@ -429,14 +458,10 @@ bool SolveAll( Block * block ,
                long   * out_it1 = nullptr );
 
 /*--------------------------------------------------------------------------*/
-/// convenience SolveAll(): read every Solver via @p getters as Exact optima
-/** @p getters is matched positionally to the registered Solver; if empty,
- *  every Solver is read via get_var_value(); if shorter than the number of
- *  Solver, the missing entries default to get_var_value(). */
+/// SolveAll() reading every Solver with read_bounds(), the usual case
 
 bool SolveAll( Block * block ,
                double ref = std::numeric_limits< double >::quiet_NaN() ,
-               const std::vector< ObjGetter > & getters = {} ,
                double tol = 1e-5 ,
                double * out_fo1 = nullptr ,
                bool   * out_hs1 = nullptr ,
@@ -444,23 +469,16 @@ bool SolveAll( Block * block ,
                long   * out_it1 = nullptr );
 
 /*--------------------------------------------------------------------------*/
-/// Pattern B: run the Solver(s) registered on a single Block
-/** If @p block has just one registered Solver, this calls compute() on it,
- *  prints "<time>\\t<iters>\\t<fo>\\n" and returns the has-solution flag.
+/// SolveAll() of the one or two Solver registered to @p block
+/** The Solver are read via @p g1 and @p g2 rather than as the interval of
+ *  their bounds, which is what the tests whose Solver only publish a value
+ *  need. With @p one_sided_le false (the default) both readings claim an
+ *  optimum and must agree; with it true the first is only a lower bound and
+ *  the second only an upper bound, so the verdict becomes LB <= UB, and each
+ *  of the two is held to what -E declares for it, if anything.
  *
- *  If @p block has two registered Solver, this calls compute() on both
- *  (Slvr1 = front(), Slvr2 = back()), prints "<time1> - <time2> - <verdict>"
- *  with verdict ∈ { OK(f) , OK(e) , OK(u) , Solver1 = ... ~ Solver2 = ... }
- *  and returns true iff the two results agree.
- *
- *  Agreement criterion:
- *  - if @p one_sided_le is false (default), |fo1 - fo2| ≤ tol × max(1,|fo1|,|fo2|);
- *  - if true (ProxHeur-style), fo1 - fo2 ≤ tol (absolute, one-sided);
- *  in either case kInfeasible / kUnbounded parity is also accepted.
- *
- *  @p g1 / @p g2 select which getter to use on each Solver.
- *  Out-params, if non-null, are populated from Slvr1: fo1, has-solution flag,
- *  elapsed time, elapsed iterations. */
+ *  Out-params, if non-null, are populated from the first Solver: value,
+ *  has-solution flag, elapsed time, elapsed iterations. */
 
 bool SolveBoth( Block * block ,
                 ObjGetter g1 = ObjGetter::LowerBound ,

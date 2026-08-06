@@ -254,8 +254,9 @@ static bool SolveBoth( void )
  #endif
 
  bool hs1 = false;
- bool ok = SolveAll( MCFB , std::numeric_limits< double >::quiet_NaN() ,
-                     std::vector< ObjGetter >{} , 5e-7 , nullptr , & hs1 );
+ bool ok = SolveAll( MCFB , exact_getter( ObjGetter::VarValue ) ,
+                     std::numeric_limits< double >::quiet_NaN() ,
+                     5e-7 , nullptr , & hs1 );
  last_round_feasible = hs1;  // the 1st (physical) Solver found a solution
  return( ok );
  }

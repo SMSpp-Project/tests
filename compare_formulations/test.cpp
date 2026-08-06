@@ -113,14 +113,14 @@ static bool SolveBoth( double * out_fo1 = nullptr ,
 
   double t2 = elapsed.count();
 
-  // Pattern A (two separate Blocks): both Solver are exact optima that must
-  // agree (2e-7); defer the verdict and the uniform per-instance line to
-  // common_utils, semantics unchanged
+  // the two formulations are two separate Block with one Solver each, both
+  // claiming an optimum, and the two optima must agree (2e-7); the verdict
+  // and the per-instance line are those of common_utils
   std::vector< SolverReading > rd( 2 );
   std::vector< bool > hs{ hs1st , hs2nd };
   std::vector< int > status{ rtrn1st , rtrn2nd };
-  if( hs1st ) { rd[ 0 ].kind = SolverReading::Kind::Exact; rd[ 0 ].value = fo1st; }
-  if( hs2nd ) { rd[ 1 ].kind = SolverReading::Kind::Exact; rd[ 1 ].value = fo2nd; }
+  if( hs1st ) rd[ 0 ] = SolverReading::exact( fo1st , eps_of( 0 , Slvr1 ) );
+  if( hs2nd ) rd[ 1 ] = SolverReading::exact( fo2nd , eps_of( 1 , Slvr2 ) );
 
   auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
    if( h )                               return( reading_token( r ) );
