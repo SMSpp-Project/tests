@@ -18,6 +18,7 @@
 
 #include "common_utils.h"
 
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -34,17 +35,14 @@
 /*--------------------------------------------------------------------------*/
 /*--------------------- MPI / UCX SAFE-DEFAULTS ----------------------------*/
 /*--------------------------------------------------------------------------*/
-/* Some SMS++ targets (InvestmentBlock and tools using SDDPBlock) pull in
- * libboost_mpi / libmpi transitively even when they never call MPI_Init().
- * On systems where Open MPI / UCX are installed but no usable transport is
- * available (no IB, missing UCX vfs.sock, ...), the MPI/UCX runtime can
- * hang on startup spinning on futex / X11 sockets.
- *
- * To make every SMS++ test work out-of-the-box after a fresh install, we
- * pre-seed safe TCP-only defaults with setenv(..., 0): the third argument
- * is "overwrite = false", so any user who has already exported UCX_TLS /
- * OMPI_MCA_* (e.g. on an HPC cluster with a real fabric) keeps full
- * control. This is executed before main() via a static initializer.    */
+/* Some SMS++ targets (InvestmentBlock, and the tools using SDDPBlock) pull
+ * in libboost_mpi / libmpi transitively even when they never call
+ * MPI_Init(). Where Open MPI / UCX are installed but no usable transport is
+ * available (no IB, missing UCX vfs.sock, ...), their runtime can hang on
+ * startup spinning on futex / X11 sockets, so TCP-only defaults are
+ * pre-seeded here, before main(), with setenv( ... , 0 ): the third
+ * argument is "overwrite = false", hence whoever has exported UCX_TLS /
+ * OMPI_MCA_* already, as on a cluster with a real fabric, keeps control. */
 
 namespace {
 
@@ -73,8 +71,10 @@ static SmsppMpiSafeEnvInit smspp_mpi_safe_env_init_;
 }  // anonymous namespace
 
 /*--------------------------------------------------------------------------*/
-/*------------------------------ FUNCTIONS ---------------------------------*/
+/*----------------------- OUTPUT AND ERROR HANDLING ------------------------*/
 /*--------------------------------------------------------------------------*/
+
+// print an objective value, or the reason why there is none
 
 void PrintResults( bool hs , int rtrn , double fo )
 {
@@ -93,6 +93,7 @@ void PrintResults( bool hs , int rtrn , double fo )
  }
 
 /*--------------------------------------------------------------------------*/
+// print the exception that reached std::terminate(), then abort
 
 void smspp_terminate( void )
 {
@@ -111,6 +112,10 @@ void smspp_terminate( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/*----------------------------- CONFIGURATION ------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+// apply a BlockConfig, or dispatch a meta one to the sub-Block it names
 
 void b_config_Block( Block * block , Configuration * b_config ,
                      const std::string & fn )
@@ -163,6 +168,8 @@ void b_config_Block( Block * block , Configuration * b_config ,
  }  // end( b_config_Block )
 
 /*--------------------------------------------------------------------------*/
+// the same for a BlockSolverConfig, which is also clear()-ed for the final
+// cleanup, see common_utils.h
 
 void s_config_Block( Block * block , Configuration * s_config ,
                      const std::string & fn ,
@@ -222,6 +229,10 @@ void s_config_Block( Block * block , Configuration * s_config ,
  }  // end( s_config_Block )
 
 /*--------------------------------------------------------------------------*/
+/*------------------------------ CROSS-CHECK -------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+// where a Solver publishes its answer
 
 double get_obj_value( Solver * slvr , ObjGetter g )
 {
@@ -234,6 +245,7 @@ double get_obj_value( Solver * slvr , ObjGetter g )
  }
 
 /*--------------------------------------------------------------------------*/
+// the canonical format of every value the tests print
 
 std::string fmt_obj( double v )
 {
@@ -244,69 +256,51 @@ std::string fmt_obj( double v )
  }
 
 /*--------------------------------------------------------------------------*/
+// the tolerance Solver k is held to
+
+double eps_of( std::size_t k , Solver * s , double dflt )
+{
+ // a single value of -E is the tolerance of every Solver, a list is
+ // positional and its empty fields declare nothing
+ double e = std::numeric_limits< double >::quiet_NaN();
+ if( solver_eps.size() == 1 )
+  e = solver_eps.front();
+ else if( k < solver_eps.size() )
+  e = solver_eps[ k ];
+
+ if( ! std::isnan( e ) )
+  return( e );
+
+ // else the accuracy the Solver was asked for in its ComputeConfig
+ return( s ? s->get_dbl_par( Solver::dblRelAcc ) : dflt );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the default reading of a Solver: the interval of its base contract
+
+SolverReading read_bounds( Solver * s , std::size_t k )
+{
+ return( SolverReading{ get_obj_value( s , ObjGetter::LowerBound ) ,
+                        get_obj_value( s , ObjGetter::UpperBound ) ,
+                        eps_of( k , s ) } );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the reading of a Solver that publishes an optimum and no interval
 
 SolverClassifier exact_getter( ObjGetter g )
 {
- return( [ g ]( Solver * s , std::size_t ) -> SolverReading {
-  SolverReading r;
-  r.kind  = SolverReading::Kind::Exact;
-  r.value = get_obj_value( s , g );
-  return( r );
+ return( [ g ]( Solver * s , std::size_t k ) -> SolverReading {
+  return( SolverReading::exact( get_obj_value( s , g ) , eps_of( k , s ) ) );
   } );
  }
 
 /*--------------------------------------------------------------------------*/
 
-SolverClassifier exact_getters( std::vector< ObjGetter > getters ,
-                                ObjGetter dflt )
-{
- return( [ getters = std::move( getters ) , dflt ]
-         ( Solver * s , std::size_t k ) -> SolverReading {
-  SolverReading r;
-  r.kind  = SolverReading::Kind::Exact;
-  r.value = get_obj_value( s , k < getters.size() ? getters[ k ] : dflt );
-  return( r );
-  } );
- }
-
-/*--------------------------------------------------------------------------*/
-
-SolverClassifier eps_getter( std::vector< double > eps )
-{
- return( [ eps = std::move( eps ) ]( Solver * s ,
-                                     std::size_t k ) -> SolverReading {
-  SolverReading r;
-  const double e = k < eps.size() ? eps[ k ]
-                 : std::numeric_limits< double >::quiet_NaN();
-  const double lb = get_obj_value( s , ObjGetter::LowerBound );
-  const double ub = get_obj_value( s , ObjGetter::UpperBound );
-  if( std::isinf( e ) ) {
-   // no optimality claim: just the base-contract interval around z*
-   r.kind = SolverReading::Kind::Bracket;
-   r.lb   = lb;
-   r.ub   = ub;
-   }
-  else {
-   // exact up to e (NaN = up to the cross_check tol): the claimed optimum
-   // is the finite bound (a Solver exposing only get_lb(), such as a
-   // LagrangianDualSolver, claims it AS the optimum; ditto for get_ub())
-   r.kind  = SolverReading::Kind::Exact;
-   r.value = std::isfinite( lb ) ? lb : ub;
-   r.eps   = e;
-   }
-  return( r );
-  } );
- }
-
-/*--------------------------------------------------------------------------*/
-
-// verbose is on either via -v (verbosity_level, only for tests that parse
-// their options through process_args) or, uniformly for *all* tests regardless
-// of how they parse their arguments, via the `verbose` environment variable
-// (e.g. `verbose=1 ./batch ...` or `verbose=1 ctest ...`), which the child test
-// processes inherit. The latter is what makes the verbose log consistent
-// across the whole test suite, including the tests that read positional
-// arguments by hand and so do not understand -v.
+// whether the extended output is on, either via -v or via the `verbose`
+// environment variable (`verbose=1 ./batch ...`, `verbose=1 ctest ...`),
+// which the tests that parse their arguments positionally, and so do not
+// understand -v, inherit as well
 static bool tests_verbose()
 {
  static const bool env_on = []() {
@@ -315,6 +309,10 @@ static bool tests_verbose()
    }();
  return ( verbosity_level >= 1 ) || env_on;
 }
+
+/*--------------------------------------------------------------------------*/
+// print the one line that reports an instance: timings, Solver values,
+// reference and verdict
 
 void print_instance_line( const std::vector< double > & times ,
                           const std::vector< std::string > & value_tokens ,
@@ -350,25 +348,27 @@ void print_instance_line( const std::vector< double > & times ,
  }
 
 /*--------------------------------------------------------------------------*/
+// how a reading appears in that line
 
 std::string reading_token( const SolverReading & r )
 {
- if( r.kind == SolverReading::Kind::Bracket )
-  return( "[ " + fmt_obj( r.lb ) + " , " + fmt_obj( r.ub ) + " ]" );
- return( fmt_obj( r.value ) );
+ const std::string lb = fmt_obj( r.lb ) , ub = fmt_obj( r.ub );
+
+ // a Solver that closed the gap prints the optimum rather than an interval
+ // whose two ends read the same
+ if( lb == ub )
+  return( lb );
+
+ return( "[ " + lb + " , " + ub + " ]" );
  }
 
 /*--------------------------------------------------------------------------*/
-/*--- mutual-infeasibility watchdog ----------------------------------------*/
-/*--------------------------------------------------------------------------*/
-// A multi-Solver cross-check where *all* Solvers report infeasible (or all
-// unbounded) and no reference is given is accepted as a pass (OK(e) / OK(u)):
-// the Solvers agree, so there is nothing to flag per se. However, if a whole
-// run degenerates into such "everybody agrees it is infeasible" comparisons,
-// the test is not really comparing any solution and silently passes for
-// the wrong reason. We therefore count these cases and, at process exit, emit
-// a warning on stderr if they dominate the run (without altering any verdict
-// or exit code, so that legitimately-infeasible tests keep working).
+// A cross-check where every Solver reports infeasible, or every Solver
+// reports unbounded, is a pass: they do agree. A run made mostly of such
+// comparisons, however, passes without ever comparing a solution, so they
+// are counted here and a warning is issued at exit if they dominate; no
+// verdict and no exit code is touched, since a test can be legitimately
+// infeasible.
 
 namespace {
  struct MutualInfWatchdog {
@@ -389,6 +389,7 @@ namespace {
 }
 
 /*--------------------------------------------------------------------------*/
+// the verdict on one instance, see common_utils.h for the criterion
 
 bool cross_check( const std::vector< SolverReading > & rd ,
                   const std::vector< bool > & has_solution ,
@@ -422,7 +423,7 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  // lb <= ub sanity check when the reading is a bracket)
  if( ( M == 1 ) && std::isnan( ref ) ) {
   bool ok = has_solution[ 0 ];
-  if( ok && ( rd[ 0 ].kind == SolverReading::Kind::Bracket ) )
+  if( ok && std::isfinite( rd[ 0 ].lb ) && std::isfinite( rd[ 0 ].ub ) )
    ok = le( rd[ 0 ].lb , rd[ 0 ].ub , tol );
   verdict_out = ok ? "OK" : "KO";
   return( ok );
@@ -446,62 +447,57 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  // disagreeing with the feasible ones, too)
  if( nFeas < M ) { verdict_out = "KO"; return( false ); }
 
- // all feasible: the mutual-agreement check. Every reading is turned into
- // the interval [ lb_k , ub_k ] that it claims contains the optimum, with
- // the optimality tolerance eps_k it was declared with:
- //
- //   Exact( v )        ->  [ v , v ]       eps = its declared eps (NaN = tol)
- //   LowerBound( v )   ->  [ v , +inf ]    eps = tol
- //   UpperBound( v )   ->  [ -inf , v ]    eps = tol
- //   Bracket           ->  [ lb , ub ]     eps = tol
- //   ref (if given)    ->  [ ref , ref ]   eps = tol
- //
- // and readings i and j agree iff their intervals overlap up to the larger
- // of the two tolerances:
- //
- //   lb_i <= ub_j ( 1 + eps )  and  lb_j <= ub_i ( 1 + eps ) ,
- //   eps = max( eps_i , eps_j )
- //
- // (in the relative form lb - ub <= eps * max( 1 , | lb | , | ub | )). The
- // check passes iff EVERY pair agrees, the pair i == j included (which is
- // the sanity check lb_k <= ub_k). The familiar special cases all follow:
- // two Exact overlap iff their optima are equal up to eps, an Exact vs a
- // Bracket iff the bracket contains the optimum, two Bracket iff
- // max lb <= min ub.
- struct Interval { double lb , ub , eps; };
+ // all feasible: the agreement check of common_utils.h. The optimum is not
+ // known, so what every Solver is measured against is the best knowledge
+ // the whole set of them provides, i.e. the largest of the lower bounds and
+ // the smallest of the upper bounds (the reference value, when given, being
+ // one more Solver that has both)
  constexpr double INF = std::numeric_limits< double >::infinity();
- std::vector< Interval > itv;
- itv.reserve( M + 1 );
- double zstar = std::numeric_limits< double >::quiet_NaN();  // 1st Exact optimum
- for( std::size_t k = 0 ; k < M ; ++k )
-  switch( rd[ k ].kind ) {
-   case SolverReading::Kind::Exact:
-    itv.push_back( { rd[ k ].value , rd[ k ].value ,
-                     std::isnan( rd[ k ].eps ) ? tol : rd[ k ].eps } );
-    if( std::isnan( zstar ) )
-     zstar = rd[ k ].value;
-    break;
-   case SolverReading::Kind::LowerBound:
-    itv.push_back( { rd[ k ].value , INF , tol } );
-    break;
-   case SolverReading::Kind::UpperBound:
-    itv.push_back( { - INF , rd[ k ].value , tol } );
-    break;
-   case SolverReading::Kind::Bracket:
-    itv.push_back( { rd[ k ].lb , rd[ k ].ub , tol } );
-    break;
-   }
- if( ! std::isnan( ref ) )
-  itv.push_back( { ref , ref , tol } );
+ double best_lb = - INF , best_ub = INF;
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  best_lb = std::max( best_lb , rd[ k ].lb );
+  best_ub = std::min( best_ub , rd[ k ].ub );
+  }
+ if( ! std::isnan( ref ) ) {
+  best_lb = std::max( best_lb , ref );
+  best_ub = std::min( best_ub , ref );
+  }
 
  bool ok = true;
- for( std::size_t i = 0 ; i < itv.size() ; ++i )
-  for( std::size_t j = i ; j < itv.size() ; ++j ) {
-   const double eps = std::max( itv[ i ].eps , itv[ j ].eps );
-   if( ( ! le( itv[ i ].lb , itv[ j ].ub , eps ) ) ||
-       ( ! le( itv[ j ].lb , itv[ i ].ub , eps ) ) )
+ double zstar = std::numeric_limits< double >::quiet_NaN();  // 1st claimed z*
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  const double lb = rd[ k ].lb , ub = rd[ k ].ub;
+
+  // correctness, which every Solver owes whatever it promised: its bounds
+  // cannot contradict the bounds of the others
+  if( std::isfinite( ub ) && ( ! le( best_lb , ub , tol ) ) )
+   ok = false;
+  if( std::isfinite( lb ) && ( ! le( lb , best_ub , tol ) ) )
+   ok = false;
+
+  // quality, which only the Solver that delivered what it was asked owes:
+  // each of its bounds has to be within its declared tolerance of the best
+  // opposite one. A Solver that returns kLowPrecision, or that stopped on
+  // any other condition, promised nothing and owes nothing here. The
+  // tolerance is never taken below tol: under that the comparison would be
+  // measuring the noise of the cross-check itself, and a Solver asked for
+  // an accuracy that tight stops just outside it anyway, its own stopping
+  // criterion not being normalized exactly like this one
+  const double e = std::max( std::isnan( rd[ k ].eps ) ? tol : rd[ k ].eps ,
+                             tol );
+  if( ( status[ k ] == Solver::kOK ) && ( ! std::isinf( e ) ) ) {
+   if( std::isfinite( ub ) && std::isfinite( best_lb )
+       && ( ! le( ub , best_lb , e ) ) )
+    ok = false;
+   if( std::isfinite( lb ) && std::isfinite( best_ub )
+       && ( ! le( best_ub , lb , e ) ) )
     ok = false;
    }
+
+  // the optimum is pinned by the first Solver that bounds it on both sides
+  if( std::isnan( zstar ) && std::isfinite( lb ) && std::isfinite( ub ) )
+   zstar = rd[ k ].claimed();
+  }
 
  if( ( ! std::isnan( zstar ) ) && ( ! std::isnan( ref ) ) )
   diff_out = std::abs( zstar - ref );
@@ -511,6 +507,7 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  }
 
 /*--------------------------------------------------------------------------*/
+// solve an instance with every Solver, cross-check them, report
 
 bool SolveAll( Block * block ,
                const SolverClassifier & classify ,
@@ -526,6 +523,10 @@ bool SolveAll( Block * block ,
                         : std::numeric_limits< double >::max();
 
  try {
+  // the Solver the BlockSolverConfig attached to this Block, in its order,
+  // which is the order the -E tolerances are positional on; the Solver that
+  // these in turn attach to the inner Block are theirs, not part of the
+  // comparison
   const auto & reg = block->get_registered_solvers();
   std::vector< Solver * > S( reg.begin() , reg.end() );
   const std::size_t M = S.size();
@@ -555,6 +556,11 @@ bool SolveAll( Block * block ,
    if( hs[ k ] ) {
     rd[ k ] = classify( S[ k ] , k );
     tok[ k ] = reading_token( rd[ k ] );
+    // a Solver that did not return kOK did not deliver what it was asked
+    // and is therefore only held to correctness: say so in the line, since
+    // it is what its numbers are worth
+    if( status[ k ] == Solver::kLowPrecision )  tok[ k ] += " (lowP)";
+    else if( status[ k ] != Solver::kOK )       tok[ k ] += " (stop)";
     }
    else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
    else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
@@ -562,7 +568,7 @@ bool SolveAll( Block * block ,
    }
 
   // out-params from the first Solver - - - - - - - - - - - - - - - - - - - -
-  if( out_fo1 )   *out_fo1   = hs[ 0 ] ? rd[ 0 ].value : -INF;
+  if( out_fo1 )   *out_fo1   = hs[ 0 ] ? rd[ 0 ].claimed() : -INF;
   if( out_hs1 )   *out_hs1   = hs[ 0 ];
   if( out_time1 ) *out_time1 = times[ 0 ];
   if( out_it1 )   *out_it1   = iters[ 0 ];
@@ -588,18 +594,18 @@ bool SolveAll( Block * block ,
 
 bool SolveAll( Block * block ,
                double ref ,
-               const std::vector< ObjGetter > & getters ,
                double tol ,
                double * out_fo1 ,
                bool   * out_hs1 ,
                double * out_time1 ,
                long   * out_it1 )
 {
- return( SolveAll( block , exact_getters( getters ) , ref , tol ,
+ return( SolveAll( block , read_bounds , ref , tol ,
                    out_fo1 , out_hs1 , out_time1 , out_it1 ) );
  }
 
 /*--------------------------------------------------------------------------*/
+// SolveAll() of one or two Solver read via the given getters
 
 bool SolveBoth( Block * block ,
                 ObjGetter g1 ,
@@ -612,22 +618,20 @@ bool SolveBoth( Block * block ,
                 long   * out_it1 )
 {
  // SolveBoth is the M <= 2 special case of SolveAll: the first Solver is read
- // via g1, the second via g2. In the default (two-sided) mode both are Exact
- // optima that must agree; in the ProxHeur one-sided mode the first is a
+ // via g1, the second via g2. In the default (two-sided) mode both claim an
+ // optimum that must agree; in the ProxHeur one-sided mode the first is a
  // lower bound and the second an upper bound, so the verdict becomes LB <= UB.
  SolverClassifier classify =
   [ g1 , g2 , one_sided_le ]( Solver * s , std::size_t k ) -> SolverReading {
-   SolverReading r;
-   if( one_sided_le ) {
-    r.kind  = k ? SolverReading::Kind::UpperBound
-                : SolverReading::Kind::LowerBound;
-    r.value = get_obj_value( s , k ? g2 : g1 );
-    }
-   else {
-    r.kind  = SolverReading::Kind::Exact;
-    r.value = get_obj_value( s , k ? g2 : g1 );
-    }
-   return( r );
+   const double v = get_obj_value( s , k ? g2 : g1 );
+   if( ! one_sided_le )
+    return( SolverReading::exact( v , eps_of( k , s ) ) );
+
+   // the one-sided bounds claim nothing unless -E says how tight they are
+   const double e = eps_of( k , nullptr ,
+                            std::numeric_limits< double >::infinity() );
+   return( k ? SolverReading::upper_bound( v , e )
+             : SolverReading::lower_bound( v , e ) );
    };
 
  return( SolveAll( block , classify ,
@@ -636,6 +640,7 @@ bool SolveBoth( Block * block ,
  }
 
 /*--------------------------------------------------------------------------*/
+// compare a value against the reference one and report
 
 bool CheckRefValue( double fo , double ref ,
                     double rel_tol ,
@@ -658,6 +663,7 @@ bool CheckRefValue( double fo , double ref ,
  }
 
 /*--------------------------------------------------------------------------*/
+// solve with the only Solver and compare against the reference value
 
 bool SolveAndCheckRef( Block * block , double ref ,
                        ObjGetter g ,
@@ -669,9 +675,9 @@ bool SolveAndCheckRef( Block * block , double ref ,
  }
 
 /*--------------------------------------------------------------------------*/
-/*--------------------- CLI baseline (opt-in) ------------------------------*/
+/*------------------------------ COMMAND LINE ------------------------------*/
 /*--------------------------------------------------------------------------*/
-// Globals (declared extern in common_utils.h).
+// the globals declared extern in common_utils.h
 
 std::string docopt_desc;
 
@@ -689,10 +695,12 @@ int verbosity_level = 0;
 
 double RefObjective = std::numeric_limits< double >::quiet_NaN();
 
-// Minimal getopt baseline shared by tests that opt in. Tests that need
+std::vector< double > solver_eps;
+
+// the getopt baseline shared by the tests that opt in; those that need
 // extra switches override short_opts / long_opts / help in their main()
-// before calling process_args().
-std::string short_opts = "B:S:p:c:Dv::h";
+// before calling process_args()
+std::string short_opts = "B:S:p:c:E:Dv::h";
 
 std::vector< option > long_opts = {
  { "help"            , no_argument       , nullptr , 'h' } ,
@@ -700,6 +708,7 @@ std::vector< option > long_opts = {
  { "solvercfg"       , required_argument , nullptr , 'S' } ,
  { "prefix"          , required_argument , nullptr , 'p' } ,
  { "configdir"       , required_argument , nullptr , 'c' } ,
+ { "eps"             , required_argument , nullptr , 'E' } ,
  { "dryrun"          , no_argument       , nullptr , 'D' } ,
  { "verbose"         , optional_argument , nullptr , 'v' } ,
  { nullptr           , no_argument       , nullptr , 0   }
@@ -711,10 +720,16 @@ std::string help =
  "  -S, --solvercfg <file>          Solver Configuration\n"
  "  -p, --prefix <path>             the prefix for all Block filenames\n"
  "  -c, --configdir <path>          the prefix for all Config filenames\n"
+ "  -E, --eps <e[,e,...]>           optimality tolerance of each Solver, in\n"
+ "                                  the order of the BlockSolverConfig, the\n"
+ "                                  empty field being its own dblRelAcc; one\n"
+ "                                  value applies to all, inf claims nothing\n"
+ "                                  beyond a valid [ get_lb() , get_ub() ]\n"
  "  -D, --dryrun                    skip the compute() call\n"
  "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic, 2 = debug)\n";
 
 /*--------------------------------------------------------------------------*/
+// open an SMS++ nc4 file and check that it is one
 
 int read_open_netCDF( netCDF::NcFile & f , std::string fn )
 {
@@ -748,6 +763,7 @@ int read_open_netCDF( netCDF::NcFile & f , std::string fn )
  }
 
 /*--------------------------------------------------------------------------*/
+// print the usage
 
 void docopt( void )
 {
@@ -760,6 +776,51 @@ void docopt( void )
  }
 
 /*--------------------------------------------------------------------------*/
+// read the tolerances of -E, a comma-separated list whose fields are either
+// a number or, case-insensitively, "inf"
+static void parse_eps_list( const std::string & arg )
+{
+ solver_eps.clear();
+ std::size_t pos = 0;
+ while( pos <= arg.size() ) {
+  const std::size_t next = arg.find( ',' , pos );
+  std::string field = arg.substr( pos , next == std::string::npos
+                                        ? std::string::npos : next - pos );
+  pos = ( next == std::string::npos ) ? arg.size() + 1 : next + 1;
+
+  // trim the blanks that a quoted argument may carry
+  const auto b = field.find_first_not_of( " \t" );
+  const auto e = field.find_last_not_of( " \t" );
+  field = ( b == std::string::npos ) ? "" : field.substr( b , e - b + 1 );
+
+  // an empty field declares nothing for that Solver, but holds its place
+  if( field.empty() ) {
+   solver_eps.push_back( std::numeric_limits< double >::quiet_NaN() );
+   continue;
+   }
+
+  std::string lc;
+  for( auto c : field )
+   lc += char( std::tolower( (unsigned char) c ) );
+
+  if( ( lc == "inf" ) || ( lc == "+inf" ) || ( lc == "infinity" ) ) {
+   solver_eps.push_back( std::numeric_limits< double >::infinity() );
+   continue;
+   }
+
+  try {
+   solver_eps.push_back( std::stod( field ) );
+   }
+  catch( ... ) {
+   std::cerr << exe << ": invalid tolerance '" << field << "' in -E"
+             << std::endl;
+   exit( 1 );
+   }
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+// one standard option, or false if it is not one
 
 bool process_standard_arg( int opt )
 {
@@ -778,6 +839,7 @@ bool process_standard_arg( int opt )
             // against it, exactly as Block::set_filename_prefix() does for -p
             Configuration::set_filename_prefix( std::string( conf_prefix ) );
             break;
+  case 'E': parse_eps_list( std::string( optarg ) ); break;
   case 'D': dryrun = true; break;
   case 'v': {
    sol_verbose = true;
@@ -796,6 +858,7 @@ bool process_standard_arg( int opt )
 bool filename_optional = false;
 
 /*--------------------------------------------------------------------------*/
+// the -S and -B that a test cannot do without
 
 void require_solver_config( void )
 {
@@ -814,6 +877,7 @@ void require_block_config( void )
  }
 
 /*--------------------------------------------------------------------------*/
+// parse the command line, with or without test-specific options
 
 void process_args( int argc , char ** argv )
 {

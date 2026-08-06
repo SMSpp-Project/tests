@@ -7,14 +7,14 @@
  * An UCBlock instance is loaded from netCDF file, all the Solver listed in the
  * given BlockSolverConfig are registered to it, the UCBlock is solved by each
  * of them and the results are cross-checked against each other (and against a
- * reference objective value, where one is known). How each Solver enters the
- * cross-check follows from the per-Solver optimality tolerances declared to
- * eps_getter(): a Solver with a finite eps is exact up to it and must agree
- * with the other exact ones on the optimum, while one with an infinite eps
- * only has to contain the optimum in its [ get_lb() , get_ub() ] interval,
- * which is valid by the base Solver contract. Nothing here is tied to a
- * particular Solver, so bringing a new one into the comparison is a matter
- * of listing it in the BlockSolverConfig.
+ * reference objective value, where one is known). Each Solver enters the
+ * cross-check as its [ get_lb() , get_ub() ] interval, valid by the base
+ * Solver contract, and is measured against the best bounds all of them
+ * provide: correctness always, and the tolerance it declares when it says
+ * it delivered it. That tolerance is the dblRelAcc of its ComputeConfig
+ * unless -E overrides it. Nothing here is tied to a particular Solver, so
+ * bringing a new one into the comparison is a matter of listing it in the
+ * BlockSolverConfig.
  *
  * Although the tester does not even include BundleSolver, some
  * BundleSolver-specific steps are done if a macro is set.
@@ -552,17 +552,11 @@ int main( int argc , char ** argv )
  // cross-check EVERY registered Solver against the others (and against the
  // reference objective value, where one is known). Each Solver enters the
  // check as its [ get_lb() , get_ub() ] interval, valid by the base Solver
- // contract; the per-Solver eps below declares, positionally with respect to
- // the Solver order in the BSPar*.txt files, how tight each one claims to
- // be: the :MILPSolver and the LagrangianDualSolver (which closes the gap on
- // these instances) are exact up to the test tolerance, while nothing beyond
- // plain correctness is claimed for the PrimalProximalHeur (its bounds only
- // have to contain the optimum). Further exact Solver appended to the
- // BlockSolverConfig are covered by the eps_getter() default, so bringing
- // one into the comparison is only a matter of listing it there
- const bool AllPassed = SolveAll( TestBlock ,
-                                  eps_getter( { 1e-5 , 1e-5 , INF } ) ,
-                                  RefObjective , 1e-5 );
+ // contract, and is held to the gap declared for it, which is the dblRelAcc
+ // of its ComputeConfig unless -E overrides it: the batches do so for the
+ // PrimalProximalHeur, whose dblRelAcc is what the inner Solver is asked
+ // and not what its primal solution is worth
+ const bool AllPassed = SolveAll( TestBlock , RefObjective , 1e-5 );
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

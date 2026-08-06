@@ -16,6 +16,12 @@ source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
 DEFAULT_PAR=BSPar-AC.txt
+# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
+# except for the PrimalProximalHeur: what is asked of the inner BundleSolver
+# is not what its primal solution is worth, so the third field of -E declares
+# the quality of its upper bound on these instances, where it closes
+# the gap almost exactly (measured worst case: 2.3e-07)
+EPS="${EPS:-,,1e-4}"
 parse_batch_args "$@"
 
 # AC OPF LP relaxations are more degenerate than DC ones (SOCP cone +
@@ -44,7 +50,7 @@ for what in ${DATADIR}/*.nc4; do
       *_24h_*) continue ;;
     esac
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -E "$EPS"
 
 done
 

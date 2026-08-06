@@ -11,10 +11,13 @@
 #   - PrimalProximalHeur    a heuristic: it only UPPER bounds the optimum
 #
 # The test reads each Solver as the [ get_lb() , get_ub() ] interval of the
-# base Solver contract, with the per-Solver optimality tolerances declared in
-# the tester positionally on this very Solver list (the two exact ones first,
-# the heuristic third), so adding an exact Solver here is all it takes to
-# bring it into the cross-check. The per-Solver ComputeConfig are factored
+# base Solver contract, measures it against the best bounds all of them
+# provide, and holds the one that returns kOK to the dblRelAcc its
+# ComputeConfig asks of it. The PrimalProximalHeur is the exception, since
+# what is asked of the inner BundleSolver is not what its primal solution
+# is worth: the batches declare with -E what its bound is worth on the
+# instances they run. Adding an exact Solver here is therefore all it takes
+# to bring it into the cross-check. The per-Solver ComputeConfig are factored
 # into the *Cfg.txt fragments. BSPar-EASY.txt and
 # BSPar-AC.txt are the variants for the instances whose components are all
 # "easy" for BundleSolver (intDoEasy=0), the AC one also tuned for the QCP

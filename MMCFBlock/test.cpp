@@ -293,8 +293,7 @@ static bool SolveBoth( void )
    PrintSol( Slvr , k == 0 , times[ k ] , fo );
 
    if( hs[ k ] ) {
-    rd[ k ].kind  = SolverReading::Kind::Exact;
-    rd[ k ].value = fo;
+    rd[ k ] = SolverReading::exact( fo , eps_of( k , Slvr ) );
     tok[ k ] = reading_token( rd[ k ] );
     }
    else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";

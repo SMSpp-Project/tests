@@ -410,10 +410,8 @@ static bool SolveBoth( void )
    std::vector< SolverReading > rd( 2 );
    std::vector< bool > hs{ has_solution( rtrn1st ) , has_solution( rtrn2nd ) };
    std::vector< int > status{ rtrn1st , rtrn2nd };
-   if( hs[ 0 ] ) { rd[ 0 ].kind = SolverReading::Kind::Exact;
-                   rd[ 0 ].value = fo1st; }
-   if( hs[ 1 ] ) { rd[ 1 ].kind = SolverReading::Kind::Exact;
-                   rd[ 1 ].value = fo2nd; }
+   if( hs[ 0 ] ) rd[ 0 ] = SolverReading::exact( fo1st , eps_of( 0 , Slvr1 ) );
+   if( hs[ 1 ] ) rd[ 1 ] = SolverReading::exact( fo2nd , eps_of( 1 , Slvr2 ) );
 
    auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
     if( h )                              return( reading_token( r ) );
