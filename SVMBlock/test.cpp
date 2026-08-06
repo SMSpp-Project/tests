@@ -202,7 +202,7 @@ static bool run_round( unsigned sd )
   * and SMOSolver, which close the gap, as well as a LagrangianDualSolver,
   * whose lower bound is the optimal value itself since the training problem
   * is convex and the consensus rewriting is an exact one. */
- const bool ok = SolveAll( block , eps_getter( {} ) , RefObjective , tol );
+ const bool ok = SolveAll( block , RefObjective , tol );
 
  s_config_Block( block , bsc );  // remove the Solver by re-apply()-ing the
  delete bsc;                     // clear()-ed BlockSolverConfig
