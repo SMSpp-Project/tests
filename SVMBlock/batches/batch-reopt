@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#
+# usage: batch-reopt < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# exercises the changes of the training problem: each run solves the SVMBlock,
+# then changes its hyper-parameters, its targets and finally its whole data
+# set under the very Solver that are attached to it, re-solving after each
+# change. The ad hoc SMOSolver re-optimizes out of the physical
+# representation, restarting from the previous multipliers whenever the change
+# allows it, while a general-purpose :MILPSolver reads the abstract one, which
+# the SVMBlock has to keep up to date: that the two keep agreeing after every
+# change is the test
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+# both problems the abstract representation can encode, since a change has to
+# be followed in either of them; the kernels are swept by the dual alone, the
+# training problem itself only existing for the linear one
+for prb in dual primal; do
+
+  K_LIST="0"
+  [ "$prb" = "dual" ] && K_LIST="0 1 2 3"
+
+  for K in $K_LIST; do
+
+    # wf: the linear (0) or the quadratic (+1) penalty of the training errors,
+    # and the bias free (0) or regularised (+2)
+    for wf in 0 1 2 3; do
+      for task in "" "-g"; do
+
+        run_test "$exe" -S "$par" -B SVMCfg-${prb}.txt -f "$wf" -K "$K" \
+                 -N 40 -M 3 -n 1 -e 1 -R $task
+
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

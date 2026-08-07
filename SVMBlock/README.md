@@ -35,10 +35,9 @@ Three `:Solver` are involved:
 The usage of the executable is the following:
 
        ./SVM_test -S <BlockSolverConfig> [options] [file]
-       -f, --wf <bits>    what is encoded, coded bit-wise [0]
-                          1  = the training problem itself, 0 = its Wolfe dual
-                          +2 = squared loss
-                          +4 = regularised bias
+       -f, --wf <bits>    the loss and the bias, coded bit-wise [0]
+                          1 = squared loss
+                          2 = regularised bias
        -s, --nchunk <n>   rewrite the training problem as n chunks tied by
                           consensus constraints [1]
        -K, --kernel <n>   0 linear, 1 poly, 2 gaussian, 3 laplacian,
@@ -52,6 +51,8 @@ The usage of the executable is the following:
        -n, --rounds <n>   how many rounds, each with its own data set [10]
        -t, --tol <x>      relative tolerance of the cross-check [1e-5]
        -r, --ref <x>      reference objective value
+       -R, --reopt        also change the training problem under the Solver,
+                          re-solving after each change
 
 `./SVM_test --help` lists the standard options as well. If a `file` is given
 it is read as a `SVMBlock` in netCDF format and no data set is generated.
@@ -72,3 +73,14 @@ and the granularity of the consensus rewriting, and
 and the trade-off parameter. Each of them passes the `BlockConfig` naming its
 own problem, so that what is being exercised is stated in the batch rather
 than encoded in a flag.
+
+With `-R` the training problem is also *changed* under the `Solver`, and
+re-solved after each change: the trade-off parameter, the loss, the bias, the
+half-width of the insensitivity tube, one target and finally a whole new data
+set. The `Solver` are not detached in between, hence each of them has to make
+the right sense of the `Modification` the `SVMBlock` issues, `SMOSolver`
+re-optimizing out of the physical representation and the `:MILPSolver` reading
+the abstract one, which the `SVMBlock` keeps up to date; that the two keep
+agreeing after every change is the test. This is what the third batch file,
+[batch-reopt](batches/batch-reopt), sweeps over both problems and all the
+kernels.

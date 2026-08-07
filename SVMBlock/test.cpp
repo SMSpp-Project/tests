@@ -81,6 +81,7 @@ double parC = 1;            ///< the trade-off parameter C
 double parE = 0.1;          ///< the half-width of the insensitivity tube
 Index n_repeat = 10;        ///< number of rounds
 double tol = 1e-5;          ///< relative tolerance of the cross-check
+bool reopt = false;         ///< re-solve after changing the training problem
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
@@ -159,6 +160,74 @@ static SVMBlock * construct( unsigned sd )
  }  // end( construct )
 
 /*--------------------------------------------------------------------------*/
+/// changes the training problem under the Solver, re-solving after each change
+/** Subjects the SVMBlock to a sequence of changes of its data, re-solving it
+ * after each one with all the Solver that are attached to it: since they keep
+ * having to agree with each other, this is a check that each of them makes
+ * the right sense of the Modification, be it a Solver reading the physical
+ * representation, such as SMOSolver, which can then re-optimize starting from
+ * the previous solution, or one working on the abstract representation, which
+ * the SVMBlock has to keep up to date. */
+
+static bool run_changes( SVMBlock * svm , Block * block )
+{
+ bool ok = true;
+
+ auto step = [ & ]( const std::string & what ) {
+  std::cout << "  after " << what << ": ";
+  ok &= SolveAll( block , std::numeric_limits< double >::quiet_NaN() , tol );
+  };
+
+ svm->set_C( parC * 8 );
+ step( "C increased" );
+
+ svm->set_C( parC / 8 );
+ step( "C decreased" );
+
+ svm->set_squared_loss( ! ( wf & SqrLoss ) );
+ step( "the loss changed" );
+
+ svm->set_C( parC );
+ step( "C changed back" );
+
+ svm->set_squared_loss( wf & SqrLoss );
+ step( "the loss changed back" );
+
+ if( auto svr = dynamic_cast< SVRBlock * >( svm ) ) {
+  svr->set_epsilon( parE * 4 );
+  step( "epsilon increased" );
+
+  svm->chg_target( svm->get_y()[ 0 ] + 1 , 0 );
+  step( "a target changed" );
+  }
+ else {
+  svm->chg_target( - svm->get_y()[ 0 ] , 0 );
+  step( "a target flipped" );
+  }
+
+ // whatever changes the Hessian of the dual as a whole makes the SVMBlock
+ // rebuild its abstract representation and issue a NBModification
+ svm->set_reg_bias( ! ( wf & RegBias ) );
+ step( "the bias regularised or not" );
+
+ if( svm->get_generated_problem() != SVMBlock::kPrimal ) {
+  svm->set_kernel( kernel == SVMBlock::kLinear ? SVMBlock::kGaussian
+                                               : SVMBlock::kLinear );
+  step( "the kernel changed" );
+  }
+
+ // and so does a whole new data set, of a different size
+ doubleVec X , y;
+ generate( ( nsample * 2 ) / 3 + 1 , nfeature , X , y , seed + 1000 );
+ svm->load( ( nsample * 2 ) / 3 + 1 , nfeature , std::move( X ) ,
+            std::move( y ) );
+ step( "a new data set" );
+
+ return( ok );
+
+ }  // end( run_changes )
+
+/*--------------------------------------------------------------------------*/
 /// runs one round: builds the SVMBlock, solves it with every Solver, checks
 
 static bool run_round( unsigned sd )
@@ -202,7 +271,14 @@ static bool run_round( unsigned sd )
   * and SMOSolver, which close the gap, as well as a LagrangianDualSolver,
   * whose lower bound is the optimal value itself since the training problem
   * is convex and the consensus rewriting is an exact one. */
- const bool ok = SolveAll( block , RefObjective , tol );
+ bool ok = SolveAll( block , RefObjective , tol );
+
+ /* The training problem can also be changed under the Solver, which then have
+  * to keep agreeing with each other: the consensus rewriting is left out,
+  * since there the Solver are attached to the assembled Block and not to the
+  * SVMBlock the changes would be made to. */
+ if( reopt && ( nchunk <= 1 ) )
+  ok &= run_changes( svm , block );
 
  s_config_Block( block , bsc );  // remove the Solver by re-apply()-ing the
  delete bsc;                     // clear()-ed BlockSolverConfig
@@ -232,6 +308,7 @@ static bool process_specific_arg( int opt )
   case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
   case( 't' ): Str2Sthg( optarg , tol );       return( true );
   case( 'g' ): regression = true;              return( true );
+  case( 'R' ): reopt = true;                   return( true );
   case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
   }
 
@@ -249,7 +326,7 @@ int main( int argc , char ** argv )
 
  docopt_desc = "SMS++ SVMBlock test.\n";
  filename_optional = true;
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:g";
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:gR";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
@@ -262,7 +339,8 @@ int main( int argc , char ** argv )
    { "rounds"   , required_argument , nullptr , 'n' } ,
    { "tol"      , required_argument , nullptr , 't' } ,
    { "ref"      , required_argument , nullptr , 'r' } ,
-   { "regress"  , no_argument       , nullptr , 'g' } };
+   { "regress"  , no_argument       , nullptr , 'g' } ,
+   { "reopt"    , no_argument       , nullptr , 'R' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
@@ -283,6 +361,10 @@ int main( int argc , char ** argv )
          "tube [0.1]\n"
          "  -g, --regress                   regression instead of "
          "classification\n"
+         "  -R, --reopt                     also change the training problem "
+         "under the\n"
+         "                                  Solver, re-solving after each "
+         "change\n"
          "  -n, --rounds <n>                how many rounds [10]\n"
          "  -t, --tol <x>                   relative tolerance of the "
          "cross-check [1e-5]\n"
