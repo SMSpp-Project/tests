@@ -1,11 +1,39 @@
 #!/usr/bin/env bash
+#
+# usage: run_uc_test [ options ]
+#        --generator < path >   scenario generator, default ./UCScenarioGenerator
+#        --solve < path >       reduction test, default ./ScenarioReductionSolver_test
+#        --instances < list >   instance names or paths, default EC_CO_Test_TUB
+#        --n < list >           scenario counts N, default 25
+#        --k < list >           representative counts K, default 5
+#        --seeds < list >       random seeds, default 10
+#        --methods < list >     reduction methods, default cssc
+#        --solver < file >      BlockSolverConfig, default BSCfg.txt
+#        --variation < x >      data variation, default 0.5
+#        --uncertainty < w >    demand | renewable | both, default demand
+#        --instance-dir < dir > where the UC instances are searched
+#        --scenario-dir < dir > where the generated scenarios are written
+#        --config-dir < dir >   where the BSCfg.txt configs live
+#        --output < file >      CSV results file
+#
+# generates the scenarios and the TSSB file for each instance, N and seed,
+# then reduces and solves it for each K and each method, reporting the gap
+# between the reduced problem and the full one; see README.md.
+#
+# The two executables live in the build tree, hence they are given from the
+# outside, defaulting to the current directory as every other SMS++ batch;
+# everything else defaults to a path relative to this script, so that the
+# batch runs from any working directory and against any build tree.
+
 set -u
 
+HERE="$( cd "$( dirname "$0" )" && pwd )"
 
-WDIR=~/smspp-project/build/tests/ScenarioReduction/UC
-IDIR=~/smspp-project/UCBlock/data/nc4
-SDIR=/tmp/uc_scenarios
-CFGDIR=~/smspp-project/tests/ScenarioReduction   # where the BSCfg.txt configs live
+GEN="${GEN:-./UCScenarioGenerator}"
+SOLVE="${SOLVE:-./ScenarioReductionSolver_test}"
+IDIR="${IDIR:-${HERE}/../../../UCBlock/data/nc4}"
+SDIR="${SDIR:-${TMPDIR:-/tmp}/uc_scenarios}"
+CFGDIR="${CFGDIR:-${HERE}/..}"   # where the BSCfg.txt configs live
 
 INSTANCES="EC_CO_Test_TUB"
 N_VALUES="25"
@@ -20,24 +48,33 @@ OUTPUT_CSV="uc_results_seed_20.csv"
 # ---- parse flags ----------------------------------------------------------
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --instances)   INSTANCES="$2";   shift 2 ;;
-        --n)           N_VALUES="$2";    shift 2 ;;
-        --k)           K_VALUES="$2";    shift 2 ;;
-        --seeds)       SEEDS="$2";       shift 2 ;;
-        --methods)     METHODS="$2";     shift 2 ;;
-        --solver)      SOLVER="$2";      shift 2 ;;
-        --variation)   VARIATION="$2";   shift 2 ;;
-        --uncertainty) UNCERTAINTY="$2"; shift 2 ;;
-        --output)      OUTPUT_CSV="$2";  shift 2 ;;
-        -h|--help)     grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        --generator)    GEN="$2";         shift 2 ;;
+        --solve)        SOLVE="$2";       shift 2 ;;
+        --instances)    INSTANCES="$2";   shift 2 ;;
+        --n)            N_VALUES="$2";    shift 2 ;;
+        --k)            K_VALUES="$2";    shift 2 ;;
+        --seeds)        SEEDS="$2";       shift 2 ;;
+        --methods)      METHODS="$2";     shift 2 ;;
+        --solver)       SOLVER="$2";      shift 2 ;;
+        --variation)    VARIATION="$2";   shift 2 ;;
+        --uncertainty)  UNCERTAINTY="$2"; shift 2 ;;
+        --instance-dir) IDIR="$2";        shift 2 ;;
+        --scenario-dir) SDIR="$2";        shift 2 ;;
+        --config-dir)   CFGDIR="$2";      shift 2 ;;
+        --output)       OUTPUT_CSV="$2";  shift 2 ;;
+        -h|--help)      grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
 done
 
-GEN="$WDIR/uc_scenario_generator"
-SOLVE="$WDIR/ScenarioReductionSolver_test"
-[ ! -x "$GEN" ]   && { echo "ERROR: $GEN not found (build uc_scenario_generator)"; exit 1; }
-[ ! -x "$SOLVE" ] && { echo "ERROR: $SOLVE not found (build ScenarioReductionSolver_test)"; exit 1; }
+[ ! -x "$GEN" ] && {
+    echo "ERROR: $GEN not found (build UCScenarioGenerator, or pass"
+    echo "       --generator < path >)"; exit 1; }
+[ ! -x "$SOLVE" ] && {
+    echo "ERROR: $SOLVE not found (build ScenarioReductionSolver_test, or"
+    echo "       pass --solve < path >)"; exit 1; }
+[ ! -d "$IDIR" ] && {
+    echo "ERROR: instance directory not found: $IDIR"; exit 1; }
 
 # allow a bare filename for solver (e.g. BSCfg.txt): resolve under CFGDIR.
 # A value containing a slash is treated as a path and used as is.
@@ -52,7 +89,6 @@ case "$UNCERTAINTY" in
     *) echo "ERROR: --uncertainty must be demand|renewable|both"; exit 1 ;;
 esac
 
-cd "$WDIR" || exit 1
 mkdir -p "$SDIR"
 
 echo "Instance,Uncertainty,Seed,N,K,Method,Full_Obj,Reduced_Obj,Gap_Pct,RedTime_s,AlgoTime_s" > "$OUTPUT_CSV"
@@ -112,4 +148,4 @@ for INST in $INSTANCES; do
 done
 
 printf '%.0s=' {1..118}; printf "\n"
-echo "CSV saved to: $WDIR/$OUTPUT_CSV"
+echo "CSV saved to: $OUTPUT_CSV"

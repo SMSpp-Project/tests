@@ -13,7 +13,7 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 # UCScenarioGenerator writes a scenario file that the generic
 # ScenarioReductionSolver_test program (ScenarioReductionSolver module) then reduces
-# and solves; see run_uc_test.sh for the generate->solve flow.
+# and solves; see run_uc_test for the generate->solve flow.
 # It links SMS++::StochasticBlock, so require it too: a build that enables
 # UCBlock but not StochasticBlock (e.g. the ucblock module CI) must skip it.
 if (TARGET SMS++::UCBlock AND TARGET SMS++::StochasticBlock)
