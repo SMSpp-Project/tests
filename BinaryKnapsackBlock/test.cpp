@@ -56,6 +56,8 @@
 
 #include "BinaryKnapsackBlock.h"
 
+#include "ChangeSolver.h"
+
 #include <random>
 
 #include <chrono>
@@ -164,16 +166,20 @@ bool CrossCheckSolvers( void )
  // (skipping the infeasible ones, whose primal x cannot be read)
  std::vector< char > feasible( M , 0 );
  std::vector< char > bracket( M , 0 );
- // the generic per-Solver-eps reading lives in common_utils; the eps below
- // are positional with respect to the Solver order of BSPar.txt and
- // BSPar-mixed.txt (which agree: 3rd = GreedyRelaxationBinaryKnapsackSolver,
- // the relaxation, for which nothing beyond the base-contract bracket is
- // claimed; every other Solver, the BranchAndXSolver variants included via
- // the eps_getter() default, is exact up to the test tolerance). Here we
- // only wrap it to record, per Solver, feasibility and whether it is a
- // bracket (needed by the BinaryKnapsackBlock-specific self-consistency
- // check below)
- auto read = eps_getter( { 2e-06 , 2e-06 , Inf< double >() } );
+ // the generic per-Solver-eps reading lives in common_utils; here the eps are
+ // read off the registered Solver themselves rather than being positional, so
+ // that they follow whatever the BlockSolverConfig attaches: a
+ // :RelaxationSolver solves a relaxation, hence claims nothing beyond the
+ // base-contract bracket [ lb , ub ] around z*, while every other Solver (the
+ // exact ones and the BranchAndXSolver driving the relaxations) is exact up
+ // to the test tolerance. Here we only wrap the reading to record, per
+ // Solver, feasibility and whether it is a bracket (needed by the
+ // BinaryKnapsackBlock-specific self-consistency check below)
+ std::vector< double > eps( M , 2e-06 );
+ for( std::size_t k = 0 ; k < M ; ++k )
+  if( dynamic_cast< RelaxationSolver * >( Solvers[ k ] ) )
+   eps[ k ] = Inf< double >();
+ auto read = eps_getter( std::move( eps ) );
  SolverClassifier classify =
   [ &feasible , &bracket , read ]( Solver * s , std::size_t k ) -> SolverReading {
    feasible[ k ] = 1;
