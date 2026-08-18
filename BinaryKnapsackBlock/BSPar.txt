@@ -14,9 +14,11 @@
 #     detail of the relaxation, not a separate mode).
 #   - BranchAndXSolver again, on a few of those modes but driven by the
 #     incremental greedy relaxation (InnerBSCfg-incr.txt): same optimum.
+#   - BranchAndXSolver in reoptimization mode (intReoptimize), which retains
+#     the tree and re-seeds from its fenced frontier at each re-solve: same
+#     optimum after every runtime Modification.
 #
-# The reoptimization mode (intReoptimize) is intentionally left out for now (a
-# known issue over many re-solve cycles). The per-solver ComputeConfig are
+# The per-solver ComputeConfig are
 # factored into the *Cfg.txt fragments (the MILP/DP/CDP/GR ones are shared
 # with BSPar-mixed.txt) and the BX modes share BX-baseCfg.txt, overriding
 # only the mode-specific parameters via '*BX-baseCfg.txt +': no duplication.
@@ -32,7 +34,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-12  # number of (the names of) Solver in this BlockSolverConfig
+13  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 CPXMILPSolver                         # 1st: the exact reference optimum
@@ -50,8 +52,9 @@ BranchAndXSolver                      # 9th: BX per-node parallel solvers
 BranchAndXSolver                      # 10th: BX best-first, incremental inner
 BranchAndXSolver                      # 11th: BX depth-first, incremental inner
 BranchAndXSolver                      # 12th: BX depth-first parallel, incremental
+BranchAndXSolver                      # 13th: BX best-first, reoptimization on
 
-12  # number of ComputeConfig in this BlockSolverConfig
+13  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -287,6 +290,38 @@ intMaxThread   4
 
 # now all the string parameters
 strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 13: BranchAndXSolver, best-first with the tree retained for reoptimization
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize 1
+
+0  # number of double parameters
+
+0  # number of string parameters
 
 0  # number of vector-of-int parameters
 

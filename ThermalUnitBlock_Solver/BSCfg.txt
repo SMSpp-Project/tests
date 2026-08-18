@@ -48,8 +48,8 @@ intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
 # them within the feasibility tolerance scaled by the row can undercount
 # the quadratic cost by ~ 1e-4: tighter tolerances keep the MILP optimum
 # within the comparison accuracy of the DP reference
-FeasibilityTol  1e-9 # feasibility tolerance of GUROBI
-IntFeasTol      1e-9 # integer feasibility tolerance of GUROBI
+FeasibilityTol  1e-8 # feasibility tolerance of GUROBI
+IntFeasTol      1e-8 # integer feasibility tolerance of GUROBI
 
 ## All specific HiGHS parameter
 #primal_feasibility_tolerance 1e-9
