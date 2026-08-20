@@ -32,13 +32,15 @@ set(SMSPP_TEST_LABELS_QuadraticTests            "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_Write-Read                "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
 set(SMSPP_TEST_LABELS_BendersBFunction          "BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_MCF_MILP                  "MCFBlock;MCFClassSolver;MCFLemonSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_BinaryKnapsackBlock       "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_CapacitatedFacilityLocation
                                                 "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver;MCFClassSolver;MCFLemonSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_MMCFBlock                 "BundleSolver;MMCFBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_LagrangianDualSolver_MMCF "BundleSolver;LagrangianDualSolver;MCFLemonSolver;MMCFBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_LagrangianDualSolver_UC   "BundleSolver;LagrangianDualSolver;UCBlock;MILPSolver")
+# MMCFBlock hosts two testers: MMCF_test (vs the MMCFCplex reference) and
+# MMCFBlock_test (cross-check of a :MILPSolver and a LagrangianDualSolver), so
+# the label is the union of what the two exercise
+set(SMSPP_TEST_LABELS_MMCFBlock                 "BundleSolver;LagrangianDualSolver;MCFLemonSolver;MMCFBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_UCBlock                   "BundleSolver;LagrangianDualSolver;UCBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_MCFBlock                  "MCFBlock;MCFClassSolver;MCFLemonSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_ThermalUnitBlock_Solver   "UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_InvestmentBlock           "BundleSolver;InvestmentBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_TwoStageStochasticBlock   "BundleSolver;LagrangianDualSolver;TwoStageStochasticBlock;UCBlock;MILPSolver")

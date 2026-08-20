@@ -431,7 +431,7 @@ static bool SolveBoth( void )
 
    #if( CHECK_SOLUTIONS & 4 )
     for( Index i = 0 ; i < time_horizon ; ++i ) {
-     if( abs( p1[ i ] - p2[ i ] ) > 1e-6 * max( abs( p1[ i ] ) ,
+     if( std::abs( p1[ i ] - p2[ i ] ) > 1e-6 * std::max( std::abs( p1[ i ] ) ,
 						double( 1 ) ) ) {
       std::cerr << "p1[ " << i << " ] = " << p1[ i ] << " != p2[ " << i
 	   << " ] = " << p2[ i ] << std::endl;
@@ -585,6 +585,14 @@ int main( int argc , char **argv )
  // no-op for instances with no PrimaryRho/SecondaryRho data.
  TUBlock->set_reserve_vars( 3 );
 
+ // env-gated validation of commitment-gated reactive power: with TUDPS_QCOST
+ // set, enable q[t] (the standalone unit has no UCBlock parent to do it) and,
+ // below, price it with a constant dualized reactive term, so the DP-vs-MILP
+ // check exercises the box q in [Qmin_off+Qmin_on u, Qmax_off+Qmax_on u].
+ const char * qcost_env = std::getenv( "TUDPS_QCOST" );
+ if( qcost_env )
+  TUBlock->set_reactive_power( true );
+
  TUBlock->generate_abstract_variables();
  TUBlock->generate_objective( nullptr );
 
@@ -602,6 +610,23 @@ int main( int argc , char **argv )
   c[ i ] = TUBlock->get_const_term( i );
   // l[ i ] = TUBlock->get_operational_min_power( i );
   u[ i ] = TUBlock->get_operational_max_power( i );
+  }
+
+ if( qcost_env ) {
+  std::vector< double > qcost( time_horizon , std::atof( qcost_env ) );
+  TUBlock->set_reactive_linear_term( qcost.begin() ,
+                                     Range( 0 , time_horizon ) );
+  }
+
+ // env-gated: price the spinning reserves with a constant (negative) cost, so
+ // the reserve-rewarded multi-piece per-period cost path of the DP solvers is
+ // exercised (for profiling the reserve overhead of the base solver).
+ if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
+  std::vector< double > rcv( time_horizon , std::atof( rc ) );
+  TUBlock->set_primary_spinning_reserve_cost( rcv.begin() ,
+                                              Range( 0 , time_horizon ) );
+  TUBlock->set_secondary_spinning_reserve_cost( rcv.begin() ,
+                                                Range( 0 , time_horizon ) );
   }
 
  // attach the Solver(s) to the ThermalUnitBlock- - - - - - - - - - - - - - -

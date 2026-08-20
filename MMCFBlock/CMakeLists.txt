@@ -7,6 +7,8 @@ if (NOT hasParent)
     # Solvers
     find_package(BundleSolver)
     find_package(MILPSolver)
+    find_package(LagrangianDualSolver)
+    find_package(MCFLemonSolver)
 endif ()
 
 find_package(CPLEX)
@@ -87,7 +89,7 @@ add_custom_command(
 
 # The .dat instances are ready as soon as the archive is extracted: this is
 # the terminal target the test fixtures depend on (see also
-# tests/LagrangianDualSolver_MMCF).
+# tests/MMCFBlock).
 add_custom_target(fetch_canad_data
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad/.extracted)
 
@@ -133,8 +135,9 @@ if (TARGET SMS++::MMCFBlock AND
 
     smspp_install(MMCF_test)
 
-    # Add a test for each batch file
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch")
+    # the reference tester's batch (block-vs-MMCFCplex); the cross-check tester
+    # below registers its own (batch, batch-c, batch-m, batchML)
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch-ref")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
@@ -153,6 +156,75 @@ if (TARGET SMS++::MMCFBlock AND
         set_tests_properties(MMCF_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED
                              "canad_fetched;mnetgen_generated")
+    endforeach ()
+endif ()
+
+# ----- Cross-check tester -------------------------------------------------- #
+# The second executable solves the same MMCFBlock instances with every Solver
+# of its BlockSolverConfig (a :MILPSolver and a LagrangianDualSolver) and
+# cross-checks them, reusing the data fixtures set up above.
+if (TARGET SMS++::MMCFBlock)
+
+    add_executable(MMCFBlock_test test.cpp ../common_utils.cpp)
+    target_include_directories(MMCFBlock_test PRIVATE ..)
+    target_link_libraries(MMCFBlock_test PRIVATE SMS++::MMCFBlock)
+
+    if (TARGET SMS++::LagrangianDualSolver)
+        target_link_libraries(MMCFBlock_test PRIVATE SMS++::LagrangianDualSolver)
+    endif ()
+
+    if (TARGET SMS++::BundleSolver)
+        target_link_libraries(MMCFBlock_test PRIVATE SMS++::BundleSolver)
+    endif ()
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(MMCFBlock_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    if (TARGET SMS++::MCFLemonSolver)
+        target_link_libraries(MMCFBlock_test PRIVATE SMS++::MCFLemonSolver)
+    endif ()
+
+    smspp_install(MMCFBlock_test)
+
+    # The ML batch (batchML) drives the inner BundleSolverML, which is only
+    # registered in the Solver factory when BundleSolver is built with Torch;
+    # register it as a test only in that case.
+    find_package(Torch QUIET HINTS ${Torch_ROOT})
+    set(ML_BATCH "")
+    if (Torch_FOUND)
+        set(ML_BATCH "${CMAKE_CURRENT_SOURCE_DIR}/batchML")
+    endif ()
+
+    # Add a test for each batch file
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-c"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-m"
+                          ${ML_BATCH})
+    foreach (BATCH_FILE ${BATCH_FILES})
+        # Remove the source directory prefix to get the batch name
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        if (UNIX)
+            add_test(NAME MMCFBlock_test/${BATCH_NAME}
+                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/MMCFBlock_test
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        elseif (WIN32)
+            add_test(NAME MMCFBlock_test/${BATCH_NAME}
+                     # using Git for Windows that includes Git Bash
+                     COMMAND "C:/Program Files/Git/bin/bash.exe"
+                             "${BATCH_FILE}" "$<TARGET_FILE:MMCFBlock_test>"
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        endif ()
+        # Make each batch test require the data fixtures it reads
+        if (BATCH_NAME STREQUAL "batch")
+            set(BATCH_FIXTURES "canad_fetched;mnetgen_generated")
+        elseif (BATCH_NAME STREQUAL "batch-m")
+            set(BATCH_FIXTURES "mnetgen_generated")
+        else ()
+            set(BATCH_FIXTURES "canad_fetched")
+        endif ()
+        set_tests_properties(MMCFBlock_test/${BATCH_NAME}
+                             PROPERTIES FIXTURES_REQUIRED "${BATCH_FIXTURES}")
     endforeach ()
 endif ()
 

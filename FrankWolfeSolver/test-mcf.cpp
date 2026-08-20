@@ -11,7 +11,7 @@
  * AbstractBlock father with a random DQuadFunction father objective, solves it
  * by both a FrankWolfeSolver and a :MILPSolver, then repeatedly changes the arc
  * capacities of a sub-Block (MCFBlock::chg_ucaps, borrowing the change logic of
- * tests/MCF_MILP) and re-solves, cross-checking the two optima. This exercises
+ * tests/MCFBlock) and re-solves, cross-checking the two optima. This exercises
  * the feasibility handling of FrankWolfeSolver (atoms that became infeasible
  * are dropped and the active set re-built / warm-started), see intHandleMod.
  *
@@ -139,7 +139,7 @@ int main( int argc , char ** argv )
  bool ok = SolveAll( father , exact_getter( ObjGetter::VarValue ) ,
                      std::numeric_limits< double >::quiet_NaN() , 1e-5 );
 
- // randomized Modification rounds (in the style of tests/MCF_MILP): each round
+ // randomized Modification rounds (in the style of tests/MCFBlock): each round
  // randomly changes the arc costs (an *objective* change -> sub-Block-objective
  // Modification) and/or the arc capacities (a *feasible-region* change), of the
  // first sub-Block, always perturbing from the *original* values (not
@@ -152,7 +152,7 @@ int main( int argc , char ** argv )
  // the abstract one the monolithic :MILPSolver and FrankWolfeSolver. The chg_*
  // default (eNoBlck) updates the data but issues no Modification, leaving the
  // solvers' cached formulations stale. Capacities are kept clean integers >= 1
- // (MCFSimplex is sensitive to many-digit capacities, see tests/MCF_MILP).
+ // (MCFSimplex is sensitive to many-digit capacities, see tests/MCFBlock).
  auto mcf = children.front();
  Index na = mcf->get_NStaticArcs();
  MCFBlock::Vec_FNumber orig_caps( na );

@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+#
+# usage: batch-resilient < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs all the energy community instances and checks that the PyPsa objective
+# value matches the given reference one
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+# all the resilient instances are pure-LD subproblems on a single
+# ECNetworkBlock-like component: BundleSolver requires intDoEasy=0, so the
+# EASY variant is the default here (the standard BSPar.txt, intDoEasy=1,
+# would raise "BundleSolver: all components are easy, this is no supported").
+DEFAULT_PAR=BSPar-EASY.txt
+# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
+# except for the PrimalProximalHeur, of which nothing is asked here: it has
+# no thermal unit to penalise on these instances and so degenerates into a
+# warm-started LagrangianDualSolver, whose bound is valid but very weak
+EPS="${EPS:-,,inf}"
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ filename ] = PyPsa objective value
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_1n_1c_1g.nc]=4.221761376e+09
+REF_OBJ[smspp_1n_1c_1g_1h.nc]=4.984288994e+08
+REF_OBJ[smspp_1n_1c_1gext.nc]=4.055269613e+09
+REF_OBJ[smspp_2n_1c_1g_1b.nc]=3.944062665e+09
+REF_OBJ[smspp_2n_1c_1gext_1bext_2l.nc]=3.887187461e+09
+REF_OBJ[smspp_2n_1c_1gext_1bext_2lext.nc]=7.034743762e+08
+REF_OBJ[smspp_2n_2c_1g_1lext.nc]=6.720604306e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l.nc]=2.907246492e+09
+REF_OBJ[smspp_3n_3c_2gext_1l_1ml.nc]=1.302415551e+10
+REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.147874238e+07
+REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-6.883586038e+04
+REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=2.399258678e+05
+REF_OBJ[smspp_network_sector_coupled_complete_temp.nc]=2.3213758e+10
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for wf in 0 1 2; do
+
+    for what in ../../UCBlock/data/nc4/resilient-data/smspp_*.nc; do
+
+        # skip if pattern did not match any file
+        if [ ! -f "$what" ]; then
+          continue
+        fi
+
+        base=$(basename "$what")
+
+        ref=${REF_OBJ[$base]}
+
+        if [ -z "$ref" ]; then
+          echo "No reference objective defined for file: $base"
+          exit 1
+        fi
+
+        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -E "$EPS" -r "$ref" -f "$wf"
+
+    done
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -76,7 +76,11 @@ intTrgtMng            0 # bit-wise encoding targets and accuracies management:
 17 # number of double parameters
 
 # now all the double parameters
-dblRelAcc          1e-7 # relative accuracy required to solution
+dblRelAcc          1e-7 # relative accuracy required of the solution the
+                        # heuristic produces: it stops as soon as its
+                        # gap is this small, and returns kOK
+dbl_LDSRelAcc      1e-7 # relative accuracy the inner Solver solves the
+                        # Lagrangian Dual with
 dblNZEps           1e-8 # stopping parameter: threshold to declare 0 the || residual ||
 dbltStar           1e+2 # stopping parameter: multiplied to || residual || to estimate gap
 dblBPar5              4 # first parameter for dynamic max n. of items per iteration

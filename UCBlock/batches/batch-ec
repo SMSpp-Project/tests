@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ec < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs all the deterministic energy community instances and checks that the
+# EnergyCommunity.jl objective value matches the given reference one
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar.txt
+# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
+# except for the PrimalProximalHeur, for which what can be asked depends on
+# the instance (see below)
+EPS_PPH="${EPS_PPH:-2e-3}"
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ filename ] = | EnergyCommunity.jl objective value |
+# (see more at https://github.com/SPSUnipi/EnergyCommunity.jl).
+# The values come from the test harness in
+# UCBlock/tools/csv2netCDF/test_instance_with_EC_jl.jl run as follows:
+#   CO          --no-thermal  →  EC_CO_Test{,_NB}.nc4
+#   CO          (no flag)     →  EC_CO_Test_TUB{,_NB}.nc4
+#   CO          --no-asset    →  EC_NA_Test{,_NB}.nc4
+#   NC          --no-thermal  →  EC_NC_Test{,_NB}.nc4
+#   NC          (no flag)     →  EC_NC_Test_TUB{,_NB}.nc4
+# (NA YAMLs were dropped in favor of CO + --no-asset, since they were
+# identical to CO but with all installable assets disabled)
+# --no-thermal / --no-asset fix the corresponding x_us decisions to 0
+# in EnergyCommunity.jl, so the EC.jl model matches the SMS++ instance
+# produced by csv2nc4.jl.
+
+declare -A REF_OBJ
+
+REF_OBJ[EC_CO_Test.nc4]=3.621281488e+06
+REF_OBJ[EC_CO_Test_NB.nc4]=3.621281488e+06
+
+REF_OBJ[EC_CO_Test_TUB.nc4]=3.547667838e+06
+REF_OBJ[EC_CO_Test_TUB_NB.nc4]=3.547667838e+06
+
+REF_OBJ[EC_NA_Test.nc4]=3.998662634e+06
+REF_OBJ[EC_NA_Test_NB.nc4]=3.998662634e+06
+
+REF_OBJ[EC_NC_Test.nc4]=3.775266685e+06
+REF_OBJ[EC_NC_Test_NB.nc4]=3.775266685e+06
+
+REF_OBJ[EC_NC_Test_TUB.nc4]=3.700178022e+06
+REF_OBJ[EC_NC_Test_TUB_NB.nc4]=3.700178022e+06
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/EC_Data/EC_CO_*.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/EC_NA_*.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/EC_NC_*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    # Pure-load (no-asset) instances only contain ECNetworkBlock subblocks,
+    # all "easy" for BundleSolver: a BSPar with intDoEasy=1 raises
+    # "no non-ECNetworkBlock candidate block to set as a `hard` component".
+    # Force the EASY variant (intDoEasy=0 throughout) for those, while CO/NC
+    # instances — which have UnitBlock components that BundleSolver can keep
+    # "hard" — use the BSPar passed in.
+    #
+    # The PrimalProximalHeur, in turn, penalises the binary Variable of the
+    # thermal units: on the instances that have none it degenerates into a
+    # warm-started LagrangianDualSolver, whose bound on the penalised
+    # function says nothing about the original problem, so nothing is asked
+    # of it there. Where the thermal units are (the _TUB ones) it does
+    # produce an upper bound, and a tight one (measured: 4.5e-05 on CO,
+    # 9.5e-04 on NC).
+    case "$base" in
+      EC_NA_*)
+        cur_par=BSPar-EASY.txt
+        cur_eps=inf
+        ;;
+      *_TUB*)
+        cur_par=$par
+        cur_eps=$EPS_PPH
+        ;;
+      *)
+        cur_par=$par
+        cur_eps=inf
+        ;;
+    esac
+
+    run_test "$exe" "$what" -S "$cur_par" -B InnerBCfg.txt \
+             -E ",,$cur_eps" -r "$ref"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

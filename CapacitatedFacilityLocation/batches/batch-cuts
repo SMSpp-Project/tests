@@ -39,6 +39,13 @@ for what in ${DATADIR}/txt/ORLib/*.txt; do
   done
 done
 
+# Yang and TBED are skipped in CI: a single one of these instances runs for
+# hours (40 re-solve rounds on a large facility-location problem), far past
+# any CI budget. ORLib above gives the regression signal; local runs the lot.
+if [ -n "$CI" ]; then
+  exit 0
+fi
+
 # Yang - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 for i in 30-200 60-200 60-300 80-400; do

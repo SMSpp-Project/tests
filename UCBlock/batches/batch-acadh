@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# usage: batch-acadh < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs the hydrothermal academic instances
+#
+# for LagrangianDualSolver + BundleSolver:
+# correct value of tStar: 1e+0
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar.txt
+# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
+# except for the PrimalProximalHeur: what is asked of the inner BundleSolver
+# is not what its primal solution is worth, so the third field of -E declares
+# the quality of its upper bound on these instances (measured worst
+# case: 1.3e-01)
+EPS="${EPS:-,,2e-1}"
+parse_batch_args "$@"
+
+# hydrothermal academic instances - - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/UC_Data/HT-Ramp
+
+if [ -n "$CI" ]; then sizes="20_10 100_50 200_100";                     seeds="1"
+else                  sizes="20_10 50_20 75_35 100_50 150_75 200_100";  seeds="1 2"; fi
+
+for size in $sizes; do
+  for seed in $seeds; do
+
+    what=${DATADIR}/${size}_${seed}_w.nc4
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -E "$EPS"
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+

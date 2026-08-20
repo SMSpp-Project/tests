@@ -9,7 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
+- the cross-check of common_utils: every Solver enters it as its
+  [get_lb(), get_ub()] interval, valid by the base Solver contract, and
+  is measured against the best bounds the whole set of them provides,
+  since the optimum is not known. Correctness, i.e. not contradicting
+  those bounds, is owed by every Solver; the quality it declares is owed
+  only by the one that returns kOK, i.e. that says it delivered what it
+  was asked, while kLowPrecision promises nothing. No Solver type or
+  name is ever inspected
+
+- the tolerance each Solver is held to, which is by default the
+  dblRelAcc its ComputeConfig asks of it, and never less than the
+  tolerance the cross-check is called with, below which the comparison
+  would only measure its own numerical noise
+
+- the -E option, overriding that tolerance per Solver (positionally with
+  respect to the BlockSolverConfig, the empty field leaving the Solver
+  to its dblRelAcc), which the batches use for the heuristics, whose
+  dblRelAcc drives the stopping condition of an inner Solver and says
+  nothing about the quality of the solution they return
+
 ### Changed 
+
+- the solve-a-Block-with-Solvers cross-check testers renamed after the
+  Block they exercise: UCBlock (was LagrangianDualSolver_UC, executable
+  UCBlock_test) and MCFBlock (was MCF_MILP, executable MCFBlock_test);
+  LagrangianDualSolver_MMCF was merged into MMCFBlock as a second
+  executable (MMCFBlock_test) alongside the existing MMCF_test, sharing
+  its instance data
+
+- the one-per-instance cross-check line of SolveAll() (timings, every
+  Solver value, reference, verdict) is now always printed; only the
+  per-round lines of the tests that re-solve in a loop of modifications
+  remain verbose-only
+
+- PrimalProximalHeur is attached to the AC and resilient batteries too
+  (BSPar-AC.txt and BSPar-EASY.txt now cross-check it as well)
+
+- UCBlock cross-checks every Solver of its BlockSolverConfig at once,
+  rather than selecting one of them from the command line: the meta-
+  batches are gone and each batch is a ctest test of its own
 
 ### Fixed 
 

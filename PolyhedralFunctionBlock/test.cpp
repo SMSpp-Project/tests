@@ -105,9 +105,8 @@
 // <=> NDO unbounded" in dual mode).
 //
 // The wrapper is therefore *never* a ranged constraint -- which avoids
-// the CPLEX 22.1.1 issue with ranged constraints of huge range that
-// the historical "-10 * bound on the loose side" workaround used to
-// trigger (seed 6, size 50, nf -2, wchg 255, vert 0) -- and *never*
+// the CPLEX 22.1.1 issue with ranged constraints of huge range (seed 6,
+// size 50, nf -2, wchg 255, vert 0) -- and *never*
 // carries +/- Inf on the binding side, so MILPSolver's encoding is
 // always either `sense='L', rhs=finite` or `sense='G', rhs=finite`.
 //
@@ -743,9 +742,9 @@ static bool SolveBoth( void )
   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
                        : ( convex ? INF : -INF );
 
-  // bespoke verdict (Pattern A, LPBlock vs NDOBlock; the conditional valid-
-  // bound doubling and the dual-mode duality cases are preserved verbatim,
-  // only restructured to a single exit that prints the unified line) - - - -
+  // bespoke verdict, LPBlock against NDOBlock, covering the conditional
+  // valid-bound doubling and the dual-mode duality cases, then the
+  // per-instance line of common_utils - - - - - - - - - - - - - - - - - - -
   bool ok = false;
   std::string verdict = "KO";
   bool decided = false;
@@ -1351,12 +1350,11 @@ int main( int argc , char **argv )
   // MILPSolver" vs "natural rep solved by BundleSolver", and the
   // consistency of the primal-linearised LP and the dual-linearised LP
   // follows by transitivity (each agrees with the same BundleSolver
-  // answer) without ever having to compare the two LPs directly. The
-  // dual-mode-specific "globalbound" wrapper FRowConstraint that used
-  // to live on NDOBlock is no longer needed: BundleSolver respects
-  // set_valid_(lower|upper)_bound() as a conditional bound (declaring
-  // kUnbounded if iterates exceed it), which the test's OK(?bound?)
-  // reconciliation already handles.
+  // answer) without ever having to compare the two LPs directly. In dual
+  // mode no "globalbound" wrapper FRowConstraint is needed on NDOBlock,
+  // since BundleSolver respects set_valid_(lower|upper)_bound() as a
+  // conditional bound (declaring kUnbounded if the iterates exceed it),
+  // which the OK(?bound?) reconciliation of the test already handles.
   SimpleConfiguration< int > cfg( 0 );
   NDOBlock->generate_abstract_variables( &cfg );
   NDOBlock->generate_abstract_constraints();

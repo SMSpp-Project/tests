@@ -670,8 +670,8 @@ static bool SolveBoth( void )
   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
                        : ( convex ? INF : -INF );
 
-  // bespoke verdict (Pattern A, LPBlock vs NDOBlock; keeps the conditional
-  // valid-bound doubling), then the unified per-instance line - - - - - - - -
+  // bespoke verdict, LPBlock against NDOBlock, covering the conditional
+  // valid-bound doubling, then the per-instance line of common_utils - - - -
   bool ok = false;
   std::string verdict = "KO";
   bool decided = false;

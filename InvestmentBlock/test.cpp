@@ -403,7 +403,7 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ) {
    };
 
   times[ 0 ] = time1; hsv[ 0 ] = hs1st; statusv[ 0 ] = rtrn1st;
-  if( hs1st ) { rd[ 0 ].kind = SolverReading::Kind::Exact; rd[ 0 ].value = fo1st; }
+  if( hs1st ) rd[ 0 ] = SolverReading::exact( fo1st , eps_of( 0 , S[ 0 ] ) );
   toks[ 0 ] = tok( hs1st , rtrn1st , rd[ 0 ] );
 
   for( std::size_t k = 1 ; k < M ; ++k ) {
@@ -417,10 +417,9 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ) {
                   ( statusv[ k ] != Solver::kUnbounded ) &&
                   ( statusv[ k ] != Solver::kInfeasible ) )
                 || ( statusv[ k ] == Solver::kLowPrecision ) );
-   if( hsv[ k ] ) {
-    rd[ k ].kind = SolverReading::Kind::Exact;
-    rd[ k ].value = get_solver_objective_value( S[ k ] );
-    }
+   if( hsv[ k ] )
+    rd[ k ] = SolverReading::exact( get_solver_objective_value( S[ k ] ) ,
+                                    eps_of( k , S[ k ] ) );
    toks[ k ] = tok( hsv[ k ] , statusv[ k ] , rd[ k ] );
    }
 

@@ -1,43 +1,35 @@
 #!/usr/bin/env bash
 #
 # usage: batch < exe file >
-#        < exe file > = path of the executable file, default ./MMCF_test
+#        < exe file > = path of the executable file, default ./MMCFBlock_test
 #
-# runs the MMCFBlock tester over the JLF, Canad/PPRN and Mnetgen multicommodity
-# flow instance collections under data/
+# runs the Canad and Mnetgen MMCF instances through LagrangianDualSolver
 
-MMCF_test=${1:-./MMCF_test}
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../batch_common.sh"
 
-# JLF - - - - - - - - - - - - - - - - - - - -
+DATADIR=data
 
-for i in HALF TWO; do
-  "$MMCF_test" data/JLF/ALK/alk.$i p
+MMCFBlock_test=${1:-./MMCFBlock_test}
+
+# Canad - - - - - - - - - - - - - - - - - - - -
+
+for what in ${DATADIR}/Canad/*.dat; do
+
+  run_test "$MMCFBlock_test" "$what" -B BPar.txt -S BSPar.txt -t s
+
 done
-
-for i in 1.5k 1.6k 3.4k 3.7k; do
-  "$MMCF_test" data/JLF/Assad/assad$i p
-done
-
-for (( i = 1 ; i < 7 ; i++ )); do
-  "$MMCF_test" data/JLF/Chen.DSP/chen$i p
-done
-
-for (( i = 1 ; i < 7 ; i++ )); do
-  "$MMCF_test" data/JLF/Chen.PSP/psp$i p
-done
-
-for i in 10term 10term.0 10term.50 10term.100 15term 15term.0; do
-  "$MMCF_test" data/JLF/Farvolden/$i p
-done
-
-"$MMCF_test" data/JLF/Powell/veh8 p
 
 # Mnetgen - - - - - - - - - - - - - - - - - - - -
 
 for i in 64; do
   for j in 4 8 16 32 64; do
     for (( h = 1 ; h < 13 ; h++ )); do
-      "$MMCF_test" data/Mnetgen/$i-$j-$h m
+
+      what=${DATADIR}/Mnetgen/$i-$j-$h
+
+      run_test "$MMCFBlock_test" "$what" -B BPar.txt -S BSPar.txt -t m
+
     done
   done
 done
@@ -45,23 +37,32 @@ done
 for i in 128; do
   for j in 4 8 16 32 64 128; do
     for (( h = 1 ; h < 13 ; h++ )); do
-      "$MMCF_test" data/Mnetgen/$i-$j-$h m
+
+      what=${DATADIR}/Mnetgen/$i-$j-$h
+
+      run_test "$MMCFBlock_test" "$what" -B BPar.txt -S BSPar.txt -t m
+
     done
   done
 done
 
-for i in 256; do
-  for j in 4 8 16 32 64 128 256; do
-    for (( h = 1 ; h < 13 ; h++ )); do
-      "$MMCF_test" data/Mnetgen/$i-$j-$h m
-    done
-  done
-done
-
-# Canad - - - - - - - - - - - - - - - - - - - -
-
-for what in data/Canad/*.dat; do
-  "$MMCF_test" $what s
-done
+#for i in 256; do
+#  for j in 4 8 16 32 64 128 256; do
+#    for (( h = 1 ; h < 13 ; h++ )); do
+#
+#      what=${DATADIR}/Mnetgen/$i-$j-$h
+#
+#      printf "[$what m]: "
+#
+#      "$MMCFBlock_test" $what m
+#
+#      retVal=$?
+#      if [ $retVal -ne 0 ]; then
+#        exit 1
+#      fi
+#
+#    done
+#  done
+#done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

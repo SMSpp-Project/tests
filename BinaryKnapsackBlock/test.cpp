@@ -145,10 +145,9 @@ bool CrossCheckSolvers( void )
  // every exact one must agree on the optimal value z*, every relaxation
  // Solver must bracket it, and (in the Pisinger mode, have_ref) z* must match
  // the published optimum ref_opt. The engine also prints the uniform
- // per-instance line with every Solver value; here we only add the
- // BinaryKnapsackBlock-specific classifier (relaxation => [lb,ub] bracket) and
- // the self-consistency check (each exact Solver's reported value equals the
- // value recomputed from its returned solution)
+ // per-instance line with every Solver value; what is added here is the
+ // BinaryKnapsackBlock-specific self-consistency check, i.e., that the value
+ // each Solver reports is the one its own solution has
  const auto & reg = BKB->get_registered_solvers();
  std::vector< Solver * > Solvers( reg.begin() , reg.end() );
  const std::size_t M = Solvers.size();
@@ -157,23 +156,19 @@ bool CrossCheckSolvers( void )
   return( false );
   }
 
- // a relaxation brackets z* in [ lb , ub ]; any other Solver is an exact z*.
- // The classifier is invoked by SolveAll() only for the Solver that found a
- // solution, so we use it to record which ones to self-consistency-check below
- // (skipping the infeasible ones, whose primal x cannot be read)
+ // the reading of a Solver, its [ get_lb() , get_ub() ] interval and the
+ // tolerance it is held to, lives in common_utils; the classifier is invoked
+ // by SolveAll() only for the Solver that found a solution, so it is wrapped
+ // here to record which ones the self-consistency check below can read a
+ // primal x from: the infeasible ones have none, and neither has a Solver
+ // that claims no optimum, i.e., the relaxation
  std::vector< char > feasible( M , 0 );
  std::vector< char > bracket( M , 0 );
- // the generic relaxation-aware reading (relaxation => [lb,ub] bracket, else
- // exact) lives in common_utils; here we only wrap it to record, per Solver,
- // feasibility and whether it is a bracket (needed by the BinaryKnapsackBlock-
- // specific self-consistency check below)
- auto read = relaxation_aware_getter();
  SolverClassifier classify =
-  [ &feasible , &bracket , read ]( Solver * s , std::size_t k ) -> SolverReading {
+  [ &feasible , &bracket ]( Solver * s , std::size_t k ) -> SolverReading {
    feasible[ k ] = 1;
-   SolverReading r = read( s , k );
-   bracket[ k ] = ( r.kind == SolverReading::Kind::Bracket );
-   return( r );
+   bracket[ k ] = std::isinf( eps_of( k , s ) );  // no optimum, hence no x
+   return( read_bounds( s , k ) );
    };
 
  const double ref = have_ref ? ref_opt
