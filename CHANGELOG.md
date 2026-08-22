@@ -9,12 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
-- eps_getter() in common_utils: every Solver enters the cross-check as
-  its [get_lb(), get_ub()] interval, valid by the base Solver contract,
-  and a per-Solver optimality tolerance (positional with respect to the
-  BlockSolverConfig) declares which ones are exact; an infinite entry
-  claims nothing beyond correctness, covering pure relaxations and pure
-  heuristics with no Solver type or name ever inspected
+- the cross-check of common_utils: every Solver enters it as its
+  [get_lb(), get_ub()] interval, valid by the base Solver contract, and
+  is measured against the best bounds the whole set of them provides,
+  since the optimum is not known. Correctness, i.e. not contradicting
+  those bounds, is owed by every Solver; the quality it declares is owed
+  only by the one that returns kOK, i.e. that says it delivered what it
+  was asked, while kLowPrecision promises nothing. No Solver type or
+  name is ever inspected
+
+- the tolerance each Solver is held to, which is by default the
+  dblRelAcc its ComputeConfig asks of it, and never less than the
+  tolerance the cross-check is called with, below which the comparison
+  would only measure its own numerical noise
+
+- the -E option, overriding that tolerance per Solver (positionally with
+  respect to the BlockSolverConfig, the empty field leaving the Solver
+  to its dblRelAcc), for the Solver that does not say with kLowPrecision
+  when it did not deliver the accuracy it was asked for, and whose
+  dblRelAcc therefore says nothing about what it returns
 
 ### Changed 
 
@@ -32,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - PrimalProximalHeur is attached to the AC and resilient batteries too
   (BSPar-AC.txt and BSPar-EASY.txt now cross-check it as well)
+
+- the PPHCfg of UCBlock solves the Lagrangian Dual of every proximal
+  iteration to convergence, with the stopping parameters BSPar.txt gives
+  to the LagrangianDualSolver on the same Lagrangian Dual, so that the
+  fractional solution the penalty is built on is the convexified one
 
 - UCBlock cross-checks every Solver of its BlockSolverConfig at once,
   rather than selecting one of them from the command line: the meta-

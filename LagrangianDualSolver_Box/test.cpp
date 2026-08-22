@@ -377,16 +377,18 @@ static bool SolveBoth( void )
   std::vector< SolverReading > rd( 2 );
   std::vector< bool > hs{ hs1st , hs2nd };
   std::vector< int > status{ rtrn1st , rtrn2nd };
-  if( hs1st ) {
-   rd[ 0 ].kind = SolverReading::Kind::Exact;
-   rd[ 0 ].value = fo1st;
-   }
+  if( hs1st )
+   rd[ 0 ] = SolverReading::exact( fo1st , eps_of( 0 , Slvr1 ) );
   if( hs2nd ) {
-   rd[ 1 ].kind = ( wchg & 32 )
-                  ? ( minobj ? SolverReading::Kind::UpperBound
-                             : SolverReading::Kind::LowerBound )
-                  : SolverReading::Kind::Exact;
-   rd[ 1 ].value = fo2nd;
+   if( ! ( wchg & 32 ) )
+    rd[ 1 ] = SolverReading::exact( fo2nd , eps_of( 1 , Slvr2 ) );
+   else {
+    // the Lagrangian heuristic bounds z* on one side only, and claims
+    // nothing about how tight that bound is unless -E says otherwise
+    const double e = eps_of( 1 , nullptr , Inf< double >() );
+    rd[ 1 ] = minobj ? SolverReading::upper_bound( fo2nd , e )
+                     : SolverReading::lower_bound( fo2nd , e );
+    }
    }
   const double tol = ( wchg & 32 ) ? 1e-4 : 1e-5;
 

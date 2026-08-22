@@ -34,6 +34,11 @@ DEFAULT_EXE=./BinaryKnapsackBlock_test
 # the large Pisinger instances use the lean config (one best solver per
 # family, no full-table DP); pass BSPar.txt explicitly for the full cross-check
 DEFAULT_PAR=BSPar-fast.txt
+# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
+# except for the greedy relaxation, which is held instead to the width of
+# the bracket it produces on these instances (measured worst case over the
+# battery: 2.0e-01, on the smallest ones)
+EPS="${EPS:-,,2.5e-1}"
 parse_batch_args "$@"
 
 csvdir="../../BinaryKnapsackBlock/data/txt"
@@ -50,7 +55,7 @@ fi
 
 # sweep: each .csv class is solved, in one process, by every attached solver - -
 for csv in "${csvs[@]}"; do
-  run_test "$exe" -S "$par" -C "$csv"
+  run_test "$exe" -S "$par" -E "$EPS" -C "$csv"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

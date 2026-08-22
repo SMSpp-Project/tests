@@ -8,14 +8,18 @@
 #   - :MILPSolver           exact MIP, the reference optimum
 #   - LagrangianDualSolver  exact too on these instances (it closes the gap),
 #                           using a BundleSolver as the inner Solver
-#   - PrimalProximalHeur    a heuristic: it only UPPER bounds the optimum
+#   - PrimalProximalHeur    a heuristic: it brackets the optimum between the
+#                           bound of its unpenalized iteration and the best
+#                           feasible solution it finds
 #
 # The test reads each Solver as the [ get_lb() , get_ub() ] interval of the
-# base Solver contract, with the per-Solver optimality tolerances declared in
-# the tester positionally on this very Solver list (the two exact ones first,
-# the heuristic third), so adding an exact Solver here is all it takes to
-# bring it into the cross-check. The per-Solver ComputeConfig are factored
-# into the *Cfg.txt fragments. BSPar-EASY.txt and
+# base Solver contract, measures it against the best bounds all of them
+# provide, and holds the one that returns kOK to the dblRelAcc its
+# ComputeConfig asks of it, the heuristic included: what it returns says
+# whether it delivered that accuracy, kLowPrecision meaning it did not and
+# therefore owes nothing but sensible numbers. Adding an exact Solver here
+# is therefore all it takes to bring it into the cross-check. The per-Solver
+# ComputeConfig are factored into the *Cfg.txt fragments. BSPar-EASY.txt and
 # BSPar-AC.txt are the variants for the instances whose components are all
 # "easy" for BundleSolver (intDoEasy=0), the AC one also tuned for the QCP
 # ThermalUnitBlock; BSPar-MILP.txt solves with the :MILPSolver alone. See the

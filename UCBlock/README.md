@@ -14,12 +14,18 @@ solves it with every `Solver` listed in the given `BlockSolverConfig`
 and cross-checks their results against each other, and against a
 reference objective value where one is known (printing the running
 time of each). Every `Solver` enters the comparison as its
-`[get_lb(), get_ub()]` interval, valid by the base `Solver` contract;
-a per-`Solver` optimality tolerance declared in the tester says which
-ones are exact (and must agree on the optimum), while for the others,
-relaxations and heuristics alike, the interval only has to contain it.
-Bringing a further `Solver` into the comparison is therefore only a
-matter of listing it in the `BlockSolverConfig`.
+`[get_lb(), get_ub()]` interval, valid by the base `Solver` contract,
+and is measured against the best bounds all of them together provide,
+the optimum not being known: every `Solver` has to be correct, i.e. not
+to contradict those bounds, and the one that returns `kOK`, i.e. that
+says it delivered what it was asked, also has to be as close to them as
+it declared. That declaration is the `dblRelAcc` of its `ComputeConfig`,
+unless the `-E` option overrides it, positionally with respect to the
+`BlockSolverConfig`: this is what the batches do for the heuristic,
+whose `dblRelAcc` is the stopping condition of an inner `Solver` and
+says nothing about the quality of the solution it returns. Bringing a
+further `Solver` into the comparison is therefore only a matter of
+listing it in the `BlockSolverConfig`.
 
 The usage of the executable is the following:
 

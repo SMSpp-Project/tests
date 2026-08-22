@@ -74,12 +74,8 @@ for what in ../../UCBlock/data/nc4/EC_Data/EC_CO_*.nc4 \
     # instances — which have UnitBlock components that BundleSolver can keep
     # "hard" — use the BSPar passed in.
     case "$base" in
-      EC_NA_*)
-        cur_par=BSPar-EASY.txt
-        ;;
-      *)
-        cur_par=$par
-        ;;
+      EC_NA_*)  cur_par=BSPar-EASY.txt ;;
+      *)        cur_par=$par           ;;
     esac
 
     run_test "$exe" "$what" -S "$cur_par" -B InnerBCfg.txt -r "$ref"

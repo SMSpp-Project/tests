@@ -13,7 +13,7 @@ program.
 - `CFLScenarioGenerator.cpp` : reads a CFL instance, creates demand
   scenarios, and writes a TSSB file. This is the only file here that knows
   anything about CFL.
-- `run_cfl_tests.sh` : a batch script that runs the generate and solve
+- `run_cfl_tests` : a batch script that runs the generate and solve
   steps for many combinations of instance, number of scenarios, number of
   representatives, and method. It writes a CSV of results.
 
@@ -83,15 +83,24 @@ problem better.
 
 ## Batch runs
 
-`run_cfl_tests.sh` automates steps 2 and 3 over many combinations. It
+`run_cfl_tests` automates steps 2 and 3 over many combinations. It
 generates one TSSB file per value of `N`, since the solve program cannot
 subselect a smaller N from a bigger scenario pool.
 
+The two executables are built in the build tree, so the batch takes them
+from the outside and defaults to the current directory, as every other SMS++
+batch: either run it from the directory holding them, or say where they are.
+
 ```bash
-bash run_cfl_tests.sh
-bash run_cfl_tests.sh --instances "cap102 cap121" --n "20 50" --k "5 10" \
+bash <src-dir>/run_cfl_tests
+bash <src-dir>/run_cfl_tests --generator <build-dir>/CFLScenarioGenerator \
+    --solve <build-dir>/ScenarioReductionSolver_test \
+    --instances "cap102 cap121" --n "20 50" --k "5 10" \
     --methods "dupacova cssc" --solver BSCfg.txt --seed 1
 ```
 
-Flags: `--instances --n --k --methods --solver --seed --variation --output`.
-Defaults are set near the top of the script.
+Flags: `--generator --solve --instances --n --k --methods --solver --seed
+--variation --instance-dir --scenario-dir --config-dir --output`; `--help`
+prints them all. Every directory defaults to a path relative to the script,
+so the batch runs from any working directory, and each of them can also be
+set through the environment (`GEN`, `SOLVE`, `IDIR`, `SDIR`, `CFGDIR`).

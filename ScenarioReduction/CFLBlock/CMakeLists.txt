@@ -12,7 +12,7 @@ endif ()
 # ----- Tests --------------------------------------------------------------- #
 # CFLScenarioGenerator writes a TwoStageStochasticBlock file that the generic
 # ScenarioReductionSolver_test program (ScenarioReductionSolver module) then reduces
-# and solves; see run_cfl_tests.sh for the generate->solve flow.
+# and solves; see run_cfl_tests for the generate->solve flow.
 if (TARGET SMS++::CapacitatedFacilityLocationBlock
     AND TARGET SMS++::TwoStageStochasticBlock)
 

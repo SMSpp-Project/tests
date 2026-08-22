@@ -148,10 +148,9 @@ bool CrossCheckSolvers( void )
  // every exact one must agree on the optimal value z*, every relaxation
  // Solver must bracket it, and (in the Pisinger mode, have_ref) z* must match
  // the published optimum ref_opt. The engine also prints the uniform
- // per-instance line with every Solver value; here we only add the
- // BinaryKnapsackBlock-specific classifier (relaxation => [lb,ub] bracket) and
- // the self-consistency check (each exact Solver's reported value equals the
- // value recomputed from its returned solution)
+ // per-instance line with every Solver value; what is added here is the
+ // BinaryKnapsackBlock-specific self-consistency check, i.e., that the value
+ // each Solver reports is the one its own solution has
  const auto & reg = BKB->get_registered_solvers();
  std::vector< Solver * > Solvers( reg.begin() , reg.end() );
  const std::size_t M = Solvers.size();
@@ -160,31 +159,26 @@ bool CrossCheckSolvers( void )
   return( false );
   }
 
- // the relaxation brackets z* in [ lb , ub ]; any other Solver is an exact z*.
- // The classifier is invoked by SolveAll() only for the Solver that found a
- // solution, so we use it to record which ones to self-consistency-check below
- // (skipping the infeasible ones, whose primal x cannot be read)
+ // the reading of a Solver, its [ get_lb() , get_ub() ] interval and the
+ // tolerance it is held to, lives in common_utils; the classifier is invoked
+ // by SolveAll() only for the Solver that found a solution, so it is wrapped
+ // here to record which ones the self-consistency check below can read a
+ // primal x from: the infeasible ones have none, and neither has a Solver
+ // that claims no optimum, i.e., the relaxation
  std::vector< char > feasible( M , 0 );
  std::vector< char > bracket( M , 0 );
- // the generic per-Solver-eps reading lives in common_utils; here the eps are
- // read off the registered Solver themselves rather than being positional, so
- // that they follow whatever the BlockSolverConfig attaches: a
- // :RelaxationSolver solves a relaxation, hence claims nothing beyond the
- // base-contract bracket [ lb , ub ] around z*, while every other Solver (the
- // exact ones and the BranchAndXSolver driving the relaxations) is exact up
- // to the test tolerance. Here we only wrap the reading to record, per
- // Solver, feasibility and whether it is a bracket (needed by the
- // BinaryKnapsackBlock-specific self-consistency check below)
- std::vector< double > eps( M , 2e-06 );
- for( std::size_t k = 0 ; k < M ; ++k )
-  if( dynamic_cast< RelaxationSolver * >( Solvers[ k ] ) )
-   eps[ k ] = Inf< double >();
- auto read = eps_getter( std::move( eps ) );
+ // a :RelaxationSolver solves a relaxation, hence claims nothing beyond the
+ // [ lb , ub ] bracket of the base contract, whatever the BlockSolverConfig
+ // attaches and in whatever order; the wrapper also records, per Solver,
+ // feasibility and whether the reading is a bracket, both of which the
+ // BinaryKnapsackBlock-specific self-consistency check below needs
  SolverClassifier classify =
-  [ &feasible , &bracket , read ]( Solver * s , std::size_t k ) -> SolverReading {
+  [ &feasible , &bracket ]( Solver * s , std::size_t k ) -> SolverReading {
    feasible[ k ] = 1;
-   SolverReading r = read( s , k );
-   bracket[ k ] = ( r.kind == SolverReading::Kind::Bracket );
+   auto r = read_bounds( s , k );
+   bracket[ k ] = bool( dynamic_cast< RelaxationSolver * >( s ) );
+   if( bracket[ k ] )                    // no optimum, hence no x to read
+    r.eps = Inf< double >();
    return( r );
    };
 
