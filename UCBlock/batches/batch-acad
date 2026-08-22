@@ -15,12 +15,6 @@ source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
 DEFAULT_PAR=BSPar.txt
-# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
-# except for the PrimalProximalHeur: what is asked of the inner BundleSolver
-# is not what its primal solution is worth, so the third field of -E declares
-# the quality of its upper bound on these instances (measured worst
-# case over the battery: 1.3e-01)
-EPS="${EPS:-,,2e-1}"
 parse_batch_args "$@"
 
 #  pure thermal academic instances- - - - - - - - - - - - - - - - - - - - - -
@@ -35,7 +29,7 @@ for size in $sizes; do
 
     what=${DATADIR}/${size}_0_${seed}_w.nc4
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -E "$EPS"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
 
   done
 done
@@ -52,7 +46,7 @@ for size in $sizes; do
 
     what=${DATADIR}/${size}_${seed}_w.nc4
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -E "$EPS"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
 
   done
 done
