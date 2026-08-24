@@ -39,7 +39,10 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     # that handle continuous variables). These have no external optimum: they
     # cross-check the solvers against one another over a broad random sweep. The
     # validation against the PUBLISHED Pisinger optima is batch-pisinger.
-    foreach (BATCH_NAME batch batch-mixed)
+    # batch-negative is the same cross-check on the two regimes the sweep of
+    # batch does not reach: mostly negative weights and profits, and small
+    # instances re-solved many times.
+    foreach (BATCH_NAME batch batch-mixed batch-negative)
         if (UNIX)
             add_test(NAME BinaryKnapsackBlock_test/${BATCH_NAME}
                      COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}
