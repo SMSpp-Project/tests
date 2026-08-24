@@ -49,7 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the PPHCfg of UCBlock solves the Lagrangian Dual of every proximal
   iteration to convergence, with the stopping parameters BSPar.txt gives
   to the LagrangianDualSolver on the same Lagrangian Dual, so that the
-  fractional solution the penalty is built on is the convexified one
+  fractional solution the penalty is built on is the convexified one,
+  and follows the parameters of PrimalProximalHeur being now named after
+  the algorithm they belong to
 
 - UCBlock cross-checks every Solver of its BlockSolverConfig at once,
   rather than selecting one of them from the command line: the meta-
