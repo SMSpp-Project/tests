@@ -116,3 +116,5 @@ add_subdirectory(FrankWolfeSolver)
 add_subdirectory(compare_formulations)
 
 # --------------------------------------------------------------------------- #
+
+add_subdirectory(BundleSolverML)
