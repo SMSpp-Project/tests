@@ -26,6 +26,11 @@ BlockConfig
 
 1  # differential
 
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block - -
+*  # [none]
+
 *  # static_constraints
 
 # dynamic_constraints: SimpleConfiguration< pair< int , double > > whose
