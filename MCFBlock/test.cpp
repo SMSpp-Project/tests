@@ -235,6 +235,99 @@ static void Compact( Subset & nms , Index m )
 /*--------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------------*/
+/// checks that the solution of each Solver is a flow of the cost it reports
+/** Asks every registered Solver that has one for its solution [see
+ * Solver::get_Solution()] and checks that what comes back is a feasible flow
+ * of the very cost the Solver reports: the bounds of each arc, the flow
+ * conservation at each node and the cost.
+ *
+ * Comparing the values alone, which is what the cross-check does, cannot see
+ * a solution that is right in value but wrong in the flows: a permutation of
+ * the arcs, say, leaves the cost untouched as long as the permuted flow is
+ * still a flow of the same cost. This is exactly what happened, unnoticed for
+ * a long time, with a :Solver reporting the flows in the order of its own
+ * internal enumeration rather than in that of the MCFBlock. */
+
+static bool CheckFlows( void )
+{
+ const Index m = MCFB->get_NArcs();
+ const Index n = MCFB->get_NNodes();
+
+ bool ok = true;
+ Index k = 0;
+
+ for( auto slv : MCFB->get_registered_solvers() ) {
+  const Index kk = k++;
+
+  if( ! slv->has_var_solution() )  // nothing to check
+   continue;
+
+  auto sol = dynamic_cast< MCFSolution * >( slv->get_Solution() );
+  if( ( ! sol ) || sol->get_x().empty() ) {  // no flows in there
+   delete sol;
+   continue;
+   }
+
+  auto & x = sol->get_x();
+
+  // the tolerances are relative to the size of the flow
+  double scale = 1;
+  for( Index a = 0 ; a < m ; ++a )
+   if( ! MCFB->is_deleted( a ) )
+    scale = std::max( scale , std::abs( x[ a ] ) );
+  const double eps = 1e-9 * scale;
+
+  // the bounds of each arc, a closed one being bound to 0 - - - - - - - - -
+  for( Index a = 0 ; a < m ; ++a ) {
+   if( MCFB->is_deleted( a ) )
+    continue;
+   const double ua = MCFB->is_closed( a ) ? 0 : MCFB->get_U( a );
+   if( ( x[ a ] < - eps ) || ( x[ a ] > ua + eps ) ) {
+    std::cout << std::endl << "S" << kk << ": flow " << x[ a ]
+              << " out of [ 0 , " << ua << " ] on arc " << a;
+    ok = false;
+    break;
+    }
+   }
+
+  // the flow conservation at each node - - - - - - - - - - - - - - - - - - -
+  MCFBlock::Vec_FNumber dfct( n , 0 );
+  for( Index a = 0 ; a < m ; ++a ) {
+   if( MCFB->is_deleted( a ) )
+    continue;
+   dfct[ MCFB->get_SN( a ) - 1 ] -= x[ a ];
+   dfct[ MCFB->get_EN( a ) - 1 ] += x[ a ];
+   }
+
+  for( Index i = 0 ; i < n ; ++i )
+   if( std::abs( dfct[ i ] - MCFB->get_B( i ) ) > eps ) {
+    std::cout << std::endl << "S" << kk << ": deficit " << dfct[ i ]
+              << " instead of " << MCFB->get_B( i ) << " at node " << i;
+    ok = false;
+    break;
+    }
+
+  // the cost of the flow is the value the Solver reports - - - - - - - - - -
+  double cost = 0;
+  for( Index a = 0 ; a < m ; ++a )
+   if( ! MCFB->is_deleted( a ) )
+    cost += MCFB->get_C( a ) * x[ a ];
+
+  const double v = slv->get_var_value();
+  if( std::abs( cost - v ) > 5e-7 * std::max( double( 1 ) , std::abs( v ) ) ) {
+   std::cout << std::endl << "S" << kk << ": the flow costs " << cost
+             << " but the value is " << v;
+   ok = false;
+   }
+
+  delete sol;
+  }
+
+ return( ok );
+
+ }  // end( CheckFlows )
+
+/*--------------------------------------------------------------------------*/
 
 static bool SolveBoth( void )
 {
@@ -258,6 +351,11 @@ static bool SolveBoth( void )
                      std::numeric_limits< double >::quiet_NaN() ,
                      5e-7 , nullptr , & hs1 );
  last_round_feasible = hs1;  // the 1st (physical) Solver found a solution
+
+ /* The cross-check only compares the values: the solutions themselves are
+  * checked here, one Solver at a time, against the data of the MCFBlock. */
+ ok &= CheckFlows();
+
  return( ok );
  }
 
