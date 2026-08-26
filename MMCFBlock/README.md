@@ -63,8 +63,15 @@ printing the running time).
         ./MMCFBlock_test file_name [typ]
         typ = s*, c, p, o, d, u, m (lower or uppercase)
 
-Its batches are `batch`, `batch-c`, `batch-m` and `batchML`, over the same
-`data/` set. Its makefile is `makefile-xcheck`.
+Its batches are `batch`, `batch-c`, `batch-k`, `batch-m` and `batchML`, over
+the same `data/` set. Its makefile is `makefile-xcheck`. All of them but
+`batch-k` use `BPar.txt`, i.e. the flow formulation with one `MCFBlock` per
+commodity; `batch-k` is the one exercising the knapsack formulation, with one
+`BinaryKnapsackBlock` per arc, which it asks for in the structure
+`Configuration` of the `BlockConfig` [see `Block::set_structure()`] since the
+tree of sub-`Block` of a `MMCFBlock` is entirely a modelling choice. It only
+runs a handful of named instances, the knapsack formulation being much harder
+to solve than the flow one.
 
 All the tests passing confirms that no regressions have been done for the
 tested modules, in particular for the used `Solver`.

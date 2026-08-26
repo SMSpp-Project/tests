@@ -199,6 +199,7 @@ if (TARGET SMS++::MMCFBlock)
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batch-c"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-k"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batch-m"
                           ${ML_BATCH})
     foreach (BATCH_FILE ${BATCH_FILES})
