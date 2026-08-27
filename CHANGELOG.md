@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed 
 
+- with -v 2 the cross-check prints, before solving, the parameters of every
+  Solver it is about to run, the inner ones included; the level of -v can
+  be written attached or separate, since getopt only hands over the
+  attached form
+
 - the solve-a-Block-with-Solvers cross-check testers renamed after the
   Block they exercise: UCBlock (was LagrangianDualSolver_UC, executable
   UCBlock_test) and MCFBlock (was MCF_MILP, executable MCFBlock_test);
