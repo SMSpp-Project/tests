@@ -340,8 +340,33 @@ static bool CheckGetSolution( Solver * slvr , const char * name )
   u->set_value( 0.5 );
   }
 
+ // the modulation of a nuclear unit is scribbled over as well: it is in the
+ // Solution [see NuclearUnitBlockSolution], hence the round trip must
+ // restore it too
+ std::vector< double > m;
+ auto NUBlock = dynamic_cast< NuclearUnitBlock * >( TUBlock );
+ if( NUBlock )
+  if( auto mi = NUBlock->get_modulation() ) {
+   m.resize( time_horizon );
+   for( Index i = 0 ; i < time_horizon ; ++i , ++mi ) {
+    m[ i ] = mi->get_value();
+    mi->set_value( 0.5 );
+    }
+   }
+
  sol->write( TUBlock );
  delete sol;
+
+ if( ! m.empty() ) {
+  auto mi = NUBlock->get_modulation();
+  for( Index i = 0 ; i < time_horizon ; ++i , ++mi )
+   if( mi->get_value() != m[ i ] ) {
+    std::cerr << "Error: " << name << " Solution has modulation "
+	      << mi->get_value() << " instead of " << m[ i ] << " at "
+	      << i << std::endl;
+    return( false );
+    }
+  }
 
  obj->compute();
  const auto solval = obj->get_value();
