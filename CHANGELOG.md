@@ -51,7 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the LagrangianDualSolver on the same Lagrangian Dual, so that the
   fractional solution the penalty is built on is the convexified one,
   and follows the parameters of PrimalProximalHeur being now named after
-  the algorithm they belong to
+  the algorithm they belong to; the LagBFunctions solve the sub-Block with
+  the same BlockSolverConfig the LagrangianDualSolver gives them, rather
+  than with the plain relaxation of every one of them
 
 - UCBlock cross-checks every Solver of its BlockSolverConfig at once,
   rather than selecting one of them from the command line: the meta-
