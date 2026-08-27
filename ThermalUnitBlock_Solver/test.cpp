@@ -32,6 +32,11 @@
 // bit 1: 1 = check feasibility of optimal solutions of Solver2
 // bit 2: 1 = check that optimal solutions agree (dangerous, they may not)
 
+#define CHECK_GET_SOLUTION 1
+// 1 = check the Solution each Solver produces by itself, see
+//     CheckGetSolution(); this is cheap and it is the only thing that a
+//     "physical" Solver can offer to whoever has no abstract representation
+
 #if( LOG_LEVEL >= 1 )
  #define LOG1( x ) std::cout << x
  #define CLOG1( y , x ) if( y ) std::cout << x
@@ -297,6 +302,65 @@ static double linear_cost( Index i )
 
 /*--------------------------------------------------------------------------*/
 
+#if CHECK_GET_SOLUTION
+
+// check the Solution that the Solver produces by itself [see
+// Solver::get_Solution()] against the one it writes into the Variable. the
+// active power and the commitment are scribbled over in between, so that a
+// Solution read out of the Variable rather than out of the Solver cannot pass
+// unnoticed; only the round trip is checked, hence how accurate the Solver is
+// does not matter here.
+//
+// the tolerance is loose because writing the Solution back has
+// ThermalUnitBlock::set_solution() recompute the formulation-specific
+// auxiliary variables (start-up / shut-down, perspective-cut ones) out of
+// ( p , u ): those come out exact, whereas the ones an approximate Solver
+// leaves in the Variable are only worth its own tolerance, so the two
+// objective values legitimately differ by that much
+
+static bool CheckGetSolution( Solver * slvr , const char * name )
+{
+ auto obj = ( static_cast< FRealObjective * >( TUBlock->get_objective() )
+	      )->get_function();
+
+ slvr->get_var_solution();
+ obj->compute();
+ const auto ref = obj->get_value();
+
+ auto sol = slvr->get_Solution();
+ if( ! sol ) {
+  std::cerr << "Error: " << name << " returned no Solution" << std::endl;
+  return( false );
+  }
+
+ auto p = TUBlock->get_active_power( 0 );
+ auto u = TUBlock->get_commitment( 0 );
+ for( Index i = 0 ; i < time_horizon ; ++i , ++p , ++u ) {
+  p->set_value( -1 );
+  u->set_value( 0.5 );
+  }
+
+ sol->write( TUBlock );
+ delete sol;
+
+ obj->compute();
+ const auto solval = obj->get_value();
+ if( std::abs( ref - solval ) > 1e-6 * std::max( std::abs( ref ) ,
+						 double( 1 ) ) ) {
+  std::cerr.setf( std::ios::scientific , std::ios::floatfield );
+  std::cerr << std::setprecision( 9 );
+  std::cerr << "Error: " << name << " Solution is worth " << solval
+	    << " but the one in the Variable is worth " << ref << std::endl;
+  return( false );
+  }
+
+ return( true );
+ }
+
+#endif
+
+/*--------------------------------------------------------------------------*/
+
 static bool SolveBoth( void )
 {
  #if( CHECK_SOLUTIONS & 4 )
@@ -360,6 +424,12 @@ static bool SolveBoth( void )
     }
   #endif
 
+  #if CHECK_GET_SOLUTION
+   if( hs1st && Slvr1->has_var_solution() )
+    if( ! CheckGetSolution( Slvr1 , "Solver1" ) )
+     return( false );
+  #endif
+
   // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
   Solver * Slvr2 = TUBlock->get_registered_solvers().back();
   #if DETACH_2ND
@@ -407,6 +477,12 @@ static bool SolveBoth( void )
      GetU( u2 );
     #endif
     }
+  #endif
+
+  #if CHECK_GET_SOLUTION
+   if( hs2nd && Slvr2->has_var_solution() )
+    if( ! CheckGetSolution( Slvr2 , "Solver2" ) )
+     return( false );
   #endif
 
   // this being a MIQP, the "abstract" Solver will have a limited

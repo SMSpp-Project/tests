@@ -18,7 +18,16 @@ BlockSolverConfig     # exact type of the Configuration object
 MCFSolver<MCFSimplex>     # name of Solver
 #MCFSolver<RelaxIV>     # name of Solver
 #MCFSolver<MCFCplex>    # name of Solver
+# the LEMON Solver are commented out because of LEMON itself, not because of
+# anything the MCF relaxation of a CFL does: the data these get is exactly
+# the data MCFSimplex gets (costs, capacities and deficits all identical, the
+# deficits summing to zero to the last bit), and yet on the very instances
+# this suite runs NetworkSimplex answers "infeasible" while CapacityScaling
+# and CostScaling do not terminate. only CycleCanceling agrees with
+# MCFSimplex. LEMON assumes integer-valued data, which is not what a facility
+# location gives it (the transportation costs are scaled by the demands)
 #MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>     # name of Solver
+#MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>     # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
