@@ -25,11 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - the -E option, overriding that tolerance per Solver (positionally with
   respect to the BlockSolverConfig, the empty field leaving the Solver
-  to its dblRelAcc), which the batches use for the heuristics, whose
-  dblRelAcc drives the stopping condition of an inner Solver and says
-  nothing about the quality of the solution they return
+  to its dblRelAcc), for the Solver that does not say with kLowPrecision
+  when it did not deliver the accuracy it was asked for, and whose
+  dblRelAcc therefore says nothing about what it returns
 
 ### Changed 
+
+- with -v 2 the cross-check prints, before solving, the parameters of every
+  Solver it is about to run, the inner ones included; the level of -v can
+  be written attached or separate, since getopt only hands over the
+  attached form
 
 - the solve-a-Block-with-Solvers cross-check testers renamed after the
   Block they exercise: UCBlock (was LagrangianDualSolver_UC, executable
@@ -45,6 +50,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - PrimalProximalHeur is attached to the AC and resilient batteries too
   (BSPar-AC.txt and BSPar-EASY.txt now cross-check it as well)
+
+- the PPHCfg of UCBlock solves the Lagrangian Dual of every proximal
+  iteration to convergence, with the stopping parameters BSPar.txt gives
+  to the LagrangianDualSolver on the same Lagrangian Dual, so that the
+  fractional solution the penalty is built on is the convexified one,
+  and follows the parameters of PrimalProximalHeur being now named after
+  the algorithm they belong to; the LagBFunctions solve the sub-Block with
+  the same BlockSolverConfig the LagrangianDualSolver gives them, rather
+  than with the plain relaxation of every one of them
 
 - UCBlock cross-checks every Solver of its BlockSolverConfig at once,
   rather than selecting one of them from the command line: the meta-

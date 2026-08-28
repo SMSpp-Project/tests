@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+#
+# usage: batch-k < exe file >
+#        < exe file > = path of the executable file, default ./MMCFBlock_test
+#
+# runs some Canad MMCF instances in the *knapsack* formulation, i.e. with one
+# BinaryKnapsackBlock per arc and the flow constraints in the father, which no
+# other batch exercises: they all use BPar.txt, i.e. the flow formulation with
+# one MCFBlock per commodity.
+#
+# The formulation is asked for in the structure Configuration of the
+# BlockConfig [see Block::set_structure()], since the tree of sub-Block of a
+# MMCFBlock is entirely a modelling choice; asking for it in the Configuration
+# of the Variable, which is what BPar.txt does for the flow formulation, still
+# works and is what the other batches exercise.
+#
+# Only a handful of instances are run, and they are named one by one rather
+# than swept: the knapsack formulation is *much* harder to solve than the flow
+# one, e.g. on p37 it does not finish in three minutes where the flow one
+# takes four seconds. The ones below take a few seconds each; this is a test
+# of the formulation, not a benchmark of it.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../batch_common.sh"
+
+DATADIR=data
+
+MMCFBlock_test=${1:-./MMCFBlock_test}
+
+for what in p33 p34 p35 p36 p41 p42 p43 p44; do
+
+  run_test "$MMCFBlock_test" "${DATADIR}/Canad/${what}.dat" \
+           -B BPar-K.txt -S BSPar-K.txt -t s
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

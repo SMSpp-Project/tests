@@ -13,7 +13,7 @@ a TSSB file. Then solve, using the shared generic program.
 - `UCScenarioGenerator.cpp` : reads a UC instance, creates demand and or
   renewable scenarios, and writes a TSSB file. This is the only file here
   that knows anything about UC.
-- `run_uc_test.sh` : a batch script that runs the generate and solve steps
+- `run_uc_test` : a batch script that runs the generate and solve steps
   for many combinations of instance, seed, number of scenarios, number of
   representatives, and method. It writes a CSV of results.
 
@@ -84,18 +84,28 @@ Without it, only the heuristic methods work.
 
 ## Batch runs
 
-`run_uc_test.sh` automates steps 2 and 3 over many combinations, for one
+`run_uc_test` automates steps 2 and 3 over many combinations, for one
 chosen uncertainty type at a time.
 
+The two executables are built in the build tree, so the batch takes them
+from the outside and defaults to the current directory, as every other SMS++
+batch: either run it from the directory holding them, or say where they are.
+
 ```bash
-bash run_uc_test.sh --uncertainty demand
-bash run_uc_test.sh --instances "EC_CO_Test_TUB EC_NC_Test_TUB" \
+bash <src-dir>/run_uc_test --uncertainty demand
+bash <src-dir>/run_uc_test --generator <build-dir>/UCScenarioGenerator \
+    --solve <build-dir>/ScenarioReductionSolver_test \
+    --instances "EC_CO_Test_TUB EC_NC_Test_TUB" \
     --n "20 30" --k "5 10" --seeds "42 7" \
     --methods "dupacova cssc" --uncertainty renewable
 ```
 
-Flags: `--instances --n --k --seeds --methods --solver --variation
---uncertainty --output`.
+Flags: `--generator --solve --instances --n --k --seeds --methods --solver
+--variation --uncertainty --instance-dir --scenario-dir --config-dir
+--output`; `--help` prints them all. Every directory defaults to a path
+relative to the script, so the batch runs from any working directory, and
+each of them can also be set through the environment (`GEN`, `SOLVE`,
+`IDIR`, `SDIR`, `CFGDIR`).
 
 ## Instances
 
