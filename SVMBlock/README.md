@@ -15,7 +15,7 @@ training problem, hence they all have to agree on its optimal value, however
 it is written and however each of them gets there. That is the test. Since no reference value is hard-wired, the
 `BlockSolverConfig` (`-S`) has to be given explicitly.
 
-Three `:Solver` are involved:
+Four `:Solver` are involved:
 
 - a `:MILPSolver`, which reads the abstract representation, hence solves the
   dense quadratic program the Wolfe dual is, the diagonal one the training
@@ -24,6 +24,13 @@ Three `:Solver` are involved:
 - `SMOSolver`, which ignores the abstract representation altogether and solves
   the dual out of the data with Sequential Minimal Optimization, reporting the
   value of the objective of whichever formulation was generated;
+
+- `LIBSVMSolver`, which hands the training problem over to LIBSVM, the
+  reference implementation of the very algorithm `SMOSolver` implements, and
+  is therefore the natural thing to check the latter against; it is only there
+  when `SVMBlock` has been built with LIBSVM, and it only trains the problems
+  LIBSVM can express, i.e., the linear loss with the bias not regularised and
+  any kernel but the Laplacian one;
 
 - `LagrangianDualSolver`, only on the consensus rewriting, which relaxes the
   consensus constraints tying the copies of the model of each chunk and solves
@@ -59,8 +66,9 @@ it is read as a `SVMBlock` in netCDF format and no data set is generated.
 
 Note that the training problem itself only exists for the linear kernel, the
 only one whose feature map is the identity, and that `LagrangianDualSolver`
-only applies to the consensus rewriting, whence the two `BlockSolverConfig`:
-[BSPar.txt](BSPar.txt), a `:MILPSolver` and `SMOSolver`, and
+only applies to the consensus rewriting, whence the three `BlockSolverConfig`:
+[BSPar.txt](BSPar.txt), a `:MILPSolver` and `SMOSolver`,
+[BSPar-LSVM.txt](BSPar-LSVM.txt), the same two plus `LIBSVMSolver`, and
 [BSPar-LD.txt](BSPar-LD.txt), a `:MILPSolver` and `LagrangianDualSolver`.
 `SMOSolver` is not in the latter because it only attaches to a `SVMBlock`,
 while what `make_consensus_Block()` assembles is not one.
@@ -84,3 +92,9 @@ the abstract one, which the `SVMBlock` keeps up to date; that the two keep
 agreeing after every change is the test. This is what the third batch file,
 [batch-reopt](batches/batch-reopt), sweeps over both problems and all the
 kernels.
+
+Finally, [batch-libsvm](batches/batch-libsvm) is the three-way cross-check,
+i.e., the same sweep of the dual restricted to what LIBSVM can be asked, with
+the three `:Solver` attached at once: they have to agree on the optimal value,
+whichever representation each of them reads. It is only registered with CTest
+when `SVMBlock` has been built with LIBSVM.

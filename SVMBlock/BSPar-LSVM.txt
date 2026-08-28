@@ -1,0 +1,50 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-LSVM.txt- - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a SVMBlock whose abstract
+# representation encodes the Wolfe dual of the training problem, to be solved
+# by three different Solver: a :MILPSolver on the abstract representation and
+# the two that read the physical one, i.e., the ad hoc SMOSolver and LIBSVM.
+#
+# LIBSVM only trains the problems it can express, i.e., the linear loss with
+# the bias not regularised, the weight of the regularisation term 1 and any
+# kernel but the Laplacian one, and it refuses the others rather than
+# approximating them: this is why it has a BlockSolverConfig, and a batch, of
+# its own rather than being one more Solver in BSPar.txt.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+3  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver                  # name of 1st Solver
+GRBMILPSolver                   # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
+#HiGHSMILPSolver                # name of 1st Solver
+SMOSolver                       # name of 2nd Solver
+LIBSVMSolver                    # name of 3rd Solver
+
+3  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+*LPCCfg.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the SMOSolver
+*SMOCfg.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LIBSVMSolver
+*LSVMCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar-LSVM.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
