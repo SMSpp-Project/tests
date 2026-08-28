@@ -1,15 +1,16 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar-LD.txt  - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for the Block that
-# make_consensus_Block() assembles, i.e., the training problem written as one
-# problem per chunk tied by consensus constraints, to be solved by two
-# different Solver: a :MILPSolver, which flattens the whole tree and therefore
-# solves the rewriting as a whole, and a LagrangianDualSolver, which relaxes
-# the consensus constraints and solves the Lagrangian dual with a
-# BundleSolver, each subproblem being the SVM of one chunk. Note that
-# SMOSolver is not among them: it only attaches to a SVMBlock, while the
-# assembled Block is not one
+# A txt description of a BlockSolverConfig for a SVMBlock with the consensus
+# structure [see SVMBlock::set_structure()], i.e., the training problem
+# written as one problem per chunk tied by consensus constraints, to be solved
+# by three different Solver: a :MILPSolver, which flattens the whole tree and
+# therefore solves the rewriting as a whole, a LagrangianDualSolver, which
+# relaxes the consensus constraints and solves the Lagrangian dual with a
+# BundleSolver, each subproblem being the SVM of one chunk, and the ad hoc
+# SMOSolver, which ignores the structure altogether and solves the training
+# problem out of the data set: the rewriting being an exact one, the three
+# have to agree
 #
 #   Donato Meoli
 #
@@ -20,15 +21,16 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+3  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver                  # name of 1st Solver
 GRBMILPSolver                   # name of 1st Solver
 #SCIPMILPSolver                 # name of 1st Solver
 #HiGHSMILPSolver                # name of 1st Solver
 LagrangianDualSolver            # name of 2nd Solver
+SMOSolver                       # name of 3rd Solver
 
-2  # number of ComputeConfig in this BlockSolverConfig
+3  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -38,6 +40,10 @@ LagrangianDualSolver            # name of 2nd Solver
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the LagrangianDualSolver
 *LDCfg.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the SMOSolver
+*SMOCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - END BSPar-LD.txt  - - - - - - - - - - - - -

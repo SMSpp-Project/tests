@@ -26,10 +26,11 @@ if [ -n "$CI" ]; then slist="1 2 3"; else slist="1 2 3 5 10 15"; fi
 
 for s in ${slist}; do
 
-  # with one chunk the Block is the SVMBlock itself, which the ad hoc
-  # SMOSolver can also solve; with more than one it is what
-  # make_consensus_Block() assembles, which is not a SVMBlock, hence the
-  # BlockSolverConfig with the Lagrangian Solver and without SMOSolver
+  # with one chunk the SVMBlock has no sub-Block, hence there is nothing for
+  # a Lagrangian Solver to relax and the plain BlockSolverConfig is used;
+  # with more than one the consensus structure is there and the Lagrangian
+  # Solver joins in, SMOSolver staying in either case, since it solves the
+  # training problem out of the data set whatever the structure
   if [ ${s} -eq 1 ]; then
     par=BSPar.txt
   else

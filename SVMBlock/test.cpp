@@ -9,9 +9,10 @@
  * the BlockConfig asks for, the Wolfe dual or the training problem itself,
  * with the loss and the treatment of the bias that the bit-wise value \p wf
  * selects; with more than one chunk the training problem is rather rewritten
- * as the consensus reformulation that make_consensus_Block() assembles, which
- * is what a Lagrangian Solver attacks. All the
- * :Solver of the given BlockSolverConfig are then registered to the Block and
+ * as the consensus reformulation set_structure() gives it, which is what a
+ * Lagrangian Solver attacks.
+ *
+ * All the :Solver of the given BlockSolverConfig are then registered and
  * the results they obtain are cross-checked against each other, which is the
  * test: the ad hoc SMOSolver, a general-purpose :MILPSolver and, on the
  * consensus rewriting, a LagrangianDualSolver all have to agree on the
@@ -234,24 +235,26 @@ static bool run_round( unsigned sd )
 {
  auto svm = construct( sd );
 
- /* Which problem the abstract representation encodes is a Configuration
-  * matter; writing it as chunks tied by consensus constraints is not, it is a
-  * way of solving it, and it is assembled out of the SVMBlock. */
+ /* Whether the training problem is one Block or the chunks tied by the
+  * consensus constraints is a *structure* of the SVMBlock, chosen by
+  * set_structure(); which problem the abstract representation encodes is
+  * instead a Configuration of the Variable. Both come out of the BlockConfig
+  * when one is given, the number of chunks otherwise being said by -s. */
  Block * block = svm;
 
- if( nchunk > 1 )
-  block = make_consensus_Block( svm , nchunk );
- else {
-  // the BlockConfig is what says which problem to encode
-  if( ! bconf_file.empty() ) {
-   auto bc = Configuration::deserialize( bconf_file );
-   b_config_Block( svm , bc , bconf_file );
-   }
-
-  svm->generate_abstract_variables();
-  svm->generate_abstract_constraints();
-  svm->generate_objective();
+ if( ! bconf_file.empty() ) {
+  auto bc = Configuration::deserialize( bconf_file );
+  b_config_Block( svm , bc , bconf_file );
   }
+
+ if( nchunk > 1 ) {
+  SimpleConfiguration< int > chunks( nchunk );
+  svm->set_structure( & chunks );
+  }
+
+ svm->generate_abstract_variables();
+ svm->generate_abstract_constraints();
+ svm->generate_objective();
 
  // attach the Solver by reading a BlockSolverConfig from file and apply()-ing
  // it to the SVMBlock; the BlockSolverConfig is clear()-ed and kept to do the
