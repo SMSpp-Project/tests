@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
+- the exact Lagrangian chain for UCBlock: BSPar-DP.txt attaches the three
+  Solver over sub-Block solved to optimality by the dynamic programming
+  Solver (TUBSCfg-DP.txt, InnerBSCfg-DP.txt, LDCfg-DP.txt, PPHCfg-DP.txt)
+  and a :MILPSolver that solves the MIP rather than its continuous
+  relaxation (MILPCfg-MIP.txt). With the relaxation in the sub-Block the
+  penalty of the PrimalProximalHeur acts on variables that are not binary
+  there, and its first penalized call does not converge: on T-Ramp
+  10_0_1_w the heuristic goes from 86 to 13 seconds, its bound becomes the
+  Lagrangian one rather than the value of the continuous relaxation, and
+  every inner call ends on "optimal". No batch uses it yet: the
+  LagrangianDualSolver is a relaxation with a duality gap there, so it has
+  to be declared with -E ,inf
+
 - the cross-check of common_utils: every Solver enters it as its
   [get_lb(), get_ub()] interval, valid by the base Solver contract, and
   is measured against the best bounds the whole set of them provides,
