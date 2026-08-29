@@ -97,7 +97,8 @@ dbl_penaltyFactor  1e+3
 strWarmStartBSC     WarmStartCfg.txt # BlockSolverConfig of the warm start,
                                      # empty = no warm start
 str_LDSlv_ISName          BundleSolver # the inner Solver used by LagrangianDualSolver
-str_LagBF_BSCfg            LPBSCfg.txt # BlockSolverConfig for the LagBFunctions
+str_LagBF_BSCfg         InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions,
+                                       # the same the LagrangianDualSolver uses
 
 0 # number of vector-of-int parameters
 

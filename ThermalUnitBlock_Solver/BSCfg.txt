@@ -47,7 +47,8 @@ intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
 # the P/C lazy cuts have coefficients ~ pbar^2, so an incumbent violating
 # them within the feasibility tolerance scaled by the row can undercount
 # the quadratic cost by ~ 1e-4: tighter tolerances keep the MILP optimum
-# within the comparison accuracy of the DP reference
+# within the comparison accuracy of the DP reference; 1e-9, on the other
+# hand, makes GUROBI miss the optimum on the plan4res reserve instances
 FeasibilityTol  1e-8 # feasibility tolerance of GUROBI
 IntFeasTol      1e-8 # integer feasibility tolerance of GUROBI
 

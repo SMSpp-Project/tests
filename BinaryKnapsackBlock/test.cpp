@@ -204,6 +204,41 @@ bool CrossCheckSolvers( void )
         << " != its reported value " << value << endl;
    return( false );
    }
+
+  // the same solution must also come out of Solver::get_Solution(), which
+  // the "physical" Solver produce out of their own data structures: the x
+  // is therefore first scribbled over, so that a Solution silently taken
+  // from the Variable rather than from the Solver cannot pass unnoticed
+  for( Index i = 0 ; i < N ; ++i )
+   BKB->set_x( i , -1 );
+
+  auto sol = dynamic_cast< BinaryKnapsackSolution * >(
+					     Solvers[ k ]->get_Solution() );
+  if( ! sol ) {
+   cerr << "Error: Solver " << k << " did not return a BinaryKnapsackSolution"
+        << endl;
+   return( false );
+   }
+
+  if( sol->get_x().size() != N ) {
+   cerr << "Error: Solver " << k << " Solution has " << sol->get_x().size()
+        << " entries != " << N << endl;
+   delete sol;
+   return( false );
+   }
+
+  double solvalue = 0;
+  for( Index i = 0 ; i < N ; ++i )
+   solvalue += sol->get_x()[ i ] * BKB->get_Profit( i );
+  if( abs( solvalue - value ) > 1e-06 * max( abs( value ) , 1.0 ) ) {
+   cerr << "Error: Solver " << k << " get_Solution() value " << solvalue
+        << " != its reported value " << value << endl;
+   delete sol;
+   return( false );
+   }
+
+  sol->write( BKB );      // put the Variable back to the solution
+  delete sol;
   }
 
  return( true );

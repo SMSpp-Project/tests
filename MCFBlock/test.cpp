@@ -251,7 +251,6 @@ static void Compact( Subset & nms , Index m )
 static bool CheckFlows( void )
 {
  const Index m = MCFB->get_NArcs();
- const Index n = MCFB->get_NNodes();
 
  bool ok = true;
  Index k = 0;
@@ -270,42 +269,31 @@ static bool CheckFlows( void )
 
   auto & x = sol->get_x();
 
-  // the tolerances are relative to the size of the flow
+  // the tolerance is relative to the size of the flow, which is what the
+  // check of a node with zero deficit needs; the other checks in the
+  // MCFBlock are relative to the deficit and to the capacity already
   double scale = 1;
   for( Index a = 0 ; a < m ; ++a )
    if( ! MCFB->is_deleted( a ) )
     scale = std::max( scale , std::abs( x[ a ] ) );
-  const double eps = 1e-9 * scale;
+  SimpleConfiguration< MCFBlock::FNumber > fsbc( 1e-9 * scale );
 
-  // the bounds of each arc, a closed one being bound to 0 - - - - - - - - -
-  for( Index a = 0 ; a < m ; ++a ) {
-   if( MCFB->is_deleted( a ) )
-    continue;
-   const double ua = MCFB->is_closed( a ) ? 0 : MCFB->get_U( a );
-   if( ( x[ a ] < - eps ) || ( x[ a ] > ua + eps ) ) {
-    std::cout << std::endl << "S" << kk << ": flow " << x[ a ]
-              << " out of [ 0 , " << ua << " ] on arc " << a;
-    ok = false;
-    break;
-    }
+  // the flow is a flow: bounds arc by arc, conservation at each node. this
+  // is the MCFBlock checking the Solution the Solver produced, without the
+  // Solution ever being written into the Block
+  if( ! MCFB->is_feasible( sol , &fsbc ) ) {
+   std::cout << std::endl << "S" << kk << ": the solution is not a flow, "
+	     << ( MCFB->flow_feasible( 1e-9 * scale , x ) ? "the bounds"
+		                                : "the flow conservation" )
+	     << " is violated";
+   ok = false;
    }
 
-  // the flow conservation at each node - - - - - - - - - - - - - - - - - - -
-  MCFBlock::Vec_FNumber dfct( n , 0 );
-  for( Index a = 0 ; a < m ; ++a ) {
-   if( MCFB->is_deleted( a ) )
-    continue;
-   dfct[ MCFB->get_SN( a ) - 1 ] -= x[ a ];
-   dfct[ MCFB->get_EN( a ) - 1 ] += x[ a ];
-   }
-
-  for( Index i = 0 ; i < n ; ++i )
-   if( std::abs( dfct[ i ] - MCFB->get_B( i ) ) > eps ) {
-    std::cout << std::endl << "S" << kk << ": deficit " << dfct[ i ]
-              << " instead of " << MCFB->get_B( i ) << " at node " << i;
-    ok = false;
-    break;
-    }
+  // NOTE: is_optimal( sol ) is deliberately not checked here. It would
+  // need the potentials, and those only come out right of the Solver that
+  // fill the Solution themselves: the default Solver::get_Solution() only
+  // writes the primal solution into the Block, so the dual part of the
+  // Solution it produces is whatever was in the Constraint, i.e., zeros
 
   // the cost of the flow is the value the Solver reports - - - - - - - - - -
   double cost = 0;
