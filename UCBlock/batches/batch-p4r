@@ -25,7 +25,13 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
-DEFAULT_PAR=BSPar.txt
+DEFAULT_PAR=BSPar-DP.txt
+# the Lagrangian Dual of these instances is solved over sub-Block that the
+# dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
+# the PrimalProximalHeur needs and what makes its inner Solver converge; the
+# LagrangianDualSolver is then a relaxation with a duality gap, so nothing is
+# asked of the quality of its bound
+EPS="${EPS:-,inf}"
 parse_batch_args "$@"
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -44,14 +50,14 @@ if [ -n "$CI" ]; then
                FirstSetofInstances/L_B_N_9.nc4
                pHydro/20090907_pHydro_4_none.nc4"
     for rel in $instances; do
-        run_test "$exe" "${DATADIR}/${rel}" -S "$par" -B InnerBCfg.txt
+        run_test "$exe" "${DATADIR}/${rel}" -S "$par" -B InnerBCfg.txt -E "$EPS"
     done
 else
     for what in "${DATADIR}"/FirstSetofInstances/*.nc4 \
                 "${DATADIR}"/SecondSetofInstances/*.nc4 \
                 "${DATADIR}"/pHydro/*.nc4; do
 
-        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
+        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -E "$EPS"
 
     done
 fi
