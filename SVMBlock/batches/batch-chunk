@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# usage: batch-chunk < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# the same rewriting that batch-primal exercises, i.e., the training problem
+# written as the chunks tied by consensus constraints that a Lagrangian Solver
+# attacks, save that the subproblem of each chunk is solved by the ad hoc
+# SMOSolver rather than by a general-purpose :MILPSolver: the multipliers of
+# the relaxed consensus constraints are the linear term of the primal of the
+# chunk, which the SMOSolver folds into the dual it solves, and the value of
+# the Lagrangian dual has to be the one of the training problem all the same
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar-LD-SMO.txt
+parse_batch_args "$@"
+
+# with one chunk there is nothing to relax, hence the sweep starts at two;
+# see batch-primal for why it stops well before one sample per chunk
+if [ -n "$CI" ]; then slist="2 3"; else slist="2 3 5 10"; fi
+
+for s in ${slist}; do
+
+  # wf: the linear (0) or the quadratic (+1) penalty of the training errors,
+  # and the bias free (0) or regularised (+2); with the bias free the linear
+  # term of the primal is the right-hand side of the equality constraint of
+  # the dual, with it regularised it rather shifts the linear coefficients,
+  # so both are worth sweeping
+  for wf in 0 1 2 3; do
+    for task in "" "-g"; do
+
+      run_test "$exe" -S BSPar-LD-SMO.txt -B SVMCfg-primal.txt \
+               -f "$wf" -s "$s" -N 60 -M 4 -C 1 -n 1 -e 1 $task
+
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
