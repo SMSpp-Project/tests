@@ -7,19 +7,20 @@ training problem in each of the formulations the `Block` can generate.
 A data set is generated out of a seed, a `SVCBlock` or a `SVRBlock` is loaded
 with it and its abstract representation is generated for the problem that the
 bit-wise value `wf` selects, together with the loss and with how the bias is
-dealt with; with more than one chunk the training problem is rather rewritten
-as the consensus reformulation that `make_consensus_Block()` assembles. All the `:Solver` of the given
-`BlockSolverConfig` are then registered to the `Block`, and the results they
-obtain are cross-checked against each other: they all address the same
+dealt with; with more than one chunk the training problem is rather given the
+consensus structure that `set_structure()` builds. All the `:Solver` of the
+given `BlockSolverConfig` are then registered to the `Block`, and the results
+they obtain are cross-checked against each other: they all address the same
 training problem, hence they all have to agree on its optimal value, however
-it is written and however each of them gets there. That is the test. Since no reference value is hard-wired, the
-`BlockSolverConfig` (`-S`) has to be given explicitly.
+it is written and however each of them gets there. That is the test. Since no
+reference value is hard-wired, the `BlockSolverConfig` (`-S`) has to be given
+explicitly.
 
 Four `:Solver` are involved:
 
 - a `:MILPSolver`, which reads the abstract representation, hence solves the
   dense quadratic program the Wolfe dual is, the diagonal one the training
-  problem itself is, or, on the consensus rewriting, the whole of it;
+  problem itself is, or, on the consensus structure, the whole of it;
 
 - `SMOSolver`, which ignores the abstract representation altogether and solves
   the dual out of the data with Sequential Minimal Optimization, reporting the
@@ -32,12 +33,14 @@ Four `:Solver` are involved:
   LIBSVM can express, i.e., the linear loss with the bias not regularised and
   any kernel but the Laplacian one;
 
-- `LagrangianDualSolver`, only on the consensus rewriting, which relaxes the
+- `LagrangianDualSolver`, only on the consensus structure, which relaxes the
   consensus constraints tying the copies of the model of each chunk and solves
   the resulting Lagrangian dual with a `BundleSolver`, each subproblem being
   the SVM training problem of one chunk. The training problem being convex and
   the rewriting an exact one, the bound it converges to is the optimal value
-  itself.
+  itself. Each subproblem can be given to a `:MILPSolver` or to a `SMOSolver`
+  of its own: the multipliers of the relaxed constraints are the linear term
+  of the primal of the chunk, which the latter folds into the dual it solves.
 
 The usage of the executable is the following:
 
@@ -66,21 +69,23 @@ it is read as a `SVMBlock` in netCDF format and no data set is generated.
 
 Note that the training problem itself only exists for the linear kernel, the
 only one whose feature map is the identity, and that `LagrangianDualSolver`
-only applies to the consensus rewriting, whence the three `BlockSolverConfig`:
+only applies to the consensus structure, whence the four `BlockSolverConfig`:
 [BSPar.txt](BSPar.txt), a `:MILPSolver` and `SMOSolver`,
-[BSPar-LSVM.txt](BSPar-LSVM.txt), the same two plus `LIBSVMSolver`, and
-[BSPar-LD.txt](BSPar-LD.txt), a `:MILPSolver` and `LagrangianDualSolver`.
-`SMOSolver` is not in the latter because it only attaches to a `SVMBlock`,
-while what `make_consensus_Block()` assembles is not one.
+[BSPar-LSVM.txt](BSPar-LSVM.txt), the same two plus `LIBSVMSolver`,
+[BSPar-LD.txt](BSPar-LD.txt), which adds `LagrangianDualSolver` handing each
+chunk to a `:MILPSolver`, and [BSPar-LD-SMO.txt](BSPar-LD-SMO.txt), the same
+one with each chunk handed to a `SMOSolver` instead.
 
 There are therefore two batch files in [batches](batches), one per problem:
 [batch-primal](batches/batch-primal), which sticks to the linear kernel, the
 only one the training problem itself exists for, and sweeps the loss, the bias
-and the granularity of the consensus rewriting, and
+and the granularity of the consensus structure, and
 [batch-dual](batches/batch-dual), which sweeps the kernels, the loss, the bias
 and the trade-off parameter. Each of them passes the `BlockConfig` naming its
 own problem, so that what is being exercised is stated in the batch rather
-than encoded in a flag.
+than encoded in a flag. [batch-chunk](batches/batch-chunk) is the same sweep
+as the former, restricted to the granularities where there is something to
+relax, with each chunk solved by a `SMOSolver` of its own.
 
 With `-R` the training problem is also *changed* under the `Solver`, and
 re-solved after each change: the trade-off parameter, the loss, the bias, the
@@ -89,8 +94,8 @@ set. The `Solver` are not detached in between, hence each of them has to make
 the right sense of the `Modification` the `SVMBlock` issues, `SMOSolver`
 re-optimizing out of the physical representation and the `:MILPSolver` reading
 the abstract one, which the `SVMBlock` keeps up to date; that the two keep
-agreeing after every change is the test. This is what the third batch file,
-[batch-reopt](batches/batch-reopt), sweeps over both problems and all the
+agreeing after every change is the test. This is what
+[batch-reopt](batches/batch-reopt) sweeps over both problems and all the
 kernels.
 
 Finally, [batch-libsvm](batches/batch-libsvm) is the three-way cross-check,
