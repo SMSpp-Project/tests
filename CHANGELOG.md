@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Solver over sub-Block solved to optimality by the dynamic programming
   Solver (TUBSCfg-DP.txt, InnerBSCfg-DP.txt, LDCfg-DP.txt, PPHCfg-DP.txt)
   and a :MILPSolver that solves the MIP rather than its continuous
-  relaxation (MILPCfg-MIP.txt). With the relaxation in the sub-Block the
+  relaxation, stopping on a time limit so that what it gives is a valid
+  pair of bounds rather than a claimed optimum (MILPCfg-MIP.txt). With the relaxation in the sub-Block the
   penalty of the PrimalProximalHeur acts on variables that are not binary
   there, and its first penalized call does not converge: on T-Ramp
   10_0_1_w the heuristic goes from 86 to 13 seconds, its bound becomes the

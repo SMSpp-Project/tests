@@ -4,11 +4,12 @@
 # Cross-check BlockSolverConfig for a UCBlock in which the Lagrangian Dual is
 # the one of the original problem: the sub-Block of the LagBFunctions are
 # solved exactly by the dynamic programming Solver [see InnerBSCfg-DP.txt],
-# and the :MILPSolver solves the MIP rather than its continuous relaxation
-# [see MILPCfg-MIP.txt], so that the three Solver speak about the same
-# problem. It attaches:
+# and the :MILPSolver solves the MIP rather than its continuous relaxation,
+# stopping on a time limit rather than on the gap [see MILPCfg-MIP.txt], so
+# that the three Solver speak about the same problem. It attaches:
 #
-#   - :MILPSolver           exact MIP, the optimum
+#   - :MILPSolver           the MIP, stopped on time: what it gives is a
+#                           valid pair of bounds, not a claimed optimum
 #   - LagrangianDualSolver  a relaxation: with the sub-problems solved
 #                           exactly its bound is the Lagrangian one, which
 #                           has a duality gap, so a batch running this must

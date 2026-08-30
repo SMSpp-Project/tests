@@ -33,8 +33,11 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 1 # number of double parameters
 
 # now all the double parameters
-dblRelAcc     1e-6 # the gap the MIP is closed to; it is also what the
-                   # cross-check holds this Solver to, so the two must agree
+dblMaxTime      10 # the MIP is not solved to optimality but stopped here,
+                   # so that what it gives is a valid pair of bounds rather
+                   # than a claimed optimum: on these instances closing the
+                   # gap is a problem of its own, and the comparison is
+                   # between one heuristic and another
 
 # now all the double parameters
 #dblRelAcc      1e-8 # relative accuracy required to solution
