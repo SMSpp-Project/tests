@@ -6,6 +6,11 @@
 # itself only built into BundleSolver in that case.
 # --------------------------------------------------------------------------
 
+# Skip the suite if some module its labels declare is not in the build: the
+# benchmark links four of them, and a module whose CI configures the umbrella
+# with only itself would otherwise not even configure
+smspp_require_labelled_modules()
+
 find_package(Torch QUIET HINTS ${Torch_ROOT})
 
 if (Torch_FOUND)
