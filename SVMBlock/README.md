@@ -98,6 +98,17 @@ agreeing after every change is the test. This is what
 [batch-reopt](batches/batch-reopt) sweeps over both problems and all the
 kernels.
 
+With `-G n` the same data set is instead trained over and over with a grid of
+`n` values of `C`, i.e. the model selection one actually runs: every `:Solver`
+sees the same sequence of `Modification` and makes of them what it can, and
+what is reported, per `:Solver`, is the total time over the whole grid against
+the one of a `:Solver` of the same kind attached anew at each point, hence
+knowing nothing. The difference is what re-optimization is worth, and it grows
+with the resolution of the grid, since the finer it is the closer two
+consecutive problems are: on 300 samples and 20 features, over four orders of
+magnitude of `C`, `SMOSolver` saves 7% of the time on 7 values, 25% on 13 and
+42% on 25. This is what [batch-grid](batches/batch-grid) sweeps.
+
 Finally, [batch-libsvm](batches/batch-libsvm) is the three-way cross-check,
 i.e., the same sweep of the dual restricted to what LIBSVM can be asked, with
 the three `:Solver` attached at once: they have to agree on the optimal value,

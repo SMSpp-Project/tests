@@ -41,6 +41,8 @@
 
 #include "common_utils.h"
 
+#include <chrono>
+
 #include <random>
 
 /*--------------------------------------------------------------------------*/
@@ -83,6 +85,8 @@ double parE = 0.1;          ///< the half-width of the insensitivity tube
 Index n_repeat = 10;        ///< number of rounds
 double tol = 1e-5;          ///< relative tolerance of the cross-check
 bool reopt = false;         ///< re-solve after changing the training problem
+
+Index ngrid = 0;            ///< values of C of the model selection, 0 = none
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
@@ -159,6 +163,123 @@ static SVMBlock * construct( unsigned sd )
  return( svm );
 
  }  // end( construct )
+
+/*--------------------------------------------------------------------------*/
+/// trains the very same data set over a grid of values of C
+/** A model selection, i.e., what one actually does with a SVM: the same data
+ * set is trained over and over with a geometric grid of \p ngrid values of C
+ * centred on the one that was asked for. Every Solver attached to the
+ * SVMBlock sees the same sequence of Modification, and what it makes of them
+ * is its own business: one reading the physical representation can re-optimize
+ * from the previous solution, since the multipliers of a value of C are a
+ * sensible starting point for the next, while one that trains from scratch
+ * pays the whole thing again at each value. The results still have to agree
+ * at every point of the grid, which is what makes the times comparable, and
+ * the total time of each Solver over the whole grid is what the exercise is
+ * about. */
+
+static bool run_grid( SVMBlock * svm , Block * block )
+{
+ const auto & reg = block->get_registered_solvers();
+ std::vector< Solver * > S( reg.begin() , reg.end() );
+ const std::size_t M = S.size();
+
+ std::vector< double > total( M , 0 ) , cold( M , 0 );
+ std::vector< long > iters( M , 0 ) , citers( M , 0 );
+
+ bool ok = true;
+
+ /* The grid always spans the same range, four orders of magnitude around the
+  * given C, and \p ngrid says with which resolution: this is what a grid
+  * search actually looks like, the range being dictated by the problem and
+  * the resolution by how much time one is willing to spend. It is also the
+  * axis along which re-optimization is worth something, since the finer the
+  * grid the closer two consecutive problems are. */
+
+ const double first = parC / 64;
+ const double ratio = std::pow( 4096 , 1.0 / ( ngrid > 1 ? ngrid - 1 : 1 ) );
+
+ for( Index g = 0 ; g < ngrid ; ++g ) {
+  const double C = first * std::pow( ratio , double( g ) );
+  svm->set_C( C );
+
+  std::vector< SolverReading > rd( M );
+  std::vector< bool > hs( M , false );
+  std::vector< int > status( M , Solver::kError );
+  std::vector< double > times( M , 0 );
+  std::vector< std::string > tokens( M );
+
+  for( std::size_t k = 0 ; k < M ; ++k ) {
+   const auto start = std::chrono::steady_clock::now();
+   status[ k ] = S[ k ]->compute( false );
+   times[ k ] = std::chrono::duration< double >(
+                       std::chrono::steady_clock::now() - start ).count();
+
+   total[ k ] += times[ k ];
+   iters[ k ] += S[ k ]->get_elapsed_iterations();
+
+   hs[ k ] = S[ k ]->has_var_solution();
+   if( hs[ k ] )
+    rd[ k ] = read_bounds( S[ k ] , k );
+   tokens[ k ] = reading_token( rd[ k ] );
+   }
+
+  /* What the Modification are worth is the difference between what the
+   * Solver that is there does, having the previous solution to start from,
+   * and what a Solver of the very same kind and configuration does having
+   * just been attached, hence knowing nothing: no Solver is named here, one
+   * of each is simply built out of the Solver factory. */
+
+  for( std::size_t k = 0 ; k < M ; ++k ) {
+   auto fresh = Solver::new_Solver( S[ k ]->classname() );
+   if( ! fresh )
+    continue;
+
+   if( auto cfg = S[ k ]->get_ComputeConfig() ) {
+    fresh->set_ComputeConfig( cfg );
+    delete cfg;
+    }
+
+   block->register_Solver( fresh );
+
+   const auto start = std::chrono::steady_clock::now();
+   fresh->compute( false );
+   cold[ k ] += std::chrono::duration< double >(
+                       std::chrono::steady_clock::now() - start ).count();
+   citers[ k ] += fresh->get_elapsed_iterations();
+
+   block->unregister_Solver( fresh );
+   delete fresh;
+   }
+
+  std::string verdict;
+  double diff = std::numeric_limits< double >::quiet_NaN();
+  const bool good = cross_check( rd , hs , status ,
+                                 std::numeric_limits< double >::quiet_NaN() ,
+                                 tol , verdict , diff );
+  ok &= good;
+
+  print_instance_line( times , tokens ,
+                       std::numeric_limits< double >::quiet_NaN() , verdict ,
+                       diff , ! good );
+  }
+
+ svm->set_C( parC );   // leave the training problem as it was found
+
+ std::cout << "  grid of " << ngrid << " values of C, from " << first
+           << " to " << first * std::pow( ratio , double( ngrid - 1 ) )
+           << ", warm vs cold:" << std::endl;
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  std::cout << "   " << S[ k ]->classname() << ": " << total[ k ] << " s vs "
+            << cold[ k ] << " s";
+  if( iters[ k ] || citers[ k ] )
+   std::cout << " , " << iters[ k ] << " vs " << citers[ k ] << " iterations";
+  std::cout << std::endl;
+  }
+
+ return( ok );
+
+ }  // end( run_grid )
 
 /*--------------------------------------------------------------------------*/
 /// changes the training problem under the Solver, re-solving after each change
@@ -283,6 +404,9 @@ static bool run_round( unsigned sd )
  if( reopt && ( nchunk <= 1 ) )
   ok &= run_changes( svm , block );
 
+ if( ngrid && ( nchunk <= 1 ) )
+  ok &= run_grid( svm , block );
+
  s_config_Block( block , bsc );  // remove the Solver by re-apply()-ing the
  delete bsc;                     // clear()-ed BlockSolverConfig
 
@@ -312,6 +436,7 @@ static bool process_specific_arg( int opt )
   case( 't' ): Str2Sthg( optarg , tol );       return( true );
   case( 'g' ): regression = true;              return( true );
   case( 'R' ): reopt = true;                   return( true );
+  case( 'G' ): Str2Sthg( optarg , ngrid );     return( true );
   case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
   }
 
@@ -329,7 +454,7 @@ int main( int argc , char ** argv )
 
  docopt_desc = "SMS++ SVMBlock test.\n";
  filename_optional = true;
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:gR";
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:gR";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
@@ -343,7 +468,8 @@ int main( int argc , char ** argv )
    { "tol"      , required_argument , nullptr , 't' } ,
    { "ref"      , required_argument , nullptr , 'r' } ,
    { "regress"  , no_argument       , nullptr , 'g' } ,
-   { "reopt"    , no_argument       , nullptr , 'R' } };
+   { "reopt"    , no_argument       , nullptr , 'R' } ,
+   { "grid"     , required_argument , nullptr , 'G' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
@@ -368,6 +494,11 @@ int main( int argc , char ** argv )
          "under the\n"
          "                                  Solver, re-solving after each "
          "change\n"
+         "  -G, --grid <n>                  train the same data set over a "
+         "grid of n\n"
+         "                                  values of C, reporting the total "
+         "time of\n"
+         "                                  each Solver [0 = do not]\n"
          "  -n, --rounds <n>                how many rounds [10]\n"
          "  -t, --tol <x>                   relative tolerance of the "
          "cross-check [1e-5]\n"
