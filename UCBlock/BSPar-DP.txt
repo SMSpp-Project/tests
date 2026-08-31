@@ -25,8 +25,6 @@
 # Lagrangian Dual does not converge, and the heuristic spends its whole
 # budget in one call.
 #
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
-#
 # NOTE: an overriding ComputeConfig that is not the last in the list must end
 # with the '*' extra-Configuration pointer, or the parser runs into the next.
 #
