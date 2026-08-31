@@ -64,9 +64,12 @@ intOSImp2           0 # pre-processing (reduction)
 intOSImp3           1 # threads
 intRstAlg           2 # parameter to handle the reset of the algorithm
 
-6 # number of double parameters
+7 # number of double parameters
 
 # now all the double parameters
+dblMaxTime          300 # time limit of the heuristic, shared out among its
+                        # inner calls: what it has found when it expires is
+                        # a feasible solution all the same
 dblRelAcc          1e-4 # relative accuracy required of the solution the
                         # heuristic produces: it stops as soon as its
                         # gap is this small, and returns kOK

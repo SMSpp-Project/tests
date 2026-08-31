@@ -65,9 +65,13 @@ intOSImp2              0 # pre-processing (reduction)
 intOSImp3              1 # threads
 intRstAlg              2 # parameter to handle the reset of the algorithm
 
-17 # number of double parameters
+18 # number of double parameters
 
 # now all the double parameters
+dblMaxTime           300 # time limit of each call: on the harder instances
+                         # the Lagrangian Dual does not close its gap in any
+                         # reasonable time, and a Solver that is stopped says
+                         # so, its bound staying valid
 dblRelAcc           1e-6 # relative accuracy required to solution
 dblNZEps            1e-2 # stopping parameter: threshold to declare 0 the || residual ||
 dbltStar           -1e+3 # stopping parameter: multiplied to || residual || to estimate gap
