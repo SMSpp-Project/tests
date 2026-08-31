@@ -100,3 +100,15 @@ ehthumbs.db
 .directory
 .fuse_hidden*
 .nfs*
+UCBlock/data/
+MMCFBlock/gen/
+*.ckpt
+*.pt
+*.orig
+*.orig2
+*.bak
+BundleSolverML/bench.cpp
+UCBlock/*.csv
+UCBlock/*.csv
+UCBlock/*.csv
+UCBlock/LD.txt

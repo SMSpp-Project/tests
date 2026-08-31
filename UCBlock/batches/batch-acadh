@@ -14,13 +14,10 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
-DEFAULT_PAR=BSPar.txt
-# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
-# except for the PrimalProximalHeur: what is asked of the inner BundleSolver
-# is not what its primal solution is worth, so the third field of -E declares
-# the quality of its upper bound on these instances (measured worst
-# case: 1.3e-01)
-EPS="${EPS:-,,2e-1}"
+DEFAULT_PAR=BSPar-DP.txt
+# the Lagrangian Dual of these instances is solved over sub-Block that the
+# dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
+# the PrimalProximalHeur needs and what makes its inner Solver converge
 parse_batch_args "$@"
 
 # hydrothermal academic instances - - - - - - - - - - - - - - - - - - - - - -
@@ -35,7 +32,7 @@ for size in $sizes; do
 
     what=${DATADIR}/${size}_${seed}_w.nc4
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -E "$EPS"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
 
   done
 done

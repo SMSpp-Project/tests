@@ -32,6 +32,7 @@ set(SMSPP_TEST_LABELS_QuadraticTests            "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_Write-Read                "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
 set(SMSPP_TEST_LABELS_BendersBFunction          "BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_BundleSolverML            "BundleSolver;LagrangianDualSolver;MMCFBlock;UCBlock")
 set(SMSPP_TEST_LABELS_BinaryKnapsackBlock       "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_CapacitatedFacilityLocation
                                                 "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver;MCFClassSolver;MCFLemonSolver;MILPSolver")
@@ -46,6 +47,7 @@ set(SMSPP_TEST_LABELS_InvestmentBlock           "BundleSolver;InvestmentBlock;MI
 set(SMSPP_TEST_LABELS_TwoStageStochasticBlock   "BundleSolver;LagrangianDualSolver;TwoStageStochasticBlock;UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_MultiStageStochasticBlock "BundleSolver;LagrangianDualSolver;MultiStageStochasticBlock;TwoStageStochasticBlock;UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_LukFiBlock                "BundleSolver;LukFiBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SVMBlock                  "BundleSolver;LagrangianDualSolver;SVMBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_FrankWolfeSolver          "FrankWolfeSolver;MCFBlock;MCFClassSolver;UCBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test

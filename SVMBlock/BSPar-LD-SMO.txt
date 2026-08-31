@@ -1,0 +1,47 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-LD-SMO.txt  - - - - - - - - - - - - - -
+#
+# The same as BSPar-LD.txt, i.e., a txt description of a BlockSolverConfig for
+# a SVMBlock with the consensus structure [see SVMBlock::set_structure()] to
+# be solved by a :MILPSolver, by a LagrangianDualSolver and by the ad hoc
+# SMOSolver at once, save that the subproblem of each chunk is solved by a
+# SMOSolver of its own rather than by a :MILPSolver: the multipliers of the
+# relaxed consensus constraints are the linear term of the primal of the chunk
+# [see SVMBlock::set_linear_term()], which the SMOSolver folds into the dual
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+3  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver                  # name of 1st Solver
+GRBMILPSolver                   # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
+#HiGHSMILPSolver                # name of 1st Solver
+LagrangianDualSolver            # name of 2nd Solver
+SMOSolver                       # name of 3rd Solver
+
+3  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+*LPCCfg.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver, whose chunks go to a SMOSolver
+*LDCfg-SMO.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the SMOSolver
+*SMOCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-LD-SMO.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

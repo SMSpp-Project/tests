@@ -25,23 +25,10 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
-DEFAULT_PAR=BSPar.txt
-# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
-# except for the PrimalProximalHeur, of which what can be asked varies by
-# orders of magnitude across the instance families, hence eps_pph() below
-
-# quality of the upper bound of the PrimalProximalHeur, by family (measured
-# on the CI sample: 7.4e-06 on L_B_C, 1.6e-02 on L_B_N, 3.8e-02 on pHydro,
-# 7.5e-01 on L_B_H, where the heuristic is of no use); a full local run of
-# all 54 instances is what it takes to tighten these
-eps_pph() {
-    case "$1" in
-      *L_B_C_*)   echo 1e-3 ;;
-      *L_B_N_*)   echo 1e-1 ;;
-      *pHydro*)   echo 1e-1 ;;
-      *)          echo inf  ;;
-    esac
-}
+DEFAULT_PAR=BSPar-DP.txt
+# the Lagrangian Dual of these instances is solved over sub-Block that the
+# dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
+# the PrimalProximalHeur needs and what makes its inner Solver converge
 parse_batch_args "$@"
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -60,16 +47,14 @@ if [ -n "$CI" ]; then
                FirstSetofInstances/L_B_N_9.nc4
                pHydro/20090907_pHydro_4_none.nc4"
     for rel in $instances; do
-        run_test "$exe" "${DATADIR}/${rel}" -S "$par" -B InnerBCfg.txt \
-                 -E ",,$( eps_pph "$rel" )"
+        run_test "$exe" "${DATADIR}/${rel}" -S "$par" -B InnerBCfg.txt
     done
 else
     for what in "${DATADIR}"/FirstSetofInstances/*.nc4 \
                 "${DATADIR}"/SecondSetofInstances/*.nc4 \
                 "${DATADIR}"/pHydro/*.nc4; do
 
-        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt \
-                 -E ",,$( eps_pph "$what" )"
+        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
 
     done
 fi

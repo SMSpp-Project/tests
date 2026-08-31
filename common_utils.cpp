@@ -535,6 +535,16 @@ bool SolveAll( Block * block ,
    return( false );
    }
 
+  // with -v 2, before solving, print what each Solver was actually given:
+  // the index space of a Solver that wraps another one extends over that of
+  // the wrapped one, so this shows the parameters of the inner Solver too
+  if( verbosity_level >= 2 )
+   for( std::size_t k = 0 ; k < M ; ++k ) {
+    std::cout << std::endl << "--- parameters of Solver " << k << " ("
+              << S[ k ]->classname() << ")" << std::endl;
+    S[ k ]->print_parameters( std::cout );
+    }
+
   // solve every Solver, timing each, then read the feasible ones - - - - - - -
   std::vector< int >    status( M );
   std::vector< double > times( M );
@@ -820,6 +830,26 @@ static void parse_eps_list( const std::string & arg )
  }
 
 /*--------------------------------------------------------------------------*/
+// the command line, so that an option can look at the argument that follows
+// it even when getopt does not hand it over [see the 'v' case below]
+
+static int f_argc = 0;
+static char ** f_argv = nullptr;
+
+// whether the whole string is made of digits, so that it is the level of -v
+// and not the argument that follows it
+
+static bool is_number( const char * s )
+{
+ if( ( ! s ) || ( ! *s ) )
+  return( false );
+ for( ; *s ; ++s )
+  if( ( *s < '0' ) || ( *s > '9' ) )
+   return( false );
+ return( true );
+ }
+
+/*--------------------------------------------------------------------------*/
 // one standard option, or false if it is not one
 
 bool process_standard_arg( int opt )
@@ -843,7 +873,15 @@ bool process_standard_arg( int opt )
   case 'D': dryrun = true; break;
   case 'v': {
    sol_verbose = true;
-   verbosity_level = optarg ? std::atoi( optarg ) : 1;
+   // the level can be attached (-v2) or, since that is what one naturally
+   // writes, separate (-v 2): getopt only gives the attached form, so the
+   // next argument is taken when it is a number
+   if( optarg )
+    verbosity_level = std::atoi( optarg );
+   else if( f_argv && ( optind < f_argc ) && is_number( f_argv[ optind ] ) )
+    verbosity_level = std::atoi( f_argv[ optind++ ] );
+   else
+    verbosity_level = 1;
    break;
    }
   case 'h': docopt(); exit( 0 );
@@ -889,6 +927,8 @@ void process_args( int argc , char ** argv )
 void process_args( int argc , char ** argv , bool ( *custom_arg )( int opt ) )
 {
  exe = get_filename( argv[ 0 ] );
+ f_argc = argc;
+ f_argv = argv;
 
  while( true ) {  // options
   const auto opt = getopt_long( argc , argv , short_opts.data() ,

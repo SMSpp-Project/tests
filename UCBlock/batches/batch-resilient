@@ -17,11 +17,6 @@ DEFAULT_EXE=./UCBlock_test
 # EASY variant is the default here (the standard BSPar.txt, intDoEasy=1,
 # would raise "BundleSolver: all components are easy, this is no supported").
 DEFAULT_PAR=BSPar-EASY.txt
-# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
-# except for the PrimalProximalHeur, of which nothing is asked here: it has
-# no thermal unit to penalise on these instances and so degenerates into a
-# warm-started LagrangianDualSolver, whose bound is valid but very weak
-EPS="${EPS:-,,inf}"
 parse_batch_args "$@"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
@@ -41,7 +36,6 @@ REF_OBJ[smspp_3n_3c_2gext_1l_1ml.nc]=1.302415551e+10
 REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.147874238e+07
 REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-6.883586038e+04
 REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=2.399258678e+05
-REF_OBJ[smspp_network_sector_coupled_complete_temp.nc]=2.3213758e+10
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -63,7 +57,7 @@ for wf in 0 1 2; do
           exit 1
         fi
 
-        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -E "$EPS" -r "$ref" -f "$wf"
+        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref" -f "$wf"
 
     done
 

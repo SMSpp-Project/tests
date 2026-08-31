@@ -1,0 +1,7 @@
+dataset_dir : C:\smspp-project\tests\UCBlock\data
+format      : nc4
+stratified  : False
+total       : 42
+seed        : 42
+ratios      : train=0.8, val=0.1, test=0.1
+counts      : train=33, val=4, test=5

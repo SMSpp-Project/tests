@@ -13,10 +13,6 @@ source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
 DEFAULT_PAR=BSPar.txt
-# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
-# except for the PrimalProximalHeur, for which what can be asked depends on
-# the instance (see below)
-EPS_PPH="${EPS_PPH:-2e-3}"
 parse_batch_args "$@"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
@@ -77,31 +73,12 @@ for what in ../../UCBlock/data/nc4/EC_Data/EC_CO_*.nc4 \
     # Force the EASY variant (intDoEasy=0 throughout) for those, while CO/NC
     # instances — which have UnitBlock components that BundleSolver can keep
     # "hard" — use the BSPar passed in.
-    #
-    # The PrimalProximalHeur, in turn, penalises the binary Variable of the
-    # thermal units: on the instances that have none it degenerates into a
-    # warm-started LagrangianDualSolver, whose bound on the penalised
-    # function says nothing about the original problem, so nothing is asked
-    # of it there. Where the thermal units are (the _TUB ones) it does
-    # produce an upper bound, and a tight one (measured: 4.5e-05 on CO,
-    # 9.5e-04 on NC).
     case "$base" in
-      EC_NA_*)
-        cur_par=BSPar-EASY.txt
-        cur_eps=inf
-        ;;
-      *_TUB*)
-        cur_par=$par
-        cur_eps=$EPS_PPH
-        ;;
-      *)
-        cur_par=$par
-        cur_eps=inf
-        ;;
+      EC_NA_*)  cur_par=BSPar-EASY.txt ;;
+      *)        cur_par=$par           ;;
     esac
 
-    run_test "$exe" "$what" -S "$cur_par" -B InnerBCfg.txt \
-             -E ",,$cur_eps" -r "$ref"
+    run_test "$exe" "$what" -S "$cur_par" -B InnerBCfg.txt -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

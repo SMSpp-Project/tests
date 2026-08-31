@@ -126,6 +126,14 @@ The following tests are provided:
   (such as `MILPSolver` and its derived classes `CPXMILPSolver` ,
   `SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`).
 
+- [`SVMBlock`](SVMBlock), a tester that cross-checks every `:Solver` that can
+  train a Support Vector Machine on the same `SVMBlock`: the ad hoc
+  `SMOSolver`, `LIBSVMSolver`, a `:MILPSolver` on either formulation the
+  abstract representation can encode, and `LagrangianDualSolver` on the
+  consensus structure, whose chunks it relaxes into one independent SVM each.
+  It also changes the training problem under the `Solver` and checks that they
+  keep agreeing after each change.
+
 - [`ThermalUnitBlock_Solver`](ThermalUnitBlock_Solver), a tester for the
   `ThermalUnitExtDPSolver` specialised Dynamic Programming `:Solver` for
   `ThermalUnitBlock` as compared with a `:MILPSolver` on some of the (many)

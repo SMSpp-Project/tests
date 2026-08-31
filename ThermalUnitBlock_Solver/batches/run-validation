@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# run-validation [ exe ]
+#
+# Run the batches that back the validation claim of the TUDPS paper, in one go,
+# and say for each whether it passed and how many invocations it took.
+#
+# The claim is that the DP optima agree with the MILP optima, in objective value
+# and in the recovered schedule, on randomised instances with reserves and
+# possibly reactive power. Four batches make it: the academic instances across
+# every thermal formulation with perspective cuts, the plan4res instances that
+# carry reserves, the single-bus instances under T+P/C, and the nuclear units.
+#
+# A batch stops at its first disagreement and returns non-zero, so the exit code
+# is the verdict; the per-batch output is kept for the ones that need reading.
+#
+# Correctness does not depend on how busy the machine is, only the wall clock
+# does, so unlike the timing runs this needs no quiet machine.
+
+set -u
+here=$(cd "$(dirname "$0")" && pwd)
+exe=${1:-$here/../TUDPS_test}
+out=${OUT_DIR:-./validation}
+mkdir -p "$out"
+
+[ -x "$exe" ] || { echo "run-validation: no test executable at $exe" >&2; exit 1; }
+echo "run-validation: $exe, output in $out"
+
+rc_all=0
+for b in batch batch-reserve batch-singlebus-tpc batch-nuclear; do
+  [ -x "$here/$b" ] || { echo "  $b: missing"; continue; }
+  t0=$SECONDS
+  ( cd "$here/.." && "$here/$b" "$exe" ) > "$out/$b.out" 2>&1
+  rc=$?
+  runs=$(grep -c '^\[' "$out/$b.out")
+  if [ $rc -eq 0 ]; then
+    printf "  %-22s PASS  %5s invocations, %ss\n" "$b" "$runs" "$((SECONDS-t0))"
+  else
+    rc_all=1
+    printf "  %-22s FAIL  stopped after %s invocations, %ss\n" "$b" "$runs" "$((SECONDS-t0))"
+    printf "  %-22s       %s\n" "" "$(tail -2 "$out/$b.out" | tr '\n' ' ' | cut -c1-160)"
+  fi
+done
+exit $rc_all

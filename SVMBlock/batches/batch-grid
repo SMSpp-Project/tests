@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# usage: batch-grid < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# the model selection: the same data set is trained over and over with a grid
+# of values of C, which is what one actually does with a SVM. Each Solver sees
+# the same sequence of Modification and makes of them what it can, and the
+# batch reports, per Solver, the total time of the whole grid against the one
+# of a Solver of the same kind that is attached anew at each point, hence
+# knows nothing: the difference is what re-optimization is worth. The finer
+# the grid the more it is worth, two consecutive problems being closer, so the
+# resolution is swept while the range stays the same
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+# in CI only the coarsest grid is run, the finer ones being a benchmark
+if [ -n "$CI" ]; then glist="5"; else glist="5 9 17"; fi
+
+for G in ${glist}; do
+  for task in "" "-g"; do
+
+    run_test "$exe" -S BSPar.txt -B SVMCfg-dual.txt -G "$G" \
+             -N 100 -M 8 -C 1 -n 1 -e 1 $task
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
