@@ -281,7 +281,7 @@ static bool CheckFlows( void )
   // the flow is a flow: bounds arc by arc, conservation at each node. this
   // is the MCFBlock checking the Solution the Solver produced, without the
   // Solution ever being written into the Block
-  if( ! MCFB->is_feasible( sol , &fsbc ) ) {
+  if( ! MCFB->is_sol_feasible( sol , &fsbc ) ) {
    std::cout << std::endl << "S" << kk << ": the solution is not a flow, "
 	     << ( MCFB->flow_feasible( 1e-9 * scale , x ) ? "the bounds"
 		                                : "the flow conservation" )
@@ -289,7 +289,7 @@ static bool CheckFlows( void )
    ok = false;
    }
 
-  // NOTE: is_optimal( sol ) is deliberately not checked here. It would
+  // NOTE: is_sol_optimal( sol ) is deliberately not checked here. It would
   // need the potentials, and those only come out right of the Solver that
   // fill the Solution themselves: the default Solver::get_Solution() only
   // writes the primal solution into the Block, so the dual part of the
