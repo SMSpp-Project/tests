@@ -2,7 +2,7 @@
 #
 # usage: batch-resilient < exe file > < par file > < solver > < log file >
 #        < exe file > = path of the executable file, default MSSB_test
-#        < par file > = BlockSolverConfig file, default BSPar-MS.txt
+#        < par file > = BlockSolverConfig file, default BSPar-MS-resilient.txt
 #        < solver > = 0 or 1, default 0
 #        < log file > = name of log file, default no log
 #
@@ -15,15 +15,23 @@
 # splitting that single axis in two: the climate year, which scales the
 # availability of the renewables and the hydro inflow, is the OUTER stage,
 # while the demand, whose realizations are drawn conditional on the climate
-# year, is the INNER one. The reference is the optimum of the equivalent flat
-# network, which coincides with the tree one as long as the only here-and-now
-# Variable are the design ones.
+# year, is the INNER one. Each instance says which half of the climate the
+# outer stage acts upon, the availability of the renewables, the hydro inflow
+# or both, i.e., they are the counterparts of the maxpower, hydroinflow and
+# complete instances of the two-stage family; the demand one has no
+# counterpart here, for the demand is the inner stage of all of them.
+#
+# The default BlockSolverConfig attaches two :MILPSolver to the deterministic
+# equivalent, so each instance is a Solver-against-Solver check besides being
+# a Solver-against-reference one; the reference is the optimum of the
+# equivalent flat network solved by PyPsa, which coincides with the tree one
+# as long as the only here-and-now Variable are the design ones.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./MSSB_test
-DEFAULT_PAR=BSPar-MS.txt
+DEFAULT_PAR=BSPar-MS-resilient.txt
 DEFAULT_SLV=0
 parse_batch_args "$@"
 
@@ -34,8 +42,10 @@ parse_batch_args "$@"
 
 declare -A REF_OBJ
 
-REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_temp.nc]=5.017759647e+09
-REF_OBJ[smspp_network_small_fewsectors__snap100__c4_d3_temp.nc]=4.900427298e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_renewables_temp.nc]=5.017759647e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_hydro_temp.nc]=4.943437037e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_both_temp.nc]=5.017759647e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c4_d3_both_temp.nc]=4.900427298e+09
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

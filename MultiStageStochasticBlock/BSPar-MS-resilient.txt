@@ -1,0 +1,45 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - BSPar-MS-resilient.txt - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a MultiStageStochasticBlock
+# attaching *two* :MILPSolver to the deterministic equivalent, so that the
+# tester cross-checks one against the other besides checking both against the
+# reference objective value. The resilient instances are sector-coupled and
+# badly scaled, which is exactly where two solvers disagreeing is worth
+# knowing; the LagrangianDualSolver that would make the cross-check a
+# comparison between two *algorithms* rather than two implementations waits
+# for the nested configuration, as the header of BSPar-MS.txt says.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of 1st Solver
+HiGHSMILPSolver       # name of 2nd Solver
+
+2 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the 1st :MILPSolver
+
+*MILPCfg-grb.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the 2nd :MILPSolver
+
+*MILPCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END BSPar-MS-resilient.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

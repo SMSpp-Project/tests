@@ -1,0 +1,61 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - MILPCfg-grb.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a ComputeConfig for a GRBMILPSolver solving the
+# deterministic equivalent of a MultiStageStochasticBlock: the same thing
+# MILPCfg.txt asks of HiGHS, said in the names Gurobi uses, so that the two
+# can be attached together and cross-checked. The one thing not carried over
+# is skipping the crossover: Gurobi's interior point stops too far from the
+# optimum for the cross-check to pass.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+4 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0 # log verbosity of the MILPSolver
+intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+intCutSepPar    7 # separate user cuts + lazy constraints
+Method          2 # barrier for the (LP) relaxation, with its own crossover:
+                  # the interior point alone stops some 1e-4 short of the
+                  # optimum, which is more than the tester tolerates
+
+1 # number of double parameters
+
+# now all the double parameters
+dblRelAcc       1e-8 # relative accuracy required to solution
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END MILPCfg-grb.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
