@@ -2,7 +2,7 @@
 #
 # usage: batch-resilient < exe file > < par file > < solver > < log file >
 #        < exe file > = path of the executable file, default MSSB_test
-#        < par file > = BlockSolverConfig file, default BSPar-MS-resilient.txt
+#        < par file > = BlockSolverConfig file, default BSPar-MS.txt
 #        < solver > = 0 or 1, default 0
 #        < log file > = name of log file, default no log
 #
@@ -21,17 +21,22 @@
 # complete instances of the two-stage family; the demand one has no
 # counterpart here, for the demand is the inner stage of all of them.
 #
-# The default BlockSolverConfig attaches two :MILPSolver to the deterministic
-# equivalent, so each instance is a Solver-against-Solver check besides being
-# a Solver-against-reference one; the reference is the optimum of the
-# equivalent flat network solved by PyPsa, which coincides with the tree one
-# as long as the only here-and-now Variable are the design ones.
+# The reference is the optimum of the equivalent flat network solved by PyPsa,
+# which coincides with the tree one as long as the only here-and-now Variable
+# are the design ones. Unlike the two-stage batch, this one checks the
+# :MILPSolver on the deterministic equivalent against that reference alone,
+# and not against a LagrangianDualSolver as well: relaxing the outer
+# non-anticipativity constraints leaves one TwoStageStochasticBlock per
+# LagBFunction, and a LagBFunction requires its inner Block to carry an
+# FRealObjective of its own [see LagBFunction.cpp], which a
+# TwoStageStochasticBlock has not, its objective being the scaled sum of the
+# objectives of its sub-Blocks.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./MSSB_test
-DEFAULT_PAR=BSPar-MS-resilient.txt
+DEFAULT_PAR=BSPar-MS.txt
 DEFAULT_SLV=0
 parse_batch_args "$@"
 

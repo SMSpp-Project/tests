@@ -42,8 +42,12 @@ the two-stage family; the `demand` one has no counterpart here, the demand
 being the inner stage of all of them. Their reference objective values are
 the optimum of the equivalent flat network solved by PyPSA, which coincides
 with the tree one as long as the only here-and-now Variable are the design
-ones, and `BSPar-MS-resilient.txt` attaches two `:MILPSolver` so that each
-instance is a Solver-against-Solver check as well.
+ones. Unlike the two-stage batch, this one has no LagrangianDualSolver to
+cross-check the `:MILPSolver` against: relaxing the outer non-anticipativity
+constraints leaves one `TwoStageStochasticBlock` per `LagBFunction`, and a
+`LagBFunction` requires its inner Block to carry an `FRealObjective` of its
+own, which a `TwoStageStochasticBlock` has not, its objective being the
+scaled sum of the objectives of its sub-Blocks.
 
 A makefile is also provided that builds the executable including the
 `MultiStageStochasticBlock`, `TwoStageStochasticBlock`,
