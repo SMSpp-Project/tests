@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pisinger-large [ <exe> ] [ <timeout s> ] [ <memcap KB> ]
+#                             [ <name filter> ]
+#        <exe>          = path of the executable, default BinaryKnapsackBlock_test
+#        <timeout s>    = per-run wall-clock limit, default 120
+#        <memcap KB>    = per-run address-space cap (ulimit -v), default 8 GB
+#        <name filter>  = only instances whose name matches, e.g. _1000_ ; all
+#
+# Scaling / coverage benchmark on LARGE Pisinger instances (data/txt-large, see
+# data/fetch-txt-large: the uncorrelated and subset-sum classes at growing n,
+# one instance per .csv). Like batch-jooken, and unlike the batch-pisinger
+# cross-check, this is a performance map, not pass/fail: at large n the exact
+# tree search blows up while the core DP and the MILP scale, and the benchmark
+# documents exactly where. Each instance is handed, ONE SOLVER PER PROCESS, to
+# the lineup under a time limit and a memory cap, so a solver that runs out of
+# time or memory does not take the others (or the machine) down. The outcome is
+#   OK <t>s    finished and matched the published optimum,
+#   TIMEOUT    exceeded the time limit,
+#   OOM        hit the memory cap (killed cleanly by the kernel),
+#   FAIL(rc)   anything else.
+
+set -u
+
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+source "$here/../../batch_common.sh"   # colors only
+
+exe="${1:-./BinaryKnapsackBlock_test}"
+TIMEOUT="${2:-120}"
+MEMCAP="${3:-8388608}"
+NAMEF="${4:-}"
+
+ldir="../../BinaryKnapsackBlock/data/txt-large"
+shopt -s nullglob
+csvs=( "$ldir"/*${NAMEF}*.csv )
+if [ "${#csvs[@]}" -eq 0 ]; then
+  echo "SKIP batch-pisinger-large: no .csv under $ldir (run data/fetch-txt-large)"
+  exit 0
+fi
+
+# same lineup as batch-jooken: the toughest exact solvers we have, each as
+# "label:config" (the greedy relaxation only brackets, folded into each config)
+lineup=(
+  "CoreDP   :BSPar-coredp.txt"
+  "CPLEX    :BSPar-milp.txt"
+  "BX-parDFS:BSPar-bx-pardfs.txt"
+  "BX-dive  :BSPar-bx-dive.txt"
+)
+
+declare -A solved
+total=0
+
+for csv in $(printf '%s\n' "${csvs[@]}" | sort -t_ -k3 -n); do
+  name=$( basename "$csv" .csv )
+  z=$( awk '/^z /{print $2; exit}' "$csv" )
+  echo "=== $name  (opt $z) ==="
+  total=$(( total + 1 ))
+  for entry in "${lineup[@]}"; do
+    label="${entry%%:*}"; cfg="${entry##*:}"
+    t0=$( date +%s.%N )
+    out=$( ( ulimit -v "$MEMCAP"; timeout "$TIMEOUT" \
+             "$exe" -S "$cfg" -C "$csv" ) 2>&1 )
+    rc=$?
+    t1=$( date +%s.%N )
+    dt=$( awk "BEGIN{printf \"%.1f\", $t1-$t0}" )
+    if [ $rc -eq 124 ]; then
+      st="${RED}TIMEOUT${NC}"
+    elif echo "$out" | grep -qi "passed"; then
+      st="${GREEN}OK ${dt}s${NC}"; solved[$label]=$(( ${solved[$label]:-0} + 1 ))
+    elif echo "$out" | grep -qiE "bad_alloc|out of memory|std::bad"; then
+      st="${RED}OOM${NC}"
+    else
+      st="${RED}FAIL(rc=$rc)${NC}"
+    fi
+    printf "  %-10s -> %b\n" "$label" "$st"
+  done
+done
+
+echo "------------------------------------------------------------"
+echo "solved / $total instances (timeout ${TIMEOUT}s, memcap $(( MEMCAP/1024 )) MB):"
+for entry in "${lineup[@]}"; do
+  label="${entry%%:*}"
+  printf "  %-10s : %d\n" "$label" "${solved[$label]:-0}"
+done

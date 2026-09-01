@@ -1,0 +1,39 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-milp.txt  - - - - - - - - - - - - - -
+#
+# Single-exact-solver BlockSolverConfig: the greedy relaxation (which brackets
+# the optimum) plus the exact CPLEX MILP (:MILPSolver). It is the "CPLEX" entry
+# of the hard-instance lineups (batch-jooken and batch-pisinger-large), run one
+# solver per process to map where a strong MIP engine cracks the large-capacity
+# instances that defeat the core DP and the greedy-bound B&B.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GreedyRelaxationBinaryKnapsackSolver  # 1st: relaxation, brackets the optimum
+CPXMILPSolver                         # 2nd: the exact CPLEX MILP
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the greedy relaxation (brackets the optimum), shared fragment
+*GRCfg.txt
+
+# 2: the exact CPLEX MILP, shared fragment
+*MILPCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - End BSPar-milp.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

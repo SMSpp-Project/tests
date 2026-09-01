@@ -1,0 +1,105 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-incr.txt  - - - - - - - - - - - - - -
+#
+# Cross-check BlockSolverConfig for the incremental greedy relaxation: it
+# attaches the exact reference optimum (:MILPSolver) and the BranchAndXSolver
+# driven by the incremental inner relaxation (InnerBSCfg-incr.txt), in its
+# best-first and serial depth-first modes, so that the sweep verifies the
+# incremental variant reaches the same optimum as the reference.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+3  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CPXMILPSolver                         # 1st: the exact reference optimum
+BranchAndXSolver                      # 2nd: BX best-first, incremental inner
+BranchAndXSolver                      # 3rd: BX depth-first, incremental inner
+
+3  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the exact MILP reference (factored fragment, shared with BSPar.txt)
+*MILPCfg.txt
+
+# 2: BranchAndXSolver, best-first, with the incremental inner relaxation
+*BX-baseCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 3: BranchAndXSolver, serial depth-first, with the incremental inner
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod 0
+intMaxThread   1
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - End BSPar-incr.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

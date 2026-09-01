@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# usage: batch-negative < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable, default BinaryKnapsackBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < solver > = unused
+#        < log file > = name of log file, default no log
+#
+# The same cross-check as batch (see it), but on the instances where most of
+# the weights and the profits are NEGATIVE, and on small ones re-solved many
+# times. Both are regimes the main sweep does not reach and both are hostile
+# in their own way: negative weights mean items that *free* capacity, so the
+# normalization of the relaxation has to complement them, while a small
+# instance re-solved many times keeps landing in the corner cases (a root
+# that is fathomed on the spot, an instance that turns infeasible) that a
+# larger one hits far more rarely.
+#
+#   Donato Meoli
+
+# run from the test directory so BinaryKnapsackBlock_test reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./BinaryKnapsackBlock_test
+DEFAULT_PAR=BSPar.txt
+# see batch: the greedy relaxation is held to the width of its bracket
+EPS="${EPS:-,,2.5e-1}"
+parse_batch_args "$@"
+
+# fixed harness parameters - - - - - - - - - - - - - - - - - - - - - - - - -
+# (many re-solves of a small instance: it is the sequence of Modifications
+# that matters here, not the size)
+seed=264
+wchg=63
+n_repeat=50
+nI=1
+
+# sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for N in 10 30; do
+
+  for delta in 0.005 0.1 1; do
+
+    for nW in 0.5 0.7; do
+
+      for nP in 0.5 0.7; do
+
+        for nM in 0 0.2; do
+
+          run_test "$exe" -S "$par" -E "$EPS" -e "$seed" -k "$wchg" -N "$N" -n "$n_repeat" -d "$delta" -W "$nW" -P "$nP" -i "$nI" -M "$nM"
+
+        done
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

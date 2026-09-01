@@ -1,0 +1,174 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-reopt.txt - - - - - - - - - - - - - - -
+#
+# Cross-check BlockSolverConfig exercising the reoptimization path of the
+# BranchAndXSolver (intReoptimize = 1, which retains the tree and re-seeds
+# from its fenced frontier across re-solves): the exact MILP reference plus
+# the BX in reoptimization mode in each of its serial exploration strategies,
+# all of which must reach the same optimum after each runtime Modification.
+# Retention is strategy-independent: the strategy only decides the order in
+# which the re-seeded frontier is re-explored (the parallel depth-first
+# exploration, which retains nothing, is deliberately not here).
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+5  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CPXMILPSolver                         # 1st: the exact reference optimum
+BranchAndXSolver                      # 2nd: BX best-first, reoptimization on
+BranchAndXSolver                      # 3rd: BX best-first with dives, reopt on
+BranchAndXSolver                      # 4th: BX depth-first serial, reopt on
+BranchAndXSolver                      # 5th: BX breadth-first, reoptimization on
+
+5  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the exact MILP reference
+*MILPCfg.txt
+
+# 2: BranchAndXSolver, best-first, tree retained for reoptimization
+*BX-baseCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize 1
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 3: BranchAndXSolver, best-first with dives, tree retained
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize  1
+intSolveMethod 3
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 4: BranchAndXSolver, serial depth-first, tree retained
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+3  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize  1
+intSolveMethod 0
+intMaxThread   1
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 5: BranchAndXSolver, breadth-first, tree retained
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize  1
+intSolveMethod 1
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - End BSPar-reopt.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

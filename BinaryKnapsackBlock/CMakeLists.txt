@@ -39,7 +39,10 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     # that handle continuous variables). These have no external optimum: they
     # cross-check the solvers against one another over a broad random sweep. The
     # validation against the PUBLISHED Pisinger optima is batch-pisinger.
-    foreach (BATCH_NAME batch batch-mixed)
+    # batch-negative is the same cross-check on the two regimes the sweep of
+    # batch does not reach: mostly negative weights and profits, and small
+    # instances re-solved many times.
+    foreach (BATCH_NAME batch batch-mixed batch-negative)
         if (UNIX)
             add_test(NAME BinaryKnapsackBlock_test/${BATCH_NAME}
                      COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}
@@ -86,6 +89,39 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     # the cross-check requires the curated data (the raw .csv)
     set_tests_properties(BinaryKnapsackBlock_test/batch-pisinger
                          PROPERTIES FIXTURES_REQUIRED bk_data_ready)
+
+    # ----- Jooken hard-instance validation (batches/batch-jooken) ---------- #
+    # Same architecture as batch-pisinger, on the Jooken-Leyman-De Causmaecker
+    # hard 0-1 knapsack instances (curated into data/jooken by the fetch_jooken_
+    # data fixture, each .csv carrying the published optimum z). These instances
+    # are designed to defeat branch-and-bound, so the toughest exact solvers we
+    # have (core DP, CPLEX, the BranchAndXSolver) are run one per process under a
+    # time / memory cap: the batch is GREEN unless a solver FINISHES with the
+    # wrong optimum; a TIMEOUT or OOM on these hard instances is expected and
+    # tolerated. The ctest run is bounded to the tractable (1e6-capacity) bucket
+    # with a short per-run limit; larger buckets are for the offline benchmark.
+    add_test(NAME fetch_jooken_data
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target fetch_jooken_data)
+    set_tests_properties(fetch_jooken_data
+                         PROPERTIES FIXTURES_SETUP jooken_data_ready)
+
+    if (UNIX)
+        add_test(NAME BinaryKnapsackBlock_test/batch-jooken
+                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-jooken
+                         ${CMAKE_CURRENT_BINARY_DIR}/BinaryKnapsackBlock_test
+                         20 8388608 1000000
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    elseif (WIN32)
+        add_test(NAME BinaryKnapsackBlock_test/batch-jooken
+                 COMMAND "C:/Program Files/Git/bin/bash.exe"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-jooken"
+                         "$<TARGET_FILE:BinaryKnapsackBlock_test>"
+                         20 8388608 1000000
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    endif ()
+    # the cross-check requires the curated Jooken data
+    set_tests_properties(BinaryKnapsackBlock_test/batch-jooken
+                         PROPERTIES FIXTURES_REQUIRED jooken_data_ready)
 endif ()
 
 # Tag this directory's tests with their per-module CI labels

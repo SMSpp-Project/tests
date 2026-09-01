@@ -4,8 +4,9 @@
 /** @file
  * Main for testing BinaryKnapsackBlock, comparing the results of all the
  * Solvers attached to it: every exact Solver must agree on the optimal value,
- * every relaxation Solver must bracket it (see CrossCheckSolvers() and batches/batch and batch-mixed
- * for the cross-check of all the mathematically equivalent formulations).
+ * every relaxation Solver must bracket it (see CrossCheckSolvers() and
+ * batches/batch and batch-mixed for the cross-check of all the mathematically
+ * equivalent formulations).
  *
  * \author Federica Di Pasquale \n
  *         Dipartimento di Informatica \n
@@ -54,6 +55,8 @@
 #include "common_utils.h"
 
 #include "BinaryKnapsackBlock.h"
+
+#include "ChangeSolver.h"
 
 #include <random>
 
@@ -164,11 +167,19 @@ bool CrossCheckSolvers( void )
  // that claims no optimum, i.e., the relaxation
  std::vector< char > feasible( M , 0 );
  std::vector< char > bracket( M , 0 );
+ // a :RelaxationSolver solves a relaxation, hence claims nothing beyond the
+ // [ lb , ub ] bracket of the base contract, whatever the BlockSolverConfig
+ // attaches and in whatever order; the wrapper also records, per Solver,
+ // feasibility and whether the reading is a bracket, both of which the
+ // BinaryKnapsackBlock-specific self-consistency check below needs
  SolverClassifier classify =
   [ &feasible , &bracket ]( Solver * s , std::size_t k ) -> SolverReading {
    feasible[ k ] = 1;
-   bracket[ k ] = std::isinf( eps_of( k , s ) );  // no optimum, hence no x
-   return( read_bounds( s , k ) );
+   auto r = read_bounds( s , k );
+   bracket[ k ] = bool( dynamic_cast< RelaxationSolver * >( s ) );
+   if( bracket[ k ] )                    // no optimum, hence no x to read
+    r.eps = Inf< double >();
+   return( r );
    };
 
  const double ref = have_ref ? ref_opt
@@ -190,7 +201,7 @@ bool CrossCheckSolvers( void )
    checksol += BKB->get_x( i ) * BKB->get_Profit( i );
   if( abs( checksol - value ) > 1e-06 * max( abs( value ) , 1.0 ) ) {
    cerr << "Error: Solver " << k << " solution value " << checksol
-        << " != its reported value " << value;
+        << " != its reported value " << value << endl;
    return( false );
    }
 
@@ -327,7 +338,7 @@ static bool run_pisinger( const std::string & csv , const std::string & sconf )
  if( AllPassed )
   cout << GREEN( All tests passed!! ) << endl;
  else
-  cout << RED( Errors happened!! ) << endl;
+  cout << RED( Shit happened!! ) << endl;
 
  s_config_Block( BKB , bsc );
  delete bsc;
@@ -737,8 +748,8 @@ int main( int argc , char **argv )
       for( Index j = rng.first ; j < rng.second ; j++ ) {
        auto x = BKB->get_Var( j );
        if( ! x->is_fixed() ) {
-	x->set_value( *nXit++ );
-	x->is_fixed( true );   
+        x->set_value( *nXit++ );
+        x->is_fixed( true );
         }
        }
       LOG( "(AR)" );
@@ -755,8 +766,8 @@ int main( int argc , char **argv )
       for( auto j : nms ) {
        auto x = BKB->get_Var( j );
        if( ! x->is_fixed() ) {
-	x->set_value( *nXit++ );
-	x->is_fixed( true );   
+        x->set_value( *nXit++ );
+        x->is_fixed( true );
         }
        }
       LOG( "(AS)" );
@@ -859,7 +870,7 @@ int main( int argc , char **argv )
  if( AllPassed )
   cout << GREEN( All tests passed!! ) << endl;
  else
-  cout << RED( Errors happened!! ) << endl;    
+  cout << RED( Shit happened!! ) << endl;    
 
  // final cleanup - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

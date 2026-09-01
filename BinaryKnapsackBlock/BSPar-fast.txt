@@ -1,0 +1,84 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-fast.txt  - - - - - - - - - - - - - -
+#
+# Lean cross-check BlockSolverConfig for LARGE instances (e.g., the Pisinger
+# hard instances, see batch-pisinger), where efficiency matters: it attaches,
+# for each family of algorithm, only its best-performing representative, rather
+# than all the equivalent variants BSPar.txt cross-checks on the smaller
+# instances. So: the exact MILP reference (:MILPSolver), the core dynamic
+# program (the fastest exact DP, in place of the full-table and parallel ones),
+# the from-scratch greedy relaxation (faster than the incremental one), whose
+# true bounds must BRACKET the optimum, and the BranchAndXSolver in its best
+# exploration mode (parallel depth-first).
+#
+# The per-solver ComputeConfig are the factored *Cfg.txt fragments shared with
+# BSPar.txt; the BranchAndXSolver one overrides BX-baseCfg.txt as there.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+4  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CPXMILPSolver                         # 1st: exact reference optimum
+#GRBMILPSolver                        # (uncomment the available backend)
+#SCIPMILPSolver
+#HiGHSMILPSolver
+CoreDPBinaryKnapsackSolver            # 2nd: exact core DP (best DP)
+GreedyRelaxationBinaryKnapsackSolver  # 3rd: greedy relaxation, brackets
+BranchAndXSolver                      # 4th: BX, parallel depth-first
+
+4  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1-3: the exact MILP / core DP solvers + the greedy relaxation (factored
+# fragments shared with BSPar.txt)
+*MILPCfg.txt
+*CDPCfg.txt
+*GRCfg.txt
+
+# 4: BranchAndXSolver, parallel depth-first (4 workers)
+*BX-baseCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod 0
+intMaxThread   4
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - End BSPar-fast.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
