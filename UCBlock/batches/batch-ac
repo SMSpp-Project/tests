@@ -37,9 +37,13 @@ for what in ${DATADIR}/*.nc4; do
     fi
 
     # skip 24h temporal instances: 1236 nodes x 1543 lines x 24 time steps
-    # produces ~500k SOCP constraints and the run does not complete in any
-    # reasonable test timeout. Pending a performance investigation, restrict
-    # this batch to single-period AC OPF benchmarks.
+    # produces ~500k SOCP constraints. The :MILPSolver alone takes some 320
+    # seconds on the QCP relaxation, and the Lagrangian chain, which needs
+    # QCPDual to get the duals of the quadratic constraints at all [see
+    # LPBSCfg-QCP.txt], does not converge in fifty minutes. Taking them would
+    # mean a time limit on the LagrangianDualSolver and on the heuristic, as
+    # the exact chain has, and a sample rather than the 53 of them: until
+    # that is decided, this batch stays on the single-period benchmarks.
     case "$(basename "$what")" in
       *_24h_*) continue ;;
     esac
