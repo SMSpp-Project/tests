@@ -1,0 +1,49 @@
+# timing harness: CoreDP (light exact reference) + BranchAndXSolver in
+# depth-first mode; the intMaxThread below is swept (1/2/4/8) to measure the
+# parallel scaling of the tree exploration. NOT a committed config.
+
+BlockSolverConfig
+
+1
+
+2
+
+# names
+GreedyRelaxationBinaryKnapsackSolver
+BranchAndXSolver
+
+2
+
+# ComputeConfig
+*GRCfg.txt
+
+# BranchAndXSolver, depth-first, intMaxThread swept
+*BX-baseCfg.txt +
+
+1
+
+2
+
+# integer parameters
+intSolveMethod 3
+intMaxThread   1
+
+0
+
+0
+
+0
+
+# [none]
+
+0
+
+# [none]
+
+0
+
+# [none]
+
+*
+
+# end of BlockSolverConfig

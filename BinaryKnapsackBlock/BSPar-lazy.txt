@@ -1,0 +1,172 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-lazy.txt - - - - - - - - - - - - - - - -
+#
+# Cross-check BlockSolverConfig exercising the LAZY bounding protocol of the
+# BranchAndXSolver (intBoundingProtocol = 1, which evaluates a node when it is
+# extracted from the open set rather than when it is created): the exact MILP
+# reference plus the BX in each of its serial exploration strategies, all of
+# which must reach the same optimum as with the (default) eager protocol,
+# since when a node is evaluated changes nothing of what is explored.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+5  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CPXMILPSolver                         # 1st: the exact reference optimum
+BranchAndXSolver                      # 2nd: BX best-first, lazy bounding
+BranchAndXSolver                      # 3rd: BX best-first with dives, lazy
+BranchAndXSolver                      # 4th: BX depth-first serial, lazy
+BranchAndXSolver                      # 5th: BX breadth-first, lazy bounding
+
+5  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the exact MILP reference
+*MILPCfg.txt
+
+# 2: BranchAndXSolver, best-first, lazy bounding protocol
+*BX-baseCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intBoundingProtocol 1
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 3: BranchAndXSolver, best-first with dives, lazy bounding protocol
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intBoundingProtocol 1
+intSolveMethod 3
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 4: BranchAndXSolver, serial depth-first, lazy bounding protocol
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+3  # number of integer parameters
+
+# now all the integer parameters
+intBoundingProtocol 1
+intSolveMethod 0
+intMaxThread   1
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 5: BranchAndXSolver, breadth-first, lazy bounding protocol
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intBoundingProtocol 1
+intSolveMethod 1
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -End BSPar-lazy.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

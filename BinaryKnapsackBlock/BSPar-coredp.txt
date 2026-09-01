@@ -1,0 +1,39 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-coredp.txt  - - - - - - - - - - - - - -
+#
+# Single-exact-solver BlockSolverConfig: the greedy relaxation (which brackets
+# the optimum) plus the exact, non-dominated-state CoreDPBinaryKnapsackSolver.
+# It is the "CoreDP" entry of the hard-instance lineups (batch-jooken and
+# batch-pisinger-large), run one solver per process to map where the core
+# dynamic program survives the large-capacity instances.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GreedyRelaxationBinaryKnapsackSolver  # 1st: relaxation, brackets the optimum
+CoreDPBinaryKnapsackSolver            # 2nd: exact core DP
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the greedy relaxation (brackets the optimum), shared fragment
+*GRCfg.txt
+
+# 2: the exact core DP, shared fragment
+*CDPCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - End BSPar-coredp.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

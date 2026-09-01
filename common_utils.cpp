@@ -516,7 +516,8 @@ bool SolveAll( Block * block ,
                double * out_fo1 ,
                bool   * out_hs1 ,
                double * out_time1 ,
-               long   * out_it1 )
+               long   * out_it1 ,
+               BlockSolverConfig * bsc )
 {
  constexpr double INF = std::numeric_limits< double >::has_infinity
                         ? std::numeric_limits< double >::infinity()
@@ -526,9 +527,18 @@ bool SolveAll( Block * block ,
   // the Solver the BlockSolverConfig attached to this Block, in its order,
   // which is the order the -E tolerances are positional on; the Solver that
   // these in turn attach to the inner Block are theirs, not part of the
-  // comparison
-  const auto & reg = block->get_registered_solvers();
-  std::vector< Solver * > S( reg.begin() , reg.end() );
+  // comparison [see BlockSolverConfig::get_Solvers()]. Without a
+  // BlockSolverConfig the comparison is over all the Solver registered to
+  // the Block
+  std::vector< Solver * > S;
+  if( bsc ) {
+   const auto & mine = bsc->get_Solvers( block );
+   S.assign( mine.begin() , mine.end() );
+   }
+  else {
+   const auto & reg = block->get_registered_solvers();
+   S.assign( reg.begin() , reg.end() );
+   }
   const std::size_t M = S.size();
   if( M == 0 ) {
    std::cout << "no Solver registered to the Block!" << std::endl;
@@ -608,10 +618,11 @@ bool SolveAll( Block * block ,
                double * out_fo1 ,
                bool   * out_hs1 ,
                double * out_time1 ,
-               long   * out_it1 )
+               long   * out_it1 ,
+               BlockSolverConfig * bsc )
 {
  return( SolveAll( block , read_bounds , ref , tol ,
-                   out_fo1 , out_hs1 , out_time1 , out_it1 ) );
+                   out_fo1 , out_hs1 , out_time1 , out_it1 , bsc ) );
  }
 
 /*--------------------------------------------------------------------------*/

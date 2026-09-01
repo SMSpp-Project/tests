@@ -31,11 +31,13 @@ cd "$here/.." || exit 1
 source "$here/../../batch_common.sh"
 
 DEFAULT_EXE=./BinaryKnapsackBlock_test
-DEFAULT_PAR=BSPar.txt
+# the large Pisinger instances use the lean config (one best solver per
+# family, no full-table DP); pass BSPar.txt explicitly for the full cross-check
+DEFAULT_PAR=BSPar-fast.txt
 # the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
-# except for the greedy relaxation, the third one, which is held instead to
-# the width of the bracket it produces on these instances (measured worst
-# case over the battery: 2.0e-01, on the smallest ones)
+# except for the greedy relaxation, which is held instead to the width of
+# the bracket it produces on these instances (measured worst case over the
+# battery: 2.0e-01, on the smallest ones)
 EPS="${EPS:-,,2.5e-1}"
 parse_batch_args "$@"
 

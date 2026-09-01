@@ -1,0 +1,72 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-bx-pardfs.txt - - - - - - - - - - - - - -
+#
+# Single-exact-solver BlockSolverConfig: the greedy relaxation (which brackets
+# the optimum) plus the BranchAndXSolver exploring the tree depth-first across
+# 4 threads (intSolveMethod = DFS, intMaxThread = 4), the parallel relaxation-
+# agnostic B&B. It is the "BX-parDFS" entry of the hard-instance lineups
+# (batch-jooken and batch-pisinger-large). The inner relaxation (the greedy
+# leaf) is set by the shared BX-baseCfg.txt; only the exploration mode and the
+# thread count are overridden here via the '*BX-baseCfg.txt +' cascade.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GreedyRelaxationBinaryKnapsackSolver  # 1st: relaxation, brackets the optimum
+BranchAndXSolver                      # 2nd: BX, parallel depth-first
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the greedy relaxation (brackets the optimum), shared fragment
+*GRCfg.txt
+
+# 2: BranchAndXSolver (the base config + the exploration-mode override): the
+# inner greedy leaf comes from BX-baseCfg.txt, only the exploration is changed
+*BX-baseCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod 0  # depth-first [see SolveMethod]
+intMaxThread   4  # 4 parallel workers (triggers the parallel tree exploration)
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - End BSPar-bx-pardfs.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
