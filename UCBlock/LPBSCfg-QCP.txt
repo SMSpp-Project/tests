@@ -35,10 +35,13 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-3 # number of integer parameters
+4 # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
+QCPDual         1 # ask GUROBI for the duals of the quadratic constraints:
+                  # the AC instances relax to a QCP, and whoever solves
+                  # the Lagrangian Dual needs them [no effect on a LP]
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate the ACNetworkBlock McCormick valid inequalities,
                   # as dynamic constraints, at the root node & sub-nodes + lazy
