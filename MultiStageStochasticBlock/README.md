@@ -31,6 +31,15 @@ one, so the reference objective values under `batches/batch-ec` are
 exactly those of the corresponding `TSSB_EC_*` instances of
 `tests/TwoStageStochasticBlock`.
 
+The instances of `batches/batch-resilient` are the multi-stage counterpart
+of the resilient family: the same PyPSA-Eur network the two-stage ones are
+drawn from, with its single axis of uncertainty split in two, the climate
+year that scales the availability of the renewables and the hydro inflow in
+the outer stage, and the demand, drawn conditional on it, in the inner one.
+Their reference objective values are the optimum of the equivalent flat
+network solved by PyPSA, which coincides with the tree one as long as the
+only here-and-now Variable are the design ones.
+
 A makefile is also provided that builds the executable including the
 `MultiStageStochasticBlock`, `TwoStageStochasticBlock`,
 `LagrangianDualSolver`, `BundleSolver`, `MILPSolver` modules and the core

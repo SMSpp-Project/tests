@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# usage: batch-resilient < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default MSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-MS.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs the multi-stage counterpart of the stochastic RESILIENT instances and
+# checks that the PyPsa objective value matches the given reference one.
+#
+# the two-stage family (see the batch-resilient of TwoStageStochasticBlock)
+# perturbs demand, renewable availability and hydro inflow all at once, in one
+# flat list of scenarios. These are drawn from the same PyPSA-Eur network by
+# splitting that single axis in two: the climate year, which scales the
+# availability of the renewables and the hydro inflow, is the OUTER stage,
+# while the demand, whose realizations are drawn conditional on the climate
+# year, is the INNER one. The reference is the optimum of the equivalent flat
+# network, which coincides with the tree one as long as the only here-and-now
+# Variable are the design ones.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./MSSB_test
+DEFAULT_PAR=BSPar-MS.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ file name ] = PyPsa objective value of the equivalent flat
+# network, solved by Gurobi; c<n>_d<m> is the size of the tree, n climate
+# years each carrying m demand realizations
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_temp.nc]=5.017759647e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c4_d3_temp.nc]=4.900427298e+09
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/resilient-data/test_mssb/smspp_*_temp.nc; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
