@@ -43,6 +43,8 @@
 
 #include <chrono>
 
+#include <fstream>
+
 #include <random>
 
 /*--------------------------------------------------------------------------*/
@@ -87,6 +89,9 @@ double tol = 1e-5;          ///< relative tolerance of the cross-check
 bool reopt = false;         ///< re-solve after changing the training problem
 
 Index ngrid = 0;            ///< values of C of the model selection, 0 = none
+
+/// the data set to read instead of generating one, in the format of LIBSVM
+std::string dataset;
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
@@ -134,7 +139,7 @@ static void generate( Index n , Index m , doubleVec & X , doubleVec & y ,
  }  // end( generate )
 
 /*--------------------------------------------------------------------------*/
-/// constructs the SVMBlock of the round, either generated or read from file
+/// constructs the SVMBlock of the round, generated or read from a data set
 
 static SVMBlock * construct( unsigned sd )
 {
@@ -155,6 +160,20 @@ static SVMBlock * construct( unsigned sd )
 
  if( auto svr = dynamic_cast< SVRBlock * >( svm ) )
   svr->set_epsilon( parE );
+
+ /* A data set of the LIBSVM repository, i.e. real data, as opposed to the
+  * generated ones: the file holds the samples and the targets and nothing
+  * else, so the hyper-parameters are the ones the options say, exactly as
+  * for a generated instance. */
+
+ if( ! dataset.empty() ) {
+  std::ifstream in( dataset );
+  if( ! in.is_open() )
+   throw( std::invalid_argument( "cannot open the data set " + dataset ) );
+
+  svm->load( in , 'l' );
+  return( svm );
+  }
 
  doubleVec X , y;
  generate( nsample , nfeature , X , y , sd );
@@ -437,6 +456,7 @@ static bool process_specific_arg( int opt )
   case( 'g' ): regression = true;              return( true );
   case( 'R' ): reopt = true;                   return( true );
   case( 'G' ): Str2Sthg( optarg , ngrid );     return( true );
+  case( 'd' ): dataset = optarg;               return( true );
   case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
   }
 
@@ -454,7 +474,7 @@ int main( int argc , char ** argv )
 
  docopt_desc = "SMS++ SVMBlock test.\n";
  filename_optional = true;
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:gR";
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:d:gR";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
@@ -469,7 +489,8 @@ int main( int argc , char ** argv )
    { "ref"      , required_argument , nullptr , 'r' } ,
    { "regress"  , no_argument       , nullptr , 'g' } ,
    { "reopt"    , no_argument       , nullptr , 'R' } ,
-   { "grid"     , required_argument , nullptr , 'G' } };
+   { "grid"     , required_argument , nullptr , 'G' } ,
+   { "data"     , required_argument , nullptr , 'd' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
@@ -499,6 +520,12 @@ int main( int argc , char ** argv )
          "                                  values of C, reporting the total "
          "time of\n"
          "                                  each Solver [0 = do not]\n"
+         "  -d, --data <file>               a data set in the sparse format "
+         "of LIBSVM,\n"
+         "                                  which replaces the generated one; "
+         "the\n"
+         "                                  hyper-parameters are still the "
+         "ones above\n"
          "  -n, --rounds <n>                how many rounds [10]\n"
          "  -t, --tol <x>                   relative tolerance of the "
          "cross-check [1e-5]\n"
@@ -514,7 +541,7 @@ int main( int argc , char ** argv )
  bool AllPassed = true;
 
  // a file is one instance, a seed is a family of them
- const Index rounds = filename.empty() ? n_repeat : 1;
+ const Index rounds = ( filename.empty() && dataset.empty() ) ? n_repeat : 1;
 
  for( Index r = 0 ; r < rounds ; ++r )
   AllPassed &= run_round( seed + r );

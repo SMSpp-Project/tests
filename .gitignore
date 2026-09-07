@@ -31,9 +31,14 @@ Write-Read/writeandread_test
 
 # Large data / generated inputs
 MMCFBlock/data/*
+
 MMCFBlock/gen/Canad.tgz
 InvestmentBlock/investment_candidates.txt
 CapacitatedFacilityLocation/LD/CFL*.txt
+
+# the netCDF files the SVM serialization checks write
+SVMBlock/svmblock.nc4
+SVMBlock/svmsolution.nc4
 
 # Solver-side run output
 # *.bn = BundleSolver log; *.lp = MILPSolver LP dump

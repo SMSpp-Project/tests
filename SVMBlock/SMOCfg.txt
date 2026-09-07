@@ -21,8 +21,11 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # number of double parameters
 
 # now all the double parameters
-dblSMOTol  1e-10 # the default 1e-3 leaves a gap of the order of 1e-3 * C,
-                 # way too loose for a cross-check against an exact Solver
+dblSMOTol  1e-9  # the default 1e-3 leaves a gap of the order of 1e-3 * C,
+                 # way too loose for a cross-check against an exact Solver.
+                 # The value is the one LSVMCfg.txt gives dblLSVMTol, and has
+                 # to stay so: the two Solver are timed against each other,
+                 # and a comparison at different tolerances is no comparison
 
 0 # number of string parameters
 

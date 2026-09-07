@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+# usage: batch-real < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# the same instances everybody else uses: the data sets of the LIBSVM
+# repository, which come from the Package Registry of the SVMBlock project and
+# are extracted under SVMBlock/data/libsvm by the extract_svm_libsvm target,
+# the data living with the module as UCBlock's and CFLB's do. The batch
+# does two different things with them:
+#
+# - it cross-checks, on the smaller ones, the ad hoc SMOSolver against a
+#   general-purpose :MILPSolver on the dense quadratic program the dual is,
+#   and against LIBSVM, which is an independent implementation of the same
+#   algorithm: an instance on which the three agree is a verified one;
+#
+# - it measures the model selection, i.e. the same data set trained over a
+#   grid of values of C, with ONE Solver attached at a time, since the times
+#   of a Solver are polluted by the others being there. For each Solver the
+#   total time over the grid is reported against the one of a Solver of the
+#   same kind attached anew at each point, which is what re-optimization is
+#   worth
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar-LSVM.txt
+parse_batch_args "$@"
+
+DATA="$(dirname "$0")/../../../SVMBlock/data/libsvm"
+
+if [ ! -d "$DATA" ]; then
+  echo "the data sets are not there: build the extract_svm_libsvm target"
+  exit 0
+fi
+
+# the ones a dense quadratic program can be built of, for the cross-check
+small="heart_scale sonar_scale ionosphere_scale breast-cancer_scale \
+       australian_scale diabetes_scale"
+
+# the ones the measurements are taken on; in CI only the smallest, where the
+# point is that the batch runs at all rather than what the numbers say
+if [ -n "$CI" ]; then
+  large="heart_scale"
+  glist="5"
+else
+  large="german.numer_scale splice_scale svmguide1 a1a a2a a3a w1a w2a"
+  glist="5 9 17"
+fi
+
+# ----- the cross-check ---------------------------------------------------- #
+
+for set in ${small}; do
+  [ -f "${DATA}/${set}" ] || continue
+
+  for K in 0 2; do    # the linear kernel and the Gaussian one
+    run_test "$exe" -S BSPar-LSVM.txt -B SVMCfg-dual.txt \
+             -d "${DATA}/${set}" -K "$K" -C 1 -n 1
+  done
+done
+
+# ----- the model selection, one Solver at a time -------------------------- #
+
+for set in ${large}; do
+  [ -f "${DATA}/${set}" ] || continue
+
+  for G in ${glist}; do
+    for slv in BSPar-SMO.txt BSPar-LSVMonly.txt; do
+      run_test "$exe" -S "$slv" -B SVMCfg-dual.txt \
+               -d "${DATA}/${set}" -K 0 -G "$G" -C 1 -n 1
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
