@@ -31,6 +31,12 @@ TIMEOUT="${2:-120}"
 MEMCAP="${3:-8388608}"
 NAMEF="${4:-}"
 
+# each config of the lineup has the greedy relaxation as its FIRST Solver: it
+# is there to bracket the run, not to be judged, this being a coverage
+# benchmark and not a quality one, so it declares nothing, while the empty
+# field holds the place of the exact Solver, which keeps its own tolerance
+EPS="${EPS:-inf,}"
+
 ldir="../../BinaryKnapsackBlock/data/txt-large"
 shopt -s nullglob
 csvs=( "$ldir"/*${NAMEF}*.csv )
@@ -60,7 +66,7 @@ for csv in $(printf '%s\n' "${csvs[@]}" | sort -t_ -k3 -n); do
     label="${entry%%:*}"; cfg="${entry##*:}"
     t0=$( date +%s.%N )
     out=$( ( ulimit -v "$MEMCAP"; timeout "$TIMEOUT" \
-             "$exe" -S "$cfg" -C "$csv" ) 2>&1 )
+             "$exe" -S "$cfg" -E "$EPS" -C "$csv" ) 2>&1 )
     rc=$?
     t1=$( date +%s.%N )
     dt=$( awk "BEGIN{printf \"%.1f\", $t1-$t0}" )
