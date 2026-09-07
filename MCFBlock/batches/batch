@@ -7,6 +7,11 @@
 # runs net/goto MCF instances of several sizes through the MCFBlock-vs-MILP
 # comparison, over 3 seeds each
 #
+# the sweep is split in two so that neither half approaches the three hour cap
+# a job has on the GitLab.com shared runners: the dense instances, which are
+# what costs, are in batch-dense, everything else is here. The two together
+# are the whole sweep.
+#
 # each instance is run twice, with two "what to change" masks:
 # - 255 = change everything, arc deletions included: this exercises the full
 #         remove_arc/add_arc Modification path, but deletions can permanently
@@ -20,7 +25,7 @@
 # value.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../batch_common.sh"
+source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../MCFBlock/data
 
@@ -36,8 +41,8 @@ for type in net goto; do
 
   for (( seed = 0; seed < 3 ; seed++ )); do
 
-    #for sz in 8_8 8_32 10_8 10_64 12_8 14_8
-    for sz in 8_8 8_32 10_8 10_64 12_8; do
+    #for sz in 8_8 8_32 10_8 12_8 14_8
+    for sz in 8_8 8_32 10_8 12_8; do
       for h in 1 2 3 4 5; do
 
         what=${DATADIR}/nc4/${type}${sz}_${h}.nc4

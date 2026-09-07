@@ -43,7 +43,7 @@ if (TARGET SMS++::MCFBlock)
                          PROPERTIES FIXTURES_SETUP dmx2nc4_generated)
 
     # Add a test for each batch file
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch")
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
