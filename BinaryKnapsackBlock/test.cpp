@@ -167,19 +167,17 @@ bool CrossCheckSolvers( void )
  // that claims no optimum, i.e., the relaxation
  std::vector< char > feasible( M , 0 );
  std::vector< char > bracket( M , 0 );
- // a :RelaxationSolver solves a relaxation, hence claims nothing beyond the
- // [ lb , ub ] bracket of the base contract, whatever the BlockSolverConfig
- // attaches and in whatever order; the wrapper also records, per Solver,
- // feasibility and whether the reading is a bracket, both of which the
- // BinaryKnapsackBlock-specific self-consistency check below needs
+ // a :RelaxationSolver has no optimum to write in the Variable, so the
+ // self-consistency check below skips it; what it does have is the bracket
+ // of the base contract, whose two ends are valid bounds on the optimum of
+ // THIS problem [see GreedyRelaxationBinaryKnapsackSolver::get_lb()], so it
+ // is an ordinary inexact Solver as far as the cross-check goes and it is
+ // held to the width its -E declares, like every other one
  SolverClassifier classify =
   [ &feasible , &bracket ]( Solver * s , std::size_t k ) -> SolverReading {
    feasible[ k ] = 1;
-   auto r = read_bounds( s , k );
    bracket[ k ] = bool( dynamic_cast< RelaxationSolver * >( s ) );
-   if( bracket[ k ] )                    // no optimum, hence no x to read
-    r.eps = Inf< double >();
-   return( r );
+   return( read_bounds( s , k ) );
    };
 
  const double ref = have_ref ? ref_opt
