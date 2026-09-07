@@ -474,6 +474,9 @@ int main( int argc , char ** argv )
 
  docopt_desc = "SMS++ SVMBlock test.\n";
  filename_optional = true;
+ // -R is --reopt here, a flag, while the standard one takes a value: the
+ // standard reading has to go, appending alone would not override it
+ override_short_opt( 'R' );
  short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:d:gR";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,

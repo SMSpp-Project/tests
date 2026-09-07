@@ -178,6 +178,19 @@ extern std::vector< option > long_opts;
 
 extern std::string help;
 
+/*--------------------------------------------------------------------------*/
+/// drop a standard short option, so that a test can redefine it
+/** Erases @p opt from @ref short_opts, together with the ':' or '::' that
+ *  says which argument it takes. A test redefining one of the standard
+ *  letters with a different argument, a flag where the standard one takes a
+ *  value say, has to call this before appending its own: getopt_long()
+ *  honours the FIRST occurrence of a letter in the string, so appending
+ *  alone would leave the standard reading in force. Redefining a letter
+ *  that takes the same kind of argument needs nothing, process_args()
+ *  already gives the test's own dispatcher the first say. */
+
+void override_short_opt( char opt );
+
 /// @}
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/

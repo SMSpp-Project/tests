@@ -952,6 +952,22 @@ static bool is_number( const char * s )
  }
 
 /*--------------------------------------------------------------------------*/
+// erase a standard short option, and its argument marker, from short_opts
+
+void override_short_opt( char opt )
+{
+ const auto pos = short_opts.find( opt );
+ if( pos == std::string::npos )
+  return;
+
+ auto end = pos + 1;
+ while( ( end < short_opts.size() ) && ( short_opts[ end ] == ':' ) )
+  ++end;
+
+ short_opts.erase( pos , end - pos );
+ }
+
+/*--------------------------------------------------------------------------*/
 // one standard option, or false if it is not one
 
 bool process_standard_arg( int opt )
