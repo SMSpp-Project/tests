@@ -29,6 +29,13 @@ DEFAULT_PAR=BSPar-DP.txt
 # the Lagrangian Dual of these instances is solved over sub-Block that the
 # dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
 # the PrimalProximalHeur needs and what makes its inner Solver converge
+# the LagrangianDualSolver here solves a relaxation of the problem, and with
+# the sub-problems solved exactly the bound it gives is the Lagrangian one,
+# which has a duality gap: it is declared as such, so that it is held to
+# solving its own problem exactly while of this one it only bounds the side
+# a relaxation bounds [see BSPar-DP.txt]
+REL="${REL:-,r}"
+
 parse_batch_args "$@"
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -47,14 +54,14 @@ if [ -n "$CI" ]; then
                FirstSetofInstances/L_B_N_9.nc4
                pHydro/20090907_pHydro_4_none.nc4"
     for rel in $instances; do
-        run_test "$exe" "${DATADIR}/${rel}" -S "$par" -B InnerBCfg.txt
+        run_test "$exe" "${DATADIR}/${rel}" -S "$par" -R "$REL" -B InnerBCfg.txt
     done
 else
     for what in "${DATADIR}"/FirstSetofInstances/*.nc4 \
                 "${DATADIR}"/SecondSetofInstances/*.nc4 \
                 "${DATADIR}"/pHydro/*.nc4; do
 
-        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
+        run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt
 
     done
 fi

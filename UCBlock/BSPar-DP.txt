@@ -13,8 +13,9 @@
 #   - LagrangianDualSolver  a relaxation: with the sub-problems solved
 #                           exactly its bound is the Lagrangian one, which
 #                           has a duality gap, so a batch running this must
-#                           declare it with -E ,inf instead of holding it to
-#                           its dblRelAcc
+#                           declare it with -R ,r; being a relaxation it is
+#                           still held to solving its own problem exactly,
+#                           which is why its dblRelAcc is the tight one
 #   - PrimalProximalHeur    a heuristic: it brackets the optimum between the
 #                           bound of its unpenalized iteration and the best
 #                           feasible solution it finds
@@ -69,7 +70,11 @@ intDoEasy 1 # do easy components for (some) LagBFunction
 
 3 # number of double parameters
 
-dblNZEps  1e-4 # stopping parameter: threshold to declare 0 the || residual ||
+dblNZEps  1e-2 # stopping parameter: threshold to declare 0 the || residual ||:
+               # the publication of the bound on the value of the Lagrangian
+               # Dual is subordinated to || z || being declared zero by this,
+               # so a tighter value does not make that bound better, it makes
+               # it never appear [see dblRelAcc in LDCfg-DP.txt]
 dbltStar  1e+4 # stopping parameter: multiplied to || residual || to estimate gap
 dbltInit  1e-3 # initial value for t
 

@@ -132,6 +132,25 @@ extern double RefObjective;
  *  heuristics; see eps_of(). */
 extern std::vector< double > solver_eps;
 
+/*--------------------------------------------------------------------------*/
+/// which Solver solve a relaxation of the problem rather than the problem
+/** Positional on the order of the BlockSolverConfig, exactly like
+ *  @ref solver_eps, and filled by -R. A relaxation is a Solver of a
+ *  different problem: it is required to solve that one exactly, hence to
+ *  bound its optimum on both sides within its own tolerance, but of the
+ *  optimum of this problem only one of its two bounds says anything [see
+ *  SolverReading::Valid]. Being a relaxation is a property of the
+ *  configuration, not of the class: a LagrangianDualSolver whose sub-Block
+ *  are solved as continuous relaxations is one thing, and the same Solver
+ *  over integer sub-Block is another. */
+
+extern std::vector< bool > solver_relaxation;
+
+/*--------------------------------------------------------------------------*/
+/// whether -R declared Solver @p k to be solving a relaxation
+
+bool is_relaxation( std::size_t k );
+
 /// the optimality tolerance of Solver @p k
 /** What -E declares for @p k if it declares anything, else the accuracy
  *  Solver @p s was asked for, i.e. its dblRelAcc, which is the number that
@@ -287,9 +306,21 @@ std::string fmt_obj( double v );
  *  "the tolerance the cross-check is called with". */
 
 struct SolverReading {
+ /// which end of the interval is a bound on the optimum of THIS problem
+ /** A Solver that solves the problem it is attached to bounds its optimum on
+  * both sides, which is #kBoth. A Solver that solves a relaxation of it
+  * bounds the optimum of the relaxation, and only the end of the interval
+  * the relaxation is on says anything about this problem: #kLower for a
+  * minimization problem, whose relaxations bound it from below, #kUpper for
+  * a maximization one. The other end is still read, but as what it is, the
+  * bound of the relaxed problem on itself. */
+
+ enum Valid { kBoth = 0 , kLower = 1 , kUpper = 2 };
+
  double lb  = - std::numeric_limits< double >::infinity();  ///< z* >= lb
  double ub  =   std::numeric_limits< double >::infinity();  ///< z* <= ub
  double eps =   std::numeric_limits< double >::quiet_NaN(); ///< allowed gap
+ Valid valid = kBoth;                            ///< which end bounds z*
 
  /// an optimum @p v claimed up to @p e
  static SolverReading exact( double v ,
