@@ -22,7 +22,10 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the double parameters
 dblLSVMTol 1e-9  # as for SMOSolver, the default 1e-3 leaves a gap of the
-                 # order of 1e-3 * C, way too loose for a cross-check
+                 # order of 1e-3 * C, way too loose for a cross-check. The
+                 # value is the one SMOCfg.txt gives dblSMOTol, and has to
+                 # stay so: the two Solver are timed against each other, and
+                 # a comparison at different tolerances is no comparison
 
 0 # number of string parameters
 
