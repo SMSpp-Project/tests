@@ -26,10 +26,10 @@ BlockSolverConfig     # exact type of the Configuration object
 4  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver                         # 1st: exact reference optimum
-#GRBMILPSolver                        # (uncomment the available backend)
+HiGHSMILPSolver                       # 1st: exact reference optimum
+#CPXMILPSolver                        #      (uncomment the available backend)
+#GRBMILPSolver
 #SCIPMILPSolver
-#HiGHSMILPSolver
 CoreDPBinaryKnapsackSolver            # 2nd: exact core DP (best DP)
 GreedyRelaxationBinaryKnapsackSolver  # 3rd: greedy relaxation, brackets
 BranchAndXSolver                      # 4th: BX, parallel depth-first

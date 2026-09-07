@@ -22,7 +22,10 @@ BlockSolverConfig     # exact type of the Configuration object
 5  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver                         # 1st: the exact reference optimum
+HiGHSMILPSolver                       # 1st: the exact reference optimum
+#CPXMILPSolver                        #      (uncomment the available backend)
+#GRBMILPSolver
+#SCIPMILPSolver
 BranchAndXSolver                      # 2nd: BX best-first, reoptimization on
 BranchAndXSolver                      # 3rd: BX best-first with dives, reopt on
 BranchAndXSolver                      # 4th: BX depth-first serial, reopt on
