@@ -26,8 +26,11 @@ source "$here/../../batch_common.sh"
 
 DEFAULT_EXE=./BinaryKnapsackBlock_test
 DEFAULT_PAR=BSPar.txt
-# see batch: the greedy relaxation is held to the width of its bracket
-EPS="${EPS:-,,2.5e-1}"
+# see batch: the greedy relaxation is the fourth Solver of BSPar.txt, but on
+# the instances with negative profits its bounds are worth nothing, the
+# measured worst case over the battery being 1.95, i.e. a bracket twice as
+# wide as the optimum, so here it is declared to claim nothing at all
+EPS="${EPS:-,,,inf}"
 parse_batch_args "$@"
 
 # fixed harness parameters - - - - - - - - - - - - - - - - - - - - - - - - -

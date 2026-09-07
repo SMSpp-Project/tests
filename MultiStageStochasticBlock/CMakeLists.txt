@@ -45,8 +45,10 @@ if (TARGET SMS++::MultiStageStochasticBlock)
     smspp_install(MSSB_test)
 
     # Add a test for each batch file (batch-ec for the two-stage MSSB
-    # instances, batch-ec-3s for the three-stage ones)
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ec*")
+    # instances, batch-ec-3s for the three-stage ones, batch-resilient for the
+    # multi-stage counterpart of the resilient family)
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ec*"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-resilient")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})

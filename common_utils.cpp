@@ -32,6 +32,8 @@
 
 #include <Configuration.h>
 
+#include <Objective.h>
+
 /*--------------------------------------------------------------------------*/
 /*--------------------- MPI / UCX SAFE-DEFAULTS ----------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -276,6 +278,18 @@ double eps_of( std::size_t k , Solver * s , double dflt )
  }
 
 /*--------------------------------------------------------------------------*/
+// whether Solver k was declared to be solving a relaxation
+
+bool is_relaxation( std::size_t k )
+{
+ // a single value of -R applies to every Solver, a list is positional
+ if( solver_relaxation.size() == 1 )
+  return( solver_relaxation.front() );
+
+ return( ( k < solver_relaxation.size() ) && solver_relaxation[ k ] );
+ }
+
+/*--------------------------------------------------------------------------*/
 // the default reading of a Solver: the interval of its base contract
 
 SolverReading read_bounds( Solver * s , std::size_t k )
@@ -354,12 +368,17 @@ std::string reading_token( const SolverReading & r )
 {
  const std::string lb = fmt_obj( r.lb ) , ub = fmt_obj( r.ub );
 
+ // the interval of a relaxation is marked, since it is an interval around
+ // the optimum of another problem [see SolverReading::Valid]
+ const std::string tag =
+  ( r.valid == SolverReading::kBoth ) ? "" : " (rel)";
+
  // a Solver that closed the gap prints the optimum rather than an interval
  // whose two ends read the same
  if( lb == ub )
-  return( lb );
+  return( lb + tag );
 
- return( "[ " + lb + " , " + ub + " ]" );
+ return( "[ " + lb + " , " + ub + " ]" + tag );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -455,8 +474,12 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  constexpr double INF = std::numeric_limits< double >::infinity();
  double best_lb = - INF , best_ub = INF;
  for( std::size_t k = 0 ; k < M ; ++k ) {
-  best_lb = std::max( best_lb , rd[ k ].lb );
-  best_ub = std::min( best_ub , rd[ k ].ub );
+  // the end of a relaxation's interval that bounds its own optimum and not
+  // this one is no knowledge about this problem [see SolverReading::Valid]
+  if( rd[ k ].valid != SolverReading::kUpper )
+   best_lb = std::max( best_lb , rd[ k ].lb );
+  if( rd[ k ].valid != SolverReading::kLower )
+   best_ub = std::min( best_ub , rd[ k ].ub );
   }
  if( ! std::isnan( ref ) ) {
   best_lb = std::max( best_lb , ref );
@@ -467,12 +490,14 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  double zstar = std::numeric_limits< double >::quiet_NaN();  // 1st claimed z*
  for( std::size_t k = 0 ; k < M ; ++k ) {
   const double lb = rd[ k ].lb , ub = rd[ k ].ub;
+  const bool lb_is_ours = ( rd[ k ].valid != SolverReading::kUpper );
+  const bool ub_is_ours = ( rd[ k ].valid != SolverReading::kLower );
 
-  // correctness, which every Solver owes whatever it promised: its bounds
-  // cannot contradict the bounds of the others
-  if( std::isfinite( ub ) && ( ! le( best_lb , ub , tol ) ) )
+  // correctness, which every Solver owes whatever it promised: the bounds it
+  // gives on THIS problem cannot contradict the bounds of the others
+  if( ub_is_ours && std::isfinite( ub ) && ( ! le( best_lb , ub , tol ) ) )
    ok = false;
-  if( std::isfinite( lb ) && ( ! le( lb , best_ub , tol ) ) )
+  if( lb_is_ours && std::isfinite( lb ) && ( ! le( lb , best_ub , tol ) ) )
    ok = false;
 
   // quality, which only the Solver that delivered what it was asked owes:
@@ -486,16 +511,27 @@ bool cross_check( const std::vector< SolverReading > & rd ,
   const double e = std::max( std::isnan( rd[ k ].eps ) ? tol : rd[ k ].eps ,
                              tol );
   if( ( status[ k ] == Solver::kOK ) && ( ! std::isinf( e ) ) ) {
-   if( std::isfinite( ub ) && std::isfinite( best_lb )
-       && ( ! le( ub , best_lb , e ) ) )
-    ok = false;
-   if( std::isfinite( lb ) && std::isfinite( best_ub )
-       && ( ! le( best_ub , lb , e ) ) )
-    ok = false;
+   if( rd[ k ].valid == SolverReading::kBoth ) {
+    if( std::isfinite( ub ) && std::isfinite( best_lb )
+        && ( ! le( ub , best_lb , e ) ) )
+     ok = false;
+    if( std::isfinite( lb ) && std::isfinite( best_ub )
+        && ( ! le( best_ub , lb , e ) ) )
+     ok = false;
+    }
+   else
+    // a relaxation is asked to solve exactly the problem it does solve, so
+    // what its tolerance is about is the width of its own interval; against
+    // this problem it owes correctness alone, since the distance between the
+    // two optima is the gap of the relaxation and not an error of its
+    if( std::isfinite( lb ) && std::isfinite( ub ) && ( ! le( ub , lb , e ) ) )
+     ok = false;
    }
 
-  // the optimum is pinned by the first Solver that bounds it on both sides
-  if( std::isnan( zstar ) && std::isfinite( lb ) && std::isfinite( ub ) )
+  // the optimum is pinned by the first Solver that bounds it on both sides,
+  // which a relaxation never does whatever its own interval looks like
+  if( std::isnan( zstar ) && ( rd[ k ].valid == SolverReading::kBoth )
+      && std::isfinite( lb ) && std::isfinite( ub ) )
    zstar = rd[ k ].claimed();
   }
 
@@ -575,6 +611,14 @@ bool SolveAll( Block * block ,
                || ( status[ k ] == Solver::kLowPrecision ) );
    if( hs[ k ] ) {
     rd[ k ] = classify( S[ k ] , k );
+    // a Solver declared a relaxation by -R bounds the optimum of the
+    // relaxation: of this problem it bounds only the side the relaxation
+    // is on, which the sense of the Objective decides
+    if( is_relaxation( k ) ) {
+     auto obj = block->get_objective();
+     rd[ k ].valid = ( obj && ( obj->get_sense() == Objective::eMax ) )
+                     ? SolverReading::kUpper : SolverReading::kLower;
+     }
     tok[ k ] = reading_token( rd[ k ] );
     // a Solver that did not return kOK did not deliver what it was asked
     // and is therefore only held to correctness: say so in the line, since
@@ -718,10 +762,12 @@ double RefObjective = std::numeric_limits< double >::quiet_NaN();
 
 std::vector< double > solver_eps;
 
+std::vector< bool > solver_relaxation;
+
 // the getopt baseline shared by the tests that opt in; those that need
 // extra switches override short_opts / long_opts / help in their main()
 // before calling process_args()
-std::string short_opts = "B:S:p:c:E:Dv::h";
+std::string short_opts = "B:S:p:c:E:R:Dv::h";
 
 std::vector< option > long_opts = {
  { "help"            , no_argument       , nullptr , 'h' } ,
@@ -730,6 +776,7 @@ std::vector< option > long_opts = {
  { "prefix"          , required_argument , nullptr , 'p' } ,
  { "configdir"       , required_argument , nullptr , 'c' } ,
  { "eps"             , required_argument , nullptr , 'E' } ,
+ { "relaxation"      , required_argument , nullptr , 'R' } ,
  { "dryrun"          , no_argument       , nullptr , 'D' } ,
  { "verbose"         , optional_argument , nullptr , 'v' } ,
  { nullptr           , no_argument       , nullptr , 0   }
@@ -746,6 +793,12 @@ std::string help =
  "                                  empty field being its own dblRelAcc; one\n"
  "                                  value applies to all, inf claims nothing\n"
  "                                  beyond a valid [ get_lb() , get_ub() ]\n"
+ "  -R, --relaxation <r[,r,...]>    which Solver solve a relaxation of the\n"
+ "                                  problem, r in the same positional order,\n"
+ "                                  the empty field being an ordinary one:\n"
+ "                                  a relaxation is held to solve its own\n"
+ "                                  problem exactly, and only the bound on\n"
+ "                                  its side is one on this problem\n"
  "  -D, --dryrun                    skip the compute() call\n"
  "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic, 2 = debug)\n";
 
@@ -841,6 +894,44 @@ static void parse_eps_list( const std::string & arg )
  }
 
 /*--------------------------------------------------------------------------*/
+// read the roles of -R, a comma-separated list whose fields are either empty
+// or, case-insensitively, "r"
+
+static void parse_relaxation_list( const std::string & arg )
+{
+ solver_relaxation.clear();
+ std::size_t pos = 0;
+ while( pos <= arg.size() ) {
+  const std::size_t next = arg.find( ',' , pos );
+  std::string field = arg.substr( pos , next == std::string::npos
+                                        ? std::string::npos : next - pos );
+  pos = ( next == std::string::npos ) ? arg.size() + 1 : next + 1;
+
+  // trim the blanks that a quoted argument may carry
+  const auto b = field.find_first_not_of( " \t" );
+  const auto e = field.find_last_not_of( " \t" );
+  field = ( b == std::string::npos ) ? "" : field.substr( b , e - b + 1 );
+
+  std::string lc;
+  for( auto c : field )
+   lc += char( std::tolower( (unsigned char) c ) );
+
+  if( lc.empty() ) {          // an ordinary Solver, holding its place
+   solver_relaxation.push_back( false );
+   continue;
+   }
+
+  if( ( lc == "r" ) || ( lc == "rel" ) || ( lc == "relaxation" ) ) {
+   solver_relaxation.push_back( true );
+   continue;
+   }
+
+  std::cerr << exe << ": invalid role '" << field << "' in -R" << std::endl;
+  exit( 1 );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
 // the command line, so that an option can look at the argument that follows
 // it even when getopt does not hand it over [see the 'v' case below]
 
@@ -881,6 +972,7 @@ bool process_standard_arg( int opt )
             Configuration::set_filename_prefix( std::string( conf_prefix ) );
             break;
   case 'E': parse_eps_list( std::string( optarg ) ); break;
+  case 'R': parse_relaxation_list( std::string( optarg ) ); break;
   case 'D': dryrun = true; break;
   case 'v': {
    sol_verbose = true;

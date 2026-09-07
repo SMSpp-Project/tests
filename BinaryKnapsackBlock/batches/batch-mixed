@@ -23,10 +23,11 @@ source "$here/../../batch_common.sh"
 DEFAULT_EXE=./BinaryKnapsackBlock_test
 DEFAULT_PAR=BSPar-mixed.txt
 # the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
-# except for the greedy relaxation, the third one, which is held instead to
-# the width of the bracket it produces on these instances (measured worst
-# case over the battery: 2.0e-01, on the smallest ones)
-EPS="${EPS:-,,2.5e-1}"
+# except for the two greedy relaxations, the fourth and fifth of
+# BSPar-mixed.txt, which are held instead to the width of the bracket they
+# produce on these instances (measured worst case over the whole battery:
+# 1.8e-01, the same for both)
+EPS="${EPS:-,,,2e-1,2e-1}"
 parse_batch_args "$@"
 
 # fixed harness parameters - - - - - - - - - - - - - - - - - - - - - - - - -
