@@ -19,7 +19,10 @@ BlockSolverConfig     # exact type of the Configuration object
 3  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CPXMILPSolver                         # 1st: the exact reference optimum
+HiGHSMILPSolver                       # 1st: the exact reference optimum
+#CPXMILPSolver                        #      (uncomment the available backend)
+#GRBMILPSolver
+#SCIPMILPSolver
 BranchAndXSolver                      # 2nd: BX best-first, incremental inner
 BranchAndXSolver                      # 3rd: BX depth-first, incremental inner
 
