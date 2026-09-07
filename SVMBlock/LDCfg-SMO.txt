@@ -16,9 +16,10 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-20 # number of integer parameters
+21 # number of integer parameters
 
 # now all the integer parameters
+intMPStbl              0 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
 # first those of LagrangianDualSolver proper
 int_LDSlv_iBCopy       0 # 1 if sub-Block must be R3B-copied
 int_LDSlv_NNMult       0 # the consensus constraints are equalities, hence
