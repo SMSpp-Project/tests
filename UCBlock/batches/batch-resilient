@@ -19,6 +19,13 @@ DEFAULT_EXE=./UCBlock_test
 DEFAULT_PAR=BSPar-EASY.txt
 parse_batch_args "$@"
 
+# of the three Solver of BSPar-EASY.txt only the first one, the MILP,
+# answers this problem: the LagrangianDualSolver solves its dual, and the
+# PrimalProximalHeur the same dual with a primal recovery on top, so both
+# are declared relaxations and held to bounding the side a relaxation
+# bounds, rather than to a value and to an upper bound they need not have
+REL="${REL:-,r,r}"
+
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = PyPsa objective value
 
@@ -60,7 +67,8 @@ for wf in 0 1 2; do
           exit 1
         fi
 
-        run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref" -f "$wf"
+        run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt \
+                 -r "$ref" -f "$wf"
 
     done
 
