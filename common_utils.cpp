@@ -438,6 +438,19 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  if( M >= 2 )
   ++mutual_inf_watchdog.n_total;
 
+ /* A Solver that says it has a solution has to say what it is worth, and a
+  * value that is not a number is not a bound. The check has to be explicit:
+  * every comparison against a NaN is false, so it does not fail any of the
+  * agreement tests below, and with a single Solver and no reference there is
+  * nothing it could be compared with at all. */
+
+ for( std::size_t k = 0 ; k < M ; ++k )
+  if( has_solution[ k ] &&
+      ( std::isnan( rd[ k ].lb ) || std::isnan( rd[ k ].ub ) ) ) {
+   verdict_out = "KO";
+   return( false );
+   }
+
  // single Solver, no reference: just "did it find a solution?" (with the
  // lb <= ub sanity check when the reading is a bracket)
  if( ( M == 1 ) && std::isnan( ref ) ) {
