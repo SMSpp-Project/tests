@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# usage: batch-stochastic < exe file > < bpar file > < spar file > < log file >
+#        < exe file > = path of the executable file, default InvestmentBlock_test
+#        < bpar file > = BlockConfig file, default InnerBCfg.txt
+#        < spar file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs the instances where the InvestmentBlock wraps a whole stochastic Block,
+# a TwoStageStochasticBlock or a MultiStageStochasticBlock, rather than a
+# single UCBlock: the design is the Variable of the master, the
+# InvestmentFunction is the value function and the scenarios are the
+# subproblems, all solved at once by the Solver registered on the stochastic
+# Block. The instances are emitted by pypsa2smspp with investment_outside,
+# which states the investment once outside the scenarios instead of once per
+# scenario, and the reference is the objective of the equivalent flat network
+# solved by PyPsa.
+#
+# NOTE: the inner Block is solved by Gurobi, see BSCfg1.txt: HiGHS grinds for a
+# thousand seconds on these instances and then reports an error. Switching that
+# file leaves batch-resilient identical, verified line by line.
+#
+# NOTE: these runs are given an initial point, and it is not optional. Over
+# part of the design space the inner Block is infeasible, because scaling the
+# design of a line scales its minimum power flow along with the maximum, so a
+# line with a positive minimum is forced to carry a flow its neighbours at
+# design zero cannot absorb. There the InvestmentFunction returns +infinity
+# and no linearization, the master has no feasibility cut with which to cut
+# the point away, and the run stops declaring the stability centre optimal.
+# Starting inside the box the trajectory never enters that region.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+# NOTE: this batch takes a BlockConfig (bpar) + BlockSolverConfig (spar) pair
+# rather than the standard (par, slv); we map them onto the helper's $par/$slv
+# slots so that `parse_batch_args` and `run_test` work unchanged.
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./InvestmentBlock_test
+DEFAULT_PAR=InnerBCfg.txt
+DEFAULT_SLV=BSPar.txt
+parse_batch_args "$@"
+bpar=$par
+spar=$slv
+
+# the initial point, the lower bound of the box plus 10000 on every asset; it
+# is the same for every instance here, their design boxes being the same
+point=initial_investment_stochastic.txt
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ filename ] = PyPsa objective value of the equivalent flat
+# network; the three instances describe the same scenario tree, once as nine
+# flat scenarios and once as three subtrees of three, hence the same value
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_stoch_tssb_c3_d3_renewables.nc]=5.017759647e+09
+REF_OBJ[smspp_stoch_tssb_c3_d3_both.nc]=5.017759647e+09
+REF_OBJ[smspp_stoch_mssb_c3_d3_both.nc]=5.017759647e+09
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../InvestmentBlock/data/nc4/resilient-data/stochastic/smspp_*.nc; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" -B "$bpar" -S "$spar" -x "$point" -o "$ref" "$what"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
