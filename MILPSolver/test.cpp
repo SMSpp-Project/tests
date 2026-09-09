@@ -15,13 +15,28 @@
  * arrives with the wrong sign is a cut in the wrong direction, which is worse
  * than no cut at all.
  *
- * This is what is checked here, on a two-row linear program small enough that
- * its certificate is unique up to a positive factor. The same rows are given
- * twice, once with right-hand sides that make the program feasible and once
- * with right-hand sides that make it infeasible; every registered :MILPSolver
- * is asked for the optimal duals of the former and for the certificate of the
- * latter, and the two must have the same sign on the same row. The check thus
- * needs to know no solver's convention, only that a solver keeps one.
+ * This is what is checked here, on a linear program small enough that its
+ * certificate is unique up to a positive factor. The same rows are given
+ * twice, once with a right-hand side that makes the program feasible and once
+ * with one that makes it infeasible; every registered :MILPSolver is asked
+ * for the optimal duals of the former and for the certificate of the latter,
+ * and the two must have the same sign on the same row. The check thus needs
+ * to know no solver's convention, only that a solver keeps one.
+ *
+ * The program is
+ *
+ *     min  x + y  s.t.  2x +  y >= 3 ,  x + 2y >= 3 ,  x + y <= u ,  x , y >= 0
+ *
+ * with u = 3 in the feasible instance, whose optimum is x = y = 1, and u = 7/5
+ * in the infeasible one. It is written this way on purpose: a certificate is
+ * a ray of the dual simplex, and so it exists only where the infeasibility is
+ * proved by the simplex. Were the two sides of a single variable to conflict,
+ * every solver would see the empty domain by bound propagation alone and stop
+ * before the first LP iteration, with no dual basis to build the ray from.
+ * Here the activity bounds conclude nothing, u bounding each variable by 7/5
+ * and the largest activity of the first row being 21/5, above its 3; the
+ * infeasibility only shows as a combination, a third of the first row plus a
+ * third of the second giving x + y >= 2 against x + y <= 7/5.
  *
  * The solvers that state they have no certificate to give are reported and
  * skipped, that being a legitimate answer: the infeasibility may have been
@@ -74,42 +89,55 @@ static constexpr double Eps = 1e-9;
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-/// builds min x subject to x >= lhs and x <= rhs, x >= 0
-/** The two rows carry the same Variable with coefficient one, so that the
- * only Farkas certificate of the infeasible instance is the pair of their
- * multipliers, unique up to a positive factor: whichever way a solver scales
- * it, the sign of each component is determined. */
+/// builds the program of the file comment with the given right-hand side
+/** Every Farkas certificate of the infeasible instance is a positive multiple
+ * of ( 1/3 , 1/3 , 1 ): whichever way a solver scales it, the sign of each
+ * component is determined, and so the comparison against the optimal duals of
+ * the feasible instance is well posed. */
 
-static AbstractBlock * build( double lhs , double rhs ,
+static AbstractBlock * build( double u ,
                               std::vector< FRowConstraint > * & rows )
 {
  auto ab = new AbstractBlock();
 
- auto x = new std::vector< ColVariable >( 1 );
- (*x)[ 0 ].set_type( ColVariable::kContinuous );
+ auto x = new std::vector< ColVariable >( 2 );
+ for( auto & v : *x ) {
+  v.set_type( ColVariable::kContinuous );
+  v.is_positive( true );
+  }
  ab->add_static_variable( *x , "x" );
 
- rows = new std::vector< FRowConstraint >( 2 );
+ rows = new std::vector< FRowConstraint >( 3 );
 
- // x >= lhs
- (*rows)[ 0 ].set_function(
-  new LinearFunction( { std::make_pair( &(*x)[ 0 ] , 1.0 ) } ) );
- (*rows)[ 0 ].set_lhs( lhs );
+ // 2x + y >= 3
+ (*rows)[ 0 ].set_function( new LinearFunction(
+  { std::make_pair( &(*x)[ 0 ] , 2.0 ) ,
+    std::make_pair( &(*x)[ 1 ] , 1.0 ) } ) );
+ (*rows)[ 0 ].set_lhs( 3 );
  (*rows)[ 0 ].set_rhs( Inf< double >() );
 
- // x <= rhs
- (*rows)[ 1 ].set_function(
-  new LinearFunction( { std::make_pair( &(*x)[ 0 ] , 1.0 ) } ) );
- (*rows)[ 1 ].set_lhs( -Inf< double >() );
- (*rows)[ 1 ].set_rhs( rhs );
+ // x + 2y >= 3
+ (*rows)[ 1 ].set_function( new LinearFunction(
+  { std::make_pair( &(*x)[ 0 ] , 1.0 ) ,
+    std::make_pair( &(*x)[ 1 ] , 2.0 ) } ) );
+ (*rows)[ 1 ].set_lhs( 3 );
+ (*rows)[ 1 ].set_rhs( Inf< double >() );
+
+ // x + y <= u
+ (*rows)[ 2 ].set_function( new LinearFunction(
+  { std::make_pair( &(*x)[ 0 ] , 1.0 ) ,
+    std::make_pair( &(*x)[ 1 ] , 1.0 ) } ) );
+ (*rows)[ 2 ].set_lhs( -Inf< double >() );
+ (*rows)[ 2 ].set_rhs( u );
 
  for( auto & c : *rows )
   c.set_Block( ab );
 
  ab->add_static_constraint( *rows , "rows" );
 
- auto obj = new FRealObjective( ab ,
-  new LinearFunction( { std::make_pair( &(*x)[ 0 ] , 1.0 ) } ) );
+ auto obj = new FRealObjective( ab , new LinearFunction(
+  { std::make_pair( &(*x)[ 0 ] , 1.0 ) ,
+    std::make_pair( &(*x)[ 1 ] , 1.0 ) } ) );
  obj->set_sense( Objective::eMin );
  ab->set_objective( obj );
 
@@ -182,10 +210,10 @@ int main( void )
 
   std::cout << std::left << std::setw( 16 ) << name;
 
-  // the feasible instance: 1 <= x <= 3, whose optimum is x = 1 - - - - - - -
+  // the feasible instance, whose optimum is x = y = 1 - - - - - - - - - - -
 
   std::vector< FRowConstraint > * frows;
-  auto feasible = build( 1 , 3 , frows );
+  auto feasible = build( 3 , frows );
   feasible->register_Solver( solver );
 
   auto status = solver->compute();
@@ -218,10 +246,10 @@ int main( void )
    continue;
    }
 
-  // the infeasible instance: x >= 3 and x <= 1 - - - - - - - - - - - - - - -
+  // the infeasible instance - - - - - - - - - - - - - - - - - - - - - - - -
 
   std::vector< FRowConstraint > * irows;
-  auto infeasible = build( 3 , 1 , irows );
+  auto infeasible = build( 1.4 , irows );
   infeasible->register_Solver( solver );
 
   status = solver->compute();
@@ -249,15 +277,16 @@ int main( void )
 
     const auto d0 = (*irows)[ 0 ].get_dual();
     const auto d1 = (*irows)[ 1 ].get_dual();
+    const auto d2 = (*irows)[ 2 ].get_dual();
 
-    if( ( ! sgn( d0 ) ) && ( ! sgn( d1 ) ) ) {
+    if( ( ! sgn( d0 ) ) && ( ! sgn( d1 ) ) && ( ! sgn( d2 ) ) ) {
      std::cout << " gives an all-zero certificate" << std::endl;
      all_passed = false;
      }
     else {
-     std::cout << " certificate ( " << std::showpos << std::setw( 10 )
-               << d0 << " , " << std::setw( 10 ) << d1 << std::noshowpos
-               << " )";
+     std::cout << " certificate ( " << std::showpos << std::setw( 9 ) << d0
+               << " , " << std::setw( 9 ) << d1
+               << " , " << std::setw( 9 ) << d2 << std::noshowpos << " )";
 
      // the certificate must have, on the same row, the sign the optimal dual
      // has: whoever reads it does so with the same code
