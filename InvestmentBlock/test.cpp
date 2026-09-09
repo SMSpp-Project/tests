@@ -1301,31 +1301,32 @@ void process_block_file( const netCDF::NcFile & file ) {
 
   auto investment_block = dynamic_cast< InvestmentBlock * >(
    Block::new_Block( block_description.second , nullptr ) );
-  assert( investment_block );
+
+  // deserialize gives up, having said why, when a type it needs is not in the
+  // Block factory, which is what happens when that type is not linked in
+  if( ! investment_block ) {
+   std::cerr << "error: cannot build the InvestmentBlock of " << filename
+             << std::endl;
+   exit( 1 );
+   }
 
   auto investment_function = static_cast< InvestmentFunction * >(
    investment_block->get_function() );
-
-  for( auto block_ : investment_function->get_nested_Blocks() ) {
-   auto block = dynamic_cast< UCBlock * >( block_ );
-   if( ! block ) {
-    std::cerr << "The sub-Block of the InvestmentBlock is not a UCBlock."
-              << std::endl;
-    exit( 1 );
-   }
-  }
 
   // Configure the Block
   if( given_block_config ) {
    b_config_Block( investment_block , given_block_config , bconf_file );
   }
   else {
-   for( auto block_ : investment_function->get_nested_Blocks() ) {
-    auto block = dynamic_cast< UCBlock * >( block_ );
-    bool is_using_lagrangian_dual_solver = false;
-    configure_Blocks( block , relax_integrality ,
-                      is_using_lagrangian_dual_solver );
-   }
+   // the hand-made configuration below only knows how to shape a UCBlock;
+   // any other inner Block, a stochastic one in particular, has to be given
+   // its BlockConfig with -B
+   for( auto block_ : investment_function->get_nested_Blocks() )
+    if( auto block = dynamic_cast< UCBlock * >( block_ ) ) {
+     bool is_using_lagrangian_dual_solver = false;
+     configure_Blocks( block , relax_integrality ,
+                       is_using_lagrangian_dual_solver );
+     }
   }
 
   if( reformulate_variable_bounds ) {

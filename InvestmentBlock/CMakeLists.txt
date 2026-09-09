@@ -4,6 +4,8 @@
 if (NOT hasParent)
     # Blocks
     find_package(InvestmentBlock)
+    find_package(TwoStageStochasticBlock)
+    find_package(MultiStageStochasticBlock)
     # Solvers
     find_package(BundleSolver)
     find_package(MILPSolver)
@@ -25,6 +27,19 @@ if (TARGET SMS++::InvestmentBlock)
 
     if (TARGET SMS++::MILPSolver)
         target_link_libraries(InvestmentBlock_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    # the InvestmentBlock accepts a whole stochastic Block as its inner one;
+    # the Block factory only knows the types that are linked in, so without
+    # these the instances of batch-stochastic cannot be deserialized
+    if (TARGET SMS++::TwoStageStochasticBlock)
+        target_link_libraries(InvestmentBlock_test
+                              PRIVATE SMS++::TwoStageStochasticBlock)
+    endif ()
+
+    if (TARGET SMS++::MultiStageStochasticBlock)
+        target_link_libraries(InvestmentBlock_test
+                              PRIVATE SMS++::MultiStageStochasticBlock)
     endif ()
 
     smspp_install(InvestmentBlock_test)
