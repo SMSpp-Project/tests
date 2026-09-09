@@ -718,6 +718,83 @@ bool SolveBoth( Block * block ,
  }
 
 /*--------------------------------------------------------------------------*/
+
+double tree_objective_value( Block * block )
+{
+ double value = 0;
+
+ if( auto obj = dynamic_cast< RealObjective * >( block->get_objective() ) ) {
+  obj->compute();
+  value += obj->value();
+  }
+
+ for( auto sb : block->get_nested_Blocks() )
+  value += tree_objective_value( sb );
+
+ return( value );
+
+ }  // end( tree_objective_value )
+
+/*--------------------------------------------------------------------------*/
+
+bool check_var_solutions( Block * block , double tol )
+{
+ bool allok = true;
+ std::size_t k = 0;
+
+ for( auto slvr : block->get_registered_solvers() ) {
+  const std::size_t h = k++;
+
+  if( is_relaxation( h ) )
+   /* A Solver that solves a relaxation reports the value of the
+    * relaxation, while what it writes in the Variable is a point of the
+    * relaxed problem: the two are the same number only if the objective
+    * is linear on it. A Lagrangian dual is the obvious case, its point
+    * being a convex combination of the solutions of the sub-problems: as
+    * soon as the objective is convex and not linear, the combination
+    * costs strictly less than the combination of the costs, and the
+    * difference is not an error of anybody's. Hence the check does not
+    * apply here. */
+   continue;
+
+  if( ! slvr->has_var_solution() )
+   continue;                    // nothing to read, hence nothing to check
+
+  const double reported = slvr->get_var_value();
+  if( ! std::isfinite( reported ) )
+   continue;                    // nothing to compare the solution with
+
+  double value;
+  try {
+   slvr->get_var_solution();
+   value = tree_objective_value( block );
+   }
+  catch( std::exception & e ) {
+   std::cerr << "Error: Solver " << h << " has a solution it cannot give: "
+             << e.what() << std::endl;
+   allok = false;
+   continue;
+   }
+
+  if( verbosity_level > 0 )
+   std::cout << "solution of Solver " << h << " is worth "
+             << fmt_obj( value ) << ", reported "
+             << fmt_obj( reported ) << std::endl;
+
+  if( std::abs( value - reported ) >
+      tol * std::max( { 1.0 , std::abs( value ) , std::abs( reported ) } ) ) {
+   std::cerr << "Error: the solution of Solver " << h << " is worth "
+             << fmt_obj( value ) << ", but it reports "
+             << fmt_obj( reported ) << std::endl;
+   allok = false;
+   }
+  }
+
+ return( allok );
+
+ }  // end( check_var_solutions )
+
+/*--------------------------------------------------------------------------*/
 // compare a value against the reference one and report
 
 bool CheckRefValue( double fo , double ref ,

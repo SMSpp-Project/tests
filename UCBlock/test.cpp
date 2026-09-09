@@ -556,7 +556,15 @@ int main( int argc , char ** argv )
  // of its ComputeConfig unless -E overrides it: the batches do so for the
  // PrimalProximalHeur, whose dblRelAcc is what the inner Solver is asked
  // and not what its primal solution is worth
- const bool AllPassed = SolveAll( TestBlock , RefObjective , 1e-5 );
+ bool AllPassed = SolveAll( TestBlock , RefObjective , 1e-5 );
+
+ // each Solver that has a solution must have one that is worth what the
+ // Solver says: the cross-check compares the values the Solver report with
+ // each other, this compares each of them with the solution it comes with.
+ // It is the only place where the solution the LagrangianDualSolver
+ // RECONSTRUCTS is read back, that being written from the convex
+ // combination the important linearization of each LagBFunction describes
+ AllPassed &= check_var_solutions( TestBlock );
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

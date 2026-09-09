@@ -546,6 +546,36 @@ bool SolveBoth( Block * block ,
                 long   * out_it1 = nullptr );
 
 /*--------------------------------------------------------------------------*/
+/// value of the Objective of @p block and of all its inner Block
+/** Recomputes every Objective of the tree on the current value of the
+ *  Variable and sums them, i.e., what the tree is worth right now. */
+
+double tree_objective_value( Block * block );
+
+/*--------------------------------------------------------------------------*/
+/// check that the solution of each Solver is worth what the Solver says
+/** For every Solver registered to @p block that has one, has the primal
+ *  solution written in the Variable [see Solver::get_var_solution()] and
+ *  checks that tree_objective_value(), recomputed on it, gives back the
+ *  value the Solver reports [see Solver::get_var_value()], to the relative
+ *  tolerance @p tol. A Solver that has no primal solution is skipped, and
+ *  so is one whose reported value is not finite, there being nothing to
+ *  compare the solution with.
+ *
+ *  This is where a solution that is RECONSTRUCTED rather than found gets
+ *  looked at: a LagrangianDualSolver writes the Variable from the convex
+ *  combination that the important linearization of each LagBFunction
+ *  describes, and neither the cross-check nor anything else ever reads that
+ *  number, so a combination that is wrong, or missing, is invisible without
+ *  this. Note that the reconstructed solution is worth the value of the
+ *  relaxation only inasmuch as the residual is zero, which is what the
+ *  stopping parameters of the inner Solver are asked to deliver: hence the
+ *  tolerance here is that of a solution recovered from a converged dual,
+ *  not that of the cross-check. */
+
+bool check_var_solutions( Block * block , double tol = 1e-6 );
+
+/*--------------------------------------------------------------------------*/
 /// print "fo ~ Ref = ref (|diff| = ..., OK/KO)" and return whether OK
 /** Tolerance: |fo - ref| ≤ rel_tol × max(1, |fo|, |ref|).
  *  @p time1 and @p iters are pre-pended for output symmetry with SolveBoth. */
