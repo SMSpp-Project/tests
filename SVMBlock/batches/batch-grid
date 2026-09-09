@@ -32,4 +32,17 @@ for G in ${glist}; do
   done
 done
 
+# the same grid with the ad hoc Solver alone, with the active set shrunk and
+# with it left alone: the two have to agree at every point of the grid, and
+# what the shrinking is worth is in the iterations the tester reports at the
+# end of each run
+for G in ${glist}; do
+  for cfg in BSPar-SMO.txt BSPar-SMO-noshrink.txt; do
+
+    run_test "$exe" -S "$cfg" -B SVMCfg-dual.txt -G "$G" \
+             -N 100 -M 8 -C 1 -n 1 -e 1
+
+  done
+done
+
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

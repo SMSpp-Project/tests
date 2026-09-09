@@ -36,7 +36,7 @@ for prb in dual primal; do
       for task in "" "-g"; do
 
         run_test "$exe" -S "$par" -B SVMCfg-${prb}.txt -f "$wf" -K "$K" \
-                 -N 40 -M 3 -n 1 -e 1 -O $task
+                 -N 40 -M 3 -n 1 -e 1 -R $task
 
       done
     done

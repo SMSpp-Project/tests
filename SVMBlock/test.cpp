@@ -90,6 +90,8 @@ bool reopt = false;         ///< re-solve after changing the training problem
 
 Index ngrid = 0;            ///< values of C of the model selection, 0 = none
 
+Index nincr = 0;            ///< samples learnt one at a time, 0 = none
+
 /// the data set to read instead of generating one, in the format of LIBSVM
 std::string dataset;
 
@@ -301,6 +303,95 @@ static bool run_grid( SVMBlock * svm , Block * block )
  }  // end( run_grid )
 
 /*--------------------------------------------------------------------------*/
+/// learns \p nincr samples one at a time, timing each Solver over the walk
+/** Adds \p nincr samples to the data set one at a time, re-solving after each
+ * addition with every Solver attached to the SVMBlock and accumulating the
+ * time and the iterations each of them takes. This is the operation the exact
+ * solution path is for: a Solver that walks it grows the multiplier of the
+ * new sample from zero keeping every other index at its own optimality
+ * condition, so that what the addition costs is the events of one walk, while
+ * a Solver that iterates pays the iterations its warm start still needs.
+ *
+ * No Solver is named here, and nothing tells one from the other: which of the
+ * two an SMOSolver does is its intSMOPath parameter, i.e. a matter of the
+ * ComputeConfig it is given, so the two columns of the comparison are two
+ * runs of this same function with two configurations. The Solver still have
+ * to agree with each other at every addition, which is what makes the times
+ * comparable. */
+
+static bool run_incremental( SVMBlock * svm , Block * block )
+{
+ const auto & reg = block->get_registered_solvers();
+ std::vector< Solver * > S( reg.begin() , reg.end() );
+ const std::size_t M = S.size();
+
+ std::vector< double > total( M , 0 );
+ std::vector< long > iters( M , 0 );
+
+ bool ok = true;
+
+ /* The samples to be learnt are drawn exactly as those of the data set are,
+  * with another seed: they belong to the same distribution, hence the model
+  * has to move to accommodate them, which is the point, but they are not the
+  * ones it has already been trained on. */
+
+ doubleVec nX , ny;
+ generate( nincr , nfeature , nX , ny , seed + 2000 );
+
+ for( Index a = 0 ; a < nincr ; ++a ) {
+  doubleVec X1( nX.begin() + std::size_t( a ) * nfeature ,
+                nX.begin() + std::size_t( a + 1 ) * nfeature );
+  doubleVec y1( 1 , ny[ a ] );
+
+  svm->add_samples( 1 , X1 , y1 );
+
+  std::vector< SolverReading > rd( M );
+  std::vector< bool > hs( M , false );
+  std::vector< int > status( M , Solver::kError );
+  std::vector< double > times( M , 0 );
+  std::vector< std::string > tokens( M );
+
+  for( std::size_t k = 0 ; k < M ; ++k ) {
+   const auto start = std::chrono::steady_clock::now();
+   status[ k ] = S[ k ]->compute( false );
+   times[ k ] = std::chrono::duration< double >(
+                       std::chrono::steady_clock::now() - start ).count();
+
+   total[ k ] += times[ k ];
+   iters[ k ] += S[ k ]->get_elapsed_iterations();
+
+   hs[ k ] = S[ k ]->has_var_solution();
+   if( hs[ k ] )
+    rd[ k ] = read_bounds( S[ k ] , k );
+   tokens[ k ] = reading_token( rd[ k ] );
+   }
+
+  std::string verdict;
+  double diff = std::numeric_limits< double >::quiet_NaN();
+  const bool good = cross_check( rd , hs , status ,
+                                 std::numeric_limits< double >::quiet_NaN() ,
+                                 tol , verdict , diff );
+  ok &= good;
+
+  print_instance_line( times , tokens ,
+                       std::numeric_limits< double >::quiet_NaN() , verdict ,
+                       diff , ! good );
+  }
+
+ std::cout << "  " << nincr << " samples learnt one at a time on top of "
+           << nsample << ":" << std::endl;
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  std::cout << "   " << S[ k ]->classname() << ": " << total[ k ] << " s";
+  if( iters[ k ] )
+   std::cout << " , " << iters[ k ] << " iterations";
+  std::cout << std::endl;
+  }
+
+ return( ok );
+
+ }  // end( run_incremental )
+
+/*--------------------------------------------------------------------------*/
 /// changes the training problem under the Solver, re-solving after each change
 /** Subjects the SVMBlock to a sequence of changes of its data, re-solving it
  * after each one with all the Solver that are attached to it: since they keep
@@ -426,6 +517,12 @@ static bool run_round( unsigned sd )
  if( ngrid && ( nchunk <= 1 ) )
   ok &= run_grid( svm , block );
 
+ /* Learning one sample at a time only makes sense on a generated data set,
+  * the samples that are added having to come from the same distribution as
+  * those that are there. */
+ if( nincr && ( nchunk <= 1 ) && dataset.empty() )
+  ok &= run_incremental( svm , block );
+
  s_config_Block( block , bsc );  // remove the Solver by re-apply()-ing the
  delete bsc;                     // clear()-ed BlockSolverConfig
 
@@ -454,8 +551,9 @@ static bool process_specific_arg( int opt )
   case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
   case( 't' ): Str2Sthg( optarg , tol );       return( true );
   case( 'g' ): regression = true;              return( true );
-  case( 'O' ): reopt = true;                   return( true );
+  case( 'R' ): reopt = true;                   return( true );
   case( 'G' ): Str2Sthg( optarg , ngrid );     return( true );
+  case( 'I' ): Str2Sthg( optarg , nincr );     return( true );
   case( 'd' ): dataset = optarg;               return( true );
   case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
   }
@@ -474,10 +572,10 @@ int main( int argc , char ** argv )
 
  docopt_desc = "SMS++ SVMBlock test.\n";
  filename_optional = true;
- /* -R is the relaxation switch of the shared baseline, which takes an
-  * argument: a letter of its own is needed here, the two meaning different
-  * things. */
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:d:gO";
+ // -R is --reopt here, a flag, while the standard one takes a value: the
+ // standard reading has to go, appending alone would not override it
+ override_short_opt( 'R' );
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:I:d:gR";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
@@ -491,8 +589,9 @@ int main( int argc , char ** argv )
    { "tol"      , required_argument , nullptr , 't' } ,
    { "ref"      , required_argument , nullptr , 'r' } ,
    { "regress"  , no_argument       , nullptr , 'g' } ,
-   { "reopt"    , no_argument       , nullptr , 'O' } ,
+   { "reopt"    , no_argument       , nullptr , 'R' } ,
    { "grid"     , required_argument , nullptr , 'G' } ,
+   { "incremental" , required_argument , nullptr , 'I' } ,
    { "data"     , required_argument , nullptr , 'd' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
@@ -514,7 +613,7 @@ int main( int argc , char ** argv )
          "tube [0.1]\n"
          "  -g, --regress                   regression instead of "
          "classification\n"
-         "  -O, --reopt                     also change the training problem "
+         "  -R, --reopt                     also change the training problem "
          "under the\n"
          "                                  Solver, re-solving after each "
          "change\n"
@@ -523,6 +622,10 @@ int main( int argc , char ** argv )
          "                                  values of C, reporting the total "
          "time of\n"
          "                                  each Solver [0 = do not]\n"
+         "  -I, --incremental <n>           learn n more samples one at a "
+         "time, timing\n"
+         "                                  each Solver over the additions "
+         "[0 = do not]\n"
          "  -d, --data <file>               a data set in the sparse format "
          "of LIBSVM,\n"
          "                                  which replaces the generated one; "
