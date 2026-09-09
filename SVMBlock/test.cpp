@@ -454,7 +454,7 @@ static bool process_specific_arg( int opt )
   case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
   case( 't' ): Str2Sthg( optarg , tol );       return( true );
   case( 'g' ): regression = true;              return( true );
-  case( 'R' ): reopt = true;                   return( true );
+  case( 'O' ): reopt = true;                   return( true );
   case( 'G' ): Str2Sthg( optarg , ngrid );     return( true );
   case( 'd' ): dataset = optarg;               return( true );
   case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
@@ -474,7 +474,10 @@ int main( int argc , char ** argv )
 
  docopt_desc = "SMS++ SVMBlock test.\n";
  filename_optional = true;
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:d:gR";
+ /* -R is the relaxation switch of the shared baseline, which takes an
+  * argument: a letter of its own is needed here, the two meaning different
+  * things. */
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:d:gO";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
@@ -488,7 +491,7 @@ int main( int argc , char ** argv )
    { "tol"      , required_argument , nullptr , 't' } ,
    { "ref"      , required_argument , nullptr , 'r' } ,
    { "regress"  , no_argument       , nullptr , 'g' } ,
-   { "reopt"    , no_argument       , nullptr , 'R' } ,
+   { "reopt"    , no_argument       , nullptr , 'O' } ,
    { "grid"     , required_argument , nullptr , 'G' } ,
    { "data"     , required_argument , nullptr , 'd' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
@@ -511,7 +514,7 @@ int main( int argc , char ** argv )
          "tube [0.1]\n"
          "  -g, --regress                   regression instead of "
          "classification\n"
-         "  -R, --reopt                     also change the training problem "
+         "  -O, --reopt                     also change the training problem "
          "under the\n"
          "                                  Solver, re-solving after each "
          "change\n"
