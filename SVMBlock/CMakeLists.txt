@@ -43,14 +43,19 @@ if (TARGET SMS++::SVMBlock)
 
     smspp_install(SVM_test)
 
-    # Add a test for each batch file. batch-libsvm needs LIBSVMSolver, which
-    # SVMBlock only builds when LIBSVM is found: without it the Solver is not
-    # in the factory and its BlockSolverConfig would throw, so the batch is
-    # left out rather than failing.
+    # Add a test for each batch file. batch-libsvm and batch-liblinear need
+    # LIBSVMSolver and LIBLINEARSolver, which SVMBlock only builds when the
+    # library each of them wraps is found: without it the Solver is not in the
+    # factory and its BlockSolverConfig would throw, so the batch is left out
+    # rather than failing.
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     if (NOT SVMBlock_HAS_LIBSVM)
         list(REMOVE_ITEM BATCH_FILES
              "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-libsvm")
+    endif ()
+    if (NOT SVMBlock_HAS_LIBLINEAR)
+        list(REMOVE_ITEM BATCH_FILES
+             "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-liblinear")
     endif ()
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name

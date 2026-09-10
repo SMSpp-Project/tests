@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# usage: batch-liblinear < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# the three-way cross-check on the side of the problem LIBSVM does not cover:
+# a general-purpose :MILPSolver on the abstract representation, the ad hoc
+# SMOSolver and LIBLINEAR on the physical one. They address the same training
+# problem, hence they have to agree on its optimal value.
+#
+# LIBLINEAR trains a linear model by working in the weights rather than in the
+# multipliers, and what it can express is the complement of what LIBSVM can:
+# the linear kernel only, hence K == 0 alone, and the regularised bias only,
+# hence the bit 1 of wf always on, but both losses, hence wf == 2 and wf == 3,
+# where batch-libsvm only has the linear one.
+#
+# Its dual solvers are capped at 300 iterations by their own sources, whatever
+# tolerance they are given, so the runs with the linear loss usually stop
+# there: LIBLINEARSolver reports kLowPrecision, and the cross-check then holds
+# it to the only thing it claims, i.e., that the optimum is not above the
+# value it returns.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar-LLIN.txt
+parse_batch_args "$@"
+
+# 2 = regularised bias and linear loss, 3 = regularised bias and squared one
+for wf in 2 3; do
+
+  # classification and regression
+  for task in "" "-g"; do
+    for C in 0.1 1 10; do
+
+      run_test "$exe" -S "$par" -B SVMCfg-dual.txt -f "$wf" -K 0 -C "$C" \
+               -N 60 -M 4 -n 3 -e 1 $task
+
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

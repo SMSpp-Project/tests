@@ -109,8 +109,18 @@ consecutive problems are: on 300 samples and 20 features, over four orders of
 magnitude of `C`, `SMOSolver` saves 7% of the time on 7 values, 25% on 13 and
 42% on 25. This is what [batch-grid](batches/batch-grid) sweeps.
 
-Finally, [batch-libsvm](batches/batch-libsvm) is the three-way cross-check,
-i.e., the same sweep of the dual restricted to what LIBSVM can be asked, with
-the three `:Solver` attached at once: they have to agree on the optimal value,
-whichever representation each of them reads. It is only registered with CTest
-when `SVMBlock` has been built with LIBSVM.
+[batch-libsvm](batches/batch-libsvm) is the three-way cross-check, i.e., the
+same sweep of the dual restricted to what LIBSVM can be asked, with the three
+`:Solver` attached at once: they have to agree on the optimal value, whichever
+representation each of them reads. It is only registered with CTest when
+`SVMBlock` has been built with LIBSVM.
+
+Finally, [batch-liblinear](batches/batch-liblinear) is the same cross-check on
+the other side of the problem: LIBLINEAR has the linear kernel only and the
+regularised bias only, which is what LIBSVM has not, but it has both losses,
+which LIBSVM has not either, so the two batches together cover the four
+formulations. LIBLINEAR caps its dual solvers at 300 iterations whatever
+tolerance they are given: a run that stops there is reported as
+`kLowPrecision`, and the cross-check holds it to the only thing it then
+claims, i.e., that the optimum is not above the value it returns. It is only
+registered with CTest when `SVMBlock` has been built with LIBLINEAR.
