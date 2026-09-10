@@ -134,6 +134,15 @@ The following tests are provided:
   It also changes the training problem under the `Solver` and checks that they
   keep agreeing after each change.
 
+- [`SingleFlowDCRBlock`](SingleFlowDCRBlock), a tester of the eponymous
+  `Block` for single-flow Delay-Constrained Routing problems: a random
+  instance is built around a source-sink path whose delay the deadline is
+  set from, so that the instance is always feasible and the deadline as
+  tight as one wants it, and it is then solved by every `Solver` the
+  `BlockSolverConfig` registers, typically a `:MILPSolver` on either of the
+  two formulations of the problem and the `SingleFlowDCRBendersSolver`,
+  cross-checking what they answer and the `Solution` each of them produces.
+
 - [`ThermalUnitBlock_Solver`](ThermalUnitBlock_Solver), a tester for the
   `ThermalUnitExtDPSolver` specialised Dynamic Programming `:Solver` for
   `ThermalUnitBlock` as compared with a `:MILPSolver` on some of the (many)

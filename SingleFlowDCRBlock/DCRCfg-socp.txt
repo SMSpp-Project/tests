@@ -1,0 +1,55 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - DCRCfg-socp.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockConfig for a SingleFlowDCRBlock asking for the
+# "SOCP" formulation of the burst-delay terms, i.e., the one in which the
+# two rotated cones are explicitly constructed; this is the exact
+# formulation of the problem, and it needs a Solver that copes with conic
+# (quadratic) constraints.
+#
+#   Antonio Frangioni
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static_constraints
+SimpleConfiguration<int>
+2    # the formulation: 1 = P/C, 2 = SOCP
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+*    # [none]
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+SimpleConfiguration<double>
+1e-4    # relative tolerance of the feasibility checks
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END DCRCfg-socp.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
