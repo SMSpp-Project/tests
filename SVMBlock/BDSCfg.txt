@@ -1,0 +1,65 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BDSCfg.txt  - - - - - - - - - - - - - - - -
+#
+# A txt description of a ComputeConfig for the BendersDecompositionSolver on
+# the Benders structure of a SVMBlock, i.e., the one where the model stays in
+# the master and each chunk holds only the slacks of its own samples: the
+# master is then the regularisation term plus one epigraph variable per chunk,
+# and the subproblems are linear programs.
+#
+# The regime is the MILP one, where the master is a Block of the Solver's own
+# into which the SVMBlock is grafted: the convex one would have the Solver add
+# the sub-Block carrying the value functions to the SVMBlock itself, which
+# only an AbstractBlock lets a Solver do. The master is a quadratic program
+# all the same, the regularisation term being where it is, and the :MILPSolver
+# it goes to takes it as such
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+ComputeConfig # exact type of the ComputeConfig object
+
+0  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+int_BDSlv_Regime  1  # 0 = convex master, 1 = MILP master
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+2  # number of string parameters
+
+# now all the string parameters
+str_Bsub_BSCfg  BDSSCfg.txt # BlockSolverConfig of the subproblems
+str_Mstr_BSCfg  BDSMCfg.txt # BlockSolverConfig of the master
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BDSCfg.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

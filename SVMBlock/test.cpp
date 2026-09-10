@@ -78,7 +78,8 @@ static constexpr Index RegBias = 2;
 long int seed = 1;          ///< seed of the pseudo-random generator
 Index nsample = 60;         ///< number of samples of the generated data set
 Index nfeature = 4;         ///< number of features of each sample
-Index nchunk = 1;           ///< chunks of the consensus rewriting, 1 = none
+Index nchunk = 1;           ///< chunks the samples are dealt out to, 1 = none
+bool benders = false;       ///< the Benders structure instead of the consensus
 Index wf = 0;               ///< what formulation, coded bit-wise
 int kernel = SVMBlock::kLinear;   ///< which kernel
 double kmemory = -1;              ///< MB the Gram matrix may take, < 0 = default
@@ -482,8 +483,18 @@ static bool run_round( unsigned sd )
   }
 
  if( nchunk > 1 ) {
-  SimpleConfiguration< int > chunks( nchunk );
-  svm->set_structure( & chunks );
+  /* The two structures are the two dual ways of splitting the same sum: a
+   * SimpleConfiguration< int > is the consensus one, which is what the
+   * SVMBlock had when it was the only one, and the pair says which. */
+  if( benders ) {
+   SimpleConfiguration< std::pair< int , int > >
+    strc( std::make_pair( int( SVMBlock::kBenders ) , int( nchunk ) ) );
+   svm->set_structure( & strc );
+   }
+  else {
+   SimpleConfiguration< int > chunks( nchunk );
+   svm->set_structure( & chunks );
+   }
   }
 
  svm->generate_abstract_variables();
@@ -547,6 +558,7 @@ static bool process_specific_arg( int opt )
   case( 'N' ): Str2Sthg( optarg , nsample );   return( true );
   case( 'M' ): Str2Sthg( optarg , nfeature );  return( true );
   case( 's' ): Str2Sthg( optarg , nchunk );    return( true );
+  case( 'b' ): benders = true;                 return( true );
   case( 'f' ): Str2Sthg( optarg , wf );        return( true );
   case( 'K' ): Str2Sthg( optarg , kernel );    return( true );
   case( 'Y' ): Str2Sthg( optarg , kmemory );   return( true );
@@ -579,12 +591,13 @@ int main( int argc , char ** argv )
  // -R is --reopt here, a flag, while the standard one takes a value: the
  // standard reading has to go, appending alone would not override it
  override_short_opt( 'R' );
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:I:d:Y:gR";
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:I:d:Y:gRb";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
    { "nfeature" , required_argument , nullptr , 'M' } ,
    { "nchunk"   , required_argument , nullptr , 's' } ,
+   { "benders"  , no_argument       , nullptr , 'b' } ,
    { "wf"       , required_argument , nullptr , 'f' } ,
    { "kernel"   , required_argument , nullptr , 'K' } ,
    { "kmemory"  , required_argument , nullptr , 'Y' } ,
@@ -603,9 +616,14 @@ int main( int argc , char ** argv )
  help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
          "  -N, --nsample <n>               number of samples [60]\n"
          "  -M, --nfeature <n>              number of features [4]\n"
-         "  -s, --nchunk <n>                rewrite the training problem as "
-         "n chunks tied\n"
-         "                                  by consensus constraints [1]\n"
+         "  -s, --nchunk <n>                deal the samples out to n "
+         "chunks [1]\n"
+         "  -b, --benders                   the chunks hold the slacks and "
+         "the model stays\n"
+         "                                  in the master, instead of the "
+         "consensus\n"
+         "                                  rewriting where each chunk holds "
+         "a model\n"
          "  -f, --wf <bits>                 the loss and the bias, bit-wise "
          "[0]:\n"
          "                                    1 = squared loss\n"

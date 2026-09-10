@@ -8,6 +8,7 @@ if (NOT hasParent)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
     find_package(MILPSolver)
+    find_package(BendersDecompositionSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -35,6 +36,11 @@ if (TARGET SMS++::SVMBlock)
 
     if (TARGET SMS++::BundleSolver)
         target_link_libraries(SVM_test PRIVATE SMS++::BundleSolver)
+    endif ()
+
+    if (TARGET SMS++::BendersDecompositionSolver)
+        target_link_libraries(SVM_test PRIVATE
+                              SMS++::BendersDecompositionSolver)
     endif ()
 
     if (TARGET SMS++::MILPSolver)
