@@ -16,6 +16,15 @@ source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
 DEFAULT_PAR=BSPar-AC.txt
+# the LagrangianDualSolver here solves a relaxation, and the point it writes
+# is a point of the relaxed problem: on a conic instance a convex combination
+# of solutions of the sub-problems does not satisfy the quadratic constraints,
+# so what that point is worth is not the bound the solver reports, above or
+# below it indifferently. It is declared as such, so that it is held to
+# solving its own problem exactly while of this one it only bounds the side
+# a relaxation bounds
+REL="${REL:-,r}"
+
 parse_batch_args "$@"
 
 # AC OPF LP relaxations are more degenerate than DC ones (SOCP cone +
@@ -48,7 +57,7 @@ for what in ${DATADIR}/*.nc4; do
       *_24h_*) continue ;;
     esac
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt
+    run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt
 
 done
 
