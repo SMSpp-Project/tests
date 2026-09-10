@@ -1,0 +1,61 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a SVMBlock split into chunks
+# the *Benders* way, i.e., with the model and the regularisation term left in
+# the master and each chunk holding only the slacks of its own samples, to be
+# solved by three different Solver: a :MILPSolver on the abstract
+# representation of the whole thing, the ad hoc SMOSolver on the physical one,
+# which knows nothing of the split, and BendersDecompositionSolver, which is
+# the Solver the structure is there for.
+#
+# The three address the same training problem, hence they have to agree on its
+# optimal value: the split is a structure of one instance and not another
+# problem, which is the whole point of the comparison. This is the same
+# cross-check BSPar-LD.txt does on the consensus structure, i.e., the other
+# way of splitting the very same sum.
+#
+# WARNING: this cross-check does not run yet, and no batch uses this file. The
+# BendersDecompositionSolver does not read the Block, it restructures it, and
+# it does so in set_Block(): from the moment the BlockSolverConfig registers
+# it, the root is grafted into a master of its own, the epigraph Variable and
+# the cuts are added and the subproblems are declared excluded, so the other
+# Solver attached to the same Block find a mutilated problem and answer the
+# wrong thing. Which is measured: the :MILPSolver alone gives the same optimal
+# value as everybody else, and next to the Benders Solver it gives C times the
+# number of samples, i.e. the model at zero. Making the two coexist means
+# either moving the reformulation into compute() and dismantling at the end of
+# it, which costs the pool of cuts the re-optimization lives on, or keeping
+# the pool as a state of the Solver rather than as pieces of the Block.
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+3  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver                  # name of 1st Solver
+GRBMILPSolver                   # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
+#HiGHSMILPSolver                # name of 1st Solver
+SMOSolver                       # name of 2nd Solver
+BendersDecompositionSolver      # name of 3rd Solver
+
+3  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+*LPCCfg.txt
+
+*SMOCfg.txt
+
+*BDSCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
