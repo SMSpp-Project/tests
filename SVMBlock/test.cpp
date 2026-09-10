@@ -82,6 +82,7 @@ Index nchunk = 1;           ///< chunks the samples are dealt out to, 1 = none
 bool benders = false;       ///< the Benders structure instead of the consensus
 Index wf = 0;               ///< what formulation, coded bit-wise
 int kernel = SVMBlock::kLinear;   ///< which kernel
+double kmemory = -1;              ///< MB the Gram matrix may take, < 0 = default
 bool regression = false;    ///< if the model is a regression one
 double parC = 1;            ///< the trade-off parameter C
 double parE = 0.1;          ///< the half-width of the insensitivity tube
@@ -157,6 +158,8 @@ static SVMBlock * construct( unsigned sd )
   Block::new_Block( regression ? "SVRBlock" : "SVCBlock" ) );
 
  svm->set_kernel( kernel );
+ if( kmemory >= 0 )
+  svm->set_K_memory( kmemory * 1024 * 1024 );
  svm->set_C( parC );
  svm->set_squared_loss( wf & SqrLoss );
  svm->set_reg_bias( wf & RegBias );
@@ -558,6 +561,7 @@ static bool process_specific_arg( int opt )
   case( 'b' ): benders = true;                 return( true );
   case( 'f' ): Str2Sthg( optarg , wf );        return( true );
   case( 'K' ): Str2Sthg( optarg , kernel );    return( true );
+  case( 'Y' ): Str2Sthg( optarg , kmemory );   return( true );
   case( 'C' ): Str2Sthg( optarg , parC );      return( true );
   case( 'E' ): Str2Sthg( optarg , parE );      return( true );
   case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
@@ -587,7 +591,7 @@ int main( int argc , char ** argv )
  // -R is --reopt here, a flag, while the standard one takes a value: the
  // standard reading has to go, appending alone would not override it
  override_short_opt( 'R' );
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:I:d:gRb";
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:I:d:Y:gRb";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
@@ -596,6 +600,7 @@ int main( int argc , char ** argv )
    { "benders"  , no_argument       , nullptr , 'b' } ,
    { "wf"       , required_argument , nullptr , 'f' } ,
    { "kernel"   , required_argument , nullptr , 'K' } ,
+   { "kmemory"  , required_argument , nullptr , 'Y' } ,
    { "parC"     , required_argument , nullptr , 'C' } ,
    { "epsilon"  , required_argument , nullptr , 'E' } ,
    { "rounds"   , required_argument , nullptr , 'n' } ,
@@ -623,6 +628,11 @@ int main( int argc , char ** argv )
          "[0]:\n"
          "                                    1 = squared loss\n"
          "                                    2 = regularised bias\n"
+         "  -Y, --kmemory <MB>              memory the Gram matrix may take: "
+         "under it the\n"
+         "                                  whole matrix is built, over it "
+         "its rows are\n"
+         "                                  computed and cached [1024]\n"
          "  -K, --kernel <n>                kernel: 0 linear, 1 poly,\n"
          "                                  2 gaussian, 3 laplacian, "
          "4 sigmoid [0]\n"
