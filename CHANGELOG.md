@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
+- the `AbstractBlock_mirror` suite, which checks the copy of the abstract
+  representation of a Block that `AbstractBlock::mirror()` builds: that it is
+  the same problem as the original, whichever `:MILPSolver` solves the two,
+  that solution information moves back to the original, and that the copy
+  follows the original when this changes
+
 - the exact Lagrangian chain for UCBlock: BSPar-DP.txt attaches the three
   Solver over sub-Block solved to optimality by the dynamic programming
   Solver (TUBSCfg-DP.txt, InnerBSCfg-DP.txt, LDCfg-DP.txt, PPHCfg-DP.txt)

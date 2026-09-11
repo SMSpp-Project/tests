@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file,
+#                       default ./AbstractBlock_mirror_test
+#
+# runs the tester once per :MILPSolver that is in the build: the copy has to
+# be the same problem as the original whichever solves the two
+
+exe=${1:-./AbstractBlock_mirror_test}
+
+rc=0
+for solver in CPXMILPSolver GRBMILPSolver SCIPMILPSolver HiGHSMILPSolver; do
+  echo "=== $solver"
+  if ! "$exe" "$solver" ; then
+    if "$exe" "$solver" 2>&1 | grep -q "in the factory" ; then
+      echo "    not in the build, skipped"
+    else
+      rc=1
+    fi
+  fi
+done
+
+exit $rc

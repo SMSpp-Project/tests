@@ -92,6 +92,8 @@ add_subdirectory(QuadraticTests)
 
 add_subdirectory(Write-Read)
 
+add_subdirectory(AbstractBlock_mirror)
+
 add_subdirectory(BendersBFunction)
 add_subdirectory(MCFBlock)
 
