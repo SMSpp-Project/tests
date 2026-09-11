@@ -42,6 +42,26 @@
  * skipped, that being a legitimate answer: the infeasibility may have been
  * proved by the presolve, with no dual basis to build a ray from.
  *
+ * Two more properties are checked on a second program, the same one with the
+ * third row made two-sided and the two variables given an explicit box, so
+ * that the certificate has to live on rows and bounds alike.
+ *
+ * The first is that the certificate is a certificate, i.e. that its value is
+ * positive: summing \f$ - \pi_i b_i \f$ over rows and bounds, each taken on
+ * the side its multiplier points at (they reach the Constraint negated, see
+ * MILPSolver::write_dual_solution()), must give a positive number, that being
+ * what proves the program infeasible and what a feasibility cut cuts away.
+ * The one-sided program cannot see this: with one side infinite the side rule
+ * is never exercised, so a consumer picking the wrong one is never caught.
+ *
+ * The second is that the certificate does not depend on the Objective. An
+ * infeasibility certificate is a statement about the constraint system alone,
+ * so giving the same program two different Objectives must leave the ray
+ * unchanged up to the positive factor each solver is free to scale it by.
+ * This is checked only where the Solver knows intHomogeneousDirection, the
+ * parameter that asks for the multipliers of the ray, \f$ - A' y \f$, rather
+ * than the reduced costs of an optimal dual point, \f$ c - A' y \f$.
+ *
  * \author Donato Meoli \n
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
@@ -52,6 +72,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -63,6 +84,8 @@
 #include "FRowConstraint.h"
 
 #include "LinearFunction.h"
+
+#include "OneVarConstraint.h"
 
 #include "MILPSolver.h"
 
@@ -146,6 +169,110 @@ static AbstractBlock * build( double u ,
  ab->generate_objective();
 
  return( ab );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+/// builds the same program with the third row two-sided and a box on x and y
+/** The rows are those of build(), save that the third is stated as
+ * \f$ -u \leq x + y \leq u \f$, and each variable carries a BoxConstraint
+ * \f$ 0 \leq x_j \leq 2 \f$ rather than being declared non-negative: the
+ * certificate then has to be read off two-sided rows and bounds, each on the
+ * side its multiplier points at, which is what the one-sided program cannot
+ * exercise.
+ *
+ * \p cost is the coefficient the Objective gives to both variables, and is
+ * there only to be changed: no certificate may depend on it. */
+
+static AbstractBlock * build_boxed( double u , double cost ,
+                                    std::vector< FRowConstraint > * & rows ,
+                                    std::vector< BoxConstraint > * & bounds )
+{
+ auto ab = new AbstractBlock();
+
+ auto x = new std::vector< ColVariable >( 2 );
+ for( auto & v : *x )
+  v.set_type( ColVariable::kContinuous );
+ ab->add_static_variable( *x , "x" );
+
+ bounds = new std::vector< BoxConstraint >( 2 );
+ for( unsigned int j = 0 ; j < 2 ; ++j ) {
+  (*bounds)[ j ].set_variable( &(*x)[ j ] );
+  (*bounds)[ j ].set_lhs( 0 );
+  (*bounds)[ j ].set_rhs( 2 );
+  (*bounds)[ j ].set_Block( ab );
+  }
+ ab->add_static_constraint( *bounds , "bounds" );
+
+ rows = new std::vector< FRowConstraint >( 3 );
+
+ // 2x + y >= 3
+ (*rows)[ 0 ].set_function( new LinearFunction(
+  { std::make_pair( &(*x)[ 0 ] , 2.0 ) ,
+    std::make_pair( &(*x)[ 1 ] , 1.0 ) } ) );
+ (*rows)[ 0 ].set_lhs( 3 );
+ (*rows)[ 0 ].set_rhs( Inf< double >() );
+
+ // x + 2y >= 3
+ (*rows)[ 1 ].set_function( new LinearFunction(
+  { std::make_pair( &(*x)[ 0 ] , 1.0 ) ,
+    std::make_pair( &(*x)[ 1 ] , 2.0 ) } ) );
+ (*rows)[ 1 ].set_lhs( 3 );
+ (*rows)[ 1 ].set_rhs( Inf< double >() );
+
+ // -u <= x + y <= u, the two-sided one
+ (*rows)[ 2 ].set_function( new LinearFunction(
+  { std::make_pair( &(*x)[ 0 ] , 1.0 ) ,
+    std::make_pair( &(*x)[ 1 ] , 1.0 ) } ) );
+ (*rows)[ 2 ].set_lhs( -u );
+ (*rows)[ 2 ].set_rhs( u );
+
+ for( auto & c : *rows )
+  c.set_Block( ab );
+
+ ab->add_static_constraint( *rows , "rows" );
+
+ auto obj = new FRealObjective( ab , new LinearFunction(
+  { std::make_pair( &(*x)[ 0 ] , cost ) ,
+    std::make_pair( &(*x)[ 1 ] , cost ) } ) );
+ obj->set_sense( Objective::eMin );
+ ab->set_objective( obj );
+
+ ab->generate_abstract_variables();
+ ab->generate_abstract_constraints();
+ ab->generate_objective();
+
+ return( ab );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+/// the value of the certificate written in the given Constraints
+/** Sums \f$ - \pi_i b_i \f$ over the given rows and bounds, each taken on
+ * the side the sign of its multiplier points at: a multiplier reaches the
+ * Constraint negated, so a non-positive one belongs to the left-hand side and
+ * a positive one to the right-hand side. An infinite side carries no
+ * information and is skipped, the multiplier of a side that constrains
+ * nothing being zero. */
+
+template< typename T >
+static double certificate_value( const std::vector< T > & constraints )
+{
+ double value = 0;
+
+ for( const auto & c : constraints ) {
+  const auto dual = c.get_dual();
+  if( dual == 0 )
+   continue;
+
+  const auto b = ( dual > 0 ) ? c.get_rhs() : c.get_lhs();
+  if( ( b <= -Inf< double >() ) || ( b >= Inf< double >() ) )
+   continue;
+
+  value -= dual * b;
+  }
+
+ return( value );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -310,6 +437,117 @@ int main( void )
 
   infeasible->unregister_Solver( solver );
   delete infeasible;
+
+  // the two-sided program: is the certificate a certificate? - - - - - - - -
+
+  auto ray_of = [ & ]( double cost , std::vector< double > & ray ,
+		       double & value ) -> bool {
+   std::vector< FRowConstraint > * brows;
+   std::vector< BoxConstraint > * bbnds;
+   auto boxed = build_boxed( 1.4 , cost , brows , bbnds );
+   boxed->register_Solver( solver );
+
+   bool got = false;
+   if( solver->compute() == Solver::kInfeasible ) {
+    auto cda = dynamic_cast< CDASolver * >( solver );
+    bool has = false;
+    try { has = cda && cda->has_dual_direction(); }
+    catch( const std::exception & ) {}
+
+    if( has ) {
+     cda->get_dual_direction();
+
+     ray.clear();
+     for( const auto & c : *brows )
+      ray.push_back( c.get_dual() );
+     for( const auto & c : *bbnds )
+      ray.push_back( c.get_dual() );
+
+     value = certificate_value( *brows ) + certificate_value( *bbnds );
+     got = true;
+     }
+    }
+
+   boxed->unregister_Solver( solver );
+   delete boxed;
+   return( got );
+   };
+
+  std::cout << std::left << std::setw( 16 ) << name << " two-sided:";
+
+  std::vector< double > ray;
+  double value = 0;
+
+  if( ! ray_of( 1.0 , ray , value ) )
+   std::cout << " no certificate to give" << std::endl;
+  else {
+   std::cout << " value " << value;
+
+   if( value <= Eps ) {
+    std::cout << " -> KO, a certificate has to be positive";
+    all_passed = false;
+    }
+   else
+    std::cout << " -> OK";
+
+   /* The multipliers of a ray are tied to one another: with the homogeneous
+    * ones asked for, the multiplier of the bound of each column is minus the
+    * combination of the rows through that column. In the sign convention the
+    * Constraints carry (they hold the multipliers negated) this reads
+    *
+    *     b_j + sum_i a_ij d_i = 0
+    *
+    * which holds whichever of the rays the solver happens to return, and is
+    * what the reduced costs of an optimal dual point, c - A' y, do not
+    * satisfy: the Objective has no part in a certificate. */
+   const auto par = solver->int_par_str2idx( "intHomogeneousDirection" );
+   if( par >= Inf< Solver::idx_type >() )
+    std::cout << ", the columns are not checked, this Solver has no"
+	      << " intHomogeneousDirection";
+   else {
+    // a Solver that cannot produce them says so rather than taking the
+    // parameter and going on, which is a legitimate answer and not a failure
+    bool asked = true;
+    try { solver->set_par( par , 1 ); }
+    catch( const std::exception & ) {
+     asked = false;
+     std::cout << ", the columns are not checked, this Solver refuses the"
+	       << " homogeneous direction";
+     }
+
+    if( asked ) {
+     std::vector< double > hray;
+     double hvalue = 0;
+
+     if( ! ray_of( 1.0 , hray , hvalue ) )
+      std::cout << ", the columns are not checked, no certificate with it";
+     else {
+      // the coefficient of column j in row i, as build_boxed() states them
+      static const double a[ 3 ][ 2 ] = { { 2 , 1 } , { 1 , 2 } , { 1 , 1 } };
+
+      double worst = 0;
+      for( std::size_t j = 0 ; j < 2 ; ++j ) {
+       double sum = hray[ 3 + j ];
+       for( std::size_t i = 0 ; i < 3 ; ++i )
+	sum += a[ i ][ j ] * hray[ i ];
+       worst = std::max( worst , std::abs( sum ) );
+       }
+
+      if( worst > 1e-6 ) {
+       std::cout << ", the columns are off by " << worst << " -> KO";
+       all_passed = false;
+       }
+      else
+       std::cout << ", the columns are the ray's -> OK";
+      }
+
+     solver->set_par( par , 0 );
+     }
+    }
+
+   std::cout << std::endl;
+   }
+
   delete solver;
   }
 
