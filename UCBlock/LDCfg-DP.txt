@@ -25,7 +25,15 @@ intDoEasy              0 # do easy components for (some) LagBFunction
 intMaxIter         10000 # max number of iterations for each call
 intMaxThread           8 # MaxThread, max number of new tasks to spawn
 intLogVerb             0 # log verbosity of main Bundle algorithm
-intWZNorm              2 # which norm to use in the norm-based stopping condition
+intWZNorm             10 # which norm to use in the norm-based stopping condition
+                         # and how dblNZEps is read: 2 = Euclidean norm, plus
+                         # 8 = the threshold scales with the norm of the first
+                         # full subgradient instead of being an absolute value.
+                         # Taken absolutely the usable thresholds shrink with
+                         # the size of the instance, at 1e-6 the 200-unit one
+                         # no longer closes its gap while the 50-unit one
+                         # still does; scaled, the band that works is the same
+                         # on all of them, from 1e-2 down to 1e-6
 intBPar1              20 # discard items when they have been useless for <this> iterations
 intBPar2             100 # max bundle size per component
 intBPar3               1 # max n. of items to fetch from Fi() at each iteration
