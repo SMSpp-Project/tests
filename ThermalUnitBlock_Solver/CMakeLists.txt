@@ -40,6 +40,11 @@ if (TARGET SMS++::UCBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:TUDPS_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
+        # The instances are the ones the UCBlock suite reads, extracted there
+        # by the uc_data_extracted fixture: requiring it makes each batch
+        # runnable on its own, rather than only after that suite has run.
+        set_tests_properties(TUDPS_test/${BATCH_NAME}
+                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
     endforeach ()
 endif ()
 
