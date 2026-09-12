@@ -29,6 +29,30 @@ instances with some of the (many) different formulations supported
 by `ThermalUnitBlock`, in particular without and with "Perspective
 Cuts".
 
+The same tester drives the nuclear units: a `NuclearUnitBlock` is a
+`ThermalUnitBlock`, and the `BlockSolverConfig` `BSCfg-nuc.txt` attaches the
+`NuclearUnitExtDPSolver` in place of the thermal dynamic programming Solver.
+`batch-nuclear` checks both the original model of the modulations and the
+operating rules of nuclear units (modulations of several instants, stability
+after a modulation and after a start-up, daily limits, deep decreases and
+their costs, power bands) together with spinning reserves and reactive power,
+on a load that the unit can follow while on throughout and on one whose
+trough lies below the minimum power, where it has to shut down and start up
+again, which is what brings the rules that follow a start-up into play. Two environment variables
+price the reserves (`TUDPS_RESCOST`, the cost of both reserves) and the
+reactive power (`TUDPS_QCOST`), since a unit solved standalone has no system
+constraint whose multipliers would do it; a third one, `TUDPS_FIXMOD`, fixes
+one modulation variable out of the given number, so that the two Solvers are
+compared on a unit whose operating rules are partly decided already.
+
+Two further `BlockSolverConfig` are provided for the study of the solve
+times at the horizons at which the unit commitment is solved:
+`BSCfg-nuc-lim.txt` is `BSCfg-nuc.txt` with a time limit on the MILP solver,
+so that an instance that it cannot close still returns the pair of bounds it
+has reached, and `BSCfg-nuc-dponly.txt` attaches the dynamic programming
+Solver alone, so that the optimal schedule can be inspected without paying
+for the MILP solve.
+
 A makefile is also provided that builds the executable including the
 `MILPSolver` module and the `UCBlock` module (and, obviously, the core
 SMS++ library).

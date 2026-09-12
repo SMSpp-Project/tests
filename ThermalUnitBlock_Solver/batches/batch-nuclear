@@ -3,16 +3,36 @@
 # usage: batch-nuclear < exe file >
 #        < exe file > = path of the executable file, default ./TUDPS_test
 #
-# runs the single-bus single-NuclearUnitBlock instances on the T + Perspective-
-# Cuts formulation (wf = 9), solving each with the MILPSolver (1st / reference)
-# and the NuclearUnitExtDPSolver (2nd) and comparing the two. A NuclearUnitBlock
-# is-a ThermalUnitBlock, so the same tester drives it; the nuclear DP solver only
-# differs in the BlockSolverConfig (BSCfg-nuc.txt) of this test directory.
+# runs the single-NuclearUnitBlock instances on the T + Perspective-Cuts
+# formulation (wf = 9), solving each with the MILPSolver (1st / reference) and
+# the NuclearUnitExtDPSolver (2nd) of BSCfg-nuc.txt and comparing the two. A
+# NuclearUnitBlock is-a ThermalUnitBlock, so the same tester drives it; the
+# nuclear DP solver only differs in the BlockSolverConfig of this directory.
+#
+# Two sets of instances are run. The first one (singlebus-nuclear) has the
+# modulations of a single instant, i.e., the original model of the class. The
+# second one (nuclear/48, see UCBlock/tools/json2netCDF/gen-nuclear) has the
+# operating rules of nuclear units in eight families: l0 the original model,
+# e1 modulations of several instants at the full ramp, e2 + daily limits on
+# the modulations and the start-ups, e3 + deep decreases, e4 + the costs of
+# the downward steps and of the deep decreases, e5 + the stability that
+# follows a start-up (with the unit off at the beginning of the horizon, so
+# that a start-up is there to follow), e6 + the output split into three
+# bands, e7 the whole set of the rules on a load whose trough lies below the
+# minimum power, so that the unit has to shut down at night and start up
+# again and the rules that a start-up brings into play are exercised too;
+# each unit has spinning
+# reserves and reactive power, and is run in four regimes: energy only, a
+# rewarded spinning reserve (TUDPS_RESCOST), a priced reactive power
+# (TUDPS_QCOST) and a few rounds of changes of the costs, plus a run with
+# part of the modulation variables fixed (TUDPS_FIXMOD). In CI only the first
+# unit of the first seed of each family is run.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DATADIR=../../UCBlock/data/nc4/1UC_Data/singlebus-nuclear
+RULESDIR=../../UCBlock/data/nc4/1UC_Data/nuclear/48
 
 TUDPS_test=${1:-./TUDPS_test}
 par=BSCfg-nuc.txt
@@ -21,8 +41,32 @@ seed=0
 wchg=0      # just solve and compare the optimum (no cost perturbation here)
 wf=9        # T (=1) + Perspective Cuts (+8): the T+P/C formulation
 
+# the original model - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 for f in "${DATADIR}"/*/*.nc4; do
   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -f "$wf"
+done
+
+# the operating rules - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ -n "$CI" ]; then
+  files=$( ls "${RULESDIR}"/*_seed1_NUB0_*.nc4 2>/dev/null )
+else
+  files=$( ls "${RULESDIR}"/*.nc4 2>/dev/null )
+fi
+
+if [ -z "$files" ]; then
+  echo "batch-nuclear: no instance in ${RULESDIR}, only the original model run" >&2
+  exit 0
+fi
+
+for f in $files; do
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -f "$wf" -n 0
+  TUDPS_RESCOST=-0.05 \
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -f "$wf" -n 0
+  TUDPS_QCOST=-0.01 \
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -f "$wf" -n 0
+  TUDPS_FIXMOD=7 \
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -f "$wf" -n 0
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -f "$wf" -n 5
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -697,6 +697,28 @@ int main( int argc , char **argv )
  TUBlock->generate_abstract_variables();
  TUBlock->generate_objective( nullptr );
 
+ // env-gated check of the fixed Variable of the operating rules: with
+ // TUDPS_FIXMOD = k set, one modulation Variable out of k is fixed to 0 and
+ // the one at the middle of the horizon to 1, which any instance can do (a
+ // unit is never forced to modulate, and a modulation may move the output
+ // by nothing), so that the DP and the MILP solve the same restricted
+ // problem and must still agree
+ if( const char * fixmod_env = std::getenv( "TUDPS_FIXMOD" ) )
+  if( auto NUBlock = dynamic_cast< NuclearUnitBlock * >( TUBlock ) )
+   if( auto m = NUBlock->get_modulation() ) {
+    const Index hor = NUBlock->get_time_horizon();
+    const Index k = std::max( 1 , std::atoi( fixmod_env ) );
+    for( Index t = 0 ; t < hor ; t += k )
+     if( ! m[ t ].is_fixed() ) {
+      m[ t ].set_value( 0 );
+      m[ t ].is_fixed( true , eNoMod );
+      }
+    if( ! m[ hor / 2 ].is_fixed() ) {
+     m[ hor / 2 ].set_value( 1 );
+     m[ hor / 2 ].is_fixed( true , eNoMod );
+     }
+    }
+
  // save some original data of the ThermalUnitBlock - - - - - - - - - - - - -
 
  time_horizon = TUBlock->get_time_horizon();

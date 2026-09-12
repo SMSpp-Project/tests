@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
+- the batch `batch-nuclear` of the `ThermalUnitBlock_Solver` suite, which
+  compares the `NuclearUnitExtDPSolver` with a `:MILPSolver` on the
+  operating rules of nuclear units, in eight families of rules, four
+  regimes of the costs (energy only, rewarded reserves, priced reactive
+  power, rounds of changes of the costs) and two formulations of the rules,
+  the default one and the tight one; a further environment variable,
+  `TUDPS_FIXMOD`, fixes one modulation variable out of the given number, so
+  that the two Solver are compared on a unit whose rules are partly decided;
+  two further BlockSolverConfig serve the study of the solve times,
+  `BSCfg-nuc-lim.txt`, which holds the MILP solver to a time limit, and
+  `BSCfg-nuc-dponly.txt`, which attaches the dynamic programming Solver
+  alone, so that the optimal schedule can be looked at without paying for
+  the MILP solve
+
 - the `AbstractBlock_mirror` suite, which checks the copy of the abstract
   representation of a Block that `AbstractBlock::mirror()` builds: that it is
   the same problem as the original, whichever `:MILPSolver` solves the two,
