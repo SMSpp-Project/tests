@@ -51,7 +51,10 @@ times at the horizons at which the unit commitment is solved:
 so that an instance that it cannot close still returns the pair of bounds it
 has reached, and `BSCfg-nuc-dponly.txt` attaches the dynamic programming
 Solver alone, so that the optimal schedule can be inspected without paying
-for the MILP solve.
+for the MILP solve; built with `LOG_LEVEL` at $2$ the tester prints the
+schedule it has found, which is how one checks that the rules bind, i.e.,
+that the unit does start up, modulate and decrease deeply rather than sit at
+a constant output.
 
 A makefile is also provided that builds the executable including the
 `MILPSolver` module and the `UCBlock` module (and, obviously, the core
