@@ -32,6 +32,8 @@
 
 #include <Configuration.h>
 
+#include <FRowConstraint.h>
+
 #include <Objective.h>
 
 /*--------------------------------------------------------------------------*/
@@ -793,6 +795,76 @@ bool check_var_solutions( Block * block , double tol )
  return( allok );
 
  }  // end( check_var_solutions )
+
+/*--------------------------------------------------------------------------*/
+
+double own_rows_violation( Block * block )
+{
+ double viol = 0;
+
+ auto see = [ & viol ]( FRowConstraint & cnst ) {
+  if( cnst.is_relaxed() )
+   return;
+  if( auto ret = cnst.compute() ;
+      ( ret <= FRowConstraint::kUnEval ) || ( ret > FRowConstraint::kOK ) ) {
+   viol = Inf< double >();
+   return;
+   }
+  viol = std::max( viol , double( cnst.rel_viol() ) );
+  };
+
+ for( auto & sci : block->get_static_constraints() )
+  un_any_const_static( sci , see , un_any_type< FRowConstraint >() );
+
+ for( auto & dci : block->get_dynamic_constraints() )
+  un_any_const_dynamic( dci , see , un_any_type< FRowConstraint >() );
+
+ return( viol );
+
+ }  // end( own_rows_violation )
+
+/*--------------------------------------------------------------------------*/
+
+bool check_relaxation_solutions( Block * block , double tol )
+{
+ bool allok = true;
+ std::size_t k = 0;
+
+ for( auto slvr : block->get_registered_solvers() ) {
+  const std::size_t h = k++;
+
+  if( ! is_relaxation( h ) )
+   continue;                    // check_var_solutions() covers these
+
+  if( ! slvr->has_var_solution() )
+   continue;                    // nothing to read, hence nothing to check
+
+  double viol;
+  try {
+   slvr->get_var_solution();
+   viol = own_rows_violation( block );
+   }
+  catch( std::exception & e ) {
+   std::cerr << "Error: Solver " << h << " has a solution it cannot give: "
+             << e.what() << std::endl;
+   allok = false;
+   continue;
+   }
+
+  if( verbosity_level > 0 )
+   std::cout << "relaxation of Solver " << h << " violates the dualised rows"
+             << " by " << viol << std::endl;
+
+  if( viol > tol ) {
+   std::cerr << "Error: the solution Solver " << h << " reconstructs violates"
+             << " the dualised rows by " << viol << " > " << tol << std::endl;
+   allok = false;
+   }
+  }
+
+ return( allok );
+
+ }  // end( check_relaxation_solutions )
 
 /*--------------------------------------------------------------------------*/
 // compare a value against the reference one and report

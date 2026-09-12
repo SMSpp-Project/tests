@@ -576,6 +576,42 @@ double tree_objective_value( Block * block );
 bool check_var_solutions( Block * block , double tol = 1e-6 );
 
 /*--------------------------------------------------------------------------*/
+/// largest violation of the Constraint that @p block itself holds
+/** Computes every FRowConstraint of @p block, the static and the dynamic
+ *  ones, and returns the largest relative violation among them. The inner
+ *  Block are NOT visited: what is measured is only what the Block couples,
+ *  which for a Lagrangian relaxation is exactly the set of rows that have
+ *  been dualised. Constraint of other kinds are skipped, the linking rows
+ *  being FRowConstraint wherever this is used. */
+
+double own_rows_violation( Block * block );
+
+/*--------------------------------------------------------------------------*/
+/// check the solution a relaxation Solver reconstructs against the relaxed rows
+/** For every Solver of @p block that is_relaxation() says solves a relaxation
+ *  and that has a primal solution, writes it in the Variable and checks it
+ *  against the rows @p block itself holds, i.e. the ones the relaxation has
+ *  dualised, with own_rows_violation() and the relative tolerance @p tol.
+ *
+ *  check_var_solutions() cannot say anything about these Solver, the value
+ *  they report being that of the relaxation and not of what they write [see
+ *  there], so their reconstructed solution goes unread: a convex combination
+ *  taken with the wrong multipliers, or not taken at all, is invisible. It
+ *  is not invisible here, because at convergence the residual is zero and
+ *  hence the combination satisfies the dualised rows, while a wrong one
+ *  does not. Note that nothing is claimed about the rows of the inner Block:
+ *  the combination is a point of the convex hull of each of them, and for an
+ *  integer sub-problem it is not a point of the sub-problem at all.
+ *
+ *  The residual is zero only in the sense the stopping condition gives to
+ *  "zero", i.e. up to the threshold of dblNZEps, and the violation of the
+ *  dualised rows is of that order: the default tolerance is therefore a
+ *  loose multiple of the thresholds the batteries use, and what it catches
+ *  is a combination that is wrong, not one that is imprecise. */
+
+bool check_relaxation_solutions( Block * block , double tol = 1e-1 );
+
+/*--------------------------------------------------------------------------*/
 /// print "fo ~ Ref = ref (|diff| = ..., OK/KO)" and return whether OK
 /** Tolerance: |fo - ref| ≤ rel_tol × max(1, |fo|, |ref|).
  *  @p time1 and @p iters are pre-pended for output symmetry with SolveBoth. */

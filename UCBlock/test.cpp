@@ -566,6 +566,12 @@ int main( int argc , char ** argv )
  // combination the important linearization of each LagBFunction describes
  AllPassed &= check_var_solutions( TestBlock );
 
+ // a Solver that solves a relaxation is not covered by the check above, the
+ // value it reports not being that of what it writes: what its reconstructed
+ // solution can be held to is the rows this Block couples, i.e. the ones the
+ // relaxation has dualised, which at convergence it has to satisfy
+ AllPassed &= check_relaxation_solutions( TestBlock );
+
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // now, for n_repeat times:
