@@ -311,12 +311,15 @@ static double linear_cost( Index i )
 // unnoticed; only the round trip is checked, hence how accurate the Solver is
 // does not matter here.
 //
-// the tolerance is loose because writing the Solution back has
-// ThermalUnitBlock::set_solution() recompute the formulation-specific
-// auxiliary variables (start-up / shut-down, perspective-cut ones) out of
-// ( p , u ): those come out exact, whereas the ones an approximate Solver
-// leaves in the Variable are only worth its own tolerance, so the two
-// objective values legitimately differ by that much
+// the formulation-specific auxiliary variables are recomputed out of
+// ( p , u ) on both sides of the comparison: writing the Solution back does
+// it through ThermalUnitBlock::set_solution(), since those variables do not
+// travel with the Solution, and the reference is taken after the same call,
+// since a Solver that writes them itself only writes them as accurately as
+// it solves. The perspective-cut variable is the case that matters: its cost
+// is paid by the Objective, an approximate Solver leaves it above the p^2/u
+// that the constraint fences, and the difference is worth its tolerance
+// rather than anything about the round trip, which is what is checked here
 
 static bool CheckGetSolution( Solver * slvr , const char * name )
 {
@@ -324,6 +327,7 @@ static bool CheckGetSolution( Solver * slvr , const char * name )
 	      )->get_function();
 
  slvr->get_var_solution();
+ TUBlock->set_solution();
  obj->compute();
  const auto ref = obj->get_value();
 
