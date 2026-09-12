@@ -54,6 +54,18 @@ inner-Block module needed by the instances in `batches/` (currently
 - `BSCfg.txt` — alternative LP/QP `BlockSolverConfig` (HiGHS with IPM)
   that may be referenced from `LPBSCfg.txt` when a deterministic LP
   oracle is required.
+- `BSPar-2S-LD.txt` — outer `BlockSolverConfig` of the nested chain, in
+  which each scenario sub-problem is solved by an inner
+  `LagrangianDualSolver` (`LPBSCfg-LD.txt`) instead of a `:MILPSolver`.
+  A component of the outer Lagrangian Dual is there an entire inner one,
+  which is why every component is evaluated at each iteration
+  (`dblMinNrEvls=-1`).
+- `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
+  whose components are the units of the scenario (`InnerBSCfg.txt`).
+  `LPBSCfg-LD-noeasy.txt` is the same with `intDoEasy=0`, which the
+  instances with no installable asset need: there every unit is "easy",
+  and a Lagrangian Dual all of whose components are easy is not
+  supported.
 
 
 ## Authors

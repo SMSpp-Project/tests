@@ -51,6 +51,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed 
 
+- the nested chain of TwoStageStochasticBlock (BSPar-2S-LD.txt, where each
+  scenario sub-problem is solved by an inner LagrangianDualSolver) evaluates
+  every component at each iteration, dblMinNrEvls = -1: a component being an
+  entire inner Lagrangian Dual, an iteration made on one of them alone buys
+  little and pays a master problem anyway; on the NC instances of the energy
+  community the oracle calls go from 865 and 1705 down to 132 and 168, and
+  nothing gets worse on the others
+
+- LPBSCfg-LD-noeasy.txt, the inner LagrangianDualSolver of that chain with
+  intDoEasy = 0, which the instances with no installable asset need: every
+  unit of theirs is "easy", and a Lagrangian Dual all of whose components are
+  easy is not supported
+
 - with -v 2 the cross-check prints, before solving, the parameters of every
   Solver it is about to run, the inner ones included; the level of -v can
   be written attached or separate, since getopt only hands over the

@@ -50,8 +50,14 @@ intTrgtMng       31 # bit-wise encoding targets and accuracies management:
                     # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                     # bit 4: if Lipschitz constant is used to compute the upper model
 
-5 # number of double parameters
+6 # number of double parameters
 
+dblMinNrEvls        -1 # every component is evaluated at each iteration: a
+                       # component here is an entire inner LagrangianDualSolver,
+                       # so an iteration made on one of the three alone buys
+                       # little and costs a master problem anyway; on the NC
+                       # instances the evaluations go from 865 and 1705 down
+                       # to 132 and 168
 dblRelAcc         1e-5 # relative accuracy required to solution
 dbltStar         -1e+0 # stopping parameter: multiplied to || residual || to estimate gap
 dblmxIncr            2 # max increase of t

@@ -1,0 +1,73 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LPBSCfg-LD.txt- - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a sub-Block of the TSSBlock
+# to be solved by a LagrangianDualSolver using a BundleSolver as the inner
+# Solver
+#
+#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+LagrangianDualSolver  # name of Solver
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver; it mostly is the
+# ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+3 # number of integer parameters
+
+# now all the integer parameters
+intDoEasy         0 # no easy component: on the instances with no asset
+                    # every unit is easy, and a Lagrangian Dual all of whose
+                    # components are easy is not supported
+                    # (bit 0 + bit 1 = enable easy + ChgCosts)
+intMaxIter      100 # max number of iterations for each call
+intLogVerb        0 # log verbosity of main Bundle algorithm
+
+2 # number of double parameters
+
+# now all the double parameters
+dblRelAcc       1e-4 # relative accuracy required to solution
+dbltInit        1e+0 # initial value for t
+
+1 # number of string parameters
+
+# now all the string parameters
+str_LagBF_BSCfg InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END LPBSCfg-LD.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
