@@ -277,6 +277,10 @@ conduct, and the process for submitting merge requests to us.
   Dipartimento di Informatica  
   Università di Pisa
 
+- **Donato Meoli**  
+  Dipartimento di Informatica  
+  Università di Pisa
+
 ### Contributors
 
 - **Federica Di Pasquale**  
