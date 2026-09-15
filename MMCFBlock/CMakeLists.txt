@@ -129,6 +129,12 @@ if (TARGET SMS++::MMCFBlock AND
         target_link_libraries(MMCF_test PRIVATE SMS++::BundleSolver)
     endif ()
 
+    # the ML batch asks for BundleSolverML by name, and the class is in the
+    # factory only if its library is linked [see BundleSolver/CMakeLists.txt]
+    if (TARGET SMS++::BundleSolverML)
+        target_link_libraries(MMCF_test PRIVATE SMS++::BundleSolverML)
+    endif ()
+
     if (TARGET SMS++::MILPSolver)
         target_link_libraries(MMCF_test PRIVATE SMS++::MILPSolver)
     endif ()
