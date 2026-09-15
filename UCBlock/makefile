@@ -19,6 +19,9 @@ DIR = .
 # common stuff
 include ../makefile_common
 
+# BundleSolver uses OsiGrbSolverInterface for the quadratic master.
+COMMON_SW += -DWHICH_OSI_MP=2
+
 # define & include the necessary modules- - - - - - - - - - - - - - - - - - -
 # if a module is not used in the current configuration, just comment out the
 # corresponding include line
