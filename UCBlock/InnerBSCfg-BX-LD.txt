@@ -1,0 +1,13 @@
+# Inner BlockSolverConfig used by BranchAndXSolver.
+# The LagrangianDualRelaxationSolver supplies node bounds and branching
+# changes; its own Lagrangian-dual parameters are shared with LDCfg.txt.
+
+BlockSolverConfig
+
+1
+
+1
+LagrangianDualRelaxationSolver
+
+1
+*LDCfg.txt

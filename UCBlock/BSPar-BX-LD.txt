@@ -1,0 +1,32 @@
+# BlockSolverConfig for UCBlock_test:
+# BranchAndXSolver is the outer exact enumeration solver and
+# LagrangianDualRelaxationSolver is its inner node relaxation.
+
+BlockSolverConfig
+
+1
+
+1
+BranchAndXSolver
+
+1
+ComputeConfig
+
+1
+
+2
+intSolveMethod 0
+intMaxThread 1
+
+0
+
+1
+strNameOfBlockSolverConfigurationFile InnerBSCfg-BX-LD.txt
+
+0
+
+0
+
+0
+
+*

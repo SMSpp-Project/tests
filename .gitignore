@@ -27,6 +27,7 @@ QuadraticTests/quad_test
 SingleFlowDCRBlock/SingleFlowDCRBlock_test
 ThermalUnitBlock_Solver/TUDPS_test
 TwoStageStochasticBlock/TSSB_test
+UCBlock/UCBlock_test
 MultiStageStochasticBlock/MSSB_test
 Write-Read/writeandread_test
 
@@ -117,3 +118,7 @@ UCBlock/*.csv
 UCBlock/*.csv
 UCBlock/*.csv
 UCBlock/LD.txt
+
+
+#logs 
+*.log
