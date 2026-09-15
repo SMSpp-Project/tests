@@ -759,15 +759,22 @@ static bool SolveBoth( void )
    ok = true; verdict = "OK(f)"; decided = true;
    }
 
-  // dual mode: trust the (reliable) LP outcome when BundleSolver admits
-  // non-convergence (kStopIter / kStopTime / kLowPrecision)
-  if( ( ! decided ) && dual_mode &&
+  /* The LP is the reliable one whenever BundleSolver itself says that it did
+   * not converge, i.e., it answers kStopIter, kStopTime or kLowPrecision:
+   * what it reports then is not a claim of optimality, so comparing its
+   * value with the LP one proves nothing. It happens on an unbounded
+   * instance with few rows and free variables, where the bundle spends the
+   * call raising t and ends with "NR required but t maximum", and it used to
+   * be accepted in dual mode alone. */
+  if( ( ! decided ) &&
       ( hsLP || ( rtrnLP == Solver::kInfeasible ) ||
         ( rtrnLP == Solver::kUnbounded ) ) &&
       ( ( rtrnNDO == Solver::kStopIter ) ||
         ( rtrnNDO == Solver::kStopTime ) ||
         ( rtrnNDO == Solver::kLowPrecision ) ) ) {
-   ok = true; verdict = "OK(d-trust-LP)"; decided = true;
+   ok = true;
+   verdict = dual_mode ? "OK(d-trust-LP)" : "OK(trust-LP)";
+   decided = true;
    }
 
   // both feasible but values disagree wildly: BundleSolver master MP
