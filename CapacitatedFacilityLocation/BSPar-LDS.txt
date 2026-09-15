@@ -72,7 +72,7 @@ dbltSPar2         1e-4 # parameter for the long-term t-strategy
 
 # now all the string parameters
 #str_LDSlv_ISName   ParallelBundleSolver # the inner Solver used by LagrangianDualSolver
-str_LDSlv_ISName GeneralizedBundleSolver # the inner Solver used by LagrangianDualSolver 
+str_LDSlv_ISName            BundleSolver # the inner Solver used by LagrangianDualSolver
 strMPBSolverCfg               MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
 #str_LagBF_BSCfg           LPBSCfg-F.txt # BlockSolverConfig for the LagBFunctions
 #                      this is for the Flow relaxation, using :MCFSolver
