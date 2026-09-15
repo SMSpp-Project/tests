@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pollutants < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar-EASY.txt
+#        < log file > = name of log file, default no log
+#
+# runs the resilient instances with pollutant budget constraints, i.e., the
+# primary energy limits of the PyPsa network (a CO2 limit, and in one of them
+# also a NOx one) translated by pypsa2smspp, and checks that the PyPsa
+# objective value matches the given reference one; the limits are twice, half
+# and 60% of the emissions of the unconstrained dispatch, so that the budget
+# is loose in one instance and binding in the others
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+# as in batch-resilient, these are pure-LD subproblems: BundleSolver requires
+# intDoEasy=0, hence the EASY variant
+DEFAULT_PAR=BSPar-EASY.txt
+
+parse_batch_args "$@"
+
+# as in batch-resilient, only the MILP answers the problem, the other two
+# Solver are relaxations
+REL="${REL:-,r,r}"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ filename ] = PyPsa objective value
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_200.nc]=1.840014910e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_50.nc]=6.825785045e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_nox.nc]=5.960347460e+10
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for wf in 0 1 2; do
+
+    for what in ../../UCBlock/data/nc4/resilient-data/pollutants/smspp_*.nc; do
+
+        # skip if pattern did not match any file
+        if [ ! -f "$what" ]; then
+          continue
+        fi
+
+        base=$(basename "$what")
+
+        ref=${REF_OBJ[$base]}
+
+        if [ -z "$ref" ]; then
+          echo "No reference objective defined for file: $base"
+          exit 1
+        fi
+
+        run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt \
+                 -r "$ref" -f "$wf"
+
+    done
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

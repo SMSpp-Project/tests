@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added 
 
+- `UCBlock/batches/batch-pollutants`, the resilient instances with the
+  pollutant budget constraints of `UCBlock` in
+  `resilient-data/pollutants/`: a PyPSA network with a CO2 limit twice and
+  half the emissions of the unconstrained dispatch, and one with a CO2 and a
+  NOx limit, translated by pypsa2smspp, where the MILP, the Lagrangian dual
+  and the primal heuristic are held to the PyPSA objective as in
+  `batch-resilient`
+
 - the `AbstractBlock_mirror` suite, which checks the copy of the abstract
   representation of a Block that `AbstractBlock::mirror()` builds: that it is
   the same problem as the original, whichever `:MILPSolver` solves the two,
