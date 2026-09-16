@@ -43,7 +43,7 @@ if (TARGET SMS++::UCBlock)
                          PROPERTIES FIXTURES_SETUP uc_data_extracted)
 
     # Register every batch: each one covers a family of instances (academic,
-    # plan4res, energy community, resilient, AC OPF) and cross-checks all the
+    # plan4res, energy community, PyPSA, AC OPF) and cross-checks all the
     # Solver its BlockSolverConfig attaches, so they are independent and can be
     # run, selected and timed one by one.
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")

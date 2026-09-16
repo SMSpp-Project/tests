@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# usage: batch-resilient < exe file > < par file > < log file >
+# usage: batch-pypsa < exe file > < par file > < log file >
 #        < exe file > = path of the executable file, default UCBlock_test
 #        < par file > = BlockSolverConfig file, default BSPar.txt
 #        < log file > = name of log file, default no log
@@ -12,7 +12,7 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
-# all the resilient instances are pure-LD subproblems on a single
+# all the PyPSA instances are pure-LD subproblems on a single
 # ECNetworkBlock-like component: BundleSolver requires intDoEasy=0, so the
 # EASY variant is the default here (the standard BSPar.txt, intDoEasy=1,
 # would raise "BundleSolver: all components are easy, this is no supported").
@@ -51,7 +51,7 @@ REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=2.399258678e+05
 
 for wf in 0 1 2; do
 
-    for what in ../../UCBlock/data/nc4/resilient-data/smspp_*.nc; do
+    for what in ../../UCBlock/data/nc4/pypsa-data/smspp_*.nc; do
 
         # skip if pattern did not match any file
         if [ ! -f "$what" ]; then

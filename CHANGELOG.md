@@ -7,15 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
+  `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
+  the instances it reads are in `data/nc4/pypsa-data` instead of
+  `data/nc4/resilient-data`, the folder that holds all the networks
+  translated from PyPSA
+
 ### Added 
 
-- `UCBlock/batches/batch-pollutants`, the resilient instances with the
+- `UCBlock/batches/batch-pollutants`, the PyPSA instances with the
   pollutant budget constraints of `UCBlock` in
-  `resilient-data/pollutants/`: a PyPSA network with a CO2 limit twice and
+  `pypsa-data/pollutants/`: a PyPSA network with a CO2 limit twice and
   half the emissions of the unconstrained dispatch, and one with a CO2 and a
   NOx limit, translated by pypsa2smspp, where the MILP, the Lagrangian dual
   and the primal heuristic are held to the PyPSA objective as in
-  `batch-resilient`
+  `batch-pypsa`
 
 - the `AbstractBlock_mirror` suite, which checks the copy of the abstract
   representation of a Block that `AbstractBlock::mirror()` builds: that it is

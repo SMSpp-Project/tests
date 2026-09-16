@@ -157,7 +157,7 @@ int wf = -1;               // DCNetworkBlock formulation selector
                            // < 0 (default) = use the value set in the meta-
                            // BlockConfig InnerBCfg.txt (-> DCNBCfg.txt); when
                            // passed on the command line it overrides that file
-                           // (used by batch-resilient to iterate over all wf)
+                           // (used by batch-pypsa to iterate over all wf)
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
@@ -302,7 +302,7 @@ int main( int argc , char ** argv )
   // optional command-line override of the DCNetworkBlock formulation: when wf
   // is passed (>= 0) it replaces the static-variables Configuration of the
   // DCNetworkBlock entry of the meta-BlockConfig, overriding DCNBCfg.txt (used
-  // by batch-resilient to iterate over all formulations)
+  // by batch-pypsa to iterate over all formulations)
   if( wf >= 0 )
    if( auto m = dynamic_cast< SimpleConfiguration<
         std::map< std::string , Configuration * > > * >( ibc ) ) {
