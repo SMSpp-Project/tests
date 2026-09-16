@@ -564,7 +564,7 @@ static bool rows_match_data( UCBlock * uc )
  for( Index p = 0 ; p < uc->get_number_pollutants() ; ++p )
   for( Index z = 0 ; z < uc->get_number_pollutant_zones()[ p ] ; ++z ) {
    const Index k = first_zone( uc , p ) + z;
-   const auto & row = uc->get_const_pollutant_constraints()[ k ];
+   const auto & row = uc->get_const_pollutant_constraints()[ p ][ z ];
    if( ( row.get_rhs() != uc->get_pollutant_budget()[ k ] ) ||
        ( row.get_lhs() != uc->get_pollutant_min_budget()[ k ] ) )
     return( false );
@@ -622,7 +622,8 @@ static bool rows_match_data( UCBlock * uc )
 /// checks value, rows, dual, is_feasible() and the netCDF round trip
 
 static UCBlock * run( const std::string & name , const Instance & in ,
-                      double value , double dual = -1 , Index dual_row = 0 )
+                      double value , double dual = -1 , Index dual_p = 0 ,
+                      Index dual_z = 0 )
 {
  std::cout << name << std::endl;
  auto uc = load( write( in , name ) );
@@ -632,10 +633,10 @@ static UCBlock * run( const std::string & name , const Instance & in ,
                             std::to_string( value ) );
  check( rows_match_data( uc ) , "rows are scale times the data" );
  if( dual >= 0 )
-  check( near( std::abs( uc->get_const_pollutant_constraints()[ dual_row ]
-                         .get_dual() ) , dual ) ,
-         "dual of row " + std::to_string( dual_row ) + " == " +
-         std::to_string( dual ) );
+  check( near( std::abs( uc->get_const_pollutant_constraints()[ dual_p ]
+                         [ dual_z ].get_dual() ) , dual ) ,
+         "dual of pollutant " + std::to_string( dual_p ) + " zone " +
+         std::to_string( dual_z ) + " == " + std::to_string( dual ) );
 
  SimpleConfiguration< double > tol( 1e-6 );
  check( uc->is_feasible( false , & tol ) , "is_feasible() at the optimum" );
@@ -712,7 +713,7 @@ static int test( void )
   { 2 , { 0 , 1 , 1 } , { 100 , 1000 } , {} , co2_rate , {} } ,
   { 1 , { 0 , 0 , 1 } , { 1000 } , {} , { { 0.2 , 0.1 , 5 , 0 } } , {} } };
  {
-  auto uc = run( "A" , A , 2200 , 20 , 0 );
+  auto uc = run( "A" , A , 2200 , 20 , 0 , 0 );
 
   // the duals through a UCBlockSolution and its netCDF form
   SimpleConfiguration< int > what( 128 );
@@ -724,15 +725,16 @@ static int test( void )
    sol->serialize( g );
    }
   delete sol;
-  for( auto & row : uc->get_pollutant_constraints() )
-   row.set_dual( 0 );
+  for( auto & zones : uc->get_pollutant_constraints() )
+   for( auto & row : zones )
+    row.set_dual( 0 );
   {
    netCDF::NcFile f( sol_path , netCDF::NcFile::read );
    UCBlockSolution read;
    read.deserialize( f.getGroup( "Solution_0" ) );
    read.write( uc );
    }
-  check( near( std::abs( uc->get_const_pollutant_constraints()[ 0 ]
+  check( near( std::abs( uc->get_const_pollutant_constraints()[ 0 ][ 0 ]
                          .get_dual() ) , 20 ) ,
          "the dual goes through the Solution" );
 
@@ -749,7 +751,7 @@ static int test( void )
  Instance A2 = A;
  A2.pollutants[ 1 ].ub = { 20 };
  {
-  auto uc = run( "A2" , A2 , 3000 , 200 , 2 );
+  auto uc = run( "A2" , A2 , 3000 , 200 , 1 , 0 );
 
   std::vector< double > budget = { 1000 };
   uc->set_pollutant_budget( budget.begin() , Block::Range( 2 , 3 ) ,
@@ -769,7 +771,7 @@ static int test( void )
   fresh->get_unit_block( 1 )->scale( 0.25 , eNoMod , eNoMod );
   attach( fresh );
   check( near( solve( fresh ) , 3150 ) , "scaled unit read from scratch" );
-  check( near( std::abs( fresh->get_const_pollutant_constraints()[ 2 ]
+  check( near( std::abs( fresh->get_const_pollutant_constraints()[ 1 ][ 0 ]
                          .get_dual() ) , 250 ) , "dual of the scaled unit" );
   release( fresh );
   }
@@ -780,7 +782,7 @@ static int test( void )
   B.zones = false;
   B.pollutants = { { 1 , { 0 , 0 , 0 } , { 50 } , {} ,
                      { { 1 , 0.5 , 0 , 0 } , { 1.5 , 0.5 , 0 , 0 } } , {} } };
-  auto uc = run( "B" , B , 5400 , 60 , 0 );
+  auto uc = run( "B" , B , 5400 , 60 , 0 , 0 );
   check( ( uc->get_number_pollutant_zones().size() == 1 ) &&
          ( uc->get_number_pollutant_zones()[ 0 ] == 1 ) &&
          uc->get_pollutant_zone().empty() , "one zone of all the nodes" );
@@ -792,12 +794,12 @@ static int test( void )
  {
   Instance M1;
   M1.pollutants = { { 1 , { 0 , 0 , 0 } , { INF } , { 180 } , dirty , {} } };
-  release( run( "M1" , M1 , 2200 , 20 , 0 ) );
+  release( run( "M1" , M1 , 2200 , 20 , 0 , 0 ) );
   }
  {
   Instance M2;
   M2.pollutants = { { 1 , { 0 , 0 , 0 } , { 150 } , { 150 } , dirty , {} } };
-  auto uc = run( "M2" , M2 , 1600 , 20 , 0 );
+  auto uc = run( "M2" , M2 , 1600 , 20 , 0 , 0 );
 
   std::vector< double > floor = { -INF };
   uc->set_pollutant_min_budget( floor.begin() , Block::Range( 0 , 1 ) ,
