@@ -20,10 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UCBlock/batches/batch-pollutants`, the PyPSA instances with the
   pollutant budget constraints of `UCBlock` in
   `pypsa-data/pollutants/`: a PyPSA network with a CO2 limit twice and
-  half the emissions of the unconstrained dispatch, and one with a CO2 and a
-  NOx limit, translated by pypsa2smspp, where the MILP, the Lagrangian dual
-  and the primal heuristic are held to the PyPSA objective as in
-  `batch-pypsa`
+  half the emissions of the unconstrained dispatch, one with a CO2 and a NOx
+  limit, a CO2 floor, an operational limit on a carrier and a CO2 limit where
+  a store contributes through its final level, translated by pypsa2smspp,
+  where the MILP, the Lagrangian dual and the primal heuristic are held to
+  the PyPSA objective as in `batch-pypsa`
 
 - the `AbstractBlock_mirror` suite, which checks the copy of the abstract
   representation of a Block that `AbstractBlock::mirror()` builds: that it is

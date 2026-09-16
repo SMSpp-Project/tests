@@ -6,11 +6,13 @@
 #        < log file > = name of log file, default no log
 #
 # runs the PyPSA instances with pollutant budget constraints, i.e., the
-# primary energy limits of the PyPsa network (a CO2 limit, and in one of them
-# also a NOx one) translated by pypsa2smspp, and checks that the PyPsa
-# objective value matches the given reference one; the limits are twice, half
-# and 60% of the emissions of the unconstrained dispatch, so that the budget
-# is loose in one instance and binding in the others
+# global constraints of the PyPsa network on the dispatch translated by
+# pypsa2smspp, and checks that the PyPsa objective value matches the given
+# reference one: a CO2 limit twice and half the emissions of the unconstrained
+# dispatch, a CO2 and a NOx limit, a CO2 floor (a lower bound), an
+# operational limit on a carrier, and a CO2 limit where a store contributes
+# through its final level; the instances are written by
+# pollutant_generator.py of pypsa2smspp
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
@@ -31,9 +33,12 @@ REL="${REL:-,r,r}"
 
 declare -A REF_OBJ
 
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_200.nc]=1.840014910e+09
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_50.nc]=6.825785045e+10
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_nox.nc]=5.960347460e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_200.nc]=1.614054032e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_50.nc]=6.577283237e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_nox.nc]=5.674789164e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_min.nc]=1.595084457e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_ccgt_limit.nc]=7.041837002e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_h2.nc]=6.258806398e+10
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
