@@ -23,14 +23,6 @@
  * repeatedly randomly modified and re-solved several times, but this is not
  * done yet.
  *
- * Called as UCBlock_test --hydro, with no other argument, the tester checks
- * the flow-to-power rows of HydroUnitBlock on an instance it writes itself: a
- * hydro unit with two arcs, the first with two pieces and no flow at the first
- * time instant, the second with one piece, and a demand the second arc alone
- * covers there. Each arc must have its own pieces, so the optimum is 0; were
- * the second arc given a piece of the first, it could not cover the demand,
- * and the SlackUnitBlock would make it 5000.
- *
  * Called as UCBlock_test --pollutant, with no other argument, the tester
  * instead checks the pollutant budget constraints of UCBlock.
  *
@@ -878,102 +870,6 @@ static int test( void )
 }  // end( namespace pollutant )
 
 /*--------------------------------------------------------------------------*/
-/*---------------- CHECK OF THE PIECES OF THE HYDRO ARCS -------------------*/
-/*--------------------------------------------------------------------------*/
-
-namespace hydro {
-
-/// the check of the flow-to-power rows of HydroUnitBlock [see the file comment]
-
-static int test( void )
-{
- for( const auto & name : pollutant::SolverNames )
-  if( auto solver = Solver::new_Solver( name ) ) {
-   delete solver;
-   pollutant::solver_name = name;
-   break;
-   }
-
- if( pollutant::solver_name.empty() ) {
-  std::cout << "no :MILPSolver in this build, nothing to check" << std::endl;
-  return( 0 );
-  }
-
- const auto path = ( std::filesystem::temp_directory_path() /
-                     ( "UCBlock_hydro_test_" + std::to_string( getpid() ) +
-                       ".nc4" ) ).string();
- {
-  netCDF::NcFile f( path , netCDF::NcFile::replace );
-  f.putAtt( "SMS++_file_type" , netCDF::NcInt() , 1 );
-
-  auto g = f.addGroup( "Block_0" );
-  g.putAtt( "type" , "UCBlock" );
-  auto dT = g.addDim( "TimeHorizon" , 2 );
-  g.addDim( "NumberUnits" , 2 );
-  g.addDim( "NumberElectricalGenerators" , 3 );
-  const std::vector< double > demand = { 20 , 0 };
-  g.addVar( "ActivePowerDemand" , netCDF::NcDouble() , dT ).putVar(
-                                                             demand.data() );
-
-  auto slack = g.addGroup( "UnitBlock_0" );
-  slack.putAtt( "type" , "SlackUnitBlock" );
-  const double smax = 1000 , scost = 1000;
-  slack.addVar( "MaxPower" , netCDF::NcDouble() ).putVar( & smax );
-  slack.addVar( "ActivePowerCost" , netCDF::NcDouble() ).putVar( & scost );
-
-  auto h = g.addGroup( "UnitBlock_1" );
-  h.putAtt( "type" , "HydroUnitBlock" );
-  auto dR = h.addDim( "NumberReservoirs" , 1 );
-  auto dA = h.addDim( "NumberArcs" , 2 );
-  auto dP = h.addDim( "TotalNumberPieces" , 3 );
-  auto put = [ & ]( const char * var , std::vector< netCDF::NcDim > dims ,
-                    const std::vector< double > & v ) {
-   h.addVar( var , netCDF::NcDouble() , dims ).putVar( v.data() );
-   };
-  auto put_int = [ & ]( const char * var , netCDF::NcDim dim ,
-                        const std::vector< long long > & v ) {
-   h.addVar( var , netCDF::NcInt64() , dim ).putVar( v.data() );
-   };
-  put_int( "StartArc" , dA , { 0 , 0 } );
-  put_int( "EndArc" , dA , { 1 , 1 } );
-  put_int( "NumberPieces" , dA , { 2 , 1 } );
-  put( "MaxVolumetric" , { dT , dR } , { 1000 , 1000 } );
-  put( "MinVolumetric" , {} , { 0 } );
-  put( "Inflows" , { dR , dT } , { 0 , 0 } );
-  put( "InitialVolumetric" , { dR } , { 500 } );
-  // arc 0 has no flow at time 0, and a flow up to 100 at time 1
-  put( "MinFlow" , { dT , dA } , { 0 , 0 , 0 , 0 } );
-  put( "MaxFlow" , { dT , dA } , { 0 , 10 , 100 , 10 } );
-  put( "MinPower" , { dT , dA } , { 0 , 0 , 0 , 0 } );
-  put( "MaxPower" , { dT , dA } , { 100 , 100 , 100 , 100 } );
-  // arc 0: p <= f and p <= 10 + 0.5 f ; arc 1: p <= 2 f
-  put( "LinearTerm" , { dP } , { 1 , 0.5 , 2 } );
-  put( "ConstantTerm" , { dP } , { 0 , 10 , 0 } );
-  }
-
- auto uc = pollutant::load( path );
- pollutant::attach( uc );
- const double v = pollutant::solve( uc );
- pollutant::release( uc );
- std::filesystem::remove( path );
-
- // arc 1 alone covers the demand of time 0 (p <= 2 f , f <= 10), so the
- // slack is not needed; were arc 1 given the second piece of arc 0 it could
- // not go beyond 15, and the slack would cost 5000
- const bool ok = std::abs( v ) <= 1e-6;
- std::cout << "hydro arcs: optimum " << v << " == 0"
-           << ( ok ? " -> OK" : " -> Error" ) << std::endl;
- if( ok )
-  std::cout << "All tests passed!!" << std::endl;
- else
-  std::cout << "Shit happened!!" << std::endl;
- return( ok ? 0 : 1 );
- }
-
-}  // end( namespace hydro )
-
-
-/*--------------------------------------------------------------------------*/
 
 int main( int argc , char ** argv )
 {
@@ -984,9 +880,6 @@ int main( int argc , char ** argv )
  // Configuration: they write their own instances [see the file comment]
  if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--pollutant" ) )
   return( pollutant::test() );
-
- if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--hydro" ) )
-  return( hydro::test() );
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

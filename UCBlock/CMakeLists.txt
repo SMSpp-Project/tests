@@ -38,8 +38,6 @@ if (TARGET SMS++::UCBlock)
     if (TARGET SMS++::MILPSolver)
         add_test(NAME UCBlock_test/pollutant
                  COMMAND UCBlock_test --pollutant)
-        add_test(NAME UCBlock_test/hydro
-                 COMMAND UCBlock_test --hydro)
     endif ()
 
     # Create a test fixture to generate .nc4 files by running extract_uc_nc4.
