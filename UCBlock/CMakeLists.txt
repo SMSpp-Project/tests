@@ -34,6 +34,12 @@ if (TARGET SMS++::UCBlock)
 
     smspp_install(UCBlock_test)
 
+    # the pollutant budget constraints, on instances the tester writes itself
+    if (TARGET SMS++::MILPSolver)
+        add_test(NAME UCBlock_test/pollutant
+                 COMMAND UCBlock_test --pollutant)
+    endif ()
+
     # Create a test fixture to generate .nc4 files by running extract_uc_nc4.
     # This test will build and run the extract_uc_nc4 target
     add_test(NAME extract_uc_nc4
