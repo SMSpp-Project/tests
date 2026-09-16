@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   its lower bound, the duals through a `UCBlockSolution`, the netCDF round
   trip and the data `UCBlock::deserialize()` must refuse
 
+- `UCBlock_test --hydro` (the ctest `UCBlock_test/hydro`), which checks on an
+  instance it writes itself that each arc of a `HydroUnitBlock` has the
+  flow-to-power rows of its own pieces, also when an arc before it has no
+  flow at some instant
+
 - the `MILPSolver` suite (the ctest `MILPSolver_test/groups`), which solves
   the same program with every `:MILPSolver` in the build, its `Variable` and
   `Constraint` grouped in every shape a `Block` allows
