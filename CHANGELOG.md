@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added 
 
 - the PyPSA instances with the pollutant budget constraints of `UCBlock`
-  in `pypsa-data/pollutants/`, run by `UCBlock/batches/batch-pypsa`:
+  in `pypsa-data/`, run by `UCBlock/batches/batch-pypsa`:
   a PyPSA network with a CO2 limit twice and half the emissions of the
   unconstrained dispatch, a CO2 and a NOx limit, a CO2 floor, a CO2 equality,
   an operational limit on a carrier, and CO2 limits where a store and a hydro
