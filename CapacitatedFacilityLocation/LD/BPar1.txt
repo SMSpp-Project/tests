@@ -26,7 +26,10 @@ BlockConfig # exact type of the ComputeConfig object
 
 # static_constraints
 SimpleConfiguration<int>
-3    # bit 0 = demand, bit 1 = capacity, bit 2 = strong
+7    # bit 0 = demand, bit 1 = capacity, bit 2 = strong: the Lagrangian
+     # Dual of the knapsack relaxation is as strong as the continuous
+     # relaxation *with* the strong linking constraints x_ij <= y_i, hence
+     # these are what the bound is compared against
 
 # dynamic_constraints
 *    # [none]

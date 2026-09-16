@@ -38,9 +38,10 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-19 # number of integer parameters
+20 # number of integer parameters
 
 # now all the integer parameters
+intMPStbl              0 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
 # first those of LagrangianDualSolver proper
 int_LDSlv_iBCopy      0 # 1 if sub-Block must be R3B-copied
 int_LDSlv_NNMult      1 # 1 if Lagrangian multipliers must be >= 0
@@ -75,7 +76,7 @@ intTrgtMng            0 # bit-wise encoding targets and accuracies management:
                         # bit 4: if Lipschitz constant is used to compute the upper model
                   
 
-17 # number of double parameters
+18 # number of double parameters
 
 # now all the double parameters
 dblRelAcc          1e-7 # relative accuracy required of the solution the
@@ -107,10 +108,9 @@ dbl_penaltyFactor  1e+5
 # first those of LagrangianDualSolver proper
 strWarmStartBSC   WarmStartCfg.txt # BlockSolverConfig of the warm start,
                                    # empty = no warm start
-str_LDSlv_ISName  BundleSolver # the inner Solver used by LagrangianDualSolver
-strMPBSolverCfg   MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's
-                             # Solver
-str_LagBF_BSCfg    QPBSCfg.txt # the BlockSolverConfig for inner Block
+str_LDSlv_ISName      BundleSolver # the inner Solver used by LagrangianDualSolver
+strMPBSolverCfg         MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
+str_LagBF_BSCfg        QPBSCfg.txt # the BlockSolverConfig for inner Block
 
 # then those of BundleSolver as its inner Solver
 # [none]

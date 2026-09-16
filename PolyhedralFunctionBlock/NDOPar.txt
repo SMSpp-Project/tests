@@ -32,6 +32,7 @@ ComputeConfig # exact type of the ComputeConfig object
 17 # number of integer parameters
 
 # now all the integer parameters
+intMPStbl              0 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
 intMaxIter   100000 # MaxIter, max number of iterations for each call
 intMaxThread      0 # MaxThread, max number of new tasks to spawn
 intLogVerb       12 # LogVerb, log verbosity of main Bundle algorithm
@@ -73,10 +74,10 @@ dbltInit         1 # initial value for t
 dbltSPar2    0.001 # parameter for the long-term t-strategy
 #dblMinNrEvls     2 # minimum number/fraction of function evaluations at each iteration
 
-0 # number of string parameters
+1 # number of string parameters
 
 # now all the string parameters
-# [none]
+strMPBSolverCfg  MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
 
 0 # number of vector-of-int parameters
 

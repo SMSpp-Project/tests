@@ -17,6 +17,7 @@ ComputeConfig         # exact type of the ComputeConfig object
 18 # number of integer parameters
 
 # now all the integer parameters
+intMPStbl              0 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
 
 # parameters of BundleSolver
 intDoEasy        0 # do easy components for (some) LagBFunction
@@ -61,10 +62,10 @@ dbltInit      1e+1 # initial value for t
 dbltSPar2     1e-2 # parameter for the long-term t-strategy
 dbltSPar3        0 # parameter for small heuristic t adjustments
 
-0 # number of string parameters
+1 # number of string parameters
 
 # now all the string parameters
-# [none]
+strMPBSolverCfg  MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
 
 0 # number of vector-of-int parameters
 

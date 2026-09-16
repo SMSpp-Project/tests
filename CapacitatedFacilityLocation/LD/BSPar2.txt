@@ -31,9 +31,10 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-24 # number of integer parameters
+17 # number of integer parameters
 
 # now all the integer parameters
+intMPStbl              0 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
 intDoEasy            0 # do not do easy components even for LagBFunction
 intMaxIter       10000 # MaxIter, max number of iterations for each call
 intMaxThread        10 # MaxThread, max number of new tasks to spawn
@@ -75,11 +76,11 @@ dbltSPar2         1e-2 # parameter for the long-term t-strategy
 
 # now all the string parameters
 #str_LDSlv_ISName ParallelBundleSolver # the inner Solver used by LagrangianDualSolver 
-str_LDSlv_ISName BundleSolver # the inner Solver used by LagrangianDualSolver 
-strMPBSolverCfg                 MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
-str_LagBF_BSCfg      LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
-#                      this is for the Knapsack relaxation, using DPBinaryKnapsackSolver
-strLogFileName              logLD.txt
+str_LDSlv_ISName          BundleSolver # the inner Solver used by LagrangianDualSolver
+strMPBSolverCfg             MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
+str_LagBF_BSCfg       LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
+                                       # this is for the Knapsack relaxation, using DPBinaryKnapsackSolver
+strLogFileName               logLD.txt
 
 0 # number of vector-of-int parameters
 

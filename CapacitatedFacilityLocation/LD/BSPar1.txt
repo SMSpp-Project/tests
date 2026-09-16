@@ -37,8 +37,10 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 intLogVerb      2 # log verbosity of the MILPSolver
-intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
-intCutSepPar    0 # do not separate user cuts
+intRelaxIntVars 2 # the continuous relaxation, with the separation loop
+intCutSepPar    1 # separate user cuts: the strong linking constraints are
+                  # dynamic, and without them the relaxation is weaker than
+                  # the Lagrangian Dual it is compared with
 
 2 # number of double parameters
 
