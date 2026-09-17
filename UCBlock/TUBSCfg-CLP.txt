@@ -31,7 +31,7 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts at the root node & sub-nodes
                   # and lazy constraints (everywhere); this has no
                   # effect if P/C are not activated in the TUBCfg
@@ -39,7 +39,7 @@ intCutSepPar    7 # separate user cuts at the root node & sub-nodes
 1 # number of double parameters
 
 # now all the double parameters
-dblRelAcc       1e-8 # relative accuracy required to solution = mipmap
+dblRelAcc       1e-6 # relative accuracy required to solution = mipmap
                      # must be tighter than the accuracy required to
                      # the Lagrangian Dual, but not too much so
 
