@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
+  `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
+  the instances it reads are in `data/nc4/pypsa-data` instead of
+  `data/nc4/resilient-data`, the folder that holds all the networks
+  translated from PyPSA
+
 ### Added 
+
+- the PyPSA instances with the pollutant budget constraints of `UCBlock`
+  in `pypsa-data/`, run by `UCBlock/batches/batch-pypsa`:
+  a PyPSA network with a CO2 limit twice and half the emissions of the
+  unconstrained dispatch, a CO2 and a NOx limit, a CO2 floor, a CO2 equality,
+  an operational limit on a carrier, and CO2 limits where a store and a hydro
+  storage unit contribute through their final level, translated by
+  pypsa2smspp and held to the PyPSA objective
+
+- `UCBlock_test --pollutant` (the ctest `UCBlock_test/pollutant`), which
+  checks the pollutant budget constraints of `UCBlock` on small instances it
+  writes itself, whose optima are known: several zones per pollutant and a
+  node in none, rates depending on time, lower bounds and equalities, the
+  level of a battery, the scale of a unit, the setters of the budget and of
+  its lower bound, the duals through a `UCBlockSolution`, the netCDF round
+  trip and the data `UCBlock::deserialize()` must refuse
+
+- the `MILPSolver` suite (the ctest `MILPSolver_test/groups`), which solves
+  the same program with every `:MILPSolver` in the build, its `Variable` and
+  `Constraint` grouped in every shape a `Block` allows
 
 - the `AbstractBlock_mirror` suite, which checks the copy of the abstract
   representation of a Block that `AbstractBlock::mirror()` builds: that it is

@@ -31,8 +31,8 @@ one, so the reference objective values under `batches/batch-ec` are
 exactly those of the corresponding `TSSB_EC_*` instances of
 `tests/TwoStageStochasticBlock`.
 
-The instances of `batches/batch-resilient` are the multi-stage counterpart
-of the resilient family: the same PyPSA-Eur network the two-stage ones are
+The instances of `batches/batch-pypsa` are the multi-stage counterpart
+of the PyPSA family: the same PyPSA-Eur network the two-stage ones are
 drawn from, with its single axis of uncertainty split in two, the climate
 year in the outer stage and the demand, drawn conditional on it, in the
 inner one. Each of them says in its name what the climate acts upon, the

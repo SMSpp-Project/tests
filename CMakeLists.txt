@@ -80,6 +80,7 @@ else ()
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
+add_subdirectory(MILPSolver)
 add_subdirectory(BoxSolver)
 add_subdirectory(LagrangianDualSolver_Box)
 
