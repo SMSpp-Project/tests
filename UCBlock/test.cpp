@@ -23,6 +23,73 @@
  * repeatedly randomly modified and re-solved several times, but this is not
  * done yet.
  *
+ * Called as UCBlock_test --pollutant, with no other argument, the tester
+ * instead checks the pollutant budget constraints of UCBlock.
+ *
+ * The PyPSA instances of batch-pypsa check the pollutant budget
+ * constraints against the objective value of PyPSA, which however writes a
+ * limit with a single zone spanning all the nodes, and knows nothing of what
+ * is peculiar to UCBlock: several zones per pollutant, a node belonging to no
+ * zone, the scale of a unit, the Modification that change a budget, the
+ * Solution and the netCDF form of all this. These are checked here, on
+ * instances small enough that every optimum is known.
+ *
+ * All the instances share the same data: two time instants with a demand of
+ * 80 and 60 at node 2 of three nodes on a path, whose lines are never binding;
+ * three IntermittentUnitBlock U0, U1 and U2 at nodes 0, 1 and 2, with a
+ * capacity of 100 and a cost of 10, 30 and 60; a SlackUnitBlock at node 2
+ * with a cost of 1000; in some instances a BatteryUnitBlock at node 2, empty
+ * at the start, with a capacity of 100 in either direction and a maximum
+ * level of 100. They differ in the pollutants:
+ *
+ * - N: none, whose optimum is 1400;
+ *
+ * - A: CO2 with two zones, { 0 } with budget 100 and { 1 , 2 } with budget
+ *   1000, rates 1 and 0.5 for U0 and U1; NOx with one zone { 0 , 1 }, node 2
+ *   belonging to none, budget 1000, rates 0.2, 0.1 and 5 for U0, U1 and U2
+ *   (the rate of U2 must not count). Optimum 2200, dual of CO2 in zone 0
+ *   equal to 20;
+ *
+ * - A2: A with a NOx budget of 20, optimum 3000 with dual 200; with U1
+ *   scaled by 0.25, 3150 with dual 250;
+ *
+ * - B: CO2 alone, with neither NumberPollutantZones nor PollutantZones (one
+ *   zone of all the nodes), budget 50 and rates depending on time (1 and 0.5
+ *   at time 0, 1.5 and 0.5 at time 1), optimum 5400 with dual 60;
+ *
+ * - M1: CO2 with rates 1 and 2 for U0 and U1, no upper bound and a lower
+ *   bound of 180 (PollutantMinBudget), optimum 2200 with dual 20;
+ *
+ * - M2: as M1 with both bounds equal to 150, optimum 1600 (1400 once the
+ *   lower bound is removed);
+ *
+ * - S0 and S: the battery and CO2 with rates 1 and 0.5 and budget 100, the
+ *   level of the battery at the end of the horizon counting -2 in S
+ *   (PollutantStorageRho), which lowers the optimum from 3000 to 1800; with
+ *   the battery scaled by 0.1 the optimum of S is 2700.
+ *
+ * The optima have been computed on a linear program written independently
+ * of UCBlock. On each instance it is checked that the value is the expected
+ * one, that the coefficients of every row are the scale of the unit times the
+ * factor of the data, that the dual has the expected absolute value (not on
+ * S0 and S, whose battery makes the problem a MILP), that UCBlock::is_feasible()
+ * holds at the optimum while a solution exceeding a budget violates the
+ * rows, and that the instance written back by UCBlock::serialize() has the
+ * same optimum. On A the duals also go through a UCBlockSolution and its
+ * netCDF form; on A2 and M2 the setters of the budget and of its lower bound,
+ * by range and by subset, change the rows of the attached Solver; on A2
+ * scaling a unit with the Solver attached gives the optimum of the scaled
+ * instance read from scratch, and on S scaling the battery gives the expected
+ * optimum. Finally, an instance with inconsistent data
+ * must be refused by UCBlock::deserialize() in five ways: two zones and no
+ * PollutantZones, a PollutantRho of the wrong size, a
+ * TotalNumberPollutantZones that is not the sum of NumberPollutantZones, a
+ * NumberStorages that is not the number of storages of the units, and a
+ * PollutantStorageRho of the wrong size.
+ *
+ * The instances are written in a temporary directory, and solved by the first
+ * :MILPSolver in the Solver factory.
+ *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
@@ -99,7 +166,10 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <filesystem>
 #include <random>
+
+#include <unistd.h>
 
 #include "common_utils.h"
 
@@ -114,6 +184,12 @@
 #include "ECNetworkBlock.h"
 
 #include "BatteryUnitBlock.h"
+
+#include "BlockSolverConfig.h"
+
+#include "CDASolver.h"
+
+#include "LinearFunction.h"
 
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- USING -----------------------------------*/
@@ -157,7 +233,7 @@ int wf = -1;               // DCNetworkBlock formulation selector
                            // < 0 (default) = use the value set in the meta-
                            // BlockConfig InnerBCfg.txt (-> DCNBCfg.txt); when
                            // passed on the command line it overrides that file
-                           // (used by batch-resilient to iterate over all wf)
+                           // (used by batch-pypsa to iterate over all wf)
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
@@ -218,11 +294,592 @@ static bool process_specific_arg( int opt )
  }
 
 /*--------------------------------------------------------------------------*/
+namespace pollutant {
+
+/*--------------------------------------------------------------------------*/
+/*--------------- CONSTANTS OF THE POLLUTANT BUDGET CHECKS -----------------*/
+/*--------------------------------------------------------------------------*/
+
+/// the :MILPSolver to try, the first in the Solver factory being used
+
+static const std::vector< std::string > SolverNames =
+ { "CPXMILPSolver" , "GRBMILPSolver" , "HiGHSMILPSolver" , "SCIPMILPSolver" };
+
+/// the relative tolerance of every comparison
+
+static constexpr double Eps = 1e-6;
+
+/*--------------------------------------------------------------------------*/
+/*----------------- TYPES OF THE POLLUTANT BUDGET CHECKS -------------------*/
+/*--------------------------------------------------------------------------*/
+
+/// the data of one pollutant [see the file comment]
+
+struct Pollutant {
+ Index nz;                                ///< number of zones
+ std::vector< Index > zones;              ///< zone of each node
+ std::vector< double > ub;                ///< PollutantBudget
+ std::vector< double > lb;                ///< PollutantMinBudget, if any
+ std::vector< std::vector< double > > rho;  ///< [ t or 0 ][ generator ]
+ std::vector< double > sigma;             ///< [ t ] on the battery level
+ };
+
+/// an instance [see the file comment]
+
+struct Instance {
+ std::vector< Pollutant > pollutants;
+ bool battery = false;
+ bool zones = true;            ///< write NumberPollutantZones, PollutantZones
+ // the defects of the instances that must be refused
+ bool drop_zones = false;      ///< no PollutantZones although nz > 1
+ bool bad_rho = false;         ///< PollutantRho over one generator less
+ Index bad_tnpz = 0;           ///< added to TotalNumberPollutantZones
+ bool bad_storages = false;    ///< NumberStorages one more than the units'
+ bool bad_sigma = false;       ///< PollutantStorageRho over two storages
+ };
+
+/*--------------------------------------------------------------------------*/
+/*--------------- GLOBALS OF THE POLLUTANT BUDGET CHECKS -------------------*/
+/*--------------------------------------------------------------------------*/
+
+static bool all_passed = true;  ///< false as soon as a check fails
+
+static std::string solver_name;
+
+static std::filesystem::path dir;
+
+/*--------------------------------------------------------------------------*/
+/*-------------- FUNCTIONS OF THE POLLUTANT BUDGET CHECKS ------------------*/
+/*--------------------------------------------------------------------------*/
+
+static void check( bool ok , const std::string & what )
+{
+ std::cout << "  " << what << ( ok ? " -> OK" : " -> Error" ) << std::endl;
+ if( ! ok )
+  all_passed = false;
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static bool near( double a , double b )
+{
+ return( std::abs( a - b ) <= Eps * std::max( 1.0 , std::abs( b ) ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// writes the instance in the file with the given name, returning its path
+
+static std::string write( const Instance & in , const std::string & name )
+{
+ const Index T = 2;
+ const Index N = 3;
+ const Index G = in.battery ? 5 : 4;
+ const Index P = in.pollutants.size();
+
+ auto path = ( dir / ( name + ".nc4" ) ).string();
+ netCDF::NcFile f( path , netCDF::NcFile::replace );
+ f.putAtt( "SMS++_file_type" , netCDF::NcInt() , 1 );
+
+ auto g = f.addGroup( "Block_0" );
+ g.putAtt( "type" , "UCBlock" );
+ auto dT = g.addDim( "TimeHorizon" , T );
+ g.addDim( "NumberUnits" , G );
+ auto dG = g.addDim( "NumberElectricalGenerators" , G );
+ auto dN = g.addDim( "NumberNodes" , N );
+ auto dL = g.addDim( "NumberLines" , 2 );
+
+ const std::vector< double > demand = { 0 , 0 , 0 , 0 , 80 , 60 };
+ g.addVar( "ActivePowerDemand" , netCDF::NcDouble() ,
+           { dN , dT } ).putVar( demand.data() );
+ std::vector< unsigned > gen_node = { 0 , 1 , 2 , 2 , 2 };
+ g.addVar( "GeneratorNode" , netCDF::NcUint() , dG ).putVar( gen_node.data() );
+ const std::vector< unsigned > start = { 0 , 1 } , end = { 1 , 2 };
+ g.addVar( "StartLine" , netCDF::NcUint() , dL ).putVar( start.data() );
+ g.addVar( "EndLine" , netCDF::NcUint() , dL ).putVar( end.data() );
+ const std::vector< double > maxf = { 1000 , 1000 } , minf = { -1000 , -1000 };
+ g.addVar( "MaxPowerFlow" , netCDF::NcDouble() , dL ).putVar( maxf.data() );
+ g.addVar( "MinPowerFlow" , netCDF::NcDouble() , dL ).putVar( minf.data() );
+
+ if( P ) {
+  auto dP = g.addDim( "NumberPollutants" , P );
+  Index tnpz = 0;
+  std::vector< unsigned > npz , pz;
+  std::vector< double > ub , lb;
+  bool any_lb = false;
+  for( const auto & p : in.pollutants ) {
+   tnpz += p.nz;
+   npz.push_back( p.nz );
+   pz.insert( pz.end() , p.zones.begin() , p.zones.end() );
+   ub.insert( ub.end() , p.ub.begin() , p.ub.end() );
+   if( p.lb.empty() )
+    lb.insert( lb.end() , p.nz , -INF );
+   else {
+    lb.insert( lb.end() , p.lb.begin() , p.lb.end() );
+    any_lb = true;
+    }
+   }
+
+  auto dZ = g.addDim( "TotalNumberPollutantZones" , tnpz + in.bad_tnpz );
+  if( in.zones ) {
+   g.addVar( "NumberPollutantZones" , netCDF::NcUint() ,
+             dP ).putVar( npz.data() );
+   if( ! in.drop_zones )
+    g.addVar( "PollutantZones" , netCDF::NcUint() ,
+              { dP , dN } ).putVar( pz.data() );
+   }
+  ub.resize( tnpz + in.bad_tnpz , ub.back() );
+  lb.resize( tnpz + in.bad_tnpz , lb.back() );
+  g.addVar( "PollutantBudget" , netCDF::NcDouble() , dZ ).putVar( ub.data() );
+  if( any_lb )
+   g.addVar( "PollutantMinBudget" , netCDF::NcDouble() ,
+             dZ ).putVar( lb.data() );
+
+  // the rates, over one time instant if they all are constant
+  const Index RT = in.pollutants[ 0 ].rho.size();
+  const Index RG = in.bad_rho ? G - 1 : G;
+  std::vector< double > rho( RT * P * RG , 0 );
+  for( Index t = 0 ; t < RT ; ++t )
+   for( Index p = 0 ; p < P ; ++p )
+    for( Index h = 0 ; h < std::min( RG , Index( 4 ) ) ; ++h )
+     rho[ ( t * P + p ) * RG + h ] = in.pollutants[ p ].rho[ t ][ h ];
+  auto dRT = g.addDim( "PollutantRhoTime" , RT );
+  auto dRG = in.bad_rho ? g.addDim( "OneGeneratorLess" , RG ) : dG;
+  g.addVar( "PollutantRho" , netCDF::NcDouble() ,
+            { dRT , dP , dRG } ).putVar( rho.data() );
+
+  // the factors of the storages, over the one battery: over two with a
+  // NumberStorages that says so if bad_storages, over two with no
+  // NumberStorages at all if bad_sigma
+  if( ! in.pollutants[ 0 ].sigma.empty() ) {
+   const Index S = ( in.bad_storages || in.bad_sigma ) ? 2 : 1;
+   auto dS = g.addDim( in.bad_sigma ? "TwoStorages" : "NumberStorages" , S );
+   std::vector< double > sigma( T * P * S , 0 );
+   for( Index t = 0 ; t < T ; ++t )
+    for( Index p = 0 ; p < P ; ++p )
+     if( ! in.pollutants[ p ].sigma.empty() )
+      sigma[ ( t * P + p ) * S ] = in.pollutants[ p ].sigma[ t ];
+   g.addVar( "PollutantStorageRho" , netCDF::NcDouble() ,
+             { dT , dP , dS } ).putVar( sigma.data() );
+   }
+  }
+
+ auto unit = [ & ]( Index u , const char * type , double cost , double max ) {
+  auto ug = g.addGroup( "UnitBlock_" + std::to_string( u ) );
+  ug.putAtt( "type" , type );
+  ug.addVar( "MaxPower" , netCDF::NcDouble() ).putVar( & max );
+  ug.addVar( "ActivePowerCost" , netCDF::NcDouble() ).putVar( & cost );
+  if( std::string( type ) == "IntermittentUnitBlock" ) {
+   const double zero = 0;
+   ug.addVar( "MinPower" , netCDF::NcDouble() ).putVar( & zero );
+   }
+  };
+ unit( 0 , "IntermittentUnitBlock" , 10 , 100 );
+ unit( 1 , "IntermittentUnitBlock" , 30 , 100 );
+ unit( 2 , "IntermittentUnitBlock" , 60 , 100 );
+ unit( 3 , "SlackUnitBlock" , 1000 , 1000 );
+
+ if( in.battery ) {
+  auto bg = g.addGroup( "UnitBlock_4" );
+  bg.putAtt( "type" , "BatteryUnitBlock" );
+  auto scalar = [ & bg ]( const char * var , double value ) {
+   bg.addVar( var , netCDF::NcDouble() ).putVar( & value );
+   };
+  scalar( "MaxPower" , 100 );
+  scalar( "MinPower" , -100 );
+  scalar( "ExtractingBatteryRho" , 1 );
+  scalar( "StoringBatteryRho" , 1 );
+  scalar( "MinStorage" , 0 );
+  scalar( "MaxStorage" , 100 );
+  scalar( "InitialStorage" , 0 );
+  scalar( "Cost" , 0 );
+  }
+
+ return( path );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static UCBlock * load( const std::string & path )
+{
+ auto uc = dynamic_cast< UCBlock * >( Block::deserialize( path ) );
+ if( ! uc )
+  throw( std::logic_error( path + " is not a UCBlock" ) );
+ return( uc );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// attaches the :MILPSolver to the UCBlock (or detaches it if clear)
+
+static void attach( UCBlock * uc , bool clear = false )
+{
+ BlockSolverConfig bsc( 1 );
+ bsc.add_ComputeConfig( std::string( solver_name ) , nullptr );
+ if( clear )
+  bsc.clear();
+ bsc.apply( uc );
+ if( ! clear )
+  if( auto s = uc->get_registered_solvers().front() ) {
+   const auto par = s->int_par_str2idx( "intLogVerb" );
+   if( par < Inf< Solver::idx_type >() )
+    s->set_par( par , 0 );
+   }
+ }
+
+/*--------------------------------------------------------------------------*/
+/// solves the UCBlock, writing the solution in it, and returns the value
+
+static double solve( UCBlock * uc )
+{
+ auto solver = static_cast< CDASolver * >(
+                                    uc->get_registered_solvers().front() );
+ if( solver->compute( false ) != Solver::kOK )
+  return( std::numeric_limits< double >::quiet_NaN() );
+ solver->get_var_solution();
+ if( solver->has_dual_solution() )
+  solver->get_dual_solution();
+ return( solver->get_var_value() );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// the index of the row of zone 0 of pollutant p
+
+static Index first_zone( const UCBlock * uc , Index p )
+{
+ Index k = 0;
+ for( Index q = 0 ; q < p ; ++q )
+  k += uc->get_number_pollutant_zones()[ q ];
+ return( k );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// true if every row has exactly the terms of the data
+/** Each row must have, for each generator of a unit at a node of its zone
+ * and each time with a nonzero rate, the active power with coefficient the
+ * scale of the unit times the rate, and for each storage the level with
+ * coefficient the scale times its factor; and nothing else. */
+
+static bool rows_match_data( UCBlock * uc )
+{
+ const Index T = uc->get_time_horizon();
+ for( Index p = 0 ; p < uc->get_number_pollutants() ; ++p )
+  for( Index z = 0 ; z < uc->get_number_pollutant_zones()[ p ] ; ++z ) {
+   const Index k = first_zone( uc , p ) + z;
+   const auto & row = uc->get_const_pollutant_constraints()[ p ][ z ];
+   if( ( row.get_rhs() != uc->get_pollutant_budget()[ k ] ) ||
+       ( row.get_lhs() != uc->get_pollutant_min_budget()[ k ] ) )
+    return( false );
+
+   // the terms expected from the data
+   std::vector< std::pair< const ColVariable * , double > > expected;
+   Index eg = 0 , st = 0;
+   for( Index u = 0 ; u < uc->get_number_units() ; ++u ) {
+    auto ub = uc->get_unit_block( u );
+    const Index first_eg = eg;
+    for( Index h = 0 ; h < ub->get_number_generators() ; ++h , ++eg ) {
+     const Index node = uc->get_generator_node()[ eg ];
+     const Index zone = uc->get_pollutant_zone().empty() ? 0 :
+                        uc->get_pollutant_zone()[ p ][ node ];
+     if( zone != z )
+      continue;
+     auto ap = ub->get_active_power( h );
+     for( Index t = 0 ; ap && ( t < T ) ; ++t )
+      if( uc->get_pollutant_rho( t , p , eg ) != 0 )
+       expected.emplace_back( & ap[ t ] ,
+                              ub->get_scale() *
+                              uc->get_pollutant_rho( t , p , eg ) );
+     }
+    if( ! uc->get_pollutant_storage_rho().empty() ) {
+     const Index node = ub->get_number_generators() ?
+                        uc->get_generator_node()[ first_eg ] : 0;
+     const Index zone = uc->get_pollutant_zone().empty() ? 0 :
+                        uc->get_pollutant_zone()[ p ][ node ];
+     for( Index s = 0 ; s < ub->get_number_storages() ; ++s ) {
+      auto level = ub->get_storage_level( s );
+      for( Index t = 0 ; level && ( zone == z ) && ( t < T ) ; ++t )
+       if( uc->get_pollutant_storage_rho( t , p , st + s ) != 0 )
+        expected.emplace_back( & level[ t ] , ub->get_scale() *
+                               uc->get_pollutant_storage_rho( t , p ,
+                                                              st + s ) );
+      }
+     st += ub->get_number_storages();
+     }
+    }
+
+   auto lf = static_cast< LinearFunction * >( row.get_function() );
+   if( lf->get_v_var().size() != expected.size() )
+    return( false );
+   for( const auto & [ var , coeff ] : expected ) {
+    const auto i = lf->is_active( var );
+    if( ( i >= lf->get_num_active_var() ) ||
+        ( ! near( lf->get_coefficient( i ) , coeff ) ) )
+     return( false );
+    }
+   }
+ return( true );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// checks value, rows, dual, is_feasible() and the netCDF round trip
+
+static UCBlock * run( const std::string & name , const Instance & in ,
+                      double value , double dual = -1 , Index dual_p = 0 ,
+                      Index dual_z = 0 )
+{
+ std::cout << name << std::endl;
+ auto uc = load( write( in , name ) );
+ attach( uc );
+ const double v = solve( uc );
+ check( near( v , value ) , "optimum " + std::to_string( v ) + " == " +
+                            std::to_string( value ) );
+ check( rows_match_data( uc ) , "rows are scale times the data" );
+ if( dual >= 0 )
+  check( near( std::abs( uc->get_const_pollutant_constraints()[ dual_p ]
+                         [ dual_z ].get_dual() ) , dual ) ,
+         "dual of pollutant " + std::to_string( dual_p ) + " zone " +
+         std::to_string( dual_z ) + " == " + std::to_string( dual ) );
+
+ SimpleConfiguration< double > tol( 1e-6 );
+ check( uc->is_feasible( false , & tol ) , "is_feasible() at the optimum" );
+
+ // the instance written by UCBlock has the same optimum
+ auto copy = ( dir / ( name + "-copy.nc4" ) ).string();
+ static_cast< Block * >( uc )->serialize( copy , eBlockFile );
+ auto rt = load( copy );
+ attach( rt );
+ check( near( solve( rt ) , value ) , "serialize() keeps the optimum" );
+ attach( rt , true );
+ delete rt;
+
+ return( uc );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static void expect_refused( const std::string & name , const Instance & in ,
+                            const std::string & what )
+{
+ bool refused = false;
+ try {
+  delete load( write( in , name ) );
+  }
+ catch( std::exception & e ) {
+  refused = true;
+  }
+ check( refused , what + " is refused" );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static void release( UCBlock * uc )
+{
+ attach( uc , true );
+ delete uc;
+ }
+
+/*--------------------------------------------------------------------------*/
+/// the checks of the pollutant budget constraints [see the file comment]
+
+static int test( void )
+{
+ for( const auto & name : SolverNames )
+  if( auto solver = Solver::new_Solver( name ) ) {
+   delete solver;
+   solver_name = name;
+   break;
+   }
+
+ if( solver_name.empty() ) {
+  std::cout << "no :MILPSolver in this build, nothing to check" << std::endl;
+  return( 0 );
+  }
+ std::cout << "solving with " << solver_name << std::endl;
+
+ dir = std::filesystem::temp_directory_path() /
+       ( "UCBlock_pollutant_test_" + std::to_string( getpid() ) );
+ std::filesystem::create_directories( dir );
+
+ const std::vector< std::vector< double > > co2_rate = { { 1 , 0.5 , 0 , 0 } };
+
+ // N- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ {
+  auto uc = run( "N" , Instance() , 1400 );
+  check( uc->get_const_pollutant_constraints().empty() , "no rows" );
+  release( uc );
+  }
+
+ // A- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ Instance A;
+ A.pollutants = {
+  { 2 , { 0 , 1 , 1 } , { 100 , 1000 } , {} , co2_rate , {} } ,
+  { 1 , { 0 , 0 , 1 } , { 1000 } , {} , { { 0.2 , 0.1 , 5 , 0 } } , {} } };
+ {
+  auto uc = run( "A" , A , 2200 , 20 , 0 , 0 );
+
+  // the duals through a UCBlockSolution and its netCDF form
+  SimpleConfiguration< int > what( 128 );
+  auto sol = uc->get_Solution( & what , false );
+  auto sol_path = ( dir / "A-solution.nc4" ).string();
+  {
+   netCDF::NcFile f( sol_path , netCDF::NcFile::replace );
+   auto g = f.addGroup( "Solution_0" );
+   sol->serialize( g );
+   }
+  delete sol;
+  for( auto & zones : uc->get_pollutant_constraints() )
+   for( auto & row : zones )
+    row.set_dual( 0 );
+  {
+   netCDF::NcFile f( sol_path , netCDF::NcFile::read );
+   UCBlockSolution read;
+   read.deserialize( f.getGroup( "Solution_0" ) );
+   read.write( uc );
+   }
+  check( near( std::abs( uc->get_const_pollutant_constraints()[ 0 ][ 0 ]
+                         .get_dual() ) , 20 ) ,
+         "the dual goes through the Solution" );
+
+  // a solution beyond the budget of zone 0 of CO2 violates the rows
+  auto u0 = uc->get_unit_block( 0 )->get_active_power( 0 );
+  u0[ 0 ].set_value( u0[ 0 ].get_value() + 50 );
+  check( ! RowConstraint::is_feasible( uc->get_pollutant_constraints() ,
+                                       1e-6 ) ,
+         "exceeding a budget violates the rows" );
+  release( uc );
+  }
+
+ // A2 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ Instance A2 = A;
+ A2.pollutants[ 1 ].ub = { 20 };
+ {
+  auto uc = run( "A2" , A2 , 3000 , 200 , 1 , 0 );
+
+  std::vector< double > budget = { 1000 };
+  uc->set_pollutant_budget( budget.begin() , Block::Range( 2 , 3 ) ,
+                            eModBlck , eModBlck );
+  check( near( solve( uc ) , 2200 ) , "set_pollutant_budget( range )" );
+  budget = { 20 };
+  uc->set_pollutant_budget( budget.begin() , Block::Subset( { 2 } ) , true ,
+                            eModBlck , eModBlck );
+  check( near( solve( uc ) , 3000 ) , "set_pollutant_budget( subset )" );
+
+  uc->get_unit_block( 1 )->scale( 0.25 , eModBlck , eModBlck );
+  check( rows_match_data( uc ) , "rows follow the scale of a unit" );
+  check( near( solve( uc ) , 3150 ) , "scaled unit with the Solver attached" );
+  release( uc );
+
+  auto fresh = load( ( dir / "A2.nc4" ).string() );
+  fresh->get_unit_block( 1 )->scale( 0.25 , eNoMod , eNoMod );
+  attach( fresh );
+  check( near( solve( fresh ) , 3150 ) , "scaled unit read from scratch" );
+  check( near( std::abs( fresh->get_const_pollutant_constraints()[ 1 ][ 0 ]
+                         .get_dual() ) , 250 ) , "dual of the scaled unit" );
+  release( fresh );
+  }
+
+ // B- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ {
+  Instance B;
+  B.zones = false;
+  B.pollutants = { { 1 , { 0 , 0 , 0 } , { 50 } , {} ,
+                     { { 1 , 0.5 , 0 , 0 } , { 1.5 , 0.5 , 0 , 0 } } , {} } };
+  auto uc = run( "B" , B , 5400 , 60 , 0 , 0 );
+  check( ( uc->get_number_pollutant_zones().size() == 1 ) &&
+         ( uc->get_number_pollutant_zones()[ 0 ] == 1 ) &&
+         uc->get_pollutant_zone().empty() , "one zone of all the nodes" );
+  release( uc );
+  }
+
+ // M1 and M2- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ const std::vector< std::vector< double > > dirty = { { 1 , 2 , 0 , 0 } };
+ {
+  Instance M1;
+  M1.pollutants = { { 1 , { 0 , 0 , 0 } , { INF } , { 180 } , dirty , {} } };
+  release( run( "M1" , M1 , 2200 , 20 , 0 , 0 ) );
+  }
+ {
+  Instance M2;
+  M2.pollutants = { { 1 , { 0 , 0 , 0 } , { 150 } , { 150 } , dirty , {} } };
+  auto uc = run( "M2" , M2 , 1600 , 20 , 0 , 0 );
+
+  std::vector< double > floor = { -INF };
+  uc->set_pollutant_min_budget( floor.begin() , Block::Range( 0 , 1 ) ,
+                                eModBlck , eModBlck );
+  check( near( solve( uc ) , 1400 ) , "set_pollutant_min_budget( range )" );
+  floor = { 150 };
+  uc->set_pollutant_min_budget( floor.begin() , Block::Subset( { 0 } ) ,
+                                true , eModBlck , eModBlck );
+  check( near( solve( uc ) , 1600 ) , "set_pollutant_min_budget( subset )" );
+  release( uc );
+  }
+
+ // S0 and S - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ Instance S0;
+ S0.battery = true;
+ S0.pollutants = { { 1 , { 0 , 0 , 0 } , { 100 } , {} , co2_rate , {} } };
+ release( run( "S0" , S0 , 3000 ) );
+
+ Instance S = S0;
+ S.pollutants[ 0 ].sigma = { 0 , -2 };
+ {
+  auto uc = run( "S" , S , 1800 );
+  check( uc->get_number_storages() == 1 , "one storage, the battery" );
+  uc->get_unit_block( 4 )->scale( 0.1 , eModBlck , eModBlck );
+  check( rows_match_data( uc ) , "rows follow the scale of the battery" );
+  check( near( solve( uc ) , 2700 ) , "scaled battery" );
+  release( uc );
+  }
+
+ // refused instances- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ std::cout << "refused instances" << std::endl;
+ {
+  Instance E = A;
+  E.drop_zones = true;
+  expect_refused( "E1" , E , "two zones and no PollutantZones" );
+  }
+ {
+  Instance E = A;
+  E.bad_rho = true;
+  expect_refused( "E2" , E , "a PollutantRho of the wrong size" );
+  }
+ {
+  Instance E = A;
+  E.bad_tnpz = 1;
+  expect_refused( "E3" , E , "a wrong TotalNumberPollutantZones" );
+  }
+ {
+  Instance E = S;
+  E.bad_storages = true;
+  expect_refused( "E4" , E , "a wrong NumberStorages" );
+  }
+ {
+  Instance E = S;
+  E.bad_sigma = true;
+  expect_refused( "E5" , E , "a PollutantStorageRho of the wrong size" );
+  }
+
+ std::filesystem::remove_all( dir );
+
+ if( all_passed )
+  std::cout << "All tests passed!!" << std::endl;
+ else
+  std::cout << "Shit happened!!" << std::endl;
+
+ return( all_passed ? 0 : 1 );
+ }
+
+}  // end( namespace pollutant )
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char ** argv )
 {
  // override the default terminate handler to print the exception message
  std::set_terminate( smspp_terminate );
+
+ // the checks of the pollutant budget constraints need no instance and no
+ // Configuration: they write their own instances [see the file comment]
+ if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--pollutant" ) )
+  return( pollutant::test() );
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -302,7 +959,7 @@ int main( int argc , char ** argv )
   // optional command-line override of the DCNetworkBlock formulation: when wf
   // is passed (>= 0) it replaces the static-variables Configuration of the
   // DCNetworkBlock entry of the meta-BlockConfig, overriding DCNBCfg.txt (used
-  // by batch-resilient to iterate over all formulations)
+  // by batch-pypsa to iterate over all formulations)
   if( wf >= 0 )
    if( auto m = dynamic_cast< SimpleConfiguration<
         std::map< std::string , Configuration * > > * >( ibc ) ) {

@@ -17,7 +17,10 @@ if (Torch_FOUND)
 
     add_executable(BundleSolverML_bench test.cpp)
 
+    # BundleSolverML is a library of its own, and it is the one that has the
+    # class in the factory [see BundleSolver/CMakeLists.txt]
     target_link_libraries(BundleSolverML_bench PRIVATE
+                          SMS++::BundleSolverML
                           SMS++::BundleSolver
                           SMS++::UCBlock
                           SMS++::MMCFBlock

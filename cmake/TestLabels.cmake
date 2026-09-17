@@ -24,6 +24,7 @@
 # --------------------------------------------------------------------------- #
 
 set(SMSPP_TEST_LABELS_BoxSolver                 "SMS++;MILPSolver")
+set(SMSPP_TEST_LABELS_MILPSolver                "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_LagrangianDualSolver_Box  "SMS++;BundleSolver;LagrangianDualSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_LagBFunction              "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunction        "SMS++;BundleSolver;MILPSolver")
