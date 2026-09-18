@@ -45,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   minutes, and the InvestmentBlock over the flat form of another after
   twenty-four
 
+- the two instances named after the `inv_` Excel cases are gone, those cases
+  giving the very networks `1n_1c_1gext` and `2n_1c_1gext_1bext_2l` give, to
+  the byte
+
 - `UCBlock/batches/batch-pypsa` says, for the two instances whose Lagrangian
   dual stops on its own gap, what the interval of that Solver is worth, the
   cross-check holding it to that instead of to the accuracy the Solver was

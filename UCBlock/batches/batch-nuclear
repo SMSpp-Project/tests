@@ -15,12 +15,16 @@
 # PyPSA has no such rules, hence its optimum is a relaxation of all but the
 # first two instances and cannot be the reference value here, as it is in
 # batch-pypsa: each reference is the optimum of SMS++ itself, taken from the
-# run that writes the instance and proven optimal by the MILP solver. The
-# BlockSolverConfig is therefore the MILP alone, to a relative accuracy of
-# 1e-9 (see MILPCfg-NUC.txt), tighter than the 1e-5 within which the tester
-# compares: the Lagrangian dual of these instances is not run, a LagBFunction
-# changing the costs of a NuclearUnitBlock, which refuses a change of the
-# costs of its modulations and of its deep decreases.
+# run that writes the instance and proven optimal by the MILP solver.
+#
+# Each instance is therefore run twice. First with the MILP alone, to a
+# relative accuracy of 1e-9 (see MILPCfg-NUC.txt), tighter than the 1e-5
+# within which the tester compares, and held to the reference value. Then
+# with BSPar-DP.txt, i.e., the MILP, the Lagrangian dual and the primal
+# proximal heuristic, which cross-check each other: the dual and the
+# heuristic are relaxations, and what the interval of the former is worth is
+# declared, its convexified primal violating the demand rows of these
+# instances by some 5e-5 of the power at stake.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
@@ -63,6 +67,9 @@ for what in ../../UCBlock/data/nc4/pypsa-data/nuclear/smspp_*.nc; do
     fi
 
     run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
+
+    run_test "$exe" "$what" -S BSPar-DP.txt -R ",r,r" -E ",1e-2," \
+             -B InnerBCfg.txt
 
 done
 
