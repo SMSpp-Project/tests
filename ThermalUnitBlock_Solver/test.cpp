@@ -600,6 +600,7 @@ int wf = 1;
 double p_change = 0.6;
 Index n_change = 10;
 Index n_repeat = 100;
+double sd_cost = 0;   // the shut-down cost given to the unit, if any
 
 /*--------------------------------------------------------------------------*/
 
@@ -612,6 +613,7 @@ static bool process_specific_arg( int opt )
   case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
   case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
   case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
+  case( 'd' ): Str2Sthg( optarg , sd_cost );   return( true );
   default:                                     return( false );
   }
  }
@@ -631,14 +633,15 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ ThermalUnitBlock Solver test.\n";
- short_opts += "e:k:f:n:m:q:";
+ short_opts += "e:k:f:n:m:q:d:";
  const std::vector< option > my_opts = {
    { "seed"   , required_argument , nullptr , 'e' } ,
    { "wchg"   , required_argument , nullptr , 'k' } ,
    { "wf"     , required_argument , nullptr , 'f' } ,
    { "rounds" , required_argument , nullptr , 'n' } ,
    { "nchng"  , required_argument , nullptr , 'm' } ,
-   { "pchng"  , required_argument , nullptr , 'q' } };
+   { "pchng"  , required_argument , nullptr , 'q' } ,
+   { "sdcost" , required_argument , nullptr , 'd' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
@@ -654,7 +657,10 @@ int main( int argc , char **argv )
          "                                    +8 also use perspective cuts\n"
          "  -n, --rounds <n>                how many iterations [100]\n"
          "  -m, --nchng <n>                 number of changes [10]\n"
-         "  -q, --pchng <p>                 probability of changing [0.6]\n";
+         "  -q, --pchng <p>                 probability of changing [0.6]\n"
+         "  -d, --sdcost <v>                shut-down cost of the unit at\n"
+         "                                  each instant, the instance\n"
+         "                                  having none [0]\n";
 
  process_args( argc , argv , process_specific_arg );
 
@@ -697,6 +703,24 @@ int main( int argc , char **argv )
  const char * qcost_env = std::getenv( "TUDPS_QCOST" );
  if( qcost_env )
   TUBlock->set_reactive_power( true );
+
+ // the shut-down cost, if any, is given to the unit before the Objective is
+ // generated: the shut-down variables enter it only if the unit pays
+ // anything to shut down
+ if( sd_cost != 0 ) {
+  // the first instants in which the commitment is fixed, and therefore have
+  // no shut-down variable, are those the initial state imposes
+  const int tau0 = TUBlock->get_init_up_down_time();
+  const Index init_t =
+   tau0 > 0 ? ( Index( tau0 ) >= TUBlock->get_min_up_time()
+                ? 0 : TUBlock->get_min_up_time() - Index( tau0 ) )
+            : ( Index( - tau0 ) >= TUBlock->get_min_down_time()
+                ? 0 : TUBlock->get_min_down_time() - Index( - tau0 ) );
+  std::vector< double > sdc( TUBlock->get_time_horizon() - init_t , sd_cost );
+  TUBlock->set_shutdown_costs( sdc.begin() ,
+                               Range( init_t ,
+                                      TUBlock->get_time_horizon() ) );
+  }
 
  TUBlock->generate_abstract_variables();
  TUBlock->generate_objective( nullptr );
