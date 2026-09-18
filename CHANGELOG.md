@@ -13,12 +13,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
   the instances it reads are in `data/nc4/pypsa-data` instead of
   `data/nc4/resilient-data`, the folder that holds all the networks
-  translated from PyPSA
+  translated from PyPSA, one sub-folder per kind of problem: `ucblock`,
+  `pollutants`, `tssb` (whose files are named after the perturbation, instead
+  of lying in a sub-folder each) and `mssb`; the instances of `EC_Data` are
+  divided in the same way, in `ucblock`, `tssb` and `mssb`
+
+- the PyPSA instances of `pypsa-data/ucblock` and of the `pypsa-data` of
+  `InvestmentBlock` are written by one generator, `test/instance_generator.py`
+  of pypsa2smspp, which builds each test network once and writes it in the two
+  forms the conversion supports, the one where the design variables are those
+  of the `UCBlock` and the one where an `InvestmentBlock` wraps it: the two
+  are therefore the same problem and are held to the same reference, the
+  objective value PyPSA computes on that very network. The demand and the
+  hydro inflow of a test network being drawn at random, the generator fixes
+  the seed, so that the instances can be written again; the uncapped
+  extendable assets take the finite caps of the instances with a pollutant
+  budget, an unbounded design making some Lagrangian sub-problem unbounded.
+  The reference values all change, the previous instances coming from an
+  older state of the conversion, and one instance is named after its Excel
+  case, `2n_1c_1g_1b_2l` instead of `2n_1c_1g_1b`
+
+- `UCBlock/batches/batch-pypsa` says, for the two instances whose Lagrangian
+  dual stops on its own gap, what the interval of that Solver is worth, the
+  cross-check holding it to that instead of to the accuracy the Solver was
+  asked for; `InvestmentBlock/batches/batch-pypsa` fails when it finds no
+  instance at all, which is how a batch that has tested nothing was until now
+  indistinguishable from one where everything went well
 
 ### Added 
 
 - the PyPSA instances with the pollutant budget constraints of `UCBlock`
-  in `pypsa-data/`, run by `UCBlock/batches/batch-pypsa`:
+  in `pypsa-data/pollutants/`, run by `UCBlock/batches/batch-pypsa`:
   a PyPSA network with a CO2 limit twice and half the emissions of the
   unconstrained dispatch, a CO2 and a NOx limit, a CO2 floor, a CO2 equality,
   an operational limit on a carrier, and CO2 limits where a store and a hydro

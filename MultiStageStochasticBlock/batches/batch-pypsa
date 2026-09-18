@@ -47,14 +47,14 @@ parse_batch_args "$@"
 
 declare -A REF_OBJ
 
-REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_renewables_temp.nc]=5.017759647e+09
-REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_hydro_temp.nc]=4.943437037e+09
-REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_both_temp.nc]=5.017759647e+09
-REF_OBJ[smspp_network_small_fewsectors__snap100__c4_d3_both_temp.nc]=4.900427298e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_renewables.nc]=5.017759647e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_hydro.nc]=4.943437037e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_both.nc]=5.017759647e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__c4_d3_both.nc]=4.900427298e+09
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../UCBlock/data/nc4/pypsa-data/test_mssb/smspp_*_temp.nc; do
+for what in ../../UCBlock/data/nc4/pypsa-data/mssb/smspp_*.nc; do
 
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then

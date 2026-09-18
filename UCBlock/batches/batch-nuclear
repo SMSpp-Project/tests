@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+#
+# usage: batch-nuclear < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar-NUC.txt
+#        < log file > = name of log file, default no log
+#
+# runs the instances of pypsa-data/nuclear, a single-bus PyPSA network whose
+# nuclear generator follows a daily load, written once as a ThermalUnitBlock
+# and then as a NuclearUnitBlock with one family of operating rules added at
+# a time (the modulations, the daily limits on them and on the start-ups, the
+# three bands of the output, the deep decreases, and the whole set of the
+# rules); they are written by test/nuclear_generator.py of pypsa2smspp.
+#
+# PyPSA has no such rules, hence its optimum is a relaxation of all but the
+# first two instances and cannot be the reference value here, as it is in
+# batch-pypsa: each reference is the optimum of SMS++ itself, taken from the
+# run that writes the instance and proven optimal by the MILP solver.
+#
+# Each instance is therefore run twice. First with the MILP alone, to a
+# relative accuracy of 1e-9 (see MILPCfg-NUC.txt), tighter than the 1e-5
+# within which the tester compares, and held to the reference value. Then
+# with BSPar-DP.txt, i.e., the MILP, the Lagrangian dual and the primal
+# proximal heuristic, which cross-check each other: the dual and the
+# heuristic are relaxations, and what the interval of the former is worth is
+# declared, its convexified primal violating the demand rows of these
+# instances by some 5e-5 of the power at stake.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar-NUC.txt
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ filename ] = SMS++ objective value, the optimum of the
+# instance; the PyPSA one, which is the optimum of the first two only, is
+# 1.349164965e+06 for all of them
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_nuclear_tub.nc]=1.349164970e+06
+REF_OBJ[smspp_nuclear_free.nc]=1.349164970e+06
+REF_OBJ[smspp_nuclear_modulation.nc]=1.559422640e+06
+REF_OBJ[smspp_nuclear_daily.nc]=1.628606300e+06
+REF_OBJ[smspp_nuclear_bands.nc]=1.603172390e+06
+REF_OBJ[smspp_nuclear_deep.nc]=1.559422640e+06
+REF_OBJ[smspp_nuclear_rules.nc]=1.628610300e+06
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/pypsa-data/nuclear/smspp_*.nc; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
+
+    run_test "$exe" "$what" -S BSPar-DP.txt -R ",r,r" -E ",1e-2," \
+             -B InnerBCfg.txt
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -29,15 +29,25 @@ spar=$slv
 
 declare -A REF_OBJ
 
-REF_OBJ[smspp_1n_1c_1gext.nc]=3.969365408e+08
-REF_OBJ[smspp_2n_1c_1gext_1bext_2l.nc]=4.116252931e+08
-REF_OBJ[smspp_2n_1c_1gext_1bext_2lext.nc]=9.019791121e+07
-REF_OBJ[smspp_2n_2c_1g_1lext.nc]=6.626444342e+08
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l.nc]=5.983456337e+08
-REF_OBJ[smspp_inv_1n_1c_1g_ext.nc]=4.109344639e+08
-REF_OBJ[smspp_inv_2n_1c_1g_1b_ext.nc]=4.168985026e+08
+REF_OBJ[smspp_1n_1c_1g.nc]=1.517348289e+11
+REF_OBJ[smspp_1n_1c_1g_1h.nc]=2.793939844e+10
+REF_OBJ[smspp_1n_1c_1gext.nc]=1.447274894e+11
+REF_OBJ[smspp_2n_1c_1g_1b_2l.nc]=1.476439209e+11
+REF_OBJ[smspp_2n_1c_1gext_1bext_2l.nc]=1.435139638e+11
+REF_OBJ[smspp_2n_1c_1gext_1bext_2lext.nc]=9.695409177e+10
+REF_OBJ[smspp_2n_2c_1g_1lext.nc]=2.446649078e+11
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l.nc]=1.501972958e+09
+REF_OBJ[smspp_3n_3c_2gext_1l_1ml.nc]=4.736469299e+11
+REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=4.682891301e+06
+REF_OBJ[smspp_inv_1n_1c_1g_ext.nc]=1.447274894e+11
+REF_OBJ[smspp_inv_2n_1c_1g_1b_ext.nc]=1.435139638e+11
+REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-2.400702717e+07
+REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=-2.372297229e+07
+REF_OBJ[smspp_tssb_2n_2gext_1l.nc]=1.508768621e+09
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ran=0
 
 for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
 
@@ -45,6 +55,8 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
     if [ ! -f "$what" ]; then
       continue
     fi
+
+    ran=$((ran + 1))
 
     base=$(basename "$what")
     ref=${REF_OBJ[$base]}
@@ -57,5 +69,12 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
     run_test "$exe" "$what" "$bpar" "$spar" 0 "$ref"
 
 done
+
+# a batch that has found no instance at all has tested nothing, and saying so
+# is the only way to tell it apart from one where everything went well
+if [ "$ran" -eq 0 ]; then
+    echo "No instance found in ../../InvestmentBlock/data/nc4/pypsa-data"
+    exit 1
+fi
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

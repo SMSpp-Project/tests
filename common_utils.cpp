@@ -18,6 +18,7 @@
 
 #include "common_utils.h"
 
+#include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <cmath>
@@ -558,6 +559,52 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 /*--------------------------------------------------------------------------*/
 // solve an instance with every Solver, cross-check them, report
 
+void print_solver_parameters( Block * block )
+{
+ if( ( verbosity_level < 2 ) || ( ! block ) )
+  return;
+
+ // one entry per distinct ( Solver class , Block class , parameters ), in
+ // the order they are first met, with the number of Solvers sharing it
+ struct Entry {
+  std::string solver , owner , pars;
+  std::size_t count;
+  };
+ std::vector< Entry > entries;
+
+ std::function< void( Block * ) > visit = [ & ]( Block * b ) {
+  for( auto solver : b->get_registered_solvers() ) {
+   std::ostringstream pars;
+   solver->print_parameters( pars );
+   Entry e{ solver->classname() , b->classname() , pars.str() , 1 };
+   auto it = std::find_if( entries.begin() , entries.end() ,
+                           [ & ]( const Entry & o ) {
+                            return( ( o.solver == e.solver ) &&
+                                    ( o.owner == e.owner ) &&
+                                    ( o.pars == e.pars ) ); } );
+   if( it == entries.end() )
+    entries.push_back( std::move( e ) );
+   else
+    ++it->count;
+   }
+  if( verbosity_level >= 3 )
+   for( auto sb : b->get_nested_Blocks() )
+    visit( sb );
+  };
+ visit( block );
+
+ for( const auto & e : entries ) {
+  std::cout << std::endl << "--- parameters of " << e.solver << " on "
+            << e.owner;
+  if( e.count > 1 )
+   std::cout << " (" << e.count << " Solvers)";
+  std::cout << std::endl << e.pars;
+  }
+ std::cout << std::endl;
+ }
+
+/*--------------------------------------------------------------------------*/
+
 bool SolveAll( Block * block ,
                const SolverClassifier & classify ,
                double ref ,
@@ -594,15 +641,8 @@ bool SolveAll( Block * block ,
    return( false );
    }
 
-  // with -v 2, before solving, print what each Solver was actually given:
-  // the index space of a Solver that wraps another one extends over that of
-  // the wrapped one, so this shows the parameters of the inner Solver too
-  if( verbosity_level >= 2 )
-   for( std::size_t k = 0 ; k < M ; ++k ) {
-    std::cout << std::endl << "--- parameters of Solver " << k << " ("
-              << S[ k ]->classname() << ")" << std::endl;
-    S[ k ]->print_parameters( std::cout );
-    }
+  // with -v 2, before solving, print what each Solver was actually given
+  print_solver_parameters( block );
 
   // solve every Solver, timing each, then read the feasible ones - - - - - - -
   std::vector< int >    status( M );
@@ -813,7 +853,10 @@ std::string help =
  "                                  problem exactly, and only the bound on\n"
  "                                  its side is one on this problem\n"
  "  -D, --dryrun                    skip the compute() call\n"
- "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic, 2 = debug)\n";
+ "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic,\n"
+ "                                  2 = debug, with the parameters of the\n"
+ "                                  Solvers of the Block, 3 = those of the\n"
+ "                                  sub-Blocks' Solvers too)\n";
 
 /*--------------------------------------------------------------------------*/
 // open an SMS++ nc4 file and check that it is one

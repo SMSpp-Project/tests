@@ -5,15 +5,15 @@
 #        < par file > = BlockSolverConfig file, default BSPar.txt
 #        < log file > = name of log file, default no log
 #
-# runs all the PyPSA instances and checks that the PyPsa objective value
-# matches the given reference one; those of 3n_3c_1gext_1h_1bext_2l whose
-# name ends with a limit (e.g., _co2_50) have the global constraints of the
-# PyPsa network on the dispatch, translated by pypsa2smspp into the pollutant
-# budget constraints of UCBlock: a CO2 limit twice and half the emissions of
-# the unconstrained dispatch, a CO2 and a NOx limit, a CO2 floor, a CO2
-# equality, an operational limit on a carrier, and CO2 limits where a store
-# and a hydro storage unit contribute through their final level (the
-# instances are written by test/pollutant_generator.py of pypsa2smspp)
+# runs all the PyPSA instances of pypsa-data/ucblock and pypsa-data/pollutants
+# and checks that the PyPsa objective value matches the given reference one;
+# those in pypsa-data/pollutants are 3n_3c_1gext_1h_1bext_2l with the global
+# constraints of the PyPsa network on the dispatch, translated by pypsa2smspp
+# into the pollutant budget constraints of UCBlock: a CO2 limit twice and half
+# the emissions of the unconstrained dispatch, a CO2 and a NOx limit, a CO2
+# floor, a CO2 equality, an operational limit on a carrier, and CO2 limits
+# where a store and a hydro storage unit contribute through their final level
+# (the instances are written by test/pollutant_generator.py of pypsa2smspp)
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
@@ -38,37 +38,51 @@ REL="${REL:-,r,r}"
 
 declare -A REF_OBJ
 
-REF_OBJ[smspp_1n_1c_1g.nc]=4.221761376e+09
-REF_OBJ[smspp_1n_1c_1g_1h.nc]=4.984288994e+08
-REF_OBJ[smspp_1n_1c_1gext.nc]=4.055269613e+09
-REF_OBJ[smspp_2n_1c_1g_1b.nc]=3.944062665e+09
-REF_OBJ[smspp_2n_1c_1gext_1bext_2l.nc]=3.887187461e+09
-# this one is the optimum SMS++ computes and not the PyPsa value: on
-# this instance alone the two disagree by some 1e-5 relative, where
-# everywhere else they agree to the last digit
-REF_OBJ[smspp_2n_1c_1gext_1bext_2lext.nc]=7.034812177e+08
-REF_OBJ[smspp_2n_2c_1g_1lext.nc]=6.720604306e+09
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l.nc]=2.907246492e+09
-REF_OBJ[smspp_3n_3c_2gext_1l_1ml.nc]=1.302415551e+10
-REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.147874238e+07
-REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-6.883586038e+04
-REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=2.399258678e+05
+REF_OBJ[smspp_1n_1c_1g.nc]=1.517348289e+11
+REF_OBJ[smspp_1n_1c_1g_1h.nc]=2.793939844e+10
+REF_OBJ[smspp_1n_1c_1gext.nc]=1.447274894e+11
+REF_OBJ[smspp_2n_1c_1g_1b_2l.nc]=1.476439209e+11
+REF_OBJ[smspp_2n_1c_1gext_1bext_2l.nc]=1.435139638e+11
+REF_OBJ[smspp_2n_1c_1gext_1bext_2lext.nc]=9.695409177e+10
+REF_OBJ[smspp_2n_2c_1g_1lext.nc]=2.446649078e+11
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l.nc]=1.501972958e+09
+REF_OBJ[smspp_3n_3c_2gext_1l_1ml.nc]=4.736469299e+11
+REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=4.682891301e+06
+REF_OBJ[smspp_inv_1n_1c_1g_ext.nc]=1.447274894e+11
+REF_OBJ[smspp_inv_2n_1c_1g_1b_ext.nc]=1.435139638e+11
+REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-2.400702717e+07
+REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=-2.372297229e+07
+REF_OBJ[smspp_tssb_2n_2gext_1l.nc]=1.508768621e+09
 
 # the instances with pollutant budget constraints
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_200.nc]=1.671547247e+09
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_50.nc]=6.751130209e+10
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_nox.nc]=5.293804195e+10
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_min.nc]=1.807113140e+09
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_ccgt_limit.nc]=6.513045862e+10
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_h2.nc]=6.833593826e+10
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_eq.nc]=2.273162064e+10
-REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_hydro.nc]=8.196633457e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_200.nc]=1.501972958e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_50.nc]=6.679866968e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_nox.nc]=5.233050238e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_min.nc]=1.572466474e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_ccgt_limit.nc]=6.679866968e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_h2.nc]=6.679866968e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_eq.nc]=2.339416779e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_hydro.nc]=7.898750861e+10
+
+# what the interval of a relaxation is worth, per instance - - - - - - - - -
+# The Lagrangian dual of an instance whose thermal unit carries a commitment
+# has an integrality gap, and on the one below the bundle stops with its own
+# interval 1.7e-3 wide while reporting kOK, i.e. while claiming the 1e-6 of
+# its dblRelAcc [see LDCfg.txt]. The -E of that Solver says what its interval
+# is actually worth, the cross-check holding it to that and not to what the
+# Solver promised.
+
+declare -A EPS
+
+EPS[smspp_2n_1c_1g_1b_2l.nc]=,2e-3,
+EPS[smspp_2n_1c_1gext_1bext_2l.nc]=,2e-3,
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 for wf in 0 1 2; do
 
-    for what in ../../UCBlock/data/nc4/pypsa-data/smspp_*.nc; do
+    for what in ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_*.nc \
+                ../../UCBlock/data/nc4/pypsa-data/pollutants/smspp_*.nc; do
 
         # skip if pattern did not match any file
         if [ ! -f "$what" ]; then
@@ -84,8 +98,15 @@ for wf in 0 1 2; do
           exit 1
         fi
 
-        run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt \
-                 -r "$ref" -f "$wf"
+        eps=${EPS[$base]}
+
+        if [ -n "$eps" ]; then
+          run_test "$exe" "$what" -S "$par" -R "$REL" -E "$eps" \
+                   -B InnerBCfg.txt -r "$ref" -f "$wf"
+        else
+          run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt \
+                   -r "$ref" -f "$wf"
+        fi
 
     done
 
