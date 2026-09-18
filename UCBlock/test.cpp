@@ -283,12 +283,17 @@ static Subset GenerateRand( Index m , Index k )
 // BlockSolverConfig, -c/-p prefixes) are handled centrally by common_utils
 //   -r / --ref        : reference objective value to compare against
 //   -f / --wf         : DCNetworkBlock formulation, overrides the -B one
+//   -V / --viol       : how much the solution a relaxation reconstructs may
+//                       violate the rows it has dualised
+
+static double RelaxationViol = 1e-1;
 
 static bool process_specific_arg( int opt )
 {
  switch( opt ) {
-  case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
-  case( 'f' ): Str2Sthg( optarg , wf );           return( true );
+  case( 'r' ): Str2Sthg( optarg , RefObjective );   return( true );
+  case( 'f' ): Str2Sthg( optarg , wf );             return( true );
+  case( 'V' ): Str2Sthg( optarg , RelaxationViol ); return( true );
   default:                                         return( false );
   }
  }
@@ -889,16 +894,19 @@ int main( int argc , char ** argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ LagrangianDualSolver-on-UCBlock test.\n";
- short_opts += "r:f:";
+ short_opts += "r:f:V:";
  const std::vector< option > my_opts = {
    { "ref"        , required_argument , nullptr , 'r' } ,
-   { "wf"         , required_argument , nullptr , 'f' } };
+   { "wf"         , required_argument , nullptr , 'f' } ,
+   { "viol"       , required_argument , nullptr , 'V' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -r, --ref <value>               reference objective to compare "
          "against [none]\n"
          "  -f, --wf <0|1|2>                DCNetworkBlock formulation, "
-         "overrides the -B one [file]\n";
+         "overrides the -B one [file]\n"
+         "  -V, --viol <value>              how much the solution a "
+         "relaxation reconstructs may violate the rows it dualised [1e-1]\n";
 
  process_args( argc , argv , process_specific_arg );
 
@@ -1227,7 +1235,8 @@ int main( int argc , char ** argv )
  // value it reports not being that of what it writes: what its reconstructed
  // solution can be held to is the rows this Block couples, i.e. the ones the
  // relaxation has dualised, which it satisfies where the relaxation is exact
- AllPassed &= check_relaxation_solutions( TestBlock , 1e-1 , RefObjective );
+ AllPassed &= check_relaxation_solutions( TestBlock , RelaxationViol ,
+                                          RefObjective );
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

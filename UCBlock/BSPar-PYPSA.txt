@@ -1,0 +1,131 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-PYPSA.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for the UCBlock translated from a
+# PyPSA network: it is BSPar-EASY.txt with one parameter of the Bundle
+# changed, dblNZEps, whose default value stops the Bundle of this line at the
+# first iteration [see the 2nd ComputeConfig].
+#
+#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+3 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver        # name of 1st Solver
+GRBMILPSolver         # name of 1st Solver
+#SCIPMILPSolver       # name of 1st Solver
+#HiGHSMILPSolver      # name of 1st Solver
+LagrangianDualSolver  # name of 2nd Solver
+PrimalProximalHeur    # name of 3rd Solver
+
+3 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+
+*MILPCfg.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver; it mostly is the
+# ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver.
+# LDCfg.txt already has intDoEasy=0, which is what these all-easy instances
+# need; what it does not have is a dblNZEps this line can live with. That
+# parameter is the threshold under which the norm of the residual is taken to
+# be zero, hence the point to be optimal, and here the Bundle finds a residual
+# of 2.69e-3 at the first iteration and stops on it, calling optimal a value
+# two orders of magnitude below the optimum and saying so with a success. The
+# master of the Bundle 1.0 answers those very instances, with that very 1e-2,
+# in a second or two, so the value below is a bandage over something else:
+# asking that the residual be zero rather than merely small is what makes the
+# duals of these instances converge, in 50 to 600 iterations, on the value the
+# MILP computes.
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+0 # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+1 # number of double parameters
+
+dblNZEps 1e-12 # stop on a residual that is zero, not merely small
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the PrimalProximalHeur, overriding only intDoEasy=0 (its
+# default PPHCfg.txt uses intDoEasy=1, which would raise "all components are
+# easy" on these instances)
+
+*PPHCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+intDoEasy 0 # these instances have no non-easy component
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# end of 3rd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-PYPSA.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
