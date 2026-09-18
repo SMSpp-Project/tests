@@ -93,9 +93,9 @@ dblCtOff            0.01 # cut-off factor for pricing in MinQuad
 
 # now all the string parameters
 #str_LDSlv_ISName  ParallelBundleSolver # the inner Solver used by LagrangianDualSolver
-str_LDSlv_ISName           BundleSolver # the inner Solver used by LagrangianDualSolver
-str_LagBF_BSCfg            InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
-strLogFileName             log/RabaxLogFile   #file where save the log
+str_LDSlv_ISName           BundleSolver            # the inner Solver used by LagrangianDualSolver
+str_LagBF_BSCfg            InnerBSCfg.txt          # BlockSolverConfig for the LagBFunctions
+strLogFileName             log/RabaxLogFile.log    # File where save the log
 
 0 # number of vector-of-int parameters
 
