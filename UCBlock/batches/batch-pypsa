@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
 #
-# usage: batch-resilient < exe file > < par file > < log file >
+# usage: batch-pypsa < exe file > < par file > < log file >
 #        < exe file > = path of the executable file, default UCBlock_test
 #        < par file > = BlockSolverConfig file, default BSPar.txt
 #        < log file > = name of log file, default no log
 #
-# runs all the energy community instances and checks that the PyPsa objective
-# value matches the given reference one
+# runs all the PyPSA instances of pypsa-data/ucblock and pypsa-data/pollutants
+# and checks that the PyPsa objective value matches the given reference one;
+# those in pypsa-data/pollutants are 3n_3c_1gext_1h_1bext_2l with the global
+# constraints of the PyPsa network on the dispatch, translated by pypsa2smspp
+# into the pollutant budget constraints of UCBlock: a CO2 limit twice and half
+# the emissions of the unconstrained dispatch, a CO2 and a NOx limit, a CO2
+# floor, a CO2 equality, an operational limit on a carrier, and CO2 limits
+# where a store and a hydro storage unit contribute through their final level
+# (the instances are written by test/pollutant_generator.py of pypsa2smspp)
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
-# all the resilient instances are pure-LD subproblems on a single
+# all the PyPSA instances are pure-LD subproblems on a single
 # ECNetworkBlock-like component: BundleSolver requires intDoEasy=0, so the
 # EASY variant is the default here (the standard BSPar.txt, intDoEasy=1,
 # would raise "BundleSolver: all components are easy, this is no supported").
@@ -47,11 +54,22 @@ REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.147874238e+07
 REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-6.883586038e+04
 REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=2.399258678e+05
 
+# the instances with pollutant budget constraints
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_200.nc]=1.671547247e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_50.nc]=6.751130209e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_nox.nc]=5.293804195e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_min.nc]=1.807113140e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_ccgt_limit.nc]=6.513045862e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_h2.nc]=6.833593826e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_eq.nc]=2.273162064e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_hydro.nc]=8.196633457e+10
+
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 for wf in 0 1 2; do
 
-    for what in ../../UCBlock/data/nc4/resilient-data/smspp_*.nc; do
+    for what in ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_*.nc \
+                ../../UCBlock/data/nc4/pypsa-data/pollutants/smspp_*.nc; do
 
         # skip if pattern did not match any file
         if [ ! -f "$what" ]; then

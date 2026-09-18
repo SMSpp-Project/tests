@@ -24,6 +24,7 @@ MMCFBlock/gen/JLF
 PolyhedralFunction/PolyhedralFunction_test
 PolyhedralFunctionBlock/PolyhedralFunctionBlock_test
 QuadraticTests/quad_test
+SingleFlowDCRBlock/SingleFlowDCRBlock_test
 ThermalUnitBlock_Solver/TUDPS_test
 TwoStageStochasticBlock/TSSB_test
 MultiStageStochasticBlock/MSSB_test

@@ -18,7 +18,7 @@
 #
 # NOTE: the inner Block is solved by Gurobi, see BSCfg1.txt: HiGHS grinds for a
 # thousand seconds on these instances and then reports an error. Switching that
-# file leaves batch-resilient identical, verified line by line.
+# file leaves batch-pypsa identical, verified line by line.
 #
 # NOTE: these runs are given an initial point, and it is not optional. Over
 # part of the design space the inner Block is infeasible, because scaling the
@@ -59,7 +59,7 @@ REF_OBJ[smspp_stoch_mssb_c3_d3_both.nc]=5.017759647e+09
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../InvestmentBlock/data/nc4/resilient-data/stochastic/smspp_*.nc; do
+for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
 
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then

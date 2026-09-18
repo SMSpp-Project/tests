@@ -58,7 +58,7 @@ Method        1   # 0 = primal, 1 = dual simplex, 2 = barrier: the multipliers
                   # the presolve is left at its default here, since with
                   # it off the Lagrangian dual and the heuristic end in
                   # error on the sector-coupled instances of
-                  # batch-resilient, five of whose thirty-six runs are
+                  # batch-pypsa, five of whose thirty-six runs are
                   # solved to the reference value only with it on
 NumericFocus  1   # 0 = auto, 1..3 = increasing precision focus: the master
                   # is small and re-solved thousands of times, so whatever

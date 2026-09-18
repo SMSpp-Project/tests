@@ -84,8 +84,9 @@ The following tests are provided:
   any `CDASolver` able to handle `C05Function` in the `Objective` (such as
   `BundleSolver`), any `CDASolver` able to handle Linear Programs (such as
   `CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block` for
-  Unit-Commitment problems, as well as for quite a lot of the mechanics
-  of the SMS++ core library.
+  Unit-Commitment problems (including the pollutant budget constraints, both
+  against PyPSA and on small instances with known optima), as well as for
+  quite a lot of the mechanics of the SMS++ core library.
 
 - [`LukFiBlock`](LukFiBlock): a very simple main for running tests with
   [LukFiBlock](https://gitlab.com/smspp/lukfiblock). It just creates one
@@ -96,6 +97,12 @@ The following tests are provided:
   `MCFSolver`, `MILPSolver` and its derived classes (`CPXMILPSolver` and
   `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
   core library.
+
+- [`MILPSolver`](MILPSolver): solves the same small Linear Program with each
+  `:MILPSolver` in the build, its `Variable` and `Constraint` being grouped in
+  every shape a `Block` allows (single arrays, `std::vector` of `std::vector`,
+  `boost::multi_array` of `std::vector` or of `std::list`), and checks that the
+  optimum, the duals and the primal solution do not depend on the shape.
 
 - [`MMCFBlock`](MMCFBlock), a tester which provides initial tests
   for `MMCFBlock` (in particular, a way to retrieve/generate some sets of
@@ -133,6 +140,15 @@ The following tests are provided:
   consensus structure, whose chunks it relaxes into one independent SVM each.
   It also changes the training problem under the `Solver` and checks that they
   keep agreeing after each change.
+
+- [`SingleFlowDCRBlock`](SingleFlowDCRBlock), a tester of the eponymous
+  `Block` for single-flow Delay-Constrained Routing problems: a random
+  instance is built around a source-sink path whose delay the deadline is
+  set from, so that the instance is always feasible and the deadline as
+  tight as one wants it, and it is then solved by every `Solver` the
+  `BlockSolverConfig` registers, typically a `:MILPSolver` on either of the
+  two formulations of the problem and the `SingleFlowDCRBendersSolver`,
+  cross-checking what they answer and the `Solution` each of them produces.
 
 - [`ThermalUnitBlock_Solver`](ThermalUnitBlock_Solver), a tester for the
   `ThermalUnitExtDPSolver` specialised Dynamic Programming `:Solver` for

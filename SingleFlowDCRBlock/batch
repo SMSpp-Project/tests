@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file > < par file > < block config >
+#        < exe file >     = path of the executable file, default
+#                           ./SingleFlowDCRBlock_test
+#        < par file >     = BlockSolverConfig file, default BSPar.txt
+#        < block config > = BlockConfig file, default DCRCfg-socp.txt
+#
+# sweeps SingleFlowDCRBlock_test over a range of network sizes, 5 seeds
+# each, and over three values of the "tightness" of the deadline: 1.05 is
+# just above the delay of the one path the instance is built around, so
+# that few routings are feasible and the delay constraint is what decides,
+# while at 4 the deadline is loose and the problem is essentially a
+# min-cost path
+#
+# the SingleFlowDCRBendersSolver stops on its own criterion and does not
+# declare how much of a gap it leaves, so "-E ,inf" holds it to the base
+# Solver contract alone, i.e. to the interval [ get_lb() , get_ub() ]
+# containing the optimum
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../batch_common.sh"
+
+exe=${1:-./SingleFlowDCRBlock_test}
+par=${2:-BSPar.txt}
+bcf=${3:-DCRCfg-socp.txt}
+
+for n in 10 20 40; do
+
+  m=$(( 3 * n ))
+
+  for t in 1.05 1.5 4; do
+    for (( seed = 0 ; seed < 5 ; seed++ )); do
+
+      run_test "$exe" -B "$bcf" -S "$par" -E ,inf -n "$n" -m "$m" \
+               -t "$t" -e "$seed"
+
+    done # seed
+  done   # t
+
+done     # n
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

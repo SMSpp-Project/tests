@@ -109,8 +109,8 @@ each of them can also be set through the environment (`GEN`, `SOLVE`,
 
 ## Instances
 
-UC instances with renewables live in `UCBlock/data/nc4/EC_Data`. Only the
-`_TUB` instances have a ThermalUnitBlock, so only they support `cssc`.
+UC instances with renewables live in `UCBlock/data/nc4/EC_Data/ucblock`. Only
+the `_TUB` instances have a ThermalUnitBlock, so only they support `cssc`.
 
 - Support cssc (`_TUB`): `EC_CO_Test_TUB`, `EC_CO_Test_TUB_NB`,
   `EC_NC_Test_TUB`, `EC_NC_Test_TUB_NB`.

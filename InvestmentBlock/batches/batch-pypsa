@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# usage: batch-resilient < exe file > < bpar file > < spar file > < log file >
+# usage: batch-pypsa < exe file > < bpar file > < spar file > < log file >
 #        < exe file > = path of the executable file, default InvestmentBlock_test
 #        < bpar file > = BlockConfig file, default InnerBCfg.txt
 #        < spar file > = BlockSolverConfig file, default BSPar.txt
@@ -39,7 +39,7 @@ REF_OBJ[smspp_inv_2n_1c_1g_1b_ext.nc]=4.168985026e+08
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../InvestmentBlock/data/nc4/resilient-data/smspp_*.nc; do
+for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
 
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then

@@ -23,6 +23,15 @@ if (TARGET SMS++::MILPSolver)
              COMMAND MILPSolver_test
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+    add_executable(MILPSolver_groups_test groups.cpp)
+    target_link_libraries(MILPSolver_groups_test PRIVATE SMS++::MILPSolver)
+
+    smspp_install(MILPSolver_groups_test)
+
+    add_test(NAME MILPSolver_test/groups
+             COMMAND MILPSolver_groups_test
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
     # ----- Labels ---------------------------------------------------------- #
     smspp_label_tests()
 

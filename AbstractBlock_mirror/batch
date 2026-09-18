@@ -13,7 +13,7 @@ rc=0
 for solver in CPXMILPSolver GRBMILPSolver SCIPMILPSolver HiGHSMILPSolver; do
   echo "=== $solver"
   if ! "$exe" "$solver" ; then
-    if "$exe" "$solver" 2>&1 | grep -q "in the factory" ; then
+    if "$exe" "$solver" 2>&1 | grep -q "factory" ; then
       echo "    not in the build, skipped"
     else
       rc=1

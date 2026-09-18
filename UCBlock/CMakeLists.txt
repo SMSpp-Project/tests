@@ -34,6 +34,12 @@ if (TARGET SMS++::UCBlock)
 
     smspp_install(UCBlock_test)
 
+    # the pollutant budget constraints, on instances the tester writes itself
+    if (TARGET SMS++::MILPSolver)
+        add_test(NAME UCBlock_test/pollutant
+                 COMMAND UCBlock_test --pollutant)
+    endif ()
+
     # Create a test fixture to generate .nc4 files by running extract_uc_nc4.
     # This test will build and run the extract_uc_nc4 target
     add_test(NAME extract_uc_nc4
@@ -43,7 +49,7 @@ if (TARGET SMS++::UCBlock)
                          PROPERTIES FIXTURES_SETUP uc_data_extracted)
 
     # Register every batch: each one covers a family of instances (academic,
-    # plan4res, energy community, resilient, AC OPF) and cross-checks all the
+    # plan4res, energy community, PyPSA, AC OPF) and cross-checks all the
     # Solver its BlockSolverConfig attaches, so they are independent and can be
     # run, selected and timed one by one.
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
