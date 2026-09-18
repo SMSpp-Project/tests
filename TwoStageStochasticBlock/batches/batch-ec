@@ -53,9 +53,9 @@ REF_OBJ[TSSB_EC_NC_Test_TUB_NB.nc4]=3.717360943e+06
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../UCBlock/data/nc4/EC_Data/TSSB_EC_CO_*.nc4 \
-            ../../UCBlock/data/nc4/EC_Data/TSSB_EC_NA_*.nc4 \
-            ../../UCBlock/data/nc4/EC_Data/TSSB_EC_NC_*.nc4; do
+for what in ../../UCBlock/data/nc4/EC_Data/tssb/TSSB_EC_CO_*.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/tssb/TSSB_EC_NA_*.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/tssb/TSSB_EC_NC_*.nc4; do
 
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then

@@ -13,12 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
   the instances it reads are in `data/nc4/pypsa-data` instead of
   `data/nc4/resilient-data`, the folder that holds all the networks
-  translated from PyPSA
+  translated from PyPSA, one sub-folder per kind of problem: `ucblock`,
+  `pollutants`, `tssb` (whose files are named after the perturbation, instead
+  of lying in a sub-folder each) and `mssb`; the instances of `EC_Data` are
+  divided in the same way, in `ucblock`, `tssb` and `mssb`
 
 ### Added 
 
 - the PyPSA instances with the pollutant budget constraints of `UCBlock`
-  in `pypsa-data/`, run by `UCBlock/batches/batch-pypsa`:
+  in `pypsa-data/pollutants/`, run by `UCBlock/batches/batch-pypsa`:
   a PyPSA network with a CO2 limit twice and half the emissions of the
   unconstrained dispatch, a CO2 and a NOx limit, a CO2 floor, a CO2 equality,
   an operational limit on a carrier, and CO2 limits where a store and a hydro

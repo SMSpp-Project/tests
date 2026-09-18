@@ -22,34 +22,33 @@ DEFAULT_SLV=0
 parse_batch_args "$@"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
-# each entry: [ perturbation ] = PyPsa objective value
+# each entry: [ file name ] = PyPsa objective value
 # (Obj_PyPSA column of the summary_all_cases.csv produced by the
 # transformation_pypsa_smspp harness; same single instance
-# network_small_fewsectors__snap100__scen3 perturbed in four ways).
+# network_small_fewsectors__snap100__scen3 perturbed in four ways, the
+# perturbation being the last part of the file name).
 
 declare -A REF_OBJ
 
-REF_OBJ[test_tssb_demand]=4.822693602e+09
-REF_OBJ[test_tssb_maxpower]=3.812776176e+09
-REF_OBJ[test_tssb_hydroinflow]=3.742200254e+09
-REF_OBJ[test_tssb_complete]=4.920921646e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_demand.nc]=4.822693602e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_maxpower.nc]=3.812776176e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_hydroinflow.nc]=3.742200254e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_complete.nc]=4.920921646e+09
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# the four perturbed instances share the same file name, so they are kept in
-# separate sub-folders and the reference is keyed by the sub-folder name.
 
-for what in ../../UCBlock/data/nc4/pypsa-data/test_tssb_*/smspp_*_temp.nc; do
+for what in ../../UCBlock/data/nc4/pypsa-data/tssb/smspp_*.nc; do
 
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then
       continue
     fi
 
-    pert=$(basename "$(dirname "$what")")
-    ref=${REF_OBJ[$pert]}
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
 
     if [ -z "$ref" ]; then
-      echo "No reference objective defined for instance: $pert"
+      echo "No reference objective defined for file: $base"
       exit 1
     fi
 
