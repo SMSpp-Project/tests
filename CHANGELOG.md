@@ -33,6 +33,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   older state of the conversion, and one instance is named after its Excel
   case, `2n_1c_1g_1b_2l` instead of `2n_1c_1g_1b`
 
+- the two-level scenario trees of `pypsa-data/mssb`, and the ones the
+  `InvestmentBlock` runs with the investment stated outside the scenarios, are
+  written by `test/tree_instance_generator.py` of pypsa2smspp from the trees
+  `references/gen_resilient_tree.py` draws with a fixed seed, each form of a
+  tree being held to the objective value PyPSA computes on the equivalent flat
+  network. The reference values change, the instances in place having been
+  emitted from trees that were drawn again since
+
 - `UCBlock/batches/batch-pypsa` says, for the two instances whose Lagrangian
   dual stops on its own gap, what the interval of that Solver is worth, the
   cross-check holding it to that instead of to the accuracy the Solver was
