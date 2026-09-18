@@ -47,10 +47,10 @@ parse_batch_args "$@"
 
 declare -A REF_OBJ
 
-REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_renewables.nc]=1.274865528e+10
-REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_hydro.nc]=1.218231184e+10
-REF_OBJ[smspp_network_small_fewsectors__snap100__c3_d3_both.nc]=1.274865528e+10
-REF_OBJ[smspp_network_small_fewsectors__snap100__c4_d3_both.nc]=1.219492088e+10
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_renewables.nc]=4.604366815e+09
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_hydro.nc]=4.470631969e+09
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_both.nc]=4.604366815e+09
+REF_OBJ[smspp_network_small_fewsectors__snap24__c4_d3_both.nc]=4.365147554e+09
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
