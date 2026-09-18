@@ -3,8 +3,8 @@
 #
 # A txt description of a BlockSolverConfig for the UCBlock translated from a
 # PyPSA network: it is BSPar-EASY.txt with one parameter of the Bundle
-# changed, dblNZEps, whose default value stops the Bundle of this line at the
-# first iteration [see the 2nd ComputeConfig].
+# changed, intWZNorm, whose value here stops the Bundle at the first
+# iteration [see the 2nd ComputeConfig].
 #
 #   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
@@ -37,29 +37,29 @@ PrimalProximalHeur    # name of 3rd Solver
 # ComputeConfig of the LagrangianDualSolver; it mostly is the
 # ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver.
 # LDCfg.txt already has intDoEasy=0, which is what these all-easy instances
-# need; what it does not have is a dblNZEps this line can live with. That
-# parameter is the threshold under which the norm of the residual is taken to
-# be zero, hence the point to be optimal, and here the Bundle finds a residual
-# of 2.69e-3 at the first iteration and stops on it, calling optimal a value
-# two orders of magnitude below the optimum and saying so with a success. The
-# master of the Bundle 1.0 answers those very instances, with that very 1e-2,
-# in a second or two, so the value below is a bandage over something else:
-# asking that the residual be zero rather than merely small is what makes the
-# duals of these instances converge, in 50 to 600 iterations, on the value the
-# MILP computes.
+# need; what it does not have is an intWZNorm these instances can live with.
+# That parameter says which norm of the residual the stopping condition uses
+# and how dblNZEps is read, and the 8 of the 10 of LDCfg.txt asks for a
+# threshold scaled by the norm of the first full subgradient, which was set
+# for the plan4res instances. Here the subgradients of the units are the
+# productions on the very rows the demand sits on, so that norm is 7.27e+06
+# against an aggregate of 1.96e+04, and 1e-2 of it stops the Bundle at the
+# first iteration on a value two orders of magnitude below the optimum. Read
+# as the absolute value it is on develop, the duals of these instances
+# converge in 50 to 600 iterations on the value the MILP computes.
 
 *LDCfg.txt +
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-0 # number of integer parameters
+1 # number of integer parameters
 
-# now all the integer parameters
+intWZNorm 2 # the threshold of the residual is the absolute one
+
+0 # number of double parameters
+
+# now all the double parameters
 # [none]
-
-1 # number of double parameters
-
-dblNZEps 1e-12 # stop on a residual that is zero, not merely small
 
 0 # number of string parameters
 

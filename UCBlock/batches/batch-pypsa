@@ -68,15 +68,15 @@ REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_hydro.nc]=7.898750861e+10
 # the instances the Lagrangian dual is not run on - - - - - - - - - - - - - -
 # The instances whose lines are extendable, the ones whose name carries an
 # "lext", die in "Bundle::FormD: unrecoverable MP failure", a few "error in
-# MP, emergency delete" having preceded it: on one of them the dual has by
-# then reached the optimum, 4.6828920565e+06 against the 4.682891301e+06 of
-# the MILP, on another it is nowhere near it, and which formulation of the
-# network is asked for decides whether it happens at all. The tolerances of
-# the master are not the reason, since with FeasibilityTol and OptimalityTol
-# at 1e-7 rather than 1e-9 the first dies at iteration 519 instead of 582;
-# the master of the Bundle 1.0 answers them all, which is where this belongs.
-# They are run against their reference by the MILP alone until the master of
-# this line is mended.
+# MP, emergency delete" having preceded it, and which formulation of the
+# network is asked for decides whether it happens at all: on one of them the
+# dual has by then reached the optimum, 4.6828920565e+06 against the
+# 4.682891301e+06 of the MILP. It is not the tolerances of the master, since
+# with FeasibilityTol and OptimalityTol at 1e-7 rather than 1e-9 that one dies
+# at iteration 519 instead of 582, nor the floor of t, which is nine orders
+# below the 2.24e-01 t has there; the master of the Bundle 1.0 answers them
+# all. They are run against their reference by the MILP alone until the master
+# of this line is mended.
 
 MILP_ONLY_PATTERN="lext"
 

@@ -50,16 +50,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the byte
 
 - `UCBlock/batches/batch-pypsa` runs with its own BlockSolverConfig,
-  `BSPar-PYPSA.txt`, which is `BSPar-EASY.txt` with `dblNZEps` at 1e-12 rather
-  than the 1e-2 of `LDCfg.txt`, that threshold being the one under which the
-  norm of the residual is taken to be zero and the point therefore optimal.
-  It is a bandage: on this line the Bundle finds a residual of 2.69e-3 at the
-  first iteration and stops there, reporting success on a value two orders of
-  magnitude below the optimum, while the master of the 1.0 solves those very
-  instances, with that very 1e-2, in a second or two. Asking for a residual
-  that is zero and not merely small is what keeps the batch meaningful
-  meanwhile; `InvestmentBlock/batches/batch-pypsa` fails when it finds no
-  instance at all, which is how a batch that has tested nothing was until now
+  `BSPar-PYPSA.txt`, which is `BSPar-EASY.txt` with `intWZNorm` at 2 rather
+  than the 10 of `LDCfg.txt`: that parameter says which norm of the residual
+  the stopping condition uses and how `dblNZEps` is read, and the 8 of that 10
+  asks for a threshold scaled by the norm of the first full subgradient, which
+  the plan4res instances want. The subgradients of these instances are the
+  productions of the units on the very rows the demand sits on, so that norm
+  is 7.27e+06 against an aggregate of 1.96e+04, and 1e-2 of it stops the
+  Bundle at the first iteration on a value two orders of magnitude below the
+  optimum; read as the absolute value it is on develop, their duals converge
+  in 50 to 600 iterations on the value the MILP computes;
+  `InvestmentBlock/batches/batch-pypsa` fails when it finds no instance at
+  all, which is how a batch that has tested nothing was until now
   indistinguishable from one where everything went well
 
 - `check_relaxation_solutions()` holds the point a relaxation reconstructs to
@@ -82,9 +84,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `UCBlock/batches/batch-pypsa` runs the instances whose lines are extendable
   with the MILP alone: on this line their master dies in "Bundle::FormD:
-  unrecoverable MP failure", and which formulation of the network is asked for
-  decides whether it happens at all, while the master of the 1.0 answers them
-  all; the instances are worth testing against their reference meanwhile
+  unrecoverable MP failure", on one of them with the dual by then on the
+  optimum, and which formulation of the network is asked for decides whether
+  it happens at all, where the master of the 1.0 answers them all; the
+  instances are worth testing against their reference meanwhile
 
 ### Added 
 
