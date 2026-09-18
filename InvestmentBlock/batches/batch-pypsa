@@ -47,12 +47,16 @@ REF_OBJ[smspp_tssb_2n_2gext_1l.nc]=1.508768621e+09
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+ran=0
+
 for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
 
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then
       continue
     fi
+
+    ran=$((ran + 1))
 
     base=$(basename "$what")
     ref=${REF_OBJ[$base]}
@@ -65,5 +69,12 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
     run_test "$exe" "$what" "$bpar" "$spar" 0 "$ref"
 
 done
+
+# a batch that has found no instance at all has tested nothing, and saying so
+# is the only way to tell it apart from one where everything went well
+if [ "$ran" -eq 0 ]; then
+    echo "No instance found in ../../InvestmentBlock/data/nc4/pypsa-data"
+    exit 1
+fi
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
