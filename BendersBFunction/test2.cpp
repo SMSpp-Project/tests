@@ -34,8 +34,6 @@
 #include <fstream>
 #include <string>
 
-#undef NDEBUG
-#include <cassert> 
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------- NAMESPACE ------------------------------------*/
@@ -57,6 +55,26 @@ using matrix = std::vector< std::vector< double > >;
 const auto inf = Inf< double >();
 
 std::string solver_filename;
+
+/*--------------------------------------------------------------------------*/
+/*-------------------------------- CHECKING --------------------------------*/
+/*--------------------------------------------------------------------------*/
+/* Each check is reported and counted rather than assert()-ed, so that a run
+ * says which of them failed and how many, and the exit status tells the suite
+ * whether the tester passed: an abort on the first failure says neither. */
+
+bool AllPassed = true;
+
+bool check( bool passed , const char * what , int line )
+{
+ if( ! passed ) {
+  AllPassed = false;
+  std::cout << RED( KO ) << " line " << line << ": " << what << std::endl;
+  }
+ return( passed );
+ }
+
+#define CHECK( x ) check( ( x ) , #x , __LINE__ )
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------- FUNCTIONS --------------------------------*/
@@ -519,7 +537,7 @@ void test_linearization( Block * benders_block ,
   ( dynamic_cast< FRealObjective * >
     ( benders_block->get_objective() )->get_function() );
 
- assert( benders_function );
+ if( ! CHECK( benders_function ) ) return;
 
  const auto num_y = benders_function->get_num_active_var();
 
@@ -527,7 +545,7 @@ void test_linearization( Block * benders_block ,
  std::vector< ColVariable * > y( num_y );
  for( Index i = 0 ; i < y.size() ; ++i ) {
   y[ i ] = dynamic_cast< ColVariable * >( benders_function->get_active_var( i ) );
-  assert( y[ i ] );
+  if( ! CHECK( y[ i ] ) ) return;
   optimal_solution[ i ] = y[ i ]->get_value();
  }
 
@@ -538,13 +556,13 @@ void test_linearization( Block * benders_block ,
   std::vector< double > g( num_y , std::numeric_limits< double >::quiet_NaN() );
   for( Index j = 0 ; j < num_y ; ++j )
    y[ j ]->set_value( y_values[ i ][ j ] );
-  assert( benders_function->compute() == status[ i ] );
-  assert( benders_function->get_value() == solution_values[ i ] );
+  CHECK( benders_function->compute() == status[ i ] );
+  CHECK( benders_function->get_value() == solution_values[ i ] );
 
   if( status[ i ] == Solver::kOK )
-   assert( benders_function->has_linearization() );
+   CHECK( benders_function->has_linearization() );
   else
-   assert( benders_function->has_linearization( false ) );
+   CHECK( benders_function->has_linearization( false ) );
 
   auto alpha = benders_function->get_linearization_constant();
   benders_function->get_linearization_coefficients( g.data() );
@@ -553,20 +571,20 @@ void test_linearization( Block * benders_block ,
    double gy = 0;
    for( Index j = 0 ; j < g.size() ; ++j )
     gy += g[ j ] * y[ j ]->get_value();
-   assert( alpha + gy > 0 );
+   CHECK( alpha + gy > 0 );
   }
   else if( status[ i ] == Solver::kOK ) {
    // test linearization on y
    double gy = 0;
    for( Index j = 0 ; j < g.size() ; ++j )
     gy += g[ j ] * y[ j ]->get_value();
-   assert( solution_values[ i ] == alpha + gy );
+   CHECK( solution_values[ i ] == alpha + gy );
 
    // test linearization on the optimal solution
    gy = 0;
    for( Index j = 0 ; j < g.size() ; ++j )
     gy += g[ j ] * optimal_solution[ j ];
-   assert( alpha + gy <= optimal_value );
+   CHECK( alpha + gy <= optimal_value );
   }
  }
 }
@@ -648,10 +666,10 @@ void test( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == - 2.5 );
+ CHECK( optimal_value == - 2.5 );
  delete( lp );
  delete( solver );
 
@@ -665,9 +683,9 @@ void test( bool invert ) {
  auto block_solver_config = build_solver_config( solver_filename );
  block_solver_config->apply( benders_block );
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  // Test linearizations
@@ -749,10 +767,10 @@ void test2( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == 1.0 );
+ CHECK( optimal_value == 1.0 );
  delete( lp );
  delete( solver );
 
@@ -768,9 +786,9 @@ void test2( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  // Test linearizations
@@ -842,10 +860,10 @@ void test3( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == 1.0 );
+ CHECK( optimal_value == 1.0 );
  delete( lp );
  delete( solver );
 
@@ -861,9 +879,9 @@ void test3( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  // Test linearizations
@@ -935,10 +953,10 @@ void test4( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == 1.0 );
+ CHECK( optimal_value == 1.0 );
  delete( lp );
  delete( solver );
 
@@ -954,9 +972,9 @@ void test4( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  // Test linearizations
@@ -1025,10 +1043,10 @@ void test5( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == -2.0 );
+ CHECK( optimal_value == -2.0 );
  delete( lp );
  delete( solver );
 
@@ -1044,9 +1062,9 @@ void test5( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  // Test linearizations
@@ -1120,10 +1138,10 @@ void test6( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == 1 );
+ CHECK( optimal_value == 1 );
  delete( lp );
  delete( solver );
 
@@ -1139,9 +1157,9 @@ void test6( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  // Test linearizations
@@ -1211,10 +1229,10 @@ void test7( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == -4 );
+ CHECK( optimal_value == -4 );
  delete( lp );
  delete( solver );
 
@@ -1230,9 +1248,9 @@ void test7( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  // Test linearizations
@@ -1298,10 +1316,10 @@ void test8( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == 1 );
+ CHECK( optimal_value == 1 );
  delete( lp );
  delete( solver );
 
@@ -1317,9 +1335,9 @@ void test8( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  block_solver_config->clear();
@@ -1332,7 +1350,7 @@ void test8( bool invert ) {
   ( dynamic_cast< FRealObjective * >
     ( benders_block->get_objective() )->get_function() );
 
- assert( benders_function );
+ if( ! CHECK( benders_function ) ) return;
 
  auto y = dynamic_cast< ColVariable * >( benders_function->get_active_var( 0 ) );
  y->set_value( 1 );
@@ -1395,10 +1413,10 @@ void test9( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == 1 );
+ CHECK( optimal_value == 1 );
  delete( lp );
  delete( solver );
 
@@ -1414,9 +1432,9 @@ void test9( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  block_solver_config->clear();
@@ -1429,7 +1447,7 @@ void test9( bool invert ) {
   ( dynamic_cast< FRealObjective * >
     ( benders_block->get_objective() )->get_function() );
 
- assert( benders_function );
+ if( ! CHECK( benders_function ) ) return;
 
  auto y = dynamic_cast< ColVariable * >( benders_function->get_active_var( 0 ) );
  y->set_value( 1 );
@@ -1493,10 +1511,10 @@ void test10( bool invert ) {
  lpbsc->clear();
 
  auto solver = ( lp->get_registered_solvers() ).front();
- assert( solver->compute() == Solver::kOK );
- assert( solver->has_var_solution() );
+ CHECK( solver->compute() == Solver::kOK );
+ CHECK( solver->has_var_solution() );
  auto optimal_value = solver->get_var_value();
- assert( optimal_value == -1 );
+ CHECK( optimal_value == -1 );
  delete( lp );
  delete( solver );
 
@@ -1512,9 +1530,9 @@ void test10( bool invert ) {
  block_solver_config->clear();
 
  auto bundle_solver = benders_block->get_registered_solvers().front();
- assert( bundle_solver->compute() == Solver::kOK );
- assert( bundle_solver->has_var_solution() );
- assert( bundle_solver->get_var_value() == optimal_value );
+ CHECK( bundle_solver->compute() == Solver::kOK );
+ CHECK( bundle_solver->has_var_solution() );
+ CHECK( bundle_solver->get_var_value() == optimal_value );
  bundle_solver->get_var_solution();
 
  block_solver_config->clear();
@@ -1527,7 +1545,7 @@ void test10( bool invert ) {
   ( dynamic_cast< FRealObjective * >
     ( benders_block->get_objective() )->get_function() );
 
- assert( benders_function );
+ if( ! CHECK( benders_function ) ) return;
 
  auto y = dynamic_cast< ColVariable * >( benders_function->get_active_var( 0 ) );
  y->set_value( 1 );
@@ -1583,7 +1601,7 @@ void test11( bool invert ) {
   ( dynamic_cast< FRealObjective * >
     ( benders_block->get_objective() )->get_function() );
 
- assert( benders_function );
+ if( ! CHECK( benders_function ) ) return;
 
  auto y = dynamic_cast< ColVariable * >( benders_function->get_active_var( 0 ) );
  y->set_value( 1 );
@@ -1633,9 +1651,16 @@ int main( int argc , char ** argv )
 
  solver_filename = argv[ 1 ];
 
+ // the two runs are the same tests with the two orders of the data mapping
  run( false );
  run( true );
- return( 0 );
+
+ if( AllPassed )
+  std::cout << GREEN( All tests passed!! ) << std::endl;
+ else
+  std::cout << RED( Shit happened!! ) << std::endl;
+
+ return( AllPassed ? 0 : 1 );
 }
 
 /*--------------------------------------------------------------------------*/
