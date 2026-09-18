@@ -75,6 +75,7 @@ REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_hydro.nc]=7.898750861e+10
 declare -A EPS
 
 EPS[smspp_2n_1c_1g_1b_2l.nc]=,2e-3,
+EPS[smspp_2n_1c_1gext_1bext_2l.nc]=,2e-3,
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
