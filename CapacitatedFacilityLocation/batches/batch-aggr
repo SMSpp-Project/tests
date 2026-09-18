@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#
+# usage: batch-aggr < exe file > < aggregations > < seeds > < log file >
+#        < exe file >      = path of the executable file, default ../CFL_test
+#        < aggregations >  = values of dblCmpAggr to try, default
+#                            "0 0.02 0.1 0.5 1"
+#        < seeds >         = values of intCmpAggrSeed to try, default 42
+#        < log file >      = name of the log file, default no log (stdout)
+#
+# Same Lagrangian-dual arrangement as batch-ld, i.e. B2 is a copy of the
+# CapacitatedFacilityLocationBlock in the knapsack formulation solved by a
+# LagrangianDualSolver with a BundleSolver driving the dual, run over a grid
+# of values of the *partial aggregation* of the components: dblCmpAggr = 0
+# leaves each of them a component of the master problem, 1 makes them a single
+# one, and x in between gives round( 1 / x ) groups. This is the arrangement
+# in which the subproblems are easy and the master problem is the expensive
+# part, which is where the aggregation is supposed to pay.
+#
+# The parameter is set in the ComputeConfig of the inner BundleSolver, i.e. in
+# BSPar2.txt, which is therefore rewritten for each value and put back as it
+# was at the end.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+# run from the LD config directory so CFL_test reads its config files
+# (BPar*, BSPar*, R3BCfg) there
+cd "$(dirname "$0")/../LD" || exit 1
+
+DATADIR=../../../CapacitatedFacilityLocationBlock/data
+
+CFL_test=${1:-../CFL_test}
+aggrs=${2:-"0 0.02 0.1 0.5 1"}
+seeds=${3:-"42"}
+mlf=${4:-}
+
+CFG=BSPar2.txt
+
+niter=0
+# wchg = 257 = change facility costs (bit 0) and the abstract representation
+# (+256)
+wchg=257
+rounds=40
+seed=0
+
+# put the configuration back as it was, whatever happens - - - - - - - - - -
+
+cp "${CFG}" "${CFG}.orig"
+trap 'mv -f "${CFG}.orig" "${CFG}"' EXIT
+
+# ORLib, a handful of the instances of batch-ld: this is a measure of the
+# aggregation, not a check of the formulation, so the same instances are run
+# once per value of the parameter rather than once per seed of the data
+
+for aggr in ${aggrs}; do
+  for cmpseed in ${seeds}; do
+
+    cp -f "${CFG}.orig" "${CFG}"
+    cfg_set_par "${CFG}" dblCmpAggr "${aggr}"
+    cfg_set_par "${CFG}" intCmpAggrSeed "${cmpseed}"
+
+    for f in 102 113 124 42 62 73 91 103 114 131; do
+
+      what=${DATADIR}/txt/ORLib/cap${f}.txt
+
+      run_timed "[aggr ${aggr} seed ${cmpseed} cap${f}]" \
+                "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
+
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
