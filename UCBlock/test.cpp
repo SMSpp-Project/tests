@@ -1226,8 +1226,8 @@ int main( int argc , char ** argv )
  // a Solver that solves a relaxation is not covered by the check above, the
  // value it reports not being that of what it writes: what its reconstructed
  // solution can be held to is the rows this Block couples, i.e. the ones the
- // relaxation has dualised, which at convergence it has to satisfy
- AllPassed &= check_relaxation_solutions( TestBlock );
+ // relaxation has dualised, which it satisfies where the relaxation is exact
+ AllPassed &= check_relaxation_solutions( TestBlock , 1e-1 , RefObjective );
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

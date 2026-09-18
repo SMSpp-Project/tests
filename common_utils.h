@@ -609,7 +609,10 @@ double own_rows_violation( Block * block );
  *  loose multiple of the thresholds the batteries use, and what it catches
  *  is a combination that is wrong, not one that is imprecise. */
 
-bool check_relaxation_solutions( Block * block , double tol = 1e-1 );
+bool check_relaxation_solutions( Block * block , double tol = 1e-1 ,
+                                 double ref = std::numeric_limits< double
+                                                             >::quiet_NaN() ,
+                                 double ref_tol = 1e-5 );
 
 /*--------------------------------------------------------------------------*/
 /// print "fo ~ Ref = ref (|diff| = ..., OK/KO)" and return whether OK

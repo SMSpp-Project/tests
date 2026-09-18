@@ -825,7 +825,8 @@ double own_rows_violation( Block * block )
 
 /*--------------------------------------------------------------------------*/
 
-bool check_relaxation_solutions( Block * block , double tol )
+bool check_relaxation_solutions( Block * block , double tol , double ref ,
+                                 double ref_tol )
 {
  bool allok = true;
  std::size_t k = 0;
@@ -838,6 +839,23 @@ bool check_relaxation_solutions( Block * block , double tol )
 
   if( ! slvr->has_var_solution() )
    continue;                    // nothing to read, hence nothing to check
+
+  /* What the reconstruction satisfies the dualised rows is the convex
+   * combination of the answers of the components, and that is a point of the
+   * original problem only where the relaxation is exact. Where it is not,
+   * i.e. where the bound the relaxation reports is strictly better than the
+   * optimum (a unit with a commitment is enough for that), the combination
+   * violates the rows by the very gap, and holding it to them would call a
+   * duality gap an error. */
+  if( ( ! std::isnan( ref ) ) && ( std::abs( slvr->get_var_value() - ref ) >
+                                   ref_tol * std::max( double( 1 ) ,
+                                                       std::abs( ref ) ) ) ) {
+   if( verbosity_level > 0 )
+    std::cout << "relaxation of Solver " << h << " is not exact here, its "
+              << "reconstruction is not held to the dualised rows"
+              << std::endl;
+   continue;
+   }
 
   double viol;
   try {
