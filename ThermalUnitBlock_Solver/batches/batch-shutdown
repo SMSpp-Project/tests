@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+#
+# usage: batch-shutdown < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#
+# runs a few 1UC academic instances with a shut-down cost, which the
+# instances themselves do not have: the tester gives the unit the cost of
+# the -d option at every instant before the Objective is generated, so that
+# the shut-down variables enter it, and the MILP and the DP must still agree
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../UCBlock/data/nc4/1UC_Data
+
+TUDPS_test=${1:-./TUDPS_test}
+par=BSCfg.txt
+
+seed=0
+wchg=135    # change fixed + linear + quadratic costs (+128: also regen the
+            # abstract representation, exercising the Modification path)
+rounds=5
+nchg=10
+pchg=0.6
+
+# a cost that leaves the schedule alone and one that is worth a few hours of
+# production, hence changes it
+for sdc in 100 50000; do
+  for i in 24; do
+    for j in 1 12 23; do
+      for h in 1 50 100; do
+
+        what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
+
+        # wf is bit-wise: 0-6 select the formulation (3bin/T/pt/DP/SU/SD/
+        # SUSD), +8 (PCuts) adds the perspective cuts
+        for wf in 0 1 2 3 4 5 6 8 9; do
+
+          run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
+                   -f "$wf" -n "$rounds" -m "$nchg" -q "$pchg" -d "$sdc"
+
+        done
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
