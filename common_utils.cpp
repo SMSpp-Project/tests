@@ -853,11 +853,8 @@ double own_rows_violation( Block * block )
   viol = std::max( viol , double( cnst.rel_viol() ) );
   };
 
- for( auto & sci : block->get_static_constraints() )
-  un_any_const_static( sci , see , un_any_type< FRowConstraint >() );
-
- for( auto & dci : block->get_dynamic_constraints() )
-  un_any_const_dynamic( dci , see , un_any_type< FRowConstraint >() );
+ block->for_each_constraint_group( [ & see ]( const BaseGroup & group ) {
+   group.for_each_as< FRowConstraint >( see ); } );
 
  return( viol );
 
