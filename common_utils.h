@@ -477,15 +477,19 @@ bool cross_check( const std::vector< SolverReading > & rd ,
                   std::string & verdict_out , double & diff_out );
 
 /*--------------------------------------------------------------------------*/
-/// print the parameters of every Solver in the Block tree, if -v 2 is given
-/** When verbosity_level >= 2, prints what print_parameters() says of every
- *  Solver registered to @p block or to any of its sub-Blocks, recursively,
- *  i.e., the value each parameter has been actually given, after the
- *  BlockSolverConfig, along with its default. The Solvers of the same class
- *  registered to Blocks of the same class and with the very same parameters,
- *  as those of the many sub-Blocks of a decomposition typically are, are
- *  printed once, with their number. It is the same printout as that of -v 2
- *  in the tools. A no-op when verbosity_level < 2. */
+/// print the parameters of the Solvers, if -v 2 or -v 3 is given
+/** Prints what print_parameters() says of the Solvers, i.e., the value each
+ *  parameter has been actually given, after the BlockSolverConfig, along
+ *  with its default. With verbosity_level == 2 these are only the Solvers
+ *  registered to @p block (for a Solver that wraps another one, as
+ *  LagrangianDualSolver does, the parameters of the wrapped one are shown
+ *  too, since they are in its index space); with verbosity_level >= 3 they
+ *  are those registered to any of its sub-Blocks as well, recursively. The
+ *  Solvers of the same class registered to Blocks of the same class and with
+ *  the very same parameters, as those of the many sub-Blocks of a
+ *  decomposition typically are, are printed once, with their number. It is
+ *  the same printout as that of -v 2 and -v 3 in the tools. A no-op when
+ *  verbosity_level < 2. */
 
 void print_solver_parameters( Block * block );
 

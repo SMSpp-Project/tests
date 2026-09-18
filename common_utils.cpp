@@ -587,8 +587,9 @@ void print_solver_parameters( Block * block )
    else
     ++it->count;
    }
-  for( auto sb : b->get_nested_Blocks() )
-   visit( sb );
+  if( verbosity_level >= 3 )
+   for( auto sb : b->get_nested_Blocks() )
+    visit( sb );
   };
  visit( block );
 
@@ -852,8 +853,10 @@ std::string help =
  "                                  problem exactly, and only the bound on\n"
  "                                  its side is one on this problem\n"
  "  -D, --dryrun                    skip the compute() call\n"
- "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic, 2 = debug,\n"
- "                                  with the Solver parameters)\n";
+ "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic,\n"
+ "                                  2 = debug, with the parameters of the\n"
+ "                                  Solvers of the Block, 3 = those of the\n"
+ "                                  sub-Blocks' Solvers too)\n";
 
 /*--------------------------------------------------------------------------*/
 // open an SMS++ nc4 file and check that it is one
