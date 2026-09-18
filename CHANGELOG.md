@@ -39,7 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `references/gen_resilient_tree.py` draws with a fixed seed, each form of a
   tree being held to the objective value PyPSA computes on the equivalent flat
   network. The reference values change, the instances in place having been
-  emitted from trees that were drawn again since
+  emitted from trees that were drawn again since, and so do the file names,
+  the trees now spanning a day of 24 instants rather than 100: over 100 the
+  MultiStageStochasticBlock of one of them ends in an error after eleven
+  minutes, and the InvestmentBlock over the flat form of another after
+  twenty-four
 
 - `UCBlock/batches/batch-pypsa` says, for the two instances whose Lagrangian
   dual stops on its own gap, what the interval of that Solver is worth, the
