@@ -96,6 +96,67 @@ print_header() {
 # option. Do NOT append -v here: tests that parse positional arguments by hand
 # would mis-read it.
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# set an algorithmic parameter in a ComputeConfig file, in place
+#
+#   cfg_set_par < file > < name > < value >
+#
+# adds the parameter to the file if it is not there, replaces its value if it
+# is, and keeps the count of the parameters of that section right. Which
+# section is used is read off the name, i.e. "int..." goes among the integer
+# parameters and "dbl..." among the double ones; any other prefix is an error.
+# The file is changed in place, so whoever calls this is expected to keep a
+# copy of the original and to put it back at the end [see batch-aggr].
+
+cfg_set_par() {
+    local _file=$1 _name=$2 _value=$3 _kind
+
+    case "${_name}" in
+        int*) _kind="integer" ;;
+        dbl*) _kind="double" ;;
+        *) echo "cfg_set_par: ${_name} is neither int... nor dbl..." >&2
+           return 1 ;;
+    esac
+
+    if grep -q "^${_name}[[:space:]]" "${_file}"; then
+        sed -i "s/^${_name}[[:space:]].*/${_name} ${_value}/" "${_file}"
+        return 0
+    fi
+
+    # not there: add it right after the line declaring how many there are,
+    # and increase that number by one
+    awk -v name="${_name}" -v value="${_value}" -v kind="${_kind}" '
+        $0 ~ ("^[0-9]+ # number of " kind " parameters") && ! done {
+            print $1 + 1 " # number of " kind " parameters"
+            print ""
+            print name " " value
+            done = 1
+            next
+        }
+        { print }
+    ' "${_file}" > "${_file}.tmp" && mv "${_file}.tmp" "${_file}"
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# run a test and report how long it took
+#
+#   run_timed < tag > < exe file > args...
+#
+# does what run_test does, and prints one line "<tag> time <seconds>" after
+# it, so that a batch sweeping a parameter leaves a log out of which the
+# times can be read without the solver having to print anything.
+
+run_timed() {
+    local _tag=$1
+    shift
+    local _t0 _t1
+    _t0=$( date +%s.%N )
+    run_test "$@"
+    _t1=$( date +%s.%N )
+    echo "${_tag} time $( awk -v a="${_t0}" -v b="${_t1}" 'BEGIN{ printf "%.2f" , b - a }' )"
+}
+
 run_test() {
     local _exe=$1
     shift
