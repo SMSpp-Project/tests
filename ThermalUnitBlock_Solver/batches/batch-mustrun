@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# usage: batch-mustrun < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#
+# runs a few 1UC academic instances as units that are on at every instant,
+# which is how a generator that PyPSA does not commit is written: the tester
+# gives the unit, with -u, a minimum up time longer than the horizon and the
+# initial state of a unit that is on before it, so that the commitment is
+# fixed everywhere and there is no start-up or shut-down variable. The MILP
+# and the DP must still agree, and they are also run with a shut-down cost on
+# top, which such a unit never pays
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../UCBlock/data/nc4/1UC_Data
+
+TUDPS_test=${1:-./TUDPS_test}
+par=BSCfg.txt
+
+seed=0
+wchg=135    # change fixed + linear + quadratic costs (+128: also regen the
+            # abstract representation, exercising the Modification path)
+rounds=5
+nchg=10
+pchg=0.6
+
+for i in 24; do
+  for j in 1 12 23; do
+    for h in 1 50 100; do
+
+      what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
+
+      # wf is bit-wise: 0-6 select the formulation (3bin/T/pt/DP/SU/SD/SUSD),
+      # +8 (PCuts) adds the perspective cuts
+      for wf in 0 1 2 3 9; do
+
+        run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
+                 -f "$wf" -n "$rounds" -m "$nchg" -q "$pchg" -u
+
+        run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
+                 -f "$wf" -n "$rounds" -m "$nchg" -q "$pchg" -u -d 5000
+
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
