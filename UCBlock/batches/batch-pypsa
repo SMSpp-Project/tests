@@ -80,19 +80,6 @@ REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_hydro.nc]=7.898750861e+10
 
 MILP_ONLY_PATTERN="lext"
 
-# what the point a relaxation reconstructs may violate - - - - - - - - - - -
-# On the instance below the Lagrangian dual closes on the optimum and stops
-# with an aggregate residual of 2e-17, i.e. the convex combination its master
-# holds does satisfy the rows the relaxation has dualised; the point that is
-# then written into the Block does not, and misses two node balance rows, two
-# equalities to zero, by 50 and 100. The two are not the same point, and which
-# one is wrong is with the authors of the bundle. Until then the instance is
-# run for what it does say, the value, and the violation is only reported.
-
-declare -A VIOL
-
-VIOL[smspp_2n_1c_1gext_1bext_2l.nc]=200
-
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 for wf in 0 1 2; do
@@ -114,8 +101,6 @@ for wf in 0 1 2; do
           exit 1
         fi
 
-        viol=${VIOL[$base]}
-
         # an instance the master cannot cope with is run with the
         # BlockSolverConfig that holds the MILP alone, hence with no
         # relaxation to declare
@@ -123,7 +108,6 @@ for wf in 0 1 2; do
           opts=( -S BSPar-MILP.txt )
         else
           opts=( -S "$par" -R "$REL" )
-          [ -n "$viol" ] && opts+=( -V "$viol" )
         fi
 
         run_test "$exe" "$what" "${opts[@]}" \

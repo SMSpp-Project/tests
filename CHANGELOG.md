@@ -77,10 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - the tester of `UCBlock` takes `-V`, how much the point a relaxation
   reconstructs may violate the rows it has dualised, the default being the
-  1e-1 that was written in the test; `UCBlock/batches/batch-pypsa` raises it
-  for the one instance where the Lagrangian dual stops with an aggregate
-  residual of 2e-17, hence with a convex combination that satisfies those
-  rows, and the point written into the Block misses two of them by 50 and 100
+  1e-1 that was written in the test
 
 - `UCBlock/batches/batch-pypsa` runs the instances whose lines are extendable
   with the MILP alone: on this line their master dies in "Bundle::FormD:
