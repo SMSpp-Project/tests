@@ -63,6 +63,23 @@ The usage of the executable is the following:
        -r, --ref <x>      reference objective value
        -R, --reopt        also change the training problem under the Solver,
                           re-solving after each change
+       -d, --data <file>  a data set in the sparse format of LIBSVM, which
+                          replaces the generated one
+       -Y, --kmemory <MB> memory the Gram matrix may take: under it the whole
+                          matrix is built, over it its rows are computed and
+                          cached [1024]
+       -A, --noabstract   leave the Block in its physical representation,
+                          which is all a Solver reading it needs
+       -G, --grid <n>     train over a grid of n values of C, reporting the
+                          total time and the iterations of each Solver [0]
+       -P, --pgrid <n>    walk that grid at n values of the parameter of the
+                          kernel as well [0]
+       -O, --order <n>    in which order the grid is walked [0]: 0 = C
+                          increasing, 1 = C decreasing, 2 = C back and forth,
+                          3 = the kernel innermost
+       -I, --incremental <n>
+                          learn n more samples one at a time, timing each
+                          Solver over the additions [0]
 
 `./SVM_test --help` lists the standard options as well. If a `file` is given
 it is read as a `SVMBlock` in netCDF format and no data set is generated.
