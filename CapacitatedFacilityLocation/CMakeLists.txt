@@ -10,6 +10,7 @@ if (NOT hasParent)
     find_package(MILPSolver)
     find_package(MCFClassSolver)
     find_package(MCFLemonSolver)
+    find_package(BendersDecompositionSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -98,6 +99,31 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
         set_tests_properties(CFL_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED cfl2nc4_generated)
     endforeach ()
+
+    # The generic Benders decomposition of BendersDecompositionSolver against
+    # the ad hoc one the Block carries in its BenForm formulation, on a real
+    # ORLib instance: the two describe the same problem, hence what is checked
+    # is that they agree, and what is reported is what each of them costs.
+    # BendersDecompositionSolver is not among the labels of this suite, the
+    # rest of which runs without it, so the tester is built only where it is.
+    if (TARGET SMS++::BendersDecompositionSolver)
+
+        add_executable(CFL_BDS_test test_bds.cpp)
+        target_link_libraries(CFL_BDS_test PRIVATE
+                SMS++::CapacitatedFacilityLocationBlock
+                SMS++::BendersDecompositionSolver
+                SMS++::BundleSolver
+                SMS++::MILPSolver)
+        smspp_install(CFL_BDS_test)
+
+        # the ORLib instance the test reads comes with the archive that
+        # CapacitatedFacilityLocationBlock downloads and unpacks
+        add_dependencies(CFL_BDS_test extract_cfl_txt)
+
+        add_test(NAME CFL_BDS_test
+                 COMMAND CFL_BDS_test
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    endif ()
 endif ()
 
 # Tag this directory's tests with their per-module CI labels

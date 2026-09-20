@@ -37,7 +37,10 @@ The following tests are provided:
   `MILPSolver`), or via a Min-Cost Flow relaxation cast as a `MCFBlock`
   and using custom `MCFSolver`, or, finally, via a Lagrange-friendly
   reformulation as a bunch of `BinaryKnapsackBlock`, so that a
-  `LagrangianDualSolver` can be used to compute a stronger bound.
+  `LagrangianDualSolver` can be used to compute a stronger bound, and a
+  second one that puts the ad hoc Benders decomposition the Block carries
+  against the generic one of `BendersDecompositionSolver` on the same
+  instance.
 
 - [`compare_formulations`](compare_formulations),  very simple tester for
   testing different formulations of some problem obtained by

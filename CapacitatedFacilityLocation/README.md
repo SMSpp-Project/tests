@@ -143,6 +143,20 @@ A makefile is also provided that builds the executable including the
 module, the `MCFBlock` module, the `BinaryKnapsackBlock` module, together of
 course with the core SMS++ library.
 
+A second tester, `CFL_BDS_test`, puts the two Benders decompositions of the
+same instance one against the other: the ad hoc one the `Block` carries in
+its BenForm formulation, where the `BendersBFunction` separating the cuts is
+hidden inside it and its subproblem is an `MCFBlock`, and the generic one of
+`BendersDecompositionSolver`, which is given the same problem written as a
+master holding the facility-opening `Variable` and one transportation
+sub-`Block` per customer. The two describe one problem, hence what is checked
+is that they agree with each other and with the monolithic solve, and what is
+reported is what each of them costs, in the convex regime and in the MILP one,
+with and without the Pareto-optimal cuts. It is built only where
+`BendersDecompositionSolver` is in the build, the rest of the suite running
+without it, and it reads one of the ORLib instances the `Block` downloads and
+unpacks.
+
 All the tests passing give some confidence that no regressions have been
 done for the involved `Block` (`CapacitatedFacilityLocationBlock`,
 `MCFBlock`, and `BinaryKnapsackBlock`) and the `Solver` used in the
