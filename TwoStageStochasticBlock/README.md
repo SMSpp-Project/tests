@@ -106,6 +106,20 @@ inner-Block module needed by the instances in `batches/` (currently
   and each scenario subproblem by the `:MILPSolver` of
   `BDSSCfg.txt`, which is also what solves the extensive form
   the comparison is checked against.
+- `BSPar-BDS-2S.txt` — the cross-check on the Benders form the tester
+  assembles around an instance on file: a `:MILPSolver`, which reads
+  the whole tree and is therefore solving the extensive form, and
+  `BendersDecompositionSolver` in its MILP regime, which is asked to
+  give the Block back at the end of each `compute()` so that the two
+  can stand on it together. `BSPar-BDS-2S-CVX.txt` is the same in the
+  convex regime, where the value functions enter the `Objective` of
+  the master and a bundle drives the loop: that is the regime for a
+  first stage that decides something, and where it converges it takes
+  from two to three times less (30 s against 80 on one instance), but
+  the parameters of `BDSMCfg.txt` are those of the small problem the
+  Solver was written on and on some instances the bundle stops short
+  of the accuracy the cross-check asks for, so the batch uses the
+  MILP regime until they are tuned.
 - `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
   bundle over the `InvestmentBlock`, and `InvBCfg.txt` the
   `BlockConfig` of that Block, which is what fixes the design in every
