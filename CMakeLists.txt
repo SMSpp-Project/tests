@@ -80,7 +80,6 @@ else ()
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
-add_subdirectory(MILPSolver)
 add_subdirectory(BoxSolver)
 add_subdirectory(LagrangianDualSolver_Box)
 
@@ -105,7 +104,6 @@ add_subdirectory(CapacitatedFacilityLocation)
 add_subdirectory(MMCFBlock)
 
 add_subdirectory(UCBlock)
-add_subdirectory(ThermalUnitBlock_Solver)
 add_subdirectory(InvestmentBlock)
 add_subdirectory(TwoStageStochasticBlock)
 add_subdirectory(MultiStageStochasticBlock)

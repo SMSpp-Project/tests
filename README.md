@@ -89,7 +89,11 @@ The following tests are provided:
   `CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block` for
   Unit-Commitment problems (including the pollutant budget constraints, both
   against PyPSA and on small instances with known optima), as well as for
-  quite a lot of the mechanics of the SMS++ core library.
+  quite a lot of the mechanics of the SMS++ core library. The same suite runs
+  `TUDPS_test`, which compares the `ThermalUnitExtDPSolver` specialised
+  Dynamic Programming `:Solver` with a `:MILPSolver` on some of the (many)
+  different formulations `ThermalUnitBlock` supports; its batches are in
+  `batches-tudps`, each of them being run with that tester.
 
 - [`LukFiBlock`](LukFiBlock): a very simple main for running tests with
   [LukFiBlock](https://gitlab.com/smspp/lukfiblock). It just creates one
@@ -100,12 +104,6 @@ The following tests are provided:
   `MCFSolver`, `MILPSolver` and its derived classes (`CPXMILPSolver` and
   `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
   core library.
-
-- [`MILPSolver`](MILPSolver): solves the same small Linear Program with each
-  `:MILPSolver` in the build, its `Variable` and `Constraint` being grouped in
-  every shape a `Block` allows (single arrays, `std::vector` of `std::vector`,
-  `boost::multi_array` of `std::vector` or of `std::list`), and checks that the
-  optimum, the duals and the primal solution do not depend on the shape.
 
 - [`MMCFBlock`](MMCFBlock), a tester which provides initial tests
   for `MMCFBlock` (in particular, a way to retrieve/generate some sets of
@@ -152,11 +150,6 @@ The following tests are provided:
   `BlockSolverConfig` registers, typically a `:MILPSolver` on either of the
   two formulations of the problem and the `SingleFlowDCRBendersSolver`,
   cross-checking what they answer and the `Solution` each of them produces.
-
-- [`ThermalUnitBlock_Solver`](ThermalUnitBlock_Solver), a tester for the
-  `ThermalUnitExtDPSolver` specialised Dynamic Programming `:Solver` for
-  `ThermalUnitBlock` as compared with a `:MILPSolver` on some of the (many)
-  different formulations supported by `ThermalUnitBlock`.
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`

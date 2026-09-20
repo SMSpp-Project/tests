@@ -71,6 +71,39 @@ if (TARGET SMS++::UCBlock)
         set_tests_properties(UCBlock_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
     endforeach ()
+
+    # The specialised dynamic programming solver of ThermalUnitBlock against a
+    # :MILPSolver on the same unit: it reads the instances of this suite and
+    # compares two solvers of this module's Block, hence it is one of the
+    # tests of UCBlock and not a suite of its own. Its batches live apart
+    # because each of them is run with this tester and not with the one above.
+    add_executable(TUDPS_test test_tudps.cpp ../common_utils.cpp)
+    target_include_directories(TUDPS_test PRIVATE ..)
+    target_link_libraries(TUDPS_test PRIVATE SMS++::UCBlock)
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(TUDPS_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    smspp_install(TUDPS_test)
+
+    file(GLOB TUDPS_BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches-tudps/*")
+    foreach (BATCH_FILE ${TUDPS_BATCH_FILES})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        if (UNIX)
+            add_test(NAME TUDPS_test/${BATCH_NAME}
+                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/TUDPS_test
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        elseif (WIN32)
+            add_test(NAME TUDPS_test/${BATCH_NAME}
+                     # using Git for Windows that includes Git Bash
+                     COMMAND "C:/Program Files/Git/bin/bash.exe"
+                             "${BATCH_FILE}" "$<TARGET_FILE:TUDPS_test>"
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        endif ()
+        set_tests_properties(TUDPS_test/${BATCH_NAME}
+                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
+    endforeach ()
 endif ()
 
 # Tag this directory's tests with their per-module CI labels

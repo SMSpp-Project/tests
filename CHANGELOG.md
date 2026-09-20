@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the suite of `MILPSolver` is the test directory of that module, where its
+  two testers now live as `test_farkas.cpp` and `test_groups.cpp`: neither of
+  them needs a Block of another module, hence neither of them needs to be
+  here
+
+- the suite of the dynamic programming solver of `ThermalUnitBlock` is part
+  of the suite of `UCBlock`, whose instances it reads and whose Block it
+  solves in two ways: the tester is `test_tudps.cpp` and its batches are in
+  `batches-tudps`, each of them run with that tester rather than with the one
+  of the suite
+
 - `SVMBlock` runs the comparison of the two dual decompositions of one
   training problem, the consensus one under `LagrangianDualSolver` and the
   Benders one under `BendersDecompositionSolver`, both cross-checked against
