@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block having a single
 # BendersDecompositionSolver attached, in the convex regime: the master is
@@ -43,8 +43,8 @@ int_BDSlv_Regime  0  # 0 = convex master, 1 = MILP master
 2  # number of string parameters
 
 # now all the string parameters
-str_Bsub_BSCfg  BSPar-BDS-sub.txt     # BlockSolverConfig of the subproblems
-str_Mstr_BSCfg  BSPar-BDS-master.txt  # BlockSolverConfig of the master
+str_Bsub_BSCfg  BDSSCfg.txt     # BlockSolverConfig of the subproblems
+str_Mstr_BSCfg  BDSMCfg.txt  # BlockSolverConfig of the master
 
 0  # number of vector-of-int parameters
 
@@ -69,5 +69,5 @@ str_Mstr_BSCfg  BSPar-BDS-master.txt  # BlockSolverConfig of the master
 # end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

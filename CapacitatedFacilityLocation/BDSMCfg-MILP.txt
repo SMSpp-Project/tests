@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - BSPar-BDS-master-milp.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BDSMCfg-MILP.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the master problem of the
 # Benders decomposition in the MILP regime: a single :MILPSolver that solves
@@ -73,5 +73,5 @@ dblRelAcc     1e-9  # relative accuracy required to solution
 # end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BSPar-BDS-master-milp.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BDSMCfg-MILP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-BDS-sub.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BDSSCfg.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the subproblem of one Benders
 # component, i.e., the linear program whose value function is being
@@ -91,5 +91,5 @@ dblRelAcc      1e-9  # relative accuracy required to solution
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-BDS-sub.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BDSSCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

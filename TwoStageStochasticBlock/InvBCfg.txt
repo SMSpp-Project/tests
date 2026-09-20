@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BCfg-Inv.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - InvBCfg.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the inner Block of an
 # InvestmentFunction, i.e., the whole TwoStageStochasticBlock with the design

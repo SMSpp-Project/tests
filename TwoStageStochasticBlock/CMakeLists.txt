@@ -110,6 +110,20 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                                "there, the BDS batch is out")
             endif ()
         endif ()
+
+        # the cross-check on the stochastic PyPSA instances batch-pypsa runs:
+        # there the Benders form is assembled by the tester around the very
+        # instance on file, since no file format carries it, and the two
+        # Solver the BlockSolverConfig names stand on the Block that comes out
+        add_test(NAME TSSB_BDS_test/batches/batch-bds-pypsa
+                 COMMAND bash
+                         ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bds-pypsa
+                         $<TARGET_FILE:TSSB_BDS_test>
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+        # the instances come with the archive tests/UCBlock unpacks
+        set_tests_properties(TSSB_BDS_test/batches/batch-bds-pypsa
+                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
     endif ()
 endif ()
 

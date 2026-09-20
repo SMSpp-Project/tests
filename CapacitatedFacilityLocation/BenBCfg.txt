@@ -40,7 +40,8 @@ BlockConfig
 SimpleConfiguration<std::pair<int,double>>
 1 1e-6
 
-# static_variables: SimpleConfiguration< int > with value 3 = BenForm with feasibility cuts (wf & 3 == 3)
+# static_variables: SimpleConfiguration< int > with value 3 = BenForm with
+# feasibility cuts (wf & 3 == 3)
 SimpleConfiguration<int>
 2
 

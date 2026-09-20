@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - MPBCfg-BDS.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MPBCfg-BDS.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the inner :MILPSolver of
 # the MasterProblemBlock used by the BundleSolver
@@ -114,5 +114,5 @@ OptimalityTol   1e-09 # how much a reduced cost of the master may be off
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END MPBCfg-BDS.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MPBCfg-BDS.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

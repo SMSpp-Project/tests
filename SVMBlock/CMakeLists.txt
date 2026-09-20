@@ -63,10 +63,9 @@ if (TARGET SMS++::SVMBlock)
         list(REMOVE_ITEM BATCH_FILES
              "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-liblinear")
     endif ()
-    # the same for the Benders form, which is the one BendersDecompositionSolver
-    # asks for and which is therefore only checked where that Solver is built:
-    # it is not among the labels of this suite, the rest of which runs without
-    # it
+    # the same for the Benders form, which is the one the Benders Solver asks
+    # for and which is therefore only checked where that Solver is built: it
+    # is not among the labels of this suite, the rest of which runs without it
     if (NOT TARGET SMS++::BendersDecompositionSolver)
         list(REMOVE_ITEM BATCH_FILES
              "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bds")

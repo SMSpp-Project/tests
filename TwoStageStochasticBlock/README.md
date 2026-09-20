@@ -48,18 +48,37 @@ iterations and the times are printed. It is built only where
 `BendersDecompositionSolver` and `InvestmentBlock` are in the build,
 the rest of the suite running without them.
 
+The same tester also takes an instance written in its extensive form,
+i.e., with the design replicated in the scenarios and tied by the
+non-anticipativity `Constraint`: no file format carries the structure
+the Benders `Solver` asks for, since `AbstractBlock` only deserializes
+a .lp/.mps model and a model of its own cannot name the `Variable` of
+a sub-`Block`, so that structure is assembled around the `Block` the
+file gives, one copy of the here-and-now `Variable` in the root and
+one wrapper per scenario carrying the coupling. Whatever `Solver` the
+`BlockSolverConfig` names are then cross-checked on the `Block` that
+comes out, a `:MILPSolver` reading it whole being the extensive form.
+
 The usage of the second executable is the following:
 
-       ./TSSB_BDS_test [TSSB-file]
+       ./TSSB_BDS_test [TSSB-file] [-S BSC-file] [-B BC-file] [-r ref]
        TSSB-file: instance to read [tssb_investment.nc4]
+       BSC-file:  BlockSolverConfig; naming one is what asks for the
+                  cross-check on the instance read from file
+       BC-file:   BlockConfig applied to the instance [none]
+       ref:       reference objective value to compare against [none]
 
-`batches/batch-bds` repeats that comparison on instances of
+`batches/batch-bds` repeats the three-form comparison on instances of
 growing size, from 3 to 100 scenarios and from 24 to 96 time steps,
 which is where the forms part ways: the generic one takes many more
 iterations, each of which is one LP per scenario, while the ad hoc one
 takes few, each of which is the whole stochastic problem. The
 instances are written by `gen_investment.py`, which needs a Python
 with `netCDF4`, and are thrown away at the end.
+
+`batches/batch-bds-pypsa` runs the cross-check on the same stochastic
+PyPSA instances `batches/batch-pypsa` solves, against the same
+reference objective values.
 
 A makefile is also provided that builds the executable including the
 `TwoStageStochasticBlock`, `LagrangianDualSolver`, `BundleSolver`,
@@ -71,13 +90,13 @@ inner-Block module needed by the instances in `batches/` (currently
 
 - `BSPar-BDS.txt` — `BlockSolverConfig` attaching
   `BendersDecompositionSolver` to the structured form, in the convex
-  regime: the master is solved by the bundle `BSPar-BDS-master.txt`
+  regime: the master is solved by the bundle `BDSMCfg.txt`
   names, whose `MasterProblemBlock` is configured by `MPBCfg-BDS.txt`,
   and each scenario subproblem by the `:MILPSolver` of
-  `BSPar-BDS-sub.txt`, which is also what solves the extensive form
+  `BDSSCfg.txt`, which is also what solves the extensive form
   the comparison is checked against.
 - `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
-  bundle over the `InvestmentBlock`, and `BCfg-Inv.txt` the
+  bundle over the `InvestmentBlock`, and `InvBCfg.txt` the
   `BlockConfig` of that Block, which is what fixes the design in every
   scenario rather than mapping it into the right-hand side.
 - `BSPar-2S.txt` — outer `BlockSolverConfig` registering `:MILPSolver`

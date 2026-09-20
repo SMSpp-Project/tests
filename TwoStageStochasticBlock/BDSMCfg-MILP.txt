@@ -1,10 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BDSMCfg-MILP.txt - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a Block having a single
-# BendersDecompositionSolver attached, in the convex regime: the master is
-# solved by a bundle-type Solver, while each subproblem and the master are
-# configured through the referenced BlockSolverConfig files.
+# A txt description of a BlockSolverConfig for the master problem of the
+# Benders decomposition in the MILP regime: a single :MILPSolver that solves
+# the master (with the epigraph Variable and the dynamically added Benders
+# cuts) at each round of the cut loop.
 #
 #   Antonio Frangioni
 #   Donato Meoli
@@ -18,7 +18,10 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-BendersDecompositionSolver # name of Solver
+GRBMILPSolver    # name of Solver
+#CPXMILPSolver   # name of Solver
+#SCIPMILPSolver  # name of Solver
+#HiGHSMILPSolver # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -30,21 +33,22 @@ ComputeConfig # exact type of the ComputeConfig object
 0  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-1  # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
-int_BDSlv_Regime  0  # 0 = convex master, 1 = MILP master
+intLogVerb       0  # LogVerb, log verbosity of the MILPSolver
+Threads          1  # one thread, so that the time is that of a sequential
+                    # algorithm, as every other one here is
 
-0  # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
-# [none]
+dblRelAcc     1e-9  # relative accuracy required to solution
 
-2  # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
-str_Bsub_BSCfg  BDSSCfg.txt     # BlockSolverConfig of the subproblems
-str_Mstr_BSCfg  BDSMCfg.txt  # BlockSolverConfig of the master
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -69,5 +73,5 @@ str_Mstr_BSCfg  BDSMCfg.txt  # BlockSolverConfig of the master
 # end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BDSMCfg-MILP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

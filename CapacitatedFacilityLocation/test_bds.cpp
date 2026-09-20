@@ -275,10 +275,10 @@ static double solve_by_bundle( AbstractBlock * block , const std::string & cfg ,
 
 static double solve_benform( CFLB * B , double & seconds )
 {
- auto bc = Configuration::deserialize( "BenForm-BCfg.txt" );
+ auto bc = Configuration::deserialize( "BenBCfg.txt" );
  dynamic_cast< BlockConfig * >( bc )->apply( B );
  B->generate_abstract_variables();
- auto sc = Configuration::deserialize( "BenForm-BSCfg.txt" );
+ auto sc = Configuration::deserialize( "BenBSCfg.txt" );
  auto bsc = dynamic_cast< BlockSolverConfig * >( sc );
  bsc->apply( B );
  auto solver = B->get_registered_solvers().front();
@@ -327,7 +327,7 @@ int main( int argc , char ** argv )
  // ----- reference: monolithic LP ----------------------------------------- #
  auto mono = build_monolithic( B , M );
  double t_ref;
- const double ref = solve( mono , "BSPar-BDS-sub.txt" , t_ref );
+ const double ref = solve( mono , "BDSSCfg.txt" , t_ref );
 
  /* The ad hoc Benders of CapacitatedFacilityLocationBlock is the reference
   * this Solver is measured against, but on a large instance it takes tens of
@@ -367,9 +367,9 @@ int main( int argc , char ** argv )
  double t_m , t_p;
  int st_m , st_p;
  long it_m = 0 , it_p = 0 , ct_m = 0 , ct_p = 0;
- const double v_m = solve( root_m , "BSPar-BDS-milp.txt" , t_m , & st_m ,
+ const double v_m = solve( root_m , "BSPar-BDS-MILP.txt" , t_m , & st_m ,
                            nullptr , & it_m , & ct_m , budget );
- const double v_p = solve( root_p , "BSPar-BDS-milp-pareto.txt" , t_p ,
+ const double v_p = solve( root_p , "BSPar-BDS-Pareto.txt" , t_p ,
                            & st_p , nullptr , & it_p , & ct_p , budget );
 
  // ----- compare ---------------------------------------------------------- #

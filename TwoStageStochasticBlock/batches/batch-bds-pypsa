@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# usage: batch-bds-pypsa < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default ./TSSB_BDS_test
+#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S.txt
+#        < log file > = name of log file, default no log
+#
+# the same stochastic PyPSA instances batch-pypsa runs, in their Benders
+# form: the tester assembles it around the instance, i.e., one copy of the
+# here-and-now Variable in the root and one sub-Block per scenario coupled to
+# them, and the BlockSolverConfig attaches to that Block both a :MILPSolver,
+# which reads the whole tree and is therefore solving the extensive form, and
+# BendersDecompositionSolver. The two describe one problem, so what is
+# checked is that they agree with each other and with the objective value
+# PyPSA gives
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./TSSB_BDS_test
+DEFAULT_PAR=BSPar-BDS-2S.txt
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ file name ] = PyPsa objective value, the same references
+# batch-pypsa checks the extensive form against
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_demand.nc]=4.822693602e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_maxpower.nc]=3.812776176e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_hydroinflow.nc]=3.742200254e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_complete.nc]=4.920921646e+09
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/pypsa-data/tssb/smspp_*.nc; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
