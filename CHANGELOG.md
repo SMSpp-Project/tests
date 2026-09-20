@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the master of the bundle that solves the Lagrangian dual of a
+  `TwoStageStochasticBlock` is asked for the accuracy the scale of its own
+  model allows, `1e-7` on the rows and on the reduced costs with the numerical
+  focus at its maximum: that model carries values of `1e9` and linearization
+  errors of `1e12`, on which the `1e-9` that a well-scaled master can be asked
+  for is out of reach, and on the sector-coupled instance whose demand is the
+  stochastic datum the master declares its numerical difficulties
+  unrecoverable a step away from the optimum, upon which the bundle empties
+  itself one item at a time and the Lagrangian dual ends in error
+
 - the scenario reduction is run from the suite of the Block whose scenarios
   are reduced: the generator of the unit commitment instances and the runs on
   them are in `UCBlock/scenario-reduction`, those of the facility location in
