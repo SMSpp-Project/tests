@@ -76,20 +76,25 @@ takes few, each of which is the whole stochastic problem. The
 instances are written by `gen_investment.py`, which needs a Python
 with `netCDF4`, and are thrown away at the end.
 
-`batches/batch-bds-pypsa` runs the cross-check on the same stochastic
-PyPSA instances `batches/batch-pypsa` solves, against the same
-reference objective values.
+`batches/batch-pypsa` runs each of its instances twice, once per
+structure the `Solver` ask for: on the stochastic `Block` as the file
+gives it, where a `:MILPSolver` and a `LagrangianDualSolver` are
+cross-checked, and on the Benders form of it, where the same
+`:MILPSolver`, which reads the assembled `Block` whole and is
+therefore still solving the extensive form, is cross-checked against
+`BendersDecompositionSolver`.
 
-`batches/batch-bds-pypsa-invest` runs it on the same PyPSA networks
-written with the capital costs scaled by the same factor the horizon
-is cut by. Without that scaling the capital cost of an extendable
-asset pays for a whole year while the operation it saves is that of
-the snapshots that are kept, so nothing is ever built and the first
-stage is a formality; with it the expansion is actually bought, which
-is what makes the master of a decomposition decide something. It is
-not registered with CTest: the Benders Solver takes minutes on those
-instances, its master being a cutting plane with no stabilization on
-a design that is continuous.
+`batches/batch-pypsa-invest` runs the second of the two on the same
+PyPSA networks written with the capital costs scaled by the same
+factor the horizon is cut by. Without that scaling the capital cost
+of an extendable asset pays for a whole year while the operation it
+saves is that of the snapshots that are kept, so the expansion is
+bought far less than it would be and the first stage decides little;
+with it the design is built, which is what gives the master of a
+decomposition something to decide. It is not registered with CTest:
+the Benders `Solver` takes minutes on those instances, its master
+being a cutting plane with no stabilization on a design that is
+continuous.
 
 A makefile is also provided that builds the executable including the
 `TwoStageStochasticBlock`, `LagrangianDualSolver`, `BundleSolver`,

@@ -9,6 +9,15 @@
 # runs all the stochastic PyPSA instances and checks that the PyPsa
 # objective value matches the given reference one.
 #
+# each instance is run twice, i.e. once per structure the Solver ask for: on
+# the stochastic Block as the file gives it, where a :MILPSolver on the
+# deterministic equivalent and a LagrangianDualSolver are cross-checked, and
+# on the Benders form of it that the tester assembles [-b], where the same
+# :MILPSolver, which reads the assembled Block whole and is therefore still
+# solving the extensive form, is cross-checked against
+# BendersDecompositionSolver. The second run is skipped where that Solver is
+# not in the build, its configuration naming it.
+#
 # these sector-coupled instances are badly scaled: HiGHS aborts on the inner
 # LagBFunction LPs, so the default BlockSolverConfig here (BSPar-2S.txt)
 # solves the LagrangianDual inner with Gurobi and tightens the bundle stopping.
@@ -18,6 +27,11 @@ source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./TSSB_test
 DEFAULT_PAR=BSPar-2S.txt
+
+# the BlockSolverConfig of the run on the Benders form; the environment
+# empties it where BendersDecompositionSolver is not in the build, since its
+# configuration names it and the factory would not find it
+bds_par="${TSSB_BDS_PAR-BSPar-BDS-2S.txt}"
 DEFAULT_SLV=0
 parse_batch_args "$@"
 
@@ -53,6 +67,12 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb/smspp_*.nc; do
     fi
 
     run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+
+    # the Benders form of the same instance, where the Solver that keeps the
+    # design in a master of its own can stand beside a :MILPSolver
+    if [ -n "${bds_par}" ]; then
+      run_test "$exe" "$what" -b -S "${bds_par}" -B InnerBCfg.txt -r "$ref"
+    fi
 
 done
 

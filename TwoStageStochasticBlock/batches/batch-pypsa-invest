@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
 # usage: batch-bds-pypsa-invest < exe file > < par file > < log file >
-#        < exe file > = path of the executable, default ./TSSB_BDS_test
+#        < exe file > = path of the executable, default ./TSSB_test
 #        < par file > = BlockSolverConfig file, default BSPar-BDS-2S.txt
 #        < log file > = name of log file, default no log
 #
-# the same cross-check batch-bds-pypsa does, on the instances in which the
-# expansion is actually built: they are the same PyPSA networks, written with
+# the same cross-check the second run of batch-pypsa does, on the instances
+# in which the expansion is actually built: they are the same PyPSA networks, written with
 # the capital costs scaled by the same factor the horizon is cut by, so that
 # the investment can pay for itself and the first stage is a decision rather
 # than a formality [see SCALE_CAPITAL_COSTS in the generator of pypsa2smspp]
@@ -18,7 +18,7 @@
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
-DEFAULT_EXE=./TSSB_BDS_test
+DEFAULT_EXE=./TSSB_test
 DEFAULT_PAR=BSPar-BDS-2S.txt
 parse_batch_args "$@"
 
@@ -49,7 +49,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-invest/smspp_*.nc; do
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
+    run_test "$exe" "$what" -b -S "$par" -B InnerBCfg.txt -r "$ref"
 
 done
 

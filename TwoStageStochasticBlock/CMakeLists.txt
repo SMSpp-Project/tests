@@ -19,9 +19,17 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::TwoStageStochasticBlock)
 
-    add_executable(TSSB_test test.cpp ../common_utils.cpp)
+    add_executable(TSSB_test test.cpp benders_form.cpp ../common_utils.cpp)
     target_include_directories(TSSB_test PRIVATE ..)
     target_link_libraries(TSSB_test PRIVATE SMS++::TwoStageStochasticBlock)
+
+    # the Benders form of an instance is assembled by the tester itself [see
+    # benders_form()], but the Solver that asks for it comes out of the
+    # factory, hence has to be linked where it is built
+    if (TARGET SMS++::BendersDecompositionSolver)
+        target_link_libraries(TSSB_test PRIVATE
+                SMS++::BendersDecompositionSolver)
+    endif ()
 
     if (TARGET SMS++::UCBlock)
         target_link_libraries(TSSB_test PRIVATE SMS++::UCBlock)
@@ -65,6 +73,15 @@ if (TARGET SMS++::TwoStageStochasticBlock)
         # subdirectory just adds a dependency without redefining the test.
         set_tests_properties(TSSB_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
+
+        # batch-pypsa runs each instance twice, the second time on the Benders
+        # form, whose BlockSolverConfig names a Solver that may not be in the
+        # build: there the second run is emptied out
+        if (BATCH_NAME MATCHES "batch-pypsa" AND
+            NOT TARGET SMS++::BendersDecompositionSolver)
+            set_tests_properties(TSSB_test/${BATCH_NAME}
+                                 PROPERTIES ENVIRONMENT "TSSB_BDS_PAR=")
+        endif ()
     endforeach ()
 
     # The three ways of solving the same two-stage stochastic investment
@@ -110,20 +127,6 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                                "there, the BDS batch is out")
             endif ()
         endif ()
-
-        # the cross-check on the stochastic PyPSA instances batch-pypsa runs:
-        # there the Benders form is assembled by the tester around the very
-        # instance on file, since no file format carries it, and the two
-        # Solver the BlockSolverConfig names stand on the Block that comes out
-        add_test(NAME TSSB_BDS_test/batches/batch-bds-pypsa
-                 COMMAND bash
-                         ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bds-pypsa
-                         $<TARGET_FILE:TSSB_BDS_test>
-                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-        # the instances come with the archive tests/UCBlock unpacks
-        set_tests_properties(TSSB_BDS_test/batches/batch-bds-pypsa
-                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
     endif ()
 endif ()
 
