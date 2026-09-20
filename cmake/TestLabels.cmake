@@ -24,18 +24,19 @@
 # --------------------------------------------------------------------------- #
 
 set(SMSPP_TEST_LABELS_BoxSolver                 "SMS++;MILPSolver")
-set(SMSPP_TEST_LABELS_AbstractBlock_Box  "SMS++;BundleSolver;LagrangianDualSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_LagBFunction              "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunction        "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunctionBlock   "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_QuadraticTests            "SMS++;MILPSolver")
-set(SMSPP_TEST_LABELS_Write-Read                "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
-set(SMSPP_TEST_LABELS_AbstractBlock      "SMS++;BinaryKnapsackBlock;MILPSolver")
+# the three testers posed on an AbstractBlock ask for one module each beyond
+# these two, and each of them is guarded by its own if( TARGET ), so what the
+# directory declares is what they all need and the rest is set test by test
+set(SMSPP_TEST_LABELS_AbstractBlock             "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_BendersBFunction          "BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_BundleSolverML            "BundleSolver;LagrangianDualSolver;MMCFBlock;UCBlock")
+set(SMSPP_TEST_LABELS_ML                        "BundleSolver;LagrangianDualSolver;MMCFBlock;UCBlock")
 set(SMSPP_TEST_LABELS_BinaryKnapsackBlock       "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_CapacitatedFacilityLocation
+set(SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock
                                                 "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver;MCFClassSolver;MCFLemonSolver;MILPSolver")
 # MMCFBlock hosts two testers: MMCF_test (vs the MMCFCplex reference) and
 # MMCFBlock_test (cross-check of a :MILPSolver and a LagrangianDualSolver), so
@@ -49,7 +50,6 @@ set(SMSPP_TEST_LABELS_MultiStageStochasticBlock "BundleSolver;LagrangianDualSolv
 set(SMSPP_TEST_LABELS_LukFiBlock                "BundleSolver;LukFiBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SVMBlock                  "BundleSolver;LagrangianDualSolver;SVMBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SingleFlowDCRBlock        "SingleFlowDCRBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_FrankWolfeSolver          "FrankWolfeSolver;MCFBlock;MCFClassSolver;UCBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test
 # it registered, dynamic batch-file test names included.

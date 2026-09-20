@@ -2,7 +2,7 @@
 #
 # usage: batch-bds-pypsa-invest < exe file > < par file > < log file >
 #        < exe file > = path of the executable, default ./TSSB_test
-#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S.txt
+#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S-CVX.txt
 #        < log file > = name of log file, default no log
 #
 # the same cross-check the second run of batch-pypsa does, on the instances
@@ -11,15 +11,19 @@
 # the investment can pay for itself and the first stage is a decision rather
 # than a formality [see SCALE_CAPITAL_COSTS in the generator of pypsa2smspp]
 #
-# it is not registered with CTest: the Benders Solver takes minutes on these,
-# its master being a cutting plane with no stabilization on a design that is
-# continuous, which is exactly what these instances are there to show
+# the Benders Solver runs here in its convex regime, i.e. with the value
+# functions in the Objective of the master and a bundle driving the loop,
+# which is the regime a first stage that decides something asks for: on these
+# instances it takes from 1.2 to 2.3 times less than the MILP one and reaches
+# the value everywhere, while the MILP one is a cutting plane with no
+# stabilization. It is not registered with CTest all the same, a run taking
+# minutes
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./TSSB_test
-DEFAULT_PAR=BSPar-BDS-2S.txt
+DEFAULT_PAR=BSPar-BDS-2S-CVX.txt
 parse_batch_args "$@"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -

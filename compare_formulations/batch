@@ -2,14 +2,14 @@
 #
 # usage: batch < bpar file > < bspar file >
 
-source "$(dirname "$0")/../batch_common.sh"
+source "$(dirname "$0")/../../batch_common.sh"
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #set=pypsa-data/ucblock/smspp_*.nc
 set=plan4res-data/FirstSetofInstances/*.nc4
 
-for what in ../../UCBlock/data/nc4/$set; do
+for what in ../../../UCBlock/data/nc4/$set; do
 
     run_test ./compare_formulations "$what" -B MetaConfig1.txt -X MetaConfig2.txt -S BSCfg1.txt -Y BSCfg2.txt
 

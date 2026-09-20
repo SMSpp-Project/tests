@@ -3,39 +3,34 @@
 # ============================================================
 
 # --- Project-specific: per-test binaries --------------------
-BoxSolver/BoxSolver_test
+# a suite lives in the directory of the module its tests are posed on, hence
+# the binaries a run leaves behind are matched wherever the suite is, save
+# for the two scripts of the scenario reduction that end in the same way
+*_test
+*_bench
+!UCBlock/scenario-reduction/run_uc_test
+!UCBlock/scenario-reduction/UCInvestmentTest/run_investment_test
 BinaryKnapsackBlock/BinaryKnapsackBlock_test
-CapacitatedFacilityLocation/CFL_test
+CapacitatedFacilityLocationBlock/CFL_test
 compare_formulations/compare_formulations
-FrankWolfeSolver/FWS_test
-FrankWolfeSolver/FWS_mcf_test
 InvestmentBlock/IB_test
-LagBFunction/LagBFunction_test
-LagrangianDualSolver_Box/LDS_Box_test
-LagrangianDualSolver_UC/LDS_UC_test
-LagrangianDualSolver_UC/log.txt
-LagrangianDualSolver_MMCF/LDS_MMCF_test
 LukFiBlock/LukFi_test
 MCF_MILP/MCF_MILP_test
 MMCFBlock/MMCF_test
 MMCFBlock/gen/Mnetgen/mnetgen
 MMCFBlock/gen/Canad
 MMCFBlock/gen/JLF
-PolyhedralFunction/PolyhedralFunction_test
-PolyhedralFunctionBlock/PolyhedralFunctionBlock_test
-QuadraticTests/quad_test
+MILPSolver/QuadraticTests/quad_test
 SingleFlowDCRBlock/SingleFlowDCRBlock_test
-ThermalUnitBlock_Solver/TUDPS_test
 TwoStageStochasticBlock/TSSB_test
 MultiStageStochasticBlock/MSSB_test
-Write-Read/writeandread_test
 
 # Large data / generated inputs
 MMCFBlock/data/*
 
 MMCFBlock/gen/Canad.tgz
 InvestmentBlock/investment_candidates.txt
-CapacitatedFacilityLocation/LD/CFL*.txt
+CapacitatedFacilityLocationBlock/LD/CFL*.txt
 
 # the netCDF files the SVM serialization checks write
 SVMBlock/svmblock.nc4
@@ -45,7 +40,7 @@ SVMBlock/svmsolution.nc4
 # *.bn = BundleSolver log; *.lp = MILPSolver LP dump
 *.bn
 *.lp
-Write-Read/*.mps
+SMS++/AbstractBlock/*.mps
 
 # --- C/C++ build artifacts ----------------------------------
 *.o
@@ -113,7 +108,7 @@ MMCFBlock/gen/
 *.orig
 *.orig2
 *.bak
-BundleSolverML/bench.cpp
+BundleSolver/ML/bench.cpp
 UCBlock/*.csv
 UCBlock/*.csv
 UCBlock/*.csv

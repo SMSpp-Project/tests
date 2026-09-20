@@ -8,6 +8,7 @@ if (NOT hasParent)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
     find_package(MILPSolver)
+    find_package(FrankWolfeSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -104,6 +105,30 @@ if (TARGET SMS++::UCBlock)
         set_tests_properties(TUDPS_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
     endforeach ()
+
+    # The Frank-Wolfe decomposition of a father Block whose leaves are the
+    # ThermalUnitBlock of this suite, each with its ThermalUnitDPSolver as the
+    # Linear Minimization Oracle: since the dynamic programme plus the
+    # Perspective Cuts characterize the convex hull of the integer solutions
+    # of a unit, the Dantzig-Wolfe value Frank-Wolfe computes must be the
+    # perspective bound a monolithic :MILPSolver gives, which is what the
+    # batch checks. The tester is the generic one (../fw_test.cpp), the same
+    # the MCFBlock suite builds on its own Block; the configurations and the
+    # batch live in FW/ beside it. The batch is not registered as a test
+    # because the reference solves a monolithic relaxation with a cut
+    # separation loop, i.e. minutes per run.
+    if (TARGET SMS++::FrankWolfeSolver)
+        add_executable(UCBlock_FW_test ../fw_test.cpp ../common_utils.cpp)
+        target_include_directories(UCBlock_FW_test PRIVATE ..)
+        target_link_libraries(UCBlock_FW_test PRIVATE
+                              SMS++::FrankWolfeSolver SMS++::UCBlock)
+
+        if (TARGET SMS++::MILPSolver)
+            target_link_libraries(UCBlock_FW_test PRIVATE SMS++::MILPSolver)
+        endif ()
+
+        smspp_install(UCBlock_FW_test)
+    endif ()
 endif ()
 
 # The scenario generator of this Block and the runs that reduce the scenarios

@@ -2,7 +2,7 @@
 ################################ makefile ####################################
 ##############################################################################
 #                                                                            #
-#   makefile of test (for compare_formulations)                              #
+#   makefile of test (for BoxSolver)                                         #
 #                                                                            #
 #                              Antonio Frangioni                             #
 #                          Dipartimento di Informatica                       #
@@ -11,7 +11,7 @@
 ##############################################################################
 
 # module name
-NAME = compare_formulations
+NAME = BoxSolver_test
 
 # basic directory
 DIR = .
@@ -33,32 +33,32 @@ include ../../makefile_common
 SMS++SDR = ../../../SMS++
 include $(SMS++SDR)/lib/makefile-c
 
-# define input macros for UCBlock makefile, then include it
-UCBckDIR = ../../../UCBlock
-include $(UCBckDIR)/lib/makefile
-
-# MILPSolver
+# MILPSolver, without core SMS++
 MILPSSDR = ../../../MILPSolver
-include $(MILPSSDR)/makefile-c
+include $(MILPSSDR)/makefile-s
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(CMMNUOBJ) $(MILPSOBJ) $(UCBckOBJ) $(SMS++OBJ)
+MOBJ =  $(SMS++OBJ) $(MILPSOBJ) $(CMMNUOBJ)
 
 # libraries
-MLIB =  $(SMS++LIB) $(UCBckLIB) $(MILPSLIB)
+# note: linking the SMS++ object files directly (lib/makefile-c above)
+# rather than the static library pulls in SMS++/obj/BoxSolver.o
+# unconditionally, so BoxSolver registers in the Solver factory without any
+# --force-link trick (it is never explicitly mentioned in test.cpp)
+MLIB =  $(SMS++LIB) $(MILPSLIB)
 
 $(DIR)/$(NAME): $(DIR)/test.o $(MOBJ)
-	$(CC) -o $(DIR)/$(NAME) $+ $(MLIB) $(SW)
+	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
 
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(UCBckINC) $(MILPSINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(MILPSINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(UCBckH) $(MILPSH) $(CMMNUH)
+MH =    $(SMS++H) $(MILPSH) $(CMMNUH)
 
 # compile command
 

@@ -57,6 +57,12 @@ include $(MCFLESDR)/makefile
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-s
 
+# FrankWolfeSolver, for the two Frank-Wolfe testers only ("make fw" and
+# "make fwmods"); its objects are not in MOBJ, so the tester of the Block
+# does not link it
+FWSlvSDR = ../../FrankWolfeSolver
+include $(FWSlvSDR)/makefile-s
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
@@ -85,5 +91,36 @@ MH =    $(MCFBkH) $(MCFCSH) $(MCFLEH) $(MILPSH) $(CMMNUH)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)
+
+# the Frank-Wolfe decomposition on this Block- - - - - - - - - - - - - - - - -
+# the generic tester lives in the root of the suites, since the leaf Block it
+# reads is whichever one the configurations of FW/ name; the one of the
+# Modification of the feasible region is of this Block, hence it is here
+
+fw: SW = $(SW_RELEASE)
+fw: $(DIR)/MCFBlock_FW_test
+
+fwmods: SW = $(SW_RELEASE)
+fwmods: $(DIR)/MCFBlock_FWmods_test
+
+$(DIR)/MCFBlock_FW_test: $(MOBJ) $(FWSlvOBJ) $(DIR)/fw_test.o
+	$(CC) -o $@ $(DIR)/fw_test.o $(MOBJ) $(FWSlvOBJ) $(MLIB) $(FWSlvLIB) \
+	      $(SW)
+
+$(DIR)/MCFBlock_FWmods_test: $(MOBJ) $(FWSlvOBJ) $(DIR)/test_fw_mods.o
+	$(CC) -o $@ $(DIR)/test_fw_mods.o $(MOBJ) $(FWSlvOBJ) $(MLIB) \
+	      $(FWSlvLIB) $(SW)
+
+$(DIR)/fw_test.o: ../fw_test.cpp ../fw_test_common.h $(MH) $(FWSlvH)
+	$(CC) -c ../fw_test.cpp -o $@ $(MINC) $(FWSlvINC) $(SW)
+
+$(DIR)/test_fw_mods.o: $(DIR)/test_fw_mods.cpp ../fw_test_common.h $(MH) \
+                       $(FWSlvH)
+	$(CC) -c $(DIR)/test_fw_mods.cpp -o $@ $(MINC) $(FWSlvINC) $(SW)
+
+.PHONY: fw fwmods
+
+clean::
+	rm -f $(DIR)/MCFBlock_FW_test $(DIR)/MCFBlock_FWmods_test
 
 ############################ End of makefile #################################

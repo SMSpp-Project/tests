@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# usage: batch-box < exe file > < regime | par file >
+#        < exe file > = path of the executable file,
+#                       default ./AbstractBlock_Box_test
+#        < regime >   = LDS, the Lagrangian dual cross-checked against the
+#                       Linear Program (default), or PPH, the primal proximal
+#                       heuristic; anything else is taken to be the
+#                       BlockSolverConfig file to run with, in the LDS regime
+#
+# runs the tests over a range of sizes, number of sub-blocks, densities and
+# seeds. The two regimes differ in what is registered to the father and in
+# what the tester is asked to change, hence in the bit-wise code of the
+# second argument of the tester and in the number of rounds
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../../batch_common.sh"
+
+exe=${1:-./AbstractBlock_Box_test}
+
+case ${2:-LDS} in
+  LDS) par=BSPar.txt    ; what=15 ; iter=   ;;
+  PPH) par=ProxHeur.txt ; what=63 ; iter=40 ;;
+  *)   par=$2           ; what=15 ; iter=   ;;
+esac
+
+for nvar in 2 10 50; do
+  for nson in 2 9 20; do
+    for dens in 0.05 0.1; do
+      for (( seed = 7 ; seed < 13 ; seed++ )); do
+
+        # ordinarily one would stop with any error, but experience shows that
+        # a few errors arise from numerical difficulties in Cplex, and that a
+        # few cases with small optimal value may trigger an error although
+        # they are not consequential, which is why we print stuff in the
+        # tester but leave the batch running
+        run_test "$exe" -S "$par" -e "$seed" -k "$what" -N "$nvar" -s "$nson" -d "$dens" -n "$iter"
+
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -110,7 +110,7 @@ int_BDSlv_Restore 1  # 0 = the reformulation stays, 1 = the Block is given
 
 # now all the string parameters
 str_Bsub_BSCfg  BDSSCfg.txt       # BlockSolverConfig of the subproblems
-str_Mstr_BSCfg  BDSMCfg.txt       # BlockSolverConfig of the master
+str_Mstr_BSCfg  BDSMCfg-INV.txt   # BlockSolverConfig of the master
 
 0  # number of vector-of-int parameters
 

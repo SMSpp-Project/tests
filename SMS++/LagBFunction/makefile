@@ -2,7 +2,7 @@
 ################################ makefile ####################################
 ##############################################################################
 #                                                                            #
-#   makefile of test (for compare_formulations)                              #
+#   makefile of test (for LagBFunction)                                      #
 #                                                                            #
 #                              Antonio Frangioni                             #
 #                          Dipartimento di Informatica                       #
@@ -11,7 +11,7 @@
 ##############################################################################
 
 # module name
-NAME = compare_formulations
+NAME = LagBFunction_test
 
 # basic directory
 DIR = .
@@ -33,32 +33,33 @@ include ../../makefile_common
 SMS++SDR = ../../../SMS++
 include $(SMS++SDR)/lib/makefile-c
 
-# define input macros for UCBlock makefile, then include it
-UCBckDIR = ../../../UCBlock
-include $(UCBckDIR)/lib/makefile
+# BundleSolver
+BNDSLVSDR = ../../../BundleSolver
+include $(BNDSLVSDR)/makefile-s
 
+# not necessary, BundleSolver does that already
 # MILPSolver
-MILPSSDR = ../../../MILPSolver
-include $(MILPSSDR)/makefile-c
+#MILPSSDR = ../../../MILPSolver
+#include $(MILPSSDR)/makefile
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(CMMNUOBJ) $(MILPSOBJ) $(UCBckOBJ) $(SMS++OBJ)
+MOBJ =  $(BNDSLVOBJ) $(SMS++OBJ) $(CMMNUOBJ)
 
 # libraries
-MLIB =  $(SMS++LIB) $(UCBckLIB) $(MILPSLIB)
+MLIB =  $(BNDSLVLIB) $(SMS++LIB)
 
-$(DIR)/$(NAME): $(DIR)/test.o $(MOBJ)
-	$(CC) -o $(DIR)/$(NAME) $+ $(MLIB) $(SW)
+$(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
+	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
 
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(UCBckINC) $(MILPSINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(UCBckH) $(MILPSH) $(CMMNUH)
+MH =    $(SMS++H) $(BNDSLVH) $(CMMNUH)
 
 # compile command
 

@@ -54,6 +54,26 @@ function(smspp_install target_name)
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})]]
 endfunction()
 
+# Register a batch file as a ctest driving the given executable: every suite
+# runs its batches this way, each of them being a family of instances that the
+# tester cross-checks all the Solver of its BlockSolverConfig on, so that they
+# are independent and can be run, selected and timed one by one.
+function(add_batch_test exe batch)
+    if (UNIX)
+        add_test(NAME ${exe}/${batch}
+                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/${batch}
+                         ${CMAKE_CURRENT_BINARY_DIR}/${exe}
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    elseif (WIN32)
+        add_test(NAME ${exe}/${batch}
+                 # using Git for Windows that includes Git Bash
+                 COMMAND "C:/Program Files/Git/bin/bash.exe"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/${batch}"
+                         "$<TARGET_FILE:${exe}>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    endif ()
+endfunction()
+
 # ----- Settings ------------------------------------------------------------ #
 # This creates an ENABLE_TESTING option (default: ON) and enables the testing
 # using the ctest executable.
@@ -80,26 +100,21 @@ else ()
 endif ()
 
 # ----- Tests --------------------------------------------------------------- #
-add_subdirectory(BoxSolver)
-add_subdirectory(AbstractBlock_Box)
+# One directory per module the tests are posed on, named after it, since a
+# suite here is what a module cannot test by itself: what it needs is either
+# the cross-check machinery of common_utils or a module that is not one of its
+# dependencies. The testers of the objects of the core library are therefore
+# grouped under SMS++, those of a Block under the name of its module.
+add_subdirectory(SMS++)
 
-add_subdirectory(LagBFunction)
+add_subdirectory(MILPSolver)
+add_subdirectory(BundleSolver)
 
-add_subdirectory(PolyhedralFunction)
-add_subdirectory(PolyhedralFunctionBlock)
-
-add_subdirectory(QuadraticTests)
-
-add_subdirectory(Write-Read)
-
-add_subdirectory(AbstractBlock)
-
-add_subdirectory(BendersBFunction)
 add_subdirectory(MCFBlock)
 
 add_subdirectory(BinaryKnapsackBlock)
 
-add_subdirectory(CapacitatedFacilityLocation)
+add_subdirectory(CapacitatedFacilityLocationBlock)
 
 add_subdirectory(MMCFBlock)
 
@@ -113,11 +128,8 @@ add_subdirectory(LukFiBlock)
 add_subdirectory(SVMBlock)
 add_subdirectory(SingleFlowDCRBlock)
 
-add_subdirectory(FrankWolfeSolver)
-
-
+# the one tester that is posed on no Block in particular: it reads whichever
+# two the configurations name and compares the two formulations
 add_subdirectory(compare_formulations)
 
 # --------------------------------------------------------------------------- #
-
-add_subdirectory(BundleSolverML)

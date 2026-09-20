@@ -47,13 +47,6 @@ The following tests are provided:
   `BlockConfig`-uring in two different ways two copies of the same `:Block`
   and solving them with two copies of the same `:Solver`.
 
-- [`FrankWolfeSolver`](FrankWolfeSolver), a generic tester for
-  `FrankWolfeSolver`: a "leaf" `Block` is read `K` times into a father
-  `AbstractBlock` with a random `FRealObjective`, which is then solved both by
-  a `FrankWolfeSolver` (using the `:Solver` registered to each sub-`Block` as a
-  Linear Minimization Oracle) and by a monolithic `:MILPSolver`, cross-checking
-  the two optima.
-
 - [`InvestmentBlock`](InvestmentBlock), a tester that solves the investment
   problem defined by an `InvestmentBlock` (loaded from a netCDF file) with the
   configured `:Solver`.
@@ -93,7 +86,12 @@ The following tests are provided:
   `TUDPS_test`, which compares the `ThermalUnitExtDPSolver` specialised
   Dynamic Programming `:Solver` with a `:MILPSolver` on some of the (many)
   different formulations `ThermalUnitBlock` supports; its batches are in
-  `batches-tudps`, each of them being run with that tester.
+  `batches-tudps`, each of them being run with that tester. It also runs the
+  generic Frank-Wolfe tester (`fw_test.cpp`) on `K` copies of a
+  `ThermalUnitBlock`, each with its Dynamic Programming `:Solver` as the
+  Linear Minimization Oracle, against the perspective bound a `:MILPSolver`
+  computes on the monolithic relaxation: the configurations and the batch are
+  in `FW`.
 
 - [`LukFiBlock`](LukFiBlock): a very simple main for running tests with
   [LukFiBlock](https://gitlab.com/smspp/lukfiblock). It just creates one
@@ -103,7 +101,15 @@ The following tests are provided:
   `MCFSolver` and compare the results. This is a test for `MCFBlock`,
   `MCFSolver`, `MILPSolver` and its derived classes (`CPXMILPSolver` and
   `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
-  core library.
+  core library. The same suite hosts the generic Frank-Wolfe
+  tester (`fw_test.cpp`): a "leaf" `Block` is read `K` times into a father
+  `AbstractBlock` with a random `FRealObjective`, which is then solved both by
+  a `FrankWolfeSolver` (using the `:Solver` registered to each sub-`Block` as a
+  Linear Minimization Oracle) and by a monolithic `:MILPSolver`, cross-checking
+  the two optima; here the leaves are `MCFBlock` and their oracle a
+  `MCFSolver`, and a second tester runs the same comparison while the feasible
+  region of a sub-`Block` changes. Their configurations, the regression suite
+  and the large-scale batch are in `FW`.
 
 - [`MMCFBlock`](MMCFBlock), a tester which provides initial tests
   for `MMCFBlock` (in particular, a way to retrieve/generate some sets of
