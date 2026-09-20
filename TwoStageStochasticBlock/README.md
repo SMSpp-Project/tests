@@ -34,6 +34,33 @@ but nothing in the executable assumes a specific inner Block type —
 any two-stage stochastic problem that can be expressed as a
 `TwoStageStochasticBlock` is in scope.
 
+A second tester, `TSSB_BDS_test`, puts the three ways of solving
+the same two-stage stochastic investment problem one against the
+other on the same data: the extensive form given to a `:MILPSolver`,
+the generic Benders decomposition of `BendersDecompositionSolver`,
+whose master carries the design Variable and whose subproblems are the
+scenarios, and the ad hoc one an `InvestmentBlock` over the whole
+`TwoStageStochasticBlock` carries, i.e., an `InvestmentFunction` whose
+value is the entire stochastic problem and which therefore yields one
+aggregated linearization per iteration. Being three formulations of
+one problem the optima must coincide, which is what is checked; the
+iterations and the times are printed. It is built only where
+`BendersDecompositionSolver` and `InvestmentBlock` are in the build,
+the rest of the suite running without them.
+
+The usage of the second executable is the following:
+
+       ./TSSB_BDS_test [TSSB-file]
+       TSSB-file: instance to read [tssb_investment.nc4]
+
+`batches/batch-bds` repeats that comparison on instances of
+growing size, from 3 to 100 scenarios and from 24 to 96 time steps,
+which is where the forms part ways: the generic one takes many more
+iterations, each of which is one LP per scenario, while the ad hoc one
+takes few, each of which is the whole stochastic problem. The
+instances are written by `gen_investment.py`, which needs a Python
+with `netCDF4`, and are thrown away at the end.
+
 A makefile is also provided that builds the executable including the
 `TwoStageStochasticBlock`, `LagrangianDualSolver`, `BundleSolver`,
 `MILPSolver` modules and the core SMS++ library, together with the
@@ -42,6 +69,17 @@ inner-Block module needed by the instances in `batches/` (currently
 
 ## Configuration files
 
+- `BSPar-BDS.txt` — `BlockSolverConfig` attaching
+  `BendersDecompositionSolver` to the structured form, in the convex
+  regime: the master is solved by the bundle `BSPar-BDS-master.txt`
+  names, whose `MasterProblemBlock` is configured by `MPBCfg-BDS.txt`,
+  and each scenario subproblem by the `:MILPSolver` of
+  `BSPar-BDS-sub.txt`, which is also what solves the extensive form
+  the comparison is checked against.
+- `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
+  bundle over the `InvestmentBlock`, and `BCfg-Inv.txt` the
+  `BlockConfig` of that Block, which is what fixes the design in every
+  scenario rather than mapping it into the right-hand side.
 - `BSPar-2S.txt` — outer `BlockSolverConfig` registering `:MILPSolver`
   (default `GRBMILPSolver`) + `LagrangianDualSolver`. The
   `LagrangianDualSolver` parameters

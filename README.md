@@ -157,7 +157,12 @@ The following tests are provided:
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
-  through a `BlockSolverConfig` and compares their results.
+  through a `BlockSolverConfig` and compares their results, and a second one
+  that puts the three ways of solving the same two-stage stochastic investment
+  problem one against the other, i.e., the extensive form, the generic Benders
+  decomposition of `BendersDecompositionSolver` and the ad hoc one an
+  `InvestmentBlock` over the whole `TwoStageStochasticBlock` carries, on
+  instances of growing size.
 
 - [`MultiStageStochasticBlock`](MultiStageStochasticBlock), a tester that loads
   a `MultiStageStochasticBlock` from a netCDF file, attaches a `:Solver`

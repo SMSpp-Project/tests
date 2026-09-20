@@ -5,10 +5,12 @@ if (NOT hasParent)
     # Blocks
     find_package(TwoStageStochasticBlock)
     find_package(UCBlock)
+    find_package(InvestmentBlock)
     # Solvers
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
     find_package(MILPSolver)
+    find_package(BendersDecompositionSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -64,6 +66,51 @@ if (TARGET SMS++::TwoStageStochasticBlock)
         set_tests_properties(TSSB_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
     endforeach ()
+
+    # The three ways of solving the same two-stage stochastic investment
+    # problem: the extensive form, the generic Benders decomposition of
+    # BendersDecompositionSolver and the ad hoc one an InvestmentBlock over
+    # the whole TwoStageStochasticBlock carries. Neither of the two Solver it
+    # takes is among the labels of this suite, since the rest of it runs
+    # without them, so the tester is built only where they are.
+    if (TARGET SMS++::BendersDecompositionSolver AND
+        TARGET SMS++::InvestmentBlock)
+
+        add_executable(TSSB_BDS_test test_bds.cpp)
+        target_link_libraries(TSSB_BDS_test PRIVATE
+                SMS++::TwoStageStochasticBlock
+                SMS++::InvestmentBlock
+                SMS++::BendersDecompositionSolver
+                SMS++::BundleSolver
+                SMS++::MILPSolver)
+        smspp_install(TSSB_BDS_test)
+
+        add_test(NAME TSSB_BDS_test
+                 COMMAND TSSB_BDS_test
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+        # the same comparison on instances of growing size, which is where the
+        # forms part ways: those instances are written by gen_investment.py,
+        # hence the batch runs only where there is a Python that can write
+        # netCDF
+        find_package(Python3 COMPONENTS Interpreter)
+        if (Python3_Interpreter_FOUND)
+            execute_process(COMMAND ${Python3_EXECUTABLE} -c "import netCDF4"
+                            RESULT_VARIABLE HAS_NETCDF4
+                            OUTPUT_QUIET ERROR_QUIET)
+            if (HAS_NETCDF4 EQUAL 0)
+                add_test(NAME TSSB_BDS_test/batches/batch-bds
+                         COMMAND bash
+                                 ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bds
+                                 $<TARGET_FILE:TSSB_BDS_test>
+                                 ${Python3_EXECUTABLE}
+                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+            else ()
+                message(STATUS "tests/TwoStageStochasticBlock: netCDF4 is not "
+                               "there, the BDS batch is out")
+            endif ()
+        endif ()
+    endif ()
 endif ()
 
 # Tag this directory's tests with their per-module CI labels
