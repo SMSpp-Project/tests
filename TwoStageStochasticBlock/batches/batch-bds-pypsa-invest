@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# usage: batch-bds-pypsa-invest < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default ./TSSB_BDS_test
+#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S.txt
+#        < log file > = name of log file, default no log
+#
+# the same cross-check batch-bds-pypsa does, on the instances in which the
+# expansion is actually built: they are the same PyPSA networks, written with
+# the capital costs scaled by the same factor the horizon is cut by, so that
+# the investment can pay for itself and the first stage is a decision rather
+# than a formality [see SCALE_CAPITAL_COSTS in the generator of pypsa2smspp]
+#
+# it is not registered with CTest: the Benders Solver takes minutes on these,
+# its master being a cutting plane with no stabilization on a design that is
+# continuous, which is exactly what these instances are there to show
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./TSSB_BDS_test
+DEFAULT_PAR=BSPar-BDS-2S.txt
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ file name ] = PyPsa objective value
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_demand_invest.nc]=2.1884021766e+08
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_maxpower_invest.nc]=1.7659454519e+08
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_hydroinflow_invest.nc]=1.3152296125e+08
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_complete_invest.nc]=2.8391748465e+08
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/pypsa-data/tssb-invest/smspp_*.nc; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

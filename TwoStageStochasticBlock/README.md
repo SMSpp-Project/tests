@@ -80,6 +80,17 @@ with `netCDF4`, and are thrown away at the end.
 PyPSA instances `batches/batch-pypsa` solves, against the same
 reference objective values.
 
+`batches/batch-bds-pypsa-invest` runs it on the same PyPSA networks
+written with the capital costs scaled by the same factor the horizon
+is cut by. Without that scaling the capital cost of an extendable
+asset pays for a whole year while the operation it saves is that of
+the snapshots that are kept, so nothing is ever built and the first
+stage is a formality; with it the expansion is actually bought, which
+is what makes the master of a decomposition decide something. It is
+not registered with CTest: the Benders Solver takes minutes on those
+instances, its master being a cutting plane with no stabilization on
+a design that is continuous.
+
 A makefile is also provided that builds the executable including the
 `TwoStageStochasticBlock`, `LagrangianDualSolver`, `BundleSolver`,
 `MILPSolver` modules and the core SMS++ library, together with the

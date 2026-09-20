@@ -513,9 +513,13 @@ static AbstractBlock * benders_form( TwoStageStochasticBlock * tssb )
     }
    }
 
+ /* Every design Variable enters the Objective of the master, those that cost
+  * nothing with a zero coefficient: a bundle solving the master in its
+  * sparse mode asks its linear part to cover all the Variable the value
+  * functions are active in, and they are active in all of them. */
+
  for( Index j = 0 ; j < n ; ++j )
-  if( cost[ j ] )
-   rlf->add_variable( & ( *x )[ j ] , cost[ j ] );
+  rlf->add_variable( & ( *x )[ j ] , cost[ j ] );
 
  auto robj = new FRealObjective( root , rlf );
  robj->set_sense( Objective::eMin );

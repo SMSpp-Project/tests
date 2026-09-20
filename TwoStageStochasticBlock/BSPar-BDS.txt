@@ -43,7 +43,7 @@ int_BDSlv_Regime  0  # 0 = convex master, 1 = MILP master
 2  # number of string parameters
 
 # now all the string parameters
-str_Bsub_BSCfg  BDSSCfg.txt     # BlockSolverConfig of the subproblems
+str_Bsub_BSCfg  BDSSCfg.txt  # BlockSolverConfig of the subproblems
 str_Mstr_BSCfg  BDSMCfg.txt  # BlockSolverConfig of the master
 
 0  # number of vector-of-int parameters
