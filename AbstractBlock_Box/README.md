@@ -1,4 +1,4 @@
-# test/LagrangianDualSolver_Box
+# test/AbstractBlock_Box
 
 A tester which provides very comprehensive tests for
 `LagrangianDualSolver`, `LagBFunction`, `BoxSolver`, any `CDASolver` able to

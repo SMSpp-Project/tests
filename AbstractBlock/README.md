@@ -1,4 +1,4 @@
-# AbstractBlock_mirror test
+# AbstractBlock test
 
 A tester for `AbstractBlock::mirror()`, i.e., for the copy of the abstract
 representation of a Block that any Block has without having written a line
@@ -18,7 +18,7 @@ representation of its own and generates its abstract one.
 
 ## Running the test
 
-    ./AbstractBlock_mirror_test [ <solver> ]
+    ./AbstractBlock_test [ <solver> ]
 
 with `<solver>` the name of the `:MILPSolver` to use, `CPXMILPSolver` by
 default. The `batch` script runs the tester over every `:MILPSolver` that is

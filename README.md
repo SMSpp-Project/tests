@@ -66,7 +66,7 @@ The following tests are provided:
   and its derived classes `CPXMILPSolver` and `SCIPMILPSolver`), as well as
   for quite a lot of the mechanics of the SMS++ core library.
 
-- [`LagrangianDualSolver_Box`](LagrangianDualSolver_Box), a tester
+- [`AbstractBlock_Box`](AbstractBlock_Box), a tester
   which provides very comprehensive tests for `LagrangianDualSolver`,
   `LagBFunction`, `BoxSolver`, any `CDASolver` able to handle `C05Function`
   in the `Objective`, any `CDASolver` able to handle Linear Programs (such

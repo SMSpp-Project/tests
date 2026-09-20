@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- the suite of `MILPSolver` is the test directory of that module, where its
+- a suite is named after the Block its tests are posed on, not after a Solver
+  that runs on it: `AbstractBlock_mirror` is `AbstractBlock`, and
+  `LagrangianDualSolver_Box` is `AbstractBlock_Box`, the structured
+  `AbstractBlock` of box-constrained sub-Block being what it builds and the
+  Lagrangian dual one of the ways it solves it
+
+the suite of `MILPSolver` is the test directory of that module, where its
   two testers now live as `test_farkas.cpp` and `test_groups.cpp`: neither of
   them needs a Block of another module, hence neither of them needs to be
   here

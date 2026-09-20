@@ -81,7 +81,7 @@ endif ()
 
 # ----- Tests --------------------------------------------------------------- #
 add_subdirectory(BoxSolver)
-add_subdirectory(LagrangianDualSolver_Box)
+add_subdirectory(AbstractBlock_Box)
 
 add_subdirectory(LagBFunction)
 
@@ -92,7 +92,7 @@ add_subdirectory(QuadraticTests)
 
 add_subdirectory(Write-Read)
 
-add_subdirectory(AbstractBlock_mirror)
+add_subdirectory(AbstractBlock)
 
 add_subdirectory(BendersBFunction)
 add_subdirectory(MCFBlock)
