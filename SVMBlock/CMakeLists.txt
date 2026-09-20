@@ -63,6 +63,14 @@ if (TARGET SMS++::SVMBlock)
         list(REMOVE_ITEM BATCH_FILES
              "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-liblinear")
     endif ()
+    # the same for the Benders form, which is the one BendersDecompositionSolver
+    # asks for and which is therefore only checked where that Solver is built:
+    # it is not among the labels of this suite, the rest of which runs without
+    # it
+    if (NOT TARGET SMS++::BendersDecompositionSolver)
+        list(REMOVE_ITEM BATCH_FILES
+             "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bds")
+    endif ()
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})

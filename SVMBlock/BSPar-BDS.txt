@@ -15,18 +15,15 @@
 # cross-check BSPar-LD.txt does on the consensus structure, i.e., the other
 # way of splitting the very same sum.
 #
-# WARNING: this cross-check does not run yet, and no batch uses this file. The
-# BendersDecompositionSolver does not read the Block, it restructures it, and
-# it does so in set_Block(): from the moment the BlockSolverConfig registers
-# it, the root is grafted into a master of its own, the epigraph Variable and
-# the cuts are added and the subproblems are declared excluded, so the other
-# Solver attached to the same Block find a mutilated problem and answer the
-# wrong thing. Which is measured: the :MILPSolver alone gives the same optimal
-# value as everybody else, and next to the Benders Solver it gives C times the
-# number of samples, i.e. the model at zero. Making the two coexist means
-# either moving the reformulation into compute() and dismantling at the end of
-# it, which costs the pool of cuts the re-optimization lives on, or keeping
-# the pool as a state of the Solver rather than as pieces of the Block.
+# The three can be attached to one Block because the Benders Solver is asked
+# to give it back as it was at the end of each compute() [int_BDSlv_Restore in
+# BDSCfg.txt]: it does not read the Block, it restructures it, grafting the
+# root into a master of its own and taking the complicating Variable out of
+# the Constraint of the chunks, and while that lasts the problem the others
+# would find is not the one they were attached to. What the restoring costs is
+# the reformulation, paid at every compute(), and the pool of cuts, which is
+# made of pieces of the master and goes with it, so that nothing is warm
+# started here.
 #
 #   Donato Meoli
 #
