@@ -19,17 +19,39 @@
 # components that are evaluated, and with it the trajectory, depends on
 # thread timing and a run is not reproducible bit for bit; the objective
 # values still have to match the references, which is what this checks.
+#
+# The instances are run once per value of dblCmpAggr, i.e. with the
+# components the master problem sees left as they are and then gathered in
+# groups: with fewer groups than threads the outer loop cannot spend them all
+# and hands the rest to the groups, which spend them on their members, so
+# that this is the arrangement where the two levels of parallelism are
+# nested. The values below are the two ends of that, one group per component
+# and half of them in each of two groups.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 CFG=${HERE}/../LDCfg.txt
+
+aggrs="0 0.5"
 
 # put the configuration back as it was, whatever happens - - - - - - - - - -
 
 cp "${CFG}" "${CFG}.orig"
 trap 'mv -f "${CFG}.orig" "${CFG}"' EXIT
 
-sed -i 's/^str_LDSlv_ISName[[:space:]].*/str_LDSlv_ISName   ParallelBundleSolver # the inner Solver used by LagrangianDualSolver/' "${CFG}"
+for aggr in ${aggrs}; do
 
-bash "${HERE}/batch-ec" "$@"
+  cp -f "${CFG}.orig" "${CFG}"
+
+  sed -i 's/^str_LDSlv_ISName[[:space:]].*/str_LDSlv_ISName   ParallelBundleSolver # the inner Solver used by LagrangianDualSolver/' "${CFG}"
+  cfg_set_par "${CFG}" dblCmpAggr "${aggr}"
+
+  echo "[ dblCmpAggr ${aggr} ]"
+
+  bash "${HERE}/batch-ec" "$@"
+
+done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
