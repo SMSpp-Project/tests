@@ -24,7 +24,7 @@ several times, the results are compared.
 
 The usage of the executable is the following:
 
-    ./LDS_Box_test seed [wchg nvar nson dens #rounds #chng %chng]
+    ./AbstractBlock_Box_test seed [wchg nvar nson dens #rounds #chng %chng]
        wchg: what to change, coded bit-wise [17]
              0 = bounds, 1 = objective
              2 = linking coefficients, 3 = linking lhs/rhs

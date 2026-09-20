@@ -16,19 +16,19 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::LagrangianDualSolver)
 
-    add_executable(LDS_Box_test test.cpp ../common_utils.cpp)
-    target_include_directories(LDS_Box_test PRIVATE ..)
-    target_link_libraries(LDS_Box_test PRIVATE SMS++::LagrangianDualSolver)
+    add_executable(AbstractBlock_Box_test test.cpp ../common_utils.cpp)
+    target_include_directories(AbstractBlock_Box_test PRIVATE ..)
+    target_link_libraries(AbstractBlock_Box_test PRIVATE SMS++::LagrangianDualSolver)
 
     if (TARGET SMS++::BundleSolver)
-        target_link_libraries(LDS_Box_test PRIVATE SMS++::BundleSolver)
+        target_link_libraries(AbstractBlock_Box_test PRIVATE SMS++::BundleSolver)
     endif ()
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(LDS_Box_test PRIVATE SMS++::MILPSolver)
+        target_link_libraries(AbstractBlock_Box_test PRIVATE SMS++::MILPSolver)
     endif ()
 
-    smspp_install(LDS_Box_test)
+    smspp_install(AbstractBlock_Box_test)
 
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch")
@@ -36,14 +36,14 @@ if (TARGET SMS++::LagrangianDualSolver)
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
         if (UNIX)
-            add_test(NAME LDS_Box_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/LDS_Box_test
+            add_test(NAME AbstractBlock_Box_test/${BATCH_NAME}
+                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/AbstractBlock_Box_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
-            add_test(NAME LDS_Box_test/${BATCH_NAME}
+            add_test(NAME AbstractBlock_Box_test/${BATCH_NAME}
                      # using Git for Windows that includes Git Bash
                      COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:LDS_Box_test>"
+                             "${BATCH_FILE}" "$<TARGET_FILE:AbstractBlock_Box_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
     endforeach ()
