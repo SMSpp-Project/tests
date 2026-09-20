@@ -123,6 +123,28 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
         add_test(NAME CFL_BDS_test
                  COMMAND CFL_BDS_test
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+        # The same problem on an instance small enough that every way the
+        # Solver has of writing a cut can be run on it and compared with the
+        # monolithic optimum: the multi-cut and single-cut masters, the
+        # cutting-plane and the bundle one, the Pareto-optimal cuts, the two
+        # normalizations of the feasibility cut and its phase one, the
+        # combinatorial cut of a binary master, the cut that serves for both
+        # feasibility and optimality, what keeping a subproblem in the master
+        # costs and what the Block is given back at the end of a compute().
+        # The instance is written by the tester itself, so the only thing it
+        # needs is the configurations, which live in BDS/ beside the ones of
+        # the other comparisons of this suite.
+        add_executable(CFL_BDS_regimes_test test_bds_regimes.cpp)
+        target_link_libraries(CFL_BDS_regimes_test PRIVATE
+                SMS++::BendersDecompositionSolver
+                SMS++::BundleSolver
+                SMS++::MILPSolver)
+        smspp_install(CFL_BDS_regimes_test)
+
+        add_test(NAME CFL_BDS_regimes_test
+                 COMMAND CFL_BDS_regimes_test
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BDS)
     endif ()
 endif ()
 
