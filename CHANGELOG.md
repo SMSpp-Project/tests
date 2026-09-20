@@ -79,13 +79,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reconstructs may violate the rows it has dualised, the default being the
   1e-1 that was written in the test
 
-- `UCBlock/batches/batch-pypsa` runs the instances whose lines are extendable
-  with the MILP alone: on this line their master dies in "Bundle::FormD:
-  unrecoverable MP failure", on one of them with the dual by then on the
-  optimum, and which formulation of the network is asked for decides whether
-  it happens at all, where the master of the 1.0 answers them all; the
-  instances are worth testing against their reference meanwhile
-
 ### Added 
 
 - the batch `batch-nuclear` of the `ThermalUnitBlock_Solver` suite, which
