@@ -49,6 +49,29 @@ if (TARGET SMS++::SVMBlock)
 
     smspp_install(SVM_test)
 
+    # the two dual decompositions of one training problem, the consensus one
+    # under a Lagrangian Solver and the Benders one under the generic Benders
+    # Solver, both cross-checked against the ad hoc solver of the module: what
+    # is tested is that the two structures set_structure() deals out describe
+    # the same instance, hence it belongs to the suite of the Block and not to
+    # that of either Solver
+    if (TARGET SMS++::BendersDecompositionSolver AND
+        TARGET SMS++::LagrangianDualSolver)
+        add_executable(SVM_bds_test test_bds.cpp)
+        target_link_libraries(SVM_bds_test PRIVATE
+                              SMS++::SVMBlock
+                              SMS++::BendersDecompositionSolver
+                              SMS++::LagrangianDualSolver
+                              SMS++::BundleSolver
+                              SMS++::MILPSolver)
+
+        smspp_install(SVM_bds_test)
+
+        add_test(NAME SVM_bds_test
+                 COMMAND SVM_bds_test
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    endif ()
+
     # Add a test for each batch file. batch-libsvm and batch-liblinear need
     # LIBSVMSolver and LIBLINEARSolver, which SVMBlock only builds when the
     # library each of them wraps is found: without it the Solver is not in the

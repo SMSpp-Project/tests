@@ -27,6 +27,25 @@ endif ()
 
 smspp_install(PolyhedralFunctionBlock_test)
 
+# unit test of PolyhedralFunction::remove_parallel_rows() and of
+# PolyhedralFunctionBlock::remove_redundant_rows(), i.e., of the pruning of
+# the rows: it builds a function whose dominated and inactive rows are known
+# and asks that exactly those be removed, hence it needs no configuration and
+# no other module
+add_executable(PolyhedralFunctionBlock_prune_test test_prune.cpp)
+target_link_libraries(PolyhedralFunctionBlock_prune_test PRIVATE SMS++::SMS++)
+
+if (TARGET SMS++::MILPSolver)
+    target_link_libraries(PolyhedralFunctionBlock_prune_test
+                          PRIVATE SMS++::MILPSolver)
+endif ()
+
+smspp_install(PolyhedralFunctionBlock_prune_test)
+
+add_test(NAME PolyhedralFunctionBlock_prune_test
+         COMMAND PolyhedralFunctionBlock_prune_test
+         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Add a test for each batch file
 file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch")
 foreach (BATCH_FILE ${BATCH_FILES})

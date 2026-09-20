@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `SVMBlock` runs the comparison of the two dual decompositions of one
+  training problem, the consensus one under `LagrangianDualSolver` and the
+  Benders one under `BendersDecompositionSolver`, both cross-checked against
+  the ad hoc solver of the module, and `PolyhedralFunctionBlock` runs the unit
+  test of the pruning of the rows: both come from the test directory of
+  `BendersDecompositionSolver`, which is not where a test that needs another
+  Block to exist belongs
+
 - `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
   `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
   the instances it reads are in `data/nc4/pypsa-data` instead of
