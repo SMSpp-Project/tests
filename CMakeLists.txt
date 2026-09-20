@@ -107,7 +107,6 @@ add_subdirectory(UCBlock)
 add_subdirectory(InvestmentBlock)
 add_subdirectory(TwoStageStochasticBlock)
 add_subdirectory(MultiStageStochasticBlock)
-add_subdirectory(ScenarioReduction)
 
 add_subdirectory(LukFiBlock)
 

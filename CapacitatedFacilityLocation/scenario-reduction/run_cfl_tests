@@ -32,7 +32,7 @@ GEN="${GEN:-./CFLScenarioGenerator}"
 SOLVE="${SOLVE:-./ScenarioReductionSolver_test}"
 IDIR="${IDIR:-${HERE}/../../../CapacitatedFacilityLocationBlock/data/nc4/ORLib}"
 SDIR="${SDIR:-${TMPDIR:-/tmp}/cfl_scenarios}"
-CFGDIR="${CFGDIR:-${HERE}/..}"   # where the BSCfg.txt configs live
+CFGDIR="${CFGDIR:-${HERE}}"      # where the BSCfg.txt configs live
 
 INSTANCES="cap102"
 N_VALUES="200"

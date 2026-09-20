@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- a suite is named after the Block its tests are posed on, not after a Solver
+- the scenario reduction is run from the suite of the Block whose scenarios
+  are reduced: the generator of the unit commitment instances and the runs on
+  them are in `UCBlock/scenario-reduction`, those of the facility location in
+  `CapacitatedFacilityLocation/scenario-reduction`, each with the two
+  configurations they share, which they now read from their own directory
+
+a suite is named after the Block its tests are posed on, not after a Solver
   that runs on it: `AbstractBlock_mirror` is `AbstractBlock`, and
   `LagrangianDualSolver_Box` is `AbstractBlock_Box`, the structured
   `AbstractBlock` of box-constrained sub-Block being what it builds and the

@@ -33,7 +33,7 @@ GEN="${GEN:-./UCScenarioGenerator}"
 SOLVE="${SOLVE:-./ScenarioReductionSolver_test}"
 IDIR="${IDIR:-${HERE}/../../../UCBlock/data/nc4}"
 SDIR="${SDIR:-${TMPDIR:-/tmp}/uc_scenarios}"
-CFGDIR="${CFGDIR:-${HERE}/..}"   # where the BSCfg.txt configs live
+CFGDIR="${CFGDIR:-${HERE}}"      # where the BSCfg.txt configs live
 
 INSTANCES="EC_CO_Test_TUB"
 N_VALUES="25"

@@ -106,6 +106,13 @@ if (TARGET SMS++::UCBlock)
     endforeach ()
 endif ()
 
+# The scenario generator of this Block and the runs that reduce the scenarios
+# it writes: the reduction is asked of ScenarioReductionSolver, but what it is
+# asked of is the unit commitment instances, hence it belongs to this suite.
+if (TARGET SMS++::ScenarioReductionSolver)
+    add_subdirectory(scenario-reduction)
+endif ()
+
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
