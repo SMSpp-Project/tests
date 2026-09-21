@@ -680,9 +680,11 @@ static bool SolveBoth( void )
    * Solver answering kLowPrecision has declared that it did not reach the
    * accuracy it was asked for, and has said how far it is: the two bounds it
    * reports are around the value, and their distance is the accuracy it did
-   * reach. Holding such an answer to the tolerance of an exact one asks for
-   * more than the Solver ever promised, so the tolerance is widened to the
-   * gap the Solver itself declares. */
+   * reach (they may well have crossed, which is what not reaching it looks
+   * like). Holding such an answer to the tolerance of an exact one asks for
+   * more than the Solver ever promised, so the declared gap is added to the
+   * tolerance: the answer is off by the gap at worst, and the comparison
+   * carries the ordinary tolerance on top of it. */
 
   double tol = 2e-7 * max( double( 1 ) , abs( max( foLP , foNDO ) ) );
 
@@ -696,18 +698,10 @@ static bool SolveBoth( void )
    return( abs( ub - lb ) );
    };
 
-  const double gap = max( declared_gap( slvrLP , rtrnLP ) ,
-			  declared_gap( slvrNDO , rtrnNDO ) );
-  const bool inexact = ( gap > tol );
-  if( inexact )
-   tol = gap;
-
-  std::cerr << "PROBE rtrnLP = " << rtrnLP << " rtrnNDO = " << rtrnNDO
-	    << std::setprecision( 12 )
-	    << " NDO [ " << slvrNDO->get_lb() << " , " << slvrNDO->get_ub()
-	    << " ] LP [ " << slvrLP->get_lb() << " , " << slvrLP->get_ub()
-	    << " ] tol = " << tol << " diff = " << abs( foLP - foNDO )
-	    << std::endl;
+  const double gap = declared_gap( slvrLP , rtrnLP ) +
+                     declared_gap( slvrNDO , rtrnNDO );
+  const bool inexact = ( gap > 0 );
+  tol += gap;
 
   if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= tol ) ) {
    ok = true; verdict = inexact ? "OK(f~)" : "OK(f)"; decided = true;
