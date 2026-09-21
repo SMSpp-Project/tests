@@ -86,12 +86,6 @@ if [ -n "${fwexe}" ]; then
   fwargs="-o 1 -k 2 -e 1"
   fw_run ${DATADIR}/nc4/goto10_8_1.nc4
 
-  # the same, with the network simplex of LEMON as the LMO of each sub-Block
-  fwpar=BSPar-lemon.txt
-  fwargs="-o 0 -k 2 -e 1"
-  fw_run ${DATADIR}/nc4/goto10_8_1.nc4
-  unset fwpar
-
   # the Away-step variant, which keeps an active set of atoms
   cfg_set_par "$FWCFG" intAlgorithm 1
   fwargs="-o 0 -k 2 -e 1"

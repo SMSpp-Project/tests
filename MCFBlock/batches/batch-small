@@ -65,16 +65,6 @@ if [ -n "${fwexe}" ]; then
     done
   done
 
-  # the same, with the network simplex of LEMON as the LMO of each sub-Block
-  fwpar=BSPar-lemon.txt
-  for inst in $INSTANCES; do
-    for o in 0 1; do
-      fwargs="-o $o -k 2 -e 1"
-      fw_run "${DATADIR}/${inst}.nc4"
-    done
-  done
-  unset fwpar
-
   # the Away-step (1) and the BPCG (2) variants
   fwargs="-o 1 -k 3 -e 1"
   for a in 1 2; do

@@ -70,7 +70,9 @@ The `MCFBlock` family: `BSPar.txt`, `FatherBSCfg.txt`, `MCFBSCfg.txt`,
 warm-started `BSPar-warm.txt` / `FatherBSCfg-warm.txt` / `FWCfg-warm.txt` that
 the rounds of Modification use, and `BSPar-lemon.txt` /
 `MCFBSCfg-lemon.txt`, where the LMO of each sub-`Block` is the network simplex
-of LEMON instead of the one of MCFClass. A battery names them with `-c FW`,
+of LEMON instead of the one of MCFClass; these two are in no battery, since
+the costs the LMO is given are the gradient of the father, and LEMON requires
+integer data. A battery names them with `-c FW`,
 which makes every nested name resolve into this directory while the working
 directory stays the one of the suite, where the instances are.
 

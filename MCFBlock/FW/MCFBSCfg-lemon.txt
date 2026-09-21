@@ -2,9 +2,9 @@
 # - - - - - - - - - - - - - -  MCFBSCfg-lemon.txt - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of MCFBSCfg.txt with the network simplex of LEMON as
-# the LMO of each MCFBlock sub-Block. LEMON requires integer data: the
-# capacities and the deficits of these instances are, and the costs the LMO
-# is given, i.e., the gradient of the father, do not decide feasibility.
+# the LMO of each MCFBlock sub-Block. It is in no battery: LEMON requires
+# integer data, and the costs the LMO is given, i.e., the gradient of the
+# father, are not.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

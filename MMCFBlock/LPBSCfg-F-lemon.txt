@@ -2,9 +2,8 @@
 # - - - - - - - - - - - - - - LPBSCfg-F-lemon.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MCFBlock solved by the
-# network simplex of LEMON: the capacities and the deficits of the
-# commodities are integer, which is what LEMON requires, while the costs are
-# the Lagrangian ones
+# network simplex of LEMON. LEMON requires integer data, and the Lagrangian
+# costs are not: see BSPar-lemon.txt
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

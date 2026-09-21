@@ -3,7 +3,9 @@
 #
 # The BlockSolverConfig of BSPar.txt, where the subproblems of the
 # LagrangianDualSolver, i.e., the MCFBlock of the commodities, are solved by
-# the network simplex of LEMON instead of a :MILPSolver
+# the network simplex of LEMON instead of a :MILPSolver. It is in no battery:
+# LEMON requires integer data and the Lagrangian costs are not, so that on
+# pN35 the network simplex does not terminate
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
