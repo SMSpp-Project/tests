@@ -100,6 +100,10 @@ AbstractBlock * benders_form( TwoStageStochasticBlock * tssb )
     up = std::min( up , double( ovc->get_rhs() ) );
     }
 
+  // a design that counts modules is integer in the master as in the leaves
+  if( xk[ 0 ][ j ]->is_integer() )
+   ( *x )[ j ].is_integer( true , eNoMod );
+
   ( *bnd )[ j ].set_variable( & ( *x )[ j ] );
   ( *bnd )[ j ].set_lhs( lo );
   ( *bnd )[ j ].set_rhs( up );
