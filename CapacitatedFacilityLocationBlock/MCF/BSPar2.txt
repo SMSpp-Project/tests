@@ -2,7 +2,8 @@
 # - - - - - - - - - - - - - - - - BSPar2.txt- - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
-# CapacitatedFacilityLocationBlock to be solved by a :MCFSolver
+# CapacitatedFacilityLocationBlock whose flow relaxation is solved by the
+# network simplex of LEMON
 #
 #   Antonio Frangioni
 #
@@ -15,19 +16,17 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-MCFSolver<MCFSimplex>     # name of Solver
+#MCFSolver<MCFSimplex>     # name of Solver
 #MCFSolver<RelaxIV>     # name of Solver
 #MCFSolver<MCFCplex>    # name of Solver
-# the LEMON Solver are commented out because LEMON requires integer data,
-# which is not what a facility location gives it: the supply of the source
-# is fractional (59291.127024 on cap102 after the first changes) and the
-# transportation costs are scaled by the demands. The data are the data
-# MCFSimplex gets, and yet on the instances of this suite NetworkSimplex,
-# CycleCanceling and CostScaling answer "infeasible", the simplex leaving a
-# few ulp of flow on its artificial arcs depending on the order of the nodes
-# and the arcs (the same data read in another order is solved), while
-# CapacityScaling does not terminate
-#MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>     # name of Solver
+# the network simplex of LEMON solves the flow relaxation, whose supplies
+# are fractional (59291.127024 on cap102 after the first changes) and whose
+# transportation costs are scaled by the demands: LEMON requires integer
+# data, and the network simplex takes these only thanks to the tolerances
+# MCFLemonSolver compiles it with, without which it answers "infeasible".
+# The other LEMON algorithms have no such fix and fail here: CycleCanceling
+# and CostScaling answer "infeasible", CapacityScaling does not terminate
+MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # name of Solver
 #MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>     # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig

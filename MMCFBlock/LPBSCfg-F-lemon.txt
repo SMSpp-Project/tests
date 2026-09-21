@@ -2,8 +2,8 @@
 # - - - - - - - - - - - - - - LPBSCfg-F-lemon.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MCFBlock solved by the
-# network simplex of LEMON. LEMON requires integer data, and the Lagrangian
-# costs are not: see BSPar-lemon.txt
+# network simplex of LEMON, which takes the fractional Lagrangian costs thanks
+# to the tolerances MCFLemonSolver compiles it with
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

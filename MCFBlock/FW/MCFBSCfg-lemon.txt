@@ -2,9 +2,9 @@
 # - - - - - - - - - - - - - -  MCFBSCfg-lemon.txt - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of MCFBSCfg.txt with the network simplex of LEMON as
-# the LMO of each MCFBlock sub-Block. It is in no battery: LEMON requires
-# integer data, and the costs the LMO is given, i.e., the gradient of the
-# father, are not.
+# the LMO of each MCFBlock sub-Block. The costs the LMO is given, i.e., the
+# gradient of the father, are fractional, which the network simplex of LEMON
+# takes only thanks to the tolerances MCFLemonSolver compiles it with.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -70,16 +70,13 @@ the same `data/` set. Its makefile is `makefile-xcheck`. All of them but
 commodity. The subproblems of the `LagrangianDualSolver`, i.e., the `MCFBlock`
 of the commodities, are solved by a `:MILPSolver` (`BSPar.txt`), by
 `MCFSolver< MCFSimplex >` (`BSPar-2S.txt`, when `MCFClassSolver` is in the
-build) or by the network simplex of `MCFLemonSolver` (`BSPar-lemon.txt`). The
-last one is in no battery: the Lagrangian costs are fractional, and LEMON
-requires integer data, so that on `pN35` its network simplex does not
-terminate. `batch-k` is the one exercising the knapsack
-formulation, with one `BinaryKnapsackBlock` per arc, which it asks for in the
-structure `Configuration` of the `BlockConfig` [see `Block::set_structure()`]
-since the tree of sub-`Block` of a `MMCFBlock` is entirely a modelling
-choice. It only
-runs a handful of named instances, the knapsack formulation being much harder
-to solve than the flow one.
+build) or by the network simplex of `MCFLemonSolver` (`BSPar-lemon.txt`), and
+`batch-c` runs every instance with the first and the last. `batch-k` is the
+one exercising the knapsack formulation, with one `BinaryKnapsackBlock` per
+arc, which it asks for in the structure `Configuration` of the `BlockConfig`
+[see `Block::set_structure()`] since the tree of sub-`Block` of a `MMCFBlock`
+is entirely a modelling choice. It only runs a handful of named instances,
+the knapsack formulation being much harder to solve than the flow one.
 
 All the tests passing confirms that no regressions have been done for the
 tested modules, in particular for the used `Solver`.
