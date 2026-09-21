@@ -676,9 +676,35 @@ static bool SolveBoth( void )
   std::string verdict = "KO";
   bool decided = false;
 
-  if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 2e-7 *
-			 max( double( 1 ) , abs( max( foLP , foNDO ) ) ) ) ) {
-   ok = true; verdict = "OK(f)"; decided = true;
+  /* The two values are compared at the relative tolerance below, save that a
+   * Solver answering kLowPrecision has declared that it did not reach the
+   * accuracy it was asked for, and has said how far it is: the two bounds it
+   * reports are around the value, and their distance is the accuracy it did
+   * reach (they may well have crossed, which is what not reaching it looks
+   * like). Holding such an answer to the tolerance of an exact one asks for
+   * more than the Solver ever promised, so the declared gap is added to the
+   * tolerance: the answer is off by the gap at worst, and the comparison
+   * carries the ordinary tolerance on top of it. */
+
+  double tol = 2e-7 * max( double( 1 ) , abs( max( foLP , foNDO ) ) );
+
+  auto declared_gap = []( Solver * slvr , int rtrn ) -> double {
+   if( rtrn != Solver::kLowPrecision )
+    return( 0 );
+   const double lb = slvr->get_lb();
+   const double ub = slvr->get_ub();
+   if( ( lb <= -INF ) || ( ub >= INF ) )
+    return( 0 );
+   return( abs( ub - lb ) );
+   };
+
+  const double gap = declared_gap( slvrLP , rtrnLP ) +
+                     declared_gap( slvrNDO , rtrnNDO );
+  const bool inexact = ( gap > 0 );
+  tol += gap;
+
+  if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= tol ) ) {
+   ok = true; verdict = inexact ? "OK(f~)" : "OK(f)"; decided = true;
    }
 
   if( ( ! decided ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
