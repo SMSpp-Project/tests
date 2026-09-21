@@ -323,7 +323,13 @@ static bool CheckGetSolution( Solver * slvr , const char * name )
  auto obj = ( static_cast< FRealObjective * >( TUBlock->get_objective() )
 	      )->get_function();
 
+ // the Solution holds (p, u), from which its write() derives the rest of
+ // the schedule [see ThermalUnitBlock::set_solution()]: the state it is
+ // compared with is completed in the same way, since the one a Solver leaves
+ // may differ in what is derived, e.g., the epigraph of the perspective
+ // cuts, which is only as tight as the cuts that were separated
  slvr->get_var_solution();
+ TUBlock->set_solution();
  obj->compute();
  const auto ref = obj->get_value();
 

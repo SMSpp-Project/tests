@@ -161,6 +161,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed 
 
+- the tester of `ThermalUnitBlock` compares the `Solution` of a Solver with
+  the state it left in the Variable once that is completed from `(p, u)` as
+  the `Solution` is when it is written: with the perspective cuts the epigraph
+  a Solver leaves is only as tight as the separated cuts, `1e-7` relative, and
+  on an objective that is the difference of much larger terms this showed as a
+  `Solution` worth `4e-6` more than the Variable
+
 ## [0.6.0] - 2025-12-12
 
 ### Added 
