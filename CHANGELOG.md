@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the reference of `smspp_nuclear_bands.nc` in `batch-nuclear` of `UCBlock`
+  is `1.6134485e+06` instead of `1.6031724e+06`: the old one was the optimum of
+  a formulation of `NuclearUnitBlock` in which a modulation at the last instant
+  of the horizon could leave the output out of the bands, which the rules of
+  the unit and its dynamic program do not allow; the other six instances keep
+  their values
+
 - `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
   `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
   the instances it reads are in `data/nc4/pypsa-data` instead of
