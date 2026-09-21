@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ec-par < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs batch-ec with the Lagrangian dual driven by ParallelBundleSolver
+# instead of BundleSolver, which is the only thing that changes: the
+# instances, the references and the rest of the configuration are those of
+# batch-ec, so that the two are directly comparable and there is no second
+# copy of either to keep in step. LDCfg.txt already asks for intMaxThread
+# threads; the components of these instances are the units of an energy
+# community, hence several small ones, which is the arrangement the parallel
+# inner loop is meant for.
+#
+# The parallel formulation is chosen by intParFrm [see ParallelBundleSolver]:
+# the default 0 consumes the evaluations in completion order, so the set of
+# components that are evaluated, and with it the trajectory, depends on
+# thread timing and a run is not reproducible bit for bit; the objective
+# values still have to match the references, which is what this checks.
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+CFG=${HERE}/../LDCfg.txt
+
+# put the configuration back as it was, whatever happens - - - - - - - - - -
+
+cp "${CFG}" "${CFG}.orig"
+trap 'mv -f "${CFG}.orig" "${CFG}"' EXIT
+
+sed -i 's/^str_LDSlv_ISName[[:space:]].*/str_LDSlv_ISName   ParallelBundleSolver # the inner Solver used by LagrangianDualSolver/' "${CFG}"
+
+bash "${HERE}/batch-ec" "$@"
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

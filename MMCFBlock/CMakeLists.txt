@@ -191,6 +191,12 @@ if (TARGET SMS++::MMCFBlock)
         target_link_libraries(MMCFBlock_test PRIVATE SMS++::MCFLemonSolver)
     endif ()
 
+    # batchML asks for BundleSolverML by name, and the class is in the
+    # factory only if its library is linked [see BundleSolver/CMakeLists.txt]
+    if (TARGET SMS++::BundleSolverML)
+        target_link_libraries(MMCFBlock_test PRIVATE SMS++::BundleSolverML)
+    endif ()
+
     smspp_install(MMCFBlock_test)
 
     # The ML batch (batchML) drives the inner BundleSolverML, which is only

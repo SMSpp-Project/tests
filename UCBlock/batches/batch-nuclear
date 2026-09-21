@@ -44,7 +44,7 @@ REF_OBJ[smspp_nuclear_tub.nc]=1.349164970e+06
 REF_OBJ[smspp_nuclear_free.nc]=1.349164970e+06
 REF_OBJ[smspp_nuclear_modulation.nc]=1.559422640e+06
 REF_OBJ[smspp_nuclear_daily.nc]=1.628606300e+06
-REF_OBJ[smspp_nuclear_bands.nc]=1.603172390e+06
+REF_OBJ[smspp_nuclear_bands.nc]=1.613448500e+06
 REF_OBJ[smspp_nuclear_deep.nc]=1.559422640e+06
 REF_OBJ[smspp_nuclear_rules.nc]=1.628610300e+06
 

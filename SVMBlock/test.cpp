@@ -89,8 +89,11 @@ double parE = 0.1;          ///< the half-width of the insensitivity tube
 Index n_repeat = 10;        ///< number of rounds
 double tol = 1e-5;          ///< relative tolerance of the cross-check
 bool reopt = false;         ///< re-solve after changing the training problem
+bool abstract = true;       ///< whether the abstract representation is built
 
 Index ngrid = 0;            ///< values of C of the model selection, 0 = none
+Index npgrid = 0;           ///< values of gamma of the model selection, 0 = none
+Index gorder = 0;           ///< in which order the grid is walked [see run_grid]
 
 Index nincr = 0;            ///< samples learnt one at a time, 0 = none
 
@@ -190,10 +193,12 @@ static SVMBlock * construct( unsigned sd )
  }  // end( construct )
 
 /*--------------------------------------------------------------------------*/
-/// trains the very same data set over a grid of values of C
+/// trains the very same data set over a grid of values of C and of gamma
 /** A model selection, i.e., what one actually does with a SVM: the same data
  * set is trained over and over with a geometric grid of \p ngrid values of C
- * centred on the one that was asked for. Every Solver attached to the
+ * centred on the one that was asked for, and, where \p npgrid asks for it
+ * and the kernel has one, of \p npgrid values of its parameter, walked in
+ * the order \p gorder says. Every Solver attached to the
  * SVMBlock sees the same sequence of Modification, and what it makes of them
  * is its own business: one reading the physical representation can re-optimize
  * from the previous solution, since the multipliers of a value of C are a
@@ -224,9 +229,42 @@ static bool run_grid( SVMBlock * svm , Block * block )
  const double first = parC / 64;
  const double ratio = std::pow( 4096 , 1.0 / ( ngrid > 1 ? ngrid - 1 : 1 ) );
 
- for( Index g = 0 ; g < ngrid ; ++g ) {
-  const double C = first * std::pow( ratio , double( g ) );
+ /* The second dimension of the grid is the parameter of the kernel, which
+  * only a nonlinear one has: a change of C moves the bounds of the dual and
+  * leaves the Hessian alone, while a change of gamma changes the kernel,
+  * hence the Hessian and whatever is cached of it. The two axes therefore
+  * cost differently, and the order in which the grid is walked is part of
+  * the result: with the kernel outermost each of its values is paid once and
+  * the sweep of C re-optimizes along it, with the kernel innermost it is
+  * paid at every point, and the sweep back and forth starts each row of the
+  * grid where the previous one ended instead of at its far end. */
+
+ const bool haspar = ( npgrid > 1 ) && ( kernel != SVMBlock::kLinear );
+ const Index np = haspar ? npgrid : 1;
+ const double gfirst = haspar ? svm->get_gamma() / 64 : 0;
+ const double gratio = std::pow( 4096 , 1.0 / ( np > 1 ? np - 1 : 1 ) );
+
+ std::vector< std::pair< double , double > > point;
+ point.reserve( ngrid * np );
+
+ if( gorder == 3 )
+  for( Index g = 0 ; g < ngrid ; ++g )
+   for( Index h = 0 ; h < np ; ++h )
+    point.emplace_back( first * std::pow( ratio , double( g ) ) ,
+                        gfirst * std::pow( gratio , double( h ) ) );
+ else
+  for( Index h = 0 ; h < np ; ++h )
+   for( Index g = 0 ; g < ngrid ; ++g ) {
+    const Index k = ( ( gorder == 1 ) ||
+                      ( ( gorder == 2 ) && ( h % 2 ) ) ) ? ngrid - 1 - g : g;
+    point.emplace_back( first * std::pow( ratio , double( k ) ) ,
+                        gfirst * std::pow( gratio , double( h ) ) );
+    }
+
+ for( const auto & [ C , gamma ] : point ) {
   svm->set_C( C );
+  if( haspar )
+   svm->set_kernel( kernel , gamma );
 
   std::vector< SolverReading > rd( M );
   std::vector< bool > hs( M , false );
@@ -290,10 +328,15 @@ static bool run_grid( SVMBlock * svm , Block * block )
   }
 
  svm->set_C( parC );   // leave the training problem as it was found
+ if( haspar )
+  svm->set_kernel( kernel );
 
  std::cout << "  grid of " << ngrid << " values of C, from " << first
-           << " to " << first * std::pow( ratio , double( ngrid - 1 ) )
-           << ", warm vs cold:" << std::endl;
+           << " to " << first * std::pow( ratio , double( ngrid - 1 ) );
+ if( haspar )
+  std::cout << ", times " << np << " values of gamma, from " << gfirst
+            << " to " << gfirst * std::pow( gratio , double( np - 1 ) );
+ std::cout << ", order " << gorder << ", warm vs cold:" << std::endl;
  for( std::size_t k = 0 ; k < M ; ++k ) {
   std::cout << "   " << S[ k ]->classname() << ": " << total[ k ] << " s vs "
             << cold[ k ] << " s";
@@ -497,9 +540,16 @@ static bool run_round( unsigned sd )
    }
   }
 
- svm->generate_abstract_variables();
- svm->generate_abstract_constraints();
- svm->generate_objective();
+ /* A Solver that reads the physical representation needs none of this, and
+  * on a large data set the abstract one costs more than the algorithm: the
+  * objective of the Wolfe dual is a DQuadFunction carrying the whole n x n
+  * Hessian, i.e., what the Gram matrix is kept out of memory for. */
+
+ if( abstract ) {
+  svm->generate_abstract_variables();
+  svm->generate_abstract_constraints();
+  svm->generate_objective();
+  }
 
  // attach the Solver by reading a BlockSolverConfig from file and apply()-ing
  // it to the SVMBlock; the BlockSolverConfig is clear()-ed and kept to do the
@@ -568,7 +618,10 @@ static bool process_specific_arg( int opt )
   case( 't' ): Str2Sthg( optarg , tol );       return( true );
   case( 'g' ): regression = true;              return( true );
   case( 'R' ): reopt = true;                   return( true );
+  case( 'A' ): abstract = false;               return( true );
   case( 'G' ): Str2Sthg( optarg , ngrid );     return( true );
+  case( 'P' ): Str2Sthg( optarg , npgrid );    return( true );
+  case( 'O' ): Str2Sthg( optarg , gorder );    return( true );
   case( 'I' ): Str2Sthg( optarg , nincr );     return( true );
   case( 'd' ): dataset = optarg;               return( true );
   case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
@@ -591,7 +644,7 @@ int main( int argc , char ** argv )
  // -R is --reopt here, a flag, while the standard one takes a value: the
  // standard reading has to go, appending alone would not override it
  override_short_opt( 'R' );
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:I:d:Y:gRb";
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:P:O:I:d:Y:gRbA";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
@@ -608,7 +661,10 @@ int main( int argc , char ** argv )
    { "ref"      , required_argument , nullptr , 'r' } ,
    { "regress"  , no_argument       , nullptr , 'g' } ,
    { "reopt"    , no_argument       , nullptr , 'R' } ,
+   { "noabstract" , no_argument     , nullptr , 'A' } ,
    { "grid"     , required_argument , nullptr , 'G' } ,
+   { "pgrid"    , required_argument , nullptr , 'P' } ,
+   { "order"    , required_argument , nullptr , 'O' } ,
    { "incremental" , required_argument , nullptr , 'I' } ,
    { "data"     , required_argument , nullptr , 'd' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
@@ -645,11 +701,29 @@ int main( int argc , char ** argv )
          "under the\n"
          "                                  Solver, re-solving after each "
          "change\n"
+         "  -A, --noabstract                leave the Block in its physical "
+         "representation,\n"
+         "                                  which is all a Solver reading it "
+         "needs\n"
          "  -G, --grid <n>                  train the same data set over a "
          "grid of n\n"
          "                                  values of C, reporting the total "
          "time of\n"
          "                                  each Solver [0 = do not]\n"
+         "  -P, --pgrid <n>                 walk the grid of C at n values "
+         "of the\n"
+         "                                  parameter of the kernel as well "
+         "[0 = do not]\n"
+         "  -O, --order <n>                 in which order the grid is "
+         "walked [0]:\n"
+         "                                    0 = C increasing, the kernel "
+         "outermost\n"
+         "                                    1 = C decreasing, the kernel "
+         "outermost\n"
+         "                                    2 = C back and forth, the "
+         "kernel outermost\n"
+         "                                    3 = the kernel innermost, both "
+         "increasing\n"
          "  -I, --incremental <n>           learn n more samples one at a "
          "time, timing\n"
          "                                  each Solver over the additions "

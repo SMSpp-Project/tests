@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the reference of `smspp_nuclear_bands.nc` in `batch-nuclear` of `UCBlock`
+  is `1.6134485e+06` instead of `1.6031724e+06`: the old one was the optimum of
+  a formulation of `NuclearUnitBlock` in which a modulation at the last instant
+  of the horizon could leave the output out of the bands, which the rules of
+  the unit and its dynamic program do not allow; the other six instances keep
+  their values
+
 - `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
   `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
   the instances it reads are in `data/nc4/pypsa-data` instead of
@@ -33,12 +40,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   older state of the conversion, and one instance is named after its Excel
   case, `2n_1c_1g_1b_2l` instead of `2n_1c_1g_1b`
 
-- `UCBlock/batches/batch-pypsa` says, for the two instances whose Lagrangian
-  dual stops on its own gap, what the interval of that Solver is worth, the
-  cross-check holding it to that instead of to the accuracy the Solver was
-  asked for; `InvestmentBlock/batches/batch-pypsa` fails when it finds no
-  instance at all, which is how a batch that has tested nothing was until now
-  indistinguishable from one where everything went well
+- the two-level scenario trees of `pypsa-data/mssb`, and the ones the
+  `InvestmentBlock` runs with the investment stated outside the scenarios, are
+  written by `test/tree_instance_generator.py` of pypsa2smspp from the trees
+  `references/gen_resilient_tree.py` draws with a fixed seed, each form of a
+  tree being held to the objective value PyPSA computes on the equivalent flat
+  network. The reference values change, the instances in place having been
+  emitted from trees that were drawn again since, and so do the file names,
+  the trees now spanning a day of 24 instants rather than 100: over 100 the
+  MultiStageStochasticBlock of one of them ends in an error after eleven
+  minutes, and the InvestmentBlock over the flat form of another after
+  twenty-four
+
+- the two instances named after the `inv_` Excel cases are gone, those cases
+  giving the very networks `1n_1c_1gext` and `2n_1c_1gext_1bext_2l` give, to
+  the byte
+
+- `InvestmentBlock/batches/batch-pypsa` fails when it finds no instance at all,
+  which is how a batch that has tested nothing was until now indistinguishable
+  from one where everything went well
 
 ### Added 
 
