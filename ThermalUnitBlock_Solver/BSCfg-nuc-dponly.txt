@@ -1,0 +1,34 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSCfg-nuc-dponly.txt - - - - - - - - - - - - - -
+#
+# BlockSolverConfig that attaches two NuclearUnitExtDPSolver to a (single-TUB)
+# NuclearUnitBlock and no :MILPSolver, so that an optimal schedule can be
+# looked at without a MILP solver, i.e., without its licence and its time:
+# what the operating rules do to a schedule is read off the DP alone.
+#
+#   Antonio Frangioni, Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+NuclearUnitExtDPSolver
+NuclearUnitExtDPSolver
+
+0 # number of ComputeConfig in this BlockSolverConfig
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSCfg-nuc-dponly.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
