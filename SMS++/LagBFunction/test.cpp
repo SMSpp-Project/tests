@@ -275,6 +275,8 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <limits>
+#include <map>
 #include <memory>
 
 #include <random>
@@ -637,7 +639,96 @@ static void ConstructObj( p_AB AB )
  }
 
 /*--------------------------------------------------------------------------*/
+/// the value of a LagBFunction in the current value of its Variable, by copy
+/** Returns the value of \p lbf in the current value of the multipliers y
+ * without computing \p lbf, which is what a LagBFunction treated as easy
+ * needs: its inner Block has no Solver, the NDO Solver handling it exactly
+ * in its master, and computing it with a Solver lent for the purpose would
+ * put into the Objective of its inner Block the Variable it keeps aside,
+ * changing what the following rounds of changes pick. The inner Block is
+ * copied [see AbstractBlock::mirror()], the copy is given the Lagrangian
+ * objective c( x ) + < y , g( x ) > in the sense of the original, and the
+ * copy is solved with the Solver of TPPar.txt; the value is NaN if anything
+ * of this cannot be done. */
+
+static double LBF_value_by_copy( LagBFunction * lbf )
+{
+ const double NaN = std::numeric_limits< double >::quiet_NaN();
+
+ AbstractBlock copy;
+ copy.mirror( lbf->get_inner_block() );
+ if( ! copy.get_mirror_issues().empty() )
+  return( NaN );
+
+ auto obj = copy.get_objective< FRealObjective >();
+ auto clf = obj ? dynamic_cast< LinearFunction * >( obj->get_function() )
+                : nullptr;
+ if( ! clf )
+  return( NaN );
+
+ // the Lagrangian costs: first the original costs of the Variable of the
+ // Objective, in their order, which are those the LagBFunction keeps [see
+ // LagBFunction::get_A_by_col()] and not those in the Objective, where a
+ // LagBFunction that has been computed has written its Lagrangian ones
+ LinearFunction::v_coeff_pair cost( clf->get_v_var() );
+ std::map< ColVariable * , Index > pos;
+ for( Index h = 0 ; h < cost.size() ; ++h ) {
+  auto col = lbf->get_A_by_col( copy.mirrored_of( cost[ h ].first ) );
+  if( ! col )
+   return( NaN );
+  cost[ h ].second = col->first;
+  pos[ cost[ h ].first ] = h;
+  }
+ double ct = clf->get_constant_term();
+
+ for( Index i = 0 ; i < lbf->get_num_active_var() ; ++i ) {
+  const double yi =
+   static_cast< ColVariable * >( lbf->get_active_var( i ) )->get_value();
+  auto gi = static_cast< LinearFunction * >( lbf->get_Lagrangian_term( i ) );
+  ct += yi * gi->get_constant_term();
+  for( const auto & [ xj , aij ] : gi->get_v_var() ) {
+   auto cj = copy.mirror_of( static_cast< ColVariable * >( xj ) );
+   if( ! cj )
+    return( NaN );
+   auto it = pos.find( cj );
+   if( it == pos.end() ) {
+    pos[ cj ] = cost.size();
+    cost.emplace_back( cj , yi * aij );
+    }
+   else
+    cost[ it->second ].second += yi * aij;
+   }
+  }
+
+ obj->set_function( new LinearFunction( std::move( cost ) , ct ) , eNoMod );
+
+ auto cfg = Configuration::deserialize( "TPPar.txt" );
+ auto tpc = dynamic_cast< BlockSolverConfig * >( cfg );
+ if( ! tpc ) {
+  delete( cfg );
+  return( NaN );
+  }
+
+ tpc->apply( & copy );
+ double value = NaN;
+ if( ! copy.get_registered_solvers().empty() ) {
+  auto slvr = copy.get_registered_solvers().front();
+  const int rtrn = slvr->compute( false );
+  if( ( rtrn >= Solver::kOK ) && ( rtrn < Solver::kError ) )
+   value = slvr->get_var_value();
+  }
+
+ tpc->clear();  // take the Solver away again
+ tpc->apply( & copy );
+ delete( tpc );
+
+ return( value );
+ }
+
+/*--------------------------------------------------------------------------*/
 /// the value of the objective of NDOBlock in the current values of x
+/** A LagBFunction whose inner Block has no Solver is valued by copy [see
+ * LBF_value_by_copy()], any other Function by computing it. */
 
 static double NDO_value( void )
 {
@@ -649,8 +740,13 @@ static double NDO_value( void )
  for( Index b = 0 ; b < NDOBlock->get_number_nested_Blocks() ; ++b )
   if( auto obj =
       NDOBlock->get_nested_Block( b )->get_objective< FRealObjective >() ) {
-   obj->compute();
-   value += obj->value();
+   auto lbf = dynamic_cast< LagBFunction * >( obj->get_function() );
+   if( lbf && lbf->get_inner_block()->get_registered_solvers().empty() )
+    value += LBF_value_by_copy( lbf );
+   else {
+    obj->compute();
+    value += obj->value();
+    }
    }
  return( value );
  }
@@ -665,29 +761,13 @@ static double NDO_value( void )
  * of the LP, which is an exact reformulation of the NDO problem. A direction
  * that does not move x says nothing about NDOBlock, and is not taken as an
  * agreement. The values of the Variable of both Block are put back as they
- * were.
- *
- * A LagBFunction treated as easy has no Solver on its inner Block, the NDO
- * Solver handling it exactly in its master, and therefore no value of its
- * own; lending it one for the check would not do, since computing it puts
- * into the Objective of its inner Block the Variable it keeps aside, which
- * changes what the following rounds of changes pick. The check does not
- * answer yes then. */
+ * were, and a LagBFunction treated as easy is valued by copy [see
+ * NDO_value()]. */
 
 static bool NDO_improves_along_LP_ray( Solver * slvrLP )
 {
  if( ! slvrLP->has_var_direction() )
   return( false );
-
- // a LagBFunction treated as easy has no value of its own [see above]
- for( Index b = 0 ; b < NDOBlock->get_number_nested_Blocks() ; ++b ) {
-  auto obj =
-   NDOBlock->get_nested_Block( b )->get_objective< FRealObjective >();
-  auto lbf = obj ? dynamic_cast< LagBFunction * >( obj->get_function() )
-                 : nullptr;
-  if( lbf && lbf->get_nested_Block( 0 )->get_registered_solvers().empty() )
-   return( false );
-  }
 
  auto LPx = LPBlock->get_static_variable_v< ColVariable >( "x" );
  auto NDOx = NDOBlock->get_static_variable_v< ColVariable >( "x" );
