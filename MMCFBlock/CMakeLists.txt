@@ -120,7 +120,7 @@ if (TARGET SMS++::MMCFBlock AND
     TARGET MMCFClass AND
     CPLEX_FOUND)
 
-    add_executable(MMCF_test main.cpp)
+    add_executable(MMCF_test test_reference.cpp)
     target_link_libraries(MMCF_test PRIVATE
                           SMS++::MMCFBlock
                           MMCFClass)
