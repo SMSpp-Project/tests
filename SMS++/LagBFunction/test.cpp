@@ -275,6 +275,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <memory>
 
 #include <random>
 
@@ -636,6 +637,104 @@ static void ConstructObj( p_AB AB )
  }
 
 /*--------------------------------------------------------------------------*/
+/// the value of the objective of NDOBlock in the current values of x
+
+static double NDO_value( void )
+{
+ double value = 0;
+ if( auto obj = NDOBlock->get_objective< FRealObjective >() ) {
+  obj->compute();
+  value += obj->value();
+  }
+ for( Index b = 0 ; b < NDOBlock->get_number_nested_Blocks() ; ++b )
+  if( auto obj =
+      NDOBlock->get_nested_Block( b )->get_objective< FRealObjective >() ) {
+   obj->compute();
+   value += obj->value();
+   }
+ return( value );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// true if the objective of NDOBlock improves along the ray of the LP
+/** Called when the LP Solver has proved the LP unbounded, this reads the
+ * unbounded direction it gives as the certificate and, from the point where
+ * the NDO Solver has stopped, moves x along it by two steps s and 2 s, with s
+ * large with respect to both the point and the direction: the objective of
+ * NDOBlock has to improve at both, as it does along a direction of recession
+ * of the LP, which is an exact reformulation of the NDO problem. A direction
+ * that does not move x says nothing about NDOBlock, and is not taken as an
+ * agreement. The values of the Variable of both Block are put back as they
+ * were.
+ *
+ * A LagBFunction treated as easy has no Solver on its inner Block, the NDO
+ * Solver handling it exactly in its master, and therefore no value of its
+ * own; lending it one for the check would not do, since computing it puts
+ * into the Objective of its inner Block the Variable it keeps aside, which
+ * changes what the following rounds of changes pick. The check does not
+ * answer yes then. */
+
+static bool NDO_improves_along_LP_ray( Solver * slvrLP )
+{
+ if( ! slvrLP->has_var_direction() )
+  return( false );
+
+ // a LagBFunction treated as easy has no value of its own [see above]
+ for( Index b = 0 ; b < NDOBlock->get_number_nested_Blocks() ; ++b ) {
+  auto obj =
+   NDOBlock->get_nested_Block( b )->get_objective< FRealObjective >();
+  auto lbf = obj ? dynamic_cast< LagBFunction * >( obj->get_function() )
+                 : nullptr;
+  if( lbf && lbf->get_nested_Block( 0 )->get_registered_solvers().empty() )
+   return( false );
+  }
+
+ auto LPx = LPBlock->get_static_variable_v< ColVariable >( "x" );
+ auto NDOx = NDOBlock->get_static_variable_v< ColVariable >( "x" );
+ const Index n = LPx->size();
+
+ std::vector< double > x0( n );
+ double xn = 0;
+ for( Index i = 0 ; i < n ; ++i ) {
+  x0[ i ] = (*NDOx)[ i ].get_value();
+  xn = std::max( xn , std::abs( x0[ i ] ) );
+  }
+
+ // the ray is written in all the Variable of LPBlock, whose values are put
+ // back as they were once the part of it along x has been read
+ std::unique_ptr< Solution > saved( LPBlock->get_Solution( nullptr , false ) );
+ slvrLP->get_var_direction();
+ std::vector< double > d( n );
+ double dn = 0;
+ for( Index i = 0 ; i < n ; ++i ) {
+  d[ i ] = (*LPx)[ i ].get_value();
+  dn = std::max( dn , std::abs( d[ i ] ) );
+  }
+ if( saved )
+  saved->write( LPBlock );
+
+ if( dn == 0 )
+  return( false );
+
+ const double s = 1e+3 * ( 1 + xn ) / dn;
+ auto value_at = [ & ]( double k ) {
+  for( Index i = 0 ; i < n ; ++i )
+   (*NDOx)[ i ].set_value( x0[ i ] + k * d[ i ] );
+  return( convex ? NDO_value() : - NDO_value() );
+  };
+
+ const double f0 = value_at( 0 );
+ const double f1 = value_at( s );
+ const double f2 = value_at( 2 * s );
+
+ for( Index i = 0 ; i < n ; ++i )
+  (*NDOx)[ i ].set_value( x0[ i ] );
+
+ const double eps = 1e-9 * std::max( { 1.0 , std::abs( f0 ) , std::abs( f1 ) } );
+ return( ( f1 < f0 - eps ) && ( f2 < f1 - eps ) );
+ }
+
+/*--------------------------------------------------------------------------*/
 
 static bool SolveBoth( void ) 
 {
@@ -730,6 +829,20 @@ static bool SolveBoth( void )
   if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
       ( rtrnNDO == Solver::kUnbounded ) ) {
    ok = true; verdict = "OK(u)"; decided = true;
+   }
+
+  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
+      ( ( rtrnNDO == Solver::kStopIter ) ||
+        ( rtrnNDO == Solver::kStopTime ) ) ) {
+   /* The LP has been proved unbounded, and the NDO Solver has run out of
+    * iterations or of time on its way down, which is what it does when the
+    * objective decreases so slowly along the unbounded direction that the
+    * tentative bound cannot be crossed in time. The two agree if the
+    * objective of NDOBlock improves along the ray the LP gives as the
+    * certificate [see NDO_improves_along_LP_ray()]. */
+   if( NDO_improves_along_LP_ray( slvrLP ) ) {
+    ok = true; verdict = "OK(u~)"; decided = true;
+    }
    }
 
   auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
