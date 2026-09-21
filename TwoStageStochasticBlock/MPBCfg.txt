@@ -4,6 +4,8 @@
 # A txt description of a BlockSolverConfig for the inner :MILPSolver of
 # the MasterProblemBlock used by the BundleSolver
 #
+#   Donato Meoli, Antonio Frangioni
+#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -58,14 +60,13 @@ Method        1   # 0 = primal, 1 = dual simplex, 2 = barrier: the multipliers
                   # sector-coupled instances of batch-pypsa ends in
                   # error, and with it on all four are solved to the
                   # reference value
-NumericFocus  3   # 0 = auto, 1..3 = increasing precision focus: the model the
-                  # master carries has values of 1e9 and linearization errors
-                  # of 1e12, so the most care is what keeps it solvable to the
-                  # end; the extra care is paid at every one of the thousands
-                  # of re-solves, and on these instances it is paid back, the
-                  # master being small. 0 is not an option: with it the
+NumericFocus  1   # 0 = auto, 1..3 = increasing precision focus: the master
+                  # is small and re-solved thousands of times, so whatever
+                  # extra care is asked is paid at every one of them, and 3
+                  # costs a factor two. 0 is not an option: with it the
                   # Lagrangian dual answers Unfeas on a hydrothermal instance
-                  # that has a solution
+                  # that has a solution, so this is the least care that
+                  # answers right
 
 5 # number of double parameters
 
@@ -78,18 +79,13 @@ dblRAccSol      1e-08 # relative accuracy of the solution pool
 # its own feasibility, or the loop cannot end: a step that violates a
 # vertical row by less than the default 1e-6 is feasible for the master and
 # infeasible for the subproblem, which answers with the very cut that is
-# already there, and the same iteration repeats forever. How much tighter is
-# bounded from below by the scale of the model: with coefficients that reach
-# 1e12, 1e-9 is 1e-21 in relative terms, and near the optimum the master
-# answers that its numerical difficulties are unrecoverable, which the bundle
-# reads as a failure and answers by emptying its own bundle one item at a
-# time until there is nothing left to delete.
-FeasibilityTol  1e-07 # how much a row of the master may be violated
-OptimalityTol   1e-07 # how much a reduced cost of the master may be off
+# already there, and the same iteration repeats forever.
+FeasibilityTol  1e-09 # how much a row of the master may be violated
+OptimalityTol   1e-09 # how much a reduced cost of the master may be off
 
 # All specific HiGHS parameter (uncomment based on Solver)
-#primal_feasibility_tolerance     1e-7
-#dual_feasibility_tolerance       1e-7
+#primal_feasibility_tolerance     1e-9
+#dual_feasibility_tolerance       1e-9
 
 0 # number of string parameters
 

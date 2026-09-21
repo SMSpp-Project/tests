@@ -9,15 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- the master of the bundle that solves the Lagrangian dual of a
-  `TwoStageStochasticBlock` is asked for the accuracy the scale of its own
-  model allows, `1e-7` on the rows and on the reduced costs with the numerical
-  focus at its maximum: that model carries values of `1e9` and linearization
-  errors of `1e12`, on which the `1e-9` that a well-scaled master can be asked
-  for is out of reach, and on the sector-coupled instance whose demand is the
-  stochastic datum the master declares its numerical difficulties
-  unrecoverable a step away from the optimum, upon which the bundle empties
-  itself one item at a time and the Lagrangian dual ends in error
+- the four sector-coupled instances `batch-pypsa` walks are written by the
+  conversion as it stands, where an extendable asset with no upper bound keeps
+  the infinite design cap it has instead of a finite number standing in for it:
+  the ones the archive held carried `1e10` on nine converters and `1e9` on nine
+  batteries, which the Lagrangian relaxation sends a design straight to, so
+  that 262 of the 311 linearizations of a solve carried a subgradient entry of
+  exactly `1e10` against function values of `1e9`, the rows of the master of the
+  bundle became a difference of terms of `1e12` giving `1e8`, and on one of the
+  four the master declared its numerical difficulties unrecoverable a step away
+  from the optimum, upon which the bundle emptied itself one item at a time and
+  the Lagrangian dual ended in error. The objective value of each of the four is
+  the one it was, the caps having never been binding
 
 - the scenario reduction is run from the suite of the Block whose scenarios
   are reduced: the generator of the unit commitment instances and the runs on
