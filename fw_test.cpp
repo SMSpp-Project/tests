@@ -27,9 +27,12 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include "fw_test_common.h"   // collect_vars / build_father / make_father_objective
+#include "common_utils.h"
 
+#include "DQuadFunction.h"
+#include "FRealObjective.h"
 #include "PolyhedralFunctionBlock.h"   // for the two-block Polyhedral path
+#include "QuadFunction.h"
 
 #include <random>
 #include <sstream>
@@ -72,8 +75,8 @@ std::mt19937 rg;
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
-// the father-building / objective scaffolding lives in fw_test_common.h
-// (namespace fwtest), shared with test-mcf.cpp.
+// the father-building and the random objective are the scaffolding of
+// common_utils, every test of a decomposition needing them
 
 static bool process_specific_arg( int opt )
 {
@@ -143,14 +146,14 @@ int main( int argc , char ** argv )
 
  if( obj_type != 2 ) {
   std::vector< ColVariable * > vars;
-  auto father = fwtest::build_father( filename , n_children , bconf_file , var_groups , vars );
+  auto father = build_father( filename , n_children , bconf_file , var_groups , vars );
   if( vars.empty() ) {
    cerr << "Error: the sub-Block have no ColVariable" << endl;
    exit( 1 );
    }
 
   auto obj = new FRealObjective( father ,
-            fwtest::make_father_objective( vars , obj_type , obj_scale , poly_rows , rg ) );
+            make_father_objective( vars , obj_type , obj_scale , poly_rows , rg ) );
   obj->set_sense( Objective::eMin , eNoMod );
   father->set_objective( obj );
 
@@ -178,7 +181,7 @@ int main( int argc , char ** argv )
    cout << endl << "no Solver registered to the father Block!" << endl;
    exit( 1 );
    }
-  fwtest::apply_solver_verbosity( father );  // -v drives Solver::intLogVerb
+  apply_solver_verbosity( father );  // -v drives Solver::intLogVerb
 
   bool ok = SolveAll( father , exact_getter( ObjGetter::VarValue ) ,
                       std::numeric_limits< double >::quiet_NaN() , 1e-5 );
@@ -194,7 +197,7 @@ int main( int argc , char ** argv )
    Index n = f->get_num_active_var();
    Function::Vec_FunctionValue nc( n );
    for( Index i = 0 ; i < n ; ++i )
-    nc[ i ] = obj_scale * fwtest::rnd( rg );
+    nc[ i ] = obj_scale * rnd( rg );
    if( auto dq = dynamic_cast< DQuadFunction * >( f ) )
     dq->modify_linear_coefficients( std::move( nc ) , Function::Range( 0 , n ) );
    else if( auto lf = dynamic_cast< LinearFunction * >( f ) )
@@ -243,8 +246,8 @@ int main( int argc , char ** argv )
   }
 
  std::vector< ColVariable * > vars1 , vars2;
- auto father1 = fwtest::build_father( filename , n_children , bconf_file , var_groups , vars1 );
- auto father2 = fwtest::build_father( filename , n_children , bconf_file , var_groups , vars2 );
+ auto father1 = build_father( filename , n_children , bconf_file , var_groups , vars1 );
+ auto father2 = build_father( filename , n_children , bconf_file , var_groups , vars2 );
  if( vars1.empty() || ( vars1.size() != vars2.size() ) ) {
   cerr << "Error: the two Block copies do not match" << endl;
   exit( 1 );
@@ -253,7 +256,7 @@ int main( int argc , char ** argv )
 
  PolyhedralFunction::MultiVector A;
  PolyhedralFunction::RealVector b;
- fwtest::generate_poly( nv , poly_rows , obj_scale , rg , A , b );
+ generate_poly( nv , poly_rows , obj_scale , rg , A , b );
  const FunctionValue NEGINF = - Inf< FunctionValue >();
 
  // copy1: the PolyhedralFunction as the father Objective
@@ -300,8 +303,8 @@ int main( int argc , char ** argv )
   cerr << "Error: no Solver registered" << endl;
   exit( 1 );
   }
- fwtest::apply_solver_verbosity( father1 );  // -v drives Solver::intLogVerb
- fwtest::apply_solver_verbosity( father2 );
+ apply_solver_verbosity( father1 );  // -v drives Solver::intLogVerb
+ apply_solver_verbosity( father2 );
 
  Solver * fwslv = father1->get_registered_solvers().front();
  Solver * mlslv = father2->get_registered_solvers().front();

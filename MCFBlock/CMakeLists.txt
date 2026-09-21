@@ -43,27 +43,6 @@ if (TARGET SMS++::MCFBlock)
     set_tests_properties(run_dmx2nc4
                          PROPERTIES FIXTURES_SETUP dmx2nc4_generated)
 
-    # Add a test for each batch file
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
-    foreach (BATCH_FILE ${BATCH_FILES})
-        # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME MCFBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/MCFBlock_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME MCFBlock_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:MCFBlock_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
-        # Make each batch test require the dmx2nc4_generated fixture
-        set_tests_properties(MCFBlock_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED dmx2nc4_generated)
-    endforeach ()
-
     # The Frank-Wolfe decomposition of a father Block whose leaves are the
     # MCFBlock of this suite. The tester is the generic one (../fw_test.cpp):
     # it reads a leaf Block K times, makes the K copies the sub-Block of a
@@ -72,8 +51,8 @@ if (TARGET SMS++::MCFBlock)
     # registered to each sub-Block as a Linear Minimization Oracle, against a
     # monolithic :MILPSolver. Which Block is read and which :Solver are
     # attached is the configurations' business, so the same source is built on
-    # the ThermalUnitBlock of the UCBlock suite; here the LMO is a MCFSolver,
-    # and the configurations and the batches live in FW/ beside it.
+    # the ThermalUnitBlock of the UCBlock suite; here the Oracle is a
+    # MCFSolver, and its configurations are those of FW/.
     if (TARGET SMS++::FrankWolfeSolver)
 
         add_executable(MCFBlock_FW_test ../fw_test.cpp ../common_utils.cpp)
@@ -112,40 +91,40 @@ if (TARGET SMS++::MCFBlock)
 
         smspp_install(MCFBlock_FWmods_test)
 
-        # the fast regression suite: small instances, static and with dynamic
-        # arcs, covering vanilla / Away-step / BPCG, the bounded active set,
-        # the parallel LMO, the Polyhedral bracket and the rounds of
-        # Modification of the feasible region. It reads the instances of
-        # MCFClassSolver, hence it needs no fixture of this suite, and it
-        # takes the two testers as its arguments
-        if (UNIX)
-            add_test(NAME MCFBlock_FW_test/regression
-                     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/FW/regression
-                             ${CMAKE_CURRENT_BINARY_DIR}/MCFBlock_FW_test
-                             ${CMAKE_CURRENT_BINARY_DIR}/MCFBlock_FWmods_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/FW)
-        elseif (WIN32)
-            add_test(NAME MCFBlock_FW_test/regression
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${CMAKE_CURRENT_SOURCE_DIR}/FW/regression"
-                             "$<TARGET_FILE:MCFBlock_FW_test>"
-                             "$<TARGET_FILE:MCFBlock_FWmods_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/FW)
-        endif ()
     endif ()
+
+    # Every battery is posed on a family of instances and runs it with each
+    # of the testers that applies to it, which is why it is given all three:
+    # the Solver of the Block itself, the Frank-Wolfe decomposition of a
+    # father of K copies of it, and what a Modification of the feasible
+    # region of a sub-Block does under it.
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
+    foreach (BATCH_FILE ${BATCH_FILES})
+        # Remove the source directory prefix to get the batch name
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        add_batch_test(MCFBlock_test ${BATCH_NAME}
+                       MCFBlock_FW_test MCFBlock_FWmods_test)
+        # Make each batch test require the dmx2nc4_generated fixture
+        set_tests_properties(MCFBlock_test/${BATCH_NAME}
+                             PROPERTIES FIXTURES_REQUIRED dmx2nc4_generated)
+    endforeach ()
 endif ()
 
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
 
-# The Frank-Wolfe test exercises one module more than the rest of the suite,
-# and the suite is not skipped when that module is out of the build, so its
-# labels are set apart from those of the directory.
-if (TEST MCFBlock_FW_test/regression)
-    set_tests_properties(MCFBlock_FW_test/regression PROPERTIES
-                         LABELS "${SMSPP_TEST_LABELS_MCFBlock};FrankWolfeSolver")
+# The batteries run one module more than the rest of the suite declares, and
+# the suite is not skipped when that module is out of the build, so they are
+# labelled with it here rather than in the map of the directory.
+if (TARGET SMS++::FrankWolfeSolver)
+    get_property(_tests DIRECTORY PROPERTY TESTS)
+    foreach (_t IN LISTS _tests)
+        if (_t MATCHES "^MCFBlock_test/batches/")
+            set_tests_properties(${_t} PROPERTIES
+                                 LABELS "${SMSPP_TEST_LABELS_MCFBlock};FrankWolfeSolver")
+        endif ()
+    endforeach ()
 endif ()
 
 # --------------------------------------------------------------------------- #

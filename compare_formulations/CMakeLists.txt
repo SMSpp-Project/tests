@@ -9,8 +9,8 @@ endif ()
 smspp_require_labelled_modules()
 
 # ----- Tests --------------------------------------------------------------- #
-add_executable(compare_formulations test.cpp ../../common_utils.cpp)
-target_include_directories(compare_formulations PRIVATE ../..)
+add_executable(compare_formulations test.cpp ../common_utils.cpp)
+target_include_directories(compare_formulations PRIVATE ..)
 target_link_libraries(compare_formulations PRIVATE SMS++::SMS++)
 
 # Tag this directory's tests with their per-module CI labels

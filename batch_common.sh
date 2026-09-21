@@ -157,6 +157,32 @@ run_timed() {
     echo "${_tag} time $( awk -v a="${_t0}" -v b="${_t1}" 'BEGIN{ printf "%.2f" , b - a }' )"
 }
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the Frank-Wolfe decomposition of the same instance
+#
+#   fw_run < instance file > [ further arguments ]
+#
+# A battery that walks the instances of a Block can hand each of them to the
+# generic Frank-Wolfe tester as well, which it receives as its second
+# executable ($fwexe): the instance is read K times into a father Block whose
+# Objective couples the copies, and the value FrankWolfeSolver computes by
+# decomposing it is cross-checked against the monolithic :MILPSolver of the
+# same configuration. The configurations are those of the FW directory of the
+# suite, which -c makes every nested name resolve into while the working
+# directory stays the one of the suite, where the instances are; $fwpar is the
+# BlockSolverConfig of the father inside it and $fwargs whatever else the
+# Block asks for (the BlockConfig of the formulation, the variable groups, the
+# father objective). Nothing is run if the battery was given no such
+# executable, i.e., if FrankWolfeSolver is not in the build.
+
+fw_run() {
+    [ -n "${fwexe:-}" ] && [ -x "${fwexe}" ] || return 0
+    run_test "${fwexe}" -c "${fwdir:-FW}" -S "${fwpar:-BSPar.txt}" \
+             ${fwargs:-} "$@"
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 run_test() {
     local _exe=$1
     shift

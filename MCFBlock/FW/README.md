@@ -1,7 +1,14 @@
 # tests/MCFBlock/FW
 
-The Frank-Wolfe decomposition of a father `Block` whose leaves are the
-`MCFBlock` of this suite.
+The configurations of the Frank-Wolfe decomposition of a father `Block` whose
+leaves are the `MCFBlock` of this suite, and what they are for. The runs are
+in the batteries of the suite, [`batches`](../batches), one per family of
+instances: each of them walks its family with every `:Solver` that applies to
+it, the decomposition comprised, so that what is compared is compared on the
+same instances. `batch-small` is the fast one, and the one that walks every
+code path of the decomposition.
+
+## The Frank-Wolfe decomposition
 
 The tester is the generic one, [`fw_test.cpp`](../../fw_test.cpp): a "leaf"
 `Block` is read `K` times from a `netCDF` file given on the command line; the
@@ -55,39 +62,26 @@ cross-check while the feasible region of a sub-`Block` changes (arc costs,
 capacities and arc fixing): what it changes is of the `MCFBlock`, hence that
 one is not generic and lives in the suite proper.
 
-## Configurations and batches
+## The configurations
 
-The configuration files are those of the `MCFBlock` family: `BSPar.txt`,
-`FatherBSCfg.txt`, `MCFBSCfg.txt`, `MILPCfg.txt`, `FWCfg.txt`, the Polyhedral
-two-copy variants `BSPar-fw.txt` / `BSPar-milp.txt` / `FatherBSCfg-fw.txt` /
-`FatherBSCfg-milp.txt`, and the warm-started `BSPar-warm.txt` /
-`FatherBSCfg-warm.txt` / `FWCfg-warm.txt` the Modification rounds use.
+The `MCFBlock` family: `BSPar.txt`, `FatherBSCfg.txt`, `MCFBSCfg.txt`,
+`MILPCfg.txt`, `FWCfg.txt`, the Polyhedral two-copy variants `BSPar-fw.txt` /
+`BSPar-milp.txt` / `FatherBSCfg-fw.txt` / `FatherBSCfg-milp.txt`, and the
+warm-started `BSPar-warm.txt` / `FatherBSCfg-warm.txt` / `FWCfg-warm.txt` that
+the rounds of Modification use. A battery names them with `-c FW`, which makes
+every nested name resolve into this directory while the working directory
+stays the one of the suite, where the instances are.
 
 **Single solver vs cross-check.** The single-block path runs every `:Solver`
-registered to the father and cross-checks them. The reference `:MILPSolver` can
-be either bundled in the `-S` config or supplied separately via the optional
-`-R` config (registered *additively*). Omitting the reference runs the solver
-under test **alone**, which is useful to profile `FrankWolfeSolver` without the
-(possibly very slow) reference solve. The solver's own log can be driven
-straight from the `ComputeConfig` via the standard `strLogFileName` (the file to
-write) plus `intLogVerb` (1 = per-call summary, 2 = per-iteration) parameters —
-no `-v` needed; `-v` remains available to send the log to `stdout`.
-
-Two batch scripts are provided:
-
-- [regression](regression): a fast suite (small `MCFBlock` instances, static
-  and dynamic arcs) covering vanilla / Away-step / BPCG, the bounded active set,
-  parallel LMO, the Polyhedral bracket and the rounds of `Modification` of the
-  feasible region; meant to be expanded as the solver evolves. Registered as a
-  `ctest` (`MCFBlock_FW_test/regression`), and run from this directory.
-
-- [batch-large](batch-large): a large-scale stress run on big `MCFBlock`
-  instances (the "goto" family); expect it to take a long time, hence it is not
-  registered as a `ctest`.
-
-The two executables are built by CMake with the suite, and by the makefile of
-the suite with `make fw` and `make fwmods`.
-
+registered to the father and cross-checks them. The reference `:MILPSolver`
+can be either bundled in the `-S` config or supplied separately via the
+optional `-R` config (registered *additively*). Omitting the reference runs
+the solver under test **alone**, which is useful to profile `FrankWolfeSolver`
+without the (possibly very slow) reference solve. The solver's own log can be
+driven straight from the `ComputeConfig` via the standard `strLogFileName`
+(the file to write) plus `intLogVerb` (1 = per-call summary, 2 = per-iteration)
+parameters, no `-v` needed; `-v` remains available to send the log to
+`stdout`.
 
 ## Authors
 

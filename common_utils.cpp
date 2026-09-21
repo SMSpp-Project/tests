@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <exception>
+#include <iomanip>
 #include <limits>
 #include <list>
 #include <map>
@@ -33,9 +34,15 @@
 
 #include <Configuration.h>
 
+#include <DQuadFunction.h>
+
 #include <FRowConstraint.h>
 
+#include <FRealObjective.h>
+
 #include <Objective.h>
+
+#include <QuadFunction.h>
 
 /*--------------------------------------------------------------------------*/
 /*--------------------- MPI / UCX SAFE-DEFAULTS ----------------------------*/
@@ -328,6 +335,144 @@ static bool tests_verbose()
 }
 
 /*--------------------------------------------------------------------------*/
+// the ColVariable of a Block the father Objective is built over
+
+void collect_vars( Block * b , const std::vector< std::string > & groups ,
+                   std::vector< ColVariable * > & vars )
+{
+ if( ! groups.empty() ) {
+  for( const auto & name : groups ) {
+   auto grp = b->get_static_variable_v< ColVariable >( name );
+   if( ! grp )
+    throw( std::invalid_argument( "collect_vars: no variable group named '" +
+                                  name + "' in the sub-Block" ) );
+   for( auto & v : *grp )
+    vars.push_back( & v );
+   }
+  return;
+  }
+
+ auto obj = dynamic_cast< FRealObjective * >( b->get_objective() );
+ if( ! obj )
+  throw( std::invalid_argument( "collect_vars: child has no FRealObjective" ) );
+ auto f = obj->get_function();
+ const Block::Index n = f->get_num_active_var();
+ for( Block::Index i = 0 ; i < n ; ++i )
+  vars.push_back( static_cast< ColVariable * >( f->get_active_var( i ) ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+// a father AbstractBlock with k copies of the Block a file gives
+
+AbstractBlock * build_father( const std::string & filename , int k ,
+                              const std::string & bconf ,
+                              const std::vector< std::string > & groups ,
+                              std::vector< ColVariable * > & vars )
+{
+ auto father = new AbstractBlock();
+ vars.clear();
+ for( int j = 0 ; j < k ; ++j ) {
+  Block * child = Block::deserialize( filename , father );
+  if( ! child )
+   throw( std::invalid_argument( "build_father: cannot read Block from " +
+                                 filename ) );
+  if( ! bconf.empty() ) {
+   Configuration * bc = Configuration::deserialize( bconf );
+   b_config_Block( child , bc , bconf );
+   delete bc;
+   }
+  child->generate_abstract_variables();
+  child->generate_abstract_constraints();
+  child->generate_objective();
+  father->add_nested_Block( child );
+  collect_vars( child , groups , vars );
+  }
+ return( father );
+ }
+
+/*--------------------------------------------------------------------------*/
+// random data of a convex PolyhedralFunction
+
+void generate_poly( Block::Index nv , int poly_rows , double scale ,
+                    std::mt19937 & rg ,
+                    PolyhedralFunction::MultiVector & A ,
+                    PolyhedralFunction::RealVector & b )
+{
+ using Index = Block::Index;
+ Index nr = poly_rows > 0 ? Index( poly_rows ) : nv + 1;
+ A.assign( nr , PolyhedralFunction::RealVector( nv ) );
+ b.assign( nr , 0 );
+ for( Index r = 0 ; r < nr ; ++r ) {
+  for( Index i = 0 ; i < nv ; ++i )
+   A[ r ][ i ] = scale * rnd( rg );
+  b[ r ] = scale * nv * rnd( rg ) / 4;
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+// a random Function over the given Variable, for the father Objective
+
+Function * make_father_objective( std::vector< ColVariable * > & vars ,
+                                  int obj_type , double scale ,
+                                  int poly_rows , std::mt19937 & rg )
+{
+ using Index = Block::Index;
+ using Coefficient = DQuadFunction::Coefficient;
+ const Index nv = Index( vars.size() );
+
+ if( obj_type == 0 ) {  // DQuadFunction: sum_i ( a_i x_i^2 + b_i x_i ), a_i > 0
+  DQuadFunction::v_coeff_triple tr( nv );
+  for( Index i = 0 ; i < nv ; ++i )
+   tr[ i ] = std::make_tuple( vars[ i ] , Coefficient( scale * rnd( rg ) ) ,
+                              Coefficient( scale * ( 0.5 + pos( rg ) ) ) );
+  return( new DQuadFunction( std::move( tr ) ) );
+  }
+
+ if( obj_type == 1 ) {  // QuadFunction: off-diagonal terms (i+1,i), kept PSD by
+                        // Gershgorin diagonal dominance ( 2 a_i >= sum |q| )
+  QuadFunction::v_off_diag_term nd;
+  std::vector< double > rowabs( nv , 0.0 );
+  for( Index i = 0 ; i + 1 < nv ; ++i ) {
+   double q = scale * 0.3 * rnd( rg );
+   nd.push_back( std::make_tuple( i + 1 , i , Coefficient( q ) ) );
+   rowabs[ i ]     += std::abs( q );
+   rowabs[ i + 1 ] += std::abs( q );
+   }
+  DQuadFunction::v_coeff_triple tr( nv );
+  for( Index i = 0 ; i < nv ; ++i )
+   tr[ i ] = std::make_tuple( vars[ i ] , Coefficient( scale * rnd( rg ) ) ,
+                              Coefficient( 0.5 * rowabs[ i ] +
+                                           scale * ( 0.5 + pos( rg ) ) ) );
+  return( new QuadFunction( std::move( tr ) , std::move( nd ) ) );
+  }
+
+ // obj_type == 2: convex PolyhedralFunction = max_r ( A_r . x + b_r )
+ PolyhedralFunction::MultiVector A;
+ PolyhedralFunction::RealVector b;
+ generate_poly( nv , poly_rows , scale , rg , A , b );
+ PolyhedralFunction::VarVector vv( vars.begin() , vars.end() );
+ auto pf = new PolyhedralFunction( std::move( vv ) , std::move( A ) ,
+                                   std::move( b ) ,
+                                   - Inf< Function::FunctionValue >() );
+ pf->set_is_convex( true , eNoMod );
+ return( pf );
+ }
+
+/*--------------------------------------------------------------------------*/
+// make every Solver of the Block log at the verbosity the -v option asks for
+
+void apply_solver_verbosity( Block * b )
+{
+ if( verbosity_level <= 0 )
+  return;
+
+ for( auto s : b->get_registered_solvers() ) {
+  s->set_log( & std::cout );
+  s->set_par( Solver::intLogVerb , verbosity_level );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
 // print the one line that reports an instance: timings, Solver values,
 // reference and verdict
 
@@ -336,7 +481,8 @@ void print_instance_line( const std::vector< double > & times ,
                           double ref ,
                           const std::string & verdict ,
                           double diff ,
-                          bool always )
+                          bool always ,
+                          const std::vector< std::string > & names )
 {
  // the detailed per-round line (times, solver values, verdict) of a test
  // that re-solves in a loop of modification rounds is "extended" output:
@@ -348,6 +494,35 @@ void print_instance_line( const std::vector< double > & times ,
      ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
   return;
 
+ // with the names of the Solver, one line each, the values aligned one
+ // under the other so that two that do not agree are seen at a glance
+ if( ! names.empty() ) {
+  std::size_t w = 3;   // "Ref"
+  for( const auto & n : names )
+   w = std::max( w , n.size() );
+
+  for( std::size_t k = 0 ; k < value_tokens.size() ; ++k ) {
+   std::cout << "  " << std::left << std::setw( int( w ) )
+             << ( k < names.size() ? names[ k ] : std::string() )
+             << std::right << " = " << value_tokens[ k ];
+   if( k < times.size() )
+    std::cout << "   " << fixd << times[ k ] << " s";
+   std::cout << std::endl;
+   }
+
+  if( ! std::isnan( ref ) ) {
+   std::cout << "  " << std::left << std::setw( int( w ) ) << "Ref"
+             << std::right << " = " << fmt_obj( ref );
+   if( ! std::isnan( diff ) )
+    std::cout << "   (|diff| = " << fmt_obj( diff ) << ")";
+   std::cout << std::endl;
+   }
+
+  std::cout << "  -> " << verdict << std::endl;
+  return;
+  }
+
+ // without them, the Solver are numbered and the report is one line
  for( std::size_t k = 0 ; k < times.size() ; ++k )
   std::cout << ( k ? " - " : "" ) << fixd << times[ k ];
 
@@ -696,7 +871,13 @@ bool SolveAll( Block * block ,
   std::string verdict;
   double diff;
   bool ok = cross_check( rd , hs , status , ref , tol , verdict , diff );
-  print_instance_line( times , tok , ref , verdict , diff , true );
+
+  // what each Solver is called, so that the report says who returned what
+  std::vector< std::string > names( M );
+  for( std::size_t k = 0 ; k < M ; ++k )
+   names[ k ] = S[ k ]->classname();
+
+  print_instance_line( times , tok , ref , verdict , diff , true , names );
   return( ok );
   }
  catch( std::exception & e ) {

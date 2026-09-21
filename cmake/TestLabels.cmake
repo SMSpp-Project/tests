@@ -27,14 +27,13 @@ set(SMSPP_TEST_LABELS_BoxSolver                 "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_LagBFunction              "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunction        "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunctionBlock   "SMS++;BundleSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_QuadraticTests            "SMS++;MILPSolver")
+set(SMSPP_TEST_LABELS_QuadFunction              "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
 # the three testers posed on an AbstractBlock ask for one module each beyond
 # these two, and each of them is guarded by its own if( TARGET ), so what the
 # directory declares is what they all need and the rest is set test by test
 set(SMSPP_TEST_LABELS_AbstractBlock             "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_BendersBFunction          "BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_ML                        "BundleSolver;LagrangianDualSolver;MMCFBlock;UCBlock")
 set(SMSPP_TEST_LABELS_BinaryKnapsackBlock       "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock
                                                 "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver;MCFClassSolver;MCFLemonSolver;MILPSolver")

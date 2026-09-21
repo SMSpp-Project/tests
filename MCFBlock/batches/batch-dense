@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 #
-# usage: batch-dense < exe file > < par file >
+# usage: batch-dense < exe file > < fw exe >
 #        < exe file > = path of the executable file, default ./MCFBlock_test
-#        < par file >  = BlockSolverConfig file, default BSPar.txt
+#        < fw exe >    = the generic Frank-Wolfe tester, optional: given
+#                       one, a few of the same instances are also solved by
+#                       the Frank-Wolfe decomposition of a father Block of K
+#                       copies of them
 #
 # runs the dense net/goto MCF instances through the MCFBlock-vs-MILP
 # comparison, over 3 seeds each
@@ -34,7 +37,8 @@ wchg_list="255 223"
 #rounds=40
 
 MCFBlock_test=${1:-./MCFBlock_test}
-par=${2:-BSPar.txt}
+fwexe=${2:-}
+par=BSPar.txt
 
 for type in net goto; do
 
@@ -54,5 +58,30 @@ for type in net goto; do
 
   done # seed
 done   # type
+
+# the same instances, decomposed by Frank-Wolfe - - - - - - - - - - - - - - -
+# K copies of the Block become the sub-Block of a father whose Objective
+# couples them, each of them solved by its network simplex as the Linear
+# Minimization Oracle and the Oracle of the K run in parallel; the value
+# FrankWolfeSolver computes is cross-checked against the monolithic
+# :MILPSolver of the same configuration. Only a few of the instances above are
+# run this way, these being the large ones.
+
+if [ -n "${fwexe}" ]; then
+
+  FWCFG=FW/FWCfg.txt
+  FWSAVE=$( cat "$FWCFG" )
+  trap '[ -n "$FWSAVE" ] && printf "%s\n" "$FWSAVE" > "$FWCFG"' EXIT
+  cfg_set_par "$FWCFG" intMaxThread 4
+
+  # the diagonal quadratic father, vanilla Frank-Wolfe: one run, the
+  # instances of this battery carrying some 65 thousand arcs each
+  cfg_set_par "$FWCFG" intAlgorithm 0
+  fwargs="-o 0 -k 2 -e 1"
+  fw_run ${DATADIR}/nc4/goto10_64_1.nc4
+
+  cfg_set_par "$FWCFG" intMaxThread 1
+
+fi
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

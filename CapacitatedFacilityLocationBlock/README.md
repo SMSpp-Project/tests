@@ -163,6 +163,41 @@ done for the involved `Block` (`CapacitatedFacilityLocationBlock`,
 solution process.
 
 
+## The scenarios of a facility location, and their reduction
+
+`CFLScenarioGenerator` reads a facility location instance and writes a set of
+scenarios out of it, the uncertainty being the demand of the customers, plus
+the `TwoStageStochasticBlock` that carries them, which is what the reduction
+reads:
+
+    ./CFLScenarioGenerator -i <instance.nc4> -o <scenarios.nc4>
+                           --tssb-output <tssb.nc4> -n 50 -v 0.5 -s 1
+                           --no-validate
+
+`-i` is the instance (required), `-o` where the scenarios go,
+`--tssb-output` the file the reduction reads, `-n` how many scenarios, `-v`
+how much the demand varies between them, `-s` the seed, and `--no-validate`
+skips a slow feasibility check, which also makes what is written depend on
+the seed alone. How many scenarios there are is fixed when the file is
+written, so a sweep over that number is a file each.
+
+The reduction is asked of the generic tester of `ScenarioReductionSolver`,
+which reads the same file whatever Block wrote it:
+
+    ./ScenarioReductionSolver_test -i <tssb.nc4> -m cssc -r 5 -c BSCfg-scenred.txt
+
+with `-m` the method (`baseline`, `dupacova`, `bestfit`, `firstfit`, `cssc`),
+`-r` how many representatives to keep and `-c` the `BlockSolverConfig`. What
+it prints is the value of the whole set, the value of the reduced one and the
+relative difference between the two, which is how well the representatives
+stand for the whole.
+
+[batches/batch-scenred](batches/batch-scenred) walks the two steps over
+instances, numbers of scenarios and of representatives and methods, writing
+one file per number of scenarios since the reduction cannot take a smaller
+set out of a larger pool, and collects what each run gives into a CSV.
+
+
 ## Authors
 
 - **Antonio Frangioni**  

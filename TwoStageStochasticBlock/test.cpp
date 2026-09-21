@@ -55,9 +55,9 @@
 #include <cmath>
 #include <fstream>
 
-#include "benders_form.h"
-
 #include "common_utils.h"
+
+#include "AbstractBlock.h"
 
 #include "TwoStageStochasticBlock.h"
 
@@ -68,6 +68,19 @@
 /*--------------------------------------------------------------------------*/
 
 using namespace SMSpp_di_unipi_it;
+
+/*--------------------------------------------------------------------------*/
+/*-------------------------- WHAT IS DEFINED APART -------------------------*/
+/*--------------------------------------------------------------------------*/
+
+/// assemble the Benders form of @p tssb around it
+/** Returns the father AbstractBlock of the Benders form of @p tssb, i.e., the
+ * shape BendersDecompositionSolver asks for: the here-and-now Variable in a
+ * single copy in the root, one sub-Block per subproblem, and the coupling
+ * written as Constraint of the sub-Block. It is defined in benders_form.cpp,
+ * which is of this tester alone. */
+
+AbstractBlock * benders_form( TwoStageStochasticBlock * tssb );
 
 using FunctionValue = Function::FunctionValue;
 

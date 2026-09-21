@@ -22,19 +22,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the Lagrangian dual ended in error. The objective value of each of the four is
   the one it was, the caps having never been binding
 
+- every directory of the suites is named after the module its tests are posed
+  on, a suite living here exactly when the module cannot run it by itself:
+  the testers of the objects of the core library are under `SMS++`, those of
+  the quadratic programs a `:MILPSolver` is asked to solve under `MILPSolver`,
+  the benchmark of the machine-learning driven bundle, which reads the Block
+  of two modules that are not among its dependencies, under `BundleSolver/ML`,
+  and the suite of the facility location takes the name of its module,
+  `CapacitatedFacilityLocationBlock`. `compare_formulations`, which is posed
+  on whichever two Block its configurations name, stays in the root
+
+- the batteries of `UCBlock` that walk the instances carrying one unit alone
+  are `batches-tub`, and each of them runs that family with every `:Solver`
+  that applies to it: the dynamic programme against the `:MILPSolver`, and the
+  Frank-Wolfe decomposition of a father of `K` copies of the unit, which used
+  to be a batch of its own
+
+- the suite of `FrankWolfeSolver` is dissolved into the suites of the Block it
+  is posed on: the tester assumes nothing on the leaf Block it reads, hence it
+  is `fw_test.cpp` in the root beside `common_utils`, and each suite builds it
+  with its own modules; `MCFBlock` builds it and the tester of what a
+  Modification of the feasible region of a sub-Block does, and `UCBlock`
+  builds it on the thermal unit
+
+- the runs of a Solver that is not the one of the Block are in the battery of
+  the instances they are posed on rather than in a batch of that Solver, its
+  configurations staying together in a directory of their own, which `-c`
+  names; this is what `FW` is in the suites of `MCFBlock` and of `UCBlock`.
+  The scenario reduction, which has no configurations of its own to keep
+  apart, is in the suites instead: the generator of the scenarios of a unit
+  commitment is in that of `UCBlock` and what a reduction costs on an
+  investment problem is `test_reduction.cpp` in that of
+  `TwoStageStochasticBlock`, the Block it is posed on, each with its battery
+  in `batches`
+
+- a battery runs every tester that applies to the family of instances it
+  walks, and is therefore given all of them, the first as before and the
+  others after it: `add_batch_test()` names them and hands over the ones that
+  are in the build. In `MCFBlock` this is the Solver of the Block, the
+  Frank-Wolfe decomposition and the rounds of Modification of the feasible
+  region on the same instances, `batch-small` being the fast one that walks
+  every code path of the decomposition; in `UCBlock` the dynamic programme and
+  the decomposition on the same units
+
+- the tester of the ways `BendersDecompositionSolver` has of writing a cut is
+  not here: it writes the instance it runs on itself, hence it needs no Block
+  of anyone else and it belongs to the test directory of that module, where it
+  is and where it is being worked on. What stays here is the comparison of the
+  ad hoc Benders decomposition a `CapacitatedFacilityLocationBlock` carries
+  with the generic one, which is posed on that Block
+
+- `BSCfg-nuc-dponly.txt` of `UCBlock` is gone: it registered the extended
+  dynamic programming Solver of the nuclear unit twice, so that the tester,
+  which compares a first and a second Solver, would run with it alone. A
+  Solver compared with itself checks nothing, and no battery used it; timing
+  the dynamic programme alone is a thing to ask the tester for, not something
+  to obtain by declaring the same Solver twice
+
+- - the report of a cross-check says what each Solver is called, one per line
+  and with the values aligned one under the other, instead of numbering them
+  S0, S1, ...: with several Solver of different families on the same Block,
+  which of them disagrees is what one needs to read at a glance
+
+- the three testers posed on an `AbstractBlock` are one directory,
+  `SMS++/AbstractBlock`: the box-structured Block whose Lagrangian dual is
+  computed (`test_box.cpp`), the copy of the abstract representation
+  (`test_mirror.cpp`) and the round trip of a linear program through a file
+  (`test_readwrite.cpp`), with a batch each in `batches`. The two regimes of
+  the box one, the Lagrangian dual and the primal proximal heuristic, are one
+  script taking which of them to run
+
+- the batches of a suite are registered with `add_batch_test()`, written once
+  in the root instead of the same loop copied in every directory
+
 - the scenario reduction is run from the suite of the Block whose scenarios
   are reduced: the generator of the unit commitment instances and the runs on
-  them are in `UCBlock/scenario-reduction`, those of the facility location in
-  `CapacitatedFacilityLocation/scenario-reduction`, each with the two
-  configurations they share, which they now read from their own directory
+  them are in the suite of `UCBlock`, those of the facility location in that
+  of `CapacitatedFacilityLocationBlock`, each with the two configurations they
+  read
 
-a suite is named after the Block its tests are posed on, not after a Solver
+- a suite is named after the Block its tests are posed on, not after a Solver
   that runs on it: `AbstractBlock_mirror` is `AbstractBlock`, and
   `LagrangianDualSolver_Box` is `AbstractBlock_Box`, the structured
   `AbstractBlock` of box-constrained sub-Block being what it builds and the
   Lagrangian dual one of the ways it solves it
 
-the suite of `MILPSolver` is the test directory of that module, where its
+- the suite of `MILPSolver` is the test directory of that module, where its
   two testers now live as `test_farkas.cpp` and `test_groups.cpp`: neither of
   them needs a Block of another module, hence neither of them needs to be
   here
@@ -42,7 +115,7 @@ the suite of `MILPSolver` is the test directory of that module, where its
 - the suite of the dynamic programming solver of `ThermalUnitBlock` is part
   of the suite of `UCBlock`, whose instances it reads and whose Block it
   solves in two ways: the tester is `test_tudps.cpp` and its batches are in
-  `batches-tudps`, each of them run with that tester rather than with the one
+  `batches-tub`, each of them run with that tester rather than with the one
   of the suite
 
 - `SVMBlock` runs the comparison of the two dual decompositions of one

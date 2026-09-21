@@ -1,12 +1,12 @@
-# --------------------------------------------------------------------------- #
-#    The tests posed on the objects of the core library                       #
-#                                                                             #
-#    One directory per object: what is tested here is the core, but each of   #
-#    these testers needs either a :Solver of a module the core does not       #
-#    depend on, or the cross-check machinery of common_utils, hence it        #
-#    cannot live in SMS++/test.                                               #
-# --------------------------------------------------------------------------- #
+# ----- Requirements -------------------------------------------------------- #
+# Nothing of its own: this directory groups the tests posed on the objects of
+# the core library, one directory each, and every one of them states what it
+# needs. What is tested here is the core, but each of these testers asks
+# either for a :Solver of a module the core does not depend on, or for the
+# cross-check machinery of common_utils, hence none of them can live in
+# SMS++/test.
 
+# ----- Tests --------------------------------------------------------------- #
 add_subdirectory(AbstractBlock)
 add_subdirectory(BoxSolver)
 

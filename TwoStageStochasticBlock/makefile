@@ -65,7 +65,7 @@ MOBJ =  $(CMMNUOBJ) $(BNDSLVOBJ) $(LgDSLVOBJ) $(TSSBkOBJ) $(StcBlkOBJ) $(UCBckOB
 # libraries
 MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LgDSLVLIB) $(UCBckLIB) $(StcBlkLIB)
 
-$(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
+$(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o $(DIR)/benders_form.o
 	$(CC) -o $(DIR)/$(NAME) $+ $(MLIB) $(SW)
 
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
@@ -81,5 +81,32 @@ MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(UCBckH) $(StcBlkH) $(TSSBkH) $(CMMNUH)
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)
+
+# the Benders form the tester assembles, which no file format carries
+
+$(DIR)/benders_form.o: $(DIR)/benders_form.cpp $(MH)
+	$(CC) -c $(DIR)/benders_form.cpp -o $@ $(MINC) $(SW)
+
+# what a scenario reduction costs on the investment problem- - - - - - - - - -
+# the reduction is asked of ScenarioReductionSolver, which only this tester
+# links
+
+SRSkSDR = ../../ScenarioReductionSolver
+include $(SRSkSDR)/makefile-s
+
+reduction: SW = $(SW_RELEASE)
+reduction: $(DIR)/TSSB_reduction_test
+
+$(DIR)/TSSB_reduction_test: $(MOBJ) $(SRSkOBJ) $(DIR)/test_reduction.o
+	$(CC) -o $@ $(DIR)/test_reduction.o $(MOBJ) $(SRSkOBJ) $(MLIB) \
+	      $(SRSkLIB) $(SW)
+
+$(DIR)/test_reduction.o: $(DIR)/test_reduction.cpp $(MH) $(SRSkH)
+	$(CC) -c $(DIR)/test_reduction.cpp -o $@ $(MINC) $(SRSkINC) $(SW)
+
+.PHONY: reduction
+
+clean::
+	rm -f $(DIR)/TSSB_reduction_test
 
 ############################ End of makefile #################################

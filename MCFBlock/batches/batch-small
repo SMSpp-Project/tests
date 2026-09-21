@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+#
+# usage: batch-small < exe file > < fw exe > < fw mods exe >
+#        < exe file >    = the tester of the Block, default ./MCFBlock_test
+#        < fw exe >      = the generic Frank-Wolfe tester, optional
+#        < fw mods exe > = the tester of the Modification of the feasible
+#                          region under Frank-Wolfe, optional
+#
+# The small instances of MCFClassSolver, static and with dynamic arcs, run
+# with every Solver that applies to them: the network simplex, RelaxIV, the
+# LEMON solvers and a :MILPSolver on the Block itself, and, on a father Block
+# of K copies of it, the Frank-Wolfe decomposition against the monolithic
+# :MILPSolver. Of Frank-Wolfe this walks the whole set of code paths, i.e.,
+# the vanilla algorithm, the Away-step and the BPCG variants, the bounded
+# active set, the parallel Linear Minimization Oracle, the Polyhedral father
+# whose bracket has to contain the optimum, and the rounds of Modification of
+# the feasible region; the instances being small, it is the fast battery of
+# the suite and it is meant to be EXPANDED as the solvers evolve.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+MCFBlock_test=${1:-./MCFBlock_test}
+fwexe=${2:-}
+fwmodsexe=${3:-}
+DATADIR=../../MCFClassSolver/test/data
+par=BSPar.txt
+
+INSTANCES="N3-5-0-0-0 N3-5-5-2-2"
+
+# the Solver of the Block against one another - - - - - - - - - - - - - - - -
+# 159 = every change but the deletion of arcs, which the comparison of the
+# values does not survive on instances this small, and but their addition
+# (bit 6), which on the instances that carry dynamic arcs kills
+# MCFLemonSolverNetworkSimplex: with that Solver alone the run segfaults on
+# N3-5-5-2-2 as soon as an arc is added, while MCFSolver< MCFSimplex > and
+# MCFSolver< RelaxIV > take it, so the bit goes back in when that is fixed
+
+for inst in $INSTANCES; do
+  for (( seed = 0 ; seed < 3 ; seed++ )); do
+    run_test "$MCFBlock_test" "${DATADIR}/${inst}.nc4" -S "$par" \
+             -e "$seed" -k 159
+  done
+done
+
+# the same instances, decomposed by Frank-Wolfe - - - - - - - - - - - - - - -
+# K copies of the Block become the sub-Block of a father whose Objective
+# couples them, each of them solved by its network simplex as the Linear
+# Minimization Oracle; the value FrankWolfeSolver computes is cross-checked
+# against the monolithic :MILPSolver of the same configuration
+
+if [ -n "${fwexe}" ]; then
+
+  FWCFG=FW/FWCfg.txt
+  FWSAVE=$( cat "$FWCFG" )
+  trap '[ -n "$FWSAVE" ] && printf "%s\n" "$FWSAVE" > "$FWCFG"' EXIT
+
+  # the quadratic and the diagonal quadratic father, vanilla Frank-Wolfe
+  cfg_set_par "$FWCFG" intAlgorithm 0
+  cfg_set_par "$FWCFG" intMaxAtoms  0
+  cfg_set_par "$FWCFG" intMaxThread 1
+  for inst in $INSTANCES; do
+    for o in 0 1; do
+      fwargs="-o $o -k 2 -e 1"
+      fw_run "${DATADIR}/${inst}.nc4"
+    done
+  done
+
+  # the Away-step (1) and the BPCG (2) variants
+  fwargs="-o 1 -k 3 -e 1"
+  for a in 1 2; do
+    cfg_set_par "$FWCFG" intAlgorithm $a
+    fw_run "${DATADIR}/N3-5-0-0-0.nc4"
+  done
+
+  # the active set bounded to eight atoms, i.e., with aggregation
+  cfg_set_par "$FWCFG" intAlgorithm 1
+  cfg_set_par "$FWCFG" intMaxAtoms  8
+  fw_run "${DATADIR}/N3-5-0-0-0.nc4"
+  cfg_set_par "$FWCFG" intMaxAtoms  0
+
+  # the Linear Minimization Oracle of the sub-Block run in parallel
+  cfg_set_par "$FWCFG" intAlgorithm 0
+  cfg_set_par "$FWCFG" intMaxThread 4
+  fw_run "${DATADIR}/N3-5-5-2-2.nc4"
+  cfg_set_par "$FWCFG" intMaxThread 1
+
+  # the Polyhedral father, where Frank-Wolfe has no global convergence
+  # guarantee: the two copies of the problem are built, the one it solves and
+  # the one where the same PolyhedralFunction lives inside a linearized
+  # PolyhedralFunctionBlock that a :MILPSolver solves, and the bracket
+  # [ lb , value ] has to contain the optimum
+  fwpar=BSPar-fw.txt
+  fwargs="-R BSPar-milp.txt -o 2 -k 2 -e 1"
+  for inst in $INSTANCES; do
+    fw_run "${DATADIR}/${inst}.nc4"
+  done
+  unset fwpar fwargs
+
+fi
+
+# the feasible region of a sub-Block while it changes - - - - - - - - - - - -
+# arc costs (the Objective), capacities (the region) and arc fixing (closing
+# and reopening): what it changes is of the MCFBlock, hence this tester is not
+# the generic one
+
+if [ -n "${fwmodsexe}" ]; then
+  for inst in $INSTANCES; do
+    for (( seed = 1 ; seed < 3 ; seed++ )); do
+      run_test "$fwmodsexe" -c FW -S BSPar-warm.txt -k 2 -e "$seed" -M 8 \
+               "${DATADIR}/${inst}.nc4"
+    done
+  done
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

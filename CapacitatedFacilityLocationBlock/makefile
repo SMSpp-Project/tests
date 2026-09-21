@@ -94,4 +94,32 @@ MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CFLBkH) $(MCFBkH) $(MCFCSH) \
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)
 
+# the generator of the scenarios of this Block- - - - - - - - - - - - - - - -
+# it writes the TwoStageStochasticBlock that the battery of the reduction then
+# solves; the two stochastic modules are only linked by it
+
+StcBlkSDR = ../../StochasticBlock
+include $(StcBlkSDR)/makefile-s
+
+TSSBkSDR = ../../TwoStageStochasticBlock
+include $(TSSBkSDR)/makefile
+
+scenarios: SW = $(SW_RELEASE)
+scenarios: $(DIR)/CFLScenarioGenerator
+
+$(DIR)/CFLScenarioGenerator: $(MOBJ) $(StcBlkOBJ) $(TSSBkOBJ) \
+                             $(DIR)/CFLScenarioGenerator.o
+	$(CC) -o $@ $(DIR)/CFLScenarioGenerator.o $(MOBJ) $(StcBlkOBJ) \
+	      $(TSSBkOBJ) $(MLIB) $(StcBlkLIB) $(SW)
+
+$(DIR)/CFLScenarioGenerator.o: $(DIR)/CFLScenarioGenerator.cpp $(MH) \
+                               $(StcBlkH) $(TSSBkH)
+	$(CC) -c $(DIR)/CFLScenarioGenerator.cpp -o $@ $(MINC) $(StcBlkINC) \
+	      $(TSSBkINC) $(SW)
+
+.PHONY: scenarios
+
+clean::
+	rm -f $(DIR)/CFLScenarioGenerator
+
 ############################ End of makefile #################################

@@ -2,8 +2,19 @@
 /*------------------------- File benders_form.cpp --------------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * Implementation of benders_form(), which assembles the Benders form of a
- * two-stage stochastic instance around the Block a file gives.
+ * The Benders form of a two-stage stochastic instance, assembled around the
+ * Block a file gives.
+ *
+ * An instance written in its extensive form has the here-and-now Variable
+ * replicated in every scenario and tied by the non-anticipativity Constraint
+ * of the stochastic Block, while BendersDecompositionSolver asks for them in
+ * a single copy in the root, for one sub-Block per subproblem, and for the
+ * coupling written as Constraint of the sub-Block where those Variable
+ * appear linearly. No file format carries the latter: AbstractBlock only
+ * deserializes a .lp/.mps model, and a model in a file of its own cannot
+ * name the Variable of a sub-Block, hence the shape is assembled here.
+ *
+ * Whoever uses it declares it, there being one function and one caller.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -19,8 +30,7 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include "benders_form.h"
-
+#include "AbstractBlock.h"
 #include "AbstractPath.h"
 #include "ColVariable.h"
 #include "FRealObjective.h"
@@ -28,6 +38,7 @@
 #include "LinearFunction.h"
 #include "Objective.h"
 #include "OneVarConstraint.h"
+#include "TwoStageStochasticBlock.h"
 
 #include <list>
 

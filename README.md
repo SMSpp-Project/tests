@@ -9,18 +9,33 @@ to that module. For this reason, we ship them in a separate repository.
 
 The following tests are provided:
 
-- [`BendersBFunction`](BendersBFunction): a test of the `BendersBFunction`
-  component on a "hand-made" `Block` for Capacitated Facility Location
-  (CFL) problems.
+Each directory is named after the module the tests inside it are posed on,
+since a suite lives here when the module cannot run it by itself: either it
+needs the cross-check machinery of [`common_utils`](common_utils.h), which
+solves a Block with every `:Solver` a `BlockSolverConfig` attaches and
+compares what they return, or it needs a module that is not among that
+module's dependencies. The testers of the objects of the core library are
+therefore grouped under [`SMS++`](SMS++), and those posed on a Block under the
+name of its module; the unit tests of a module, which need neither, live in
+the `test` directory of the module itself.
 
-- [`BinaryKnapsackBlock`](BinaryKnapsackBlock): a tester of the eponymous
-  `Block` for (mixed-integer) binary knapsack problems that cross-checks all
-  its equivalent `Solver` (the core DP, the `BranchAndXSolver` in each
-  exploration mode, with the greedy relaxation bracketing) against a standard
-  `MILPSolver`, both on random instances and against the published optima of
-  the curated Pisinger benchmark.
+### The core library ([`SMS++`](SMS++))
 
-- [`BoxSolver`](BoxSolver), a tester which provides very
+- [`AbstractBlock`](SMS++/AbstractBlock), the three testers posed on an
+  `AbstractBlock`: the box-structured Block of `k` sub-`AbstractBlock` with box
+  constraints and a separable `Objective` whose Lagrangian dual is computed by
+  a `LagrangianDualSolver` (with `LagBFunction` and `BoxSolver`) and
+  cross-checked against a `:MILPSolver`; `AbstractBlock::mirror()`, i.e., the
+  copy of the abstract representation that every Block has without a line
+  written for it, checked to be the same problem as the original, to take the
+  solution back to it and to follow it when it changes; and
+  `AbstractBlock::read_lp()` / `AbstractBlock::read_mps()`, a random linear
+  program being written to file by the `:MILPSolver` attached to it, read back
+  into a second `AbstractBlock` and solved again, the two optima having to
+  agree. All three then change the instance at random and re-solve many
+  times.
+
+- [`BoxSolver`](SMS++/BoxSolver), a tester which provides very
   comprehensive tests for `BoxSolver` (a very simple `CDASolver` for
   extremely simple problems where each `ColVariable` can
   be dealt with separately subject only to bound and integrality
@@ -30,7 +45,58 @@ The following tests are provided:
   classes `CPXMILPSolver` and `SCIPMILPSolver`), and for some of the
   mechanics of the SMS++ core library.
 
-- [`CapacitatedFacilityLocation`](CapacitatedFacilityLocation), a tester
+- [`LagBFunction`](SMS++/LagBFunction), a tester which provides very
+  comprehensive tests for `LagBFunction`, `PolyhedralFunctionBlock`,
+  `PolyhedralFunction`, any `CDASolver` able to handle `C05Function` in the
+  objective (such as `BundleSolver`, for which some specific provisions are
+  made), any `CDASolver` able to handle Linear Programs (such as `MILPSolver`
+  and its derived classes `CPXMILPSolver` and `SCIPMILPSolver`), as well as
+  for quite a lot of the mechanics of the SMS++ core library.
+
+- [`BendersBFunction`](SMS++/BendersBFunction): a test of the `BendersBFunction`
+  component on a "hand-made" `Block` for Capacitated Facility Location
+  (CFL) problems.
+
+- [`PolyhedralFunction`](SMS++/PolyhedralFunction), a tester which
+  provides very comprehensive tests for `PolyhedralFunction` and some tests
+  for any `CDASolver` able to handle `C05Function` in the objective (such as
+  `BundleSolver`) and any `CDASolver` able to handle Linear Programs (such
+  as `MILPSolver` and its derived classes `CPXMILPSolver` and
+  `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
+  core library.
+
+- [`PolyhedralFunctionBlock`](SMS++/PolyhedralFunctionBlock), a tester
+  which provides very comprehensive tests for `PolyhedralFunction` and
+  especially `PolyhedralFunctionBlock`, plus quite a few tests for any
+  `CDASolver` able to handle multiple `C05Function` in the objective (such
+  as `BundleSolver`) and any `CDASolver` able to handle Linear Programs
+  (such as `MILPSolver` and its derived classes `CPXMILPSolver` and
+  `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
+  core library.
+
+### The Solver
+
+- [`QuadFunction`](MILPSolver/QuadFunction), a tester which provides very
+  comprehensive tests for any `CDASolver` able to handle Quadratic Programs
+  (such as `MILPSolver` and its derived classes `CPXMILPSolver` ,
+  `SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`).
+
+- [`BundleSolver/ML`](BundleSolver/ML), the benchmark of the machine-learning
+  driven `BundleSolver` against the plain one, over a split of the instances
+  of `MMCFBlock` and of `UCBlock`: it is here, and not in the `test` of its
+  module, because those two Block are not among the dependencies of
+  `BundleSolver`.
+
+### The Block
+
+- [`BinaryKnapsackBlock`](BinaryKnapsackBlock): a tester of the eponymous
+  `Block` for (mixed-integer) binary knapsack problems that cross-checks all
+  its equivalent `Solver` (the core DP, the `BranchAndXSolver` in each
+  exploration mode, with the greedy relaxation bracketing) against a standard
+  `MILPSolver`, both on random instances and against the published optima of
+  the curated Pisinger benchmark.
+
+- [`CapacitatedFacilityLocationBlock`](CapacitatedFacilityLocationBlock), a tester
   that can be used to test several things together within a slope scaling
   approach to the Capacitated Facility Location (CFL) problem where the
   continuous relaxation can be solved with either standard LP tools (a
@@ -41,61 +107,6 @@ The following tests are provided:
   second one that puts the ad hoc Benders decomposition the Block carries
   against the generic one of `BendersDecompositionSolver` on the same
   instance.
-
-- [`compare_formulations`](compare_formulations),  very simple tester for
-  testing different formulations of some problem obtained by
-  `BlockConfig`-uring in two different ways two copies of the same `:Block`
-  and solving them with two copies of the same `:Solver`.
-
-- [`InvestmentBlock`](InvestmentBlock), a tester that solves the investment
-  problem defined by an `InvestmentBlock` (loaded from a netCDF file) with the
-  configured `:Solver`.
-
-- [`LagBFunction`](LagBFunction), a tester which provides very
-  comprehensive tests for `LagBFunction`, `PolyhedralFunctionBlock`,
-  `PolyhedralFunction`, any `CDASolver` able to handle `C05Function` in the
-  objective (such as `BundleSolver`, for which some specific provisions are
-  made), any `CDASolver` able to handle Linear Programs (such as `MILPSolver`
-  and its derived classes `CPXMILPSolver` and `SCIPMILPSolver`), as well as
-  for quite a lot of the mechanics of the SMS++ core library.
-
-- [`AbstractBlock_Box`](AbstractBlock_Box), a tester
-  which provides very comprehensive tests for `LagrangianDualSolver`,
-  `LagBFunction`, `BoxSolver`, any `CDASolver` able to handle `C05Function`
-  in the `Objective`, any `CDASolver` able to handle Linear Programs (such
-  as `MILPSolver` and its derived classes `CPXMILPSolver` and
-  `SCIPMILPSolver`), as well as for quite a lot of the mechanics of the
-  SMS++ core library.
-
-- [`MMCFBlock`](MMCFBlock),
-  a tester which provides  initial tests for `LagrangianDualSolver`,
-  `LagBFunction`, any `CDASolver` able to handle `C05Function` in the
-  `Objective` (such as `BundleSolver`), any `CDASolver` able to handle
-  Linear Programs (such as `MILPSolver` and its derived classes
-  `CPXMILPSolver` and `SCIPMILPSolver`), `MMCFBlock` and `MCFBlock`,
-  as well as for quite a lot of the mechanics of the SMS++ core library.
-
-- [`UCBlock`](UCBlock), a tester
-  which provides initial tests for `LagrangianDualSolver`, `LagBFunction`,
-  any `CDASolver` able to handle `C05Function` in the `Objective` (such as
-  `BundleSolver`), any `CDASolver` able to handle Linear Programs (such as
-  `CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block` for
-  Unit-Commitment problems (including the pollutant budget constraints, both
-  against PyPSA and on small instances with known optima), as well as for
-  quite a lot of the mechanics of the SMS++ core library. The same suite runs
-  `TUDPS_test`, which compares the `ThermalUnitExtDPSolver` specialised
-  Dynamic Programming `:Solver` with a `:MILPSolver` on some of the (many)
-  different formulations `ThermalUnitBlock` supports; its batches are in
-  `batches-tudps`, each of them being run with that tester. It also runs the
-  generic Frank-Wolfe tester (`fw_test.cpp`) on `K` copies of a
-  `ThermalUnitBlock`, each with its Dynamic Programming `:Solver` as the
-  Linear Minimization Oracle, against the perspective bound a `:MILPSolver`
-  computes on the monolithic relaxation: the configurations and the batch are
-  in `FW`.
-
-- [`LukFiBlock`](LukFiBlock): a very simple main for running tests with
-  [LukFiBlock](https://gitlab.com/smspp/lukfiblock). It just creates one
-  and loads it from a stream; little more than a compilation check.
 
 - [`MCFBlock`](MCFBlock): solve a `MCFBlock` with both a `MILPSolver` and a
   `MCFSolver` and compare the results. This is a test for `MCFBlock`,
@@ -108,37 +119,71 @@ The following tests are provided:
   Linear Minimization Oracle) and by a monolithic `:MILPSolver`, cross-checking
   the two optima; here the leaves are `MCFBlock` and their oracle a
   `MCFSolver`, and a second tester runs the same comparison while the feasible
-  region of a sub-`Block` changes. Their configurations, the regression suite
-  and the large-scale batch are in `FW`.
+  region of a sub-`Block` changes. Their configurations are in `FW` and their
+  runs are in the batteries of the instances they are posed on, `batch-small`
+  being the fast one, which walks every code path of the decomposition on the
+  small instances of `MCFClassSolver`.
 
-- [`MMCFBlock`](MMCFBlock), a tester which provides initial tests
-  for `MMCFBlock` (in particular, a way to retrieve/generate some sets of
-  Multicommodity Min-Cost Flow instances) and any `Solver` able to handle
+- [`MMCFBlock`](MMCFBlock),
+  a tester which provides  initial tests for `LagrangianDualSolver`,
+  `LagBFunction`, any `CDASolver` able to handle `C05Function` in the
+  `Objective` (such as `BundleSolver`), any `CDASolver` able to handle
   Linear Programs (such as `MILPSolver` and its derived classes
-  `CPXMILPSolver` and `SCIPMILPSolver`), as well as for a few of the
-  mechanics of the SMS++ core library.
+  `CPXMILPSolver` and `SCIPMILPSolver`), `MMCFBlock` and `MCFBlock`,
+  as well as for quite a lot of the mechanics of the SMS++ core library. The
+  suite holds a second tester, which provides initial tests for `MMCFBlock`
+  (in particular, a way to retrieve/generate some sets of Multicommodity
+  Min-Cost Flow instances) and any `Solver` able to handle Linear Programs,
+  as well as for a few of the mechanics of the SMS++ core library.
 
-- [`PolyhedralFunction`](PolyhedralFunction), a tester which
-  provides very comprehensive tests for `PolyhedralFunction` and some tests
-  for any `CDASolver` able to handle `C05Function` in the objective (such as
-  `BundleSolver`) and any `CDASolver` able to handle Linear Programs (such
-  as `MILPSolver` and its derived classes `CPXMILPSolver` and
-  `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
-  core library.
+- [`UCBlock`](UCBlock), a tester
+  which provides initial tests for `LagrangianDualSolver`, `LagBFunction`,
+  any `CDASolver` able to handle `C05Function` in the `Objective` (such as
+  `BundleSolver`), any `CDASolver` able to handle Linear Programs (such as
+  `CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block` for
+  Unit-Commitment problems (including the pollutant budget constraints, both
+  against PyPSA and on small instances with known optima), as well as for
+  quite a lot of the mechanics of the SMS++ core library. The same suite runs
+  `TUDPS_test`, which compares the `ThermalUnitExtDPSolver` specialised
+  Dynamic Programming `:Solver` with a `:MILPSolver` on some of the (many)
+  different formulations `ThermalUnitBlock` supports; its batches are in
+  `batches-tub`, the batteries that walk the instances carrying one unit
+  alone, thermal or nuclear. Each of them runs that family with every
+  `:Solver` that applies to it: besides the dynamic programme against the
+  `:MILPSolver`, the generic Frank-Wolfe tester (`fw_test.cpp`) on `K` copies
+  of the unit, each with its Dynamic Programming `:Solver` as the Linear
+  Minimization Oracle, against the perspective bound a `:MILPSolver` computes
+  on the monolithic relaxation; its configurations are in `FW`. The same suite
+  holds the generator of the scenarios of a unit commitment and the battery
+  that reduces them, `batches/batch-scenred`, which runs it together with the
+  tester of `ScenarioReductionSolver`.
 
-- [`PolyhedralFunctionBlock`](PolyhedralFunctionBlock), a tester
-  which provides very comprehensive tests for `PolyhedralFunction` and
-  especially `PolyhedralFunctionBlock`, plus quite a few tests for any
-  `CDASolver` able to handle multiple `C05Function` in the objective (such
-  as `BundleSolver`) and any `CDASolver` able to handle Linear Programs
-  (such as `MILPSolver` and its derived classes `CPXMILPSolver` and
-  `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
-  core library.
+- [`InvestmentBlock`](InvestmentBlock), a tester that solves the investment
+  problem defined by an `InvestmentBlock` (loaded from a netCDF file) with the
+  configured `:Solver`.
 
-- [`QuadraticTests`](QuadraticTests), a tester which provides very
-  comprehensive tests for any `CDASolver` able to handle Quadratic Programs
-  (such as `MILPSolver` and its derived classes `CPXMILPSolver` ,
-  `SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`).
+- [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
+  `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
+  through a `BlockSolverConfig` and compares their results, and a second one
+  that puts the three ways of solving the same two-stage stochastic investment
+  problem one against the other, i.e., the extensive form, the generic Benders
+  decomposition of `BendersDecompositionSolver` and the ad hoc one an
+  `InvestmentBlock` over the whole `TwoStageStochasticBlock` carries, on
+  instances of growing size. A third one measures what a scenario
+  reduction costs: the instance is solved on the whole scenario set and on the
+  `K` representatives each method of `ScenarioReductionSolver` picks, and the
+  first-stage decision the reduced problem finds is put back into the whole
+  set, so that what is reported is both the gap of the reduced problem and the
+  implementation error of its decision.
+
+- [`MultiStageStochasticBlock`](MultiStageStochasticBlock), a tester that loads
+  a `MultiStageStochasticBlock` from a netCDF file, attaches a `:Solver`
+  through a `BlockSolverConfig` and compares its result against a reference
+  objective value.
+
+- [`LukFiBlock`](LukFiBlock): a very simple main for running tests with
+  [LukFiBlock](https://gitlab.com/smspp/lukfiblock). It just creates one
+  and loads it from a stream; little more than a compilation check.
 
 - [`SVMBlock`](SVMBlock), a tester that cross-checks every `:Solver` that can
   train a Support Vector Machine on the same `SVMBlock`: the ad hoc
@@ -157,30 +202,12 @@ The following tests are provided:
   two formulations of the problem and the `SingleFlowDCRBendersSolver`,
   cross-checking what they answer and the `Solution` each of them produces.
 
-- [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
-  `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
-  through a `BlockSolverConfig` and compares their results, and a second one
-  that puts the three ways of solving the same two-stage stochastic investment
-  problem one against the other, i.e., the extensive form, the generic Benders
-  decomposition of `BendersDecompositionSolver` and the ad hoc one an
-  `InvestmentBlock` over the whole `TwoStageStochasticBlock` carries, on
-  instances of growing size.
+### Posed on no Block in particular
 
-- [`MultiStageStochasticBlock`](MultiStageStochasticBlock), a tester that loads
-  a `MultiStageStochasticBlock` from a netCDF file, attaches a `:Solver`
-  through a `BlockSolverConfig` and compares its result against a reference
-  objective value.
-
-- [`Write-Read`](Write-Read), a tester for the function
-  `AbstractBlock::read_mps` and some tests for any  `CDASolver` able
-  to handle Linear Programs (such as `MILPSolver` and its derived classes
-  `CPXMILPSolver` , `SCIPMILPSolver` , `GRBMILPSolver` and
-  `HiGHSMILPSolver`), as well as for some of the mechanics of the "core"
-  SMS++ library. A random MILP is constructed in an `AbstractBlock` and
-  saved to a `.mps` file. A new `AbstractBlock` is created and read back
-  to the file, two `:Solver` are attached to the two `AbstractBlock` and
-  the results are compared. The first `AbstractBlock` is randomly changed
-  many times and the process is repeated.
+- [`compare_formulations`](compare_formulations),  very simple tester for
+  testing different formulations of some problem obtained by
+  `BlockConfig`-uring in two different ways two copies of the same `:Block`
+  and solving them with two copies of the same `:Solver`.
 
 The tests run as traditional command line executables. Most of the tests
 can also run as a

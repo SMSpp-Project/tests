@@ -55,21 +55,37 @@ function(smspp_install target_name)
 endfunction()
 
 # Register a batch file as a ctest driving the given executable: every suite
-# runs its batches this way, each of them being a family of instances that the
-# tester cross-checks all the Solver of its BlockSolverConfig on, so that they
-# are independent and can be run, selected and timed one by one.
+# runs its batteries this way, each of them being a family of instances that
+# the tester cross-checks all the Solver of its BlockSolverConfig on, so that
+# they are independent and can be run, selected and timed one by one.
+#
+# A battery that the Solver of one tester do not cover alone runs every other
+# tester that applies to its instances as well: those are named here after the
+# first one and reach the battery as the arguments after it, in the order they
+# are given and each of them only if it is in the build, an empty argument
+# standing for the one that is not, which the battery then leaves out.
 function(add_batch_test exe batch)
+    set(_others "")
+    foreach (_t IN LISTS ARGN)
+        if (TARGET ${_t})
+            # a generator expression, since a tester of another suite or of a
+            # module is built in another directory of the tree
+            list(APPEND _others "$<TARGET_FILE:${_t}>")
+        else ()
+            list(APPEND _others "")
+        endif ()
+    endforeach ()
     if (UNIX)
         add_test(NAME ${exe}/${batch}
                  COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/${batch}
-                         ${CMAKE_CURRENT_BINARY_DIR}/${exe}
+                         ${CMAKE_CURRENT_BINARY_DIR}/${exe} ${_others}
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     elseif (WIN32)
         add_test(NAME ${exe}/${batch}
                  # using Git for Windows that includes Git Bash
                  COMMAND "C:/Program Files/Git/bin/bash.exe"
                          "${CMAKE_CURRENT_SOURCE_DIR}/${batch}"
-                         "$<TARGET_FILE:${exe}>"
+                         "$<TARGET_FILE:${exe}>" ${_others}
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 endfunction()
@@ -108,7 +124,6 @@ endif ()
 add_subdirectory(SMS++)
 
 add_subdirectory(MILPSolver)
-add_subdirectory(BundleSolver)
 
 add_subdirectory(MCFBlock)
 

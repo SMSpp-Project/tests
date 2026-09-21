@@ -4,12 +4,9 @@
 
 # --- Project-specific: per-test binaries --------------------
 # a suite lives in the directory of the module its tests are posed on, hence
-# the binaries a run leaves behind are matched wherever the suite is, save
-# for the two scripts of the scenario reduction that end in the same way
+# the binaries a run leaves behind are matched wherever the suite is
 *_test
 *_bench
-!UCBlock/scenario-reduction/run_uc_test
-!UCBlock/scenario-reduction/UCInvestmentTest/run_investment_test
 BinaryKnapsackBlock/BinaryKnapsackBlock_test
 CapacitatedFacilityLocationBlock/CFL_test
 compare_formulations/compare_formulations
@@ -20,7 +17,7 @@ MMCFBlock/MMCF_test
 MMCFBlock/gen/Mnetgen/mnetgen
 MMCFBlock/gen/Canad
 MMCFBlock/gen/JLF
-MILPSolver/QuadraticTests/quad_test
+MILPSolver/QuadFunction/MILPSolver_QuadFunction_test
 SingleFlowDCRBlock/SingleFlowDCRBlock_test
 TwoStageStochasticBlock/TSSB_test
 MultiStageStochasticBlock/MSSB_test
@@ -30,7 +27,10 @@ MMCFBlock/data/*
 
 MMCFBlock/gen/Canad.tgz
 InvestmentBlock/investment_candidates.txt
-CapacitatedFacilityLocationBlock/LD/CFL*.txt
+CapacitatedFacilityLocationBlock/*/CFL[12].txt
+CapacitatedFacilityLocationBlock/*/log[12].txt
+CapacitatedFacilityLocationBlock/*/logLD.txt
+CapacitatedFacilityLocationBlock/*/logMILP.txt
 
 # the netCDF files the SVM serialization checks write
 SVMBlock/svmblock.nc4

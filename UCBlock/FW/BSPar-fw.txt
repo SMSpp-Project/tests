@@ -1,0 +1,28 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar-fw.txt - - - - - - - - - - - - - - -
+#
+# A "meta"-BlockSolverConfig (a map classname --> BlockSolverConfig) for the
+# FrankWolfeSolver-on-ThermalUnitBlock test registering the FrankWolfeSolver
+# alone, i.e., with no reference :MILPSolver on the father and therefore no
+# cross-check: this is the Frank-Wolfe-only run, the one to time. Since the
+# ThermalUnitDPSolver oracle has its own internal DP, pair it with the plain
+# T formulation (-B TUBCfg-T.txt), which gives the identical value much
+# faster than the DP + P/C one that only the reference needs.
+#
+#   AbstractBlock     -> FatherBSCfg-fw.txt  (a FrankWolfeSolver)
+#   ThermalUnitBlock  -> TUBSCfg.txt         (ThermalUnitDPSolver, the LMO)
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig , i.e., a map classname --> its BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+2 # the number of elements in the map
+
+AbstractBlock      *FatherBSCfg-fw.txt
+ThermalUnitBlock   *TUBSCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar-fw.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

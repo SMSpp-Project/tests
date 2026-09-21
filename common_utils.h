@@ -76,12 +76,16 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include <AbstractBlock.h>
 #include <Block.h>
 #include <BlockSolverConfig.h>
+#include <ColVariable.h>
+#include <PolyhedralFunction.h>
 
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- USING -----------------------------------*/
@@ -392,19 +396,113 @@ SolverReading read_bounds( Solver * s , std::size_t k );
 SolverClassifier exact_getter( ObjGetter g = ObjGetter::VarValue );
 
 /*--------------------------------------------------------------------------*/
-/// print the uniform per-instance log line
-/** Prints "<t0> - <t1> - ... | S0 = <tok0>  S1 = <tok1>  ... [ ~ Ref = <r>
- *  (|diff| = <d>) ]  -> <verdict>". @p times and @p value_tokens must have the
- *  same length (one entry per Solver); a Ref is printed only if @p ref is not
- *  NaN, and the "(|diff| = ...)" detail only if @p diff is also not NaN. Used
- *  both by SolveAll() and by the tests that keep their own solve loop (so every
- *  test prints the same line).
+/** @name Building a father Block out of the copies of a leaf one
  *
- *  With @p always == false the line is only printed when verbose (the -v
+ * What a test of a decomposition needs before it can decompose anything: a
+ * father Block whose sub-Block are the copies of a leaf Block read from a
+ * file, and an Objective over their Variable that couples them. Nothing of
+ * this is of one Solver rather than another, the father being the same
+ * object whichever :Solver is then asked to solve it.
+ * @{ */
+
+/// a random number in [ -1 , 1 ] drawn from @p rg
+
+inline double rnd( std::mt19937 & rg )
+{ std::uniform_real_distribution<> d( 0.0 , 1.0 ); return( 2 * d( rg ) - 1 ); }
+
+/// a random number in [ 0 , 1 ) drawn from @p rg
+
+inline double pos( std::mt19937 & rg )
+{ std::uniform_real_distribution<> d( 0.0 , 1.0 ); return( d( rg ) ); }
+
+/*--------------------------------------------------------------------------*/
+/// the ColVariable of @p b the father Objective is built over
+/** Collects into @p vars the named static-variable groups of @p b, or, given
+ *  no name, the Variable active in the Objective of @p b.
+ *
+ *  Which Variable the father Objective couples is a choice of the instance:
+ *  for a Block whose objective spans every variable (e.g. MCFBlock)
+ *  collecting from the objective takes them all, while for a Block whose
+ *  formulation carries auxiliary objective variables (e.g. ThermalUnitBlock)
+ *  the named groups pick the "physical" ones, which is what a decomposition
+ *  of that unit is about. */
+
+void collect_vars( Block * b , const std::vector< std::string > & groups ,
+                   std::vector< ColVariable * > & vars );
+
+/*--------------------------------------------------------------------------*/
+/// a father AbstractBlock with @p k copies of the Block in @p filename
+/** Reads the Block in @p filename @p k times, makes the copies the sub-Block
+ *  of a father AbstractBlock, applies the BlockConfig @p bconf to each of
+ *  them if one is named, and collects the Variable of the father Objective
+ *  into @p vars [see collect_vars()]. The father is returned with no
+ *  Objective, which make_father_objective() is there to build. */
+
+AbstractBlock * build_father( const std::string & filename , int k ,
+                              const std::string & bconf ,
+                              const std::vector< std::string > & groups ,
+                              std::vector< ColVariable * > & vars );
+
+/*--------------------------------------------------------------------------*/
+/// random data ( A , b ) of a convex PolyhedralFunction, max_r ( A_r x + b_r )
+
+void generate_poly( Block::Index nv , int poly_rows , double scale ,
+                    std::mt19937 & rg ,
+                    PolyhedralFunction::MultiVector & A ,
+                    PolyhedralFunction::RealVector & b );
+
+/*--------------------------------------------------------------------------*/
+/// a random Function over @p vars, to be the Objective of a father Block
+/** With @p obj_type 0 a DQuadFunction, 1 a QuadFunction and 2 a convex
+ *  PolyhedralFunction; @p scale multiplies the coefficients and @p poly_rows
+ *  is how many rows the third one has (its default being one more than the
+ *  Variable). The quadratic ones are built positive definite, by giving the
+ *  diagonal what Gershgorin asks for. */
+
+Function * make_father_objective( std::vector< ColVariable * > & vars ,
+                                  int obj_type , double scale ,
+                                  int poly_rows , std::mt19937 & rg );
+
+/** @} ---------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------*/
+/// make every Solver of @p b log at the verbosity the command line asks for
+/** If the tester was asked to be verbose (the standard `-v` option, which
+ *  sets verbosity_level), every Solver registered to @p b is made to log to
+ *  std::cout at that verbosity via the standard Solver::intLogVerb parameter.
+ *  This overrides, from the command line, the per-Solver value read from the
+ *  ComputeConfig (default 0), `-v` being an explicit request of whoever runs
+ *  the test. */
+
+void apply_solver_verbosity( Block * b );
+
+/*--------------------------------------------------------------------------*/
+/// print the uniform per-instance log
+/** Reports what each Solver returned, on a line of its own:
+ *
+ *      <name of the Solver>  = <tok>   <t> s
+ *      ...
+ *      Ref                   = <r>     (|diff| = <d>)
+ *      -> <verdict>
+ *
+ *  The names come from @p names, which is what each Solver answers to
+ *  classname(); given none, the Solver are numbered S0, S1, ... and the whole
+ *  report is one line, which is what a test keeping its own solve loop over a
+ *  couple of Solver wants. The names being as long as they are, and what
+ *  makes a failure visible being the disagreement between two values, the
+ *  values are aligned one under the other.
+ *
+ *  @p times and @p value_tokens must have the same length (one entry per
+ *  Solver), and so must @p names when it is given; a Ref is printed only if
+ *  @p ref is not NaN, and the "(|diff| = ...)" detail only if @p diff is also
+ *  not NaN. Used both by SolveAll() and by the tests that keep their own
+ *  solve loop, so that every test prints the same thing.
+ *
+ *  With @p always == false the report is only printed when verbose (the -v
  *  option or the `verbose` environment variable) or on a KO verdict: this is
  *  what the tests that re-solve in a loop of modification rounds use, so
  *  their default output stays terse. SolveAll() passes true instead, so the
- *  one cross-check line per instance is always visible. */
+ *  one cross-check per instance is always visible. */
 
 void print_instance_line( const std::vector< double > & times ,
                           const std::vector< std::string > & value_tokens ,
@@ -412,7 +510,8 @@ void print_instance_line( const std::vector< double > & times ,
                           const std::string & verdict ,
                           double diff =
                            std::numeric_limits< double >::quiet_NaN() ,
-                          bool always = false );
+                          bool always = false ,
+                          const std::vector< std::string > & names = {} );
 
 /*--------------------------------------------------------------------------*/
 /// format a SolverReading as a value token ("v" or "[ lb , ub ]")

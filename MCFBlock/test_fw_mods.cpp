@@ -25,8 +25,9 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include "fw_test_common.h"   // collect_vars / build_father / make_father_objective
+#include "common_utils.h"
 
+#include "FRealObjective.h"
 #include "MCFBlock.h"
 
 #include <random>
@@ -56,8 +57,8 @@ std::mt19937 rg;
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
-// the father-building / objective scaffolding lives in fw_test_common.h
-// (namespace fwtest), shared with test.cpp.
+// the father-building and the random objective are the scaffolding of
+// common_utils, every test of a decomposition needing them
 
 static bool process_specific_arg( int opt )
 {
@@ -102,7 +103,7 @@ int main( int argc , char ** argv )
  // build the father: K MCFBlock copies (shared scaffolding) + a random
  // DQuadFunction objective over all their (flow) ColVariables
  std::vector< ColVariable * > vars;
- auto father = fwtest::build_father( filename , n_children , "" , {} , vars );
+ auto father = build_father( filename , n_children , "" , {} , vars );
  if( vars.empty() ) {
   cerr << "Error: the sub-Block have no ColVariable" << endl;
   exit( 1 );
@@ -120,7 +121,7 @@ int main( int argc , char ** argv )
   }
 
  auto obj = new FRealObjective( father ,
-            fwtest::make_father_objective( vars , 0 , obj_scale , 0 , rg ) );
+            make_father_objective( vars , 0 , obj_scale , 0 , rg ) );
  obj->set_sense( Objective::eMin , eNoMod );
  father->set_objective( obj );
 
@@ -134,7 +135,7 @@ int main( int argc , char ** argv )
   cerr << "no Solver registered to the father Block!" << endl;
   exit( 1 );
   }
- fwtest::apply_solver_verbosity( father );  // -v drives Solver::intLogVerb
+ apply_solver_verbosity( father );  // -v drives Solver::intLogVerb
 
  bool ok = SolveAll( father , exact_getter( ObjGetter::VarValue ) ,
                      std::numeric_limits< double >::quiet_NaN() , 1e-5 );
@@ -167,7 +168,7 @@ int main( int argc , char ** argv )
  std::vector< bool > closed( na , false );
 
  for( int r = 0 ; ( r < mod_rounds ) && ok ; ++r ) {
-  int what = int( 4 * fwtest::pos( rg ) );  // 0 cost, 1 cap, 2 both, 3 fix-toggle
+  int what = int( 4 * pos( rg ) );  // 0 cost, 1 cap, 2 both, 3 fix-toggle
   const char * desc = what == 0 ? "cost" : ( what == 1 ? "cap" :
                       ( what == 2 ? "cost+cap" : "fix" ) );
 
@@ -175,7 +176,7 @@ int main( int argc , char ** argv )
    MCFBlock::Vec_CNumber costs( na );
    for( Index a = 0 ; a < na ; ++a )
     costs[ a ] = std::round( double( orig_costs[ a ] ) *
-                             ( 0.7 + 0.6 * fwtest::pos( rg ) ) );
+                             ( 0.7 + 0.6 * pos( rg ) ) );
    mcf->chg_costs( costs.begin() , MCFBlock::Range( 0 , na ) , eModBlck ,
                    eModBlck );
    }
@@ -184,12 +185,12 @@ int main( int argc , char ** argv )
    for( Index a = 0 ; a < na ; ++a )
     caps[ a ] = MCFBlock::FNumber( std::max( 1.0 ,
                    std::round( double( orig_caps[ a ] ) *
-                               ( 0.85 + 0.45 * fwtest::pos( rg ) ) ) ) );
+                               ( 0.85 + 0.45 * pos( rg ) ) ) ) );
    mcf->chg_ucaps( caps.begin() , MCFBlock::Range( 0 , na ) , eModBlck ,
                    eModBlck );
    }
   if( what == 3 ) {                                // toggle one arc's fix status
-   Index a = Index( na * fwtest::pos( rg ) ) % na; // (a VariableMod: closing an
+   Index a = Index( na * pos( rg ) ) % na; // (a VariableMod: closing an
    if( ! closed[ a ] ) {                           //  arc shrinks the region,
     vars[ a ]->set_value( 0 );                     //  reopening relaxes it)
     vars[ a ]->is_fixed( true );

@@ -94,7 +94,7 @@ $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 
 # the Frank-Wolfe decomposition on this Block- - - - - - - - - - - - - - - - -
 # the generic tester lives in the root of the suites, since the leaf Block it
-# reads is whichever one the configurations of FW/ name; the one of the
+# reads is whichever one the -fw configurations name; the one of the
 # Modification of the feasible region is of this Block, hence it is here
 
 fw: SW = $(SW_RELEASE)
@@ -111,10 +111,10 @@ $(DIR)/MCFBlock_FWmods_test: $(MOBJ) $(FWSlvOBJ) $(DIR)/test_fw_mods.o
 	$(CC) -o $@ $(DIR)/test_fw_mods.o $(MOBJ) $(FWSlvOBJ) $(MLIB) \
 	      $(FWSlvLIB) $(SW)
 
-$(DIR)/fw_test.o: ../fw_test.cpp ../fw_test_common.h $(MH) $(FWSlvH)
+$(DIR)/fw_test.o: ../fw_test.cpp $(MH) $(FWSlvH)
 	$(CC) -c ../fw_test.cpp -o $@ $(MINC) $(FWSlvINC) $(SW)
 
-$(DIR)/test_fw_mods.o: $(DIR)/test_fw_mods.cpp ../fw_test_common.h $(MH) \
+$(DIR)/test_fw_mods.o: $(DIR)/test_fw_mods.cpp $(MH) \
                        $(FWSlvH)
 	$(CC) -c $(DIR)/test_fw_mods.cpp -o $@ $(MINC) $(FWSlvINC) $(SW)
 

@@ -130,6 +130,33 @@ if (TARGET SMS++::TwoStageStochasticBlock)
     endif ()
 endif ()
 
+# What a scenario reduction costs on the investment problem: the instance is
+# solved on the whole scenario set, then on the K representatives each method
+# of ScenarioReductionSolver picks, and the first-stage decision the reduced
+# problem finds is put back into the whole set, so that what is reported is
+# both the gap of the reduced problem and the implementation error of its
+# decision. The Block is a TwoStageStochasticBlock and the second stage a
+# UCBlock, hence it belongs to this suite and not to that of either of the
+# two modules it also reads.
+if (TARGET SMS++::ScenarioReductionSolver AND TARGET SMS++::UCBlock
+    AND TARGET SMS++::StochasticBlock)
+
+    add_executable(TSSB_reduction_test test_reduction.cpp)
+    target_link_libraries(TSSB_reduction_test PRIVATE
+                          SMS++::TwoStageStochasticBlock
+                          SMS++::ScenarioReductionSolver
+                          SMS++::StochasticBlock
+                          SMS++::UCBlock)
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(TSSB_reduction_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    smspp_install(TSSB_reduction_test)
+
+    add_batch_test(TSSB_reduction_test batches-scenred/batch)
+endif ()
+
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()

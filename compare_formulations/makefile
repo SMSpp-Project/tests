@@ -17,8 +17,7 @@ NAME = compare_formulations
 DIR = .
 
 # common stuff
-TSTROOT = ../..
-include ../../makefile_common
+include ../makefile_common
 
 # define & include the necessary modules- - - - - - - - - - - - - - - - - - -
 # if a module is not used in the current configuration, just comment out the
@@ -30,15 +29,15 @@ include ../../makefile_common
 # *INC is the -I< include directories >
 
 # define input macros for SMS++ complete makefile, then include it
-SMS++SDR = ../../../SMS++
+SMS++SDR = ../../SMS++
 include $(SMS++SDR)/lib/makefile-c
 
 # define input macros for UCBlock makefile, then include it
-UCBckDIR = ../../../UCBlock
+UCBckDIR = ../../UCBlock
 include $(UCBckDIR)/lib/makefile
 
 # MILPSolver
-MILPSSDR = ../../../MILPSolver
+MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-c
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,52 +1,43 @@
 # tests/UCBlock/FW
 
-The Frank-Wolfe decomposition of a father `Block` whose leaves are the
-`ThermalUnitBlock` of this suite.
+The configurations of the Frank-Wolfe decomposition of a father `Block` whose
+leaves are the `ThermalUnitBlock` of this suite. The runs are in the batteries
+of the single units, [`batches-tub`](../batches-tub), together with those of
+the dynamic programming solver, since they are posed on the same instances;
+only a few of them, the reference being a monolithic relaxation with a cut
+separation loop, i.e., minutes per run. A battery names these configurations
+with `-c FW`, which makes every nested name resolve into this directory while
+the working directory stays the one of the suite, where the instances are.
 
-The tester is the generic one, [`fw_test.cpp`](../../fw_test.cpp), the same the
-suite of `MCFBlock` builds on its own `Block` (see
-[`MCFBlock/FW`](../../MCFBlock/FW), where its options are documented): a leaf
-`Block` is read `K` times, the `K` copies become the sub-`Block` of a father
-`AbstractBlock` with a random objective over their `Variable`, and the
-`FrankWolfeSolver` that decomposes it is cross-checked against a monolithic
-`:MILPSolver`. Which `Block` is read and which `:Solver` are attached is the
-configurations' business, hence nothing of what follows is in the source.
+The tester is the generic one,
+[`fw_test.cpp`](../../fw_test.cpp), the same the suite of `MCFBlock` builds on
+its own Block: a leaf Block is read `K` times, the `K` copies become the
+sub-`Block` of a father `AbstractBlock` with a random objective over their
+`Variable`, and the `FrankWolfeSolver` that decomposes it is cross-checked
+against a monolithic `:MILPSolver`. Which Block is read and which `:Solver`
+are attached is the configurations' business, hence nothing of what follows is
+in the source.
 
-A `ThermalUnitDPSolver` is the Linear Minimization Oracle of each unit, and the
-reference `:MILPSolver` solves the continuous relaxation *with* the cut
-separation loop (`intRelaxIntVars = 2`). Since DP + Perspective Cuts
+Here a `ThermalUnitDPSolver` is the Linear Minimization Oracle of each unit
+(`TUBSCfg.txt`), and the reference
+`:MILPSolver` solves the continuous relaxation *with* the cut separation loop
+(`MILPCfg.txt`, `intRelaxIntVars = 2`). Since DP + Perspective Cuts
 characterizes the convex hull of the integer solutions of the unit, the
 Dantzig-Wolfe value `FrankWolfeSolver` computes (`intCvxComb = 1`) must equal
 the perspective bound, i.e., Frank-Wolfe is a decomposition alternative to
-DP + P/C, and this is what the batch checks.
+DP + P/C, and this is what is checked.
 
-The executable is built by CMake with the suite, and by the makefile of the
-suite with `make fw`:
+The configurations are `BSPar.txt`, which maps the father to
+`FatherBSCfg.txt` and each unit to `TUBSCfg.txt`, plus `FWCfg.txt` and
+`MILPCfg.txt` that the father holds; `BSPar-fw.txt` registers the
+`FrankWolfeSolver` alone and `BSPar-milp.txt` the reference `:MILPSolver`
+alone, for the runs that time one of the two. The formulation is chosen by
+`TUBCfg-DP.txt` (DP + P/C, which only the reference needs and which is
+expensive to build) or by `TUBCfg-T.txt` (the plain `T` formulation, which
+gives the identical result much faster when the reference is not run).
 
-       ./UCBlock_FW_test [ options ] <ThermalUnitBlock netCDF file>
 
-## Configurations and batch
 
-The `ThermalUnitBlock` family: `BSPar-tub.txt`, `FatherBSCfg-tub.txt`,
-`TUBSCfg.txt`, `MILPCfg-tub.txt`, `FWCfg-tub.txt`, and the two formulation
-`BlockConfig` `TUBCfg-DP.txt` / `TUBCfg-T.txt`.
-
-**Two formulation `BlockConfig`.** `TUBCfg-DP.txt` selects the DP + P/C
-formulation (`static_variables = 11`); it is needed **only** for the reference
-`:MILPSolver` (which solves the monolithic DP + P/C relaxation), and building
-that abstract formulation is expensive. `FrankWolfeSolver` does **not** use it,
-its `ThermalUnitDPSolver` oracle having its own internal DP, so any FW-only run
-should pass `-B TUBCfg-T.txt` (the plain `T` formulation,
-`static_variables = 1`, no Perspective Cuts), which gives the identical result
-much faster (e.g., ~2s vs ~28s on a 96-period unit). Use `TUBCfg-DP.txt` only
-for the cross-check or the reference-only timing. `BSPar-tub-fwonly.txt`
-registers only the `FrankWolfeSolver`; `BSPar-tub-ref.txt` registers only the
-reference `:MILPSolver` (the MIQP-only run, for time comparison).
-
-[batch-tub](batch-tub) runs the cross-check on the units of this suite, from
-this directory. It is **not** registered as a `ctest`, since the reference
-solves a monolithic relaxation with a cut separation loop and Frank-Wolfe
-converges sublinearly: expect minutes per run.
 
 
 ## Authors

@@ -124,35 +124,37 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
                  COMMAND CFL_BDS_test
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-        # The same problem on an instance small enough that every way the
-        # Solver has of writing a cut can be run on it and compared with the
-        # monolithic optimum: the multi-cut and single-cut masters, the
-        # cutting-plane and the bundle one, the Pareto-optimal cuts, the two
-        # normalizations of the feasibility cut and its phase one, the
-        # combinatorial cut of a binary master, the cut that serves for both
-        # feasibility and optimality, what keeping a subproblem in the master
-        # costs and what the Block is given back at the end of a compute().
-        # The instance is written by the tester itself, so the only thing it
-        # needs is the configurations, which live in BDS/ beside the ones of
-        # the other comparisons of this suite.
-        add_executable(CFL_BDS_regimes_test test_bds_regimes.cpp)
-        target_link_libraries(CFL_BDS_regimes_test PRIVATE
-                SMS++::BendersDecompositionSolver
-                SMS++::BundleSolver
-                SMS++::MILPSolver)
-        smspp_install(CFL_BDS_regimes_test)
-
-        add_test(NAME CFL_BDS_regimes_test
-                 COMMAND CFL_BDS_regimes_test
-                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/BDS)
     endif ()
 endif ()
 
-# The scenario generator of this Block and the runs that reduce the scenarios
-# it writes: the reduction is asked of ScenarioReductionSolver, but what it is
+# The scenario generator of this Block and the battery that reduces what it
+# writes: the reduction is asked of ScenarioReductionSolver, but what it is
 # asked of is the facility location instances, hence it belongs to this suite.
-if (TARGET SMS++::ScenarioReductionSolver)
-    add_subdirectory(scenario-reduction)
+# The generator writes the TwoStageStochasticBlock that the battery then
+# reduces and solves with the tester of ScenarioReductionSolver, which is
+# generic and lives in that module, so the battery is run with the two of them
+# and not with the tester of this suite.
+if (TARGET SMS++::CapacitatedFacilityLocationBlock
+    AND TARGET SMS++::TwoStageStochasticBlock)
+
+    add_executable(CFLScenarioGenerator
+                   CFLScenarioGenerator.cpp ../common_utils.cpp)
+    target_include_directories(CFLScenarioGenerator PRIVATE ..)
+    target_link_libraries(CFLScenarioGenerator PRIVATE
+                          SMS++::CapacitatedFacilityLocationBlock
+                          SMS++::StochasticBlock
+                          SMS++::TwoStageStochasticBlock)
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(CFLScenarioGenerator PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    smspp_install(CFLScenarioGenerator)
+
+    if (TARGET SMS++::ScenarioReductionSolver)
+        add_batch_test(CFLScenarioGenerator batches-scenred/batch
+                       ScenarioReductionSolver_test)
+    endif ()
 endif ()
 
 # Tag this directory's tests with their per-module CI labels

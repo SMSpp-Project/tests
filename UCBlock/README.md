@@ -100,6 +100,82 @@ Both batches automatically copy the right TUBCfg\*.txt and
 TUBSCfg\*.txt for the intended tests to succeed.
 
 
+## The scenarios of a unit commitment, and their reduction
+
+`UCScenarioGenerator` reads a unit commitment instance and writes a set of
+scenarios out of it, the uncertainty being a time series rather than the
+single static vector of a facility location: the demand over time, the
+renewable power available over time, or both. It writes both the plain
+scenario file and the `TwoStageStochasticBlock` that carries it, which is what
+the reduction reads.
+
+    ./UCScenarioGenerator -i <instance.nc4> -o <scenarios.nc4>
+                          --tssb-output <tssb.nc4> -n 20 -v 0.3 -s 42
+                          --no-maxpower --no-validate
+
+`-i` is the instance (required), `-o` where the scenarios go,
+`--tssb-output` the file the reduction reads, `-n` how many scenarios, `-v`
+how much the demand or the renewable power varies between them, `-s` the seed
+of the random generator, `--no-demand` / `--no-maxpower` which of the two
+uncertainties to leave out, and `--no-validate` skips solving each scenario
+once, which is slow and, with the demand uncertain, unreliable. With `T`
+periods, `nd` demand nodes and `ni` intermittent units a scenario is `nd * T`
+long with the demand alone, `ni * T` with the generation alone and the sum of
+the two by default; how many of them there are is fixed when the file is
+written, so a sweep over that number is a file each.
+
+The reduction itself is asked of the generic tester of
+`ScenarioReductionSolver`, which reads the same file whatever Block wrote it:
+
+    ./ScenarioReductionSolver_test -i <tssb.nc4> -m cssc -r 5 -c
+BSCfg-scenred.txt
+
+with `-m` the method (`baseline`, `dupacova`, `bestfit`, `firstfit`, `cssc`),
+`-r` how many representatives to keep and `-c` the `BlockSolverConfig`.
+`cssc` asks for an instance that carries a `ThermalUnitBlock`, i.e., one of
+the `_TUB` ones of `UCBlock/data/nc4/EC_Data/ucblock`; without it only the
+heuristics run.
+
+[batches/batch-scenred](batches/batch-scenred) walks the two steps over
+instances, seeds, numbers of scenarios and of representatives and methods,
+and writes what each run gives into a CSV. It is run with the generator and
+that tester, and every directory it reads defaults to a path relative to
+itself, so it runs from any working directory and against any build tree; the
+same paths can be given as flags (`--generator --solve --instances --n --k
+--seeds --methods --solver --variation --uncertainty --instance-dir
+--scenario-dir --config-dir --output`) or in the environment (`GEN`, `SOLVE`,
+`IDIR`, `SDIR`, `CFGDIR`).
+
+
+## The benchmark of the machine-learning driven bundle
+
+`UCBlock_ML_bench` trains and measures `BundleSolverML`, the bundle solver
+that predicts the proximal parameter `t` with a small neural network, on the
+instances of this Block. The harness is the generic one,
+[`ml_bench.cpp`](../ml_bench.cpp), the same the suite of `MMCFBlock` builds on
+its own instances; it is built only where Torch is, `BundleSolverML` being
+built into `BundleSolver` only in that case, and it is run by hand, being a
+measurement and not a check.
+
+The instances are not in the repository, they are a separate download and have
+to stay such: `<data-dir>` is where they are. The train, validation and test
+splits are here instead, beside the batteries, since they are small and are
+what makes a run reproducible.
+
+Train a network on the training split and write the weights:
+
+    UCBlock_ML_bench train <split> <data-dir> <block-cfg> <ml-cfg> \
+                   -o <weights> [-e <epochs>]
+
+Compare two solver configurations over the same split:
+
+    UCBlock_ML_bench compare <split> <data-dir> <block-cfg> <cfg-A> <cfg-B> \
+                     [-r <weights>] [-o <results.csv>]
+
+`-c <dir>` prefixes the configuration files, `-r <file>` gives the B side the
+weights a training run wrote (without it, B runs untrained).
+
+
 ## Authors
 
 - **Antonio Frangioni**  
