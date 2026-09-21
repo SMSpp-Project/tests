@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-lemon.txt - - - - - - - - - - - - - - -
+#
+# The "meta"-BlockSolverConfig of BSPar.txt with the network simplex of
+# LEMON as the LMO of each sub-Block in place of the one of MCFClass:
+#
+#   AbstractBlock  -> FatherBSCfg.txt     (a :MILPSolver + a FrankWolfeSolver)
+#   MCFBlock       -> MCFBSCfg-lemon.txt  (the LMO of each sub-Block)
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig , i.e., a map classname --> its BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+2 # the number of elements in the map
+
+AbstractBlock   *FatherBSCfg.txt
+MCFBlock        *MCFBSCfg-lemon.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-lemon.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

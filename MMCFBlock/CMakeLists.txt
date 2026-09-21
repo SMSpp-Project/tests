@@ -9,6 +9,7 @@ if (NOT hasParent)
     find_package(MILPSolver)
     find_package(LagrangianDualSolver)
     find_package(MCFLemonSolver)
+    find_package(MCFClassSolver)
 endif ()
 
 find_package(CPLEX)
@@ -190,6 +191,11 @@ if (TARGET SMS++::MMCFBlock)
 
     if (TARGET SMS++::MCFLemonSolver)
         target_link_libraries(MMCFBlock_test PRIVATE SMS++::MCFLemonSolver)
+    endif ()
+
+    # the flow relaxation of BSPar-2S.txt asks for MCFSolver< MCFSimplex >
+    if (TARGET SMS++::MCFClassSolver)
+        target_link_libraries(MMCFBlock_test PRIVATE SMS++::MCFClassSolver)
     endif ()
 
     # batchML asks for BundleSolverML by name, and the class is in the

@@ -66,11 +66,13 @@ one is not generic and lives in the suite proper.
 
 The `MCFBlock` family: `BSPar.txt`, `FatherBSCfg.txt`, `MCFBSCfg.txt`,
 `MILPCfg.txt`, `FWCfg.txt`, the Polyhedral two-copy variants `BSPar-fw.txt` /
-`BSPar-milp.txt` / `FatherBSCfg-fw.txt` / `FatherBSCfg-milp.txt`, and the
+`BSPar-milp.txt` / `FatherBSCfg-fw.txt` / `FatherBSCfg-milp.txt`, the
 warm-started `BSPar-warm.txt` / `FatherBSCfg-warm.txt` / `FWCfg-warm.txt` that
-the rounds of Modification use. A battery names them with `-c FW`, which makes
-every nested name resolve into this directory while the working directory
-stays the one of the suite, where the instances are.
+the rounds of Modification use, and `BSPar-lemon.txt` /
+`MCFBSCfg-lemon.txt`, where the LMO of each sub-`Block` is the network simplex
+of LEMON instead of the one of MCFClass. A battery names them with `-c FW`,
+which makes every nested name resolve into this directory while the working
+directory stays the one of the suite, where the instances are.
 
 **Single solver vs cross-check.** The single-block path runs every `:Solver`
 registered to the father and cross-checks them. The reference `:MILPSolver`

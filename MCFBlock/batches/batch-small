@@ -29,17 +29,16 @@ par=BSPar.txt
 INSTANCES="N3-5-0-0-0 N3-5-5-2-2"
 
 # the Solver of the Block against one another - - - - - - - - - - - - - - - -
-# 159 = every change but the deletion of arcs, which the comparison of the
-# values does not survive on instances this small, and but their addition
-# (bit 6), which on the instances that carry dynamic arcs kills
-# MCFLemonSolverNetworkSimplex: with that Solver alone the run segfaults on
-# N3-5-5-2-2 as soon as an arc is added, while MCFSolver< MCFSimplex > and
-# MCFSolver< RelaxIV > take it, so the bit goes back in when that is fixed
+# all those of BSPar.txt, the four LEMON algorithms included, with the two
+# "what to change" masks of batch: 255 = every change, arc deletions
+# included, and 223 = every change but arc deletions (255 & ~32)
 
 for inst in $INSTANCES; do
   for (( seed = 0 ; seed < 3 ; seed++ )); do
-    run_test "$MCFBlock_test" "${DATADIR}/${inst}.nc4" -S "$par" \
-             -e "$seed" -k 159
+    for wchg in 255 223; do
+      run_test "$MCFBlock_test" "${DATADIR}/${inst}.nc4" -S "$par" \
+               -e "$seed" -k "$wchg"
+    done
   done
 done
 
@@ -65,6 +64,16 @@ if [ -n "${fwexe}" ]; then
       fw_run "${DATADIR}/${inst}.nc4"
     done
   done
+
+  # the same, with the network simplex of LEMON as the LMO of each sub-Block
+  fwpar=BSPar-lemon.txt
+  for inst in $INSTANCES; do
+    for o in 0 1; do
+      fwargs="-o $o -k 2 -e 1"
+      fw_run "${DATADIR}/${inst}.nc4"
+    done
+  done
+  unset fwpar
 
   # the Away-step (1) and the BPCG (2) variants
   fwargs="-o 1 -k 3 -e 1"

@@ -67,10 +67,16 @@ printing the running time).
 Its batches are `batch`, `batch-c`, `batch-k`, `batch-m` and `batchML`, over
 the same `data/` set. Its makefile is `makefile-xcheck`. All of them but
 `batch-k` use `BPar.txt`, i.e. the flow formulation with one `MCFBlock` per
-commodity; `batch-k` is the one exercising the knapsack formulation, with one
-`BinaryKnapsackBlock` per arc, which it asks for in the structure
-`Configuration` of the `BlockConfig` [see `Block::set_structure()`] since the
-tree of sub-`Block` of a `MMCFBlock` is entirely a modelling choice. It only
+commodity. `batch-c` runs every instance twice, the subproblems of the
+`LagrangianDualSolver`, i.e., the `MCFBlock` of the commodities, being solved
+by a `:MILPSolver` (`BSPar.txt`) and by the network simplex of
+`MCFLemonSolver` (`BSPar-lemon.txt`), the two configurations differing in
+that only; `BSPar-2S.txt` solves them with `MCFSolver< MCFSimplex >`, when
+`MCFClassSolver` is in the build. `batch-k` is the one exercising the knapsack
+formulation, with one `BinaryKnapsackBlock` per arc, which it asks for in the
+structure `Configuration` of the `BlockConfig` [see `Block::set_structure()`]
+since the tree of sub-`Block` of a `MMCFBlock` is entirely a modelling
+choice. It only
 runs a handful of named instances, the knapsack formulation being much harder
 to solve than the flow one.
 

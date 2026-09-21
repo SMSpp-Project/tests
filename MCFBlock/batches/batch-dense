@@ -38,7 +38,9 @@ wchg_list="255 223"
 
 MCFBlock_test=${1:-./MCFBlock_test}
 fwexe=${2:-}
-par=BSPar.txt
+# the Solver of BSPar.txt but the two LEMON algorithms that are slow on
+# these instances, see BSPar-large.txt
+par=BSPar-large.txt
 
 for type in net goto; do
 

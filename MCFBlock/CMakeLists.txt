@@ -65,6 +65,11 @@ if (TARGET SMS++::MCFBlock)
                                   SMS++::MCFClassSolver)
         endif ()
 
+        if (TARGET SMS++::MCFLemonSolver)
+            target_link_libraries(MCFBlock_FW_test PRIVATE
+                                  SMS++::MCFLemonSolver)
+        endif ()
+
         if (TARGET SMS++::MILPSolver)
             target_link_libraries(MCFBlock_FW_test PRIVATE SMS++::MILPSolver)
         endif ()
@@ -82,6 +87,11 @@ if (TARGET SMS++::MCFBlock)
         if (TARGET SMS++::MCFClassSolver)
             target_link_libraries(MCFBlock_FWmods_test PRIVATE
                                   SMS++::MCFClassSolver)
+        endif ()
+
+        if (TARGET SMS++::MCFLemonSolver)
+            target_link_libraries(MCFBlock_FWmods_test PRIVATE
+                                  SMS++::MCFLemonSolver)
         endif ()
 
         if (TARGET SMS++::MILPSolver)

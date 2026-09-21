@@ -1,0 +1,31 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LPBSCfg-F-lemon.txt - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a MCFBlock solved by the
+# network simplex of LEMON: the capacities and the deficits of the
+# commodities are integer, which is what LEMON requires, while the costs are
+# the Lagrangian ones
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#MCFSolver<MCFSimplex>     # name of Solver
+#MCFSolver<RelaxIV>     # name of Solver
+#MCFSolver<MCFCplex>    # name of Solver
+MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+#[none]
+*
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END LPBSCfg-F-lemon.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
