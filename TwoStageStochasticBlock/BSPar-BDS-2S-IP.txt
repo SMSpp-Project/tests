@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-BDS-2S.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-BDS-2S-IP.txt  - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig registering two Solver on the
 # Benders form of a two-stage stochastic instance, i.e., on the Block the
@@ -15,8 +15,10 @@
 # restructures it, and while that lasts the problem the other Solver would
 # find is not the one it was attached to.
 #
-#   Antonio Frangioni
-#   Donato Meoli
+# It is BSPar-BDS-2S.txt for an instance whose design is integer, e.g., a
+# number of modules: the Benders Solver keeps the design integer in its
+# master, hence the :MILPSolver solves the integer problem too, and the
+# subproblems of a round are evaluated by 4 threads.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -48,10 +50,8 @@ ComputeConfig # exact type of the ComputeConfig object
 intLogVerb        0  # LogVerb, log verbosity of the MILPSolver
 Threads           1  # one thread, so that the time is that of a sequential
                      # algorithm, as the Benders one is
-intRelaxIntVars   1  # the continuous relaxation, which is the problem the
-                     # Benders Solver is solving here as long as the design
-                     # is continuous: an integer one is integer in its
-                     # master, and BSPar-BDS-2S-IP.txt is then the check
+intRelaxIntVars   0  # the integer problem, which is the one the Benders
+                     # Solver is solving, the design being integer
 
 1  # number of double parameters
 
@@ -81,7 +81,7 @@ dblRelAcc      1e-9  # relative accuracy required to solution
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -90,10 +90,11 @@ ComputeConfig # exact type of the ComputeConfig object
 0  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-2  # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
 int_BDSlv_Regime  1  # 0 = convex master, 1 = MILP master
+int_BDSlv_MaxThread 4  # threads evaluating the subproblems of a round
 int_BDSlv_Restore 1  # 0 = the reformulation stays, 1 = the Block is given
                      #     back as it was at the end of each compute(), which
                      #     is what lets the other Solver of this cross-check
@@ -129,10 +130,10 @@ str_Mstr_BSCfg  BDSMCfg-MILP.txt  # BlockSolverConfig of the master
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BSPar-BDS-2S.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-BDS-2S-IP.txt  - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

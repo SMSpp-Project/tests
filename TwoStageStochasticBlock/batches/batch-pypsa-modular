@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pypsa-modular < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default ./TSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S-IP.txt
+#        < log file > = name of log file, default no log
+#
+# the Benders form of PyPSA networks whose first stage builds whole modules
+# of solar and wind (p_nom_mod), which pypsa2smspp writes as an integer
+# design of the units, the number of modules, over a second stage that is a
+# linear program: the :MILPSolver solves the integer extensive form and the
+# BendersDecompositionSolver keeps the design integer in its master, and
+# both are checked against the optimum of PyPSA on the same network
+#
+# the instances are written by gen_modular_tssb.py and emit_modular_tssb.py
+# in the test/references of pypsa2smspp, whose README says with which values
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./TSSB_test
+DEFAULT_PAR=BSPar-BDS-2S-IP.txt
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ file name ] = PyPSA objective value (Gurobi, MIPGap 1e-9)
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_mod_t48_s10_b2_ucblock.nc4]=3.6832431872e+07
+REF_OBJ[smspp_mod_t168_s5_b1_ucblock.nc4]=8.2602180128e+07
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/pypsa-data/tssb-modular/smspp_*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -b -S "$par" -B InnerBCfg.txt -r "$ref"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

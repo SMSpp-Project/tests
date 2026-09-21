@@ -8,6 +8,18 @@
 #
 # runs all the stochastic energy community instances and checks that the
 # EnergyCommunity.jl@stochastic objective value matches the given reference one
+#
+# a BlockSolverConfig naming a BendersDecompositionSolver, e.g.,
+# BSPar-BDS-2S-IP.txt, runs the Benders form of the instances instead (-b):
+# the design of the units is integer, a number of modules, and the Benders
+# Solver keeps it integer in its master, while the reference values are those
+# of the continuous relaxation, which on the NC instances is below the
+# integer optimum; hence what is checked is that the Benders Solver and the
+# :MILPSolver on the integer problem agree; the instances with no asset,
+# whose design is empty, have no Benders form, and those with a
+# ThermalUnitBlock have a commitment in the second stage, which the
+# subproblems relax, the cuts being read off the duals of a linear program,
+# so that the Benders Solver only gives a bound there: both are skipped
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
@@ -16,6 +28,9 @@ DEFAULT_EXE=./TSSB_test
 DEFAULT_PAR=BSPar-2S.txt
 DEFAULT_SLV=0
 parse_batch_args "$@"
+
+benders=
+grep -q "^ *BendersDecompositionSolver" "$par" 2>/dev/null && benders=1
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = | EnergyCommunity.jl@stochastic objective value |
@@ -68,6 +83,12 @@ for what in ../../UCBlock/data/nc4/EC_Data/tssb/TSSB_EC_CO_*.nc4 \
     if [ -z "$ref" ]; then
       echo "No reference objective defined for file: $base"
       exit 1
+    fi
+
+    if [ -n "$benders" ]; then
+      case "$base" in TSSB_EC_NA_*|*_TUB*) continue ;; esac
+      run_test "$exe" "$what" -b -S "$par" -B InnerBCfg.txt
+      continue
     fi
 
     run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"

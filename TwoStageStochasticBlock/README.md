@@ -96,6 +96,26 @@ the Benders `Solver` takes minutes on those instances, its master
 being a cutting plane with no stabilization on a design that is
 continuous.
 
+`batches/batch-ec` given a `BlockSolverConfig` that names a
+`BendersDecompositionSolver`, e.g., `BSPar-BDS-2S-IP.txt`, runs the
+Benders form of the energy community instances instead. Their design
+is integer, and the reference values of EnergyCommunity.jl are those
+of the continuous relaxation, which on the NC instances is below the
+integer optimum, so what is checked there is that the Benders `Solver`
+and the `:MILPSolver` on the integer problem agree. The instances with
+no asset have no design, hence no Benders form, and those with a
+`ThermalUnitBlock` have a commitment in the second stage, which the
+subproblems relax, so that the Benders `Solver` only gives a bound on
+them: both are skipped.
+
+`batches/batch-pypsa-modular` runs the same cross-check on PyPSA
+networks whose first stage builds whole modules of solar and wind
+(`p_nom_mod`), which pypsa2smspp writes as an integer design of the
+units over a second stage that is a linear program, and checks both
+`Solver` against the optimum of PyPSA on the same network. The
+instances are written by `gen_modular_tssb.py` and
+`emit_modular_tssb.py` in the `test/references` of pypsa2smspp.
+
 A makefile is also provided that builds the executable including the
 `TwoStageStochasticBlock`, `LagrangianDualSolver`, `BundleSolver`,
 `MILPSolver` modules and the core SMS++ library, together with the
@@ -126,7 +146,12 @@ inner-Block module needed by the instances in `batches/` (currently
   required at what the scale of those instances asks for: with the
   ones of `BDSMCfg.txt`, which are those of the small problem the
   Solver was written on, the bundle stops short of the optimum on
-  three of the four.
+  three of the four. `BSPar-BDS-2S-IP.txt` is the cross-check for an
+  instance whose design is integer, e.g., a number of modules: the
+  Benders `Solver` keeps the design integer in its master, so the
+  `:MILPSolver` solves the integer problem as well, and the
+  subproblems of a round are evaluated by 4 threads
+  (`int_BDSlv_MaxThread`).
 - `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
   bundle over the `InvestmentBlock`, and `InvBCfg.txt` the
   `BlockConfig` of that Block, which is what fixes the design in every
