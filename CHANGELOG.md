@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `UCBlock_test --scale`, which checks the scale factor of a unit, i.e., the
+  number of copies of it that a `UCBlock` holds, on two instances the tester
+  writes itself, one carrying a thermal unit and one a nuclear one, each of
+  them with a cost of every kind its Objective can hold, the two reserves and
+  the reactive power: the model of a unit scaled once the abstract
+  representation is built has to be the one of a unit scaled before it, which
+  is compared coefficient by coefficient over the Objective of every unit and
+  the rows of the `UCBlock` that use their Variable, and through the optimum;
+  the data of the unit, being those of one copy, must not move although the
+  Solver attached to it hears of the scaling; and the three dynamic
+  programming Solvers have to answer for all the copies, i.e., to give the
+  value of the Objective, also once a price has been written into it the way
+  a dualizing Solver writes its multipliers. The thermal unit is taken in
+  each of the seven formulations, with and without the perspective cuts. The
+  comparison of the models asks for no Solver at all, so that it runs in a
+  build that has none; the optimum and the dynamic programming Solvers are
+  checked where a `:MILPSolver` is in the build
+
 ### Changed
 
 - the four sector-coupled instances `batch-pypsa` walks are written by the
