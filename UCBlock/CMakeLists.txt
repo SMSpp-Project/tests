@@ -41,6 +41,12 @@ if (TARGET SMS++::UCBlock)
                  COMMAND UCBlock_test --pollutant)
     endif ()
 
+    # the scale factor of a unit, on instances the tester writes itself; the
+    # model is checked with no Solver at all, the optimum and the DP Solvers
+    # only when a :MILPSolver is in the build
+    add_test(NAME UCBlock_test/scale
+             COMMAND UCBlock_test --scale)
+
     # Create a test fixture to generate .nc4 files by running extract_uc_nc4.
     # This test will build and run the extract_uc_nc4 target
     add_test(NAME extract_uc_nc4

@@ -26,6 +26,20 @@
  * Called as UCBlock_test --pollutant, with no other argument, the tester
  * instead checks the pollutant budget constraints of UCBlock.
  *
+ * Called as UCBlock_test --scale, with no other argument, it instead checks
+ * the scale factor of a unit, i.e., the number of copies of it the UCBlock
+ * holds. The Objective of a scaled unit is the scale factor times the cost
+ * of one copy, while its Variable stay those of one copy, which the rows of
+ * the UCBlock that use them multiply by the factor [see UnitBlock::scale()]:
+ * a unit scaled after the model is built must therefore give the model of
+ * one scaled before it, and the data of the unit must not move. What a
+ * dualizing Solver writes into the Objective, being scaled, is divided back
+ * into the cost of one copy, which is what the (physical) DP Solvers read,
+ * and they in turn answer for all the copies. This is checked on a thermal
+ * unit in each of the seven formulations, with and without the perspective
+ * cuts, and on a nuclear one, both of them carrying a cost of every kind
+ * the Objective can hold, the two reserves and the reactive power.
+ *
  * The PyPSA instances of batch-pypsa check the pollutant budget
  * constraints against the objective value of PyPSA, which however writes a
  * limit with a single zone spanning all the nodes, and knows nothing of what
@@ -190,6 +204,8 @@
 #include "CDASolver.h"
 
 #include "LinearFunction.h"
+
+#include "DQuadFunction.h"
 
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- USING -----------------------------------*/
@@ -875,6 +891,437 @@ static int test( void )
 }  // end( namespace pollutant )
 
 /*--------------------------------------------------------------------------*/
+namespace scaling {
+
+/*--------------------------------------------------------------------------*/
+/*------------------- CONSTANTS OF THE SCALING CHECKS ----------------------*/
+/*--------------------------------------------------------------------------*/
+
+/// the :MILPSolver to try, the first in the Solver factory being used
+
+static const std::vector< std::string > SolverNames =
+ { "CPXMILPSolver" , "GRBMILPSolver" , "HiGHSMILPSolver" , "SCIPMILPSolver" };
+
+/// the relative tolerance of every comparison
+
+static constexpr double Eps = 1e-6;
+
+/// the scale factor the unit under investment is given
+
+static constexpr double Kappa = 3;
+
+/// the time horizon of the instances
+
+static constexpr Index T = 8;
+
+/*--------------------------------------------------------------------------*/
+/*------------------- GLOBALS OF THE SCALING CHECKS ------------------------*/
+/*--------------------------------------------------------------------------*/
+
+static bool all_passed = true;  ///< false as soon as a check fails
+
+static std::string solver_name;
+
+static std::filesystem::path dir;
+
+/*--------------------------------------------------------------------------*/
+/*------------------ FUNCTIONS OF THE SCALING CHECKS -----------------------*/
+/*--------------------------------------------------------------------------*/
+
+static void check( bool ok , const std::string & what )
+{
+ std::cout << "  " << what << ( ok ? " -> OK" : " -> Error" ) << std::endl;
+ if( ! ok )
+  all_passed = false;
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static bool near( double a , double b )
+{
+ return( std::abs( a - b ) <= Eps * std::max( 1.0 , std::abs( b ) ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// writes the instance in the file with the given name, returning its path
+/** The instance has one node, a unit that is scaled and a SlackUnitBlock
+ * that makes it feasible whatever the first one does. The scaled unit is a
+ * ThermalUnitBlock with a cost of every kind the Objective can carry, i.e.,
+ * start-up, shut-down, linear, quadratic and fixed, the two reserves and the
+ * reactive power, or the NuclearUnitBlock that adds to them the costs of the
+ * downward modulation steps and of the deep decreases. */
+
+static std::string write( const std::string & name , bool nuclear )
+{
+ auto path = ( dir / ( name + ".nc4" ) ).string();
+ netCDF::NcFile f( path , netCDF::NcFile::replace );
+ f.putAtt( "SMS++_file_type" , netCDF::NcInt() , 1 );
+
+ auto g = f.addGroup( "Block_0" );
+ g.putAtt( "type" , "UCBlock" );
+ auto dT = g.addDim( "TimeHorizon" , T );
+ g.addDim( "NumberUnits" , 2 );
+ auto dG = g.addDim( "NumberElectricalGenerators" , 2 );
+ auto dN = g.addDim( "NumberNodes" , 1 );
+ auto dP = g.addDim( "NumberPrimaryZones" , 1 );
+ auto dS = g.addDim( "NumberSecondaryZones" , 1 );
+
+ const std::vector< unsigned > gen_node = { 0 , 0 };
+ g.addVar( "GeneratorNode" , netCDF::NcUint() , dG ).putVar( gen_node.data() );
+
+ const std::vector< double > demand =
+  { 260 , 300 , 280 , 320 , 300 , 260 , 240 , 280 };
+ g.addVar( "ActivePowerDemand" , netCDF::NcDouble() ,
+           { dN , dT } ).putVar( demand.data() );
+
+ // the two reserves are asked for, so that their rows exist and carry the
+ // scale factor of the unit; the reactive demand does the same for the
+ // reactive node injection rows
+ const std::vector< double > reserve( T , 1 );
+ g.addVar( "PrimaryDemand" , netCDF::NcDouble() ,
+           { dP , dT } ).putVar( reserve.data() );
+ g.addVar( "SecondaryDemand" , netCDF::NcDouble() ,
+           { dS , dT } ).putVar( reserve.data() );
+ const std::vector< double > reactive( T , 5 );
+ g.addVar( "ReactivePowerDemand" , netCDF::NcDouble() ,
+           { dN , dT } ).putVar( reactive.data() );
+
+ // the unit that is scaled - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ auto u = g.addGroup( "UnitBlock_0" );
+ u.putAtt( "type" , nuclear ? "NuclearUnitBlock" : "ThermalUnitBlock" );
+
+ auto put = [ & u ]( const std::string & nm , double v ) {
+  u.addVar( nm , netCDF::NcDouble() ).putVar( & v );
+  };
+ auto put_u = [ & u ]( const std::string & nm , unsigned v ) {
+  u.addVar( nm , netCDF::NcUint() ).putVar( & v );
+  };
+ auto put_i = [ & u ]( const std::string & nm , int v ) {
+  u.addVar( nm , netCDF::NcInt() ).putVar( & v );
+  };
+
+ put( "MinPower" , 100 );
+ put( "MaxPower" , 300 );
+ put( "LinearTerm" , 12 );
+ put( "QuadTerm" , 0.002 );
+ put( "ConstTerm" , 40 );
+ put( "StartUpCost" , 500 );
+ put( "DeltaRampUp" , 60 );
+ put( "DeltaRampDown" , 60 );
+ put( "StartUpLimit" , 200 );
+ put( "ShutDownLimit" , 200 );
+ put_u( "MinUpTime" , 2 );
+ put_u( "MinDownTime" , 2 );
+ put( "InitialPower" , 150 );
+ put_i( "InitUpDownTime" , 4 );
+ put( "PrimaryRho" , 0.05 );
+ put( "SecondaryRho" , 0.1 );
+ put( "MaxReactivePowerOn" , 120 );
+ put( "MinReactivePowerOn" , 0 );
+ if( ! nuclear )
+  // the cost a thermal unit pays at the instant it shuts down, which the
+  // nuclear one does not have
+  put( "ShutDownCost" , 90 );
+ else {
+  // the operating rules, on the scale of a horizon of 8 instants
+  auto dB = u.addDim( "NumberPowerBands" , 2 );
+  put_u( "ModulationTime" , 2 );
+  put_u( "InitModulation" , 2 );
+  put( "ModulationDeltaRampUp" , 0 );
+  put( "ModulationDeltaRampDown" , 0 );
+  put_u( "MaxModulationLength" , 2 );
+  put_u( "StabilityAfterStartUp" , 1 );
+  const std::vector< double > bands = { 180 , 250 };
+  u.addVar( "PowerBands" , netCDF::NcDouble() , dB ).putVar( bands.data() );
+  put_u( "DayLength" , T );
+  put_u( "ModulationsPerDay" , 2 );
+  put_u( "StartUpsPerDay" , 1 );
+  put( "DeepDecreaseThreshold" , 150 );
+  put( "DeepDecreaseGradient" , 20 );
+  put_u( "DeepDecreasesPerDay" , 1 );
+  put( "DeepDecreaseCost" , 20 );
+  put( "DownModulationCost" , 2 );
+  }
+
+ // the unit that makes the instance feasible - - - - - - - - - - - - - - - -
+
+ auto s = g.addGroup( "UnitBlock_1" );
+ s.putAtt( "type" , "SlackUnitBlock" );
+ const std::vector< double > big( T , 1000 );
+ s.addVar( "MaxPower" , netCDF::NcDouble() , dT ).putVar( big.data() );
+ s.addVar( "MaxPrimaryPower" , netCDF::NcDouble() , dT ).putVar( big.data() );
+ s.addVar( "MaxSecondaryPower" , netCDF::NcDouble() ,
+           dT ).putVar( big.data() );
+ const std::vector< double > cost( T , 1000 );
+ s.addVar( "ActivePowerCost" , netCDF::NcDouble() , dT ).putVar( cost.data() );
+ s.addVar( "PrimaryCost" , netCDF::NcDouble() , dT ).putVar( cost.data() );
+ s.addVar( "SecondaryCost" , netCDF::NcDouble() , dT ).putVar( cost.data() );
+
+ return( path );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static UCBlock * load( const std::string & path )
+{
+ auto uc = dynamic_cast< UCBlock * >( Block::deserialize( path ) );
+ if( ! uc )
+  throw( std::logic_error( path + " is not a UCBlock" ) );
+ return( uc );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// gives the unit the formulation wf and builds the abstract representation
+/** A negative \p wf leaves the formulation of the unit alone. */
+
+static void generate( UCBlock * uc , int wf )
+{
+ if( wf >= 0 ) {
+  BlockConfig bc;
+  bc.f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
+  bc.apply( uc->get_unit_block( 0 ) );
+  }
+ uc->generate_abstract_variables();
+ uc->generate_abstract_constraints();
+ uc->generate_objective();
+ }
+
+/*--------------------------------------------------------------------------*/
+/// every number the abstract representation of the UCBlock is made of
+/** The coefficients of the Objective of each unit and the two sides and the
+ * coefficients of each row the UCBlock owns, in the order in which they are
+ * generated: two UCBlock that hold the same model give the same vector. */
+
+static std::vector< double > snapshot( UCBlock * uc )
+{
+ std::vector< double > v;
+
+ for( Index u = 0 ; u < uc->get_number_units() ; ++u ) {
+  auto obj = dynamic_cast< FRealObjective * >(
+                                   uc->get_unit_block( u )->get_objective() );
+  if( ! obj )
+   continue;
+  auto fnc = obj->get_function();
+  if( auto qf = dynamic_cast< DQuadFunction * >( fnc ) )
+   for( Index i = 0 ; i < qf->get_num_active_var() ; ++i ) {
+    v.push_back( qf->get_linear_coefficient( i ) );
+    v.push_back( qf->get_quadratic_coefficient( i ) );
+    }
+  else
+   if( auto lf = dynamic_cast< LinearFunction * >( fnc ) )
+    for( Index i = 0 ; i < lf->get_num_active_var() ; ++i )
+     v.push_back( lf->get_coefficient( i ) );
+  }
+
+ auto rows = [ & v ]( const auto & group ) {
+  for( auto & row : group ) {
+   v.push_back( row.get_lhs() );
+   v.push_back( row.get_rhs() );
+   if( auto lf = dynamic_cast< LinearFunction * >( row.get_function() ) )
+    for( Index i = 0 ; i < lf->get_num_active_var() ; ++i )
+     v.push_back( lf->get_coefficient( i ) );
+   }
+  };
+
+ auto rows_2D = [ & rows ]( auto && group ) {
+  for( auto at_t : group )
+   rows( at_t );
+  };
+
+ rows_2D( uc->get_node_injection_constraints() );
+ rows_2D( uc->get_reactive_node_injection_constraints() );
+ rows_2D( uc->get_primary_demand_constraints() );
+ rows_2D( uc->get_secondary_demand_constraints() );
+ rows_2D( uc->get_inertia_demand_constraints() );
+
+ return( v );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// attaches the given Solver to the Block, or detaches all of them
+
+static void attach( Block * b , const std::vector< std::string > & names )
+{
+ BlockSolverConfig bsc( names.size() );
+ for( const auto & nm : names )
+  bsc.add_ComputeConfig( std::string( nm ) , nullptr );
+ if( names.empty() )
+  bsc.clear();
+ bsc.apply( b );
+ for( auto slv : b->get_registered_solvers() ) {
+  auto par = slv->int_par_str2idx( "intLogVerb" );
+  if( par < Inf< Solver::idx_type >() )
+   slv->set_par( par , 0 );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+/// solves with the i-th Solver of the Block, returning the value it gives
+
+static double solve( Block * b , Index i = 0 )
+{
+ auto slv = static_cast< CDASolver * >(
+                     *std::next( b->get_registered_solvers().begin() , i ) );
+ if( slv->compute( false ) != Solver::kOK )
+  return( std::numeric_limits< double >::quiet_NaN() );
+ return( slv->get_var_value() );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// the model of a unit scaled after it is built is that of one scaled before
+/** The UCBlock is built and the unit is then scaled, which has to rewrite
+ * every coefficient that carries the scale factor, both in the Objective of
+ * the unit and in the rows of the UCBlock that use its Variable; the same
+ * UCBlock with the unit scaled before anything is built is the model it must
+ * give, and its optimum is the same. Scaling must leave the data of the unit,
+ * which are those of one copy, where they are. */
+
+static void check_model( const std::string & inst , int wf ,
+                         const std::string & what )
+{
+ auto A = load( inst );
+ generate( A , wf );
+ auto tu = static_cast< ThermalUnitBlock * >( A->get_unit_block( 0 ) );
+ const auto cost = tu->get_linear_term();
+ const auto start_up = tu->get_start_up_cost();
+ A->get_unit_block( 0 )->scale( Kappa , eModBlck , eModBlck );
+ check( tu->get_linear_term() == cost ,
+        what + ": the cost of one copy is left alone" );
+ check( tu->get_start_up_cost() == start_up ,
+        what + ": the start-up cost of one copy is left alone" );
+
+ auto B = load( inst );
+ if( wf >= 0 ) {
+  BlockConfig bc;
+  bc.f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
+  bc.apply( B->get_unit_block( 0 ) );
+  }
+ B->get_unit_block( 0 )->scale( Kappa , eNoMod , eNoMod );
+ generate( B , -1 );
+
+ check( snapshot( A ) == snapshot( B ) ,
+        what + ": scaled after == scaled before" );
+
+ if( ! solver_name.empty() ) {
+  attach( A , { solver_name } );
+  attach( B , { solver_name } );
+  const auto va = solve( A );
+  const auto vb = solve( B );
+  check( near( va , vb ) , what + ": same optimum" );
+  attach( A , {} );
+  attach( B , {} );
+  }
+
+ delete A;
+ delete B;
+ }
+
+/*--------------------------------------------------------------------------*/
+/// the DP Solver of a scaled unit answers for all its copies
+/** The Objective of a scaled unit is the scale factor times the cost of one
+ * copy, and the DP Solver, which reads the data of one copy, has to answer
+ * for all of them. A dualizing Solver writes its multipliers into the
+ * Objective, i.e., scaled: what the unit stores is that change divided back
+ * into the cost of one copy, which is what the DP reads. */
+
+static void check_dp( const std::string & inst , const std::string & dp ,
+                      const std::string & what )
+{
+ if( solver_name.empty() )
+  return;
+
+ auto uc = load( inst );
+ generate( uc , -1 );
+ auto tu = static_cast< ThermalUnitBlock * >( uc->get_unit_block( 0 ) );
+ attach( tu , { dp , solver_name } );
+
+ check( near( solve( tu , 0 ) , solve( tu , 1 ) ) ,
+        what + ": the DP and the MILP agree on the unit" );
+
+ tu->scale( Kappa );
+ const auto cost = tu->get_linear_term();
+
+ // a price on the power, as a dualizing Solver puts it, i.e., scaled
+ const double price = *std::max_element( cost.begin() , cost.end() ) + 1;
+ auto qf = static_cast< DQuadFunction * >(
+            static_cast< FRealObjective * >( tu->get_objective()
+                                             )->get_function() );
+ const Index first = qf->is_active( & tu->get_active_power( 0 )[ 0 ] );
+ DQuadFunction::Vec_FunctionValue nc( T );
+ for( Index t = 0 ; t < T ; ++t )
+  nc[ t ] = qf->get_linear_coefficient( first + t ) - Kappa * price;
+ tu->anyone_there( true );
+ qf->modify_linear_coefficients( std::move( nc ) ,
+                                 Block::Range( first , first + T ) ,
+                                 eModBlck );
+
+ bool per_copy = true;
+ for( Index t = 0 ; t < T ; ++t )
+  per_copy &= near( tu->get_linear_term()[ t ] , cost[ t ] - price );
+ check( per_copy , what + ": the price is stored as the cost of one copy" );
+
+ check( near( solve( tu , 0 ) , solve( tu , 1 ) ) ,
+        what + ": the DP and the MILP agree on the scaled unit" );
+
+ attach( tu , {} );
+ delete uc;
+ }
+
+/*--------------------------------------------------------------------------*/
+/// the checks of the scale factor of a unit [see the file comment]
+
+static int test( void )
+{
+ for( const auto & name : SolverNames )
+  if( auto solver = Solver::new_Solver( name ) ) {
+   delete solver;
+   solver_name = name;
+   break;
+   }
+
+ if( solver_name.empty() )
+  std::cout << "no :MILPSolver in this build, only the model is checked"
+            << std::endl;
+ else
+  std::cout << "solving with " << solver_name << std::endl;
+
+ dir = std::filesystem::temp_directory_path() /
+       ( "UCBlock_scale_test_" + std::to_string( getpid() ) );
+ std::filesystem::create_directories( dir );
+
+ const auto thermal = write( "thermal" , false );
+ const auto nuclear = write( "nuclear" , true );
+
+ // the seven formulations of the thermal unit, with and without the
+ // perspective cuts, each of which lays the Objective out its own way
+ for( int form = 0 ; form <= 6 ; ++form )
+  for( int pc = 0 ; pc <= 1 ; ++pc ) {
+   const int wf = form + 8 * pc;
+   check_model( thermal , wf ,
+                "thermal, formulation " + std::to_string( form ) +
+                ( pc ? " with P/C" : "" ) );
+   }
+
+ check_model( nuclear , -1 , "nuclear" );
+
+ check_dp( thermal , "ThermalUnitDPSolver" , "thermal, standard DP" );
+ check_dp( thermal , "ThermalUnitExtDPSolver" , "thermal, extended DP" );
+ check_dp( nuclear , "NuclearUnitExtDPSolver" , "nuclear, extended DP" );
+
+ std::filesystem::remove_all( dir );
+
+ if( all_passed )
+  std::cout << "All tests passed!!" << std::endl;
+ else
+  std::cout << "Shit happened!!" << std::endl;
+
+ return( all_passed ? 0 : 1 );
+ }
+
+}  // end( namespace scaling )
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char ** argv )
 {
@@ -885,6 +1332,10 @@ int main( int argc , char ** argv )
  // Configuration: they write their own instances [see the file comment]
  if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--pollutant" ) )
   return( pollutant::test() );
+
+ // the same goes for the checks of the scale factor of a unit
+ if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--scale" ) )
+  return( scaling::test() );
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
