@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 #
 # usage: batch-aggr < exe file > < aggregations > < seeds > < log file >
+#                   < rules >
 #        < exe file >      = path of the executable file, default
 #                            ./MMCFBlock_test
 #        < aggregations >  = values of dblCmpAggr to try, default
 #                            "0 0.02 0.1 0.5 1"
 #        < seeds >         = values of intCmpAggrSeed to try, default 42
 #        < log file >      = name of the log file, default no log (stdout)
+#        < rules >         = values of intCmpAggrRule to try, i.e., how the
+#                            components are assigned to the groups,
+#                            default 0 (at random)
 #
 # Runs some Canad MMCF instances in the *knapsack* formulation, i.e. the one
 # of batch-k, over a grid of values of the *partial aggregation* of the
@@ -30,6 +34,7 @@ MMCFBlock_test=${1:-./MMCFBlock_test}
 aggrs=${2:-"0 0.02 0.1 0.5 1"}
 seeds=${3:-"42"}
 mlf=${4:-}
+rules=${5:-"0"}
 
 CFG=LDCfg.txt
 
@@ -39,20 +44,23 @@ cp "${CFG}" "${CFG}.orig"
 trap 'mv -f "${CFG}.orig" "${CFG}"' EXIT
 
 for aggr in ${aggrs}; do
+ for rule in ${rules}; do
   for cmpseed in ${seeds}; do
 
     cp -f "${CFG}.orig" "${CFG}"
     cfg_set_par "${CFG}" dblCmpAggr "${aggr}"
     cfg_set_par "${CFG}" intCmpAggrSeed "${cmpseed}"
+    cfg_set_par "${CFG}" intCmpAggrRule "${rule}"
 
     for what in p33 p34 p35 p36 p41 p42 p43 p44; do
 
-      run_timed "[aggr ${aggr} seed ${cmpseed} ${what}]" \
+      run_timed "[aggr ${aggr} rule ${rule} seed ${cmpseed} ${what}]" \
                 "$MMCFBlock_test" "${DATADIR}/Canad/${what}.dat" \
                 -B BPar-K.txt -S BSPar-K.txt -t s
 
     done
   done
+ done
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 #
 # usage: batch-aggr < exe file > < aggregations > < seeds > < log file >
+#                   < rules >
 #        < exe file >      = path of the executable file, default ../CFL_test
 #        < aggregations >  = values of dblCmpAggr to try, default
 #                            "0 0.02 0.1 0.5 1"
 #        < seeds >         = values of intCmpAggrSeed to try, default 42
 #        < log file >      = name of the log file, default no log (stdout)
+#        < rules >         = values of intCmpAggrRule to try, i.e., how the
+#                            components are assigned to the groups,
+#                            default 0 (at random)
 #
 # Same Lagrangian-dual arrangement as batch-ld, i.e. B2 is a copy of the
 # CapacitatedFacilityLocationBlock in the knapsack formulation solved by a
@@ -33,6 +37,7 @@ CFL_test=${1:-../CFL_test}
 aggrs=${2:-"0 0.02 0.1 0.5 1"}
 seeds=${3:-"42"}
 mlf=${4:-}
+rules=${5:-"0"}
 
 CFG=BSPar2.txt
 
@@ -53,21 +58,24 @@ trap 'mv -f "${CFG}.orig" "${CFG}"' EXIT
 # once per value of the parameter rather than once per seed of the data
 
 for aggr in ${aggrs}; do
+ for rule in ${rules}; do
   for cmpseed in ${seeds}; do
 
     cp -f "${CFG}.orig" "${CFG}"
     cfg_set_par "${CFG}" dblCmpAggr "${aggr}"
     cfg_set_par "${CFG}" intCmpAggrSeed "${cmpseed}"
+    cfg_set_par "${CFG}" intCmpAggrRule "${rule}"
 
     for f in 102 113 124 42 62 73 91 103 114 131; do
 
       what=${DATADIR}/txt/ORLib/cap${f}.txt
 
-      run_timed "[aggr ${aggr} seed ${cmpseed} cap${f}]" \
+      run_timed "[aggr ${aggr} rule ${rule} seed ${cmpseed} cap${f}]" \
                 "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
 
     done
   done
+ done
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
