@@ -35,6 +35,14 @@ if (TARGET SMS++::TwoStageStochasticBlock)
         target_link_libraries(TSSB_test PRIVATE SMS++::UCBlock)
     endif ()
 
+    # a MultiStageStochasticBlock is a TwoStageStochasticBlock, whose leaves
+    # benders_form() takes as the subproblems, hence the tester solves it too
+    # when the factory knows it
+    if (TARGET SMS++::MultiStageStochasticBlock)
+        target_link_libraries(TSSB_test PRIVATE
+                SMS++::MultiStageStochasticBlock)
+    endif ()
+
     if (TARGET SMS++::LagrangianDualSolver)
         target_link_libraries(TSSB_test PRIVATE SMS++::LagrangianDualSolver)
     endif ()

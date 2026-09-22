@@ -12,6 +12,13 @@
 # BendersDecompositionSolver keeps the design integer in its master, and
 # both are checked against the optimum of PyPSA on the same network
 #
+# the same networks with the modules turned off (a name ending in c) have a
+# continuous design, and are also written as a MultiStageStochasticBlock
+# whose scenarios are grouped into outer realizations (o2 in the name): the
+# tree has the same extensive form as the flat network, and the leaves are
+# the subproblems of its Benders form; the InvestmentBlock over the same two
+# (the investment_outside form) is in InvestmentBlock/batches/batch-stochastic
+#
 # the instances are written by gen_modular_tssb.py and emit_modular_tssb.py
 # in the test/references of pypsa2smspp, whose README says with which values
 
@@ -29,6 +36,8 @@ declare -A REF_OBJ
 
 REF_OBJ[smspp_mod_t48_s10_b2_ucblock.nc4]=3.6832431872e+07
 REF_OBJ[smspp_mod_t168_s5_b1_ucblock.nc4]=8.2602180128e+07
+REF_OBJ[smspp_mod_t48_s10_b2c_ucblock.nc4]=3.6823506884e+07
+REF_OBJ[smspp_mod_t48_s10_b2c_o2_mssb_ucblock.nc4]=3.6823506884e+07
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

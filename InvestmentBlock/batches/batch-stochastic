@@ -42,9 +42,13 @@ parse_batch_args "$@"
 bpar=$par
 spar=$slv
 
-# the initial point, the lower bound of the box plus 10000 on every asset; it
-# is the same for every instance here, their design boxes being the same
-point=initial_investment_stochastic.txt
+# the initial point, the lower bound of the box plus 10000 on every asset,
+# which the instances of the tree of network_small_fewsectors need and share,
+# their design boxes being the same; the others start from the default one
+declare -A POINT
+POINT[smspp_stoch_tssb_c3_d3_renewables.nc]=initial_investment_stochastic.txt
+POINT[smspp_stoch_tssb_c3_d3_both.nc]=initial_investment_stochastic.txt
+POINT[smspp_stoch_mssb_c3_d3_both.nc]=initial_investment_stochastic.txt
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = PyPsa objective value of the equivalent flat
@@ -56,6 +60,13 @@ declare -A REF_OBJ
 REF_OBJ[smspp_stoch_tssb_c3_d3_renewables.nc]=3.488357705e+09
 REF_OBJ[smspp_stoch_tssb_c3_d3_both.nc]=3.488357705e+09
 REF_OBJ[smspp_stoch_mssb_c3_d3_both.nc]=3.488357705e+09
+
+# a modular network of gen_modular_tssb.py with the modules turned off, once
+# as a TSSB and once as an MSSB over two outer realizations, whose
+# ucblock form is solved by BendersDecompositionSolver in
+# TwoStageStochasticBlock/batches/batch-pypsa-modular
+REF_OBJ[smspp_mod_t48_s10_b2c_investment_outside.nc]=3.6823506884e+07
+REF_OBJ[smspp_mod_t48_s10_b2c_o2_mssb_investment_outside.nc]=3.6823506884e+07
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -74,7 +85,8 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
       exit 1
     fi
 
-    run_test "$exe" -B "$bpar" -S "$spar" -x "$point" -o "$ref" "$what"
+    point=${POINT[$base]}
+    run_test "$exe" -B "$bpar" -S "$spar" ${point:+-x "$point"} -o "$ref" "$what"
 
 done
 

@@ -112,9 +112,18 @@ them: both are skipped.
 networks whose first stage builds whole modules of solar and wind
 (`p_nom_mod`), which pypsa2smspp writes as an integer design of the
 units over a second stage that is a linear program, and checks both
-`Solver` against the optimum of PyPSA on the same network. The
-instances are written by `gen_modular_tssb.py` and
-`emit_modular_tssb.py` in the `test/references` of pypsa2smspp.
+`Solver` against the optimum of PyPSA on the same network. The same
+batch holds one of those networks with the modules turned off, i.e.,
+with a continuous design, written both as a `TwoStageStochasticBlock`
+and as a `MultiStageStochasticBlock` whose scenarios are grouped into
+two outer realizations: the tree has the same extensive form as the
+flat network, and the Benders form takes its leaves as the
+subproblems. The `investment_outside` form of the same two, i.e., the
+ad hoc Benders decomposition of an `InvestmentBlock` over the whole
+stochastic Block, is run by `InvestmentBlock/batches/batch-stochastic`
+against the same reference. The instances are written by
+`gen_modular_tssb.py` and `emit_modular_tssb.py`, in the
+`scripts/smspp_instances/references` of pypsa-eur-instances.
 
 A makefile is also provided that builds the executable including the
 `TwoStageStochasticBlock`, `LagrangianDualSolver`, `BundleSolver`,
