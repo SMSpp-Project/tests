@@ -1182,6 +1182,12 @@ static void check_model( const std::string & inst , int wf ,
 {
  auto A = load( inst );
  generate( A , wf );
+ // the Solver is attached before the unit is scaled, as it is when an
+ // InvestmentBlock scales it: what the scaling writes into the Objective
+ // then comes back to the unit, which must not take it for a change of the
+ // cost of one copy
+ if( ! solver_name.empty() )
+  attach( A , { solver_name } );
  auto tu = static_cast< ThermalUnitBlock * >( A->get_unit_block( 0 ) );
  const auto cost = tu->get_linear_term();
  const auto start_up = tu->get_start_up_cost();
@@ -1204,7 +1210,6 @@ static void check_model( const std::string & inst , int wf ,
         what + ": scaled after == scaled before" );
 
  if( ! solver_name.empty() ) {
-  attach( A , { solver_name } );
   attach( B , { solver_name } );
   const auto va = solve( A );
   const auto vb = solve( B );
