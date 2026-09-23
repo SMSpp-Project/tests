@@ -951,7 +951,8 @@ static bool near( double a , double b )
  * reactive power, or the NuclearUnitBlock that adds to them the costs of the
  * downward modulation steps and of the deep decreases. */
 
-static std::string write( const std::string & name , bool nuclear )
+static std::string write( const std::string & name , bool nuclear ,
+                          bool schedule = false )
 {
  auto path = ( dir / ( name + ".nc4" ) ).string();
  netCDF::NcFile f( path , netCDF::NcFile::replace );
@@ -1019,6 +1020,15 @@ static std::string write( const std::string & name , bool nuclear )
  put( "SecondaryRho" , 0.1 );
  put( "MaxReactivePowerOn" , 120 );
  put( "MinReactivePowerOn" , 0 );
+ if( schedule ) {
+  // the profile the unit is asked to follow, the deviation from which is a
+  // further term of the Objective
+  const std::vector< double > ref =
+   { 150 , 200 , 180 , 220 , 200 , 160 , 140 , 180 };
+  u.addVar( "ReferenceSchedule" , netCDF::NcDouble() ,
+            g.getDim( "TimeHorizon" ) ).putVar( ref.data() );
+  }
+
  if( ! nuclear )
   // the cost a thermal unit pays at the instant it shuts down, which the
   // nuclear one does not have
@@ -1309,6 +1319,16 @@ static int test( void )
    }
 
  check_model( nuclear , -1 , "nuclear" );
+
+ // a thermal unit asked to follow a reference schedule: the deviation from
+ // it is weighed with the scale factor as every other term, the schedule
+ // being that of one unit [see ThermalUnitBlock::generate_objective()]. The
+ // DP Solvers know nothing of it, hence they are not asked about it
+ const auto with_schedule = write( "schedule" , false , true );
+ for( int form = 0 ; form <= 6 ; ++form )
+  check_model( with_schedule , form ,
+               "thermal with a schedule, formulation " +
+               std::to_string( form ) );
 
  check_dp( thermal , "ThermalUnitDPSolver" , "thermal, standard DP" );
  check_dp( thermal , "ThermalUnitExtDPSolver" , "thermal, extended DP" );
