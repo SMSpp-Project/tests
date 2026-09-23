@@ -9,6 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- a batch of `LagBFunction` over the easy components, which nothing was
+  exercising
+- a batch can set an algorithmic parameter in a `ComputeConfig` and time each
+  run, so that a sweep over the values of one parameter is a batch and not a
+  script written for the occasion; the two `batch-aggr` take the values of
+  `intCmpAggrRule` that way
+- `batch-k` of the multicommodity suite, the knapsack formulation asked for
+  as a structure, and `MMCFBlock_test` links the ML variant of the
+  BundleSolver, which `batchML` attaches
+- a driver that runs the batteries backing the validation claim of the
+  dynamic programming Solver of the thermal units, and the batteries require
+  again the fixture that extracts the instances they read
+- the batteries of `UCBlock` run the instances once per value of the rule
+  that forms the groups of the parallel inner loop, and cross-check the
+  academic and plan4res families over the exact Lagrangian chain; in the AC
+  family the Lagrangian dual is declared a relaxation, its point being a
+  convex combination, and the QCP sub-problems give the duals that chain
+  needs
+- the SVM suite cross-checks LIBLINEAR on the formulations that LIBSVM
+  cannot express, exercises the exact path and the shrinking, which nothing
+  was running, and compares the Lagrangian dual with a `SMOSolver` on each
+  chunk
+- `batch-ec` runs the Benders form of the energy community instances, the
+  form the tester assembles giving the master a cost for every design
+  Variable and keeping integer, in the master, a design that counts modules;
+  the convex regime of the Benders Solver has its own cross-check
+  configuration
+- a batch for an `InvestmentBlock` wrapping a whole stochastic Block, two-
+  stage or multi-stage, whose instances follow the trees they are built over;
+  the inner Solver is asked for homogeneous dual directions, which the HiGHS
+  variant cannot give, and the configuration says so where it happens
+- the batteries of `BinaryKnapsackBlock` cover what `BranchAndXSolver` does:
+  the lazy bounding protocol in every serial exploration strategy, the
+  reoptimization with one Solver per strategy, the negative weights and the
+  regime of a small instance re-solved many times, over the hard instances of
+  Jooken as well, and the benchmarks of the coverage declare the greedy
+  relaxation each of their configurations attaches
 - `UCBlock_test --scale`, which checks the scale factor of a unit, i.e., the
   number of copies of it that a `UCBlock` holds, on two instances the tester
   writes itself, one carrying a thermal unit and one a nuclear one, each of
@@ -103,12 +140,158 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- the reference of `smspp_nuclear_bands.nc` in `batch-nuclear` of `UCBlock`
-  is `1.6134485e+06` instead of `1.6031724e+06`: the old one was the optimum of
-  a formulation of `NuclearUnitBlock` in which a modulation at the last instant
-  of the horizon could leave the output out of the bands, which the rules of
-  the unit and its dynamic program do not allow; the other six instances keep
-  their values
+- the inner Solver of the `BendersBFunction` suite is Gurobi, the one the
+  image of the pipeline carries, so that the suite runs where it is run and
+  not only where a licence of another solver happens to be
+- the comparison of the three forms of a two-stage stochastic investment
+  problem lives with the suite of the Block it is posed on, and not with the
+  one of a Solver: the monolithic form, the Lagrangian one and the Benders
+  one are configured side by side there
+- the makefile asks for `-O3 -DNDEBUG` and nothing else, the macro of the
+  patch for `boost::any` on macOS having no reason to be there since there is
+  no `boost::any` left in the core
+- the tester of the copy of an `AbstractBlock` and the one of the reference
+  of the multicommodity suite are named after what they are, the core having
+  a target called as the first one was
+- a suite is guarded on the modules it is labelled with, and the benchmark of
+  BundleSolverML is skipped when its modules are not in the build, so that a
+  build without a module has no test that cannot run rather than a test that
+  fails
+- the batteries of the Lagrangian dual of the unit commitment fit the three
+  hours a job is given: the academic families are sampled in CI, the
+  plan4res one is run as a smoke test, and the metabatch is not run there,
+  being the batteries it is made of. `batch-ac` is added, and the variants
+  of the energy community under the proximal heuristic are skipped in CI,
+  where the objective of a thermal unit inside a LagBFunction is the known
+  bug
+- the batteries of the scenario reduction read their executables and their
+  directories from the arguments instead of the paths of whoever wrote them,
+  the tester is named after the Solver it drives, and the folder of the
+  facility location is named after the Block it holds
+- the tester of `BendersBFunction` reports and counts its checks instead of
+  aborting at the first one that fails, so that one run says how many of them
+  hold and not only that one does not
+- the comparison of the two Benders decompositions of a facility location
+  instance lives with the suite of that Block, its configurations take the
+  names the other suites give them, the inner Solver of the Lagrangian is
+  called `BundleSolver`, which is the name the factory has, and the
+  `BlockConfig` files are in the format of now
+- the four sector-coupled instances `batch-pypsa` walks are written by the
+  conversion as it stands, where an extendable asset with no upper bound keeps
+  the infinite design cap it has instead of a finite number standing in for it:
+  the ones the archive held carried `1e10` on nine converters and `1e9` on nine
+  batteries, which the Lagrangian relaxation sends a design straight to, so
+  that 262 of the 311 linearizations of a solve carried a subgradient entry of
+  exactly `1e10` against function values of `1e9`, the rows of the master of the
+  bundle became a difference of terms of `1e12` giving `1e8`, and on one of the
+  four the master declared its numerical difficulties unrecoverable a step away
+  from the optimum, upon which the bundle emptied itself one item at a time and
+  the Lagrangian dual ended in error. The objective value of each of the four is
+  the one it was, the caps having never been binding
+
+- every directory of the suites is named after the module its tests are posed
+  on, a suite living here exactly when the module cannot run it by itself:
+  the testers of the objects of the core library are under `SMS++`, those of
+  the quadratic programs a `:MILPSolver` is asked to solve under `MILPSolver`,
+  the benchmark of the machine-learning driven bundle, which reads the Block
+  of two modules that are not among its dependencies, under `BundleSolver/ML`,
+  and the suite of the facility location takes the name of its module,
+  `CapacitatedFacilityLocationBlock`. `compare_formulations`, which is posed
+  on whichever two Block its configurations name, stays in the root
+
+- the batteries of `UCBlock` that walk the instances carrying one unit alone
+  are `batches-tub`, and each of them runs that family with every `:Solver`
+  that applies to it: the dynamic programme against the `:MILPSolver`, and the
+  Frank-Wolfe decomposition of a father of `K` copies of the unit, which used
+  to be a batch of its own
+
+- the suite of `FrankWolfeSolver` is dissolved into the suites of the Block it
+  is posed on: the tester assumes nothing on the leaf Block it reads, hence it
+  is `fw_test.cpp` in the root beside `common_utils`, and each suite builds it
+  with its own modules; `MCFBlock` builds it and the tester of what a
+  Modification of the feasible region of a sub-Block does, and `UCBlock`
+  builds it on the thermal unit
+
+- the runs of a Solver that is not the one of the Block are in the battery of
+  the instances they are posed on rather than in a batch of that Solver, its
+  configurations staying together in a directory of their own, which `-c`
+  names; this is what `FW` is in the suites of `MCFBlock` and of `UCBlock`.
+  The scenario reduction, which has no configurations of its own to keep
+  apart, is in the suites instead: the generator of the scenarios of a unit
+  commitment is in that of `UCBlock` and what a reduction costs on an
+  investment problem is `test_reduction.cpp` in that of
+  `TwoStageStochasticBlock`, the Block it is posed on, each with its battery
+  in `batches`
+
+- a battery runs every tester that applies to the family of instances it
+  walks, and is therefore given all of them, the first as before and the
+  others after it: `add_batch_test()` names them and hands over the ones that
+  are in the build. In `MCFBlock` this is the Solver of the Block, the
+  Frank-Wolfe decomposition and the rounds of Modification of the feasible
+  region on the same instances, `batch-small` being the fast one that walks
+  every code path of the decomposition; in `UCBlock` the dynamic programme and
+  the decomposition on the same units
+
+- the tester of the ways `BendersDecompositionSolver` has of writing a cut is
+  not here: it writes the instance it runs on itself, hence it needs no Block
+  of anyone else and it belongs to the test directory of that module, where it
+  is and where it is being worked on. What stays here is the comparison of the
+  ad hoc Benders decomposition a `CapacitatedFacilityLocationBlock` carries
+  with the generic one, which is posed on that Block
+
+- `BSCfg-nuc-dponly.txt` of `UCBlock` is gone: it registered the extended
+  dynamic programming Solver of the nuclear unit twice, so that the tester,
+  which compares a first and a second Solver, would run with it alone. A
+  Solver compared with itself checks nothing, and no battery used it; timing
+  the dynamic programme alone is a thing to ask the tester for, not something
+  to obtain by declaring the same Solver twice
+
+- - the report of a cross-check says what each Solver is called, one per line
+  and with the values aligned one under the other, instead of numbering them
+  S0, S1, ...: with several Solver of different families on the same Block,
+  which of them disagrees is what one needs to read at a glance
+
+- the three testers posed on an `AbstractBlock` are one directory,
+  `SMS++/AbstractBlock`: the box-structured Block whose Lagrangian dual is
+  computed (`test_box.cpp`), the copy of the abstract representation
+  (`test_mirror.cpp`) and the round trip of a linear program through a file
+  (`test_readwrite.cpp`), with a batch each in `batches`. The two regimes of
+  the box one, the Lagrangian dual and the primal proximal heuristic, are one
+  script taking which of them to run
+
+- the batches of a suite are registered with `add_batch_test()`, written once
+  in the root instead of the same loop copied in every directory
+
+- the scenario reduction is run from the suite of the Block whose scenarios
+  are reduced: the generator of the unit commitment instances and the runs on
+  them are in the suite of `UCBlock`, those of the facility location in that
+  of `CapacitatedFacilityLocationBlock`, each with the two configurations they
+  read
+
+- a suite is named after the Block its tests are posed on, not after a Solver
+  that runs on it: `AbstractBlock_mirror` is `AbstractBlock`, and
+  `LagrangianDualSolver_Box` is `AbstractBlock_Box`, the structured
+  `AbstractBlock` of box-constrained sub-Block being what it builds and the
+  Lagrangian dual one of the ways it solves it
+
+- the suite of `MILPSolver` is the test directory of that module, where its
+  two testers now live as `test_farkas.cpp` and `test_groups.cpp`: neither of
+  them needs a Block of another module, hence neither of them needs to be
+  here
+
+- the suite of the dynamic programming solver of `ThermalUnitBlock` is part
+  of the suite of `UCBlock`, whose instances it reads and whose Block it
+  solves in two ways: the tester is `test_tudps.cpp` and its batches are in
+  `batches-tub`, each of them run with that tester rather than with the one
+  of the suite
+
+- `SVMBlock` runs the comparison of the two dual decompositions of one
+  training problem, the consensus one under `LagrangianDualSolver` and the
+  Benders one under `BendersDecompositionSolver`, both cross-checked against
+  the ad hoc solver of the module, and `PolyhedralFunctionBlock` runs the unit
+  test of the pruning of the rows: both come from the test directory of
+  `BendersDecompositionSolver`, which is not where a test that needs another
+  Block to exist belongs
 
 - `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
   `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
