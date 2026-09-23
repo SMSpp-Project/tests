@@ -7,60 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+### Added
 
-- the reference of `smspp_nuclear_bands.nc` in `batch-nuclear` of `UCBlock`
-  is `1.6134485e+06` instead of `1.6031724e+06`: the old one was the optimum of
-  a formulation of `NuclearUnitBlock` in which a modulation at the last instant
-  of the horizon could leave the output out of the bands, which the rules of
-  the unit and its dynamic program do not allow; the other six instances keep
-  their values
+- `UCBlock_test --scale`, which checks the scale factor of a unit, i.e., the
+  number of copies of it that a `UCBlock` holds, on two instances the tester
+  writes itself, one carrying a thermal unit and one a nuclear one, each of
+  them with a cost of every kind its Objective can hold, the two reserves and
+  the reactive power: the model of a unit scaled once the abstract
+  representation is built has to be the one of a unit scaled before it, which
+  is compared coefficient by coefficient over the Objective of every unit and
+  the rows of the `UCBlock` that use their Variable, and through the optimum;
+  the data of the unit, being those of one copy, must not move although the
+  Solver attached to it hears of the scaling; and the three dynamic
+  programming Solvers have to answer for all the copies, i.e., to give the
+  value of the Objective, also once a price has been written into it the way
+  a dualizing Solver writes its multipliers. The thermal unit is taken in
+  each of the seven formulations, with and without the perspective cuts. The
+  comparison of the models asks for no Solver at all, so that it runs in a
+  build that has none; the optimum and the dynamic programming Solvers are
+  checked where a `:MILPSolver` is in the build
 
-- `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
-  `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
-  the instances it reads are in `data/nc4/pypsa-data` instead of
-  `data/nc4/resilient-data`, the folder that holds all the networks
-  translated from PyPSA, one sub-folder per kind of problem: `ucblock`,
-  `pollutants`, `tssb` (whose files are named after the perturbation, instead
-  of lying in a sub-folder each) and `mssb`; the instances of `EC_Data` are
-  divided in the same way, in `ucblock`, `tssb` and `mssb`
-
-- the PyPSA instances of `pypsa-data/ucblock` and of the `pypsa-data` of
-  `InvestmentBlock` are written by one generator, `test/instance_generator.py`
-  of pypsa2smspp, which builds each test network once and writes it in the two
-  forms the conversion supports, the one where the design variables are those
-  of the `UCBlock` and the one where an `InvestmentBlock` wraps it: the two
-  are therefore the same problem and are held to the same reference, the
-  objective value PyPSA computes on that very network. The demand and the
-  hydro inflow of a test network being drawn at random, the generator fixes
-  the seed, so that the instances can be written again; the uncapped
-  extendable assets take the finite caps of the instances with a pollutant
-  budget, an unbounded design making some Lagrangian sub-problem unbounded.
-  The reference values all change, the previous instances coming from an
-  older state of the conversion, and one instance is named after its Excel
-  case, `2n_1c_1g_1b_2l` instead of `2n_1c_1g_1b`
-
-- the two-level scenario trees of `pypsa-data/mssb`, and the ones the
-  `InvestmentBlock` runs with the investment stated outside the scenarios, are
-  written by `test/tree_instance_generator.py` of pypsa2smspp from the trees
-  `references/gen_resilient_tree.py` draws with a fixed seed, each form of a
-  tree being held to the objective value PyPSA computes on the equivalent flat
-  network. The reference values change, the instances in place having been
-  emitted from trees that were drawn again since, and so do the file names,
-  the trees now spanning a day of 24 instants rather than 100: over 100 the
-  MultiStageStochasticBlock of one of them ends in an error after eleven
-  minutes, and the InvestmentBlock over the flat form of another after
-  twenty-four
-
-- the two instances named after the `inv_` Excel cases are gone, those cases
-  giving the very networks `1n_1c_1gext` and `2n_1c_1gext_1bext_2l` give, to
-  the byte
-
-- `InvestmentBlock/batches/batch-pypsa` fails when it finds no instance at all,
-  which is how a batch that has tested nothing was until now indistinguishable
-  from one where everything went well
-
-### Added 
+- the batch `batch-nuclear` of the `ThermalUnitBlock_Solver` suite, which
+  compares the `NuclearUnitExtDPSolver` with a `:MILPSolver` on the
+  operating rules of nuclear units, in eight families of rules, four
+  regimes of the costs (energy only, rewarded reserves, priced reactive
+  power, rounds of changes of the costs) and two formulations of the rules,
+  the default one and the tight one; a further environment variable,
+  `TUDPS_FIXMOD`, fixes one modulation variable out of the given number, so
+  that the two Solver are compared on a unit whose rules are partly decided;
+  two further BlockSolverConfig serve the study of the solve times,
+  `BSCfg-nuc-lim.txt`, which holds the MILP solver to a time limit, and
+  `BSCfg-nuc-dponly.txt`, which attaches the dynamic programming Solver
+  alone, so that the optimal schedule can be looked at without paying for
+  the MILP solve
 
 - the PyPSA instances with the pollutant budget constraints of `UCBlock`
   in `pypsa-data/pollutants/`, run by `UCBlock/batches/batch-pypsa`:
@@ -122,7 +101,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when it did not deliver the accuracy it was asked for, and whose
   dblRelAcc therefore says nothing about what it returns
 
-### Changed 
+### Changed
+
+- the reference of `smspp_nuclear_bands.nc` in `batch-nuclear` of `UCBlock`
+  is `1.6134485e+06` instead of `1.6031724e+06`: the old one was the optimum of
+  a formulation of `NuclearUnitBlock` in which a modulation at the last instant
+  of the horizon could leave the output out of the bands, which the rules of
+  the unit and its dynamic program do not allow; the other six instances keep
+  their values
+
+- `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
+  `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
+  the instances it reads are in `data/nc4/pypsa-data` instead of
+  `data/nc4/resilient-data`, the folder that holds all the networks
+  translated from PyPSA, one sub-folder per kind of problem: `ucblock`,
+  `pollutants`, `tssb` (whose files are named after the perturbation, instead
+  of lying in a sub-folder each) and `mssb`; the instances of `EC_Data` are
+  divided in the same way, in `ucblock`, `tssb` and `mssb`
+
+- the PyPSA instances of `pypsa-data/ucblock` and of the `pypsa-data` of
+  `InvestmentBlock` are written by one generator, `test/instance_generator.py`
+  of pypsa2smspp, which builds each test network once and writes it in the two
+  forms the conversion supports, the one where the design variables are those
+  of the `UCBlock` and the one where an `InvestmentBlock` wraps it: the two
+  are therefore the same problem and are held to the same reference, the
+  objective value PyPSA computes on that very network. The demand and the
+  hydro inflow of a test network being drawn at random, the generator fixes
+  the seed, so that the instances can be written again; the uncapped
+  extendable assets take the finite caps of the instances with a pollutant
+  budget, an unbounded design making some Lagrangian sub-problem unbounded.
+  The reference values all change, the previous instances coming from an
+  older state of the conversion, and one instance is named after its Excel
+  case, `2n_1c_1g_1b_2l` instead of `2n_1c_1g_1b`
+
+- the two-level scenario trees of `pypsa-data/mssb`, and the ones the
+  `InvestmentBlock` runs with the investment stated outside the scenarios, are
+  written by `test/tree_instance_generator.py` of pypsa2smspp from the trees
+  `references/gen_resilient_tree.py` draws with a fixed seed, each form of a
+  tree being held to the objective value PyPSA computes on the equivalent flat
+  network. The reference values change, the instances in place having been
+  emitted from trees that were drawn again since, and so do the file names,
+  the trees now spanning a day of 24 instants rather than 100: over 100 the
+  MultiStageStochasticBlock of one of them ends in an error after eleven
+  minutes, and the InvestmentBlock over the flat form of another after
+  twenty-four
+
+- the two instances named after the `inv_` Excel cases are gone, those cases
+  giving the very networks `1n_1c_1gext` and `2n_1c_1gext_1bext_2l` give, to
+  the byte
+
+- `InvestmentBlock/batches/batch-pypsa` fails when it finds no instance at all,
+  which is how a batch that has tested nothing was until now indistinguishable
+  from one where everything went well
+
+- the nested chain of TwoStageStochasticBlock (BSPar-2S-LD.txt, where each
+  scenario sub-problem is solved by an inner LagrangianDualSolver) evaluates
+  every component at each iteration, dblMinNrEvls = -1: a component being an
+  entire inner Lagrangian Dual, an iteration made on one of them alone buys
+  little and pays a master problem anyway; on the NC instances of the energy
+  community the oracle calls go from 865 and 1705 down to 132 and 168, and
+  nothing gets worse on the others
+
+- LPBSCfg-LD-noeasy.txt, the inner LagrangianDualSolver of that chain with
+  intDoEasy = 0, which the instances with no installable asset need: every
+  unit of theirs is "easy", and a Lagrangian Dual all of whose components are
+  easy is not supported
 
 - with -v 2 the cross-check prints, before solving, the parameters of every
   Solver it is about to run, the inner ones included; the level of -v can
@@ -159,7 +202,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rather than selecting one of them from the command line: the meta-
   batches are gone and each batch is a ctest test of its own
 
-### Fixed 
+### Fixed
 
 - the tester of `ThermalUnitBlock` compares the `Solution` of a Solver with
   the state it left in the Variable once that is completed from `(p, u)` as
@@ -170,7 +213,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.0] - 2025-12-12
 
-### Added 
+### Added
 
 - tests comparing UCBlock solutions with expected values
 
@@ -186,7 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - support for both LP and MPS fles in Write-Read
 
-### Changed 
+### Changed
 
 - MMCFBlock/gen and the README accordingly to account for the new way
   of distributing the instances
@@ -197,8 +240,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - adapted to new standard organization of makefiles
 
-
-### Fixed 
+### Fixed
 
 - several fixes throughout the testers
 
@@ -212,7 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - added -Wno-enum-compare to Makefiles (we regularly do that in SMS++)
 
-### Changed 
+### Changed
 
 - adapted to new CMake / makefile organisation
 
@@ -228,13 +270,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Early stop in test of ThermalUnitBlock.
 
-### Fixed
-
-- LagrangianDualSolver_UC/test.
-
 ### Removed
 
 - GoogleTest-based test for DPThermalUnitBlock.
+
+### Fixed
+
+- LagrangianDualSolver_UC/test.
 
 ## [0.5.2] - 2022-07-01
 
