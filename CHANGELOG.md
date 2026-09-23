@@ -27,6 +27,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   build that has none; the optimum and the dynamic programming Solvers are
   checked where a `:MILPSolver` is in the build
 
+- the batch `batch-nuclear` of the `ThermalUnitBlock_Solver` suite, which
+  compares the `NuclearUnitExtDPSolver` with a `:MILPSolver` on the
+  operating rules of nuclear units, in eight families of rules, four
+  regimes of the costs (energy only, rewarded reserves, priced reactive
+  power, rounds of changes of the costs) and two formulations of the rules,
+  the default one and the tight one; a further environment variable,
+  `TUDPS_FIXMOD`, fixes one modulation variable out of the given number, so
+  that the two Solver are compared on a unit whose rules are partly decided;
+  two further BlockSolverConfig serve the study of the solve times,
+  `BSCfg-nuc-lim.txt`, which holds the MILP solver to a time limit, and
+  `BSCfg-nuc-dponly.txt`, which attaches the dynamic programming Solver
+  alone, so that the optimal schedule can be looked at without paying for
+  the MILP solve
+
+- the PyPSA instances with the pollutant budget constraints of `UCBlock`
+  in `pypsa-data/pollutants/`, run by `UCBlock/batches/batch-pypsa`:
+  a PyPSA network with a CO2 limit twice and half the emissions of the
+  unconstrained dispatch, a CO2 and a NOx limit, a CO2 floor, a CO2 equality,
+  an operational limit on a carrier, and CO2 limits where a store and a hydro
+  storage unit contribute through their final level, translated by
+  pypsa2smspp and held to the PyPSA objective
+
+- `UCBlock_test --pollutant` (the ctest `UCBlock_test/pollutant`), which
+  checks the pollutant budget constraints of `UCBlock` on small instances it
+  writes itself, whose optima are known: several zones per pollutant and a
+  node in none, rates depending on time, lower bounds and equalities, the
+  level of a battery, the scale of a unit, the setters of the budget and of
+  its lower bound, the duals through a `UCBlockSolution`, the netCDF round
+  trip and the data `UCBlock::deserialize()` must refuse
+
+- the `MILPSolver` suite (the ctest `MILPSolver_test/groups`), which solves
+  the same program with every `:MILPSolver` in the build, its `Variable` and
+  `Constraint` grouped in every shape a `Block` allows
+
+- the `AbstractBlock_mirror` suite, which checks the copy of the abstract
+  representation of a Block that `AbstractBlock::mirror()` builds: that it is
+  the same problem as the original, whichever `:MILPSolver` solves the two,
+  that solution information moves back to the original, and that the copy
+  follows the original when this changes
+
+- the exact Lagrangian chain for UCBlock: BSPar-DP.txt attaches the three
+  Solver over sub-Block solved to optimality by the dynamic programming
+  Solver (TUBSCfg-DP.txt, InnerBSCfg-DP.txt, LDCfg-DP.txt, PPHCfg-DP.txt)
+  and a :MILPSolver that solves the MIP rather than its continuous
+  relaxation, stopping on a time limit so that what it gives is a valid
+  pair of bounds rather than a claimed optimum (MILPCfg-MIP.txt). With the relaxation in the sub-Block the
+  penalty of the PrimalProximalHeur acts on variables that are not binary
+  there, and its first penalized call does not converge: on T-Ramp
+  10_0_1_w the heuristic goes from 86 to 13 seconds, its bound becomes the
+  Lagrangian one rather than the value of the continuous relaxation, and
+  every inner call ends on "optimal". No batch uses it yet: the
+  LagrangianDualSolver is a relaxation with a duality gap there, so it has
+  to be declared with -E ,inf
+
+- the cross-check of common_utils: every Solver enters it as its
+  [get_lb(), get_ub()] interval, valid by the base Solver contract, and
+  is measured against the best bounds the whole set of them provides,
+  since the optimum is not known. Correctness, i.e. not contradicting
+  those bounds, is owed by every Solver; the quality it declares is owed
+  only by the one that returns kOK, i.e. that says it delivered what it
+  was asked, while kLowPrecision promises nothing. No Solver type or
+  name is ever inspected
+
+- the tolerance each Solver is held to, which is by default the
+  dblRelAcc its ComputeConfig asks of it, and never less than the
+  tolerance the cross-check is called with, below which the comparison
+  would only measure its own numerical noise
+
+- the -E option, overriding that tolerance per Solver (positionally with
+  respect to the BlockSolverConfig, the empty field leaving the Solver
+  to its dblRelAcc), for the Solver that does not say with kLowPrecision
+  when it did not deliver the accuracy it was asked for, and whose
+  dblRelAcc therefore says nothing about what it returns
+
 ### Changed
 
 - the four sector-coupled instances `batch-pypsa` walks are written by the
@@ -216,93 +290,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reconstructs may violate the rows it has dualised, the default being the
   1e-1 that was written in the test
 
-### Added 
-
-- the batch `batch-nuclear` of the `ThermalUnitBlock_Solver` suite, which
-  compares the `NuclearUnitExtDPSolver` with a `:MILPSolver` on the
-  operating rules of nuclear units, in eight families of rules, four
-  regimes of the costs (energy only, rewarded reserves, priced reactive
-  power, rounds of changes of the costs) and two formulations of the rules,
-  the default one and the tight one; a further environment variable,
-  `TUDPS_FIXMOD`, fixes one modulation variable out of the given number, so
-  that the two Solver are compared on a unit whose rules are partly decided;
-  two further BlockSolverConfig serve the study of the solve times,
-  `BSCfg-nuc-lim.txt`, which holds the MILP solver to a time limit, and
-  `BSCfg-nuc-dponly.txt`, which attaches the dynamic programming Solver
-  alone, so that the optimal schedule can be looked at without paying for
-  the MILP solve
-
-- the PyPSA instances with the pollutant budget constraints of `UCBlock`
-  in `pypsa-data/pollutants/`, run by `UCBlock/batches/batch-pypsa`:
-  a PyPSA network with a CO2 limit twice and half the emissions of the
-  unconstrained dispatch, a CO2 and a NOx limit, a CO2 floor, a CO2 equality,
-  an operational limit on a carrier, and CO2 limits where a store and a hydro
-  storage unit contribute through their final level, translated by
-  pypsa2smspp and held to the PyPSA objective
-
-- `UCBlock_test --pollutant` (the ctest `UCBlock_test/pollutant`), which
-  checks the pollutant budget constraints of `UCBlock` on small instances it
-  writes itself, whose optima are known: several zones per pollutant and a
-  node in none, rates depending on time, lower bounds and equalities, the
-  level of a battery, the scale of a unit, the setters of the budget and of
-  its lower bound, the duals through a `UCBlockSolution`, the netCDF round
-  trip and the data `UCBlock::deserialize()` must refuse
-
-- the `MILPSolver` suite (the ctest `MILPSolver_test/groups`), which solves
-  the same program with every `:MILPSolver` in the build, its `Variable` and
-  `Constraint` grouped in every shape a `Block` allows
-
-- the `AbstractBlock_mirror` suite, which checks the copy of the abstract
-  representation of a Block that `AbstractBlock::mirror()` builds: that it is
-  the same problem as the original, whichever `:MILPSolver` solves the two,
-  that solution information moves back to the original, and that the copy
-  follows the original when this changes
-
-- the exact Lagrangian chain for UCBlock: BSPar-DP.txt attaches the three
-  Solver over sub-Block solved to optimality by the dynamic programming
-  Solver (TUBSCfg-DP.txt, InnerBSCfg-DP.txt, LDCfg-DP.txt, PPHCfg-DP.txt)
-  and a :MILPSolver that solves the MIP rather than its continuous
-  relaxation, stopping on a time limit so that what it gives is a valid
-  pair of bounds rather than a claimed optimum (MILPCfg-MIP.txt). With the relaxation in the sub-Block the
-  penalty of the PrimalProximalHeur acts on variables that are not binary
-  there, and its first penalized call does not converge: on T-Ramp
-  10_0_1_w the heuristic goes from 86 to 13 seconds, its bound becomes the
-  Lagrangian one rather than the value of the continuous relaxation, and
-  every inner call ends on "optimal". No batch uses it yet: the
-  LagrangianDualSolver is a relaxation with a duality gap there, so it has
-  to be declared with -E ,inf
-
-- the cross-check of common_utils: every Solver enters it as its
-  [get_lb(), get_ub()] interval, valid by the base Solver contract, and
-  is measured against the best bounds the whole set of them provides,
-  since the optimum is not known. Correctness, i.e. not contradicting
-  those bounds, is owed by every Solver; the quality it declares is owed
-  only by the one that returns kOK, i.e. that says it delivered what it
-  was asked, while kLowPrecision promises nothing. No Solver type or
-  name is ever inspected
-
-- the tolerance each Solver is held to, which is by default the
-  dblRelAcc its ComputeConfig asks of it, and never less than the
-  tolerance the cross-check is called with, below which the comparison
-  would only measure its own numerical noise
-
-- the -E option, overriding that tolerance per Solver (positionally with
-  respect to the BlockSolverConfig, the empty field leaving the Solver
-  to its dblRelAcc), for the Solver that does not say with kLowPrecision
-  when it did not deliver the accuracy it was asked for, and whose
-  dblRelAcc therefore says nothing about what it returns
-
-### Changed 
-
-- `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
-  `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
-  the instances it reads are in `data/nc4/pypsa-data` instead of
-  `data/nc4/resilient-data`, the folder that holds all the networks
-  translated from PyPSA, one sub-folder per kind of problem: `ucblock`,
-  `pollutants`, `tssb` (whose files are named after the perturbation, instead
-  of lying in a sub-folder each) and `mssb`; the instances of `EC_Data` are
-  divided in the same way, in `ucblock`, `tssb` and `mssb`
-
 - the nested chain of TwoStageStochasticBlock (BSPar-2S-LD.txt, where each
   scenario sub-problem is solved by an inner LagrangianDualSolver) evaluates
   every component at each iteration, dblMinNrEvls = -1: a component being an
@@ -351,11 +338,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rather than selecting one of them from the command line: the meta-
   batches are gone and each batch is a ctest test of its own
 
-### Fixed 
+### Fixed
 
 ## [0.6.0] - 2025-12-12
 
-### Added 
+### Added
 
 - tests comparing UCBlock solutions with expected values
 
@@ -371,7 +358,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - support for both LP and MPS fles in Write-Read
 
-### Changed 
+### Changed
 
 - MMCFBlock/gen and the README accordingly to account for the new way
   of distributing the instances
@@ -382,8 +369,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - adapted to new standard organization of makefiles
 
-
-### Fixed 
+### Fixed
 
 - several fixes throughout the testers
 
@@ -397,7 +383,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - added -Wno-enum-compare to Makefiles (we regularly do that in SMS++)
 
-### Changed 
+### Changed
 
 - adapted to new CMake / makefile organisation
 
@@ -413,13 +399,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Early stop in test of ThermalUnitBlock.
 
-### Fixed
-
-- LagrangianDualSolver_UC/test.
-
 ### Removed
 
 - GoogleTest-based test for DPThermalUnitBlock.
+
+### Fixed
+
+- LagrangianDualSolver_UC/test.
 
 ## [0.5.2] - 2022-07-01
 
