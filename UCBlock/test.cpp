@@ -1016,6 +1016,9 @@ static std::string write( const std::string & name , bool nuclear ,
  put_u( "MinDownTime" , 2 );
  put( "InitialPower" , 150 );
  put_i( "InitUpDownTime" , 4 );
+ // what the unit consumes while it is off, which the node injection rows
+ // carry weighed with its scale factor
+ put( "FixedConsumption" , 30 );
  put( "PrimaryRho" , 0.05 );
  put( "SecondaryRho" , 0.1 );
  put( "MaxReactivePowerOn" , 120 );
@@ -1348,6 +1351,33 @@ static int test( void )
           " refuses a unit with a reference schedule" );
    attach( tu , {} );
    }
+  delete uc;
+  }
+
+ // the rows of the UCBlock must not depend on the way they were reached:
+ // writing back the demand the Block already has, which makes the setter
+ // recompute the right-hand sides, has to leave the model where it is. The
+ // setter skips the values that do not change, hence the demand is moved and
+ // put back
+ {
+  auto uc = load( thermal );
+  generate( uc , -1 );
+  const auto before = snapshot( uc );
+  const auto & d = uc->get_active_power_demand();
+  const Index N = d.shape()[ 0 ];
+  std::vector< double > same;
+  for( Index n = 0 ; n < N ; ++n )
+   for( Index t = 0 ; t < T ; ++t )
+    same.push_back( d[ n ][ t ] );
+  auto moved = same;
+  for( auto & v : moved )
+   ++v;
+  uc->set_active_power_demand( moved.cbegin() , Block::Range( 0 , N * T ) ,
+                               eModBlck , eModBlck );
+  uc->set_active_power_demand( same.cbegin() , Block::Range( 0 , N * T ) ,
+                               eModBlck , eModBlck );
+  check( snapshot( uc ) == before ,
+         "the demand written back leaves the rows where they are" );
   delete uc;
   }
 
