@@ -105,6 +105,23 @@ void PrintResults( bool hs , int rtrn , double fo )
  }
 
 /*--------------------------------------------------------------------------*/
+// what a Solver that failed says of itself
+/* A Solver that returns anything from kError up delivered nothing, and the
+ * line says so; which of the errors it is, however, is the only thing left
+ * to go by when the failure does not repeat, as one of a parallel Solver may
+ * well not, hence the code, and its name where the core gives it one. */
+
+std::string error_token( int status )
+{
+ std::string what = "Error!";
+ if( status == Solver::kError )            what += " (kError)";
+ else if( status == Solver::kBlockLocked ) what += " (Block locked)";
+ else                                      what += " (status " +
+                                            std::to_string( status ) + ")";
+ return( what );
+ }
+
+/*--------------------------------------------------------------------------*/
 // print the exception that reached std::terminate(), then abort
 
 void smspp_terminate( void )
@@ -858,7 +875,8 @@ bool SolveAll( Block * block ,
     }
    else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
    else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
-   else                                           tok[ k ] = "Error!";
+   else                                           tok[ k ] = error_token(
+							      status[ k ] );
    }
 
   // out-params from the first Solver - - - - - - - - - - - - - - - - - - - -
