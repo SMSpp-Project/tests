@@ -94,7 +94,9 @@ print_header() {
 # `verbose=1 ctest ...`): the test binaries read it from the inherited
 # environment, so it works regardless of whether a test understands the -v
 # option. Do NOT append -v here: tests that parse positional arguments by hand
-# would mis-read it.
+# would mis-read it. A number asks for that level, `verbose=2 ./batch ...`
+# being what gives the log of each Solver, which is the only way to have it
+# from inside a battery.
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # set an algorithmic parameter in a ComputeConfig file, in place

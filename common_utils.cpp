@@ -1468,6 +1468,13 @@ void process_args( int argc , char ** argv , bool ( *custom_arg )( int opt ) )
  f_argc = argc;
  f_argv = argv;
 
+ // the `verbose` environment variable carries the level as well, so that a
+ // battery, which has no way of passing -v to the test it runs, can ask for
+ // the log of the Solver with `verbose=2 ./batch ...`; -v, where the test
+ // understands it, is read afterwards and wins
+ if( const char * e = std::getenv( "verbose" ) ; e && is_number( e ) )
+  verbosity_level = std::atoi( e );
+
  while( true ) {  // options
   const auto opt = getopt_long( argc , argv , short_opts.data() ,
                                 long_opts.data() , nullptr );
