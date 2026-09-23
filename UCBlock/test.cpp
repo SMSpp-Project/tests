@@ -1330,6 +1330,27 @@ static int test( void )
                "thermal with a schedule, formulation " +
                std::to_string( form ) );
 
+ // the DP Solvers have no term for the deviation from a reference schedule,
+ // hence they refuse a unit that has one instead of answering for a unit
+ // that pays nothing to depart from its schedule
+ if( ! solver_name.empty() ) {
+  auto uc = load( with_schedule );
+  generate( uc , -1 );
+  auto tu = uc->get_unit_block( 0 );
+  for( const auto & dp : { "ThermalUnitDPSolver" , "ThermalUnitExtDPSolver" } ) {
+   bool refused = false;
+   try {
+    attach( tu , { dp } );
+    solve( tu , 0 );
+    }
+   catch( const std::exception & e ) { refused = true; }
+   check( refused , std::string( dp ) +
+          " refuses a unit with a reference schedule" );
+   attach( tu , {} );
+   }
+  delete uc;
+  }
+
  check_dp( thermal , "ThermalUnitDPSolver" , "thermal, standard DP" );
  check_dp( thermal , "ThermalUnitExtDPSolver" , "thermal, extended DP" );
  check_dp( nuclear , "NuclearUnitExtDPSolver" , "nuclear, extended DP" );
