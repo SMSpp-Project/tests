@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # usage: batch-stochastic < exe file > < bpar file > < spar file > < log file >
-#        < exe file > = path of the executable file, default InvestmentBlock_test
+#        < exe file > = path of the executable file, default IB_test
 #        < bpar file > = BlockConfig file, default InnerBCfg.txt
 #        < spar file > = BlockSolverConfig file, default BSPar.txt
 #        < log file > = name of log file, default no log
@@ -35,7 +35,7 @@
 # slots so that `parse_batch_args` and `run_test` work unchanged.
 source "$(dirname "$0")/../../batch_common.sh"
 
-DEFAULT_EXE=./InvestmentBlock_test
+DEFAULT_EXE=./IB_test
 DEFAULT_PAR=InnerBCfg.txt
 DEFAULT_SLV=BSPar.txt
 parse_batch_args "$@"

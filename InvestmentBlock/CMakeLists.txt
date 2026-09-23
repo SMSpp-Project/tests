@@ -17,32 +17,32 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::InvestmentBlock)
 
-    add_executable(InvestmentBlock_test test.cpp ../common_utils.cpp)
-    target_include_directories(InvestmentBlock_test PRIVATE ..)
-    target_link_libraries(InvestmentBlock_test PRIVATE SMS++::InvestmentBlock)
+    add_executable(IB_test test.cpp ../common_utils.cpp)
+    target_include_directories(IB_test PRIVATE ..)
+    target_link_libraries(IB_test PRIVATE SMS++::InvestmentBlock)
 
     if (TARGET SMS++::BundleSolver)
-        target_link_libraries(InvestmentBlock_test PRIVATE SMS++::BundleSolver)
+        target_link_libraries(IB_test PRIVATE SMS++::BundleSolver)
     endif ()
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(InvestmentBlock_test PRIVATE SMS++::MILPSolver)
+        target_link_libraries(IB_test PRIVATE SMS++::MILPSolver)
     endif ()
 
     # the InvestmentBlock accepts a whole stochastic Block as its inner one;
     # the Block factory only knows the types that are linked in, so without
     # these the instances of batch-stochastic cannot be deserialized
     if (TARGET SMS++::TwoStageStochasticBlock)
-        target_link_libraries(InvestmentBlock_test
+        target_link_libraries(IB_test
                               PRIVATE SMS++::TwoStageStochasticBlock)
     endif ()
 
     if (TARGET SMS++::MultiStageStochasticBlock)
-        target_link_libraries(InvestmentBlock_test
+        target_link_libraries(IB_test
                               PRIVATE SMS++::MultiStageStochasticBlock)
     endif ()
 
-    smspp_install(InvestmentBlock_test)
+    smspp_install(IB_test)
 
     # Create a test fixture to generate .nc4 files by running extract_investment_nc4.
     # This test will build and run the extract_investment_nc4 target
@@ -58,18 +58,18 @@ if (TARGET SMS++::InvestmentBlock)
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
         if (UNIX)
-            add_test(NAME InvestmentBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/InvestmentBlock_test
+            add_test(NAME IB_test/${BATCH_NAME}
+                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/IB_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
-            add_test(NAME InvestmentBlock_test/${BATCH_NAME}
+            add_test(NAME IB_test/${BATCH_NAME}
                      # using Git for Windows that includes Git Bash
                      COMMAND "C:/Program Files/Git/bin/bash.exe"
-                     "${BATCH_FILE}" "$<TARGET_FILE:InvestmentBlock_test>"
+                     "${BATCH_FILE}" "$<TARGET_FILE:IB_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
         # Make each batch test require the investment_data_extracted fixture
-        set_tests_properties(InvestmentBlock_test/${BATCH_NAME}
+        set_tests_properties(IB_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED investment_data_extracted)
     endforeach ()
 endif ()
