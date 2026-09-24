@@ -182,7 +182,13 @@ inner-Block module needed by the instances in `batches/` (currently
   `LagrangianDualSolver` (`LPBSCfg-LD.txt`) instead of a `:MILPSolver`.
   A component of the outer Lagrangian Dual is there an entire inner one,
   which is why every component is evaluated at each iteration
-  (`dblMinNrEvls=-1`).
+  (`dblMinNrEvls=-1`). The third Solver is the recursive form
+  (`intRecursive=1`), which relaxes the linking constraints of the
+  scenarios and those of the units within them at once, its components
+  being the units of all the scenarios (`InnerBSCfg.txt`): the nested and
+  the recursive form give the same bound, which is stronger than that of
+  the continuous relaxation the `:MILPSolver` solves (`MILPCfg.txt`), so
+  that the latter is to be declared a relaxation (`-R r,,`).
 - `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
   whose components are the units of the scenario (`InnerBSCfg.txt`).
   `LPBSCfg-LD-noeasy.txt` is the same with `intDoEasy=0`, which the

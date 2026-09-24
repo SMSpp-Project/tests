@@ -35,7 +35,10 @@ LagrangianDualSolver  # name of Solver
 # now all the integer parameters
 intDoEasy         3 # do easy components for (some) LagBFunction
                     # (bit 0 + bit 1 = enable easy + ChgCosts)
-intMaxIter      100 # max number of iterations for each call
+intMaxIter     1000 # max number of iterations for each call: the cap
+                    # is not binding, the inner dual stops on its own
+                    # criteria first, and with 100 the nested bound
+                    # stays 1e-4 below the recursive one
 intLogVerb        0 # log verbosity of main Bundle algorithm
 
 2 # number of double parameters
