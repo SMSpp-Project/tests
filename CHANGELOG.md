@@ -149,6 +149,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the two batteries of `MCFBlock` run one seed of their three when `$CI` is
+  set, as the one of the dynamic programming already runs 5 of its 100 ramp
+  profiles: the three seeds are the same sweep with another random stream,
+  while the whole of them takes more than an hour on a machine of ours and
+  does not fit what a test is given on a shared runner
+
 - the inner Solver of the `BendersBFunction` suite is Gurobi, the one the
   image of the pipeline carries, so that the suite runs where it is run and
   not only where a licence of another solver happens to be
