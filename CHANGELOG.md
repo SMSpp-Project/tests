@@ -405,6 +405,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `LukFi_test` stops with an error when the `BlockSolverConfig` it reads
+  attaches no `Solver` to the `LukFiBlock`, e.g. because the file is empty or
+  malformed, rather than crashing on the first element of an empty list
+
 - the suites that try each :MILPSolver in turn skipped the ones the build does
   not have by constructing them, while `Solver::new_Solver()` throws rather
   than returning `nullptr` on a name the factory does not hold, so
