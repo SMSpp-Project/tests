@@ -1,10 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar2.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar2.txt   - - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a
-# CapacitatedFacilityLocationBlock to be solved by a :MCFSolver
-#
-#   Antonio Frangioni
+# A txt description of a BlockSolverConfig for the flow relaxation of a
+# CapacitatedFacilityLocationBlock, a MCFBlock, to be solved by every
+# Solver that takes one, i.e., the three :MCFSolver and the four LEMON
+# algorithms, each of which the test compares with the LP
+# of the natural formulation
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,34 +14,66 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1  # number of (the names of) Solver in this BlockSolverConfig
+7  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-MCFSolver<MCFSimplex>     # name of Solver
-#MCFSolver<RelaxIV>     # name of Solver
-#MCFSolver<MCFCplex>    # name of Solver
-#MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>     # name of Solver
+MCFSolver<MCFSimplex>  # 1st Solver
+MCFSolver<RelaxIV>  # 2nd Solver
+# the flow relaxation has fractional supplies (59291.127024 on cap102 after
+# the first changes) and transportation costs scaled by the demands, while
+# LEMON requires integer data: MCFLemonSolver compiles the network simplex
+# with tolerances and gives the other three algorithms the costs, the
+# capacities and the supplies scaled and rounded
+MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # 3rd Solver
+MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>  # 4th Solver
+MCFLemonSolverCostScaling<MCFListDigraph,double,double>  # 5th Solver
+MCFLemonSolverCapacityScaling<MCFListDigraph,double,double>  # 6th Solver
+MCFSolver<MCFCplex>  # 11th Solver
 
-1  # number of ComputeConfig in this BlockSolverConfig
+7  # number of ComputeConfig in this BlockSolverConfig
 
-# now all the ComputeConfig
-# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the :MCFSolver
+# now all the ComputeConfig: every Solver runs as it comes
 
-ComputeConfig # exact type of the ComputeConfig object
+# - - - - - - - - - - - - -   1st ComputeConfig   - - - - - - - - - - - - - -
+# MCFSolver (MCFSimplex)
 
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+*DfltCfg.txt
 
-0  # number of integer parameters
+# - - - - - - - - - - - - -   2nd ComputeConfig   - - - - - - - - - - - - - -
+# MCFSolver (RelaxIV)
 
-# now all the integer parameters
-#kReopt      1    # whether or not to reoptimize
+*DfltCfg.txt
 
-0 # number of double parameters
+# - - - - - - - - - - - - -   3rd ComputeConfig   - - - - - - - - - - - - - -
+# MCFLemonSolverNetworkSimplex on MCFListDigraph
 
-# now all the double parameters
-# [none]
+*DfltCfg.txt
+
+# - - - - - - - - - - - - -   4th ComputeConfig   - - - - - - - - - - - - - -
+# MCFLemonSolverCycleCanceling on MCFListDigraph
+
+*DfltCfg.txt
+
+# - - - - - - - - - - - - -   5th ComputeConfig   - - - - - - - - - - - - - -
+# MCFLemonSolverCostScaling on MCFListDigraph
+
+*DfltCfg.txt
+
+# - - - - - - - - - - - - -   6th ComputeConfig   - - - - - - - - - - - - - -
+# MCFLemonSolverCapacityScaling on MCFListDigraph
+
+*DfltCfg.txt
+
+
+
+
+
+# - - - - - - - - - - - - -  11th ComputeConfig   - - - - - - - - - - - - - -
+# MCFSolver (MCFCplex)
+
+*DfltCfg.txt
+
+# end of BlockSolverConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar2.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar2.txt   - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

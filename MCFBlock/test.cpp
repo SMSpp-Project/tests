@@ -463,6 +463,102 @@ int main( int argc , char **argv )
   // why the Block:: should be necessary evades me, but it seems it is
   }
 
+ /* An unbounded instance has a direction to give rather than a solution,
+  * and the :MCFSolver that produce the certificate of unboundedness give it
+  * [see MCFClass::MCFGetUnbCycl()]: 4 nodes, 2 units of flow from node 1 to
+  * node 4, and the cycle 1-2-3-1 of cost -3 and infinite capacity. The
+  * Solution has to say that what it holds is a direction, the MCFBlock has
+  * to take it for one and not for a solution, and get_var_direction() has
+  * to write it in the Variable. A :MCFSolver that gives no certificate
+  * throws, and is skipped here. */
+
+ {
+  MCFBlock unb;
+  const MCFBlock::Subset sn = { 1 , 2 , 3 , 1 , 3 };
+  const MCFBlock::Subset en = { 2 , 3 , 1 , 3 , 4 };
+  const MCFBlock::Vec_CNumber c = { -1 , -1 , -1 , 5 , 1 };
+  MCFBlock::Vec_FNumber u( 5 , Inf< MCFBlock::FNumber >() );
+  u[ 4 ] = 10;
+  const MCFBlock::Vec_FNumber b = { -2 , 0 , 0 , 2 };
+  unb.load( 4 , 5 , en , sn , u , c , b );
+
+  if( auto slv = Solver::new_Solver( "MCFSolver<MCFSimplex>" ) ) {
+   unb.lock( slv );
+   unb.register_Solver( slv );
+   const int status = slv->compute();
+   if( status != Solver::kUnbounded ) {
+    std::cerr << "Error: the unbounded instance is not unbounded, status "
+	      << status << std::endl;
+    return( 1 );
+    }
+
+   bool gives = true;
+   Solution * dir = nullptr;
+   try { dir = slv->get_Solution(); }
+   catch( ... ) { gives = false; }
+
+   if( gives && dir ) {
+    if( ! dir->is_direction() ) {
+     std::cerr << "Error: what the Solution holds is not a direction"
+	       << std::endl;
+     return( 1 );
+     }
+    if( ! unb.is_sol_feasible( dir ) ) {
+     std::cerr << "Error: the direction is not one of the MCFBlock"
+	       << std::endl;
+     return( 1 );
+     }
+    dir->is_direction( false );
+    if( unb.is_sol_feasible( dir ) ) {
+     std::cerr << "Error: the direction is taken for a solution"
+	       << std::endl;
+     return( 1 );
+     }
+    delete dir;
+
+    slv->get_var_direction();
+    if( ! unb.is_direction() ) {
+     std::cerr << "Error: the MCFBlock does not know that its Variable "
+	       << "hold a direction" << std::endl;
+     return( 1 );
+     }
+    unb.is_direction( false );
+    }
+
+   unb.unregister_Solver( slv , true );
+   unb.unlock( slv );
+   }
+  }
+
+ /* a direction of the MCFBlock, i.e., a ray of its feasible region, is
+  * checked against the homogeneous version of the constraints: the zero
+  * flow is one whatever the instance, and a flow on an arc of finite
+  * capacity is not one, that arc leaving no room to move for ever */
+
+ {
+  MCFBlock::Vec_FNumber d( MCFB->get_NArcs() , 0 );
+  MCFSolution ray;
+  ray.is_direction( true );
+  ray.set_x( MCFBlock::Vec_FNumber( d ) );
+  if( ! MCFB->is_sol_feasible( &ray ) ) {
+   std::cerr << "Error: the zero flow is not a direction" << std::endl;
+   return( 1 );
+   }
+
+  for( MCFBlock::Index a = 0 ; a < MCFB->get_NArcs() ; ++a )
+   if( ( ! MCFB->is_deleted( a ) ) && ( ! MCFB->is_closed( a ) ) &&
+       ( MCFB->get_U( a ) < Inf< MCFBlock::FNumber >() ) ) {
+    d[ a ] = MCFB->get_U( a ) > 0 ? MCFB->get_U( a ) : 1;
+    ray.set_x( std::move( d ) );
+    if( MCFB->is_sol_feasible( &ray ) ) {
+     std::cerr << "Error: a flow on arc " << a << ", whose capacity is "
+	       << "finite, is taken for a direction" << std::endl;
+     return( 1 );
+     }
+    break;
+    }
+  }
+
  // attach the Solver(s) to the MCFBlock- - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and

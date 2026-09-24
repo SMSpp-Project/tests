@@ -14,19 +14,19 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-5  # number of (the names of) Solver in this BlockSolverConfig
+6  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 MCFSolver<MCFSimplex>   # name of 1st Solver
 MCFSolver<RelaxIV>      # name of 2nd Solver
-#MCFSolver<MCFCplex>    # name of Solver
-MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>   # 3rd Solver
-MCFLemonSolverCostScaling<MCFListDigraph,double,double>      # 4th Solver
+MCFSolver<MCFCplex>     # name of 3rd Solver, if CPLEX is there
+MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>   # 4th Solver
+MCFLemonSolverCostScaling<MCFListDigraph,double,double>      # 5th Solver
+HiGHSMILPSolver                 # name of 6th Solver
 #CPXMILPSolver                  # name of 5th Solver
 #GRBMILPSolver                  # name of 5th Solver
 #SCIPMILPSolver                 # name of 5th Solver
-HiGHSMILPSolver                 # name of 5th Solver
 
-5  # number of ComputeConfig in this BlockSolverConfig
+6  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -119,7 +119,7 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the LEMON NetworkSimplex; default parameters
+# ComputeConfig of the :MCFSolver (MCFCplex); default parameters
 
 ComputeConfig # exact type of the ComputeConfig object
 
@@ -162,7 +162,7 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of 3rd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the LEMON CostScaling; default parameters
+# ComputeConfig of the LEMON NetworkSimplex; default parameters
 
 ComputeConfig # exact type of the ComputeConfig object
 
@@ -205,6 +205,49 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of 4th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LEMON CostScaling; default parameters
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 5th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the :MILPSolver
 
 ComputeConfig # exact type of the ComputeConfig object
@@ -259,7 +302,7 @@ intLogVerb      0 # log verbosity of the MILPSolver
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 5th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 6th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

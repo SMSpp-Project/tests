@@ -169,21 +169,29 @@ run_timed() {
 # executable ($fwexe): the instance is read K times into a father Block whose
 # Objective couples the copies, and the value FrankWolfeSolver computes by
 # decomposing it is cross-checked against the monolithic :MILPSolver of the
-# same configuration. The configurations are those of the FW directory of the
-# suite, which -c makes every nested name resolve into while the working
-# directory stays the one of the suite, where the instances are; $fwpar is the
-# BlockSolverConfig of the father inside it and $fwargs whatever else the
-# Block asks for (the BlockConfig of the formulation, the variable groups, the
-# father objective). Nothing is run if the battery was given no such
-# executable, i.e., if FrankWolfeSolver is not in the build.
+# same configuration. The configurations are those of the suite, like every
+# other Solver's: the meta-BlockSolverConfig of the father is $fwpar, named
+# FatherBSPar*.txt since the father is what this tester adds to the Block of
+# the suite, and $fwargs is whatever else the Block asks for (the BlockConfig
+# of the formulation, the variable groups, the father objective). Nothing is
+# run if the battery was given no such executable, i.e., if FrankWolfeSolver
+# is not in the build.
 
 fw_run() {
     [ -n "${fwexe:-}" ] && [ -x "${fwexe}" ] || return 0
-    run_test "${fwexe}" -c "${fwdir:-FW}" -S "${fwpar:-BSPar.txt}" \
-             ${fwargs:-} "$@"
+    run_test "${fwexe}" -S "${fwpar:-FatherBSPar.txt}" ${fwargs:-} "$@"
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# A run that exits with 77 had nothing to do rather than failing: the tester
+# answers that when the configuration it is given names only Solver that this
+# build does not have, which is what an external library that is not there
+# looks like from here [see drop_missing_Solvers() of common_utils.cpp]. Those
+# runs are counted and named at the end of the battery, and they do not stop
+# it, while any other nonzero status does.
+
+SKIPPED_RUNS=0
 
 run_test() {
     local _exe=$1
@@ -195,7 +203,12 @@ run_test() {
         "${_exe}" "$@" >> "${mlf}"
     fi
     local _rv=$?
+    if [ ${_rv} -eq 77 ]; then
+        SKIPPED_RUNS=$(( SKIPPED_RUNS + 1 ))
+        return 0
+    fi
     if [ ${_rv} -ne 0 ]; then
         exit 1
     fi
 }
+

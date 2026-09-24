@@ -51,11 +51,20 @@ set(SMSPP_TEST_LABELS_SVMBlock                  "BundleSolver;LagrangianDualSolv
 set(SMSPP_TEST_LABELS_SingleFlowDCRBlock        "SingleFlowDCRBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test
-# it registered, dynamic batch-file test names included.
+# it registered, dynamic batch-file test names included, and tell ctest that
+# 77 is the status of a test that had nothing to do rather than of one that
+# failed: a tester exits with it when the configuration it is given names only
+# Solver that this build does not have, which is the case of a configuration
+# asking for a Solver of an external library that is not there
+# [see drop_missing_Solvers() of common_utils.cpp].
 function(smspp_label_tests)
     get_filename_component(_dir "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
     get_property(_tests DIRECTORY PROPERTY TESTS)
-    if (_tests AND DEFINED SMSPP_TEST_LABELS_${_dir})
+    if (NOT _tests)
+        return()
+    endif ()
+    set_tests_properties(${_tests} PROPERTIES SKIP_RETURN_CODE 77)
+    if (DEFINED SMSPP_TEST_LABELS_${_dir})
         set_tests_properties(${_tests} PROPERTIES
                              LABELS "${SMSPP_TEST_LABELS_${_dir}}")
     endif ()

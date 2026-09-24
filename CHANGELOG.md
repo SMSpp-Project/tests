@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- a configuration that names a `Solver` this build does not have no longer
+  makes a run fail: the testers take those names out of the `BlockSolverConfig`
+  before applying it [see `Solver::has_Solver()`] and warn, in the yellow of
+  the other warnings and one line per name, that the run solves without it, so
+  that the log of a run says what it has actually solved with and a
+  configuration can name every `Solver` that makes sense on its instances,
+  whatever each machine has; a run left with no `Solver` at all, and a run
+  whose one `Solver` was the missing one, has nothing to do rather than
+  something to fail, so it exits with the 77 that `ctest` and the batteries
+  read as "skipped" (`SKIP_RETURN_CODE`), and a run left with one `Solver` out
+  of several warns that there is nothing to cross-check it against. `BSPar.txt`
+  and `BSPar-large.txt` of the `MCFBlock` suite and the two configurations of
+  the flow relaxation of the capacitated facility location therefore name
+  `MCFSolver<MCFCplex>` as well, the network solver of CPLEX, which joins the
+  comparison wherever CPLEX is there and is left out, with a line saying so,
+  wherever it is not
+
+- the tester of `BendersBFunction` checks the global pool when a dynamic row of
+  the sub-Block is removed: a row that is slack at the optimum, hence with a
+  zero multiplier, leaves the entry of the pool where it is and the
+  linearization it gives is the one it gave before, while a row that is active
+  takes the entry away, what is left of its dual solution no longer satisfying
+  the dual constraints
+
+- the tester of `MCFBlock` checks what a direction of a `MCFBlock` is: on an
+  instance with a negative cost cycle of infinite capacity the `Solution` a
+  `:MCFSolver` gives has to say that it holds a direction, which the
+  `MCFBlock` takes for one and not for a solution, while a `:MCFSolver` that
+  gives no such certificate throws and is skipped
+
 - a batch of `LagBFunction` over the easy components, which nothing was
   exercising
 - a batch can set an algorithmic parameter in a `ComputeConfig` and time each
@@ -139,6 +169,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dblRelAcc therefore says nothing about what it returns
 
 ### Changed
+
+- the `ComputeConfig` of the flow relaxation of the capacitated facility
+  location, all of them the default one, are the single `DfltCfg.txt` that the
+  two configurations point at instead of seven copies of the same block, which
+  is what takes those two files from 338 and 340 lines to about 100
 
 - the inner Solver of the `BendersBFunction` suite is Gurobi, the one the
   image of the pipeline carries, so that the suite runs where it is run and

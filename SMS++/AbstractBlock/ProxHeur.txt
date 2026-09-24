@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - ProxHeur.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  ProxHeur.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block to be solved by two
 # different Solver: a :MILPSolver and a PrimalProximalHeur using a
 # BundleSolver as the inner Solver
-#
-#   Luca Mencarelli, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -74,7 +72,6 @@ intTrgtMng            0 # bit-wise encoding targets and accuracies management:
                         # bit 1: if upper/lower target is set to each convex/concave component
                         # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                         # bit 4: if Lipschitz constant is used to compute the upper model
-                  
 
 18 # number of double parameters
 
@@ -133,16 +130,10 @@ str_LagBF_BSCfg        QPBSCfg.txt # the BlockSolverConfig for inner Block
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the :MILPSolver
-*LPCCfg.txt
-
 # end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END ProxHeur.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END ProxHeur.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

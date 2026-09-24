@@ -1618,6 +1618,127 @@ void test11( bool invert ) {
 
 /*--------------------------------------------------------------------------*/
 
+/*--------------------------------------------------------------------------*/
+/* The global pool when a dynamic row of the sub-Block is removed: the dual
+ * variable of that row goes with it, hence the entries whose multiplier of it
+ * was zero are still dual feasible and are kept, with that multiplier dropped
+ * from the dual solution they hold, while the others cannot be and go. The
+ * sub-Block is asked for a Solution that carries the dual values, which is
+ * what makes a global pool of a BendersBFunction worth anything at all. */
+
+void test_pool_after_removal( void )
+{
+ /*
+  * min  x1 + x2 + x3
+  * s.t. -1 <= x_i <= 1,      i = 1,2,3
+  *       0.5 <= -x1 + x3 <= 1 + y1 + y2
+  * plus two rows added to a dynamic group of the sub-Block:
+  *       x1 + x2 + x3 >= -100   (slack at the optimum, multiplier 0)
+  *       x2 >= -0.5             (tight at the optimum, multiplier not 0)
+  */
+
+ int num_x = 3;
+
+ std::vector< double > l = { -10 , -10 };
+ std::vector< double > u = {  10 ,  10 };
+ std::vector< double > d( num_x , 1.0 );
+
+ matrix E = { { -1 , 0 , 1 } };
+ matrix M1 = { { 0 , 0 } };
+ matrix M2 = { { 1 , 1 } };
+ std::vector< double > b1 = { 0.5 };
+ std::vector< double > b2 = { 1.0 };
+
+ matrix F = { { 1.0 , 0.0 , 0.0 } ,
+	      { 0.0 , 1.0 , 0.0 } ,
+	      { 0.0 , 0.0 , 1.0 } };
+ std::vector< double > f1 = { -1 , -1 , -1 };
+ std::vector< double > f2 = {  1 ,  1 ,  1 };
+
+ std::vector< double > l_x( num_x , -1 );
+ std::vector< double > u_x( num_x ,  1 );
+
+ auto inner_block_solver = build_inner_block_solver();
+ auto benders_block = build_Benders_decomposition
+  ( inner_block_solver , false , l , u , d , E , M1 , M2 , b1 , b2 , F , f1 ,
+    f2 , l_x , u_x );
+
+ auto benders_function = dynamic_cast< BendersBFunction * >
+  ( dynamic_cast< FRealObjective * >
+    ( benders_block->get_objective() )->get_function() );
+ if( ! CHECK( benders_function ) ) return;
+
+ auto inner_block = dynamic_cast< AbstractBlock * >
+                                       ( benders_function->get_inner_block() );
+ if( ! CHECK( inner_block ) ) return;
+
+ // the sub-Block has to give a Solution that carries the dual values
+ auto block_config = new BlockConfig;
+ block_config->f_solution_Configuration = new SimpleConfiguration< int >( 2 );
+ inner_block->set_BlockConfig( block_config );
+
+ auto x = inner_block->get_static_variable_v< ColVariable >( "x" );
+ if( ! CHECK( x ) ) return;
+
+ // the two rows, in a dynamic group of their own
+ auto rows = new std::list< FRowConstraint >( 2 );
+ auto row = rows->begin();
+ {
+  auto function = new LinearFunction();
+  for( Index j = 0 ; j < x->size() ; ++j )
+   function->add_variable( &( *x )[ j ] , 1.0 );
+  row->set_function( function );
+  row->set_lhs( -100 );
+  row->set_rhs( inf );
+  }
+ ++row;
+ {
+  auto function = new LinearFunction( { { &( *x )[ 1 ] , 1.0 } } );
+  row->set_function( function );
+  row->set_lhs( -0.5 );
+  row->set_rhs( inf );
+  }
+ /* the group joins the sub-Block while the Solver is not attached to it, so
+  * that the Solver reads the two rows when it is attached again: a group that
+  * is registered when a Solver is already there issues no Modification, the
+  * Solver having no way of knowing that it exists. */
+ inner_block->unregister_Solver( inner_block_solver );
+ inner_block->add_dynamic_constraint( *rows , "extra" );
+ inner_block->register_Solver( inner_block_solver );
+
+ // one linearization in the global pool, out of the two rows above
+ benders_function->set_par( C05Function::intGPMaxSz , 2 );
+
+ for( Index i = 0 ; i < benders_function->get_num_active_var() ; ++i )
+  dynamic_cast< ColVariable * >
+                       ( benders_function->get_active_var( i ) )->set_value( 0 );
+
+ CHECK( benders_function->compute() == Solver::kOK );
+ CHECK( benders_function->has_linearization() );
+ benders_function->store_linearization( 0 );
+ CHECK( benders_function->is_linearization_there( 0 ) );
+
+ const auto alpha = benders_function->get_linearization_constant( 0 );
+
+ // the slack row goes: its multiplier was zero, so the entry is still there,
+ // and the linearization it gives is the one it gave before
+ inner_block->remove_dynamic_constraints( *rows , Block::Subset( { 0 } ) ,
+					  true );
+ CHECK( benders_function->is_linearization_there( 0 ) );
+ CHECK( benders_function->get_linearization_constant( 0 ) == alpha );
+
+ // the row that is left is the tight one: its multiplier is not zero, hence
+ // what is left of the dual solution is not feasible and the entry goes
+ inner_block->remove_dynamic_constraints( *rows , Block::Subset( { 0 } ) ,
+					  true );
+ CHECK( ! benders_function->is_linearization_there( 0 ) );
+
+ delete( benders_block );
+ delete( inner_block_solver );
+ }
+
+/*--------------------------------------------------------------------------*/
+
 void run( bool invert ) {
  test( invert );
  test2( invert );
@@ -1654,6 +1775,9 @@ int main( int argc , char ** argv )
  // the two runs are the same tests with the two orders of the data mapping
  run( false );
  run( true );
+
+ // the global pool does not depend on the order of the data mapping
+ test_pool_after_removal();
 
  if( AllPassed )
   std::cout << GREEN( All tests passed!! ) << std::endl;

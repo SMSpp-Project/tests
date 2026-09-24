@@ -53,12 +53,14 @@
  #define GREEN( x ) "\x1B[32m" #x "\033[0m"
  #define YELLOW( x ) "\x1B[33m" #x "\033[0m"
  // raw on/off codes, for colouring runtime (non-literal) messages
+ #define ANSI_RED    "\x1B[31m"
  #define ANSI_YELLOW "\x1B[33m"
  #define ANSI_RESET  "\033[0m"
 #else
  #define RED( x ) #x
  #define GREEN( x ) #x
  #define YELLOW( x ) #x
+ #define ANSI_RED    ""
  #define ANSI_YELLOW ""
  #define ANSI_RESET  ""
 #endif

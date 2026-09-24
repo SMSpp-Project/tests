@@ -197,6 +197,78 @@ void b_config_Block( Block * block , Configuration * b_config ,
  }  // end( b_config_Block )
 
 /*--------------------------------------------------------------------------*/
+/* Takes out of a BlockSolverConfig the Solver that this build does not have.
+ * A configuration names every Solver that makes sense on the instances of a
+ * battery, so that a run solves with all of them and compares; but which
+ * Solver are there depends on the modules the build has and on the external
+ * libraries each of them has found, and asking the factory for one that is
+ * not there throws [see Solver::new_Solver()], which would kill the whole
+ * run rather than that one comparison. What is left out is said, name by
+ * name, so that the log of a run tells what it has actually solved with. */
+
+static void drop_missing_Solvers( BlockSolverConfig * bsc ,
+				  const std::string & fn )
+{
+ if( ! bsc )
+  return;
+
+ const auto asked = bsc->num_ComputeConfig();
+
+ /* A BlockSolverConfig that names no Solver at all is how a Solver is
+  * detached rather than a configuration that cannot be applied: there is
+  * nothing to look for in the factory and nothing to skip. */
+ if( ! asked )
+  return;
+
+ for( Block::Index i = asked ; i-- ; ) {
+  const auto & name = bsc->get_SolverName( i );
+  if( Solver::has_Solver( name ) )
+   continue;
+
+  std::cerr << ANSI_YELLOW << "[WARNING] " << name << " is not in this build"
+	    << ", so " << fn << " solves without it" << ANSI_RESET << std::endl;
+
+  /* What -E and -R declare is positional on the order of the
+   * BlockSolverConfig, hence the entry of the Solver that goes has to go with
+   * it: what is left would otherwise be read off the Solver that takes its
+   * place, i.e. a tolerance or a "this one solves a relaxation" landing on
+   * another Solver. A single value applies to every Solver and stays as it
+   * is [see solver_eps and solver_relaxation]. */
+  if( solver_eps.size() > 1 )
+   if( i < solver_eps.size() )
+    solver_eps.erase( solver_eps.begin() + i );
+  if( solver_relaxation.size() > 1 )
+   if( i < solver_relaxation.size() )
+    solver_relaxation.erase( solver_relaxation.begin() + i );
+
+  bsc->remove_ComputeConfig( i );
+  }
+
+ const auto left = bsc->num_ComputeConfig();
+
+ if( ! left ) {
+  /* A configuration none of whose Solver is there cannot be applied to
+   * anything: a run that went through the motions would report that nothing
+   * failed, which is worse than saying that it cannot be done. The status is
+   * the one of a test that has nothing to do rather than of one that failed,
+   * which is what the batteries and ctest read it as
+   * [see SKIP_RETURN_CODE and run_test of batch_common.sh]. */
+  std::cerr << ANSI_YELLOW << "[SKIPPED] none of the " << asked
+	    << " Solver that " << fn << " names is in this build"
+	    << ANSI_RESET << std::endl;
+  exit( 77 );
+  }
+
+ if( ( asked > 1 ) && ( left == 1 ) )
+  std::cerr << ANSI_YELLOW << "[WARNING] " << fn << " names " << asked
+	    << " Solver and this build has one of them, "
+	    << bsc->get_SolverName( 0 )
+	    << ": there is no Solver to cross-check it against, and what this "
+	       "run says is what that one Solver says" << ANSI_RESET
+	    << std::endl;
+ }
+
+/*--------------------------------------------------------------------------*/
 // the same for a BlockSolverConfig, which is also clear()-ed for the final
 // cleanup, see common_utils.h
 
@@ -225,8 +297,10 @@ void s_config_Block( Block * block , Configuration * s_config ,
   // now BlockSolverConfig-ure all Block whose classname() matches
   for( auto b : BFS )
    if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bsc = dynamic_cast< BlockSolverConfig * >( bcit->second ) )
+    if( auto bsc = dynamic_cast< BlockSolverConfig * >( bcit->second ) ) {
+     drop_missing_Solvers( bsc , fn );
      bsc->apply( b );
+     }
     else {
      std::cerr << "Error: meta-Configuration for :Block " << bcit->first
                << " in file " << fn << " is not a BlockSolverConfig"
@@ -244,6 +318,7 @@ void s_config_Block( Block * block , Configuration * s_config ,
   }
 
  if( auto * bsc = dynamic_cast< BlockSolverConfig * >( s_config ) ) {
+  drop_missing_Solvers( bsc , fn );
   bsc->apply( block );          // just apply() it
   if( clear_after )
    bsc->clear();                // clear() it for final cleanup

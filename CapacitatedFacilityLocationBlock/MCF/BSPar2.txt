@@ -1,11 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar2.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar2.txt   - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
 # CapacitatedFacilityLocationBlock whose flow relaxation is solved by the
-# network simplex of LEMON
-#
-#   Antonio Frangioni
+# four LEMON algorithms and by the three :MCFSolver, each
+# of which the test compares with the LP of the natural formulation
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,42 +13,66 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1  # number of (the names of) Solver in this BlockSolverConfig
+7  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-#MCFSolver<MCFSimplex>     # name of Solver
-#MCFSolver<RelaxIV>     # name of Solver
-#MCFSolver<MCFCplex>    # name of Solver
-# the network simplex of LEMON solves the flow relaxation, whose supplies
-# are fractional (59291.127024 on cap102 after the first changes) and whose
-# transportation costs are scaled by the demands: LEMON requires integer
-# data, and the network simplex takes these only thanks to the tolerances
-# MCFLemonSolver compiles it with, without which it answers "infeasible".
-# The other LEMON algorithms have no such fix and fail here: CycleCanceling
-# and CostScaling answer "infeasible", CapacityScaling does not terminate
-MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # name of Solver
-#MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>     # name of Solver
+# the flow relaxation has fractional supplies (59291.127024 on cap102 after
+# the first changes) and transportation costs scaled by the demands, while
+# LEMON requires integer data: MCFLemonSolver compiles the network simplex
+# with tolerances and gives the other three algorithms the costs, the
+# capacities and the supplies scaled and rounded
+MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # 1st Solver
+MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>  # 2nd Solver
+MCFLemonSolverCostScaling<MCFListDigraph,double,double>  # 3rd Solver
+MCFLemonSolverCapacityScaling<MCFListDigraph,double,double>  # 4th Solver
+MCFSolver<MCFSimplex>  # 9th Solver
+MCFSolver<RelaxIV>  # 10th Solver
+MCFSolver<MCFCplex>  # 11th Solver
 
-1  # number of ComputeConfig in this BlockSolverConfig
+7  # number of ComputeConfig in this BlockSolverConfig
 
-# now all the ComputeConfig
-# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the :MCFSolver
+# now all the ComputeConfig: every Solver runs as it comes
 
-ComputeConfig # exact type of the ComputeConfig object
+# - - - - - - - - - - - - -   1st ComputeConfig   - - - - - - - - - - - - - -
+# MCFLemonSolverNetworkSimplex on MCFListDigraph
 
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+*../DfltCfg.txt
 
-0  # number of integer parameters
+# - - - - - - - - - - - - -   2nd ComputeConfig   - - - - - - - - - - - - - -
+# MCFLemonSolverCycleCanceling on MCFListDigraph
 
-# now all the integer parameters
-#kReopt      1    # whether or not to reoptimize
+*../DfltCfg.txt
 
-0 # number of double parameters
+# - - - - - - - - - - - - -   3rd ComputeConfig   - - - - - - - - - - - - - -
+# MCFLemonSolverCostScaling on MCFListDigraph
 
-# now all the double parameters
-# [none]
+*../DfltCfg.txt
+
+# - - - - - - - - - - - - -   4th ComputeConfig   - - - - - - - - - - - - - -
+# MCFLemonSolverCapacityScaling on MCFListDigraph
+
+*../DfltCfg.txt
+
+
+
+
+
+# - - - - - - - - - - - - -   9th ComputeConfig   - - - - - - - - - - - - - -
+# MCFSolver (MCFSimplex)
+
+*../DfltCfg.txt
+
+# - - - - - - - - - - - - -  10th ComputeConfig   - - - - - - - - - - - - - -
+# MCFSolver (RelaxIV)
+
+*../DfltCfg.txt
+
+# - - - - - - - - - - - - -  11th ComputeConfig   - - - - - - - - - - - - - -
+# MCFSolver (MCFCplex)
+
+*../DfltCfg.txt
+
+# end of BlockSolverConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar2.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar2.txt   - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
