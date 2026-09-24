@@ -103,6 +103,16 @@ int main( int argc , char **argv )
  bsc->apply( sLukFi );
  bsc->clear();
 
+ // a BlockSolverConfig that attaches no Solver (e.g., one read from an
+ // empty or malformed file, or a "differential" one) leaves nothing to run
+ if( sLukFi->get_registered_solvers().empty() ) {
+  cerr << "Error: no Solver attached to the LukFiBlock by "
+       << ( argc < 3 ? "BSC.txt" : argv[ 2 ] ) << endl;
+  delete bsc;
+  delete sLukFi;
+  return( 1 );
+  }
+
  auto slvr = ( sLukFi->get_registered_solvers() ).front();
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
