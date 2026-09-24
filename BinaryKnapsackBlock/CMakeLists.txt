@@ -6,6 +6,7 @@ if (NOT hasParent)
     find_package(BinaryKnapsackBlock)
     # Solvers
     find_package(MILPSolver)
+    find_package(FrankWolfeSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -30,6 +31,40 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     endif ()
 
     smspp_install(BinaryKnapsackBlock_test)
+
+    # The Frank-Wolfe decomposition of a father Block whose leaves are the
+    # BinaryKnapsackBlock of this suite, each with its DPBinaryKnapsackSolver
+    # as the Linear Minimization Oracle: the dynamic programme minimizes over
+    # the knapsack whatever linear objective the decomposition writes into it,
+    # which is exactly what an oracle is asked for. The tester is the generic
+    # one (../fw_test.cpp), the same the suites of MCFBlock and of UCBlock
+    # build on their own Block, and its configurations are the `Father*` ones
+    # of the suite. The runs are in batches/batch-pisinger, on the netCDF
+    # instances that BinaryKnapsackBlock/tools/batch writes out of the same
+    # curated archive the rest of that battery reads.
+    if (TARGET SMS++::FrankWolfeSolver)
+
+        add_executable(BinaryKnapsackBlock_FW_test
+                       ../fw_test.cpp ../common_utils.cpp)
+        target_include_directories(BinaryKnapsackBlock_FW_test PRIVATE ..)
+        target_link_libraries(BinaryKnapsackBlock_FW_test PRIVATE
+                              SMS++::FrankWolfeSolver
+                              SMS++::BinaryKnapsackBlock)
+
+        if (TARGET SMS++::MILPSolver)
+            target_link_libraries(BinaryKnapsackBlock_FW_test PRIVATE
+                                  SMS++::MILPSolver)
+        endif ()
+
+        smspp_install(BinaryKnapsackBlock_FW_test)
+
+        # fixture: write the netCDF instances out of the curated txt
+        add_test(NAME run_bk2nc4
+                 COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_bk2nc4)
+        set_tests_properties(run_bk2nc4
+                             PROPERTIES FIXTURES_SETUP bk_nc4_generated)
+
+    endif ()
 
     # Formulation cross-checks on randomly generated instances: a single
     # cross-check batch attaches ALL the mathematically equivalent solvers at
@@ -73,22 +108,38 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     set_tests_properties(fetch_bk_data
                          PROPERTIES FIXTURES_SETUP bk_data_ready)
 
+    # the battery is given the Frank-Wolfe tester as well, when it is in the
+    # build, as its fifth argument: the same knapsacks are then also solved by
+    # the decomposition of a father of K copies of them
+    set(_bk_fw "")
+    if (TARGET BinaryKnapsackBlock_FW_test)
+        set(_bk_fw "$<TARGET_FILE:BinaryKnapsackBlock_FW_test>")
+    endif ()
+
     if (UNIX)
         add_test(NAME BinaryKnapsackBlock_test/batch-pisinger
                  COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-pisinger
                          ${CMAKE_CURRENT_BINARY_DIR}/BinaryKnapsackBlock_test
+                         "" "" "" ${_bk_fw}
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     elseif (WIN32)
         add_test(NAME BinaryKnapsackBlock_test/batch-pisinger
                  # using Git for Windows that includes Git Bash
                  COMMAND "C:/Program Files/Git/bin/bash.exe"
-                         "${CMAKE_CURRENT_SOURCE_DIR}/batches-data/batch-pisinger"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-pisinger"
                          "$<TARGET_FILE:BinaryKnapsackBlock_test>"
+                         "" "" "" ${_bk_fw}
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
-    # the cross-check requires the curated data (the raw .csv)
-    set_tests_properties(BinaryKnapsackBlock_test/batch-pisinger
-                         PROPERTIES FIXTURES_REQUIRED bk_data_ready)
+    # the cross-check requires the curated data (the raw .csv), and the
+    # decomposition the netCDF instances written out of it
+    if (TARGET BinaryKnapsackBlock_FW_test)
+        set_tests_properties(BinaryKnapsackBlock_test/batch-pisinger
+                             PROPERTIES FIXTURES_REQUIRED "bk_data_ready;bk_nc4_generated")
+    else ()
+        set_tests_properties(BinaryKnapsackBlock_test/batch-pisinger
+                             PROPERTIES FIXTURES_REQUIRED bk_data_ready)
+    endif ()
 
     # ----- Jooken hard-instance validation (batches/batch-jooken) ---------- #
     # Same architecture as batch-pisinger, on the Jooken-Leyman-De Causmaecker
@@ -127,5 +178,13 @@ endif ()
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# One battery runs a module more than the rest of the suite declares, and the
+# suite is not skipped when that module is out of the build, so it is labelled
+# with it here rather than in the map of the directory.
+if (TARGET SMS++::FrankWolfeSolver)
+    set_tests_properties(BinaryKnapsackBlock_test/batch-pisinger PROPERTIES
+                         LABELS "${SMSPP_TEST_LABELS_BinaryKnapsackBlock};FrankWolfeSolver")
+endif ()
 
 # --------------------------------------------------------------------------- #

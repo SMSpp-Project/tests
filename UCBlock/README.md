@@ -100,6 +100,70 @@ Both batches automatically copy the right TUBCfg\*.txt and
 TUBSCfg\*.txt for the intended tests to succeed.
 
 
+## The Frank-Wolfe decomposition of a father of K units
+
+The same units are also solved as the leaves of a decomposition: a unit is
+read `K` times, the `K` copies become the sub-`Block` of a father
+`AbstractBlock` carrying a random objective over their `Variable`, and the
+`FrankWolfeSolver` that decomposes the father, with the
+`ThermalUnitDPSolver` of each unit as the Linear Minimization Oracle
+(`TUBSCfg-DP.txt`), is cross-checked against a monolithic `:MILPSolver`. The
+tester is the generic one, [`fw_test.cpp`](../fw_test.cpp), the same the suite
+of `MCFBlock` builds on its own Block, so that which Block is read and which
+`:Solver` are attached is the configurations' business and nothing of what
+follows is in the source.
+
+The reference `:MILPSolver` solves the continuous relaxation *with* the cut
+separation loop (`MILPCfg-FW.txt`, `intRelaxIntVars = 2`) over the DP
+formulation plus Perspective Cuts (`TUBCfg-DP.txt`); since that characterizes
+the convex hull of the integer solutions of the unit, the Dantzig-Wolfe value
+`FrankWolfeSolver` computes (`intCvxComb = 1`) has to equal the perspective
+bound, which is what is checked, i.e., Frank-Wolfe is here a decomposition
+alternative to DP + P/C. The runs are in the batteries of the single units,
+[`batches-tub`](batches-tub), together with those of the dynamic programming
+solver, being posed on the same instances; only a few of them, the reference
+being a monolithic relaxation with a cut separation loop, i.e., minutes per
+run.
+
+The configurations are the same set, with the same names, in every suite that
+poses this tester on its own `Block`. `FatherBSPar.txt` is the
+meta-`BlockSolverConfig` that dispatches by classname: the father goes to
+`FatherBSCfg.txt` and each leaf to the `BlockSolverConfig` that makes its
+`:Solver` the oracle. `FatherBSCfg.txt` registers the monolithic reference and
+one `FrankWolfeSolver` per variant of the decomposition, the way the `BSPar`
+of a suite do with the `:Solver` of its `Block`, so that a single run
+cross-checks the variants against one another and all of them against the
+reference; the variants are vanilla, Away-step, Blended Pairwise, Away-step
+with aggregation, vanilla with the oracles in parallel, and the two that take
+the direction from a stabilized master of two and of ten pieces, the master of
+the last being a `MasterProblemBlock` solved by the `:Solver` of
+`MPBCfg-FW.txt`, which names a backend that solves QPs.
+
+Each variant is written as an override of `FWCfg.txt`, the fragment holding
+what they have in common, so that what a variant changes is the only thing its
+lines say; the reference reads `MILPCfg-FW.txt`. An override block writes the
+extra-`Configuration` slot even when it changes nothing of it, because one
+that leaves it out is read on to the end of the stream and swallows the
+`ComputeConfig` that follows it. What `intLMOObj` selects is not among the
+variants: that parameter decides whether the sub-`Block` objectives enter the
+problem at all, and not merely what the oracle is shown, so `LMOLinear` solves
+a different problem and has nothing to be compared with here.
+
+Three more shapes of the same lineup exist, and no battery rewrites a
+configuration file to select a variant. `FatherBSPar-fast.txt` keeps the
+reference and the two variants that between them walk the most of the
+machinery, Away-step with aggregation and the master problem one, for the
+instances on which a single run costs the best part of an hour;
+`FatherBSPar-fw.txt` keeps a variant alone, with nothing to compare it with,
+for the runs that only time it; `FatherBSPar-milp.txt` keeps the reference
+alone, for the same reason.
+
+Here the oracle of each unit is its `ThermalUnitDPSolver` (`TUBSCfg-DP.txt`,
+the one the rest of the suite already uses, rather than a copy of it), and a
+run of the decomposition alone takes `TUBCfg-T.txt`, the plain `T`
+formulation, which gives the identical result much faster, the oracle having
+its own dynamic programme and making no use of the abstract one.
+
 ## The scenarios of a unit commitment, and their reduction
 
 `UCScenarioGenerator` reads a unit commitment instance and writes a set of

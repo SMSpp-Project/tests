@@ -1,0 +1,83 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - MPBCfg-FW.txt - - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig for the :MILPSolver of the MasterProblemBlock out of
+# which FrankWolfeSolver takes the direction it gives the oracle when
+# intFWDirection is eDirBundleMP [see strFWMPBCfg].
+#
+# The master is a QUADRATIC problem, small and re-solved at every iteration,
+# so the backend has to be one that solves QPs: with HiGHS the run reports an
+# error at every iteration and does not converge at all, while with Gurobi it
+# does, which is why the backend is named here and not left to whichever one
+# the rest of the suite happens to use. It is asked for one thread, so that
+# the runs are comparable, and for an accuracy tighter than the one the
+# decomposition is held to, the direction resting on it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of Solver: a backend that solves QPs
+#CPXMILPSolver        #   (uncomment the available one)
+#SCIPMILPSolver
+#HiGHSMILPSolver      #   NOT this one, see above
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+3 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0 # log verbosity of the :MILPSolver
+intRelaxIntVars 1 # the master is continuous
+intMaxThread    1 # one thread: the master is small and re-solved
+                  # often, and a deterministic one makes the runs
+                  # comparable
+
+1 # number of double parameters
+
+# now all the double parameters
+dblRelAcc       1e-10 # tighter than the accuracy the
+                      # decomposition is held to
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of ComputeConfig
+
+# end of BlockSolverConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END MPBCfg-FW.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

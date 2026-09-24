@@ -1,0 +1,22 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  FatherBSPar-warm.txt - - - - - - - - - - - - -
+#
+# The meta-BlockSolverConfig of the runs that change the feasible region of a
+# sub-Block and re-solve: the decomposition keeps its active set across the
+# change [see FatherBSCfg-warm.txt].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig, i.e., a map classname --> its
+# BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+2 # the number of elements in the map
+
+AbstractBlock  *FatherBSCfg-warm.txt
+MCFBlock       *MCFBSCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END FatherBSPar-warm.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

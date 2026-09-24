@@ -63,6 +63,20 @@ for type in net goto; do
   done # seed
 done   # type
 
+# the same instances solved once as they are, with no change, by every Solver
+# of a MCFBlock (BSPar-static.txt): the two LEMON algorithms left out above,
+# and the four LEMON algorithms on SmartDigraph, which does not support the
+# changes of the arcs
+
+for type in net goto; do
+  for sz in 8_8 8_32 10_8 12_8; do
+    for h in 1 2 3 4 5; do
+      run_test "$MCFBlock_test" ${DATADIR}/nc4/${type}${sz}_${h}.nc4 \
+               -S BSPar-static.txt -k 0 -n 0
+    done
+  done
+done
+
 # the same instances, decomposed by Frank-Wolfe - - - - - - - - - - - - - - -
 # K copies of the Block become the sub-Block of a father whose Objective
 # couples them, each of them solved by its network simplex as the Linear
@@ -73,13 +87,12 @@ done   # type
 
 if [ -n "${fwexe}" ]; then
 
-  FWCFG=FW/FWCfg.txt
-  FWSAVE=$( cat "$FWCFG" )
-  trap '[ -n "$FWSAVE" ] && printf "%s\n" "$FWSAVE" > "$FWCFG"' EXIT
-  cfg_set_par "$FWCFG" intMaxThread 4
+  # the reduced lineup (FatherBSPar-fast.txt): on these instances a single run
+  # of the decomposition takes the best part of an hour, so the reference is
+  # compared with the two variants that between them walk the most of the
+  # machinery and not with all of them, the whole lineup being batch-small
+  fwpar=FatherBSPar-fast.txt
 
-  # the diagonal quadratic and the quadratic father, vanilla Frank-Wolfe
-  cfg_set_par "$FWCFG" intAlgorithm 0
   fwargs="-o 0 -k 2 -e 1"
   fw_run ${DATADIR}/nc4/goto10_8_1.nc4
   fw_run ${DATADIR}/nc4/goto10_8_2.nc4
@@ -87,18 +100,11 @@ if [ -n "${fwexe}" ]; then
   fw_run ${DATADIR}/nc4/goto10_8_1.nc4
 
   # the same, with the network simplex of LEMON as the LMO of each sub-Block
-  fwpar=BSPar-lemon.txt
+  fwpar=FatherBSPar-lemon.txt
   fwargs="-o 0 -k 2 -e 1"
   fw_run ${DATADIR}/nc4/goto10_8_1.nc4
-  unset fwpar
 
-  # the Away-step variant, which keeps an active set of atoms
-  cfg_set_par "$FWCFG" intAlgorithm 1
-  fwargs="-o 0 -k 2 -e 1"
-  fw_run ${DATADIR}/nc4/goto10_8_1.nc4
-  cfg_set_par "$FWCFG" intAlgorithm 0
-
-  cfg_set_par "$FWCFG" intMaxThread 1
+  unset fwpar fwargs
 
 fi
 

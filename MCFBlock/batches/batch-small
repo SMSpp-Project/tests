@@ -42,6 +42,24 @@ for inst in $INSTANCES; do
   done
 done
 
+# the same instances solved once as they are, with no change, by every
+# Solver of a MCFBlock (BSPar-static.txt), i.e., also by the four LEMON
+# algorithms on SmartDigraph, which creating and deleting arcs rules out
+for inst in $INSTANCES; do
+  run_test "$MCFBlock_test" "${DATADIR}/${inst}.nc4" -S BSPar-static.txt \
+           -k 0 -n 0
+done
+
+# the same instances with every change SmartDigraph takes - - - - - - - - - -
+# 31 = costs, capacities, deficits, closing and re-opening arcs, i.e. 255
+# without the creation and the deletion of arcs, which are the only changes
+# the static graph of LEMON refuses: this is what re-solves the four LEMON
+# algorithms on SmartDigraph after a change instead of only solving them once
+for inst in $INSTANCES; do
+  run_test "$MCFBlock_test" "${DATADIR}/${inst}.nc4" -S BSPar-static.txt \
+           -e 1 -k 31
+done
+
 # the same instances, decomposed by Frank-Wolfe - - - - - - - - - - - - - - -
 # K copies of the Block become the sub-Block of a father whose Objective
 # couples them, each of them solved by its network simplex as the Linear
@@ -50,14 +68,17 @@ done
 
 if [ -n "${fwexe}" ]; then
 
-  FWCFG=FW/FWCfg.txt
-  FWSAVE=$( cat "$FWCFG" )
-  trap '[ -n "$FWSAVE" ] && printf "%s\n" "$FWSAVE" > "$FWCFG"' EXIT
+  source "$(dirname "$0")/fw_lmo_solvers"
+  trap fw_lmo_cleanup EXIT
+  fw_lmo_copies "MCFSolver<RelaxIV>" "MCFSolver<MCFCplex>" \
+                "MCFLemonSolverNetworkSimplex<${LEMON}" \
+                "MCFLemonSolverCycleCanceling<${LEMON}" \
+                "MCFLemonSolverCostScaling<${LEMON}" \
+                "MCFLemonSolverCapacityScaling<${LEMON}"
 
-  # the quadratic and the diagonal quadratic father, vanilla Frank-Wolfe
-  cfg_set_par "$FWCFG" intAlgorithm 0
-  cfg_set_par "$FWCFG" intMaxAtoms  0
-  cfg_set_par "$FWCFG" intMaxThread 1
+  # the quadratic and the diagonal quadratic father: one run attaches the
+  # reference and every variant of the decomposition at once, they being in
+  # FatherBSCfg.txt, and cross-checks them against one another
   for inst in $INSTANCES; do
     for o in 0 1; do
       fwargs="-o $o -k 2 -e 1"
@@ -65,42 +86,33 @@ if [ -n "${fwexe}" ]; then
     done
   done
 
-  # the same, with the network simplex of LEMON as the LMO of each sub-Block
-  fwpar=BSPar-lemon.txt
-  for inst in $INSTANCES; do
-    for o in 0 1; do
-      fwargs="-o $o -k 2 -e 1"
-      fw_run "${DATADIR}/${inst}.nc4"
+  # the same, with each of the other Solver of a MCFBlock as the LMO of each
+  # sub-Block, i.e., RelaxIV, MCFCplex and the four LEMON algorithms; a round
+  # whose LMO this build does not have skips itself
+  for fwpar in "${FWLMO_BSPAR[@]}"; do
+    for inst in $INSTANCES; do
+      for o in 0 1; do
+        fwargs="-o $o -k 2 -e 1"
+        fw_run "${DATADIR}/${inst}.nc4"
+      done
     done
   done
-  unset fwpar
 
-  # the Away-step (1) and the BPCG (2) variants
-  fwargs="-o 1 -k 3 -e 1"
-  for a in 1 2; do
-    cfg_set_par "$FWCFG" intAlgorithm $a
+  # three sub-Block rather than two, with the network simplex of MCFClass
+  # (FatherBSPar.txt) and with that of LEMON (FatherBSPar-lemon.txt)
+  for fwpar in FatherBSPar.txt FatherBSPar-lemon.txt; do
+    fwargs="-o 1 -k 3 -e 1"
     fw_run "${DATADIR}/N3-5-0-0-0.nc4"
   done
-
-  # the active set bounded to eight atoms, i.e., with aggregation
-  cfg_set_par "$FWCFG" intAlgorithm 1
-  cfg_set_par "$FWCFG" intMaxAtoms  8
-  fw_run "${DATADIR}/N3-5-0-0-0.nc4"
-  cfg_set_par "$FWCFG" intMaxAtoms  0
-
-  # the Linear Minimization Oracle of the sub-Block run in parallel
-  cfg_set_par "$FWCFG" intAlgorithm 0
-  cfg_set_par "$FWCFG" intMaxThread 4
-  fw_run "${DATADIR}/N3-5-5-2-2.nc4"
-  cfg_set_par "$FWCFG" intMaxThread 1
+  unset fwpar
 
   # the Polyhedral father, where Frank-Wolfe has no global convergence
   # guarantee: the two copies of the problem are built, the one it solves and
   # the one where the same PolyhedralFunction lives inside a linearized
   # PolyhedralFunctionBlock that a :MILPSolver solves, and the bracket
   # [ lb , value ] has to contain the optimum
-  fwpar=BSPar-fw.txt
-  fwargs="-R BSPar-milp.txt -o 2 -k 2 -e 1"
+  fwpar=FatherBSPar-fw.txt
+  fwargs="-F FatherBSPar-milp.txt -o 2 -k 2 -e 1"
   for inst in $INSTANCES; do
     fw_run "${DATADIR}/${inst}.nc4"
   done
@@ -116,7 +128,7 @@ fi
 if [ -n "${fwmodsexe}" ]; then
   for inst in $INSTANCES; do
     for (( seed = 1 ; seed < 3 ; seed++ )); do
-      run_test "$fwmodsexe" -c FW -S BSPar-warm.txt -k 2 -e "$seed" -M 8 \
+      run_test "$fwmodsexe" -S FatherBSPar-warm.txt -k 2 -e "$seed" -M 8 \
                "${DATADIR}/${inst}.nc4"
     done
   done

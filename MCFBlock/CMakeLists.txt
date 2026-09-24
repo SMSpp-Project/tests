@@ -52,7 +52,7 @@ if (TARGET SMS++::MCFBlock)
     # monolithic :MILPSolver. Which Block is read and which :Solver are
     # attached is the configurations' business, so the same source is built on
     # the ThermalUnitBlock of the UCBlock suite; here the Oracle is a
-    # MCFSolver, and its configurations are those of FW/.
+    # MCFSolver, and its configurations are the `Father*` ones of the suite.
     if (TARGET SMS++::FrankWolfeSolver)
 
         add_executable(MCFBlock_FW_test ../fw_test.cpp ../common_utils.cpp)

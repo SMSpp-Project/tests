@@ -1,0 +1,37 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  FatherBSCfg-milp.txt - - - - - - - - - - - - -
+#
+# A BlockSolverConfig for the father AbstractBlock of the Frank-Wolfe test,
+# whose leaves are the min-cost flow networks of this suite, each of them
+# solved by a network simplex as the Linear Minimization Oracle.
+#
+# It registers the monolithic reference alone, for the runs that only time
+# it; the cross-check is FatherBSCfg.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+HiGHSMILPSolver       # the monolithic reference
+#CPXMILPSolver        #   (uncomment the available backend)
+#GRBMILPSolver
+#SCIPMILPSolver
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+# 1: the monolithic reference
+*MILPCfg-FW.txt
+
+# end of BlockSolverConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END FatherBSCfg-milp.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

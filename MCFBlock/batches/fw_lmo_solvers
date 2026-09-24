@@ -1,0 +1,41 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - fw_lmo_solvers - - - - - - - - - - - - - - -
+#
+# sourced by the batches that run FrankWolfeSolver with each Solver of a
+# MCFBlock in turn as the Linear Minimization Oracle of the sub-Block:
+#
+#   fw_lmo_copies < Solver name >...
+#
+# writes, for each Solver named, a copy of MCFBSCfg.txt, for a :MCFSolver,
+# or of MCFBSCfg-lemon.txt, for a LEMON algorithm, with its name in place of
+# the one there and a copy of FatherBSPar-lemon.txt that asks for it, and
+# puts the name of the latter, which is what fwpar takes, in the array
+# FWLMO_BSPAR;
+#
+#   fw_lmo_cleanup
+#
+# removes all the copies, and is meant to be called on exit.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+LEMON="MCFListDigraph,double,double>"
+FWLMO_TMP=fw_lmo.$$
+FWLMO_BSPAR=()
+
+fw_lmo_copies() {
+    local _s _k=${#FWLMO_BSPAR[@]}
+    for _s in "$@"; do
+        case "${_s}" in
+            MCFSolver*) sed "s/^MCFSolver<MCFSimplex>/${_s}/" MCFBSCfg.txt ;;
+            *) sed "s/^MCFLemonSolverNetworkSimplex<[^ ]*/${_s}/" \
+                   MCFBSCfg-lemon.txt ;;
+        esac > ${FWLMO_TMP}.MCF${_k}.txt
+        sed "s/MCFBSCfg-lemon.txt/${FWLMO_TMP}.MCF${_k}.txt/" \
+            FatherBSPar-lemon.txt > ${FWLMO_TMP}.BS${_k}.txt
+        FWLMO_BSPAR+=( ${FWLMO_TMP}.BS${_k}.txt )
+        _k=$((_k + 1))
+    done
+}
+
+fw_lmo_cleanup() {
+    rm -f ${FWLMO_TMP}.*
+}

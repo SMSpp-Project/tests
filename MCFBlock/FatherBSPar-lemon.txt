@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - FatherBSPar-lemon.txt - - - - - - - - - - - - -
+#
+# The meta-BlockSolverConfig of the Frank-Wolfe test with the network simplex
+# of LEMON as the Linear Minimization Oracle of each sub-Block instead of the
+# one of MCFClass: what changes is the Solver of the leaves, hence the father
+# is configured by the same file.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig, i.e., a map classname --> its
+# BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+2 # the number of elements in the map
+
+AbstractBlock  *FatherBSCfg.txt
+MCFBlock       *MCFBSCfg-lemon.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END FatherBSPar-lemon.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

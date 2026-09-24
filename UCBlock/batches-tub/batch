@@ -68,20 +68,19 @@ done
 if [ -n "${fwexe}" ]; then
 
   fwargs="-B TUBCfg-DP.txt -V p_thermal,u_thermal -o 0 -e 1"
-  FWCFG=FW/FWCfg.txt
-  FWSAVE=$( cat "$FWCFG" )
-  trap '[ -n "$FWSAVE" ] && printf "%s\n" "$FWSAVE" > "$FWCFG"' EXIT
 
-  # vanilla Frank-Wolfe on two 96-period units and on a 384-period one
-  cfg_set_par "$FWCFG" intAlgorithm 0
-  cfg_set_par "$FWCFG" dblRelAcc 1e-7
+  # the whole lineup (FatherBSPar.txt attaches the reference and every variant
+  # of the decomposition at once) on one 96-period unit, where the reference
+  # closes in reasonable time
   fw_run ${DATADIR}/96/S1ramp17_96.nc4 -k 2
+
+  # the reduced lineup on the others, the reference being a monolithic
+  # relaxation with a cut separation loop, i.e., minutes per run
+  fwpar=FatherBSPar-fast.txt
   fw_run ${DATADIR}/96/S12ramp10_96.nc4 -k 2
   fw_run ${DATADIR}/384/S1ramp1_384.nc4 -k 2
-
-  # the Away-step variant, which keeps an active set of atoms
-  cfg_set_par "$FWCFG" intAlgorithm 1
   fw_run ${DATADIR}/96/S1ramp17_96.nc4 -k 3
+  unset fwpar
 
 fi
 

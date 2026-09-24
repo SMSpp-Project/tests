@@ -59,7 +59,7 @@ int obj_type = 0;       // -o : 0 = DQuadFunction, 1 = QuadFunction, 2 = Polyhed
 double obj_scale = 1.0; // -a : scale of the (random) father objective coefficients
 long seed = 1;          // -e : random seed
 int poly_rows = 0;      // -r : number of rows of the PolyhedralFunction (0 = nvar+1)
-std::string refconf;    // -R : BlockSolverConfig for the reference (Poly test)
+std::string refconf;    // -F : BlockSolverConfig for the reference (Poly test)
 int mod_rounds = 0;     // -M : extra solve rounds, each perturbing the father
                         // (and a sub-Block) objective to exercise Modification
                         // handling (re-snapshot / re-cache on re-solve)
@@ -87,7 +87,7 @@ static bool process_specific_arg( int opt )
   case( 'e' ): Str2Sthg( optarg , seed );       return( true );
   case( 'r' ): Str2Sthg( optarg , poly_rows );  return( true );
   case( 'M' ): Str2Sthg( optarg , mod_rounds ); return( true );
-  case( 'R' ): refconf = std::string( optarg ); return( true );
+  case( 'F' ): refconf = std::string( optarg ); return( true );
   case( 'V' ): {                                 // comma-separated group names
    std::string s( optarg ) , tok;
    std::stringstream ss( s );
@@ -107,14 +107,14 @@ int main( int argc , char ** argv )
  std::set_terminate( smspp_terminate );
 
  docopt_desc = "SMS++ FrankWolfeSolver generic test.\n";
- short_opts += "k:o:a:e:r:R:V:M:";
+ short_opts += "k:o:a:e:r:F:V:M:";
  const std::vector< option > my_opts = {
    { "children" , required_argument , nullptr , 'k' } ,
    { "objtype"  , required_argument , nullptr , 'o' } ,
    { "scale"    , required_argument , nullptr , 'a' } ,
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "rows"     , required_argument , nullptr , 'r' } ,
-   { "refconf"  , required_argument , nullptr , 'R' } ,
+   { "refconf"  , required_argument , nullptr , 'F' } ,
    { "modrounds", required_argument , nullptr , 'M' } ,
    { "vargroups", required_argument , nullptr , 'V' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
@@ -124,7 +124,7 @@ int main( int argc , char ** argv )
          "  -a, --scale <s>      scale of the random father objective [1]\n"
          "  -e, --seed <n>       random seed [1]\n"
          "  -r, --rows <m>       PolyhedralFunction rows [nvar+1]\n"
-         "  -R, --refconf <f>    reference (MILP) BlockSolverConfig, Poly test\n"
+         "  -F, --refconf <f>    reference (MILP) BlockSolverConfig, Poly test\n"
          "  -M, --modrounds <n>  extra re-solve rounds, each perturbing the\n"
          "                       father and a sub-Block objective (tests the\n"
          "                       Modification handling) [0]\n"

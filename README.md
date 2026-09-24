@@ -94,7 +94,12 @@ the `test` directory of the module itself.
   its equivalent `Solver` (the core DP, the `BranchAndXSolver` in each
   exploration mode, with the greedy relaxation bracketing) against a standard
   `MILPSolver`, both on random instances and against the published optima of
-  the curated Pisinger benchmark.
+  the curated Pisinger benchmark. `batch-pisinger` also runs the generic
+  Frank-Wolfe tester on `K` copies of a knapsack, each with its dynamic
+  programme as the Linear Minimization Oracle: no compact formulation
+  describes the convex hull of a knapsack, so what the decomposition computes
+  is a lower bound on the monolithic optimum and not the same number, which is
+  what that battery checks.
 
 - [`CapacitatedFacilityLocationBlock`](CapacitatedFacilityLocationBlock), a tester
   that can be used to test several things together within a slope scaling
@@ -119,10 +124,13 @@ the `test` directory of the module itself.
   Linear Minimization Oracle) and by a monolithic `:MILPSolver`, cross-checking
   the two optima; here the leaves are `MCFBlock` and their oracle a
   `MCFSolver`, and a second tester runs the same comparison while the feasible
-  region of a sub-`Block` changes. Their configurations are in `FW` and their
-  runs are in the batteries of the instances they are posed on, `batch-small`
-  being the fast one, which walks every code path of the decomposition on the
-  small instances of `MCFClassSolver`.
+  region of a sub-`Block` changes. Their configurations are the `Father*` ones
+  of the suite, flat beside those of every other `:Solver`, and their runs are
+  in the batteries of the instances they are posed on, `batch-small` being the
+  fast one, which walks every code path of the decomposition on the small
+  instances of `MCFClassSolver`. A run attaches the reference and one
+  `FrankWolfeSolver` per variant of the decomposition at once, and cross-checks
+  the variants against one another as well.
 
 - [`MMCFBlock`](MMCFBlock),
   a tester which provides  initial tests for `LagrangianDualSolver`,
@@ -153,7 +161,8 @@ the `test` directory of the module itself.
   `:MILPSolver`, the generic Frank-Wolfe tester (`fw_test.cpp`) on `K` copies
   of the unit, each with its Dynamic Programming `:Solver` as the Linear
   Minimization Oracle, against the perspective bound a `:MILPSolver` computes
-  on the monolithic relaxation; its configurations are in `FW`. The same suite
+  on the monolithic relaxation, with the same set of configurations, named the
+  same way, as the other two suites this tester is built in. The same suite
   holds the generator of the scenarios of a unit commitment and the battery
   that reduces them, `batches/batch-scenred`, which runs it together with the
   tester of `ScenarioReductionSolver`.

@@ -76,6 +76,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   regime of a small instance re-solved many times, over the hard instances of
   Jooken as well, and the benchmarks of the coverage declare the greedy
   relaxation each of their configurations attaches
+- the Frank-Wolfe decomposition is posed on the `BinaryKnapsackBlock` of that
+  suite as well, in `batch-pisinger`, with the dynamic programme of each
+  knapsack as the Linear Minimization Oracle: since no compact formulation
+  describes the convex hull of a knapsack, what the decomposition computes is
+  a lower bound on the monolithic optimum and not the same number, so the
+  battery declares the variants relaxations (`-R`) and holds them to nothing
+  (`-E`), so what is checked is that they agree with one another and that none
+  of them passes the bound. The instances are the netCDF ones the `bk2nc4` of
+  the module writes out of the curated archive the rest of that battery reads
+
 - `UCBlock_test --scale`, which checks the scale factor of a unit, i.e., the
   number of copies of it that a `UCBlock` holds, on two instances the tester
   writes itself, one carrying a thermal unit and one a nuclear one, each of
@@ -211,6 +221,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   names the other suites give them, the inner Solver of the Lagrangian is
   called `BundleSolver`, which is the name the factory has, and the
   `BlockConfig` files are in the format of now
+- a run of the Frank-Wolfe tester attaches the reference and one
+  `FrankWolfeSolver` per variant of the decomposition at once, cross-checking
+  the variants against one another as well, the way the `BSPar` of a suite do
+  with the `Solver` of its `Block`; the variants used to be run one at a time
+  by a battery that rewrote the `ComputeConfig` file between them, which is
+  gone together with the `trap` that put the file back. Each variant is an
+  override of the shared fragment, and an override block writes the
+  extra-`Configuration` slot even when it changes nothing of it: one that
+  leaves it out is read on to the end of the stream and swallows the
+  `ComputeConfig` that follows it, which is what made the Solver of every
+  variant but the first run with its parameters at their default
+
+- the configurations of the Frank-Wolfe tester live in the suite, flat beside
+  those of every other `Solver`, rather than in a directory of their own that
+  a battery selected with `-c`: they are the `Father*` files, the same set
+  with the same names in each of the three suites the tester is built in
+
+- the reference `BlockSolverConfig` of the Polyhedral path of the Frank-Wolfe
+  tester is `-F`, `-R` going back to what it is everywhere else, i.e. the
+  declaration of which `Solver` solve a relaxation of the problem
+
 - the four sector-coupled instances `batch-pypsa` walks are written by the
   conversion as it stands, where an extendable asset with no upper bound keeps
   the infinite design cap it has instead of a finite number standing in for it:

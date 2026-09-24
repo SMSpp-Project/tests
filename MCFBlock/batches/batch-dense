@@ -71,18 +71,17 @@ done   # type
 
 if [ -n "${fwexe}" ]; then
 
-  FWCFG=FW/FWCfg.txt
-  FWSAVE=$( cat "$FWCFG" )
-  trap '[ -n "$FWSAVE" ] && printf "%s\n" "$FWSAVE" > "$FWCFG"' EXIT
-  cfg_set_par "$FWCFG" intMaxThread 4
-
-  # the diagonal quadratic father, vanilla Frank-Wolfe: one run, the
-  # instances of this battery carrying some 65 thousand arcs each
-  cfg_set_par "$FWCFG" intAlgorithm 0
+  # the reduced lineup, the instances of this battery carrying some 65
+  # thousand arcs each [see batch, and batch-small for the whole of it]
+  fwpar=FatherBSPar-fast.txt
   fwargs="-o 0 -k 2 -e 1"
   fw_run ${DATADIR}/nc4/goto10_64_1.nc4
 
-  cfg_set_par "$FWCFG" intMaxThread 1
+  # the same, with the network simplex of LEMON as the LMO of each sub-Block
+  fwpar=FatherBSPar-lemon.txt
+  fw_run ${DATADIR}/nc4/goto10_64_1.nc4
+
+  unset fwpar fwargs
 
 fi
 

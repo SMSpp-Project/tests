@@ -87,7 +87,7 @@ if (TARGET SMS++::UCBlock)
     # perspective bound a monolithic :MILPSolver gives, which is what the
     # batteries of the single units check on a few of them. The tester is the
     # generic one (../fw_test.cpp), the same the MCFBlock suite builds on its
-    # own Block, and its configurations are those of FW/.
+    # own Block, and its configurations are the `Father*` ones of the suite.
     if (TARGET SMS++::FrankWolfeSolver)
         add_executable(UCBlock_FW_test ../fw_test.cpp ../common_utils.cpp)
         target_include_directories(UCBlock_FW_test PRIVATE ..)

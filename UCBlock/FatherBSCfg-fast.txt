@@ -1,0 +1,132 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  FatherBSCfg-fast.txt - - - - - - - - - - - - -
+#
+# A BlockSolverConfig for the father AbstractBlock of the Frank-Wolfe test,
+# whose leaves are the thermal units of this suite, each of them solved by a
+# dynamic programme as the Linear Minimization Oracle.
+#
+# It registers the monolithic reference and, of the variants, the two that
+# between them walk the most of the machinery: Away-step with aggregation,
+# the only one that merges atoms and the one that contains the plain active
+# set, and the direction taken from the MasterProblemBlock, the only one that
+# builds and solves a master problem. The whole lineup is FatherBSCfg.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+3 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+HiGHSMILPSolver       # the monolithic reference
+#CPXMILPSolver        #   (uncomment the available backend)
+#GRBMILPSolver
+#SCIPMILPSolver
+FrankWolfeSolver      # 2: Away-step, aggregating
+FrankWolfeSolver      # 3: master of 10 pieces
+
+3 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+# 1: the monolithic reference
+*MILPCfg-FW.txt
+
+# 2: Away-step with the active set bounded, i.e., with aggregation: the
+#    least active atoms are merged when they are more than the cap
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2 # number of integer parameters
+
+# now all the integer parameters
+intAlgorithm    1 # Away-step
+intMaxAtoms     8 # the cap that makes it aggregate
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# the "extra" Configuration slot, which this block does not change
+# but has to write all the same: an override block that leaves it
+# out is read on to the end of the stream, and so swallows whatever
+# follows it in the enclosing file, i.e. the next ComputeConfig
+* # [none]
+
+# 3: the same direction taken from a master of ten pieces, which is a
+#    MasterProblemBlock solved by the Solver of MPBCfg-FW.txt
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+4 # number of integer parameters
+
+# now all the integer parameters
+intAlgorithm    0 # vanilla
+intMaxAtoms     0 # no active set to bound
+intFWDirection  2 # eDirBundleMP
+intFWBundleSize 10 # the pieces the master keeps
+
+1 # number of double parameters
+
+# now all the double parameters
+dblFWt          1 # how much the master is stabilized
+
+1 # number of string parameters
+
+# now all the string parameters
+strFWMPBCfg     MPBCfg-FW.txt # the Solver of the master problem
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# the "extra" Configuration slot, which this block does not change
+# but has to write all the same: an override block that leaves it
+# out is read on to the end of the stream, and so swallows whatever
+# follows it in the enclosing file, i.e. the next ComputeConfig
+* # [none]
+
+# end of BlockSolverConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END FatherBSCfg-fast.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
