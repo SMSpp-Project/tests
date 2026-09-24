@@ -411,6 +411,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the two configurations of the suite of `InvestmentBlock` asked HiGHS for a
+  feasibility tolerance of `1e-9`, which is absolute, on instances whose
+  objective is of the order of `1e11`, i.e., beyond what double precision
+  holds: HiGHS declared the model optimal and its primal solution infeasible
+  at the same time, which reaches the caller as a solve that went well with
+  no solution in it, and the `InvestmentFunction` turned that into an error
+  that stopped the bundle. They ask for `1e-7`, the default, and
+  `batches/batch-pypsa` passes
+
+
 - `LukFi_test` stops with an error when the `BlockSolverConfig` it reads
   attaches no `Solver` to the `LukFiBlock`, e.g. because the file is empty or
   malformed, rather than crashing on the first element of an empty list
