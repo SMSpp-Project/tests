@@ -11,41 +11,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - a batch of `LagBFunction` over the easy components, which nothing was
   exercising
+
 - a batch can set an algorithmic parameter in a `ComputeConfig` and time each
   run, so that a sweep over the values of one parameter is a batch and not a
   script written for the occasion; the two `batch-aggr` take the values of
   `intCmpAggrRule` that way
+
 - `batch-k` of the multicommodity suite, the knapsack formulation asked for
   as a structure, and `MMCFBlock_test` links the ML variant of the
   BundleSolver, which `batchML` attaches
+
 - a driver that runs the batteries backing the validation claim of the
   dynamic programming Solver of the thermal units, and the batteries require
   again the fixture that extracts the instances they read
+
 - the batteries of `UCBlock` run the instances once per value of the rule
   that forms the groups of the parallel inner loop, and cross-check the
   academic and plan4res families over the exact Lagrangian chain; in the AC
   family the Lagrangian dual is declared a relaxation, its point being a
   convex combination, and the QCP sub-problems give the duals that chain
   needs
+
 - the SVM suite cross-checks LIBLINEAR on the formulations that LIBSVM
   cannot express, exercises the exact path and the shrinking, which nothing
   was running, and compares the Lagrangian dual with a `SMOSolver` on each
   chunk
+
 - `batch-ec` runs the Benders form of the energy community instances, the
   form the tester assembles giving the master a cost for every design
   Variable and keeping integer, in the master, a design that counts modules;
   the convex regime of the Benders Solver has its own cross-check
   configuration
+
 - a batch for an `InvestmentBlock` wrapping a whole stochastic Block, two-
   stage or multi-stage, whose instances follow the trees they are built over;
   the inner Solver is asked for homogeneous dual directions, which the HiGHS
   variant cannot give, and the configuration says so where it happens
+
 - the batteries of `BinaryKnapsackBlock` cover what `BranchAndXSolver` does:
   the lazy bounding protocol in every serial exploration strategy, the
   reoptimization with one Solver per strategy, the negative weights and the
   regime of a small instance re-solved many times, over the hard instances of
   Jooken as well, and the benchmarks of the coverage declare the greedy
   relaxation each of their configurations attaches
+
 - `UCBlock_test --scale`, which checks the scale factor of a unit, i.e., the
   number of copies of it that a `UCBlock` holds, on two instances the tester
   writes itself, one carrying a thermal unit and one a nuclear one, each of
@@ -143,20 +152,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the inner Solver of the `BendersBFunction` suite is Gurobi, the one the
   image of the pipeline carries, so that the suite runs where it is run and
   not only where a licence of another solver happens to be
+
 - the comparison of the three forms of a two-stage stochastic investment
   problem lives with the suite of the Block it is posed on, and not with the
   one of a Solver: the monolithic form, the Lagrangian one and the Benders
   one are configured side by side there
+
 - the makefile asks for `-O3 -DNDEBUG` and nothing else, the macro of the
   patch for `boost::any` on macOS having no reason to be there since there is
   no `boost::any` left in the core
+
 - the tester of the copy of an `AbstractBlock` and the one of the reference
   of the multicommodity suite are named after what they are, the core having
   a target called as the first one was
+
 - a suite is guarded on the modules it is labelled with, and the benchmark of
   BundleSolverML is skipped when its modules are not in the build, so that a
   build without a module has no test that cannot run rather than a test that
   fails
+
 - the batteries of the Lagrangian dual of the unit commitment fit the three
   hours a job is given: the academic families are sampled in CI, the
   plan4res one is run as a smoke test, and the metabatch is not run there,
@@ -164,18 +178,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the energy community under the proximal heuristic are skipped in CI,
   where the objective of a thermal unit inside a LagBFunction is the known
   bug
+
 - the batteries of the scenario reduction read their executables and their
   directories from the arguments instead of the paths of whoever wrote them,
   the tester is named after the Solver it drives, and the folder of the
   facility location is named after the Block it holds
+
 - the tester of `BendersBFunction` reports and counts its checks instead of
   aborting at the first one that fails, so that one run says how many of them
   hold and not only that one does not
+
 - the comparison of the two Benders decompositions of a facility location
   instance lives with the suite of that Block, its configurations take the
   names the other suites give them, the inner Solver of the Lagrangian is
   called `BundleSolver`, which is the name the factory has, and the
   `BlockConfig` files are in the format of now
+
 - the four sector-coupled instances `batch-pypsa` walks are written by the
   conversion as it stands, where an extendable asset with no upper bound keeps
   the infinite design cap it has instead of a finite number standing in for it:
@@ -476,6 +494,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - CapacitatedFacilityLocation tester.
+
 - Code to test different formulations of some problem.
 
 ### Changed
@@ -493,6 +512,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ThermalUnitBlock_Solver tester.
+
 - BinaryKnapsackBlock tester.
 
 ### Changed
@@ -544,6 +564,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for concurrency.
+
 - Support for new configuration framework.
 
 ### Changed
