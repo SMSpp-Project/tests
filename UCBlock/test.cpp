@@ -682,8 +682,7 @@ static void release( UCBlock * uc )
 static int test( void )
 {
  for( const auto & name : SolverNames )
-  if( auto solver = Solver::new_Solver( name ) ) {
-   delete solver;
+  if( Solver::has_Solver( name ) ) {
    solver_name = name;
    break;
    }

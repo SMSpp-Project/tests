@@ -387,6 +387,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the suites that try each :MILPSolver in turn skipped the ones the build does
+  not have by constructing them, while `Solver::new_Solver()` throws rather
+  than returning `nullptr` on a name the factory does not hold, so
+  `MILPSolver_test/groups` and `UCBlock_test/pollutant` died with
+  `CPXMILPSolver not present in Solver factory` wherever CPLEX is not
+  installed; they ask `Solver::has_Solver()` first, and
+  `AbstractBlock_mirror_test`, which named CPXMILPSolver and nothing else,
+  takes the first :MILPSolver the factory holds unless one is named on the
+  command line
+
 - the tester of `ThermalUnitBlock` compares the `Solution` of a Solver with
   the state it left in the Variable once that is completed from `(p, u)` as
   the `Solution` is when it is written: with the perspective cuts the epigraph
