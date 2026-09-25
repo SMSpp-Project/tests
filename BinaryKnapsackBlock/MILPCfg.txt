@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - -
 #
-# A ComputeConfig for a :MILPSolver solving a BinaryKnapsackBlock to the exact
-# integer optimum (the reference value of the cross-checks, see BSPar*).
-# Factored as a fragment shared by BSPar.txt and BSPar-mixed.txt.
-#
-#   Donato Meoli
+# A ComputeConfig for a :MILPSolver solving a BinaryKnapsackBlock to the
+# exact integer optimum (the reference value of the cross-checks, see
+# BSPar*). Factored as a fragment shared by BSPar.txt and BSPar-mixed.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -48,5 +46,5 @@ dblRelAcc                            1e-08
 # end of ComputeConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End MILPCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END MILPCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

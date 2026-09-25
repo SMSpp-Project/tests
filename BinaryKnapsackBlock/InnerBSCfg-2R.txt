@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - InnerBSCfg-2R.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - InnerBSCfg-2R.txt - - - - - - - - - - - - - -
 #
 # Two-Solver BlockSolverConfig: TWO GreedyRelaxationBinaryKnapsackSolver as
 # the inner relaxations of a BranchAndXSolver, used only to exercise the
@@ -90,5 +90,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - End InnerBSCfg-2R.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END InnerBSCfg-2R.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

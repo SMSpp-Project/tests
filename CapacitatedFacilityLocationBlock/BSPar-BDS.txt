@@ -1,13 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block having a single
 # BendersDecompositionSolver attached, in the convex regime: the master is
 # solved by a bundle-type Solver, while each subproblem and the master are
 # configured through the referenced BlockSolverConfig files.
-#
-#   Antonio Frangioni
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -64,10 +61,10 @@ str_Mstr_BSCfg  BDSMCfg.txt  # BlockSolverConfig of the master
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,13 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-BDS-MILP.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-BDS-MILP.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block having a single
 # BendersDecompositionSolver attached, in the MILP regime: the master is solved
 # by a :MILPSolver with Benders cuts added as lazy constraints, while each
 # subproblem and the master are configured via the referenced files.
-#
-#   Antonio Frangioni
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -64,10 +61,10 @@ str_Mstr_BSCfg  BDSMCfg-MILP.txt # BlockSolverConfig of the master
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BSPar-BDS-MILP.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-BDS-MILP.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

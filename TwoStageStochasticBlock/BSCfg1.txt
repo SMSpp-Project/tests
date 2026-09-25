@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSCfg1.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSCfg1.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for any Block that is a simple
 # MILP / MIQP / MIQCQP and can be solved by a :MILPSolver
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -38,7 +36,8 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
                                       # disable presolve for reproducibility
-#CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme numerical caution
+#CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme
+                                      # numerical caution
 
 # All specific GUROBI parameter (uncomment based on Solver)
 Presolve      0   # 0 = off, 1 = conservative, 2 = aggressive (default -1)
@@ -74,5 +73,5 @@ dblRelAcc       1e-8 # relative accuracy required to solution
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -END BSCfg1.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSCfg1.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

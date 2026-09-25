@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-lazy.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-lazy.txt - - - - - - - - - - - - - - -
 #
 # Cross-check BlockSolverConfig exercising the LAZY bounding protocol of the
 # BranchAndXSolver (intBoundingProtocol = 1, which evaluates a node when it is
@@ -7,8 +7,6 @@
 # reference plus the BX in each of its serial exploration strategies, all of
 # which must reach the same optimum as with the (default) eager protocol,
 # since when a node is evaluated changes nothing of what is explored.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -171,5 +169,5 @@ intSolveMethod 1
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -End BSPar-lazy.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-lazy.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

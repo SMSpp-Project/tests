@@ -1,6 +1,12 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar1.txt - - - - - - - - - - - - - - - -
+#
 # BlockSolverConfig for B1: GRBMILPSolver on the LP relaxation.
 # Plain LP (intRelaxIntVars = 1), no user cuts (the natural formulation
 # has the full x_{ij} so no separation is needed).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig
 
@@ -27,3 +33,7 @@ dblRelAcc 1e-7
 0  # vstr
 
 *  # extra
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar1.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

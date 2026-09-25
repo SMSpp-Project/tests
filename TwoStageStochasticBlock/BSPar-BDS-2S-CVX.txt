@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - BSPar-BDS-2S-CVX.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-BDS-2S-CVX.txt - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig registering two Solver on the
 # Benders form of a two-stage stochastic instance, i.e., on the Block the
@@ -17,9 +17,6 @@
 # end of each compute() [int_BDSlv_Restore]: it does not read the Block, it
 # restructures it, and while that lasts the problem the other Solver would
 # find is not the one it was attached to.
-#
-#   Antonio Frangioni
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -82,7 +79,7 @@ dblRelAcc      1e-9  # relative accuracy required to solution
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -130,10 +127,10 @@ str_Mstr_BSCfg  BDSMCfg-INV.txt   # BlockSolverConfig of the master
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - END BSPar-BDS-2S-CVX.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-BDS-2S-CVX.txt - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

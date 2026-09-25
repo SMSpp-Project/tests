@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-bx-dive.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-bx-dive.txt - - - - - - - - - - - - - -
 #
 # Single-exact-solver BlockSolverConfig: the greedy relaxation (which brackets
 # the optimum) plus the BranchAndXSolver exploring best-first with depth-first
@@ -8,8 +8,6 @@
 # (batch-jooken and batch-pisinger-large). The inner relaxation (the greedy
 # leaf) is set by the shared BX-baseCfg.txt; only the exploration mode is
 # overridden here via the '*BX-baseCfg.txt +' cascade.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -67,5 +65,5 @@ intSolveMethod 3  # best-first with depth-first dives [see SolveMethod]
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - End BSPar-bx-dive.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-bx-dive.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

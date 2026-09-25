@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - InnerBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  InnerBSCfg.txt - - - - - - - - - - - - - - -
 #
 # Single-Solver BlockSolverConfig: the inner GreedyRelaxationBinaryKnapsackSolver
 # (continuous knapsack relaxation + branching) that BranchAndXSolver
@@ -55,5 +55,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - End InnerBSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END InnerBSCfg.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
