@@ -94,10 +94,11 @@
  * by range and by subset, change the rows of the attached Solver; on A2
  * scaling a unit with the Solver attached gives the optimum of the scaled
  * instance read from scratch, also when the unit is held by a LagBFunction
- * as a LagrangianDualSolver does, and scaling it with a LagrangianDualSolver
- * attached (whose ComputeConfig is the LDCfg.txt of the batches) gives the
- * Lagrangian dual of the instance scaled before the Solver is; on S scaling
- * the battery gives the expected optimum. Finally, an instance with inconsistent data
+ * as a LagrangianDualSolver does, and with a LagrangianDualSolver attached
+ * (whose ComputeConfig is the LDCfg.txt of the batches, with a tighter
+ * threshold) the Lagrangian dual gives that same optimum, whether the unit is
+ * scaled before the Solver is attached or after; on S scaling the battery
+ * gives the expected optimum. Finally, an instance with inconsistent data
  * must be refused by UCBlock::deserialize() in five ways: two zones and no
  * PollutantZones, a PollutantRho of the wrong size, a
  * TotalNumberPollutantZones that is not the sum of NumberPollutantZones, a
@@ -826,11 +827,13 @@ static int test( void )
   * LagBFunction only the dual pairs of the relaxed constraints its sub-Block
   * appears in [see intSparseLagPairs]: scaling a unit rewrites coefficients
   * of relaxed rows, and each change has to reach the Lagrangian term of the
-  * right LagBFunction. The unit scaled with the Solver attached must give
-  * the value of the unit scaled before the Solver is, up to the relative
-  * accuracy of the Bundle. The ComputeConfig of the LagrangianDualSolver is
-  * the LDCfg.txt of the batches, which the test is run next to [see
-  * CMakeLists.txt]. */
+  * right LagBFunction. The instance being continuous, the Lagrangian dual is
+  * its optimum, 3150 with the unit scaled, whether it is scaled before the
+  * Solver is attached or after. The ComputeConfig of the LagrangianDualSolver
+  * is the LDCfg.txt of the batches, which the test is run next to [see
+  * CMakeLists.txt], with a tighter threshold on the residual: the one of the
+  * batches stops the Bundle some 6% away from the optimum, at a value that
+  * does not change with the scale, and the check would not see it. */
  {
   // the value of the Lagrangian dual of A2 with unit 1 scaled by 0.25,
   // before the LagrangianDualSolver is attached or after
@@ -839,6 +842,7 @@ static int test( void )
 				     Configuration::deserialize( "LDCfg.txt" ) );
    if( ! cc )
     return( std::numeric_limits< double >::quiet_NaN() );
+   cc->set_par( "dblNZEps" , 1e-8 );
    auto uc = load( ( dir / "A2.nc4" ).string() );
    if( ! after )
     uc->get_unit_block( 1 )->scale( 0.25 , eNoMod , eNoMod );
@@ -862,9 +866,11 @@ static int test( void )
 
   const auto before = lagrangian( false );
   const auto after = lagrangian( true );
-  check( std::abs( after - before ) <= 1e-5 * std::abs( before ) ,
+  check( ( std::abs( before - 3150 ) <= 1e-5 * 3150 ) &&
+         ( std::abs( after - 3150 ) <= 1e-5 * 3150 ) ,
          "scaled unit with a LagrangianDualSolver attached: " +
-         std::to_string( after ) + " == " + std::to_string( before ) );
+         std::to_string( after ) + " and, scaled before, " +
+         std::to_string( before ) + " == 3150" );
   }
 
  // B- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

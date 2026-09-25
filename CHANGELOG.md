@@ -11,9 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `UCBlock_test --pollutant` scales a unit with a `LagrangianDualSolver`
   attached, whose `LagBFunction` hold only the dual pairs of the rows their
-  sub-Block is in, and checks that it gives the Lagrangian dual of the unit
-  scaled before the Solver is; the test is run next to the configurations of
-  the batches, whose `LDCfg.txt` it reads
+  sub-Block is in, and checks that the Lagrangian dual is the optimum of the
+  scaled instance, as it is when the unit is scaled before the Solver is
+  attached; the test is run next to the configurations of the batches, whose
+  `LDCfg.txt` it reads with a tighter threshold on the residual
 
 - `TwoStageStochasticBlock/batches/batch-mmcf`: a stochastic multicommodity
   network design problem, i.e., a `TwoStageStochasticBlock` whose scenarios
