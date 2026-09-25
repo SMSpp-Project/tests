@@ -709,8 +709,8 @@ int main( int argc , char **argv )
    exit( 1 );
    }
 
-  bsc1->apply( B1 );
-  bsc1->clear();
+  // the Solver this build does not have are left out, with a warning
+  s_config_Block( B1 , bsc1 , "BSPar1.txt" );
 
   if( B1->get_registered_solvers().empty() ) {
    cout << endl << "no Solver registered to B1!" << endl;
@@ -733,8 +733,8 @@ int main( int argc , char **argv )
    exit( 1 );
    }
 
-  bsc2->apply( B2 );
-  bsc2->clear();
+  // the Solver this build does not have are left out, with a warning
+  s_config_Block( B2 , bsc2 , "BSPar2.txt" );
 
   if( B2->get_registered_solvers().empty() ) {
    cout << endl << "no Solver registered to B2!" << endl;

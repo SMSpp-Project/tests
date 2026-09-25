@@ -627,6 +627,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the tester of `CapacitatedFacilityLocationBlock` applied `BSPar1.txt` and
+  `BSPar2.txt` by itself, so that the `Solver` this build does not have were
+  not left out as the other testers leave them [see `s_config_Block()`], and
+  a run died on `MCFSolver<MCFCplex> not present in Solver factory` wherever
+  CPLEX is not there, the pipeline included
+
 - `InvestmentBlock/MPBCfg.txt` leaves the presolve of the master at its
   default: with it off the master of a design over several extendable lines
   ends in "Bundle::FormD: unrecoverable MP failure"
