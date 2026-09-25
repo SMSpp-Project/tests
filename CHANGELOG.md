@@ -202,6 +202,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the Lagrangian duals of `TwoStageStochasticBlock` declare the residual
+  zero at `1e-6` rather than `1e-2` (`LDCfg.txt`, which every one of them
+  includes): with `1e-2` the bundle stopped with a dual value up to 1.6%
+  below the optimal one and bounds that both lay below it, whence the cut
+  of `BendersDecompositionSolver` over such a subproblem was never tight and
+  its loop repeated it
+
 - `SMS++/LagBFunction/TPPar.txt` asks HiGHS for feasibility tolerances of
   `1e-7`, the default, rather than `1e-9`: the tolerances are absolute, and
   `1e-9` goes beyond what double precision holds as soon as the objective
