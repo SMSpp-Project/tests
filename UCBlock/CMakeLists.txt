@@ -35,10 +35,13 @@ if (TARGET SMS++::UCBlock)
 
     smspp_install(UCBlock_test)
 
-    # the pollutant budget constraints, on instances the tester writes itself
+    # the pollutant budget constraints, on instances the tester writes itself;
+    # it is run here for the ComputeConfig of the LagrangianDualSolver it
+    # attaches to one of them, which is that of the batches
     if (TARGET SMS++::MILPSolver)
         add_test(NAME UCBlock_test/pollutant
-                 COMMAND UCBlock_test --pollutant)
+                 COMMAND UCBlock_test --pollutant
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 
     # the scale factor of a unit, on instances the tester writes itself; the

@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `UCBlock_test --pollutant` scales a unit with a `LagrangianDualSolver`
+  attached, whose `LagBFunction` hold only the dual pairs of the rows their
+  sub-Block is in, and checks that it gives the Lagrangian dual of the unit
+  scaled before the Solver is; the test is run next to the configurations of
+  the batches, whose `LDCfg.txt` it reads
+
 - `TwoStageStochasticBlock/batches/batch-mmcf`: a stochastic multicommodity
   network design problem, i.e., a `TwoStageStochasticBlock` whose scenarios
   are `MMCFBlock` with one knapsack per arc, written by `mmcf_tssb_gen` out

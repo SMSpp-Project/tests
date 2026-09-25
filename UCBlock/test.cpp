@@ -94,8 +94,10 @@
  * by range and by subset, change the rows of the attached Solver; on A2
  * scaling a unit with the Solver attached gives the optimum of the scaled
  * instance read from scratch, also when the unit is held by a LagBFunction
- * as a LagrangianDualSolver does, and on S scaling the battery gives the
- * expected optimum. Finally, an instance with inconsistent data
+ * as a LagrangianDualSolver does, and scaling it with a LagrangianDualSolver
+ * attached (whose ComputeConfig is the LDCfg.txt of the batches) gives the
+ * Lagrangian dual of the instance scaled before the Solver is; on S scaling
+ * the battery gives the expected optimum. Finally, an instance with inconsistent data
  * must be refused by UCBlock::deserialize() in five ways: two zones and no
  * PollutantZones, a PollutantRho of the wrong size, a
  * TotalNumberPollutantZones that is not the sum of NumberPollutantZones, a
@@ -820,6 +822,51 @@ static int test( void )
   release( uc );
   }
 
+ /* A2 with a LagrangianDualSolver attached, which by default gives each
+  * LagBFunction only the dual pairs of the relaxed constraints its sub-Block
+  * appears in [see intSparseLagPairs]: scaling a unit rewrites coefficients
+  * of relaxed rows, and each change has to reach the Lagrangian term of the
+  * right LagBFunction. The unit scaled with the Solver attached must give
+  * the value of the unit scaled before the Solver is, up to the relative
+  * accuracy of the Bundle. The ComputeConfig of the LagrangianDualSolver is
+  * the LDCfg.txt of the batches, which the test is run next to [see
+  * CMakeLists.txt]. */
+ {
+  // the value of the Lagrangian dual of A2 with unit 1 scaled by 0.25,
+  // before the LagrangianDualSolver is attached or after
+  const auto lagrangian = [ & ]( bool after ) {
+   auto cc = dynamic_cast< ComputeConfig * >(
+				     Configuration::deserialize( "LDCfg.txt" ) );
+   if( ! cc )
+    return( std::numeric_limits< double >::quiet_NaN() );
+   auto uc = load( ( dir / "A2.nc4" ).string() );
+   if( ! after )
+    uc->get_unit_block( 1 )->scale( 0.25 , eNoMod , eNoMod );
+   BlockSolverConfig bsc( 1 );
+   bsc.add_ComputeConfig( "LagrangianDualSolver" , cc );
+   bsc.apply( uc );
+   if( after )
+    uc->get_unit_block( 1 )->scale( 0.25 , eModBlck , eModBlck );
+   auto solver = static_cast< CDASolver * >(
+                                    uc->get_registered_solvers().front() );
+   const auto status = solver->compute( false );
+   const auto v = ( ( status == Solver::kOK ) ||
+                    ( status == Solver::kLowPrecision ) ) ?
+                  solver->get_var_value() :
+                  std::numeric_limits< double >::quiet_NaN();
+   bsc.clear();
+   bsc.apply( uc );
+   delete uc;
+   return( v );
+   };
+
+  const auto before = lagrangian( false );
+  const auto after = lagrangian( true );
+  check( std::abs( after - before ) <= 1e-5 * std::abs( before ) ,
+         "scaled unit with a LagrangianDualSolver attached: " +
+         std::to_string( after ) + " == " + std::to_string( before ) );
+  }
+
  // B- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  {
   Instance B;
@@ -1427,8 +1474,9 @@ int main( int argc , char ** argv )
  // override the default terminate handler to print the exception message
  std::set_terminate( smspp_terminate );
 
- // the checks of the pollutant budget constraints need no instance and no
- // Configuration: they write their own instances [see the file comment]
+ // the checks of the pollutant budget constraints need no instance: they
+ // write their own [see the file comment], and only read the ComputeConfig
+ // of the LagrangianDualSolver from the directory they are run in
  if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--pollutant" ) )
   return( pollutant::test() );
 
