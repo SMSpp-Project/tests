@@ -42,6 +42,9 @@ if (TARGET SMS++::UCBlock)
         add_test(NAME UCBlock_test/pollutant
                  COMMAND UCBlock_test --pollutant
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        add_test(NAME UCBlock_test/thermal
+                 COMMAND UCBlock_test --thermal
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 
     # the scale factor of a unit, on instances the tester writes itself; the

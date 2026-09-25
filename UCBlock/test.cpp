@@ -23,6 +23,19 @@
  * repeatedly randomly modified and re-solved several times, but this is not
  * done yet.
  *
+ * Called as UCBlock_test --thermal, with no other argument, the tester checks
+ * the setters of ThermalUnitBlock on an instance it writes itself: eight time
+ * instants of demand, two thermal units with ramps, start-up and shut-down
+ * limits, minimum up and down times and different initial conditions, and a
+ * SlackUnitBlock. For each formulation of the units (3bin, T, pt, DP, SU, SD,
+ * SUSD, and 3bin with the perspective cuts) and for each setter of the data
+ * of a unit, by range and by subset, the instance is solved, the data are
+ * changed with the :MILPSolver attached and the instance is solved again;
+ * this optimum must be that of the changed instance written by serialize()
+ * and read from scratch. Changing the initial up/down time changes the
+ * structure of the formulation, and set_init_updown_time() must refuse it
+ * once the Variable have been generated.
+ *
  * Called as UCBlock_test --pollutant, with no other argument, the tester
  * instead checks the pollutant budget constraints of UCBlock.
  *
@@ -185,6 +198,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <filesystem>
+#include <functional>
 #include <random>
 
 #include <unistd.h>
@@ -1473,6 +1487,245 @@ static int test( void )
 
 }  // end( namespace scaling )
 
+
+/*--------------------------------------------------------------------------*/
+/*---------------- CHECK OF THE SETTERS OF THE THERMAL UNITS ---------------*/
+/*--------------------------------------------------------------------------*/
+
+namespace thermal {
+
+/// the formulations of ThermalUnitBlock, as in its BlockConfig [see TUBCfg.txt]
+
+static const std::vector< std::pair< int , const char * > > Formulations = {
+ { 0 , "3bin" } , { 1 , "T" } , { 2 , "pt" } , { 3 , "DP" } , { 4 , "SU" } ,
+ { 5 , "SD" } , { 6 , "SUSD" } , { 8 , "3bin+PC" } };
+
+/// the data of the two thermal units [see the file comment]
+
+struct Unit {
+ double min_power , max_power , linear , quad , constant , startup_cost ,
+  ramp_up , ramp_down , startup_limit , shutdown_limit , initial_power;
+ unsigned min_up , min_down;
+ int init_updown;
+ };
+
+static const Unit Units[ 2 ] = {
+ { 20 , 100 , 10 , 0.01 , 50 , 300 , 40 , 40 , 60 , 60 , 50 , 2 , 2 , 3 } ,
+ { 30 , 120 , 20 , 0.005 , 80 , 500 , 50 , 50 , 70 , 70 , 0 , 3 , 2 , -2 } };
+
+/*--------------------------------------------------------------------------*/
+/// writes the instance, returning its path
+
+static std::string write( void )
+{
+ const auto path = ( pollutant::dir / "thermal.nc4" ).string();
+ netCDF::NcFile f( path , netCDF::NcFile::replace );
+ f.putAtt( "SMS++_file_type" , netCDF::NcInt() , 1 );
+
+ auto g = f.addGroup( "Block_0" );
+ g.putAtt( "type" , "UCBlock" );
+ auto dT = g.addDim( "TimeHorizon" , 8 );
+ g.addDim( "NumberUnits" , 3 );
+ g.addDim( "NumberElectricalGenerators" , 3 );
+ const std::vector< double > demand = { 60 , 90 , 120 , 150 , 130 , 100 , 70 ,
+                                        50 };
+ g.addVar( "ActivePowerDemand" , netCDF::NcDouble() , dT ).putVar(
+                                                             demand.data() );
+
+ for( int u = 0 ; u < 2 ; ++u ) {
+  auto ug = g.addGroup( "UnitBlock_" + std::to_string( u ) );
+  ug.putAtt( "type" , "ThermalUnitBlock" );
+  auto put = [ & ug ]( const char * var , double value ) {
+   ug.addVar( var , netCDF::NcDouble() ).putVar( & value );
+   };
+  const auto & U = Units[ u ];
+  put( "MinPower" , U.min_power );
+  put( "MaxPower" , U.max_power );
+  put( "LinearTerm" , U.linear );
+  put( "QuadTerm" , U.quad );
+  put( "ConstTerm" , U.constant );
+  put( "StartUpCost" , U.startup_cost );
+  put( "DeltaRampUp" , U.ramp_up );
+  put( "DeltaRampDown" , U.ramp_down );
+  put( "StartUpLimit" , U.startup_limit );
+  put( "ShutDownLimit" , U.shutdown_limit );
+  put( "InitialPower" , U.initial_power );
+  ug.addVar( "MinUpTime" , netCDF::NcUint() ).putVar( & U.min_up );
+  ug.addVar( "MinDownTime" , netCDF::NcUint() ).putVar( & U.min_down );
+  ug.addVar( "InitUpDownTime" , netCDF::NcInt() ).putVar( & U.init_updown );
+  }
+
+ auto slack = g.addGroup( "UnitBlock_2" );
+ slack.putAtt( "type" , "SlackUnitBlock" );
+ const double smax = 1000 , scost = 1000;
+ slack.addVar( "MaxPower" , netCDF::NcDouble() ).putVar( & smax );
+ slack.addVar( "ActivePowerCost" , netCDF::NcDouble() ).putVar( & scost );
+
+ return( path );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// loads the instance with the given formulation of the thermal units, and
+/// attaches the :MILPSolver to it, asking for an exact optimum
+
+static UCBlock * load( const std::string & path , int formulation )
+{
+ auto uc = pollutant::load( path );
+ for( Block::Index u = 0 ; u < 2 ; ++u ) {
+  auto bc = new BlockConfig;
+  bc->f_static_variables_Configuration =
+                                  new SimpleConfiguration< int >( formulation );
+  uc->get_unit_block( u )->set_BlockConfig( bc );
+  }
+ pollutant::attach( uc );
+ auto solver = uc->get_registered_solvers().front();
+ for( const char * par : { "dblRelAcc" , "dblAbsAcc" } ) {
+  const auto idx = solver->dbl_par_str2idx( par );
+  if( idx < Inf< Solver::idx_type >() )
+   solver->set_par( idx , 1e-9 );
+  }
+ return( uc );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// a change of the data of a thermal unit [see the file comment]
+
+struct Change {
+ const char * name;
+ std::function< void( ThermalUnitBlock * ) > apply;
+ };
+
+static std::vector< Change > changes( void )
+{
+ using V = std::vector< double >;
+ auto modb = []( void ) { return( eModBlck ); };
+ return( {
+  { "set_maximum_power( range )" , [ & ]( ThermalUnitBlock * tub ) {
+    static const V v = { 80 , 70 , 90 };
+    tub->set_maximum_power( v.begin() , Block::Range( 2 , 5 ) , modb() ,
+                            modb() ); } } ,
+  { "set_maximum_power( subset )" , [ & ]( ThermalUnitBlock * tub ) {
+    static const V v = { 75 , 85 };
+    tub->set_maximum_power( v.begin() , Block::Subset( { 1 , 4 } ) , true ,
+                            modb() , modb() ); } } ,
+  { "set_availability( range )" , [ & ]( ThermalUnitBlock * tub ) {
+    static const V v = { 0.5 , 0.6 };
+    tub->set_availability( v.begin() , Block::Range( 3 , 5 ) , modb() ,
+                           modb() ); } } ,
+  { "set_availability( subset )" , [ & ]( ThermalUnitBlock * tub ) {
+    static const V v = { 0.7 , 0.4 };
+    tub->set_availability( v.begin() , Block::Subset( { 2 , 6 } ) , true ,
+                           modb() , modb() ); } } ,
+  { "set_startup_costs( range )" , [ & ]( ThermalUnitBlock * tub ) {
+    static const V v = { 50 , 60 , 70 , 80 , 90 , 100 , 110 , 120 };
+    tub->set_startup_costs( v.begin() , Block::Range( 0 , 8 ) , modb() ,
+                            modb() ); } } ,
+  { "set_const_term( subset )" , [ & ]( ThermalUnitBlock * tub ) {
+    static const V v = { 500 , 400 };
+    tub->set_const_term( v.begin() , Block::Subset( { 3 , 5 } ) , true ,
+                         modb() , modb() ); } } ,
+  { "set_linear_term( range )" , [ & ]( ThermalUnitBlock * tub ) {
+    static const V v = { 40 , 45 , 50 };
+    tub->set_linear_term( v.begin() , Block::Range( 2 , 5 ) , modb() ,
+                          modb() ); } } ,
+  { "set_quad_term( subset )" , [ & ]( ThermalUnitBlock * tub ) {
+    static const V v = { 0.1 , 0.2 };
+    tub->set_quad_term( v.begin() , Block::Subset( { 3 , 4 } ) , true ,
+                        modb() , modb() ); } } ,
+  { "set_initial_power( range )" , [ & ]( ThermalUnitBlock * tub ) {
+    const V v = { tub->get_min_power( 0 ) + 5 };
+    tub->set_initial_power( v.begin() , Block::Range( 0 , 1 ) , modb() ,
+                            modb() ); } } ,
+  { "scale" , [ & ]( ThermalUnitBlock * tub ) {
+    static_cast< UnitBlock * >( tub )->scale( 1.5 , modb() , modb() ); } } } );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// the check of the setters of ThermalUnitBlock [see the file comment]
+
+static int test( void )
+{
+ for( const auto & name : pollutant::SolverNames )
+  if( auto solver = Solver::new_Solver( name ) ) {
+   delete solver;
+   pollutant::solver_name = name;
+   break;
+   }
+
+ if( pollutant::solver_name.empty() ) {
+  std::cout << "no :MILPSolver in this build, nothing to check" << std::endl;
+  return( 0 );
+  }
+ std::cout << "solving with " << pollutant::solver_name << std::endl;
+
+ pollutant::dir = std::filesystem::temp_directory_path() /
+                  ( "UCBlock_thermal_test_" + std::to_string( getpid() ) );
+ std::filesystem::create_directories( pollutant::dir );
+ const auto path = write();
+ const auto copy = ( pollutant::dir / "thermal-copy.nc4" ).string();
+
+ for( const auto & [ formulation , fname ] : Formulations ) {
+  std::cout << fname << std::endl;
+  for( const auto & change : changes() )
+   for( Block::Index u = 0 ; u < 2 ; ++u ) {
+    const std::string what = std::string( change.name ) + " on unit " +
+                             std::to_string( u );
+    double v1 = std::numeric_limits< double >::quiet_NaN();
+    double v2 = v1;
+    try {
+     // the change with the Solver attached
+     auto uc = load( path , formulation );
+     pollutant::solve( uc );
+     change.apply( static_cast< ThermalUnitBlock * >(
+                                               uc->get_unit_block( u ) ) );
+     v1 = pollutant::solve( uc );
+     static_cast< Block * >( uc )->serialize( copy , eBlockFile );
+     pollutant::release( uc );
+
+     // the changed data read from scratch
+     auto fresh = load( copy , formulation );
+     v2 = pollutant::solve( fresh );
+     pollutant::release( fresh );
+
+     pollutant::check( pollutant::near( v1 , v2 ) ,
+                       what + ": " + std::to_string( v1 ) + " == " +
+                       std::to_string( v2 ) );
+     }
+    catch( std::exception & e ) {
+     pollutant::check( false , what + ": " + e.what() );
+     }
+    }
+
+  // the initial up/down time changes the structure, which is refused
+  auto uc = load( path , formulation );
+  pollutant::solve( uc );
+  bool refused = false;
+  try {
+   const std::vector< int > v = { 5 };
+   static_cast< ThermalUnitBlock * >( uc->get_unit_block( 0 ) )->
+    set_init_updown_time( v.begin() , Block::Range( 0 , 1 ) , eModBlck ,
+                          eModBlck );
+   }
+  catch( std::logic_error & ) {
+   refused = true;
+   }
+  pollutant::check( refused , "set_init_updown_time() is refused" );
+  pollutant::release( uc );
+  }
+
+ std::filesystem::remove_all( pollutant::dir );
+
+ if( pollutant::all_passed )
+  std::cout << "All tests passed!!" << std::endl;
+ else
+  std::cout << "Shit happened!!" << std::endl;
+ return( pollutant::all_passed ? 0 : 1 );
+ }
+
+}  // end( namespace thermal )
+
+
+
 /*--------------------------------------------------------------------------*/
 
 int main( int argc , char ** argv )
@@ -1489,6 +1742,9 @@ int main( int argc , char ** argv )
  // the same goes for the checks of the scale factor of a unit
  if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--scale" ) )
   return( scaling::test() );
+
+ if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--thermal" ) )
+  return( thermal::test() );
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
