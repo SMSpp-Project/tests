@@ -162,9 +162,12 @@ inner-Block module needed by the instances in `batches/` (currently
   subproblems of a round are evaluated by 4 threads
   (`int_BDSlv_MaxThread`).
 - `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
-  bundle over the `InvestmentBlock`, and `InvBCfg.txt` the
-  `BlockConfig` of that Block, which is what fixes the design in every
-  scenario rather than mapping it into the right-hand side.
+  bundle over the `InvestmentBlock`; `IBOCfg.txt` is the `OBlockConfig`
+  of that Block, which reformulates its bounds and gives the
+  `InvestmentFunction` its ComputeConfig (`IFCfg.txt`), whose extra
+  Configuration is `InvBSCfg.txt`, the `BlockSolverConfig` of the inner
+  Block, which is what fixes the design in every scenario rather than
+  mapping it into the right-hand side.
 - `BSPar-2S.txt` — outer `BlockSolverConfig` registering `:MILPSolver`
   (default `GRBMILPSolver`) + `LagrangianDualSolver`. The
   `LagrangianDualSolver` parameters

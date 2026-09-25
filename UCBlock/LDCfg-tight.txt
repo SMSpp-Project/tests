@@ -1,0 +1,25 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LDCfg-tight.txt - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of LDCfg.txt with a tighter threshold on the residual,
+# for UCBlock_test --pollutant: on its continuous instances the Lagrangian
+# dual has to reach the optimum of the linear program, while the threshold
+# of LDCfg.txt stops the Bundle some 6% away from it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+1  # number of double parameters
+
+# now all the double parameters
+dblNZEps  1e-8  # threshold to declare 0 the || residual ||
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END LDCfg-tight.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

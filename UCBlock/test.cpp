@@ -95,8 +95,8 @@
  * scaling a unit with the Solver attached gives the optimum of the scaled
  * instance read from scratch, also when the unit is held by a LagBFunction
  * as a LagrangianDualSolver does, and with a LagrangianDualSolver attached
- * (whose ComputeConfig is the LDCfg.txt of the batches, with a tighter
- * threshold) the Lagrangian dual gives that same optimum, whether the unit is
+ * (whose ComputeConfig is LDCfg-tight.txt, the LDCfg.txt of the batches
+ * with a tighter threshold) the Lagrangian dual gives that same optimum, whether the unit is
  * scaled before the Solver is attached or after; on S scaling the battery
  * gives the expected optimum. Finally, an instance with inconsistent data
  * must be refused by UCBlock::deserialize() in five ways: two zones and no
@@ -830,19 +830,19 @@ static int test( void )
   * right LagBFunction. The instance being continuous, the Lagrangian dual is
   * its optimum, 3150 with the unit scaled, whether it is scaled before the
   * Solver is attached or after. The ComputeConfig of the LagrangianDualSolver
-  * is the LDCfg.txt of the batches, which the test is run next to [see
-  * CMakeLists.txt], with a tighter threshold on the residual: the one of the
-  * batches stops the Bundle some 6% away from the optimum, at a value that
-  * does not change with the scale, and the check would not see it. */
+  * LDCfg-tight.txt, which is the LDCfg.txt of the batches, next to which the
+  * test is run [see CMakeLists.txt], with a tighter threshold on the
+  * residual: the one of the batches stops the Bundle some 6% away from the
+  * optimum, at a value that does not change with the scale, and the check
+  * would not see it. */
  {
   // the value of the Lagrangian dual of A2 with unit 1 scaled by 0.25,
   // before the LagrangianDualSolver is attached or after
   const auto lagrangian = [ & ]( bool after ) {
    auto cc = dynamic_cast< ComputeConfig * >(
-				     Configuration::deserialize( "LDCfg.txt" ) );
+			       Configuration::deserialize( "LDCfg-tight.txt" ) );
    if( ! cc )
     return( std::numeric_limits< double >::quiet_NaN() );
-   cc->set_par( "dblNZEps" , 1e-8 );
    auto uc = load( ( dir / "A2.nc4" ).string() );
    if( ! after )
     uc->get_unit_block( 1 )->scale( 0.25 , eNoMod , eNoMod );

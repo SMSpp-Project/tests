@@ -218,6 +218,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- what the testers give an `InvestmentBlock` and its `InvestmentFunction`
+  comes from the configuration files, the testers only reading and applying
+  them: in `InvestmentBlock` and in `test_bds` of `TwoStageStochasticBlock`,
+  the `OBlockConfig` of the `InvestmentBlock` (`IBOCfg.txt`, the
+  `InvestmentBlock` entry of `InnerBCfg.txt`) reformulates the bounds and
+  gives the `InvestmentFunction` its ComputeConfig (`IFCfg.txt`) with the
+  BlockSolverConfig of the inner Block, where the code built the BlockConfig,
+  named `BSCfg1.txt` in code and set the file of the candidates; the
+  `InvestmentBlock` of an `SDDPBlock`, in a problem file, has its stages
+  configured by `-B` and its greedy Solvers given the passage of the state.
+  `BSCfg1.txt` is now `BSCfg.txt`, and `InvBCfg.txt` of
+  `TwoStageStochasticBlock`, a BlockSolverConfig, `InvBSCfg.txt`. The
+  threshold of the Lagrangian case of `UCBlock_test --pollutant` is in
+  `LDCfg-tight.txt` rather than set in code
+
 - the instances of `batches/batch-ec` whose components are all `ECNetworkBlock`,
   and hence all easy, are solved with the `BSPar.txt` of every other instance
   of that battery, `BundleSolver` handling that case now: the battery no
@@ -556,6 +571,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UCBlock cross-checks every Solver of its BlockSolverConfig at once,
   rather than selecting one of them from the command line: the meta-
   batches are gone and each batch is a ctest test of its own
+
+### Removed
+
+- the options `-l`, `-n`, `-r` and `-s` of the tester of `InvestmentBlock`,
+  which had no effect, and the functions only they or nobody called; the
+  configurations of `InvestmentBlock` that the suite never read (`BSCfg.txt`
+  as it was, `BSCfg2.txt`, `BlockConfig1.txt`, `BlockConfig2.txt`,
+  `RBlockConfig1.txt`, `RBlockConfig2.txt`, `SimpleConfig1.txt`,
+  `SimpleConfig2.txt`), copies of those of `compare_formulations`
 
 ### Fixed
 

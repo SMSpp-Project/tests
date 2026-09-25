@@ -350,10 +350,10 @@ static double solve_by_bundle( Block * block , const std::string & cfg ,
 
 /*--------------------------------------------------------------------------*/
 
-/* the ad hoc form: the InvestmentBlock is deserialized from the file, its
- * bound Constraint are reformulated into the shifted box that a BundleSolver
- * takes, and the BlockSolverConfig of the inner Block travels to the
- * InvestmentFunction as the "extra" Configuration it expects */
+/* the ad hoc form: the InvestmentBlock is deserialized from the file and
+ * given its OBlockConfig [see IBOCfg.txt], which reformulates its bound
+ * Constraint into the shifted box that a BundleSolver takes, and gives the
+ * InvestmentFunction the BlockSolverConfig of the inner Block */
 
 static double solve_ad_hoc( double & secs , long & iters , int & status ,
 			    bool & ran , double dflt )
@@ -365,29 +365,19 @@ static double solve_ad_hoc( double & secs , long & iters , int & status ,
   std::exit( 1 );
   }
 
- auto config = new BlockConfig;
- config->f_static_constraints_Configuration =
-                                        new SimpleConfiguration< int >( 1 );
- inv->set_BlockConfig( config );
-
- auto inner = dynamic_cast< BlockSolverConfig * >(
-                       Configuration::deserialize( "InvBCfg.txt" ) );
- if( ! inner ) {
-  std::cerr << "InvBCfg.txt is not a BlockSolverConfig" << std::endl;
+ auto config = dynamic_cast< BlockConfig * >(
+                       Configuration::deserialize( "IBOCfg.txt" ) );
+ if( ! config ) {
+  std::cerr << "IBOCfg.txt is not a BlockConfig" << std::endl;
   std::exit( 1 );
   }
 
- ComputeConfig cc;
- cc.f_extra_Configuration =
-  new SimpleConfiguration< std::map< std::string , Configuration * > >
-                                       ( { { "BlockSolverConfig" , inner } } );
-
- auto function = dynamic_cast< InvestmentFunction * >( inv->get_function() );
- if( ! function ) {
-  std::cerr << "the InvestmentBlock has no InvestmentFunction" << std::endl;
-  std::exit( 1 );
-  }
- function->set_ComputeConfig( & cc );
+ // the OBlockConfig gives its ComputeConfig to the Objective, which has to
+ // be there already
+ inv->generate_abstract_variables();
+ inv->generate_objective();
+ config->apply( inv );
+ delete config;
 
  const auto value = solve_by_bundle( inv , "BSPar-Inv.txt" , secs , iters ,
 				     status , ran , dflt );
