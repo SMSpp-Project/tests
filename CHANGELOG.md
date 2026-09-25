@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the tester of `UCBlock` takes `-V`, how much the point a relaxation
+  reconstructs may violate the rows it has dualised, the default being the
+  1e-1 that was written in the test
+
 - the same networks of pypsa2smspp in every form a module reads, each in
   the batch of its module: one scenario of the modular family with the
   design in the units in `UCBlock/batches/batch-pypsa` and under an
@@ -41,10 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `UCBlock_test --pollutant` scales a unit with a `LagrangianDualSolver`
   attached, whose `LagBFunction` hold only the dual pairs of the rows their
-  sub-Block is in, and checks that the Lagrangian dual is the optimum of the
-  scaled instance, as it is when the unit is scaled before the Solver is
-  attached; the test is run next to the configurations of the batches, whose
-  `LDCfg.txt` it reads with a tighter threshold on the residual
+  sub-Block is in, and checks that the rows of that unit follow the scale and
+  that the Lagrangian dual is the optimum of the scaled instance, as it is when
+  the unit is scaled before the Solver is attached; the test is run next to the
+  configurations of the batches, whose `LDCfg.txt` it reads with a tighter
+  threshold on the residual
 
 - `TwoStageStochasticBlock/batches/batch-mmcf`: a stochastic multicommodity
   network design problem, i.e., a `TwoStageStochasticBlock` whose scenarios
@@ -100,20 +105,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - a batch of `LagBFunction` over the easy components, which nothing was
   exercising
+
 - a batch can set an algorithmic parameter in a `ComputeConfig` and time each
   run, so that a sweep over the values of one parameter is a batch and not a
   script written for the occasion; the two `batch-aggr` take the values of
   `intCmpAggrRule` that way
+
 - `batch-k` of the multicommodity suite, the knapsack formulation asked for
   as a structure, and `MMCFBlock_test` links the ML variant of the
   BundleSolver, which `batchML` attaches
+
 - a driver that runs the batteries backing the validation claim of the
   dynamic programming Solver of the thermal units, and the batteries require
   again the fixture that extracts the instances they read
-
-- `UCBlock_test --pollutant` scales a unit held by a `LagBFunction`, as a
-  `LagrangianDualSolver` holds it, and checks that the rows of that unit
-  follow the scale
 
 - the batteries of `UCBlock` run the instances once per value of the rule
   that forms the groups of the parallel inner loop, and cross-check the
@@ -144,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   regime of a small instance re-solved many times, over the hard instances of
   Jooken as well, and the benchmarks of the coverage declare the greedy
   relaxation each of their configurations attaches
+
 - the Frank-Wolfe decomposition is posed on the `BinaryKnapsackBlock` of that
   suite as well, in `batch-pisinger`, with the dynamic programme of each
   knapsack as the Linear Minimization Oracle: since no compact formulation
@@ -314,9 +319,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   problem lives with the suite of the Block it is posed on, and not with the
   one of a Solver: the monolithic form, the Lagrangian one and the Benders
   one are configured side by side there
+
 - the makefile asks for `-O3 -DNDEBUG` and nothing else, the macro of the
   patch for `boost::any` on macOS having no reason to be there since there is
   no `boost::any` left in the core
+
 - the tester of the copy of an `AbstractBlock` and the one of the reference
   of the multicommodity suite are named after what they are, the core having
   a target called as the first one was
@@ -338,6 +345,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directories from the arguments instead of the paths of whoever wrote them,
   the tester is named after the Solver it drives, and the folder of the
   facility location is named after the Block it holds
+
 - the tester of `BendersBFunction` reports and counts its checks instead of
   aborting at the first one that fails, so that one run says how many of them
   hold and not only that one does not
@@ -347,6 +355,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   names the other suites give them, the inner Solver of the Lagrangian is
   called `BundleSolver`, which is the name the factory has, and the
   `BlockConfig` files are in the format of now
+
 - a run of the Frank-Wolfe tester attaches the reference and one
   `FrankWolfeSolver` per variant of the decomposition at once, cross-checking
   the variants against one another as well, the way the `BSPar` of a suite do
@@ -555,14 +564,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   them called a duality gap an error. The reference value is the new argument
   that says which of the two cases one is in
 
-- `InvestmentBlock/MPBCfg.txt` leaves the presolve of the master at its
-  default: with it off the master of a design over several extendable lines
-  ends in "Bundle::FormD: unrecoverable MP failure"
-
-- the tester of `UCBlock` takes `-V`, how much the point a relaxation
-  reconstructs may violate the rows it has dualised, the default being the
-  1e-1 that was written in the test
-
 - `InvestmentBlock/batches/batch-pypsa` fails when it finds no instance at all,
   which is how a batch that has tested nothing was until now indistinguishable
   from one where everything went well
@@ -626,9 +627,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `InvestmentBlock/MPBCfg.txt` leaves the presolve of the master at its
+  default: with it off the master of a design over several extendable lines
+  ends in "Bundle::FormD: unrecoverable MP failure"
+
 - `MCFBlock/BSPar-static.txt`, the configuration with every Solver of a
-  MCFBlock whose graph does not change, which `batch`, `batch-small` and the
-  README of the suite read and which was not in the repository, so that
+  MCFBlock whose graph does not change, is in the repository: `batch`,
+  `batch-small` and the README of the suite read it, and without it
   `batch-small` stopped at its first run
 
 - `BinaryKnapsackBlock/batches/batch-jooken` and `batch-pisinger-large` run
