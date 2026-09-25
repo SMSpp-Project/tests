@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `UCBlock_test --pollutant` scales a unit held by a `LagBFunction`, as a
+  `LagrangianDualSolver` holds it, and checks that the rows of that unit
+  follow the scale
+
 - a batch of `LagBFunction` over the easy components, which nothing was
   exercising
 

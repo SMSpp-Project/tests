@@ -79,8 +79,9 @@
  * netCDF form; on A2 and M2 the setters of the budget and of its lower bound,
  * by range and by subset, change the rows of the attached Solver; on A2
  * scaling a unit with the Solver attached gives the optimum of the scaled
- * instance read from scratch, and on S scaling the battery gives the expected
- * optimum. Finally, an instance with inconsistent data
+ * instance read from scratch, also when the unit is held by a LagBFunction
+ * as a LagrangianDualSolver does, and on S scaling the battery gives the
+ * expected optimum. Finally, an instance with inconsistent data
  * must be refused by UCBlock::deserialize() in five ways: two zones and no
  * PollutantZones, a PollutantRho of the wrong size, a
  * TotalNumberPollutantZones that is not the sum of NumberPollutantZones, a
@@ -190,6 +191,8 @@
 #include "CDASolver.h"
 
 #include "LinearFunction.h"
+
+#include "LagBFunction.h"
 
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- USING -----------------------------------*/
@@ -773,6 +776,27 @@ static int test( void )
   check( near( std::abs( fresh->get_const_pollutant_constraints()[ 1 ][ 0 ]
                          .get_dual() ) , 250 ) , "dual of the scaled unit" );
   release( fresh );
+  }
+
+ /* A2 with the unit scaled while a LagBFunction holds it, as it does while a
+  * LagrangianDualSolver is attached: the LagBFunction is then the father of
+  * the unit, and the unit is its only sub-Block, while the scale must still
+  * rewrite the rows of unit 1 and not those of unit 0. */
+ {
+  auto uc = load( ( dir / "A2.nc4" ).string() );
+  attach( uc );
+  auto unit = uc->get_unit_block( 1 );
+  auto lbf = new LagBFunction( unit );
+  lbf->set_f_Block( uc );
+  unit->scale( 0.25 , eModBlck , eModBlck );
+  check( rows_match_data( uc ) , "rows follow the scale of a unit under a "
+                                 "LagBFunction" );
+  lbf->set_inner_block( nullptr , false );
+  lbf->set_f_Block( nullptr );
+  unit->set_f_Block( uc );
+  delete lbf;
+  check( near( solve( uc ) , 3150 ) , "scaled under a LagBFunction" );
+  release( uc );
   }
 
  // B- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
