@@ -559,6 +559,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `MCFBlock/BSPar-static.txt`, the configuration with every Solver of a
+  MCFBlock whose graph does not change, which `batch`, `batch-small` and the
+  README of the suite read and which was not in the repository, so that
+  `batch-small` stopped at its first run
+
 - `BinaryKnapsackBlock/batches/batch-jooken` and `batch-pisinger-large` run
   with `OPENBLAS_NUM_THREADS=1`, and `BSPar-milp.txt` gives HiGHS a single
   thread: the memory cap of the two lineups is on the address space, and on
