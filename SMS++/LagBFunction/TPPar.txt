@@ -53,8 +53,12 @@ intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 #OptimalityTol 1e-9
 
 # All specific HiGHS parameter (uncomment based on Solver)
-primal_feasibility_tolerance  1e-9
-dual_feasibility_tolerance    1e-9
+# the tolerances are absolute: 1e-9 is beyond what double precision holds
+# as soon as the objective grows past 1e7, and then HiGHS declares the model
+# optimal and, in the same breath, its primal solution infeasible, which
+# reaches the caller as a solve that went well with no solution in it
+primal_feasibility_tolerance  1e-7
+dual_feasibility_tolerance    1e-7
 
 0 # number of string parameters
 

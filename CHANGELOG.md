@@ -202,6 +202,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `SMS++/LagBFunction/TPPar.txt` asks HiGHS for feasibility tolerances of
+  `1e-7`, the default, rather than `1e-9`: the tolerances are absolute, and
+  `1e-9` goes beyond what double precision holds as soon as the objective
+  grows past `1e7`, which is how the suite of `InvestmentBlock` failed
+
 - the `ComputeConfig` of the flow relaxation of the capacitated facility
   location, all of them the default one, are the single `DfltCfg.txt` that the
   two configurations point at instead of seven copies of the same block, which
