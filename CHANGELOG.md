@@ -501,6 +501,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `BinaryKnapsackBlock/batches/batch-jooken` and `batch-pisinger-large` run
+  with `OPENBLAS_NUM_THREADS=1`, and `BSPar-milp.txt` gives HiGHS a single
+  thread: the memory cap of the two lineups is on the address space, and on
+  a machine with many cores the threads that OpenBLAS starts at load time
+  (one per core up to 64) and the pool of HiGHS (half of the cores) took
+  the parallel depth-first `BranchAndXSolver` and the MILP past 8 GB, so
+  both crashed on every instance while using a few tens of MB
+
 - the step that fetches the data archive of the multicommodity suite says what
   went wrong when it goes wrong: the download is checked, an archive that did
   not arrive is removed instead of being left on disk for the build to take for
