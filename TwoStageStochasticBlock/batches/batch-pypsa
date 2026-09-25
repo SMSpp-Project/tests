@@ -18,6 +18,13 @@
 # BendersDecompositionSolver. The second run is skipped where that Solver is
 # not in the build, its configuration naming it.
 #
+# the instances of the thermal family of pypsa2smspp (gen_thermal_tssb.py,
+# units x periods x scenarios in the name) are unit commitments in every
+# scenario, where a Lagrangian dual gives a bound below the optimum by the
+# duality gap: they are run with BSPar-2S-LD-IP.txt, the :MILPSolver on the
+# integer problem cross-checked with the dual of the scenarios, the nested
+# one and the recursive one, the three declared relaxations [-R].
+#
 # these sector-coupled instances are badly scaled: HiGHS aborts on the inner
 # LagBFunction LPs, so the default BlockSolverConfig here (BSPar-2S.txt)
 # solves the LagrangianDual inner with Gurobi and tightens the bundle stopping.
@@ -49,6 +56,12 @@ REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_maxpower.nc]=3.812776176e
 REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_hydroinflow.nc]=3.742200254e+09
 REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_complete.nc]=4.920921646e+09
 
+# the thermal family: the optimum of PyPSA and Gurobi on the deterministic
+# equivalent that extensive_thermal_tssb.py writes, which the :MILPSolver
+# of SMS++ matches to the digits it prints
+declare -A REF_TUC
+REF_TUC[smspp_tuc_u10_t24_s3_b1.nc4]=5.438118773e+06
+
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 for what in ../../UCBlock/data/nc4/pypsa-data/tssb/smspp_*.nc; do
@@ -73,6 +86,26 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb/smspp_*.nc; do
     if [ -n "${bds_par}" ]; then
       run_test "$exe" "$what" -b -S "${bds_par}" -B InnerBCfg.txt -r "$ref"
     fi
+
+done
+
+for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_TUC[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -B InnerBCfg.txt \
+             -R ",r,r,r" -r "$ref"
 
 done
 

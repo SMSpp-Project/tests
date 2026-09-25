@@ -123,6 +123,8 @@ bool BenForm = false;
 //   -b / --benders     : solve the Benders form of the instance instead
 //   -w / --warm-start  : 0 = LagrangianDualSolver, 1 = PrimalProximalHeur
 //   -r / --ref         : reference objective value to compare against
+// and -R of common_utils, which declares the Solver that solve a relaxation
+// and switches to the cross-check of the intervals of all the Solver
 
 static bool process_specific_arg( int opt )
 {
@@ -272,6 +274,15 @@ int main( int argc , char ** argv )
  const auto getter1 = ObjGetter::LowerBound;
  const auto getter2 = ProxHeur ? ObjGetter::UpperBound : ObjGetter::LowerBound;
 
+ if( ! solver_relaxation.empty() )
+  /* -R says which Solver solve a relaxation, e.g., a Lagrangian dual of a
+   * TSSB whose scenarios are unit commitments, whose bound is below the
+   * optimum by the duality gap: every Solver then enters the cross-check as
+   * the interval of its bounds, as in the other testers, the relaxations
+   * with the one bound that holds for this problem, and there may be any
+   * number of them. */
+  AllPassed = SolveAll( TestBlock , RefObjective , RefTolerance );
+ else
  if( TestBlock->get_registered_solvers().size() > 1 ) {
   double fo1st = -INF;
   bool hs1st = false;

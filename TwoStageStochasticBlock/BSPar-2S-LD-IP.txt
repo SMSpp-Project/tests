@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-2S-LD-IP.txt - - - - - - - - - - - - - - 
+#
+# A txt description of a BlockSolverConfig for a TwoStageStochasticBlock
+# whose scenarios are unit commitments, to be solved by four different
+# Solver: a :MILPSolver on the deterministic equivalent as an integer
+# problem, which gives the optimum, and three LagrangianDualSolver, which
+# give the bound of the dual, below the optimum by the duality gap: the dual
+# of the scenarios, each a MILP (LDIPCfg.txt), the nested one (LDLDCfg.txt)
+# and the recursive one (LDrecCfg.txt). The batch declares the three duals as
+# relaxations (-R ,r,r,r), so that each is only required to stay below the
+# optimum.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+4 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of 1st Solver
+LagrangianDualSolver  # name of 2nd Solver
+LagrangianDualSolver  # name of 3rd Solver
+LagrangianDualSolver  # name of 4th Solver
+
+4 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver, on the integer problem
+
+*MILPCfg-IP.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver of the scenarios, each a MILP
+
+*LDIPCfg.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the nested LagrangianDualSolver
+
+*LDLDCfg.txt
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the recursive LagrangianDualSolver
+
+*LDrecCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-2S-LD-IP.txt - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

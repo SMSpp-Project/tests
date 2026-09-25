@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the same networks of pypsa2smspp in every form a module reads, each in
+  the batch of its module: one scenario of the modular family with the
+  design in the units in `UCBlock/batches/batch-pypsa` and under an
+  InvestmentBlock in `InvestmentBlock/batches/batch-pypsa`, the modular
+  family as an MSSB in `MultiStageStochasticBlock/batches/batch-pypsa`,
+  next to the TSSB of `batch-pypsa-modular`, and the thermal family, whose
+  scenarios are unit commitments, in `TwoStageStochasticBlock/batches/
+  batch-pypsa` with `BSPar-2S-LD-IP.txt`, i.e., a `:MILPSolver` on the
+  integer problem and the dual of the scenarios, the nested and the
+  recursive Lagrangian dual
+
+- `TSSB_test -R`, which declares the Solver that solve a relaxation and
+  makes the tester cross-check the intervals of the bounds of all the
+  Solver, as the other testers do, instead of requiring two values to be
+  equal: a Lagrangian dual of a unit commitment is below the optimum by
+  the duality gap
+
 - `SingleFlowDCRBlock/batches/batch-instances`, the two formulations of
   the DCR problem on the instances of the module, i.e., on 10 flows of each
   of 14 real networks, which the build of `SingleFlowDCRBlock` downloads and

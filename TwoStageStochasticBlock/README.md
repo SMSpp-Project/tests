@@ -191,7 +191,16 @@ inner-Block module needed by the instances in `batches/` (currently
   being the units of all the scenarios (`InnerBSCfg.txt`): the nested and
   the recursive form give the same bound, which is stronger than that of
   the continuous relaxation the `:MILPSolver` solves (`MILPCfg.txt`), so
-  that the latter is to be declared a relaxation (`-R r,,`).
+  that the latter is to be declared a relaxation (`-R r,,`). Its two
+  duals are the fragments `LDLDCfg.txt` and `LDrecCfg.txt`.
+- `BSPar-2S-LD-IP.txt` — the same two duals and the dual of the scenarios
+  each solved whole as a MILP (`LDIPCfg.txt`), beside a `:MILPSolver` on
+  the integer problem (`MILPCfg-IP.txt`), for a TSSB whose scenarios are
+  unit commitments: there the three duals give a bound below the optimum
+  by the duality gap, and are declared relaxations (`-R ,r,r,r`), which
+  makes the tester cross-check the intervals of the bounds of all the
+  Solver instead of requiring the values to be equal. `batch-pypsa` runs
+  it on the thermal family of pypsa2smspp (`pypsa-data/tssb-thermal`).
 - `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
   whose components are the units of the scenario (`InnerBSCfg.txt`).
   `LPBSCfg-LD-noeasy.txt` is the same with `intDoEasy=0`, which the

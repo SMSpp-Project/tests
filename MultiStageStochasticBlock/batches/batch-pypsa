@@ -51,6 +51,11 @@ REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_renewables.nc]=3.488357705
 REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_hydro.nc]=3.454083599e+09
 REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_both.nc]=3.488357705e+09
 REF_OBJ[smspp_network_small_fewsectors__snap24__c4_d3_both.nc]=3.435694613e+09
+# the modular family of pypsa2smspp (gen_modular_tssb.py, 48 periods, 10
+# scenarios in 2 outer realizations, 2 buses, modules turned off), the same
+# network TwoStageStochasticBlock/batch-pypsa-modular has as a TSSB and
+# InvestmentBlock/batch-stochastic under an InvestmentBlock
+REF_OBJ[smspp_mod_t48_s10_b2c_o2_mssb_ucblock.nc]=3.682350688e+07
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -36,115 +36,14 @@ LagrangianDualSolver  # name of 3rd Solver
 *MILPCfg.txt
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the LagrangianDualSolver; it mostly is the
-# ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver
+# ComputeConfig of the nested LagrangianDualSolver
 
-*LDCfg.txt +
-
-1  # f_diff == 1 ==> only the entries listed below are changed
-
-3 # number of integer parameters
-
-int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
-intLogVerb        0 # log verbosity of main Bundle algorithm
-intTrgtMng       31 # bit-wise targets and accuracies management:
-                    # bit 0: lower/upper target to each convex/concave
-                    #        component
-                    # bit 1: upper/lower target to each convex/concave
-                    #        component
-                    # bit 2-3: accuracy (2 = upper - lower, 3 = EpsU)
-                    # bit 4: Lipschitz constant in the upper model
-
-6 # number of double parameters
-
-dblMinNrEvls        -1 # every component is evaluated at each iteration:
-                       # a component here is an entire inner
-                       # LagrangianDualSolver, so an iteration made on one
-                       # of the three alone buys little and costs a master
-                       # problem anyway; on the NC instances the
-                       # evaluations go from 865 and 1705 down to 132 and
-                       # 168
-dblRelAcc         1e-5 # relative accuracy required to solution
-dbltStar         -1e+0 # stopping parameter: multiplied to || residual ||
-                       # to estimate the gap
-dblmxIncr            2 # max increase of t
-dbltMaior         1e+9 # maximum value for t
-dbltInit          1e-3 # initial value for t
-
-1 # number of string parameters
-
-str_LagBF_BSCfg  LPBSCfg-LD.txt # BlockSolverConfig for the LagBFunctions
-
-0 # number of vector-of-int parameters
-
-# now all the vector-of-int parameters
-# [none]
-
-0 # number of vector-of-double parameters
-
-# now all the vector-of-double parameters
-# [none]
-
-0 # number of vector-of-string parameters
-
-# now all the vector-of-string parameters
-# [none]
-
-# pointer to the "extra" Configuration
-* # [none]
+*LDLDCfg.txt
 
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the recursive LagrangianDualSolver: the same as the
-# nested one, save that the descendants are decomposed too and that the
-# LagBFunctions are those of the units
+# ComputeConfig of the recursive LagrangianDualSolver
 
-*LDCfg.txt +
-
-1  # f_diff == 1 ==> only the entries listed below are changed
-
-4 # number of integer parameters
-
-int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
-intRecursive      1 # decompose the descendants too, not the children alone
-intLogVerb        0 # log verbosity of main Bundle algorithm
-intTrgtMng       31 # bit-wise targets and accuracies management:
-                    # bit 0: lower/upper target to each convex/concave
-                    #        component
-                    # bit 1: upper/lower target to each convex/concave
-                    #        component
-                    # bit 2-3: accuracy (2 = upper - lower, 3 = EpsU)
-                    # bit 4: Lipschitz constant in the upper model
-
-6 # number of double parameters
-
-dblMinNrEvls        -1 # every component, i.e., every unit of every
-                       # scenario, is evaluated at each iteration, as in
-                       # the nested form
-dblRelAcc         1e-5 # relative accuracy required to solution
-dbltStar         -1e+0 # stopping parameter: multiplied to || residual ||
-                       # to estimate the gap
-dblmxIncr            2 # max increase of t
-dbltMaior         1e+9 # maximum value for t
-dbltInit          1e-3 # initial value for t
-
-1 # number of string parameters
-
-str_LagBF_BSCfg  InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
-
-0 # number of vector-of-int parameters
-
-# now all the vector-of-int parameters
-# [none]
-
-0 # number of vector-of-double parameters
-
-# now all the vector-of-double parameters
-# [none]
-
-0 # number of vector-of-string parameters
-
-# now all the vector-of-string parameters
-# [none]
+*LDrecCfg.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

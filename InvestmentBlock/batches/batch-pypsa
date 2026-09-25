@@ -42,6 +42,11 @@ REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.495190064e+07
 REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-2.400702717e+07
 REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=-2.372297229e+07
 REF_OBJ[smspp_tssb_2n_2gext_1l.nc]=1.508768621e+09
+# one scenario of the modular family of pypsa2smspp (gen_modular_tssb.py, 48
+# periods, 2 buses, modules turned off) with the design in an InvestmentBlock
+# over the UCBlock, the same network UCBlock/batch-pypsa has with the design
+# in the units
+REF_OBJ[smspp_mod_t48_s1_b2c_det_investment.nc]=3.511271121e+07
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
