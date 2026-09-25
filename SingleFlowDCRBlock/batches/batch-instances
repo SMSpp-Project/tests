@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# usage: batch-instances < exe file >
+#        < exe file > = path of the executable file, default
+#                       ./SingleFlowDCRBlock_test
+#
+# runs SingleFlowDCRBlock_test on the instances of the module, i.e., on 10
+# flows of each of the 14 networks in data/nc4/single of SingleFlowDCRBlock
+# (see data/README.md there), in both formulations: the SOCP one, which is
+# exact, and the "P/C" one, whose cuts only outer-approximate the cones, so
+# that the :MILPSolver solves a relaxation of the DCR problem, which -R
+# declares to the cross-check, as in batch-pc
+#
+# the SingleFlowDCRBendersSolver stops on its own criterion and does not
+# declare how much of a gap it leaves, so "-E ,inf" holds it to the base
+# Solver contract alone, i.e. to the interval [ get_lb() , get_ub() ]
+# containing the optimum
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+exe=${1:-./SingleFlowDCRBlock_test}
+DATADIR=../../SingleFlowDCRBlock/data/nc4/single
+
+ran=0
+for what in "$DATADIR"/*.nc4; do
+  [ -f "$what" ] || continue
+  ran=1
+  run_test "$exe" "$what" -B DCRCfg-socp.txt -S BSPar.txt -E ,inf
+  run_test "$exe" "$what" -B DCRCfg-pc.txt -S BSPar-pc.txt -R r, -E ,inf
+done
+
+# a batch that has found no instance at all has tested nothing, and saying so
+# is the only way to tell it apart from one where everything went well
+if [ "$ran" -eq 0 ]; then
+  echo "No instance found in $DATADIR"
+  exit 1
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

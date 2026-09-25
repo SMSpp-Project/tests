@@ -1,0 +1,29 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - DCRBSCfg-milp.txt - - - - - - - - - - - - - - -
+#
+# A txt description of the BlockSolverConfig of a SingleFlowDCRBlock that
+# is a flow of a MultiFlowDCRBlock, solved by a :MILPSolver in the SOCP
+# formulation (the default one) inside the LagrangianDualSolver of
+# BSPar-multi-milp.txt
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver                   # name of Solver
+#CPXMILPSolver                  # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# ComputeConfig of the :MILPSolver
+*MILPCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END DCRBSCfg-milp.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

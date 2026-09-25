@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SingleFlowDCRBlock/batches/batch-instances`, the two formulations of
+  the DCR problem on the instances of the module, i.e., on 10 flows of each
+  of 14 real networks, which the build of `SingleFlowDCRBlock` downloads and
+  a ctest fixture extracts before the batteries that read them
+
+- `MultiFlowDCRBlock_test` and `SingleFlowDCRBlock/batches-multiflow/batch`,
+  which compare on the instances with the first 1 to 5 flows of each network
+  a `:MILPSolver` on the formulation holding all the flows with the
+  `LagrangianDualSolver` that relaxes the mutual capacities, its flows solved
+  by the `SingleFlowDCRBendersSolver` or by a `:MILPSolver`: they take the
+  place of the testers of the multi-flow and single-flow DCR problems that
+  lived on the branches `DCRFlow` and `feature/dcr-benders`
+
 - `UCBlock_test --pollutant` scales a unit with a `LagrangianDualSolver`
   attached, whose `LagBFunction` hold only the dual pairs of the rows their
   sub-Block is in, and checks that the Lagrangian dual is the optimum of the
@@ -217,6 +230,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dblRelAcc therefore says nothing about what it returns
 
 ### Changed
+
+- the `ComputeConfig` of the `:MILPSolver` of the `SingleFlowDCRBlock` suite
+  is written once, in `MILPCfg.txt`, which `BSPar.txt`, `BSPar-pc.txt` and
+  the configurations of the multi-flow problem include
 
 - the configurations of the Benders tester of `SVMBlock` are named as the
   others are, `BSPar-BDS-<variant>.txt` (e.g., `BSPar-BDS-SMO.txt`,

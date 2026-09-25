@@ -1,0 +1,28 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - DCRBSCfg-benders.txt  - - - - - - - - - - - - - -
+#
+# A txt description of the BlockSolverConfig of a SingleFlowDCRBlock that
+# is a flow of a MultiFlowDCRBlock, solved by the
+# SingleFlowDCRBendersSolver inside the LagrangianDualSolver of
+# BSPar-multi.txt [see LDCfg.txt]
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+SingleFlowDCRBendersSolver      # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# ComputeConfig of the SingleFlowDCRBendersSolver
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END DCRBSCfg-benders.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

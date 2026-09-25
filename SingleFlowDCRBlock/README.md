@@ -57,13 +57,43 @@ plus the options that every SMS++ tester understands (`--help` lists them
 all). If a `<file>` is given, the `SingleFlowDCRBlock` is de-serialized out
 of that netCDF file instead of being generated.
 
-Two batch files are provided, `batch` for the SOCP formulation and
+Three batch files are provided: `batch` for the SOCP formulation and
 `batch-pc` for the P/C one, each sweeping a range of network sizes,
-tightnesses and seeds; all of them passing is a good sign that no
-regression has been made in the tested modules.
+tightnesses and seeds of the random instances, and `batch-instances`, which
+runs both formulations on the instances of the module, i.e., on 10 flows of
+each of 14 real networks (see `data/README.md` in `SingleFlowDCRBlock`, whose
+build downloads them); all of them passing is a good sign that no regression
+has been made in the tested modules.
 
-A makefile is also provided that builds the executable including the
-`SingleFlowDCRBlock` and `MILPSolver` modules and all their dependencies
+## MultiFlowDCRBlock_test
+
+A tester of `MultiFlowDCRBlock`, the `Block` of the multi-flow DCR problem:
+a set of flows, each of which is a `SingleFlowDCRBlock`, tied by the
+capacity of the arcs they share. The instance is read out of a netCDF file,
+and it is solved by every `Solver` that the `BlockSolverConfig` registers to
+it, cross-checked as above:
+
+- a `:MILPSolver` on the formulation that holds all the flows, each in the
+  SOCP one (the default), which gives the optimum;
+
+- the `LagrangianDualSolver`, which relaxes the mutual capacity constraints
+  and solves each flow on its own (`LDCfg.txt`), by the
+  `SingleFlowDCRBendersSolver` (`BSPar-multi.txt`, with
+  `DCRBSCfg-benders.txt` for the flows) or by a `:MILPSolver`
+  (`BSPar-multi-milp.txt`, with `DCRBSCfg-milp.txt`). The Lagrangian dual is
+  not tight in general, and the bound is lower with the
+  `SingleFlowDCRBendersSolver`, which stops on its own criterion, hence the
+  batch declares the `LagrangianDualSolver` a relaxation (`-R ,r`).
+
+The two `LagrangianDualSolver` are two configurations rather than two rows
+of one: without copies of the flows the `Solver` of one would reach the
+other, and a `SingleFlowDCRBlock` cannot be copied yet. The batch file in
+`batches-multiflow` runs both on the instances of the module with the first
+1 to 5 flows of each network; the tester and its batch are built only if
+the `LagrangianDualSolver` and the `BundleSolver` are.
+
+A makefile is also provided that builds `SingleFlowDCRBlock_test` including
+the `SingleFlowDCRBlock` and `MILPSolver` modules and all their dependencies
 (hence, obviously, the core SMS++ library).
 
 ## Authors

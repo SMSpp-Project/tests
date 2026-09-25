@@ -1,0 +1,38 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-multi.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a MultiFlowDCRBlock, solved
+# by a :MILPSolver on the formulation that holds all the flows, which gives
+# the optimum, and by the LagrangianDualSolver that relaxes the mutual
+# capacity constraints and solves each flow by the
+# SingleFlowDCRBendersSolver [see LDCfg.txt], whose bound is at most the
+# optimum. The same with a :MILPSolver for the flows is BSPar-multi-milp.txt:
+# the two cannot be two rows of one BlockSolverConfig, since without copies
+# of the flows the Solver of one reach the other, and a SingleFlowDCRBlock
+# cannot be copied yet (int_LDSlv_iBCopy 1 throws).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver                   # name of 1st Solver
+#CPXMILPSolver                  # name of 1st Solver
+LagrangianDualSolver            # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig: the :MILPSolver - - - - - - - - - - - - - - - - - - - -
+*MILPCfg.txt
+
+# 2nd ComputeConfig: the LagrangianDualSolver- - - - - - - - - - - - - - - -
+*LDCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-multi.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

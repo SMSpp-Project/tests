@@ -1,0 +1,69 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - BSPar-multi-milp.txt  - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a MultiFlowDCRBlock, as
+# BSPar-multi.txt but with each flow solved by a :MILPSolver in the SOCP
+# formulation inside the LagrangianDualSolver [see DCRBSCfg-milp.txt]: the
+# bound is that of the Lagrangian dual, while with the
+# SingleFlowDCRBendersSolver, which stops on its own criterion, it may be
+# lower
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver                   # name of 1st Solver
+#CPXMILPSolver                  # name of 1st Solver
+LagrangianDualSolver            # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig: the :MILPSolver - - - - - - - - - - - - - - - - - - - -
+*MILPCfg.txt
+
+# 2nd ComputeConfig: the LagrangianDualSolver- - - - - - - - - - - - - - - -
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+0 # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1 # number of string parameters
+
+str_LagBF_BSCfg     DCRBSCfg-milp.txt # the Solver of each flow
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END BSPar-multi-milp.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

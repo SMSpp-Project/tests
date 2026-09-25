@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default
+#                       ./MultiFlowDCRBlock_test
+#
+# runs MultiFlowDCRBlock_test on the instances of the module with the first
+# 1 to 5 flows of each of the 14 networks in data/nc4/multi of
+# SingleFlowDCRBlock (see data/README.md there), each solved by a
+# :MILPSolver on the formulation that holds all the flows and by the
+# LagrangianDualSolver that relaxes the mutual capacity constraints, once
+# with each flow solved by the SingleFlowDCRBendersSolver (BSPar-multi.txt)
+# and once by a :MILPSolver (BSPar-multi-milp.txt)
+#
+# the Lagrangian dual is not tight in general, hence "-R ,r" declares the
+# LagrangianDualSolver a relaxation, i.e., its value has to be at most the
+# optimum; the instances with all the flows are not run, a formulation that
+# holds thousands of them being out of reach of the :MILPSolver
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+exe=${1:-./MultiFlowDCRBlock_test}
+DATADIR=../../SingleFlowDCRBlock/data/nc4/multi
+
+ran=0
+for what in "$DATADIR"/*_[1-5].nc4; do
+  [ -f "$what" ] || continue
+  ran=1
+  run_test "$exe" "$what" -S BSPar-multi.txt -R ,r
+  run_test "$exe" "$what" -S BSPar-multi-milp.txt -R ,r
+done
+
+# a batch that has found no instance at all has tested nothing, and saying so
+# is the only way to tell it apart from one where everything went well
+if [ "$ran" -eq 0 ]; then
+  echo "No instance found in $DATADIR"
+  exit 1
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

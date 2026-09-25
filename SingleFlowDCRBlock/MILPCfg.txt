@@ -1,0 +1,52 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - - -
+#
+# A txt description of the ComputeConfig of the :MILPSolver of the
+# SingleFlowDCRBlock suite, i.e., the one of BSPar.txt, BSPar-pc.txt,
+# BSPar-multi.txt, BSPar-multi-milp.txt and DCRBSCfg-milp.txt
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intLogVerb     0    # log verbosity
+#intRelaxIntVars 1  # solve the continuous relaxation
+
+1 # number of double parameters
+
+# now all the double parameters
+dblRelAcc      1e-6 # relative accuracy required to the optimum
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MILPCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
