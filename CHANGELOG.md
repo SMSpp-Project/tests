@@ -78,22 +78,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `LagrangianDualSolver` holds it, and checks that the rows of that unit
   follow the scale
 
-- a batch of `LagBFunction` over the easy components, which nothing was
-  exercising
-
-- a batch can set an algorithmic parameter in a `ComputeConfig` and time each
-  run, so that a sweep over the values of one parameter is a batch and not a
-  script written for the occasion; the two `batch-aggr` take the values of
-  `intCmpAggrRule` that way
-
-- `batch-k` of the multicommodity suite, the knapsack formulation asked for
-  as a structure, and `MMCFBlock_test` links the ML variant of the
-  BundleSolver, which `batchML` attaches
-
-- a driver that runs the batteries backing the validation claim of the
-  dynamic programming Solver of the thermal units, and the batteries require
-  again the fixture that extracts the instances they read
-
 - the batteries of `UCBlock` run the instances once per value of the rule
   that forms the groups of the parallel inner loop, and cross-check the
   academic and plan4res families over the exact Lagrangian chain; in the AC
@@ -272,14 +256,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the multicommodity suite are named after what they are, the core having
   a target called as the first one was
 
-- the makefile asks for `-O3 -DNDEBUG` and nothing else, the macro of the
-  patch for `boost::any` on macOS having no reason to be there since there is
-  no `boost::any` left in the core
-
-- the tester of the copy of an `AbstractBlock` and the one of the reference
-  of the multicommodity suite are named after what they are, the core having
-  a target called as the first one was
-
 - a suite is guarded on the modules it is labelled with, and the benchmark of
   BundleSolverML is skipped when its modules are not in the build, so that a
   build without a module has no test that cannot run rather than a test that
@@ -297,10 +273,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directories from the arguments instead of the paths of whoever wrote them,
   the tester is named after the Solver it drives, and the folder of the
   facility location is named after the Block it holds
-- the tester of `BendersBFunction` reports and counts its checks instead of
-  aborting at the first one that fails, so that one run says how many of them
-  hold and not only that one does not
-
 - the tester of `BendersBFunction` reports and counts its checks instead of
   aborting at the first one that fails, so that one run says how many of them
   hold and not only that one does not
