@@ -479,6 +479,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the step that fetches the data archive of the multicommodity suite says what
+  went wrong when it goes wrong: the download is checked, an archive that did
+  not arrive is removed instead of being left on disk for the build to take for
+  the real one, and the message names the URL. A server that answers with an
+  error page used to leave a file of a few bytes there, which made the next
+  build fail while extracting it, with the message of `tar` and no mention of
+  the download
+
+- the build no longer waits for the data of the facility location: the tester
+  of the Benders decomposition was hung on the target that extracts the
+  archive, which put the download in the default target, so a registry that
+  answers with an error stopped the build of the libraries as well, and it took
+  a 503 of GitLab to see it. What the tester needs is prepared by a test
+  fixture, as in every other suite
+
 - `LukFi_test` stops with an error when the `BlockSolverConfig` it reads
   attaches no `Solver` to the `LukFiBlock`, e.g. because the file is empty or
   malformed, rather than crashing on the first element of an empty list

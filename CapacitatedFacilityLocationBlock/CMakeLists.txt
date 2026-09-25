@@ -116,13 +116,25 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
                 SMS++::MILPSolver)
         smspp_install(CFL_BDS_test)
 
-        # the ORLib instance the test reads comes with the archive that
-        # CapacitatedFacilityLocationBlock downloads and unpacks
-        add_dependencies(CFL_BDS_test extract_cfl_txt)
+        # The ORLib instance the test reads comes with the archive that
+        # CapacitatedFacilityLocationBlock downloads and unpacks, which is the
+        # business of a test fixture and not of the build: hanging the
+        # executable on the extraction would put the download in the default
+        # target, and a registry that is down would then stop the build of the
+        # library as well.
+        # This test will build and run the extract_cfl_txt target
+        add_test(NAME extract_cfl_txt
+                 COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                         --target extract_cfl_txt)
+        # Mark extract_cfl_txt as a fixture that sets up "cfl_txt_extracted"
+        set_tests_properties(extract_cfl_txt
+                             PROPERTIES FIXTURES_SETUP cfl_txt_extracted)
 
         add_test(NAME CFL_BDS_test
                  COMMAND CFL_BDS_test
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        set_tests_properties(CFL_BDS_test
+                             PROPERTIES FIXTURES_REQUIRED cfl_txt_extracted)
 
     endif ()
 endif ()
