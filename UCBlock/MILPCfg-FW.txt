@@ -23,10 +23,19 @@ intLogVerb      0 # log verbosity of the :MILPSolver
 intRelaxIntVars 2 # the continuous relaxation WITH the
                   # separation of the Perspective Cuts
 
-1 # number of double parameters
+2 # number of double parameters
 
 # now all the double parameters
 dblRelAcc       1e-8 # relative accuracy required of it
+dblMaxTime      600 # the monolithic DP + P/C relaxation with
+                    # its cut separation loop does not close
+                    # in reasonable time on a unit of 96
+                    # periods in two copies: it is stopped
+                    # here and reports the bound it reached.
+                    # Should the limit bite, what the
+                    # cross-check then compares is that
+                    # bound and not the optimum, so a
+                    # mismatch is the limit and not a defect
 
 0 # number of string parameters
 

@@ -67,20 +67,26 @@ done
 
 if [ -n "${fwexe}" ]; then
 
-  fwargs="-B TUBCfg-DP.txt -V p_thermal,u_thermal -o 0 -e 1"
-
   # the whole lineup (FatherBSPar.txt attaches the reference and every variant
-  # of the decomposition at once) on one 96-period unit, where the reference
-  # closes in reasonable time
-  fw_run ${DATADIR}/96/S1ramp17_96.nc4 -k 2
+  # of the decomposition at once) on a 24-period unit: the reference needs the
+  # DP + P/C formulation, which the decomposition does not use, its Oracle
+  # carrying its own dynamic programme, so the cross-check is paid on the
+  # smallest unit there is, where building that formulation costs little
+  fwargs="-B TUBCfg-DP.txt -V p_thermal,u_thermal -o 0 -e 1"
+  fw_run ${DATADIR}/24/S1ramp17_24.nc4 -k 2
+  fw_run ${DATADIR}/24/S12ramp10_24.nc4 -k 2
 
-  # the reduced lineup on the others, the reference being a monolithic
-  # relaxation with a cut separation loop, i.e., minutes per run
-  fwpar=FatherBSPar-fast.txt
+  # the larger units with the decomposition alone, on the plain T formulation,
+  # which gives the identical result and is cheap to build: there is nothing
+  # to compare it with, so what these runs check is that it runs and what it
+  # costs [see FatherBSPar-fw.txt]
+  fwpar=FatherBSPar-fw.txt
+  fwargs="-B TUBCfg-T.txt -V p_thermal,u_thermal -o 0 -e 1"
+  fw_run ${DATADIR}/96/S1ramp17_96.nc4 -k 2
   fw_run ${DATADIR}/96/S12ramp10_96.nc4 -k 2
   fw_run ${DATADIR}/384/S1ramp1_384.nc4 -k 2
   fw_run ${DATADIR}/96/S1ramp17_96.nc4 -k 3
-  unset fwpar
+  unset fwpar fwargs
 
 fi
 

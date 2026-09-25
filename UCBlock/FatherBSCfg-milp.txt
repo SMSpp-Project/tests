@@ -18,10 +18,13 @@ BlockSolverConfig     # exact type of the Configuration object
 1 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
-HiGHSMILPSolver       # the monolithic reference
+GRBMILPSolver         # the monolithic reference: the father is
+                      # quadratic, and on this the QP of HiGHS
+                      # gives up, reporting the problem
+                      # unbounded on the DP + P/C formulation
+                      # and an error on the plain T one
 #CPXMILPSolver        #   (uncomment the available backend)
-#GRBMILPSolver
-#SCIPMILPSolver
+#HiGHSMILPSolver      #   NOT this one, see above
 
 1 # number of ComputeConfig in this BlockSolverConfig
 
