@@ -19,11 +19,10 @@
 # whether it delivered that accuracy, kLowPrecision meaning it did not and
 # therefore owes nothing but sensible numbers. Adding an exact Solver here
 # is therefore all it takes to bring it into the cross-check. The per-Solver
-# ComputeConfig are factored into the *Cfg.txt fragments. BSPar-EASY.txt and
-# BSPar-AC.txt are the variants for the instances whose components are all
-# "easy" for BundleSolver (intDoEasy=0), the AC one also tuned for the QCP
-# ThermalUnitBlock; BSPar-MILP.txt solves with the :MILPSolver alone. See the
-# batches for which is used where.
+# ComputeConfig are factored into the *Cfg.txt fragments. BSPar-AC.txt is the
+# variant tuned for the QCP ThermalUnitBlock, BSPar-PYPSA.txt the one for the
+# PyPSA networks, and BSPar-MILP.txt solves with the :MILPSolver alone. See
+# the batches for which is used where.
 # NOTE: an overriding ComputeConfig that is not the last in the list must end
 # with the '*' extra-Configuration pointer, or the parser runs into the next.
 #

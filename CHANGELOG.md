@@ -202,6 +202,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the instances of `batches/batch-ec` whose components are all `ECNetworkBlock`,
+  and hence all easy, are solved with the `BSPar.txt` of every other instance
+  of that battery, `BundleSolver` handling that case now: the battery no
+  longer picks a configuration by the name of the file, the tester no longer
+  forces one of the components to be hard, and `UCBlock/BSPar-EASY.txt`, which
+  was `BSPar.txt` with `intDoEasy` at 0, is gone
+
 - the Lagrangian duals of `TwoStageStochasticBlock` declare the residual
   zero at `1e-6` rather than `1e-2` (`LDCfg.txt`, which every one of them
   includes): with `1e-2` the bundle stopped with a dual value up to 1.6%

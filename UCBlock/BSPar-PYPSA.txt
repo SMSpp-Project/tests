@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - BSPar-PYPSA.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the UCBlock translated from a
-# PyPSA network: it is BSPar-EASY.txt with one parameter of the Bundle
+# PyPSA network: it is BSPar.txt with one parameter of the Bundle
 # changed, intWZNorm, whose value here stops the Bundle at the first
 # iteration [see the 2nd ComputeConfig].
 #

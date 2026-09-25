@@ -1631,12 +1631,6 @@ int main( int argc , char ** argv )
        } );
        if( it != sb.end() )
         NoEasy.push_back( ( int ) std::distance( sb.begin() , it ) );
-       else
-        throw( std::logic_error(
-         "There is no non-ECNetworkBlock candidate block to set as a `hard` "
-         "component, so set intDoEasy == 0 in the Configuration file since "
-         "BundleSolver cannot deal with the problem if all its components are "
-         "`easy`." ) );
        }
       }
      } // ... else if "hard" components were given in the Configuration file...

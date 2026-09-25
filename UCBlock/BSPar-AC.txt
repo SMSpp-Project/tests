@@ -5,7 +5,7 @@
 # cross-checked by a :MILPSolver, a LagrangianDualSolver (using a BundleSolver
 # as the inner Solver) and a PrimalProximalHeur.
 #
-# It is BSPar-EASY.txt with the two differences the AC case needs, both
+# It is BSPar.txt with the two differences the AC case needs, both
 # expressed as overrides of the shared *Cfg.txt fragments:
 #
 #   - the LP-reproducibility recipe for the :MILPSolver (Method, Presolve,

@@ -67,18 +67,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/ucblock/EC_CO_*.nc4 \
       exit 1
     fi
 
-    # Pure-load (no-asset) instances only contain ECNetworkBlock subblocks,
-    # all "easy" for BundleSolver: a BSPar with intDoEasy=1 raises
-    # "no non-ECNetworkBlock candidate block to set as a `hard` component".
-    # Force the EASY variant (intDoEasy=0 throughout) for those, while CO/NC
-    # instances — which have UnitBlock components that BundleSolver can keep
-    # "hard" — use the BSPar passed in.
-    case "$base" in
-      EC_NA_*)  cur_par=BSPar-EASY.txt ;;
-      *)        cur_par=$par           ;;
-    esac
-
-    run_test "$exe" "$what" -S "$cur_par" -B InnerBCfg.txt -r "$ref"
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
