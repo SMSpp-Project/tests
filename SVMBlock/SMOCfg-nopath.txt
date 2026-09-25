@@ -1,19 +1,35 @@
-ComputeConfig # exact type of the ComputeConfig object
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - SMOCfg-nopath.txt - - - - - - - - - - - - - -
+#
+# A ComputeConfig of the SMOSolver asking for the plain iteration, i.e., the
+# samples added to the data set are learnt by iterating from the previous
+# solution rather than by walking the exact solution path. It is the term of
+# comparison of SMOCfg-path.txt, and the two have to agree at every addition.
+#
+# It is SMOCfg.txt with the two entries below changed, and says so through
+# the cascade-override mechanism ('*SMOCfg.txt +') instead of repeating the
+# whole ComputeConfig: whatever is not named here is what the base gives.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+# the base ComputeConfig, plus the overrides below - - - - - - - - - - - -
+*SMOCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
 
 1  # number of integer parameters
 
 # now all the integer parameters
-intSMOPath  0  # the samples added are learnt by iterating from the previous solution
+intSMOPath  0  # the samples added are learnt by iterating from the previous
+               # solution
 
 1  # number of double parameters
 
 # now all the double parameters
-dblSMOTol  1e-10  # the walk is exact, so the iteration it is compared with
-                  # has to be asked for a solution of the same quality, or
-                  # the comparison is between two different problems
+dblSMOTol  1e-10  # the same tolerance SMOCfg-path.txt asks for: the two are
+                  # timed against each other, and a comparison at different
+                  # tolerances is no comparison
 
 0 # number of string parameters
 
@@ -35,5 +51,9 @@ dblSMOTol  1e-10  # the walk is exact, so the iteration it is compared with
 # now all the vector-of-string parameters
 # [none]
 
-# pointer to the "extra" Configuration
-* # [none]
+# the "extra" Configuration slot is left out on purpose: an override block
+# that ends here keeps the one of the base
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END SMOCfg-nopath.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,11 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-bds-ld.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-BDS-LSVM.txt - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a SVMBlock with the consensus
-# structure, to be solved by a LagrangianDualSolver relaxing the consensus
-# constraints, each chunk going to a SMOSolver of its own
-#
-#   Donato Meoli
+# A txt description of a BlockSolverConfig for a SVMBlock having LIBSVMSolver
+# attached, i.e., the training problem handed over to LIBSVM, the reference
+# implementation of the very algorithm SMOSolver implements: it is the other
+# yardstick the two decompositions are measured against
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,13 +16,13 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-LagrangianDualSolver
+LIBSVMSolver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
-*LDCfg.txt
+*LSVMCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-bds-ld.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-BDS-LSVM.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

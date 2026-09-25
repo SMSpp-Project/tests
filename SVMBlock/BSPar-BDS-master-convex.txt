@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-bds-master-convex.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - BSPar-BDS-master-convex.txt - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the master problem of the
 # Benders decomposition of a SVM: a Block having a single BundleSolver
@@ -17,9 +17,6 @@
 # it was tuned. The accuracy has to be relative to the values of the problem
 # as well, which are of order one here: at 1e-9 the loop keeps separating
 # cuts that say nothing.
-#
-#   Antonio Frangioni
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -107,8 +104,8 @@ strMPBSolverCfg  MPBCfg.txt # BlockSolverConfig of the MasterProblemBlock Solver
 # pointer to the "extra" Configuration
 * # [none]
 
-# end 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BundlePar-cwl.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - END BSPar-BDS-master-convex.txt - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

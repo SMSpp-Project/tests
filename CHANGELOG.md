@@ -218,6 +218,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the configurations of the Benders tester of `SVMBlock` are named as the
+  others are, `BSPar-BDS-<variant>.txt` (e.g., `BSPar-BDS-SMO.txt`,
+  `BSPar-BDS-LSVM.txt`) and `BSPar-LSVM-only.txt`; the three variants of
+  `SMOCfg.txt` are overrides of it, and the `BSPar-SMO*.txt` have the header
+  of every other configuration
+
 - what the testers give an `InvestmentBlock` and its `InvestmentFunction`
   comes from the configuration files, the testers only reading and applying
   them: in `InvestmentBlock` and in `test_bds` of `TwoStageStochasticBlock`,

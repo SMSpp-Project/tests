@@ -1,7 +1,22 @@
-ComputeConfig # exact type of the ComputeConfig object
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - SMOCfg-path.txt - - - - - - - - - - - - - - -
+#
+# A ComputeConfig of the SMOSolver asking for the exact solution path, i.e.,
+# the samples added to the data set are learnt by growing their multiplier
+# from zero while every other dual index is kept at its own optimality
+# condition, rather than by iterating from the previous solution.
+#
+# It is SMOCfg.txt with the two entries below changed, and says so through
+# the cascade-override mechanism ('*SMOCfg.txt +') instead of repeating the
+# whole ComputeConfig: whatever is not named here is what the base gives.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+# the base ComputeConfig, plus the overrides below - - - - - - - - - - - -
+*SMOCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
 
 1  # number of integer parameters
 
@@ -35,5 +50,9 @@ dblSMOTol  1e-10  # the walk is exact, so the iteration it is compared with
 # now all the vector-of-string parameters
 # [none]
 
-# pointer to the "extra" Configuration
-* # [none]
+# the "extra" Configuration slot is left out on purpose: an override block
+# that ends here keeps the one of the base
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END SMOCfg-path.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

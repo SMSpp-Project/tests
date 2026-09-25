@@ -341,7 +341,7 @@ int main( int argc , char ** argv )
 
  double t_smo;
  int st_smo;
- const double smo = solve_from_config( & svm , "BSPar-bds-smo.txt" , st_smo ,
+ const double smo = solve_from_config( & svm , "BSPar-BDS-SMO.txt" , st_smo ,
                                        t_smo );
 
  std::cout << "SMOSolver        = " << smo << "  ( " << t_smo << " s )"
@@ -361,7 +361,7 @@ int main( int argc , char ** argv )
 
   double t_ker;
   int st_ker;
-  const double kv = solve_from_config( & ker , "BSPar-bds-smo.txt" , st_ker ,
+  const double kv = solve_from_config( & ker , "BSPar-BDS-SMO.txt" , st_ker ,
                                        t_ker );
 
   const double err = std::abs( kv - smo ) / std::max( 1.0 , std::abs( smo ) );
@@ -393,7 +393,7 @@ int main( int argc , char ** argv )
   lsv.load( n , mp , Xd , y );
 
   int st_lsvm;
-  lsvm = solve_from_config( & lsv , "BSPar-bds-libsvm.txt" , st_lsvm ,
+  lsvm = solve_from_config( & lsv , "BSPar-BDS-LSVM.txt" , st_lsvm ,
                             t_lsvm );
 
   std::cout << "LIBSVMSolver     = " << lsvm << "  ( " << t_lsvm << " s )"
@@ -422,7 +422,7 @@ int main( int argc , char ** argv )
  int st_ld = 0;
  double ld = smo;
  if( do_ld )
-  try { ld = solve_from_config( & cns , "BSPar-bds-ld.txt" , st_ld , t_ld ); }
+  try { ld = solve_from_config( & cns , "BSPar-BDS-LD.txt" , st_ld , t_ld ); }
   catch( const std::exception & e ) {
    std::cout << "Lagrangian dual: skipped, " << e.what() << std::endl;
    do_ld = false;
@@ -447,7 +447,7 @@ int main( int argc , char ** argv )
  double t_bd;
  int st_bd;
  long it_bd = 0 , ct_bd = 0;
- const double bd = solve_from_config( & ben , "BSPar-bds-benders.txt" , st_bd ,
+ const double bd = solve_from_config( & ben , "BSPar-BDS-benders.txt" , st_bd ,
                                       t_bd , false , & it_bd , & ct_bd );
 
  /* The same, with the cuts of all the chunks aggregated into one: the two
@@ -466,7 +466,7 @@ int main( int argc , char ** argv )
  double t_bs;
  int st_bs;
  long it_bs = 0 , ct_bs = 0;
- const double bs = solve_from_config( & bens , "BSPar-bds-benders-single.txt" ,
+ const double bs = solve_from_config( & bens , "BSPar-BDS-benders-single.txt" ,
                                       st_bs , t_bs , false , & it_bs ,
                                       & ct_bs );
 
@@ -489,7 +489,7 @@ int main( int argc , char ** argv )
    try {
     /* The bundle master minimizes, so what it converges to is its upper
      * bound, its lower one being the model value. */
-    bdb = solve_from_config( abs_ben , "BSPar-bds-benders-convex.txt" ,
+    bdb = solve_from_config( abs_ben , "BSPar-BDS-benders-convex.txt" ,
                              st_bdb , t_bdb , true );
     has_bdb = true;
     }

@@ -1,12 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-bds-smo.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-BDS-LD.txt - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a SVMBlock having the ad hoc
-# SMOSolver attached, which ignores any structure and solves the training
-# problem out of the data set: this is the reference value the two
-# decompositions have to agree with
-#
-#   Donato Meoli
+# A txt description of a BlockSolverConfig for a SVMBlock with the consensus
+# structure, to be solved by a LagrangianDualSolver relaxing the consensus
+# constraints, each chunk going to a SMOSolver of its own
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -18,13 +15,14 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-SMOSolver
+LagrangianDualSolver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
-*SMOCfg.txt
+*LDCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BSPar-bds-smo.txt - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - -  END BSPar-BDS-LD.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

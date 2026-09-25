@@ -1,32 +1,28 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -  BSPar-SMO-nopath.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-BDS-SMO.txt - - - - - - - - - - - - - -
 #
-# A BlockSolverConfig registering the SMOSolver alone on a SVMBlock, asking
-# it for the plain iteration (intSMOPath = 0, in SMOCfg-nopath.txt): the
-# samples added to the data set are learnt by iterating from the previous
-# solution.
-#
-# It is the term of comparison of BSPar-SMO-path.txt in batch-path: the two
-# have to agree at every addition, and what the walk is worth is in the
-# events against the iterations the tester reports.
+# A txt description of a BlockSolverConfig for a SVMBlock having the ad hoc
+# SMOSolver attached, which ignores any structure and solves the training
+# problem out of the data set: this is the reference value the two
+# decompositions have to agree with
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
-1  # the BlockSolverConfig is a "differential" one
+0  # the BlockSolverConfig is not a "differential" one
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-SMOSolver             # name of Solver: the ad hoc SMO
+SMOSolver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
-*SMOCfg-nopath.txt
+*SMOCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -  END BSPar-SMO-nopath.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-BDS-SMO.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

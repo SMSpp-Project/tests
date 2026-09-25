@@ -1,24 +1,26 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-bds-libsvm.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-LSVM-only.txt - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a SVMBlock having LIBSVMSolver
-# attached, i.e., the training problem handed over to LIBSVM, the reference
-# implementation of the very algorithm SMOSolver implements: it is the other
-# yardstick the two decompositions are measured against
+# A BlockSolverConfig registering LIBSVMSolver alone on a SVMBlock, i.e., the
+# training problem handed over to LIBSVM, the reference implementation of the
+# very algorithm SMOSolver implements, with no cross-check against any other
+# Solver. It is what batch-real runs against BSPar-SMO.txt, the two being the
+# same algorithm in two implementations.
 #
-#   Donato Meoli
+# BSPar-LSVM.txt is a different thing: there LIBSVMSolver is added to the
+# :MILPSolver and the SMOSolver of BSPar.txt, and the three cross-check.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
-0  # the BlockSolverConfig is not a "differential" one
+1  # the BlockSolverConfig is a "differential" one
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-LIBSVMSolver
+LIBSVMSolver          # name of Solver: LIBSVM
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -26,5 +28,5 @@ LIBSVMSolver
 *LSVMCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BSPar-bds-libsvm.txt  - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-LSVM-only.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
