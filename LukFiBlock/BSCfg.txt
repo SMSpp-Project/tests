@@ -1,9 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSC.txt - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - BSCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a LukFiBlock
-#
-#   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -96,5 +94,5 @@ strMPBSolverCfg  MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Sol
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSC.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BSCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

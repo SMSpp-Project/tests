@@ -89,9 +89,9 @@ int main( int argc , char **argv )
 
  cout << *sLukFi;
 
- ProbFile.open( argc < 3 ? "BSC.txt" : argv[ 2 ] );
+ ProbFile.open( argc < 3 ? "BSCfg.txt" : argv[ 2 ] );
  if( ! ProbFile.is_open() ) {
-  cerr << "Error: cannot open file " << ( argc < 3 ? "BSC.txt" : argv[ 2 ] )
+  cerr << "Error: cannot open file " << ( argc < 3 ? "BSCfg.txt" : argv[ 2 ] )
        << endl;
   return( 1 );
   }
@@ -107,7 +107,7 @@ int main( int argc , char **argv )
  // empty or malformed file, or a "differential" one) leaves nothing to run
  if( sLukFi->get_registered_solvers().empty() ) {
   cerr << "Error: no Solver attached to the LukFiBlock by "
-       << ( argc < 3 ? "BSC.txt" : argv[ 2 ] ) << endl;
+       << ( argc < 3 ? "BSCfg.txt" : argv[ 2 ] ) << endl;
   delete bsc;
   delete sLukFi;
   return( 1 );
