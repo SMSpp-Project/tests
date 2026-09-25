@@ -54,8 +54,13 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 2  # number of double parameters
 
 # All specific HiGHS parameter (uncomment based on Solver)
-primal_feasibility_tolerance  1e-9
-dual_feasibility_tolerance    1e-9
+# the tolerances are absolute, while the objective of these instances is of
+# the order of 1e11, whose last digit in double precision is already 1e-5:
+# asked for 1e-9, HiGHS declares the model optimal and, in the same breath,
+# its primal solution infeasible, which reaches the caller as a solve that
+# went well with no solution in it
+primal_feasibility_tolerance  1e-7
+dual_feasibility_tolerance    1e-7
 
 2 # number of string parameters
 

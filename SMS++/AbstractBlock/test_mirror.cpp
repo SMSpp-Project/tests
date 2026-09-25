@@ -54,7 +54,13 @@ using namespace SMSpp_di_unipi_it;
 
 static int failed = 0;
 
-static std::string solver_name = "CPXMILPSolver";
+/// the :MILPSolver to solve with, the first of these in the factory being
+/// used unless one is named on the command line
+
+static const std::vector< std::string > SolverNames =
+ { "CPXMILPSolver" , "GRBMILPSolver" , "HiGHSMILPSolver" , "SCIPMILPSolver" };
+
+static std::string solver_name;
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
@@ -71,14 +77,14 @@ static void check( const std::string & what , double a , double b ,
 
 static double solve( Block * blck )
 {
- auto bsc = new BlockSolverConfig();
- bsc->add_ComputeConfig( std::string( solver_name ) , nullptr );
- bsc->apply( blck );
-
- if( blck->get_registered_solvers().empty() ) {
+ if( ! Solver::has_Solver( solver_name ) ) {
   std::cerr << "no Solver " << solver_name << " in the factory" << std::endl;
   std::exit( 1 );
   }
+
+ auto bsc = new BlockSolverConfig();
+ bsc->add_ComputeConfig( std::string( solver_name ) , nullptr );
+ bsc->apply( blck );
 
  auto slvr = blck->get_registered_solvers().back();
  slvr->compute();
@@ -209,6 +215,17 @@ int main( int argc , char ** argv )
 {
  if( argc > 1 )
   solver_name = argv[ 1 ];
+ else
+  for( const auto & name : SolverNames )
+   if( Solver::has_Solver( name ) ) {
+    solver_name = name;
+    break;
+    }
+
+ if( solver_name.empty() ) {
+  std::cout << "no :MILPSolver in this build, nothing to check" << std::endl;
+  return( 0 );
+  }
 
  std::cout << std::left << std::setw( 36 ) << "case" << std::right
            << std::setw( 14 ) << "original" << std::setw( 14 ) << "mirror"

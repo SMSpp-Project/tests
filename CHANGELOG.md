@@ -73,25 +73,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - a driver that runs the batteries backing the validation claim of the
   dynamic programming Solver of the thermal units, and the batteries require
   again the fixture that extracts the instances they read
+
+- `UCBlock_test --pollutant` scales a unit held by a `LagBFunction`, as a
+  `LagrangianDualSolver` holds it, and checks that the rows of that unit
+  follow the scale
+
+- a batch of `LagBFunction` over the easy components, which nothing was
+  exercising
+
+- a batch can set an algorithmic parameter in a `ComputeConfig` and time each
+  run, so that a sweep over the values of one parameter is a batch and not a
+  script written for the occasion; the two `batch-aggr` take the values of
+  `intCmpAggrRule` that way
+
+- `batch-k` of the multicommodity suite, the knapsack formulation asked for
+  as a structure, and `MMCFBlock_test` links the ML variant of the
+  BundleSolver, which `batchML` attaches
+
+- a driver that runs the batteries backing the validation claim of the
+  dynamic programming Solver of the thermal units, and the batteries require
+  again the fixture that extracts the instances they read
+
 - the batteries of `UCBlock` run the instances once per value of the rule
   that forms the groups of the parallel inner loop, and cross-check the
   academic and plan4res families over the exact Lagrangian chain; in the AC
   family the Lagrangian dual is declared a relaxation, its point being a
   convex combination, and the QCP sub-problems give the duals that chain
   needs
+
 - the SVM suite cross-checks LIBLINEAR on the formulations that LIBSVM
   cannot express, exercises the exact path and the shrinking, which nothing
   was running, and compares the Lagrangian dual with a `SMOSolver` on each
   chunk
+
 - `batch-ec` runs the Benders form of the energy community instances, the
   form the tester assembles giving the master a cost for every design
   Variable and keeping integer, in the master, a design that counts modules;
   the convex regime of the Benders Solver has its own cross-check
   configuration
+
 - a batch for an `InvestmentBlock` wrapping a whole stochastic Block, two-
   stage or multi-stage, whose instances follow the trees they are built over;
   the inner Solver is asked for homogeneous dual directions, which the HiGHS
   variant cannot give, and the configuration says so where it happens
+
 - the batteries of `BinaryKnapsackBlock` cover what `BranchAndXSolver` does:
   the lazy bounding protocol in every serial exploration strategy, the
   reoptimization with one Solver per strategy, the negative weights and the
@@ -226,9 +251,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   two configurations point at instead of seven copies of the same block, which
   is what takes those two files from 338 and 340 lines to about 100
 
+- the two batteries of `MCFBlock` run one seed of their three when `$CI` is
+  set, as the one of the dynamic programming already runs 5 of its 100 ramp
+  profiles: the three seeds are the same sweep with another random stream,
+  while the whole of them takes more than an hour on a machine of ours and
+  does not fit what a test is given on a shared runner
+
 - the inner Solver of the `BendersBFunction` suite is Gurobi, the one the
   image of the pipeline carries, so that the suite runs where it is run and
   not only where a licence of another solver happens to be
+
 - the comparison of the three forms of a two-stage stochastic investment
   problem lives with the suite of the Block it is posed on, and not with the
   one of a Solver: the monolithic form, the Lagrangian one and the Benders
@@ -239,10 +271,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the tester of the copy of an `AbstractBlock` and the one of the reference
   of the multicommodity suite are named after what they are, the core having
   a target called as the first one was
+
+- the makefile asks for `-O3 -DNDEBUG` and nothing else, the macro of the
+  patch for `boost::any` on macOS having no reason to be there since there is
+  no `boost::any` left in the core
+
+- the tester of the copy of an `AbstractBlock` and the one of the reference
+  of the multicommodity suite are named after what they are, the core having
+  a target called as the first one was
+
 - a suite is guarded on the modules it is labelled with, and the benchmark of
   BundleSolverML is skipped when its modules are not in the build, so that a
   build without a module has no test that cannot run rather than a test that
   fails
+
 - the batteries of the Lagrangian dual of the unit commitment fit the three
   hours a job is given: the academic families are sampled in CI, the
   plan4res one is run as a smoke test, and the metabatch is not run there,
@@ -250,6 +292,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the energy community under the proximal heuristic are skipped in CI,
   where the objective of a thermal unit inside a LagBFunction is the known
   bug
+
 - the batteries of the scenario reduction read their executables and their
   directories from the arguments instead of the paths of whoever wrote them,
   the tester is named after the Solver it drives, and the folder of the
@@ -257,6 +300,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the tester of `BendersBFunction` reports and counts its checks instead of
   aborting at the first one that fails, so that one run says how many of them
   hold and not only that one does not
+
+- the tester of `BendersBFunction` reports and counts its checks instead of
+  aborting at the first one that fails, so that one run says how many of them
+  hold and not only that one does not
+
 - the comparison of the two Benders decompositions of a facility location
   instance lives with the suite of that Block, its configurations take the
   names the other suites give them, the inner Solver of the Lagrangian is
@@ -478,6 +526,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reconstructs may violate the rows it has dualised, the default being the
   1e-1 that was written in the test
 
+- `InvestmentBlock/batches/batch-pypsa` fails when it finds no instance at all,
+  which is how a batch that has tested nothing was until now indistinguishable
+  from one where everything went well
+
 - the nested chain of TwoStageStochasticBlock (BSPar-2S-LD.txt, where each
   scenario sub-problem is solved by an inner LagrangianDualSolver) evaluates
   every component at each iteration, dblMinNrEvls = -1: a component being an
@@ -551,9 +603,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a 503 of GitLab to see it. What the tester needs is prepared by a test
   fixture, as in every other suite
 
+- the two configurations of the suite of `InvestmentBlock` asked HiGHS for a
+  feasibility tolerance of `1e-9`, which is absolute, on instances whose
+  objective is of the order of `1e11`, i.e., beyond what double precision
+  holds: HiGHS declared the model optimal and its primal solution infeasible
+  at the same time, which reaches the caller as a solve that went well with
+  no solution in it, and the `InvestmentFunction` turned that into an error
+  that stopped the bundle. They ask for `1e-7`, the default, and
+  `batches/batch-pypsa` passes
+
 - `LukFi_test` stops with an error when the `BlockSolverConfig` it reads
   attaches no `Solver` to the `LukFiBlock`, e.g. because the file is empty or
   malformed, rather than crashing on the first element of an empty list
+
+- the suites that try each :MILPSolver in turn skipped the ones the build does
+  not have by constructing them, while `Solver::new_Solver()` throws rather
+  than returning `nullptr` on a name the factory does not hold, so
+  `MILPSolver_test/groups` and `UCBlock_test/pollutant` died with
+  `CPXMILPSolver not present in Solver factory` wherever CPLEX is not
+  installed; they ask `Solver::has_Solver()` first, and
+  `AbstractBlock_mirror_test`, which named CPXMILPSolver and nothing else,
+  takes the first :MILPSolver the factory holds unless one is named on the
+  command line
+
+- the tester of `ThermalUnitBlock` compares the `Solution` of a Solver with
+  the state it left in the Variable once that is completed from `(p, u)` as
+  the `Solution` is when it is written: with the perspective cuts the epigraph
+  a Solver leaves is only as tight as the separated cuts, `1e-7` relative, and
+  on an objective that is the difference of much larger terms this showed as a
+  `Solution` worth `4e-6` more than the Variable
 
 ## [0.6.0] - 2025-12-12
 
@@ -627,6 +705,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - CapacitatedFacilityLocation tester.
+
 - Code to test different formulations of some problem.
 
 ### Changed
@@ -644,6 +723,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ThermalUnitBlock_Solver tester.
+
 - BinaryKnapsackBlock tester.
 
 ### Changed
@@ -695,6 +775,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for concurrency.
+
 - Support for new configuration framework.
 
 ### Changed

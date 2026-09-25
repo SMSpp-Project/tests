@@ -42,9 +42,13 @@ fwexe=${2:-}
 # these instances, see BSPar-large.txt
 par=BSPar-large.txt
 
+# in CI one seed of the three is run: the other two are the same sweep with
+# another random stream, and the whole of it takes more than an hour there
+if [ -n "$CI" ]; then seeds=1; else seeds=3; fi
+
 for type in net goto; do
 
-  for (( seed = 0; seed < 3 ; seed++ )); do
+  for (( seed = 0; seed < seeds ; seed++ )); do
 
     for sz in 10_64; do
       for h in 1 2 3 4 5; do

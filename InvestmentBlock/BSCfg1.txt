@@ -16,8 +16,8 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver    # name of Solver
-GRBMILPSolver     # name of Solver
-#HiGHSMILPSolver  # name of Solver
+#GRBMILPSolver    # name of Solver
+HiGHSMILPSolver   # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -29,15 +29,12 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-4  # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # LogVerb, log verbosity of the MILPSolver
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints
-intHomogeneousDirection 1 # the multipliers of an unbounded dual direction are
-                  # - A' y and not c - A' y, the Objective having no part in a
-                  # certificate of infeasibility
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
@@ -49,23 +46,22 @@ intHomogeneousDirection 1 # the multipliers of an unbounded dual direction are
 #Presolve      0   # 0 = off, 1 = conservative, 2 = aggressive (default -1)
 #NumericFocus  3   # 0 = auto (default), 1..3 = increasing precision focus
 
-0  # number of double parameters
-
-# now all the double parameters
-# [none]
+2  # number of double parameters
 
 # All specific HiGHS parameter (uncomment based on Solver)
-#primal_feasibility_tolerance  1e-9
-#dual_feasibility_tolerance    1e-9
+# the tolerances are absolute, while the objective of these instances is of
+# the order of 1e11, whose last digit in double precision is already 1e-5:
+# asked for 1e-9, HiGHS declares the model optimal and, in the same breath,
+# its primal solution infeasible, which reaches the caller as a solve that
+# went well with no solution in it
+primal_feasibility_tolerance  1e-7
+dual_feasibility_tolerance    1e-7
 
-0 # number of string parameters
-
-# now all the string parameters
-# [none]
+2 # number of string parameters
 
 # All specific HiGHS parameter (uncomment based on Solver)
-#presolve  off   # disable presolve for reproducibility
-#solver    ipm   # "choose" (default), "simplex", "ipm", "pdlp"
+presolve  off    # disable presolve for reproducibility
+solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
                  # (ipm = interior point: converges to analytic center, unique x*)
 
 #strOutputFile  uc1.lp

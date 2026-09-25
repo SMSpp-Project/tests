@@ -1,12 +1,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSCfg-nuc-lim.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSCfg-nuc-lp.txt - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig that attaches, to a (single-TUB) NuclearUnitBlock, a
 # :MILPSolver as the 1st (reference) Solver and the EXT DP solver
 # (NuclearUnitExtDPSolver) as the 2nd Solver, as BSCfg-nuc.txt does, with the
-# running time of the MILP capped at the 300 seconds of the scaling study: at
-# the weekly and the monthly horizon it does not close the problem, and with
-# no cap it would hold the batch for as long as it likes.
+# :MILPSolver solving the continuous relaxation (intRelaxIntVars 1): what the
+# two Solver report is then the gap of the formulation, the DP returning the
+# integer optimum and the MILP the bound its rows give.
 #
 #   Antonio Frangioni, Donato Meoli
 #
@@ -40,11 +40,10 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
+intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
 
-1 # number of double parameters
-dblMaxTime 300 # max running time (seconds), as in the timing study of TUDPS
+0 # number of double parameters
 
 # now all the double parameters
 
@@ -120,5 +119,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BSCfg-nuc-lim.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSCfg-nuc-lp.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
