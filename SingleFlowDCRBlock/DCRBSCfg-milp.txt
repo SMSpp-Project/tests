@@ -22,7 +22,7 @@ GRBMILPSolver                   # name of Solver
 
 # now all the ComputeConfig
 # ComputeConfig of the :MILPSolver
-*MILPCfg.txt
+*GRBCfg.txt       # MILPCfg.txt for a :MILPSolver other than Gurobi
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END DCRBSCfg-milp.txt - - - - - - - - - - - - - -

@@ -89,8 +89,17 @@ The two `LagrangianDualSolver` are two configurations rather than two rows
 of one: without copies of the flows the `Solver` of one would reach the
 other, and a `SingleFlowDCRBlock` cannot be copied yet. The batch file in
 `batches-multiflow` runs both on the instances of the module with the first
-1 to 5 flows of each network; the tester and its batch are built only if
-the `LagrangianDualSolver` and the `BundleSolver` are.
+2 to 5 flows of each network: with 1 flow the mutual capacity of an arc is
+0.8 times its own, too small for the flow on 11 networks out of 14, and on
+an infeasible instance the `LagrangianDualSolver` stops without saying so.
+The tester and its batch are built only if the `LagrangianDualSolver` and
+the `BundleSolver` are.
+
+The `ComputeConfig` of a `:MILPSolver` is `MILPCfg.txt`, and Gurobi reads
+it through `GRBCfg.txt`, which adds a numerical focus of 2: without it the
+barrier stops short of the optimum of the SOCP formulation on some
+instances of the module, with a "Numeric error" or with a value a little
+below the optimum.
 
 A makefile is also provided that builds `SingleFlowDCRBlock_test` including
 the `SingleFlowDCRBlock` and `MILPSolver` modules and all their dependencies

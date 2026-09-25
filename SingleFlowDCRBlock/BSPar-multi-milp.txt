@@ -25,7 +25,7 @@ LagrangianDualSolver            # name of 2nd Solver
 
 # now all the ComputeConfig
 # 1st ComputeConfig: the :MILPSolver - - - - - - - - - - - - - - - - - - - -
-*MILPCfg.txt
+*GRBCfg.txt       # MILPCfg.txt for a :MILPSolver other than Gurobi
 
 # 2nd ComputeConfig: the LagrangianDualSolver- - - - - - - - - - - - - - - -
 *LDCfg.txt +

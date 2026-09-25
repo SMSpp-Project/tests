@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a ctest fixture extracts before the batteries that read them
 
 - `MultiFlowDCRBlock_test` and `SingleFlowDCRBlock/batches-multiflow/batch`,
-  which compare on the instances with the first 1 to 5 flows of each network
+  which compare on the instances with the first 2 to 5 flows of each network
   a `:MILPSolver` on the formulation holding all the flows with the
   `LagrangianDualSolver` that relaxes the mutual capacities, its flows solved
   by the `SingleFlowDCRBendersSolver` or by a `:MILPSolver`: they take the
@@ -233,7 +233,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - the `ComputeConfig` of the `:MILPSolver` of the `SingleFlowDCRBlock` suite
   is written once, in `MILPCfg.txt`, which `BSPar.txt`, `BSPar-pc.txt` and
-  the configurations of the multi-flow problem include
+  the configurations of the multi-flow problem include, Gurobi through
+  `GRBCfg.txt`, which adds a numerical focus of 2: without it the barrier
+  stops short of the optimum of the SOCP formulation on some instances of
+  the module, with a "Numeric error" or with a value a little below it
 
 - the configurations of the Benders tester of `SVMBlock` are named as the
   others are, `BSPar-BDS-<variant>.txt` (e.g., `BSPar-BDS-SMO.txt`,

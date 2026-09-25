@@ -1,29 +1,28 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - GRBCfg.txt  - - - - - - - - - - - - - - - - -
 #
-# A txt description of the ComputeConfig of any :MILPSolver of the
-# SingleFlowDCRBlock suite, i.e., of HiGHS in BSPar-pc.txt; Gurobi, in the
-# other configurations, takes it through GRBCfg.txt, which adds what only
-# Gurobi understands
+# A txt description of the ComputeConfig of Gurobi in the SingleFlowDCRBlock
+# suite: the one of any :MILPSolver [see MILPCfg.txt], and a numerical focus
+# of 2, without which the barrier stops short of the optimum of the SOCP
+# formulation on some instances of the module (a sub-optimal root relaxation
+# and a "Numeric error", or a value a little below the optimum)
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig # exact type of the ComputeConfig object
+*MILPCfg.txt +
 
-1  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
+1  # f_diff == 1 ==> only the entries listed below are changed
 
-1  # number of integer parameters
+1 # number of integer parameters
 
 # now all the integer parameters
-intLogVerb     0    # log verbosity
-#intRelaxIntVars 1  # solve the continuous relaxation
+NumericFocus   2    # 0 = auto, 1..3 = increasing numerical care
 
-1 # number of double parameters
+0 # number of double parameters
 
 # now all the double parameters
-dblRelAcc      1e-6 # relative accuracy required to the optimum
+# [none]
 
 0 # number of string parameters
 
@@ -49,5 +48,5 @@ dblRelAcc      1e-6 # relative accuracy required to the optimum
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END MILPCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END GRBCfg.txt  - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
