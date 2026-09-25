@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-LD-SMO.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-LD-SMO.txt - - - - - - - - - - - - - -
 #
 # The same as BSPar-LD.txt, i.e., a txt description of a BlockSolverConfig for
 # a SVMBlock with the consensus structure [see SVMBlock::set_structure()] to
@@ -8,8 +8,6 @@
 # SMOSolver of its own rather than by a :MILPSolver: the multipliers of the
 # relaxed consensus constraints are the linear term of the primal of the chunk
 # [see SVMBlock::set_linear_term()], which the SMOSolver folds into the dual
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -43,5 +41,5 @@ SMOSolver                       # name of 3rd Solver
 *SMOCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-LD-SMO.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-LD-SMO.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - PPHCfg-DP.txt  - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - PPHCfg-DP.txt - - - - - - - - - - - - - - -
 #
 # A txt description of the ComputeConfig of a PrimalProximalHeur, which
 # basically is that of LagrangianDualSolver, which in turn basically is that
 # of the inner Solver, which is a BundleSolver
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -105,5 +103,5 @@ str_LagBF_BSCfg         InnerBSCfg-DP.txt # BlockSolverConfig for the LagBFuncti
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END PPHCfg-DP.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END PPHCfg-DP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

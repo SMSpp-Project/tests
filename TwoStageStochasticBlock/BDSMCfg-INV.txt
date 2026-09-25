@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BDSMCfg-INV.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BDSMCfg-INV.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the master problem of the
 # Benders decomposition on the instances in which the expansion is actually
@@ -8,9 +8,6 @@
 # that the scale of these instances asks for, i.e. the initial value of t and
 # the accuracy required; with the ones of BDSMCfg.txt the bundle stops short
 # of the optimum on three of the four.
-#
-#   Antonio Frangioni
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -113,8 +110,8 @@ strMPBSolverCfg  MPBCfg-BDS.txt # BlockSolverConfig of the
 # pointer to the "extra" Configuration
 * # [none]
 
-# end 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BDSMCfg-INV.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BDSMCfg-INV.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

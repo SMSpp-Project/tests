@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - LukFiB.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  LukFiB.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of the input file for a LukFiBlock, comprised the crucial
 # ComputeConfig of its inner LukFiFunction
-#
-#  Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # LukFiBlock parameters - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,7 +15,7 @@
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
-                
+
 3  # number of integer parameters
 
 # now all the integer parameters
@@ -90,7 +88,7 @@ intRstAlg      30 # parameter to handle the reset of the algorithm
 16 # number of double parameters
 
 # now all the double parameters
-dblRelAcc     1e-8 # relative accuracy 
+dblRelAcc     1e-8 # relative accuracy
 dblRelMPAcc   1e-9 # precision required to the MP Solver (optimality)
 dblRMPAccSol  1e-9 # precision required to the MP Solver (feasibility)
 
@@ -107,7 +105,7 @@ dbltMaior     1e+6 # maximum value for t
 dbltMinor     1e-4 # minimum value for t
 dbltInit         1 # initial value for t
 dbltSPar2    0.001 # parameter for the long-term t-strategy
-        
+
 0 # number of string parameters
 
 # now all the string parameters
@@ -116,7 +114,7 @@ dbltSPar2    0.001 # parameter for the long-term t-strategy
 # pointer to the "extra" Configuration
 * # [none]
 
-# end 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 0 # number of BlockSolverConfig for the sub-Block
 
@@ -124,5 +122,5 @@ dbltSPar2    0.001 # parameter for the long-term t-strategy
 # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END LukFiB.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END LukFiB.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

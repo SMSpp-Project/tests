@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-pc.txt - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - -  BSPar-pc.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a SingleFlowDCRBlock in the
 # "P/C" formulation (see DCRCfg-pc.txt), whose constraints are all linear
@@ -7,8 +7,6 @@
 # SingleFlowDCRBendersSolver. Since the P/C formulation only outer-
 # approximates the two cones, the :MILPSolver here solves a relaxation of
 # the DCR problem, which is what the -R option of the test declares.
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -112,5 +110,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-pc.txt - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - -  END BSPar-pc.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

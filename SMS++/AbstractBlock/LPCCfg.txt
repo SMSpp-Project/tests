@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - LPCCfg.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  LPCCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a :MILPSolver solving is a simple
-# LP / QP (continuous, convex, separable) 
-#
-#   Enrico Gorgone, Antonio Frangioni
+# LP / QP (continuous, convex, separable)
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -49,5 +47,5 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END LPCCfg.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END LPCCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

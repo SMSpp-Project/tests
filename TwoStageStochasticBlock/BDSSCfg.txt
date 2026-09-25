@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BDSSCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BDSSCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the subproblem of one Benders
 # component, i.e., the linear program whose value function is being
@@ -26,9 +26,6 @@
 # while SCIPMILPSolver has no Farkas certificate at all, its
 # has_dual_direction() being not implemented yet: with it, only subproblems
 # that are always feasible can be dealt with.
-#
-#   Antonio Frangioni
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -95,5 +92,5 @@ dblRelAcc      1e-9  # relative accuracy required to solution
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BDSSCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BDSSCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BlockConfig2.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BlockConfig2.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockConfig object for configuring the static
 # (abstract) Variable of "any" Block only, taking the corresponding
-# Configuration form SimpleConfig2.txt 
-#
-#   Antonio Frangioni
+# Configuration form SimpleConfig2.txt
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -48,5 +46,5 @@ BlockConfig     # exact type of the Configuration object
 * #none
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BlockConfig2.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BlockConfig2.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

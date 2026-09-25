@@ -1,12 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar-2S.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar-2S.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a TwoStageStochasticBlock to
 # be solved by two different Solver: a :MILPSolver on the deterministic
 # equivalent and a LagrangianDualSolver using a BundleSolver as the inner
 # Solver
-#
-#   Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -80,5 +78,5 @@ str_LagBF_BSCfg  InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar-2S.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar-2S.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

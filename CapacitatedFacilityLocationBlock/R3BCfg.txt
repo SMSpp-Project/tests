@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - R3BCfg.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  R3BCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a R3Block Configuration for
 # CapacitatedFacilityLocationBlock
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,5 +11,5 @@ SimpleConfiguration<int> # exact type of the Configuration object
 1  # 0 = copy, 1 or 2 = MCFBlock
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END R3BCfg.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END R3BCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

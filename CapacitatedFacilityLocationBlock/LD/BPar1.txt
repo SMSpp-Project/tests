@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BPar1.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - BPar1.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockConfig for CapacitatedFacilityLocationBlock
 #
@@ -9,8 +9,6 @@
 # - Natural configuration
 # - all (static) Constraint
 # - no dynamic Constraint active
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

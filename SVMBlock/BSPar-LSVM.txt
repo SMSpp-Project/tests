@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-LSVM.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-LSVM.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a SVMBlock whose abstract
 # representation encodes the Wolfe dual of the training problem, to be solved
@@ -11,8 +11,6 @@
 # kernel but the Laplacian one, and it refuses the others rather than
 # approximating them: this is why it has a BlockSolverConfig, and a batch, of
 # its own rather than being one more Solver in BSPar.txt.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -46,5 +44,5 @@ LIBSVMSolver                    # name of 3rd Solver
 *LSVMCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END BSPar-LSVM.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-LSVM.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

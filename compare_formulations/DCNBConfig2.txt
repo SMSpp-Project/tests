@@ -4,8 +4,6 @@
 # A txt description of a BlockConfig for all the DCNetworkBlock of a UCBlock
 # setting the formulation to PTDF
 #
-#   Antonio Frangioni
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

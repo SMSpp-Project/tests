@@ -4,8 +4,6 @@
 # A txt description of a BlockSolverConfig for any Block that can be solved
 # by a BoxSolver (with the quirks that this entails)
 #
-#   Antonio Frangioni
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -44,5 +42,5 @@ intPDSol 1 # whether solutions are computed and written inside compute()
 # end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BXBSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BXBSCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

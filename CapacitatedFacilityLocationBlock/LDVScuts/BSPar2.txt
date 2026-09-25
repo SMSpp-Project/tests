@@ -1,12 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar2.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar2.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
 # CapacitatedFacilityLocationBlock to be solved by a LagrangianDualSolver
 # using a [Parallel]BundleSolver as the inner Solver and the Knapsack
 # decomposition
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -75,9 +73,9 @@ dbltSPar2         1e-2 # parameter for the long-term t-strategy
 3 # number of string parameters
 
 # now all the string parameters
-str_LDSlv_ISName BundleSolver # the inner Solver used by LagrangianDualSolver 
+str_LDSlv_ISName BundleSolver # the inner Solver used by LagrangianDualSolver
 strMPBSolverCfg                 MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
-#str_LDSlv_ISName         LegacyBundleSolver # the inner Solver used by LagrangianDualSolver 
+#str_LDSlv_ISName         LegacyBundleSolver # the inner Solver used by LagrangianDualSolver
 str_LagBF_BSCfg      LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
 #                      this is for the Knapsack relaxation, using CoreDPBinaryKnapsackSolver
 #str_LagBF_BSCfg     LPBSCfg-K-CX.txt # BlockSolverConfig for the LagBFunctions
@@ -106,5 +104,5 @@ str_LagBF_BSCfg      LPBSCfg-K-DP.txt # BlockSolverConfig for the LagBFunctions
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar2.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar2.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

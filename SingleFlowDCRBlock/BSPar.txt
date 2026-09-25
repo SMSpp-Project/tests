@@ -1,13 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a SingleFlowDCRBlock in the
 # "SOCP" formulation (see DCRCfg-socp.txt), solved by a :MILPSolver that
 # copes with the conic constraints and by the SingleFlowDCRBendersSolver.
 # Note that not every :MILPSolver does: CPLEX and Gurobi solve the
 # mixed-integer conic program, HiGHS and SCIP are left commented out.
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -111,5 +109,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,8 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - QPCCfg.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  QPCCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a :MILPSolver solving is a simple
-# QP (continuous, convex, separable) 
+# QP (continuous, convex, separable)
 #
 #   Luca Mencarelli, Antonio Frangioni
 #
@@ -49,5 +49,5 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END QPCCfg.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END QPCCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

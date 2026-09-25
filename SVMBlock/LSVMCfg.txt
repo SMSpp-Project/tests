@@ -3,8 +3,6 @@
 #
 # A txt description of a ComputeConfig for the LIBSVMSolver
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -51,5 +49,5 @@ dblLSVMTol 1e-9  # as for SMOSolver, the default 1e-3 leaves a gap of the
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END LSVMCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END LSVMCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

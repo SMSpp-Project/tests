@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-Inv.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-Inv.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for an InvestmentBlock to be
 # solved by a BundleSolver
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -108,5 +106,5 @@ strMPBSolverCfg  MPBCfg-BDS.txt # BlockSolverConfig of the
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-Inv.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar-Inv.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

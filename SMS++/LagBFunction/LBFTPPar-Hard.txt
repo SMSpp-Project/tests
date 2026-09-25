@@ -1,13 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - LBFTPPar-Hard.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LBFTPPar-Hard.txt - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a LagBFunction containing as inner
 # Block the "transportation subproblem" in the tester for LagBFunction, in
 # the case there the LagBFunction is treated as an "hard" one and therefore
 # is actually compute()-d. It uses the file redirect feature to load the
 # BlockSolverConfig for the inner Block of the LagBFunction out of TPPar.txt
-#
-#   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

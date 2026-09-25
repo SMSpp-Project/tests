@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - InnerBSCfg.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  InnerBSCfg.txt - - - - - - - - - - - - - - -
 #
 # A "meta"-BlockSolverConfig: a map from a Block classname() to the
 # BlockSolverConfig that says how to solve each inner sub-Block of the
@@ -17,8 +17,6 @@
 # their continuous relaxation makes the Lagrangian Dual bound coincide with the
 # continuous relaxation of the :MILPSolver on the whole UCBlock.
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -31,5 +29,5 @@ ThermalUnitBlock        *TUBSCfg-CLP.txt
 *                       *LPBSCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END InnerBSCfg.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END InnerBSCfg.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

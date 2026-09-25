@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - LPPar.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - LPPar.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block containing the LP
 # representation of the problem solved by the tester for BendersBFunction;
 # this being a simple one-level LP (with no sub-Block), a :MILPSolver
-#
-#   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

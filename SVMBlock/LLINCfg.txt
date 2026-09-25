@@ -3,8 +3,6 @@
 #
 # A txt description of a ComputeConfig for the LIBLINEARSolver
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -54,5 +52,5 @@ dblLLINTol 1e-9  # as for SMOSolver, the default is way too loose for a
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END LLINCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END LLINCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,12 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BDSMCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BDSMCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the master problem of the
 # Benders decomposition: a Block having a single BundleSolver attached, which
 # drives the (stabilized) cutting-plane loop.
-#
-#   Antonio Frangioni
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -105,8 +102,8 @@ strMPBSolverCfg  MPBCfg-BDS.txt # BlockSolverConfig of the
 # pointer to the "extra" Configuration
 * # [none]
 
-# end 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BDSMCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BDSMCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

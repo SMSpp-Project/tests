@@ -5,8 +5,6 @@
 # Block. In particular, the RBlockConfig does nothing to the "root" Block,
 # but it applies a given set of sub-BlockConfig to its sons
 #
-#   Antonio Frangioni
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BPar2-MCF.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BPar2-MCF.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockConfig for a MCFBlock produced as the R£Block
 # of a CapacitatedFacilityLocationBlock
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -46,5 +44,5 @@ BlockConfig # exact type of the ComputeConfig object
 *    # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BPar2-MCF.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BPar2-MCF.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

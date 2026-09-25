@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BundlePar-cwl.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BundlePar-cwl.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block having a single
 # BundleSolver attached, and no sub-Block
-#
-#   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -59,7 +57,7 @@ dbltMaior     1e+6 # maximum value for t
 dbltMinor     1e-4 # minimum value for t
 dbltInit         1 # initial value for t
 dbltSPar2    0.001 # parameter for the long-term t-strategy
-        
+
 1 # number of string parameters
 
 # now all the string parameters
@@ -83,8 +81,8 @@ strMPBSolverCfg  MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Sol
 # pointer to the "extra" Configuration
 * # [none]
 
-# end 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BundlePar-cwl.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BundlePar-cwl.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

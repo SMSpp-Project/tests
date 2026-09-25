@@ -1,12 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - BSCfg.txt - - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig that attaches, to a (single-TUB) ThermalUnitBlock,
 # a :MILPSolver as the 1st (reference) Solver and the EXT DP solver
 # (ThermalUnitExtDPSolver) as the 2nd Solver, so the batch compares the ext DP
 # against the MILP on the T+PC formulation (the DP is the 2nd / "back" Solver).
-#
-#   Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

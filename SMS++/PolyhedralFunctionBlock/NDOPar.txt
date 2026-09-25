@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - NDOPar.txt- - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  NDOPar.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the Block possibly having a
 # "linear objective" and multiple sub-Block having a "C05 objective" solved
 # by the tester for PolyhedralFunctionBlock
-#
-#   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -102,5 +100,5 @@ strMPBSolverCfg  MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Sol
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END NDOPar.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END NDOPar.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - LDCfg-DP.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  LDCfg-DP.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for the LagrangianDualSolver wrapping
 # a BundleSolver as the inner Solver, applied to a UCBlock
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -50,7 +48,6 @@ intTrgtMng             0 # bit-wise encoding targets and accuracies management:
                          # bit 1: if upper/lower target is set to each convex/concave component
                          # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                          # bit 4: if Lipschitz constant is used to compute the upper model
-
 
 17 # number of double parameters
 
@@ -112,5 +109,5 @@ str_LagBF_BSCfg             InnerBSCfg-DP.txt # BlockSolverConfig for the LagBFu
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END LDCfg-DP.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END LDCfg-DP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

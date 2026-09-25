@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a SVMBlock split into chunks
 # the *Benders* way, i.e., with the model and the regularisation term left in
@@ -24,8 +24,6 @@
 # the reformulation, paid at every compute(), and the pool of cuts, which is
 # made of pieces of the master and goes with it, so that nothing is warm
 # started here.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -54,5 +52,5 @@ BendersDecompositionSolver      # name of 3rd Solver
 *BDSCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

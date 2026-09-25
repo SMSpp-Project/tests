@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar-DP.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar-DP.txt - - - - - - - - - - - - - - -
 #
 # Cross-check BlockSolverConfig for a UCBlock in which the Lagrangian Dual is
 # the one of the original problem: the sub-Block of the LagBFunctions are
@@ -28,8 +28,6 @@
 #
 # NOTE: an overriding ComputeConfig that is not the last in the list must end
 # with the '*' extra-Configuration pointer, or the parser runs into the next.
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -109,5 +107,5 @@ dbltInit  1e-3 # initial value for t
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END BSPar-DP.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar-DP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

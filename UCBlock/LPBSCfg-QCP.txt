@@ -8,10 +8,6 @@
 # quadratic constraints, i.e. it is a QCP, which HiGHS cannot solve; SCIP is
 # used instead. It is otherwise identical to LPBSCfg.txt (HiGHS, non-QCP case).
 #
-#   Enrico Gorgone
-#
-#   Antonio Frangioni
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -82,5 +78,5 @@ intCutSepPar    7 # separate the ACNetworkBlock McCormick valid inequalities,
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END LPBSCfg-QCP.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END LPBSCfg-QCP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

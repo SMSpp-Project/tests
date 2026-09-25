@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-orig.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-orig.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block to be solved by two
 # different Solver: a :MILPSolver and a LagrangianDualSolver using a
 # BundleSolver as the inner Solver
-#
-#   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -62,7 +60,6 @@ intTrgtMng           0 # bit-wise encoding targets and accuracies management:
                        # bit 1: if upper/lower target is set to each convex/concave component
                        # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                        # bit 4: if Lipschitz constant is used to compute the upper model
-                  
 
 16 # number of double parameters
 
@@ -119,5 +116,5 @@ str_LagBF_BSCfg   BXBSCfg.txt # the BlockSolverConfig for inner Block
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-orig.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-orig.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

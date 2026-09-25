@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar-LD.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar-LD.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a SVMBlock with the consensus
 # structure [see SVMBlock::set_structure()], i.e., the training problem
@@ -11,8 +11,6 @@
 # SMOSolver, which ignores the structure altogether and solves the training
 # problem out of the data set: the rewriting being an exact one, the three
 # have to agree
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -46,5 +44,5 @@ SMOSolver                       # name of 3rd Solver
 *SMOCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar-LD.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar-LD.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

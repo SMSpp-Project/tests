@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - InnerBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  InnerBSCfg.txt - - - - - - - - - - - - - - -
 #
 # A "meta"-BlockSolverConfig: a map from a Block classname() to the
 # BlockSolverConfig to attach to every sub-Block of that class. s_config_Block()
@@ -14,8 +14,6 @@
 # The "*" entry is the default applied to any inner Block whose classname() is
 # not listed explicitly (BatteryUnitBlock, IntermittentUnitBlock, ...).
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -29,5 +27,5 @@ BinaryKnapsackBlock     *BKBSCfg-DP.txt
 *                       *BSCfg1.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END InnerBSCfg.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END InnerBSCfg.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

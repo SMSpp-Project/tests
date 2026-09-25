@@ -1,13 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - LBFTPPar-Easy.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LBFTPPar-Easy.txt - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a LagBFunction containing as inner
 # Block the "transportation subproblem" in the tester for LagBFunction, in
 # the case there the LagBFunction is treated as an "easy" one and therefore
 # is not actually compute()-d, so that it is not necessary to
 # BlockSolverConfig-ure the inner Block of the LagBFunction
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

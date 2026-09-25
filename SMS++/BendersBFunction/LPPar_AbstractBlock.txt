@@ -2,10 +2,8 @@
 # - - - - - - - - - - - - - LPPar_AbstractBlock.txt - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a customer or a location block
-# used inside CWLAbstractBlockBuilder.h; this being a simple one-level LP 
+# used inside CWLAbstractBlockBuilder.h; this being a simple one-level LP
 # (with no sub-Block), a :MILPSolver
-#
-#   Enrico Gorgone, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -69,5 +67,5 @@ intLogVerb 0 # LogVerb, log verbosity of the MILPSolver
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - END LPPar_AbstractBlock.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - END LPPar_AbstractBlock.txt - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
