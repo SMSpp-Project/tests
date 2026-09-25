@@ -13,6 +13,12 @@
 # the runs are comparable, and for an accuracy tighter than the one the
 # decomposition is held to, the direction resting on it.
 #
+# It is also asked for the dual simplex (Method, a Gurobi parameter): with
+# the barrier, which Gurobi picks for a QP, almost every solve of this master
+# ends SUBOPTIMAL, the primal residual stalling just above the feasibility
+# tolerance, and the path of the run then changes from one run to the next;
+# with the simplex every solve is optimal and the runs repeat.
+#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -36,7 +42,7 @@ ComputeConfig         # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> all non-provided parameters are not changed
 
-3 # number of integer parameters
+4 # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the :MILPSolver
@@ -44,6 +50,7 @@ intRelaxIntVars 1 # the master is continuous
 intMaxThread    1 # one thread: the master is small and re-solved
                   # often, and a deterministic one makes the runs
                   # comparable
+Method          1 # the dual simplex, not the barrier [see above]
 
 1 # number of double parameters
 

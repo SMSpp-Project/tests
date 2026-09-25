@@ -276,6 +276,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tester is `-F`, `-R` going back to what it is everywhere else, i.e. the
   declaration of which `Solver` solve a relaxation of the problem
 
+- the master problem of the Frank-Wolfe direction taken from a bundle
+  (`MPBCfg-FW.txt`, the same in the three suites) is solved by the dual
+  simplex of Gurobi rather than by the barrier Gurobi picks for a QP: with the
+  barrier almost every solve ended `SUBOPTIMAL`, the primal residual stalling
+  just above the feasibility tolerance, and the number of iterations of a run
+  changed from one run to the next, while with the simplex every solve is
+  optimal and two runs of the same case repeat to the last iteration
+
 - the four sector-coupled instances `batch-pypsa` walks are written by the
   conversion as it stands, where an extendable asset with no upper bound keeps
   the infinite design cap it has instead of a finite number standing in for it:
