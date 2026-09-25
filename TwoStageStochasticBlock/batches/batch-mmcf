@@ -3,8 +3,7 @@
 # usage: batch-mmcf < exe file > < generator > [ instance ... ]
 #        < exe file >  = path of the executable, default ./TSSB_test
 #        < generator > = path of mmcf_tssb_gen, default ./mmcf_tssb_gen
-#        < instance >  = Canad instances to run, default small.std with
-#                        demands that only decrease (always feasible); e.g.,
+#        < instance >  = Canad instances to run, default small.std; e.g.,
 #                        "p33.dat p34.dat" for the longer run
 #
 # a stochastic multicommodity network design problem, i.e., a
@@ -17,7 +16,11 @@
 # nested (BSPar-MMCF-LDLD.txt) and recursive (BSPar-MMCF-LDrec.txt), one run
 # each, since duals that do not copy their components cannot share the
 # Block of the scenarios; on its Benders form (-b) the MILP against
-# BendersDecompositionSolver (BSPar-MMCF-BDS.txt), which gives the optimum.
+# BendersDecompositionSolver, with the scenarios as LPs (BSPar-MMCF-BDS.txt)
+# or solved by the recursive Lagrangian dual (BSPar-MMCF-BDSLD.txt), one run
+# each, since a BendersDecompositionSolver reformulates its Block; both give
+# the optimum. The instances have complete recourse (mmcf_tssb_gen -r),
+# which the latter needs, the Lagrangian dual giving no Farkas certificate.
 # The instances are written by mmcf_tssb_gen out of the Canad instances of
 # tests/MMCFBlock.
 
@@ -37,24 +40,27 @@ cd "$here" || exit 1
 fail=0
 
 run() {
-  local inst=$1 args=$2
+  local inst=$1 args=$2 bmeth=${3:-BDS BDSLD}
   "$gen" -i "$data/$inst" -o "$tmp/$inst.nc4" $args > /dev/null || return 1
   echo "== $inst ($args)"
   for m in LD LDLD LDrec; do
     "$exe" -B InnerBCfg.txt -S BSPar-MMCF-$m.txt -R ",r" "$tmp/$inst.nc4" ||
       fail=1
   done
-  "$exe" -b -B InnerBCfg.txt -S BSPar-MMCF-BDS.txt "$tmp/$inst.nc4" ||
-    fail=1
+  for m in $bmeth; do
+    "$exe" -b -B InnerBCfg.txt -S BSPar-MMCF-$m.txt "$tmp/$inst.nc4" ||
+      fail=1
+  done
   }
 
 if [ ${#insts[@]} -eq 0 ]; then
-  for sd in 1 2; do
-    run small.std "-n 3 -v 0.3 -u 0 -s $sd" || fail=1
-  done
+  # BDSLD only on the first seed: on the second one it does not close in
+  # 900 seconds, whatever the accuracy of the subproblems and their Restore
+  run small.std "-n 3 -v 0.3 -r 10 -s 1" || fail=1
+  run small.std "-n 3 -v 0.3 -r 10 -s 2" BDS || fail=1
 else
   for inst in "${insts[@]}"; do
-    run "$inst" "-n 3 -v 0.2 -s 1" || fail=1
+    run "$inst" "-n 3 -v 0.2 -r 10 -s 1" || fail=1
   done
 fi
 

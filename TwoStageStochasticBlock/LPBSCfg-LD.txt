@@ -44,7 +44,7 @@ intLogVerb        0 # log verbosity of main Bundle algorithm
 2 # number of double parameters
 
 # now all the double parameters
-dblRelAcc       1e-6 # relative accuracy required to solution, a hundredth
+dblRelAcc       1e-7 # relative accuracy required to solution, a hundredth
                      # of the outer one: an outer dual that sets no
                      # accuracy to its components (intTrgtMng 3) reads the
                      # errors of all of them added up

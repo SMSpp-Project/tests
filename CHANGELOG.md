@@ -15,9 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the Canad instances, is solved by the MILP, by the Lagrangian dual over
   the scenarios, by the nested and by the recursive one (one run each, since
   duals that do not copy their components cannot share them) and, on its
-  Benders form, by `BendersDecompositionSolver`, all cross-checked against
-  the MILP; the knapsacks are solved by dynamic programming
-  (`BKBSCfg-DP.txt`, in `InnerBSCfg.txt`)
+  Benders form, by `BendersDecompositionSolver` with the scenarios as LPs
+  and with the scenarios solved by the recursive Lagrangian dual
+  (`BSPar-MMCF-BDSLD.txt`, a run of its own since a
+  `BendersDecompositionSolver` reformulates its Block), all cross-checked
+  against the MILP; the instances have complete recourse (`mmcf_tssb_gen
+  -r`), which the Lagrangian subproblems need, and the knapsacks are solved
+  by dynamic programming (`BKBSCfg-DP.txt`, in `InnerBSCfg.txt`)
 
 - `ParallelDPBinaryKnapsackSolver` is in the comparison of the
   `BinaryKnapsackBlock` battery, as its 14th `Solver`, with the engine it
