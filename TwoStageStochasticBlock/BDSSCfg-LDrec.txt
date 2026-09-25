@@ -6,7 +6,12 @@
 # duals of the coupling rows, hence the cut is a Lagrangian one, exact at the
 # master solution when the subproblem has the integrality property once the
 # complicating Variable are fixed. It gives no Farkas certificate, hence the
-# subproblem must always be feasible (int_BDSlv_FeasCut 0)
+# subproblem must always be feasible (int_BDSlv_FeasCut 0). The residual
+# is declared zero at 1e-6 rather than at the 1e-2 of LDCfg.txt: with the
+# latter the bundle stops with a dual value 1.6% below the one of the
+# subproblem and bounds that both lie below it, the cut is never tight at
+# the master solution and the loop of Benders' decomposition adds it again
+# at every round
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -37,10 +42,11 @@ int_LDSlv_iBCopy 0 # 1 if sub-Block must be R3B-copied
 intLogVerb       0 # log verbosity of main Bundle algorithm
 intRecursive     1 # decompose the descendants too
 
-1 # number of double parameters
+2 # number of double parameters
 
 # now all the double parameters
 dblRelAcc 1e-8 # relative accuracy required to solution
+dblNZEps  1e-6 # threshold to declare 0 the || residual ||
 
 1 # number of string parameters
 

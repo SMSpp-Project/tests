@@ -40,24 +40,23 @@ cd "$here" || exit 1
 fail=0
 
 run() {
-  local inst=$1 args=$2 bmeth=${3:-BDS BDSLD}
+  local inst=$1 args=$2
   "$gen" -i "$data/$inst" -o "$tmp/$inst.nc4" $args > /dev/null || return 1
   echo "== $inst ($args)"
   for m in LD LDLD LDrec; do
     "$exe" -B InnerBCfg.txt -S BSPar-MMCF-$m.txt -R ",r" "$tmp/$inst.nc4" ||
       fail=1
   done
-  for m in $bmeth; do
+  for m in BDS BDSLD; do
     "$exe" -b -B InnerBCfg.txt -S BSPar-MMCF-$m.txt "$tmp/$inst.nc4" ||
       fail=1
   done
   }
 
 if [ ${#insts[@]} -eq 0 ]; then
-  # BDSLD only on the first seed: on the second one it does not close in
-  # 900 seconds, whatever the accuracy of the subproblems and their Restore
-  run small.std "-n 3 -v 0.3 -r 10 -s 1" || fail=1
-  run small.std "-n 3 -v 0.3 -r 10 -s 2" BDS || fail=1
+  for sd in 1 2; do
+    run small.std "-n 3 -v 0.3 -r 10 -s $sd" || fail=1
+  done
 else
   for inst in "${insts[@]}"; do
     run "$inst" "-n 3 -v 0.2 -r 10 -s 1" || fail=1
