@@ -11,6 +11,7 @@ if (NOT hasParent)
     find_package(BundleSolver)
     find_package(MILPSolver)
     find_package(BendersDecompositionSolver)
+    find_package(MMCFBlock)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -135,6 +136,35 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                                "there, the BDS batch is out")
             endif ()
         endif ()
+    endif ()
+endif ()
+
+# A stochastic multicommodity network design problem: a
+# TwoStageStochasticBlock whose scenarios are MMCFBlock with one knapsack per
+# arc, solved by the MILP, by the Lagrangian duals over the scenarios (with
+# MILP scenarios, nested, recursive) and, on its Benders form, by
+# BendersDecompositionSolver, all cross-checked [see batches/batch-mmcf]. The
+# instances are written by mmcf_tssb_gen out of the Canad ones of the
+# MMCFBlock suite. Neither the MMCFBlock nor the Solver are among the labels
+# of this suite, so the tester links them and the batch runs only where they
+# are all there.
+if (TARGET SMS++::TwoStageStochasticBlock AND TARGET SMS++::MMCFBlock AND
+    TARGET SMS++::LagrangianDualSolver AND TARGET SMS++::BundleSolver AND
+    TARGET SMS++::MILPSolver AND TARGET SMS++::BendersDecompositionSolver)
+
+    target_link_libraries(TSSB_test PRIVATE SMS++::MMCFBlock)
+
+    add_executable(mmcf_tssb_gen mmcf_tssb_gen.cpp)
+    target_link_libraries(mmcf_tssb_gen PRIVATE
+                          SMS++::MMCFBlock
+                          SMS++::TwoStageStochasticBlock)
+
+    if (UNIX)
+        add_test(NAME TSSB_test/batches/batch-mmcf
+                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mmcf
+                         $<TARGET_FILE:TSSB_test>
+                         $<TARGET_FILE:mmcf_tssb_gen>
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 endif ()
 

@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBSCfg-IP.txt - - - - - - - - - - - - - - -
+#
+# A "meta"-BlockSolverConfig for the LagBFunctions of a LagrangianDualSolver
+# over the scenarios whose scenarios are solved as integer problems: the
+# scenario (the entry "*") by a :MILPSolver (BSCfg1-IP.txt), the Block inside
+# it being given their Solver as in InnerBSCfg.txt
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig, i.e., a map classname --> its BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+3 # the number of elements in the map
+
+ThermalUnitBlock    *TUBSCfg-DP.txt
+BinaryKnapsackBlock *BKBSCfg-DP.txt
+*                   *BSCfg1-IP.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBSCfg-IP.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

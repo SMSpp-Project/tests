@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# usage: batch-mmcf < exe file > < generator > [ instance ... ]
+#        < exe file >  = path of the executable, default ./TSSB_test
+#        < generator > = path of mmcf_tssb_gen, default ./mmcf_tssb_gen
+#        < instance >  = Canad instances to run, default small.std with
+#                        demands that only decrease (always feasible); e.g.,
+#                        "p33.dat p34.dat" for the longer run
+#
+# a stochastic multicommodity network design problem, i.e., a
+# TwoStageStochasticBlock whose scenarios are MMCFBlock with one knapsack per
+# arc (MMCFBCfg.txt), the arcs to build being decided before the demands of
+# the commodities are known, is solved in all the ways the suite has, which
+# are cross-checked: on the TwoStageStochasticBlock the MILP on the
+# deterministic equivalent against each of the Lagrangian duals, which give
+# lower bounds: over the scenarios with MILP scenarios (BSPar-MMCF-LD.txt),
+# nested (BSPar-MMCF-LDLD.txt) and recursive (BSPar-MMCF-LDrec.txt), one run
+# each, since duals that do not copy their components cannot share the
+# Block of the scenarios; on its Benders form (-b) the MILP against
+# BendersDecompositionSolver (BSPar-MMCF-BDS.txt), which gives the optimum.
+# The instances are written by mmcf_tssb_gen out of the Canad instances of
+# tests/MMCFBlock.
+
+exe="${1:-./TSSB_test}"
+gen="${2:-./mmcf_tssb_gen}"
+shift 2 2> /dev/null
+insts=( "$@" )
+
+# the configuration files are in the suite, the batch in its batches/
+# directory, the Canad instances in the MMCFBlock suite
+here="$( cd "$( dirname "$0" )/.." && pwd )"
+data="$here/../MMCFBlock/data/Canad"
+tmp="$( mktemp -d )"
+trap 'rm -rf "$tmp"' EXIT
+cd "$here" || exit 1
+
+fail=0
+
+run() {
+  local inst=$1 args=$2
+  "$gen" -i "$data/$inst" -o "$tmp/$inst.nc4" $args > /dev/null || return 1
+  echo "== $inst ($args)"
+  for m in LD LDLD LDrec; do
+    "$exe" -B InnerBCfg.txt -S BSPar-MMCF-$m.txt -R ",r" "$tmp/$inst.nc4" ||
+      fail=1
+  done
+  "$exe" -b -B InnerBCfg.txt -S BSPar-MMCF-BDS.txt "$tmp/$inst.nc4" ||
+    fail=1
+  }
+
+if [ ${#insts[@]} -eq 0 ]; then
+  for sd in 1 2; do
+    run small.std "-n 3 -v 0.3 -u 0 -s $sd" || fail=1
+  done
+else
+  for inst in "${insts[@]}"; do
+    run "$inst" "-n 3 -v 0.2 -s 1" || fail=1
+  done
+fi
+
+exit $fail

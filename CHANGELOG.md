@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `TwoStageStochasticBlock/batches/batch-mmcf`: a stochastic multicommodity
+  network design problem, i.e., a `TwoStageStochasticBlock` whose scenarios
+  are `MMCFBlock` with one knapsack per arc, written by `mmcf_tssb_gen` out
+  of the Canad instances, is solved by the MILP, by the Lagrangian dual over
+  the scenarios, by the nested and by the recursive one (one run each, since
+  duals that do not copy their components cannot share them) and, on its
+  Benders form, by `BendersDecompositionSolver`, all cross-checked against
+  the MILP; the knapsacks are solved by dynamic programming
+  (`BKBSCfg-DP.txt`, in `InnerBSCfg.txt`)
+
 - `ParallelDPBinaryKnapsackSolver` is in the comparison of the
   `BinaryKnapsackBlock` battery, as its 14th `Solver`, with the engine it
   chooses by itself and 4 workers: it was the one `Solver` of that module that
