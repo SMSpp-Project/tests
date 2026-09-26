@@ -48,6 +48,15 @@ REF_OBJ[smspp_tssb_2n_2gext_1l.nc]=1.508768621e+09
 # in the units
 REF_OBJ[smspp_mod_t48_s1_b2c_det_investment.nc]=3.511271121e+07
 
+# the modular network also runs with the inner UCBlock solved by the
+# recursive Lagrangian dual over its units (InnerBCfg-LD.txt)
+declare -A LD_INNER
+LD_INNER[smspp_mod_t48_s1_b2c_det_investment.nc]=1
+
+# the BlockConfig of that run; empty where the LagrangianDualSolver is not
+# in the build
+ld_bcfg="${IB_LD_BCFG-InnerBCfg-LD.txt}"
+
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ran=0
@@ -70,6 +79,10 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
     fi
 
     run_test "$exe" "$what" "$bpar" "$spar" 0 "$ref"
+
+    if [ -n "${ld_bcfg}" ] && [ -n "${LD_INNER[$base]}" ]; then
+      run_test "$exe" "$what" "${ld_bcfg}" "$spar" 0 "$ref"
+    fi
 
 done
 

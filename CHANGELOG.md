@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InvestmentBlock/batches/batch-pypsa` runs the modular network with one
+  scenario again with the inner UCBlock solved by the recursive Lagrangian
+  dual over its units (`InnerBCfg-LD.txt`), against the reference of PyPSA
+
 - the nested forms in the batteries:
   `TwoStageStochasticBlock/batches/batch-pypsa` runs the Benders form of
   the thermal instance with BendersDecompositionSolver whose subproblems

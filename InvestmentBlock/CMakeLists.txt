@@ -79,10 +79,10 @@ if (TARGET SMS++::InvestmentBlock)
         set_tests_properties(IB_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED investment_data_extracted)
 
-        # batch-stochastic runs the modular instances a second time with the
-        # inner Block solved by the LagrangianDualSolver, which may not be in
-        # the build: there the second run is emptied out
-        if (BATCH_NAME MATCHES "batch-stochastic" AND
+        # batch-stochastic and batch-pypsa run the modular instances a second
+        # time with the inner Block solved by the LagrangianDualSolver, which
+        # may not be in the build: there the second run is emptied out
+        if (BATCH_NAME MATCHES "batch-(stochastic|pypsa)" AND
             NOT TARGET SMS++::LagrangianDualSolver)
             set_tests_properties(IB_test/${BATCH_NAME}
                                  PROPERTIES ENVIRONMENT "IB_LD_BCFG=")
