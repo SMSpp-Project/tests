@@ -21,8 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   next to the TSSB of `batch-pypsa-modular`, and the thermal family, whose
   scenarios are unit commitments, in `TwoStageStochasticBlock/batches/
   batch-pypsa` with `BSPar-2S-LD-IP.txt`, i.e., a `:MILPSolver` on the
-  integer problem and the dual of the scenarios, the nested and the
-  recursive Lagrangian dual
+  integer problem, the `PrimalProximalHeur` and the recursive Lagrangian
+  dual; on the modular family with a continuous design `batch-pypsa-modular`
+  also runs BDS whose subproblems are solved by the recursive dual
+  (`BSPar-BDS-2S-LD.txt`) and the recursive dual itself
+  (`BSPar-2S-LDrec-IP.txt`)
 
 - `TSSB_test -R`, which declares the Solver that solve a relaxation and
   makes the tester cross-check the intervals of the bounds of all the

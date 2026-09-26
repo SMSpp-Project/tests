@@ -193,14 +193,26 @@ inner-Block module needed by the instances in `batches/` (currently
   the continuous relaxation the `:MILPSolver` solves (`MILPCfg.txt`), so
   that the latter is to be declared a relaxation (`-R r,,`). Its two
   duals are the fragments `LDLDCfg.txt` and `LDrecCfg.txt`.
-- `BSPar-2S-LD-IP.txt` — the same two duals and the dual of the scenarios
-  each solved whole as a MILP (`LDIPCfg.txt`), beside a `:MILPSolver` on
-  the integer problem (`MILPCfg-IP.txt`), for a TSSB whose scenarios are
-  unit commitments: there the three duals give a bound below the optimum
-  by the duality gap, and are declared relaxations (`-R ,r,r,r`), which
-  makes the tester cross-check the intervals of the bounds of all the
-  Solver instead of requiring the values to be equal. `batch-pypsa` runs
-  it on the thermal family of pypsa2smspp (`pypsa-data/tssb-thermal`).
+- `BSPar-2S-LD-IP.txt` — a `:MILPSolver` on the integer problem
+  (`MILPCfg-IP.txt`), the `PrimalProximalHeur` (`PPHCfg.txt`) and the
+  recursive `LagrangianDualSolver` (`LDrecCfg.txt`), for a TSSB whose
+  scenarios may be unit commitments: there the dual gives a bound below the
+  optimum by the duality gap, and the heuristic that bound and a feasible
+  solution above the optimum. The batch declares the dual a relaxation and
+  no tolerance for the heuristic (`-R ,,r -E ,inf`), which makes the tester
+  cross-check the intervals of the bounds of all the Solver instead of
+  requiring the values to be equal. The heuristic comes before the dual:
+  after it, it throws "Variable belonging to wrong Block".
+- `BSPar-2S-LDrec-IP.txt` — the `:MILPSolver` on the integer problem and
+  the recursive dual alone, for a TSSB whose second stage is continuous,
+  where the inner dual of the `PrimalProximalHeur` would have only easy
+  components; `batch-pypsa-modular` runs it on the modular family with a
+  continuous design.
+- `BDSCfg-IP.txt` — the ComputeConfig of the `BendersDecompositionSolver` of
+  `BSPar-BDS-2S-IP.txt` (MILP master, one cut per scenario, 4 threads), and
+  `BDSCfg-LD.txt` the same with the subproblems solved by the recursive
+  `LagrangianDualSolver` (`BDSSCfg-LDrec.txt`), which `BSPar-BDS-2S-LD.txt`
+  puts beside the `:MILPSolver` on the Benders form.
 - `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
   whose components are the units of the scenario (`InnerBSCfg.txt`).
   `LPBSCfg-LD-noeasy.txt` is the same with `intDoEasy=0`, which the

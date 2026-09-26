@@ -22,8 +22,9 @@
 # units x periods x scenarios in the name) are unit commitments in every
 # scenario, where a Lagrangian dual gives a bound below the optimum by the
 # duality gap: they are run with BSPar-2S-LD-IP.txt, the :MILPSolver on the
-# integer problem cross-checked with the dual of the scenarios, the nested
-# one and the recursive one, the three declared relaxations [-R].
+# integer problem cross-checked with the PrimalProximalHeur, whose interval
+# must contain the optimum [-E], and the recursive Lagrangian dual, declared
+# a relaxation [-R].
 #
 # these sector-coupled instances are badly scaled: HiGHS aborts on the inner
 # LagBFunction LPs, so the default BlockSolverConfig here (BSPar-2S.txt)
@@ -105,7 +106,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
     fi
 
     run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -B InnerBCfg.txt \
-             -R ",r,r,r" -r "$ref"
+             -R ",,r" -E ",inf" -r "$ref"
 
 done
 

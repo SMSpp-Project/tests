@@ -1,0 +1,45 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - BSPar-2S-LDrec-IP.txt - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a TwoStageStochasticBlock
+# whose second stage is continuous: a :MILPSolver on the deterministic
+# equivalent as an integer problem, which gives the optimum, and the
+# recursive LagrangianDualSolver (LDrecCfg.txt), which relaxes the scenarios
+# and the units within them at once and gives the same value, being the dual
+# of a linear program; the batch declares it a relaxation (-R ,r) all the
+# same, the design being possibly integer. The PrimalProximalHeur of
+# BSPar-2S-LD-IP.txt is not here, since on a linear program all the
+# components of its inner dual are easy, which its BundleSolver does not
+# support.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of 1st Solver
+LagrangianDualSolver  # name of 2nd Solver
+
+2 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver, on the integer problem
+
+*MILPCfg-IP.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the recursive LagrangianDualSolver
+
+*LDrecCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END BSPar-2S-LDrec-IP.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

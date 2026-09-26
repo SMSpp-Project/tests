@@ -19,6 +19,14 @@
 # the subproblems of its Benders form; the InvestmentBlock over the same two
 # (the investment_outside form) is in InvestmentBlock/batches/batch-stochastic
 #
+# on those with a continuous design, whose scenarios are linear programs, two
+# more runs put every other decomposition beside the :MILPSolver: on the
+# Benders form, BDS whose subproblems are solved by the recursive Lagrangian
+# dual over their units (BSPar-BDS-2S-LD.txt), and on the extensive form the
+# recursive Lagrangian dual itself (BSPar-2S-LDrec-IP.txt), declared a
+# relaxation [-R] although it is exact there; on the integer design they are
+# also exact, or a valid bound, but take minutes, hence they are left out
+#
 # the instances are written by gen_modular_tssb.py and emit_modular_tssb.py
 # in the test/references of pypsa2smspp, whose README says with which values
 
@@ -57,6 +65,14 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-modular/smspp_*.nc4; do
     fi
 
     run_test "$exe" "$what" -b -S "$par" -B InnerBCfg.txt -r "$ref"
+
+    case "$base" in
+      *_b[0-9]c_*|*_b[0-9][0-9]c_*)
+        run_test "$exe" "$what" -b -S BSPar-BDS-2S-LD.txt -B InnerBCfg.txt \
+                 -r "$ref"
+        run_test "$exe" "$what" -S BSPar-2S-LDrec-IP.txt -B InnerBCfg.txt \
+                 -R ",r" -r "$ref" ;;
+    esac
 
 done
 
