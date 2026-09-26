@@ -181,10 +181,11 @@ skips a slow feasibility check, which also makes what is written depend on
 the seed alone. How many scenarios there are is fixed when the file is
 written, so a sweep over that number is a file each.
 
-The reduction is asked of the generic tester of `ScenarioReductionSolver`,
-which reads the same file whatever Block wrote it:
+The reduction is asked of `TSSB_scenred_test`, the generic tester of the
+scenario reduction of the `TwoStageStochasticBlock` suite, which reads the
+same file whatever Block wrote it:
 
-    ./ScenarioReductionSolver_test -i <tssb.nc4> -m cssc -r 5 -c BSCfg-scenred.txt
+    ./TSSB_scenred_test -i <tssb.nc4> -m cssc -r 5 -c BSCfg-scenred.txt
 
 with `-m` the method (`baseline`, `dupacova`, `bestfit`, `firstfit`, `cssc`),
 `-r` how many representatives to keep and `-c` the `BlockSolverConfig`. What
@@ -192,7 +193,7 @@ it prints is the value of the whole set, the value of the reduced one and the
 relative difference between the two, which is how well the representatives
 stand for the whole.
 
-[batches/batch-scenred](batches/batch-scenred) walks the two steps over
+[batches-scenred/batch](batches-scenred/batch) walks the two steps over
 instances, numbers of scenarios and of representatives and methods, writing
 one file per number of scenarios since the reduction cannot take a smaller
 set out of a larger pool, and collects what each run gives into a CSV.

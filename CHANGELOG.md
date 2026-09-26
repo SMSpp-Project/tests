@@ -24,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recursive Lagrangian dual (`InnerBCfg-LD.txt`, `IBOCfg-LD.txt`,
   `IFCfg-LD.txt`, `BSCfg-LD.txt`)
 
+- `TSSB_scenred_test` in the `TwoStageStochasticBlock` suite, the generic
+  tester of the scenario reduction of a `TwoStageStochasticBlock` read from
+  a file, which was the instance mode of the test of ScenarioReductionSolver
+  and linked from there the Blocks and the `:MILPSolver` that module does
+  not depend on; the `batches-scenred` batteries of `UCBlock` and
+  `CapacitatedFacilityLocationBlock` run it, and are labelled with
+  `ScenarioReductionSolver`, `StochasticBlock` and `TwoStageStochasticBlock`
+  as well
+
 - the tester of `UCBlock` takes `-V`, how much the point a relaxation
   reconstructs may violate the rows it has dualised, the default being the
   1e-1 that was written in the test
@@ -276,6 +285,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   accurate to its own `dblRelAcc`, the bundle of the master reached the
   optimum without ever certifying its lower bound, and
   BendersDecompositionSolver reported `-inf`
+
+- the `TwoStageStochasticBlock` suite is configured before those of
+  `CapacitatedFacilityLocationBlock` and `UCBlock`, whose batteries of the
+  scenario reduction run its `TSSB_scenred_test`
 
 - `BendersBFunction_test` runs in the suite, on the 34 small instances of the
   capacitated warehouse location problem (cap41 to cap134), the large ones
@@ -708,6 +721,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CapacitatedFacilityLocationBlock` and `MCFBlock`; `CFL_BDS_test` keeps
   skipping the comparison instead, the ORLib instances being downloaded by
   the build and not always there
+
+- `CFLScenarioGenerator/batches-scenred/batch` asks for the fixture that
+  writes the netCDF instances it reads, without which it failed in a fresh
+  build tree
 
 - the tester of `CapacitatedFacilityLocationBlock` applied `BSPar1.txt` and
   `BSPar2.txt` by itself, so that the `Solver` this build does not have were

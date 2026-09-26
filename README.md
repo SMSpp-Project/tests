@@ -166,8 +166,8 @@ the `test` directory of the module itself.
   on the monolithic relaxation, with the same set of configurations, named the
   same way, as the other two suites this tester is built in. The same suite
   holds the generator of the scenarios of a unit commitment and the battery
-  that reduces them, `batches/batch-scenred`, which runs it together with the
-  tester of `ScenarioReductionSolver`.
+  that reduces them, `batches-scenred/batch`, which runs it together with
+  `TSSB_scenred_test` of the `TwoStageStochasticBlock` suite.
 
 - [`InvestmentBlock`](InvestmentBlock), a tester that solves the investment
   problem defined by an `InvestmentBlock` (loaded from a netCDF file) with the
@@ -188,7 +188,13 @@ the `test` directory of the module itself.
   `K` representatives each method of `ScenarioReductionSolver` picks, and the
   first-stage decision the reduced problem finds is put back into the whole
   set, so that what is reported is both the gap of the reduced problem and the
-  implementation error of its decision.
+  implementation error of its decision. The last one, `TSSB_scenred_test`,
+  reads whatever `TwoStageStochasticBlock` a file holds, reduces its
+  scenarios with a method of `ScenarioReductionSolver` or with
+  `CSSCScenarioReductionSolver` and reports the gap of the reduced problem;
+  it registers no test of its own, being run by the `batches-scenred`
+  batteries of the `UCBlock` and `CapacitatedFacilityLocationBlock` suites on
+  the instances their generators write.
 
 - [`MultiStageStochasticBlock`](MultiStageStochasticBlock), a tester that loads
   a `MultiStageStochasticBlock` from a netCDF file, attaches a `:Solver`

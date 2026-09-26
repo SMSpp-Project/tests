@@ -126,13 +126,16 @@ add_subdirectory(MCFBlock)
 
 add_subdirectory(BinaryKnapsackBlock)
 
+# before the suites whose batteries run its tester of the scenario reduction,
+# which has to be a target when they are configured [see add_batch_test()]
+add_subdirectory(TwoStageStochasticBlock)
+
 add_subdirectory(CapacitatedFacilityLocationBlock)
 
 add_subdirectory(MMCFBlock)
 
 add_subdirectory(UCBlock)
 add_subdirectory(InvestmentBlock)
-add_subdirectory(TwoStageStochasticBlock)
 add_subdirectory(MultiStageStochasticBlock)
 
 add_subdirectory(LukFiBlock)

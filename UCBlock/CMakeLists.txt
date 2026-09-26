@@ -142,9 +142,10 @@ endif ()
 # The generator reads a UCBlock instance, perturbs the demand and the
 # generation of its intermittent units, and writes both the scenario set and
 # the TwoStageStochasticBlock the battery then reduces and solves with the
-# tester of ScenarioReductionSolver, which is generic and lives in that
-# module; the battery is therefore run with the two of them and not with the
-# tester of this suite.
+# generic tester of the scenario reduction, which lives in
+# tests/TwoStageStochasticBlock since the Block it reads is a
+# TwoStageStochasticBlock; the battery is therefore run with the two of them
+# and not with the tester of this suite.
 if (TARGET SMS++::UCBlock AND TARGET SMS++::StochasticBlock)
 
     add_executable(UCScenarioGenerator
@@ -160,9 +161,9 @@ if (TARGET SMS++::UCBlock AND TARGET SMS++::StochasticBlock)
 
     smspp_install(UCScenarioGenerator)
 
-    if (TARGET SMS++::ScenarioReductionSolver)
+    if (TARGET TSSB_scenred_test)
         add_batch_test(UCScenarioGenerator batches-scenred/batch
-                       ScenarioReductionSolver_test)
+                       TSSB_scenred_test)
         set_tests_properties(UCScenarioGenerator/batches-scenred/batch
                              PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
     endif ()
@@ -203,5 +204,16 @@ endif ()
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# The battery of the scenario reduction runs, through the tester of
+# tests/TwoStageStochasticBlock, three modules more than the rest of the suite
+# declares, so it is labelled with them here rather than in the map of the
+# directory.
+set(_batch UCScenarioGenerator/batches-scenred/batch)
+if (TEST ${_batch})
+    set(_labels ${SMSPP_TEST_LABELS_UCBlock}
+                ScenarioReductionSolver StochasticBlock TwoStageStochasticBlock)
+    set_tests_properties(${_batch} PROPERTIES LABELS "${_labels}")
+endif ()
 
 # --------------------------------------------------------------------------- #

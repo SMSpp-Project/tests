@@ -104,9 +104,24 @@ $(DIR)/TSSB_reduction_test: $(MOBJ) $(SRSkOBJ) $(DIR)/test_reduction.o
 $(DIR)/test_reduction.o: $(DIR)/test_reduction.cpp $(MH) $(SRSkH)
 	$(CC) -c $(DIR)/test_reduction.cpp -o $@ $(MINC) $(SRSkINC) $(SW)
 
-.PHONY: reduction
+# the tester the batches-scenred batteries of the other suites run on the
+# instances their generators write: it reads whatever Block the file holds,
+# hence the Block of those instances and the :MILPSolver of the
+# configuration have to be among the modules included above
+
+scenred: SW = $(SW_RELEASE)
+scenred: $(DIR)/TSSB_scenred_test
+
+$(DIR)/TSSB_scenred_test: $(MOBJ) $(SRSkOBJ) $(DIR)/test_scenred.o
+	$(CC) -o $@ $(DIR)/test_scenred.o $(MOBJ) $(SRSkOBJ) $(MLIB) \
+	      $(SRSkLIB) $(SW)
+
+$(DIR)/test_scenred.o: $(DIR)/test_scenred.cpp $(MH) $(SRSkH)
+	$(CC) -c $(DIR)/test_scenred.cpp -o $@ $(MINC) $(SRSkINC) $(SW)
+
+.PHONY: reduction scenred
 
 clean::
-	rm -f $(DIR)/TSSB_reduction_test
+	rm -f $(DIR)/TSSB_reduction_test $(DIR)/TSSB_scenred_test
 
 ############################ End of makefile #################################

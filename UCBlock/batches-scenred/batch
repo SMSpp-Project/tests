@@ -2,7 +2,7 @@
 #
 # usage: batch [ options ]
 #        --generator < path >   scenario generator, default ./UCScenarioGenerator
-#        --solve < path >       reduction test, default ./ScenarioReductionSolver_test
+#        --solve < path >       reduction test, default ./TSSB_scenred_test
 #        --instances < list >   instance names or paths, default EC_CO_Test_TUB
 #        --n < list >           scenario counts N, default 25
 #        --k < list >           representative counts K, default 5
@@ -33,7 +33,7 @@ HERE="$( cd "$( dirname "$0" )" && pwd )"
 # how the suite runs its batteries, or in the environment, or left to default
 # to the current directory
 GEN="${GEN:-./UCScenarioGenerator}"
-SOLVE="${SOLVE:-./ScenarioReductionSolver_test}"
+SOLVE="${SOLVE:-./TSSB_scenred_test}"
 
 for _slot in GEN SOLVE; do
     [[ $# -gt 0 && "$1" != --* ]] || break
@@ -80,7 +80,7 @@ done
     echo "ERROR: $GEN not found (build UCScenarioGenerator, or pass"
     echo "       --generator < path >)"; exit 1; }
 [ ! -x "$SOLVE" ] && {
-    echo "ERROR: $SOLVE not found (build ScenarioReductionSolver_test, or"
+    echo "ERROR: $SOLVE not found (build TSSB_scenred_test, or"
     echo "       pass --solve < path >)"; exit 1; }
 [ ! -d "$IDIR" ] && {
     echo "ERROR: instance directory not found: $IDIR"; exit 1; }

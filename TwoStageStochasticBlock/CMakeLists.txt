@@ -14,6 +14,34 @@ if (NOT hasParent)
     find_package(MMCFBlock)
 endif ()
 
+# The reduction of whatever TwoStageStochasticBlock a file holds: the tester
+# reads the instance, its scenario set and the AbstractPath of its first-stage
+# Variable, reduces the scenarios to the K representatives a method of
+# ScenarioReductionSolver (or CSSCScenarioReductionSolver) picks, solves the
+# reduced problem and reports its gap against the whole one. It knows of no
+# concrete Block, hence it registers no test of its own: it is run by the
+# batches-scenred batteries of the suites whose generators write those files
+# (tests/UCBlock and tests/CapacitatedFacilityLocationBlock), which is why
+# this directory is added before theirs, and why it is built before the
+# modules the rest of the suite needs are asked for, since it needs none of
+# them; the Block of those instances and the :MILPSolver are linked when they
+# are in the build, so that the factory can read and solve them.
+if (TARGET SMS++::ScenarioReductionSolver)
+
+    add_executable(TSSB_scenred_test test_scenred.cpp)
+    target_link_libraries(TSSB_scenred_test PRIVATE
+                          SMS++::TwoStageStochasticBlock
+                          SMS++::ScenarioReductionSolver)
+
+    foreach (_mod CapacitatedFacilityLocationBlock UCBlock MILPSolver)
+        if (TARGET SMS++::${_mod})
+            target_link_libraries(TSSB_scenred_test PRIVATE SMS++::${_mod})
+        endif ()
+    endforeach ()
+
+    smspp_install(TSSB_scenred_test)
+endif ()
+
 # Skip the suite if some module its labels declare is not in the build
 smspp_require_labelled_modules()
 

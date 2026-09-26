@@ -125,6 +125,25 @@ against the same reference. The instances are written by
 `gen_modular_tssb.py` and `emit_modular_tssb.py`, in the
 `scripts/smspp_instances/references` of pypsa-eur-instances.
 
+`TSSB_scenred_test` is the generic tester of the scenario reduction: it
+reads a `TwoStageStochasticBlock` out of a netCDF file, with its scenario
+set and the `AbstractPath` that say which the here-and-now `Variable` are,
+reduces the scenarios to the `K` representatives a method picks, solves the
+reduced problem and reports its gap against the value the whole set gives:
+
+    ./TSSB_scenred_test -i <tssb.nc4> -m <method> -r <K>
+                        -c <BlockSolverConfig>
+
+with `-m` one of `baseline`, `dupacova`, `bestfit` and `firstfit`, the
+heuristics of `ScenarioReductionSolver`, and `cssc`, i.e.,
+`CSSCScenarioReductionSolver`, which solves the scenario subproblems with
+the `:MILPSolver` of the `BlockSolverConfig`. Nothing in it knows of any
+concrete Block, and writing such a file is the business of the Block of the
+second stage: it registers no test of its own and is run by the
+`batches-scenred` batteries of the `UCBlock` and
+`CapacitatedFacilityLocationBlock` suites, on the instances their
+generators write. It is built with `make scenred`.
+
 A makefile is also provided that builds the executable including the
 `TwoStageStochasticBlock`, `LagrangianDualSolver`, `BundleSolver`,
 `MILPSolver` modules and the core SMS++ library, together with the

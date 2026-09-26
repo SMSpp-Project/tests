@@ -188,11 +188,11 @@ long with the demand alone, `ni * T` with the generation alone and the sum of
 the two by default; how many of them there are is fixed when the file is
 written, so a sweep over that number is a file each.
 
-The reduction itself is asked of the generic tester of
-`ScenarioReductionSolver`, which reads the same file whatever Block wrote it:
+The reduction itself is asked of `TSSB_scenred_test`, the generic tester of
+the scenario reduction of the `TwoStageStochasticBlock` suite, which reads
+the same file whatever Block wrote it:
 
-    ./ScenarioReductionSolver_test -i <tssb.nc4> -m cssc -r 5 -c
-BSCfg-scenred.txt
+    ./TSSB_scenred_test -i <tssb.nc4> -m cssc -r 5 -c BSCfg-scenred.txt
 
 with `-m` the method (`baseline`, `dupacova`, `bestfit`, `firstfit`, `cssc`),
 `-r` how many representatives to keep and `-c` the `BlockSolverConfig`.

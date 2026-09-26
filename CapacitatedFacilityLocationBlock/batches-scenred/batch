@@ -2,7 +2,7 @@
 #
 # usage: batch [ options ]
 #        --generator < path >   scenario generator, default ./CFLScenarioGenerator
-#        --solve < path >       reduction test, default ./ScenarioReductionSolver_test
+#        --solve < path >       reduction test, default ./TSSB_scenred_test
 #        --instances < list >   instance base names, default cap102
 #        --n < list >           scenario counts N, default 200
 #        --k < list >           representative counts K, default "5 10"
@@ -32,7 +32,7 @@ HERE="$( cd "$( dirname "$0" )" && pwd )"
 # how the suite runs its batteries, or in the environment, or left to default
 # to the current directory
 GEN="${GEN:-./CFLScenarioGenerator}"
-SOLVE="${SOLVE:-./ScenarioReductionSolver_test}"
+SOLVE="${SOLVE:-./TSSB_scenred_test}"
 
 for _slot in GEN SOLVE; do
     [[ $# -gt 0 && "$1" != --* ]] || break
@@ -76,7 +76,7 @@ done
     echo "ERROR: $GEN not found (build CFLScenarioGenerator, or pass"
     echo "       --generator < path >)"; exit 1; }
 [ ! -x "$SOLVE" ] && {
-    echo "ERROR: $SOLVE not found (build ScenarioReductionSolver_test, or"
+    echo "ERROR: $SOLVE not found (build TSSB_scenred_test, or"
     echo "       pass --solve < path >)"; exit 1; }
 [ ! -d "$IDIR" ] && {
     echo "ERROR: instance directory not found: $IDIR"; exit 1; }

@@ -143,9 +143,10 @@ endif ()
 # writes: the reduction is asked of ScenarioReductionSolver, but what it is
 # asked of is the facility location instances, hence it belongs to this suite.
 # The generator writes the TwoStageStochasticBlock that the battery then
-# reduces and solves with the tester of ScenarioReductionSolver, which is
-# generic and lives in that module, so the battery is run with the two of them
-# and not with the tester of this suite.
+# reduces and solves with the generic tester of the scenario reduction, which
+# lives in tests/TwoStageStochasticBlock since the Block it reads is a
+# TwoStageStochasticBlock, so the battery is run with the two of them and not
+# with the tester of this suite.
 if (TARGET SMS++::CapacitatedFacilityLocationBlock
     AND TARGET SMS++::TwoStageStochasticBlock)
 
@@ -163,14 +164,28 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock
 
     smspp_install(CFLScenarioGenerator)
 
-    if (TARGET SMS++::ScenarioReductionSolver)
+    if (TARGET TSSB_scenred_test)
         add_batch_test(CFLScenarioGenerator batches-scenred/batch
-                       ScenarioReductionSolver_test)
+                       TSSB_scenred_test)
+        # the battery reads the netCDF instances the fixture writes
+        set_tests_properties(CFLScenarioGenerator/batches-scenred/batch
+                             PROPERTIES FIXTURES_REQUIRED cfl2nc4_generated)
     endif ()
 endif ()
 
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# The battery of the scenario reduction runs, through the tester of
+# tests/TwoStageStochasticBlock, three modules more than the rest of the suite
+# declares, so it is labelled with them here rather than in the map of the
+# directory.
+set(_batch CFLScenarioGenerator/batches-scenred/batch)
+if (TEST ${_batch})
+    set(_labels ${SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock}
+                ScenarioReductionSolver StochasticBlock TwoStageStochasticBlock)
+    set_tests_properties(${_batch} PROPERTIES LABELS "${_labels}")
+endif ()
 
 # --------------------------------------------------------------------------- #
