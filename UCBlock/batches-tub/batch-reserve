@@ -34,20 +34,20 @@ rounds=10   # re-solves per instance (exercises the Modification path)
 nchg=10
 pchg=0.6
 
-# wf is bit-wise: 0-6 select the formulation (3bin/T/pt/DP/SU/SD/SUSD), +8
-# (PCuts) adds the perspective cuts. We test every formulation with cuts, i.e.
-# wf in 8..14. On the large-horizon families (L_B_C_26 / L_B_C_31, TimeHorizon
-# 216) the interval-based formulations (pt/DP/SU/SD/SUSD, base wf >= 2, i.e.
-# wf >= 10) are too expensive, so we skip them and keep only 3bin/T (wf 8,9).
+# the formulation of the unit is the BlockConfig TUBCfg-<form>.txt, one per
+# formulation (3bin/T/pt/DP/SU/SD/SUSD), -PC adding the perspective cuts. We
+# test every formulation with cuts. On the large-horizon families (L_B_C_26 /
+# L_B_C_31, TimeHorizon 216) the interval-based formulations (pt/DP/SU/SD/SUSD)
+# are too expensive, so we skip them and keep only 3bin/T.
 for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
   case "$fam" in L_B_C_26|L_B_C_31) big=1 ;; *) big=0 ;; esac
   for f in "${DATADIR}"/${fam}_*.nc4; do
-    for wf in 8 9 10 11 12 13 14; do
+    for form in 3bin-PC T-PC pt-PC DP-PC SU-PC SD-PC SUSD-PC; do
       # skip the expensive interval-based formulations on large instances
-      if [ $wf -ge 10 ] && [ "$big" = 1 ]; then
+      if [ $form != 3bin-PC ] && [ $form != T-PC ] && [ "$big" = 1 ]; then
         continue
       fi
-      run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -f "$wf" -n "$rounds" -m "$nchg" -q "$pchg"
+      run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -B "TUBCfg-$form.txt" -n "$rounds" -m "$nchg" -q "$pchg"
     done
   done
 done

@@ -1,15 +1,14 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -  TUBCfg-T.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - TUBCfg-T.txt- - - - - - - - - - - - - - - - -
 #
-# BlockConfig for the ThermalUnitBlock: the plain T formulation, NO Perspective
-# Cuts (static_variables = 1 = TForm). This is the cheap formulation: it does NOT
-# build the (expensive) DP + P/C abstract representation. FrankWolfeSolver does
-# not need it, its LMO (ThermalUnitDPSolver) solves the unit by its own internal
-# DP regardless of the abstract formulation, so FW-only runs (profiling,
-# batch-style sweeps without the reference) get the SAME result much faster
-# (e.g. ~2s vs ~28s on a 96-period unit). Use TUBCfg-DP.txt only when the
-# reference :MILPSolver must solve the monolithic DP + P/C relaxation.
+# The BlockConfig of a ThermalUnitBlock that selects the T formulation,
+# without Perspective Cuts (static_variables = 1).
 #
+# It is the cheap formulation, which FrankWolfeSolver runs use since its
+# LMO (ThermalUnitDPSolver) solves the unit by its own DP whatever the
+# abstract formulation is.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockConfig # exact type of the Configuration object
@@ -22,31 +21,34 @@ BlockConfig # exact type of the Configuration object
 *  # [none]
 
 # static_constraints
-*    # [none]
+*  # [none]
 
 # dynamic_constraints
-*    # [none]
+*  # [none]
 
-# static_variables
+# static_variables: the formulation, 0 = 3bin, 1 = T, 2 = pt, 3 = DP,
+# 4 = SU, 5 = SD, 6 = SUSD, +8 with Perspective Cuts
 SimpleConfiguration<int>
-1    # TForm (no Perspective Cuts)
+1
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
-*    # [none]
+*  # [none]
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
-# - - - - - - - - - - - - - - -  END TUBCfg-T.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END TUBCfg-T.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

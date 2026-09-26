@@ -4,10 +4,11 @@
 #        < exe file > = path of the executable file, default ./TUDPS_test
 #
 # runs the single-NuclearUnitBlock instances on the T + Perspective-Cuts
-# formulation (wf = 9), solving each with the MILPSolver (1st / reference) and
-# the NuclearUnitExtDPSolver (2nd) of BSCfg-nuc.txt and comparing the two. A
-# NuclearUnitBlock is-a ThermalUnitBlock, so the same tester drives it; the
-# nuclear DP solver only differs in the BlockSolverConfig of this directory.
+# formulation (TUBCfg-T-PC.txt), solving each with the MILPSolver (1st /
+# reference) and the NuclearUnitExtDPSolver (2nd) of BSCfg-nuc.txt and
+# comparing the two. A NuclearUnitBlock is-a ThermalUnitBlock, so the same
+# tester drives it; the nuclear DP solver only differs in the
+# BlockSolverConfig of this directory.
 #
 # Two sets of instances are run. The first one (singlebus-nuclear) has the
 # modulations of a single instant, i.e., the original model of the class. The
@@ -39,11 +40,11 @@ par=BSCfg-nuc.txt
 
 seed=0
 wchg=0      # just solve and compare the optimum (no cost perturbation here)
-wf=9        # T (=1) + Perspective Cuts (+8): the T+P/C formulation
+form=T-PC   # the T formulation with Perspective Cuts
 
 # the original model - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 for f in "${DATADIR}"/*/*.nc4; do
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -f "$wf"
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -B "TUBCfg-$form.txt"
 done
 
 # the operating rules - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -59,14 +60,14 @@ if [ -z "$files" ]; then
 fi
 
 for f in $files; do
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -f "$wf" -n 0
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
   TUDPS_RESCOST=-0.05 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -f "$wf" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
   TUDPS_QCOST=-0.01 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -f "$wf" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
   TUDPS_FIXMOD=7 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -f "$wf" -n 0
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -f "$wf" -n 5
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -B "TUBCfg-$form.txt" -n 5
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

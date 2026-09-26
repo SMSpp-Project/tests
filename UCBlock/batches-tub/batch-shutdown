@@ -32,12 +32,12 @@ for sdc in 100 50000; do
 
         what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-        # wf is bit-wise: 0-6 select the formulation (3bin/T/pt/DP/SU/SD/
-        # SUSD), +8 (PCuts) adds the perspective cuts
-        for wf in 0 1 2 3 4 5 6 8 9; do
+        # the formulation is the BlockConfig TUBCfg-<form>.txt, -PC adding
+        # the perspective cuts
+        for form in 3bin T pt DP SU SD SUSD 3bin-PC T-PC; do
 
           run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
-                   -f "$wf" -n "$rounds" -m "$nchg" -q "$pchg" -d "$sdc"
+                   -B "TUBCfg-$form.txt" -n "$rounds" -m "$nchg" -q "$pchg" -d "$sdc"
 
         done
       done

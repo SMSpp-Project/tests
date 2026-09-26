@@ -601,7 +601,8 @@ static bool SolveBoth( void )
 // nuclear NuclearUnitExtDPSolver) just by passing a different -S file.
 long int seed = 0;
 Index wchg = 135;
-int wf = 1;
+int wf = 1;          // the formulation of the unit, read back from the
+                      // BlockConfig given with -B
 double p_change = 0.6;
 Index n_change = 10;
 Index n_repeat = 100;
@@ -615,7 +616,6 @@ static bool process_specific_arg( int opt )
  switch( opt ) {
   case( 'e' ): Str2Sthg( optarg , seed );      return( true );
   case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
-  case( 'f' ): Str2Sthg( optarg , wf );        return( true );
   case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
   case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
   case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
@@ -640,11 +640,10 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ ThermalUnitBlock Solver test.\n";
- short_opts += "e:k:f:n:m:q:d:u";
+ short_opts += "e:k:n:m:q:d:u";
  const std::vector< option > my_opts = {
    { "seed"   , required_argument , nullptr , 'e' } ,
    { "wchg"   , required_argument , nullptr , 'k' } ,
-   { "wf"     , required_argument , nullptr , 'f' } ,
    { "rounds" , required_argument , nullptr , 'n' } ,
    { "nchng"  , required_argument , nullptr , 'm' } ,
    { "pchng"  , required_argument , nullptr , 'q' } ,
@@ -659,10 +658,6 @@ int main( int argc , char **argv )
          "                                    coefficients,\n"
          "                                    128 also via abstract\n"
          "                                    representation\n"
-         "  -f, --wf <bits>                 what formulation [1]:\n"
-         "                                    0 3bin, 1 T, 2 pt, 3 DP,\n"
-         "                                    4 SU, 5 SD, 6 SUSD;\n"
-         "                                    +8 also use perspective cuts\n"
          "  -n, --rounds <n>                how many iterations [100]\n"
          "  -m, --nchng <n>                 number of changes [10]\n"
          "  -q, --pchng <p>                 probability of changing [0.6]\n"
@@ -675,9 +670,12 @@ int main( int argc , char **argv )
 
  process_args( argc , argv , process_specific_arg );
 
- // the BlockSolverConfig (-S) must be provided explicitly: the test never
- // falls back to a hardcoded default Configuration
+ // the BlockSolverConfig (-S) and the BlockConfig (-B), which gives the
+ // formulation of the unit (e.g., TUBCfg-T.txt), must be provided
+ // explicitly: the test never falls back to a hardcoded default
+ // Configuration
  require_solver_config();
+ require_block_config();
 
  rg.seed( seed );  // seed the pseudo-random number generator
 
@@ -697,9 +695,18 @@ int main( int argc , char **argv )
   exit( 1 );
   }
 
- auto bc = new BlockConfig;
- bc->f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
- TUBlock->set_BlockConfig( bc );
+ // the formulation of the unit comes from the BlockConfig, and it is read
+ // back, as the changes below depend on it: 0 3bin, 1 T, 2 pt, 3 DP, 4 SU,
+ // 5 SD, 6 SUSD, +8 also Perspective Cuts
+ auto bconf = Configuration::deserialize( bconf_file );
+ b_config_Block( TUBlock , bconf , bconf_file );
+ delete bconf;
+
+ wf = 1;  // the T formulation, the one of a unit given no BlockConfig
+ if( auto bc = TUBlock->get_BlockConfig() )
+  if( auto sc = dynamic_cast< SimpleConfiguration< int > * >(
+				       bc->f_static_variables_Configuration ) )
+   wf = sc->f_value;
 
  // enable primary + secondary spinning-reserve variables: when the unit is
  // solved standalone there is no UCBlock parent to do it, so the reserve

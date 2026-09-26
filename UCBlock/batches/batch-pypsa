@@ -72,7 +72,9 @@ REF_OBJ[smspp_mod_t48_s1_b2c_det_ucblock.nc]=3.511271121e+07
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for wf in 0 1 2; do
+# each instance with each formulation of the network: PTDF, CYCLE and the
+# KIRCHHOFF of InnerBCfg.txt
+for bcfg in InnerBCfg-PTDF.txt InnerBCfg-CYCLE.txt InnerBCfg.txt; do
 
     for what in ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_*.nc \
                 ../../UCBlock/data/nc4/pypsa-data/pollutants/smspp_*.nc; do
@@ -92,7 +94,7 @@ for wf in 0 1 2; do
         fi
 
         run_test "$exe" "$what" -S "$par" -R "$REL" \
-                 -B InnerBCfg.txt -r "$ref" -f "$wf"
+                 -B "$bcfg" -r "$ref"
 
     done
 

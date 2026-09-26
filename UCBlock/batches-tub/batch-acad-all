@@ -19,15 +19,15 @@ par=BSCfg.txt
 
 # ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
 
-# wf is bit-wise: 0-6 select the formulation (3bin/T/pt/DP/SU/SD/SUSD), +8
-# (PCuts) adds the perspective cuts. We test every formulation with cuts, i.e.
-# wf in 8..14. The interval-based formulations (pt/DP/SU/SD/SUSD, base wf >= 2,
-# i.e. wf >= 10) are too expensive on large-horizon instances, so there we skip
-# them and keep only 3bin/T (wf 8,9).
-for wf in 8 9 10 11 12 13 14; do
+# the formulation of the unit is the BlockConfig TUBCfg-<form>.txt, one per
+# formulation (3bin/T/pt/DP/SU/SD/SUSD), -PC adding the perspective cuts. We
+# test every formulation with cuts. The interval-based formulations
+# (pt/DP/SU/SD/SUSD) are too expensive on large-horizon instances, so there we
+# skip them and keep only 3bin/T.
+for form in 3bin-PC T-PC pt-PC DP-PC SU-PC SD-PC SUSD-PC; do
   for i in 24 96; do
     # skip the expensive interval-based formulations on large instances
-    if [ $wf -ge 10 ] && [ $i -eq 96 ]; then
+    if [ $form != 3bin-PC ] && [ $form != T-PC ] && [ $i -eq 96 ]; then
       continue
     fi
     for j in 1 12 16 23; do
@@ -40,7 +40,7 @@ for wf in 8 9 10 11 12 13 14; do
 
           what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-          run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" -f "$wf" -n "$iter"
+          run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" -B "TUBCfg-$form.txt" -n "$iter"
 
         #done
       done

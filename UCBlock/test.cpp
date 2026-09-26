@@ -199,7 +199,6 @@
 
 #include "HydroSystemUnitBlock.h"
 
-#include "ECNetworkBlock.h"
 
 #include "BatteryUnitBlock.h"
 
@@ -250,29 +249,8 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
 // RefObjective is defined in common_utils.cpp (extern in common_utils.h)
 
-int wf = -1;               // DCNetworkBlock formulation selector
-                           // 0 = PTDF, 1 = CYCLE, 2 = KIRCHHOFF
-                           // < 0 (default) = use the value set in the meta-
-                           // BlockConfig InnerBCfg.txt (-> DCNBCfg.txt); when
-                           // passed on the command line it overrides that file
-                           // (used by batch-pypsa to iterate over all wf)
-
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-static void Configure_HSUB( HydroSystemUnitBlock * hsub ) {
- // ensure that the PolyhedralFunctionBlock in the HydroSystemUnitBlock is
- // Configured to use the "linearised" representation of the Objective
-
- for( auto sb : hsub->get_nested_Blocks() )
-  if( auto pfb = dynamic_cast< PolyhedralFunctionBlock * >( sb ) ) {
-   auto bc = new BlockConfig;
-   bc->f_static_variables_Configuration = new SimpleConfiguration< int >( 1 );
-   pfb->set_BlockConfig( bc );
-   }
- }
-
 /*--------------------------------------------------------------------------*/
 
 static double rndfctr( void )
@@ -304,7 +282,6 @@ static Subset GenerateRand( Index m , Index k )
 // standard parameters (instance positional, -B BlockConfig, -S
 // BlockSolverConfig, -c/-p prefixes) are handled centrally by common_utils
 //   -r / --ref        : reference objective value to compare against
-//   -f / --wf         : DCNetworkBlock formulation, overrides the -B one
 //   -V / --viol       : how much the solution a relaxation reconstructs may
 //                       violate the rows it has dualised
 
@@ -314,7 +291,6 @@ static bool process_specific_arg( int opt )
 {
  switch( opt ) {
   case( 'r' ): Str2Sthg( optarg , RefObjective );   return( true );
-  case( 'f' ): Str2Sthg( optarg , wf );             return( true );
   case( 'V' ): Str2Sthg( optarg , RelaxationViol ); return( true );
   default:                                         return( false );
   }
@@ -1498,17 +1474,14 @@ int main( int argc , char ** argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ LagrangianDualSolver-on-UCBlock test.\n";
- short_opts += "r:f:V:";
+ short_opts += "r:V:";
  const std::vector< option > my_opts = {
    { "ref"        , required_argument , nullptr , 'r' } ,
-   { "wf"         , required_argument , nullptr , 'f' } ,
    { "viol"       , required_argument , nullptr , 'V' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -r, --ref <value>               reference objective to compare "
          "against [none]\n"
-         "  -f, --wf <0|1|2>                DCNetworkBlock formulation, "
-         "overrides the -B one [file]\n"
          "  -V, --viol <value>              how much the solution a "
          "relaxation reconstructs may violate the rows it dualised [1e-1]\n";
 
@@ -1549,16 +1522,16 @@ int main( int argc , char ** argv )
   // load the inner (meta-)BlockConfig that drives the *formulation* of the
   // sub-Blocks: a SimpleConfiguration< map< classname, Configuration* >>
   // mapping a Block classname to the BlockConfig to apply to every sub-Block of
-  // that class, dispatched by b_config_Block (see tests/compare_formulations):
-  //   InnerBCfg.txt -> ThermalUnitBlock formulation (TUBCfg.txt) and
-  //                    DCNetworkBlock formulation (DCNBCfg.txt)
-  // How the sub-Blocks are *solved* inside the Lagrangian Dual is NOT set here:
-  // it descends entirely from the main BSC stack via the LagrangianDualSolver
-  // str_LagBF_BSCfg parameter (BSPar -> LDCfg -> InnerBSCfg.txt), so the inner
-  // Solver of the LagBFunction is the single source of truth (e.g. BSPar-2S-EC
-  // -> LDCfg-EC -> InnerBSCfg-DP.txt to solve the thermal units with the
-  // efficient ThermalUnitExtDPSolver). A HydroSystemUnitBlock is a "hard" component
-  // iff that str_LagBF_BSCfg meta configures it; computed below once cc is found.
+  // that class, dispatched by b_config_Block over the whole tree, the
+  // PolyhedralFunctionBlock inside a HydroSystemUnitBlock included (see
+  // tests/compare_formulations): e.g., InnerBCfg.txt -> ThermalUnitBlock
+  // formulation (TUBCfg.txt) and DCNetworkBlock formulation (DCNBCfg.txt, or
+  // the variants that InnerBCfg-PTDF.txt and InnerBCfg-CYCLE.txt point at).
+  // How the sub-Blocks are *solved* inside the Lagrangian Dual is NOT set
+  // here: it descends entirely from the BlockSolverConfig, whose
+  // LagrangianDualSolver gives the inner Solver of the LagBFunctions by
+  // str_LagBF_BSCfg and the components that are never "easy" by
+  // vstr_LDSl_NoEasy (see BSPar.txt)
   auto ibc = Configuration::deserialize( bconf_file );
   if( ! ibc ) {
    std::cerr << "Error: cannot load BlockConfig from " << bconf_file
@@ -1566,213 +1539,8 @@ int main( int argc , char ** argv )
    delete( c );
    exit( 1 );
    }
-  bool hydro_hard = false;
 
-  // optional command-line override of the DCNetworkBlock formulation: when wf
-  // is passed (>= 0) it replaces the static-variables Configuration of the
-  // DCNetworkBlock entry of the meta-BlockConfig, overriding DCNBCfg.txt (used
-  // by batch-pypsa to iterate over all formulations)
-  if( wf >= 0 )
-   if( auto m = dynamic_cast< SimpleConfiguration<
-        std::map< std::string , Configuration * > > * >( ibc ) ) {
-    auto it = m->f_value.find( "DCNetworkBlock" );
-    if( it != m->f_value.end() )
-     if( auto dcbc = dynamic_cast< BlockConfig * >( it->second ) ) {
-      delete dcbc->f_static_variables_Configuration;
-      dcbc->f_static_variables_Configuration =
-       new SimpleConfiguration< int >( wf );
-      }
-    }
-
-  #if USE_BundleSolver
-   auto nbsc = bsc->num_ComputeConfig();
-   if( ! nbsc ) {
-    std::cerr << "Error: no ComputeConfig in the BlockSolverConfig"
-              << std::endl;
-    delete( c );
-    exit( 1 );
-    }
-
-   // check if any of the Solver is a LagrangianDualSolver
-   bool DoEasy = false;
-   bool is_LDS = true;
-   ComputeConfig * cc = nullptr;
-   for( auto h = 0 ; h < nbsc ; ++h ) {
-    if( bsc->get_SolverName( h ) != "LagrangianDualSolver" ) {  // if not
-     is_LDS = false;
-     continue;                                                  // do nothing
-     }
-
-    cc = bsc->get_SolverConfig( h );
-    if( ! cc ) {
-     std::cerr << "Error: empty ComputeConfig in the BlockSolverConfig"
-               << std::endl;
-     delete( c );
-     exit( 1 );
-     }
-
-    // find the inner Solver
-    auto sit = std::find_if( cc->str_pars.begin() , cc->str_pars.end() ,
-			     []( auto & pair ) {
-			      return( pair.first == "str_LDSlv_ISName" );
-			      } );
-    if( sit == cc->str_pars.end() )  // if it's not there
-     continue;                       // do nothing
-
-    // check if it is a [Parallel]BundleSolver
-    if( ( sit->second.find( "BundleSolver" ) == std::string::npos ) &&
-        ( sit->second.find( "ParallelBundleSolver" ) == std::string::npos ) )
-     continue;  // if not, do nothing
-
-    // check if the BundleSolver uses "easy" components
-    // find if the ComputeConfig contains "intDoEasy"
-    auto it = std::find_if( cc->int_pars.begin() , cc->int_pars.end() ,
-			    []( auto & pair ) {
-			     return( pair.first == "intDoEasy" );
-			     } );
-    if( it != cc->int_pars.end() )     // if so
-     DoEasy = ( it->second & 1 ) > 0;  // read it
-    else                               // otherwise
-     DoEasy = true;                    // assume it is true (default)
-
-    // the inner Solver of each LagBFunction descends from str_LagBF_BSCfg; a
-    // HydroSystemUnitBlock is a "hard" component iff that (meta-)BSC configures
-    // it. Peek at the file to decide (no-op when it is a plain BSC or absent)
-    auto bit = std::find_if( cc->str_pars.begin() , cc->str_pars.end() ,
-			     []( auto & pair ) {
-			      return( pair.first == "str_LagBF_BSCfg" );
-			      } );
-    if( bit != cc->str_pars.end() )
-     if( auto lbc = Configuration::deserialize( bit->second ) ) {
-      if( auto m = dynamic_cast< SimpleConfiguration<
-           std::map< std::string , Configuration * > > * >( lbc ) )
-       hydro_hard = m->f_value.count( "HydroSystemUnitBlock" ) > 0;
-      delete( lbc );
-      }
-
-    break;  // note that we assume this happens *at most* once
-    }
-
-   auto sb = TestBlock->get_nested_Blocks();
-
-   // apply the inner (meta-)BlockConfig (formulation) by classname over the
-   // sub-Blocks; b_config_Block clones each BlockConfig before applying, so ibc
-   // keeps ownership. The inner Solvers are NOT attached here: they descend from
-   // the LagrangianDualSolver str_LagBF_BSCfg when bsc is applied below. The
-   // OUBSCfg catch-all stays code-driven (DoEasy=false branch).
-   b_config_Block( TestBlock , ibc , "InnerBCfg.txt" );
-
-   // Configure_HSUB the linearised PolyhedralFunctionBlock inside every
-   // HydroSystemUnitBlock; runtime block-mutation, not config-driven
-   for( auto sb_i : sb )
-    if( auto hsub = dynamic_cast< HydroSystemUnitBlock * >( sb_i ) )
-     Configure_HSUB( hsub );
-
-   // if "easy" components are used
-   if( DoEasy ) {
-    // define the vector of components to be excluded from being "easy",
-    // i.e., all ThermalUnitBlock and possibly the HydroSystemUnitBlock,
-    // plus the BatteryUnitBlock whose commitment variables are binary
-    std::vector< int > NoEasy;
-    for( auto i = 0 ; i < sb.size() ; ++i ) {
-     if( dynamic_cast< ThermalUnitBlock * >( sb[ i ] ) )
-      NoEasy.push_back( i );
-     else if( auto bub = dynamic_cast< BatteryUnitBlock * >( sb[ i ] ) ) {
-      if( ! bub->get_intake_outtake_binary_variables().empty() )
-       NoEasy.push_back( i );
-      }
-     else if( dynamic_cast< HydroSystemUnitBlock * >( sb[ i ] ) ) {
-      if( hydro_hard )
-       NoEasy.push_back( i );
-      }
-     }
-
-    // if no "hard" components were given in Configuration file...
-    auto it_cc = std::find_if( cc->vint_pars.begin() , cc->vint_pars.end() ,
-                               []( const auto & pair ) {
-                                return( pair.first == "vintNoEasy" );
-                               } );
-    if( ( cc->vint_pars.empty() ||              // no pairs present
-          ( ( it_cc != cc->vint_pars.end() ) && // or vintNoEasy exists
-            it_cc->second.empty() ) ) ) {       // but is empty
-     // ... and no "hard" components were selected...
-     if( NoEasy.empty() ) {
-      // ... but there is at least one ECNetworkBlock
-      if( std::any_of( sb.begin() , sb.end() , []( Block * b ) {
-       return( dynamic_cast< ECNetworkBlock * >( b ) );
-      } ) ) {
-       // then indicate the first non-ECNetworkBlock as "hard" component,
-       // otherwise the BundleSolver will fail because all Block are easy
-       auto it = std::find_if_not( sb.begin() , sb.end() , []( Block * b ) {
-        return( dynamic_cast< ECNetworkBlock * >( b ) );
-       } );
-       if( it != sb.end() )
-        NoEasy.push_back( ( int ) std::distance( sb.begin() , it ) );
-       }
-      }
-     } // ... else if "hard" components were given in the Configuration file...
-    else
-     for( auto i : it_cc->second )
-      // ... but some of there is an ECNetworkBlock...
-      if( dynamic_cast< ECNetworkBlock * >( sb[ i ] ) )
-       // ... then raise error since we cannot treat is as "hard" component
-       throw( std::logic_error(
-        "ECNetworkBlock cannot treat as `hard` component, so remove it "
-        "from `vintNoEasy` parameter." ) );
-      else if( ! ( std::find( NoEasy.begin() ,
-                              NoEasy.end() , i ) != NoEasy.end() ) )
-       // ... otherwise add it to NoEasy if it is not already contained
-       NoEasy.push_back( i );
-
-    // now add the vintNoEasy parameter to the BundleSolver ComputeConfig
-    // we are assuming it's not there already: if it is, the new copy is
-    // seen after the old one and therefore overrides it
-    std::sort( NoEasy.begin() , NoEasy.end() );
-    cc->vint_pars.push_back( std::make_pair( "vintNoEasy" ,
-                                             std::move( NoEasy ) ) );
-    }  // end( if( DoEasy ) )
-   else
-    {
-    if( is_LDS )
-     // if there is at least one ECNetworkBlock...
-     if( std::any_of( sb.begin() , sb.end() , []( Block * b ) {
-      return( dynamic_cast< ECNetworkBlock * >( b ) );
-     } ) )
-      // ... then raise error since we cannot treat is as "hard" component
-      throw( std::logic_error(
-       "ECNetworkBlock(s) cannot treat as `hard` components, so set "
-       "intDoEasy == 0 in the Configuration file and, optionally, specify "
-       "which non-ECNetworkBlocks(s) to treat as `hard` components through "
-       "`vintNoEasy` parameter." ) );
-    // load the BlockSolverConfig for all the other :UnitBlock; note that
-    // this can be "empty", and indeed even not there.
-    // When the main BSC contains a LagrangianDualSolver (cc != nullptr,
-    // independently of whether it is the first or a later Solver) we
-    // *skip* applying this catch-all altogether: LagrangianDualSolver will
-    // configure each sub-Block's inner Solver itself, via the
-    // str_LagBF_BSCfg parameter (typically LPBSCfg.txt). Pre-attaching an
-    // MILPSolver here would just stack a second, never-used Solver on top
-    // of each sub-Block — on large instances this dominates the setup time.
-    if( ! cc ) {
-     auto co = Configuration::deserialize( "OUBSCfg.txt" );
-     auto obsc = dynamic_cast< BlockSolverConfig * >( co );
-     if( ( ! obsc ) || ( ! obsc->num_ComputeConfig() ) ) {
-      delete( co );
-      obsc = nullptr;
-      }
-
-     // apply obsc as catch-all to every sub-Block that is not Thermal or
-     // HSUB (those have already been configured via the meta-config above)
-     if( obsc )
-      for( auto ub : sb )
-       if( ! dynamic_cast< ThermalUnitBlock * >( ub ) &&
-           ! dynamic_cast< HydroSystemUnitBlock * >( ub ) )
-        obsc->apply( ub );
-
-     delete( obsc );
-     }
-    }
-  #endif
+  b_config_Block( TestBlock , ibc , bconf_file );
 
   // cleanup the inner (meta-)BlockConfig (its destructor deletes the contained
   // per-classname BlockConfig)

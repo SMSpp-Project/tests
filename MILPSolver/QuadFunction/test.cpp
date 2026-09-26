@@ -267,6 +267,7 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
+ // the continuous relaxation (C) is asked by LPPar_C.txt (intRelaxIntVars)
  std::string lpbsc_fn = ( type == 'C' ) ? "LPPar_C.txt" : "LPPar_I.txt";
  Configuration * lpbsc = Configuration::deserialize( lpbsc_fn );
  if( ! lpbsc ) {
@@ -274,11 +275,6 @@ int main( int argc , char **argv )
   exit( 1 );
   }
  s_config_Block( LPBlock , lpbsc , lpbsc_fn );
-
- // Solve the continuous relaxation, if required
- if( type == 'C' )
-  ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
-	                         MILPSolver::intRelaxIntVars , 1 );
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

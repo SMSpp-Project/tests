@@ -192,7 +192,7 @@ static AbstractBlock * build_structured( CFLB * B , double M )
 static double solve( AbstractBlock * block , const std::string & cfg ,
 		     double & seconds , int * status = nullptr ,
 		     double * ub = nullptr , long * iters = nullptr ,
-		     long * cuts = nullptr , int rounds = 0 )
+		     long * cuts = nullptr )
 {
  auto c = Configuration::deserialize( cfg );
  auto bsc = dynamic_cast< BlockSolverConfig * >( c );
@@ -209,13 +209,6 @@ static double solve( AbstractBlock * block , const std::string & cfg ,
   bsc->apply( block );
   solver = block->get_registered_solvers().front();
 
-  /* Capping the rounds turns the run into a fixed budget of cuts, which is
-   * how the strength of a family of cuts is measured: whoever has the better
-   * bound after the same number of rounds has the stronger cuts. */
-
-  if( rounds > 0 )
-   solver->set_par( solver->int_par_str2idx( "int_BDSlv_MaxRounds" ) ,
-		    rounds );
   auto t0 = std::chrono::steady_clock::now();
   st = solver->compute( false );
   auto t1 = std::chrono::steady_clock::now();
@@ -358,19 +351,17 @@ int main( int argc , char ** argv )
   * arbitrary. Both runs have to end at the same value; the figures to compare
   * are the rounds, the cuts and the time. */
 
- /* How many rounds the two capped runs get: enough to tell the cuts apart,
-  * few enough that a pure cutting plane does not have to converge. */
-
- const int budget = ( argc > 3 ) ? std::stoi( argv[ 3 ] ) : 30;
+ // the two runs are capped to the same budget of rounds, which their
+ // configurations give [see BDSCfg-MILP.txt]
  auto root_m = build_structured( B , M );
  auto root_p = build_structured( B , M );
  double t_m , t_p;
  int st_m , st_p;
  long it_m = 0 , it_p = 0 , ct_m = 0 , ct_p = 0;
  const double v_m = solve( root_m , "BSPar-BDS-MILP.txt" , t_m , & st_m ,
-                           nullptr , & it_m , & ct_m , budget );
+                           nullptr , & it_m , & ct_m );
  const double v_p = solve( root_p , "BSPar-BDS-Pareto.txt" , t_p ,
-                           & st_p , nullptr , & it_p , & ct_p , budget );
+                           & st_p , nullptr , & it_p , & ct_p );
 
  // ----- compare ---------------------------------------------------------- #
  const double tol = 1e-5;

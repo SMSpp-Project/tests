@@ -91,10 +91,13 @@ dbltInit  1e-3 # initial value for t
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+1 # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
-# [none]
+# the components that are never "easy": the ThermalUnitBlock, which have
+# binary variables and their own Solver, and the BatteryUnitBlock, which
+# may have binary variables too
+vstr_LDSl_NoEasy 2 ThermalUnitBlock BatteryUnitBlock
 
 # pointer to the "extra" Configuration
 * # [none]

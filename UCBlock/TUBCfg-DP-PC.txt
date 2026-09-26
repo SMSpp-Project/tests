@@ -1,8 +1,14 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - TUBCfg-DP.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - TUBCfg-DP-PC.txt- - - - - - - - - - - - - - - -
 #
-# The BlockConfig of a ThermalUnitBlock that selects the DP formulation,
-# without Perspective Cuts (static_variables = 3).
+# The BlockConfig of a ThermalUnitBlock that selects the DP formulation with
+# Perspective Cuts (static_variables = 11).
+#
+# It characterizes the convex hull of the integer solutions of the unit,
+# so the continuous relaxation with the cuts separated that the reference
+# MILPSolver solves equals the bound FrankWolfeSolver computes via the DP
+# oracles; it is expensive to build, hence it is used only when that
+# reference is in play.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -25,7 +31,7 @@ BlockConfig # exact type of the Configuration object
 # static_variables: the formulation, 0 = 3bin, 1 = T, 2 = pt, 3 = DP,
 # 4 = SU, 5 = SD, 6 = SUSD, +8 with Perspective Cuts
 SimpleConfiguration<int>
-3
+11
 
 # dynamic_variables
 *  # [none]
@@ -46,5 +52,5 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END TUBCfg-DP.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END TUBCfg-DP-PC.txt- - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

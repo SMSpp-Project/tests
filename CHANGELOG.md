@@ -269,6 +269,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SMOCfg.txt` are overrides of it, and the `BSPar-SMO*.txt` have the header
   of every other configuration
 
+- the tester of `UCBlock` builds no configuration in code: it reads `-B` and
+  `-S` and applies them. The `LagrangianDualSolver` of `BSPar.txt` and
+  `BSPar-DP.txt` comes from `LDCfg-easy.txt`, which lists the hard
+  components by class (`vstr_LDSl_NoEasy`), the parallel variants of
+  `batch-ec-par` are `BSPar-par.txt` and `BSPar-par-aggr.txt` rather than a
+  config rewritten by the batch, and the network formulations of
+  `batch-pypsa` are `InnerBCfg-PTDF.txt` and `InnerBCfg-CYCLE.txt`
+
+- the formulation of the unit of `TUDPS_test` is the BlockConfig given with
+  `-B`, one file per formulation (`TUBCfg-<form>.txt`, `-PC` with the
+  Perspective Cuts), which the batteries of `batches-tub` loop over; the
+  tester reads it back, as the changes it makes depend on it.
+  `TUBCfg-DP.txt` (DP with the cuts) is now `TUBCfg-DP-PC.txt`
+
+- the budget of rounds of the two capped runs of `CFL_BDS_test` is
+  `int_BDSlv_MaxRounds` in `BDSCfg-MILP.txt`, of which `BDSCfg-Pareto.txt`
+  is the override with the Pareto-optimal cuts; `BSPar-BDS-MILP.txt` and
+  `BSPar-BDS-Pareto.txt` include them
+
 - what the testers give an `InvestmentBlock` and its `InvestmentFunction`
   comes from the configuration files, the testers only reading and applying
   them: in `InvestmentBlock` and in `test_bds` of `TwoStageStochasticBlock`,
@@ -627,6 +646,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as it was, `BSCfg2.txt`, `BlockConfig1.txt`, `BlockConfig2.txt`,
   `RBlockConfig1.txt`, `RBlockConfig2.txt`, `SimpleConfig1.txt`,
   `SimpleConfig2.txt`), copies of those of `compare_formulations`
+
+- the option `-f` of the tester of `UCBlock`, the formulation of the
+  `HydroSystemUnitBlock` and the rest of the configuration it built, which
+  `-B` and `-S` give; `OUBSCfg.txt` and `SRSCfg.txt`, which no test read
+
+- the option `-f` of `TUDPS_test` and the third argument of `CFL_BDS_test`
+  (the budget of rounds), which the configuration files give; the relaxation
+  that the tester of `QuadFunction` set on top of `LPPar_C.txt`, which
+  already asks for it
 
 ### Fixed
 

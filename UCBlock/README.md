@@ -72,7 +72,7 @@ continuous relaxation of the integer problem are equivalent:
 This is why different BlockConfig [TUBCfg\*] and BlockSolverConfig
 [TUBSCfg\*] are provided for the ThermalUnitBlock subproblems:
 
-- TUBCfg-DP.txt is supposed to go together with either
+- TUBCfg-DP-PC.txt is supposed to go together with either
   TUBSCfg-DP.txt or TUBSCfg-ILP.txt: it forces the "DP formulation"
   to be used and P/Cs to be separated, which means that the
   :MILPSolver provides the same strong bound as the Lagrangian Dual
@@ -115,7 +115,7 @@ follows is in the source.
 
 The reference `:MILPSolver` solves the continuous relaxation *with* the cut
 separation loop (`MILPCfg-FW.txt`, `intRelaxIntVars = 2`) over the DP
-formulation plus Perspective Cuts (`TUBCfg-DP.txt`); since that characterizes
+formulation plus Perspective Cuts (`TUBCfg-DP-PC.txt`); since that characterizes
 the convex hull of the integer solutions of the unit, the Dantzig-Wolfe value
 `FrankWolfeSolver` computes (`intCvxComb = 1`) has to equal the perspective
 bound, which is what is checked, i.e., Frank-Wolfe is here a decomposition

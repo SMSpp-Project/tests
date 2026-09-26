@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -  BSPar-BDS-MILP.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-BDS-MILP.txt- - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a Block having a single
-# BendersDecompositionSolver attached, in the MILP regime: the master is solved
-# by a :MILPSolver with Benders cuts added as lazy constraints, while each
-# subproblem and the master are configured via the referenced files.
+# The BlockSolverConfig of a Block with a single BendersDecompositionSolver
+# in the MILP regime [see BDSCfg-MILP.txt].
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,57 +12,15 @@ BlockSolverConfig     # exact type of the Configuration object
 0  # the BlockSolverConfig is not a "differential" one
 
 1  # number of (the names of) Solver in this BlockSolverConfig
+
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-BendersDecompositionSolver # name of Solver
+BendersDecompositionSolver  # name of 1st Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
-# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-ComputeConfig # exact type of the ComputeConfig object
-
-0  # f_diff == 0 ==> all non-provided parameters are set to the default value
-   # f_diff == 1 ==> all non-provided parameters are not changed
-
-1  # number of integer parameters
-
-# now all the integer parameters
-int_BDSlv_Regime  1  # 0 = convex master, 1 = MILP master
-
-0  # number of double parameters
-
-# now all the double parameters
-# [none]
-
-2  # number of string parameters
-
-# now all the string parameters
-str_Bsub_BSCfg  BDSSCfg.txt     # BlockSolverConfig of the subproblems
-str_Mstr_BSCfg  BDSMCfg-MILP.txt # BlockSolverConfig of the master
-
-0  # number of vector-of-int parameters
-
-# now all the vector-of-int parameters
-# [none]
-
-0  # number of vector-of-double parameters
-
-# now all the vector-of-double parameters
-# [none]
-
-0  # number of vector-of-string parameters
-
-# now all the vector-of-string parameters
-# [none]
-
-# pointer to the "extra" Configuration
-* # [none]
-
-# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
+*BDSCfg-MILP.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -  END BSPar-BDS-MILP.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-BDS-MILP.txt- - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
