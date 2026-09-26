@@ -486,7 +486,8 @@ int main( int argc , char **argv )
          "                                    8 linking lhs/rhs, "
          "16 force quadratic obj,\n"
          "                                    32 Lagrangian heuristic "
-         "(one-sided bound)\n"
+         "(one-sided bound),\n"
+         "                                    64 a linking constraint is added or removed\n"
          "  -N, --nvar <n>                  number of variables [10]\n"
          "  -s, --nson <n>                  number of sub-Blocks [2]\n"
          "  -d, --dens <x>                  constraints as fraction of "
@@ -579,6 +580,13 @@ int main( int argc , char **argv )
 
   // set the linking constraints in the TestBlock
   TestBlock->add_static_constraint( *link , "link" );
+
+  // the linking constraints that are not there to begin with: the ones
+  // the changes of wchg & 64 grow and shrink. A constraint that is born
+  // after the Solver is attached is the case the Lagrangian dual has to
+  // answer by giving every component one more multiplier
+  TestBlock->add_dynamic_constraint(
+                        *( new std::list< FRowConstraint >() ) , "dlink" );
 
   //!! add an empty Objective; this should not be necessary, but
   //!! MILPSolver currently fails to properly set the sense if the
@@ -809,6 +817,39 @@ int main( int argc , char **argv )
     if( ! --tochange )
      break;
     }
+   }
+
+  // grow or shrink the linking constraints - - - - - - - - - - - - - - - -
+
+  if( ( wchg & 64 ) && ( dis( rg ) <= p_change ) ) {
+   auto dlink = TestBlock->get_dynamic_constraint< FRowConstraint >( "dlink" );
+
+   if( dlink && ( ! dlink->empty() ) && ( dis( rg ) <= 0.33 ) ) {
+    LOG1( "removed a linking constraint - " );
+    TestBlock->remove_dynamic_constraint( *dlink , dlink->begin() );
+    }
+   else
+    if( dlink ) {
+     LOG1( "added a linking constraint - " );
+
+     // one more constraint over the same share of the variables of each
+     // son the static ones are posed on
+     Index ps = std::max( Index( 1 ) , nvar / 4 );
+     LinearFunction::v_coeff_pair vp( ps * nson );
+     auto vpit = vp.begin();
+     for( Index k = 0 ; k < nson ; ++k ) {
+      auto son = TestBlock->get_nested_Block( k );
+      auto x = son->get_static_variable_v< ColVariable >( "x" );
+      Subset nms( GenerateRand( nvar , ps ) );
+      for( auto nm : nms )
+       *(vpit++) = coeff_pair( & (*x)[ nm ] , get_coeff() );
+      }
+
+     std::list< FRowConstraint > nc( 1 );
+     nc.front().set_function( new LinearFunction( std::move( vp ) ) );
+     nc.front().set_both( 0 );   // an == 0 constraint, as the static ones are
+     TestBlock->add_dynamic_constraints( *dlink , nc );
+     }
    }
 
   // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -

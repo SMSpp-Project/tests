@@ -37,12 +37,23 @@ The usage of the executable is the following:
        wchg: what to change, coded bit-wise [17]
              0 = bounds, 1 = objective
              2 = linking coefficients, 3 = linking lhs/rhs
+             6 = a linking constraint is added or removed
        nvar: number of variables [10]
        nson: number of sub-Block [2]
        dens: number of constraints, fraction of nvar * nson [0.1]
        #rounds: how many iterations [40]
        #chng: number changes [10]
        %chng: probability of changing [0.5]
+
+Bit 6 is the one the batch does not turn on, and on purpose: a linking
+constraint that is born after the Solver has been attached is a case nothing
+else in the suite covers, and the way down to it is not walkable yet. With a
+LagrangianDualSolver posed on the Block and a BundleSolver inside it, the
+Lagrangian Dual grows one multiplier, the BundleSolver meets a `BlockModAD`
+it answers with "not handled (yet)", and past that the master problem answers
+`add_vars()` with "structural resize not implemented yet". The round is here
+so that whoever fills those in has the case that exercises them, and asking
+for it is enough to see where the way stops.
 
 [batches/batch-box](batches/batch-box) runs a largish (but typically
 terminating within half an hour) set of tests with different sizes and seeds
