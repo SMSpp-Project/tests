@@ -31,6 +31,10 @@ topo/Intranetwork_8 topo/IowaStatewideFiberMap_8 topo/Niif_5 topo/Switch_1
 topo/BeyondTheNetwork_8 waxman/w1_700_08_6
 "
 
+# the SOCP formulation is not run either where Gurobi takes longer than ten
+# minutes on it
+socp_too_long="waxman/w1_800_08_7"
+
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
@@ -42,7 +46,7 @@ for what in "$DATADIR"/*/*.nc4; do
   [ -f "$what" ] || continue
   ran=1
   inst=${what#"$DATADIR"/}
-  case " $(echo $socp_gurobi_fails) " in
+  case " $(echo $socp_gurobi_fails $socp_too_long) " in
     *" ${inst%.nc4} "*) ;;
     *) run_test "$exe" "$what" -B DCRCfg-socp.txt -S BSPar.txt -E ,inf ;;
   esac

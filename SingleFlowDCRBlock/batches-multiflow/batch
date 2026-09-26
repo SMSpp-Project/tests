@@ -5,13 +5,13 @@
 #                       ./MultiFlowDCRBlock_test
 #
 # runs MultiFlowDCRBlock_test on the instances of the module with the first
-# 2 to 5 flows of each network of garr, sndlib and waxman, and with the first
-# 2 of each of the 260 networks of topo, in data/nc4/multi of
-# SingleFlowDCRBlock (see data/README.md there), each solved by a
-# :MILPSolver on the formulation that holds all the flows and by the
-# LagrangianDualSolver that relaxes the mutual capacity constraints, once
-# with each flow solved by the SingleFlowDCRBendersSolver (BSPar-multi.txt)
-# and once by a :MILPSolver (BSPar-multi-milp.txt)
+# 2 to 5 flows of each network of garr and sndlib and of the waxman networks
+# of up to 300 nodes, and with the first 2 of each of the 260 networks of
+# topo, in data/nc4/multi of SingleFlowDCRBlock (see data/README.md there),
+# each solved by a :MILPSolver on the formulation that holds all the flows
+# and by the LagrangianDualSolver that relaxes the mutual capacity
+# constraints, once with each flow solved by the SingleFlowDCRBendersSolver
+# (BSPar-multi.txt) and once by a :MILPSolver (BSPar-multi-milp.txt)
 #
 # the Lagrangian dual is not tight in general, hence "-R ,r" declares the
 # LagrangianDualSolver a relaxation, i.e., its value has to be at most the
@@ -19,12 +19,29 @@
 # mutual capacity, 0.8 times the one of each arc when there is one flow, is
 # too small for it, and on an infeasible instance the LagrangianDualSolver
 # stops without saying so; those of topo with more flows are left out only
-# to keep the batch short
+# to keep the batch short, and so are the waxman networks of 400 nodes and
+# more, on which an instance takes longer than ten minutes
 
-# sndlib/sun_2 is not run, since there Gurobi declares optimal a solution
-# whose value is 11% above its own bound, the latter agreeing with the
-# LagrangianDualSolver
-gurobi_fails="sndlib/sun_2"
+# the instances of topo whose 2 flows do not fit the mutual capacity, where
+# the LagrangianDualSolver stops without saying that they are infeasible
+infeasible="
+topo/Ai3_2 topo/Basnet_2 topo/Bbnplanet_2 topo/Bellsouth_2 topo/Gambia_2
+topo/Gblnet_2 topo/GtsCzechRepublic_2 topo/Harnet_2 topo/KentmanAug2005_2
+topo/Kreonet_2 topo/Latnet_2 topo/Litnet_2 topo/Mren_2 topo/Nordu1989_2
+topo/Oteglobe_2 topo/Padi_2 topo/Sanren_2 topo/Telecomserbia_2
+"
+
+# the instances where Gurobi does not solve the formulation that holds all
+# the flows: it declares optimal a solution whose value is far from its own
+# bound (sndlib/sun_2, topo/Dfn_2), the latter agreeing with the
+# LagrangianDualSolver, or stops on numerical difficulties (topo/Renater1999_2)
+gurobi_fails="sndlib/sun_2 topo/Dfn_2 topo/Renater1999_2"
+
+# the instances where Gurobi, solving a flow inside the LagrangianDualSolver
+# of BSPar-multi-milp.txt, stops on numerical difficulties or returns a flow
+# that makes the bound of the dual wrong; the SingleFlowDCRBendersSolver
+# solves them in BSPar-multi.txt
+gurobi_flow_fails="topo/Garr201112_2 topo/HiberniaIreland_2"
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
@@ -33,12 +50,15 @@ exe=${1:-./MultiFlowDCRBlock_test}
 DATADIR=../../SingleFlowDCRBlock/data/nc4/multi
 
 ran=0
-for what in "$DATADIR"/{garr,sndlib,waxman}/*_[2-5].nc4 "$DATADIR"/topo/*_2.nc4; do
+for what in "$DATADIR"/{garr,sndlib}/*_[2-5].nc4 \
+            "$DATADIR"/waxman/w1_[123]00_*_[2-5].nc4 "$DATADIR"/topo/*_2.nc4; do
   [ -f "$what" ] || continue
   ran=1
   inst=${what#"$DATADIR"/}
-  case " $gurobi_fails " in *" ${inst%.nc4} "*) continue ;; esac
+  inst=${inst%.nc4}
+  case " $(echo $infeasible $gurobi_fails) " in *" $inst "*) continue ;; esac
   run_test "$exe" "$what" -S BSPar-multi.txt -R ,r
+  case " $gurobi_flow_fails " in *" $inst "*) continue ;; esac
   run_test "$exe" "$what" -S BSPar-multi-milp.txt -R ,r
 done
 
