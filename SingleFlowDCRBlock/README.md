@@ -61,9 +61,11 @@ Three batch files are provided: `batch` for the SOCP formulation and
 `batch-pc` for the P/C one, each sweeping a range of network sizes,
 tightnesses and seeds of the random instances, and `batch-instances`, which
 runs both formulations on the instances of the module, i.e., on 10 flows of
-each of 14 real networks (see `data/README.md` in `SingleFlowDCRBlock`, whose
-build downloads them); all of them passing is a good sign that no regression
-has been made in the tested modules.
+each of 307 real and random networks (see `data/README.md` in
+`SingleFlowDCRBlock`, whose build downloads them), except the SOCP one on
+the 14 instances where Gurobi does not solve it (listed in the batch, with
+the reason); all of them passing is a good sign that no regression has been
+made in the tested modules.
 
 ## MultiFlowDCRBlock_test
 
@@ -89,9 +91,12 @@ The two `LagrangianDualSolver` are two configurations rather than two rows
 of one: without copies of the flows the `Solver` of one would reach the
 other, and a `SingleFlowDCRBlock` cannot be copied yet. The batch file in
 `batches-multiflow` runs both on the instances of the module with the first
-2 to 5 flows of each network: with 1 flow the mutual capacity of an arc is
-0.8 times its own, too small for the flow on 11 networks out of 14, and on
-an infeasible instance the `LagrangianDualSolver` stops without saying so.
+2 to 5 flows of each network of garr, sndlib and waxman and with the first 2
+of each network of topo: with 1 flow the mutual capacity of an arc is 0.8
+times its own, too small for the flow on most networks, and on an
+infeasible instance the `LagrangianDualSolver` stops without saying so;
+`sndlib/sun_2` is left out, Gurobi declaring optimal there a solution far
+from its own bound.
 The tester and its batch are built only if the `LagrangianDualSolver` and
 the `BundleSolver` are.
 
