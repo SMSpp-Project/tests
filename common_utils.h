@@ -8,7 +8,8 @@
  *
  * - output and parsing: the ostream manipulators def() and fixd(), the
  *   string-to-T parser Str2Sthg(), the pretty-printer of Solver return codes
- *   PrintResults(), and the std::terminate handler smspp_terminate();
+ *   PrintResults(), the std::terminate handler smspp_terminate() and
+ *   load_Block_or_exit(), which reads a Block out of a text file;
  *
  * - configuration: b_config_Block() and s_config_Block() apply a BlockConfig
  *   or a BlockSolverConfig to a Block, dispatching to the nested sub-Block
@@ -246,6 +247,21 @@ void PrintResults( bool hs , int rtrn , double fo );
 /** Install with std::set_terminate( smspp_terminate ); at the top of main(). */
 
 void smspp_terminate( void );
+
+/*--------------------------------------------------------------------------*/
+/// load a Block out of a text file, or stop with a clear message
+/** Block::load( std::string ) writes on std::cerr and returns when the file
+ *  cannot be opened, leaving the Block empty, so what the test meets is not
+ *  the missing file but whatever the empty instance breaks first: on a
+ *  CapacitatedFacilityLocationBlock, for one, an exception saying that the
+ *  number of facilities is too small, which reaches std::terminate() and
+ *  dumps core. This opens the file itself, exits with 1 citing @p fn if it
+ *  is not there, and otherwise hands the stream to load(), which being the
+ *  virtual one also spares the caller the Block:: qualification that the
+ *  load() overloads of the derived class would otherwise hide. */
+
+void load_Block_or_exit( Block * block , const std::string & fn ,
+                         char frmt = 0 );
 
 /*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockConfig to a Block

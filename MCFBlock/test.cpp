@@ -459,8 +459,7 @@ int main( int argc , char **argv )
   }
  else {
   MCFB = new MCFBlock;
-  MCFB->Block::load( fn );
-  // why the Block:: should be necessary evades me, but it seems it is
+  load_Block_or_exit( MCFB , fn );
   }
 
  /* An unbounded instance has a direction to give rather than a solution,

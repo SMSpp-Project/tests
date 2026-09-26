@@ -666,6 +666,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- a tester whose instance file is not there says so and stops with 1, where
+  `Block::load( std::string )` wrote on `std::cerr` and returned, leaving an
+  empty `Block` on which the run went on until something else broke: on
+  `CapacitatedFacilityLocationBlock` an exception about the number of
+  facilities being too small, which reached `std::terminate()` and dumped
+  core, hiding the missing file behind a message about the instance. The
+  check is `load_Block_or_exit()` of `common_utils`, used by the testers of
+  `CapacitatedFacilityLocationBlock` and `MCFBlock`; `CFL_BDS_test` keeps
+  skipping the comparison instead, the ORLib instances being downloaded by
+  the build and not always there
+
 - the tester of `CapacitatedFacilityLocationBlock` applied `BSPar1.txt` and
   `BSPar2.txt` by itself, so that the `Solver` this build does not have were
   not left out as the other testers leave them [see `s_config_Block()`], and

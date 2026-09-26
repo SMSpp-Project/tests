@@ -651,8 +651,7 @@ int main( int argc , char **argv )
   }
  else {
   B1 = new CapacitatedFacilityLocationBlock;
-  B1->Block::load( fn , filetype );
-  // why the Block:: should be necessary evades me, but it seems it is
+  load_Block_or_exit( B1 , fn , filetype );
   }
 
  m = B1->get_NFacilities();  // record number of facilities

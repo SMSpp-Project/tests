@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <limits>
 #include <list>
@@ -138,6 +139,21 @@ void smspp_terminate( void )
   std::cerr << "\tUnknown exception" << std::endl;
   }
  std::abort();  // or exit( 1 )
+ }
+
+/*--------------------------------------------------------------------------*/
+// load a Block out of a text file, or stop with a clear message
+
+void load_Block_or_exit( Block * block , const std::string & fn , char frmt )
+{
+ std::ifstream file( Block::get_filename_prefix() + fn , std::fstream::in );
+ if( ! file.is_open() ) {
+  std::cerr << "Error: cannot open " << Block::get_filename_prefix() + fn
+            << std::endl;
+  std::exit( 1 );
+  }
+
+ block->load( file , frmt );
  }
 
 /*--------------------------------------------------------------------------*/
