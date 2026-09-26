@@ -33,7 +33,7 @@ set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
 # these two, and each of them is guarded by its own if( TARGET ), so what the
 # directory declares is what they all need and the rest is set test by test
 set(SMSPP_TEST_LABELS_AbstractBlock             "SMS++;MILPSolver")
-set(SMSPP_TEST_LABELS_BendersBFunction          "BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_BendersBFunction          "SMS++;BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_BinaryKnapsackBlock       "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock
                                                 "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver;MCFClassSolver;MCFLemonSolver;MILPSolver")

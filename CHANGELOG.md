@@ -256,6 +256,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `BendersBFunction_test` runs in the suite, on the 34 small instances of the
+  capacitated warehouse location problem (cap41 to cap134), the large ones
+  being left to a run by hand: it takes the instances as files as well as a
+  directory, prints one line per instance and exits with 1 when an instance
+  is KO, while it used to print KO and exit with 0; its directory has the
+  `SMS++` label, which `ctest -L SMS++` needs to run it
+
 - the `ComputeConfig` of the `:MILPSolver` of the `SingleFlowDCRBlock` suite
   is written once, in `MILPCfg.txt`, which `BSPar.txt`, `BSPar-pc.txt` and
   the configurations of the multi-flow problem include, Gurobi through

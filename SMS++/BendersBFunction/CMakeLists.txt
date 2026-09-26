@@ -35,6 +35,13 @@ if (TARGET SMS++::MCFClassSolver)
     endif ()
 
     smspp_install(BendersBFunction_test)
+    # the small instances of the OR-Library (cap41 to cap134), whose LP
+    # relaxation both the MILPSolver and the Benders decomposition solve in
+    # seconds; the large capa, capb and capc are left to a run by hand
+    file(GLOB CWL_SMALL "${CMAKE_CURRENT_SOURCE_DIR}/instances-cwl/cap[0-9]*.txt")
+    add_test(NAME BendersBFunction_test
+             COMMAND BendersBFunction_test ${CWL_SMALL}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif ()
 
 if (TARGET SMS++::MCFBlock)

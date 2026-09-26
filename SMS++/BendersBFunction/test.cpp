@@ -7,9 +7,11 @@
  * Capacitated Warehouse Location (CWL) problem by Benders
  * decomposition. BundleSolver is used to solve the master problem and
  * *MILPSolver is used to solve the inner problem. The program requires as
- * argument the path to a directory containing instances of the CWL
- * problem. Each file in that directory is assumed to contain an instance of
- * the CWL problem, except if they are named manual.txt or readme.txt. A file
+ * arguments the instances of the CWL problem, as the files or as a
+ * directory containing them: each file in that directory is assumed to
+ * contain an instance, except if it is named manual.txt or readme.txt. The
+ * program exits with 1 if the value of any instance differs from the
+ * reference computed by cwl-mcf, or if the Solver fails on it. A file
  * containing an instance of the CWL problem must have the following
  * format. The first line must contain the number of locations (L) and the
  * number of customers (C) (in that order). Each of the next L lines is
@@ -42,7 +44,10 @@
 
 #include "cwl-mcf/cwl-mcf.h"
 
+#include <algorithm>
 #include <chrono>
+#include <filesystem>
+#include <vector>
 #include <iostream>
 #include <iomanip>
 
@@ -154,20 +159,16 @@ int solve_with_MILPSolver( std::filesystem::path file_path ,
 
 /*--------------------------------------------------------------------------*/
 
-void compare( std::string data_dir_path ,
-              SolverType solver_type = SolverType::BundleSolver ,
-              double epsilon = 1.0e-6 ) {
+/// solves the instances with the given Solver, and returns how many are KO
+
+int compare( const std::vector< std::filesystem::path > & instances ,
+             SolverType solver_type = SolverType::BundleSolver ,
+             double epsilon = 1.0e-6 ) {
 
  const bool continuous_relaxation = true;
+ int n_ko = 0;
 
- for( const auto & file :
-       std::filesystem::directory_iterator( data_dir_path ) ) {
-
-  auto file_path = file.path();
-
-  if( file_path.filename() == "manual.txt" ||
-      file_path.filename() == "readme.txt" )
-   continue;
+ for( const auto & file_path : instances ) {
 
   double solution_value = 0;
   int status;
@@ -206,8 +207,13 @@ void compare( std::string data_dir_path ,
    verdict = ( diff > max_diff ) ? "KO" : "OK";
    }
 
-  print_instance_line( { t } , { tok } , ref , verdict );
+  print_instance_line( { t } , { tok } , ref , verdict ,
+                       std::numeric_limits< double >::quiet_NaN() , true );
+  if( verdict != "OK" )
+   ++n_ko;
  }
+
+ return( n_ko );
 }
 
 
@@ -220,21 +226,34 @@ int main( int argc , char ** argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  if( argc < 2 ) {
-  std::cerr << "The path to the directory containing the instance files " <<
-   "must be provided as argument." << std::endl;
-  std::cerr << "Usage: " << argv[ 0 ] << " PATH" << std::endl;
+  std::cerr << "The instances, as the directory containing them or as the "
+            << "files, must be provided as arguments." << std::endl;
+  std::cerr << "Usage: " << argv[ 0 ] << " PATH [ PATH ... ]" << std::endl;
   return( 1 );
  }
 
- std::string path = argv[ 1 ];
+ // each argument is an instance file, or a directory each file of which is
+ // one, save manual.txt and readme.txt
+ std::vector< std::filesystem::path > instances;
+ for( int i = 1 ; i < argc ; ++i )
+  if( std::filesystem::is_directory( argv[ i ] ) ) {
+   for( const auto & file : std::filesystem::directory_iterator( argv[ i ] ) )
+    if( ( file.path().filename() != "manual.txt" ) &&
+        ( file.path().filename() != "readme.txt" ) )
+     instances.push_back( file.path() );
+   }
+  else
+   instances.push_back( argv[ i ] );
+
+ std::sort( instances.begin() , instances.end() );
 
  std::cout << "***** LP formulation test *****" << std::endl;
- compare( path , SolverType::MILPSolver );
+ int n_ko = compare( instances , SolverType::MILPSolver );
 
  std::cout << "***** Benders decomposition test *****" << std::endl;
- compare( path , SolverType::BundleSolver );
+ n_ko += compare( instances , SolverType::BundleSolver );
 
- return( 0 );
+ return( n_ko ? 1 : 0 );
 }
 
 /*--------------------------------------------------------------------------*/
