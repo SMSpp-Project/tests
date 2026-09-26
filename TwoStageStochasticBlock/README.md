@@ -160,7 +160,7 @@ inner-Block module needed by the instances in `batches/` (currently
   Benders `Solver` keeps the design integer in its master, so the
   `:MILPSolver` solves the integer problem as well, and the
   subproblems of a round are evaluated by 4 threads
-  (`int_BDSlv_MaxThread`).
+  (`intMaxThread`).
 - `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
   bundle over the `InvestmentBlock`; `IBOCfg.txt` is the `OBlockConfig`
   of that Block, which reformulates its bounds and gives the

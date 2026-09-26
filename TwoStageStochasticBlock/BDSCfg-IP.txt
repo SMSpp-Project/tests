@@ -18,7 +18,7 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 int_BDSlv_Regime  1  # 0 = convex master, 1 = MILP master
-int_BDSlv_MaxThread 4  # threads evaluating the subproblems of a round
+intMaxThread      4  # threads evaluating the subproblems of a round
 int_BDSlv_Restore 1  # 0 = the reformulation stays, 1 = the Block is given
                      #     back as it was at the end of each compute(), which
                      #     is what lets the other Solver of this cross-check
