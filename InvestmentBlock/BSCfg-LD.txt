@@ -1,0 +1,97 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSCfg-LD.txt  - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the inner Block of the InvestmentFunction that
+# solves it by the recursive Lagrangian dual, i.e., the scenarios and the
+# units at once, each unit a linear program of the Solver of BSCfg.txt [see
+# IFCfg-LD.txt]. The dual gives the value and, through the multipliers, the
+# linearization the InvestmentFunction needs, since the inner Block of a
+# network with a continuous design is a linear program.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver
+LagrangianDualSolver  # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+19 # number of integer parameters
+
+# now all the integer parameters
+intRecursive           1 # decompose the descendants too, not the children
+int_LDSlv_iBCopy       0 # 1 if sub-Block must be R3B-copied
+intPushCostToOwner     1 # whether sub-Block Objective are changed
+intDoEasy              0 # do easy components for (some) LagBFunction
+intMaxIter         10000 # max number of iterations for each call
+intMaxThread           1 # MaxThread, max number of new tasks to spawn
+intLogVerb             0 # log verbosity of main Bundle algorithm
+intTrgtMng            31 # bit-wise targets and accuracies management
+intWZNorm              2 # which norm to use in the norm-based stopping
+intBPar1              20 # discard items useless for <this> iterations
+intBPar2             100 # max bundle size per component
+intBPar3               1 # max n. of items to fetch from Fi() per iteration
+intBPar4               1 # min n. of items to fetch from Fi() per iteration
+intBPar6               0 # second parameter for dynamic max n. of items
+intBPar7              11 # how to deal with the global pools
+intMnSSC               0 # min consecutive SS with same t for a t increase
+intMnNSC               1 # min consecutive NS with same t for a t decrease
+inttSPar1             12 # long-term t-strategy (12 = balancing)
+intMaxNrEvls           2 # max number of function evaluations per iteration
+
+17 # number of double parameters
+
+# now all the double parameters
+dblMaxTime          3600 # maximum time for a call
+dblMinNrEvls          -1 # every component is evaluated at each iteration
+dblRelAcc           1e-5 # relative accuracy required to solution
+dblNZEps            1e-2 # threshold to declare 0 the || residual ||
+dbltStar           -1e+0 # multiplied to || residual || to estimate the gap
+dblBPar5               4 # first parameter for dynamic max n. of items
+dblm1              -0.30 # NS possible if Fi( L1 ) >= Fi( L ) + | m1 | v*
+dblm2               0.90 # SS possible if Fi( L1 ) <= Fi( L ) + (1 - m2) v*
+dblm3               0.99 # a NR is computed if sigma* < - t * m3 * || z* ||
+dblmxIncr              2 # max increase of t
+dblmnIncr            1.5 # min increase of t (each time it is increased)
+dblmxDecr            0.1 # max decrease of t
+dblmnDecr           0.66 # min decrease of t (each time it is decreased)
+dbltMaior           1e+9 # maximum value for t
+dbltMinor          1e-10 # minimum value for t
+dbltInit            1e-3 # initial value for t
+dbltSPar2           1e-2 # parameter for the long-term t-strategy
+
+3  # number of string parameters
+
+# now all the string parameters
+str_LDSlv_ISName   BundleSolver # the inner Solver of the Lagrangian dual
+str_LagBF_BSCfg    BSCfg.txt    # BlockSolverConfig of the units
+strMPBSolverCfg    MPBCfg.txt   # BlockSolverConfig of the master problem
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BSCfg-LD.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

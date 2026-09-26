@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the nested forms in the batteries:
+  `TwoStageStochasticBlock/batches/batch-pypsa` runs the Benders form of
+  the thermal instance with BendersDecompositionSolver whose subproblems
+  are solved by the recursive Lagrangian dual (`BSPar-BDS-2S-LD.txt`, a
+  relaxation), `batch-pypsa-modular` the same BDS with a bundle master
+  (`BSPar-BDS-2S-CVX-LD.txt`, `BDSCfg-CVX-LD.txt`), and
+  `InvestmentBlock/batches/batch-stochastic` runs the modular networks
+  again with the inner Block of the InvestmentFunction solved by the
+  recursive Lagrangian dual (`InnerBCfg-LD.txt`, `IBOCfg-LD.txt`,
+  `IFCfg-LD.txt`, `BSCfg-LD.txt`)
+
 - the tester of `UCBlock` takes `-V`, how much the point a relaxation
   reconstructs may violate the rows it has dualised, the default being the
   1e-1 that was written in the test
@@ -255,6 +266,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dblRelAcc therefore says nothing about what it returns
 
 ### Changed
+
+- `BDSMCfg-INV.txt` declares the residual zero at 1e-6 instead of 1e-8:
+  with the subproblems solved by a Lagrangian dual, whose linearizations are
+  accurate to its own `dblRelAcc`, the bundle of the master reached the
+  optimum without ever certifying its lower bound, and
+  BendersDecompositionSolver reported `-inf`
 
 - `BendersBFunction_test` runs in the suite, on the 34 small instances of the
   capacitated warehouse location problem (cap41 to cap134), the large ones

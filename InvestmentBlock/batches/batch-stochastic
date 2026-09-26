@@ -42,6 +42,10 @@ parse_batch_args "$@"
 bpar=$par
 spar=$slv
 
+# the BlockConfig of the second run, the inner Block solved by the recursive
+# Lagrangian dual; empty where the LagrangianDualSolver is not in the build
+ld_bcfg="${IB_LD_BCFG-InnerBCfg-LD.txt}"
+
 # the initial point, the lower bound of the box plus 10000 on every asset,
 # which the instances of the tree of network_small_fewsectors need and share,
 # their design boxes being the same; the others start from the default one
@@ -68,6 +72,12 @@ REF_OBJ[smspp_stoch_mssb_c3_d3_both.nc]=3.488357705e+09
 REF_OBJ[smspp_mod_t48_s10_b2c_investment_outside.nc]=3.6823506884e+07
 REF_OBJ[smspp_mod_t48_s10_b2c_o2_mssb_investment_outside.nc]=3.6823506884e+07
 
+# the instances also run with the inner Block solved by the recursive
+# Lagrangian dual (InnerBCfg-LD.txt), their inner Block being a linear program
+declare -A LD_INNER
+LD_INNER[smspp_mod_t48_s10_b2c_investment_outside.nc]=1
+LD_INNER[smspp_mod_t48_s10_b2c_o2_mssb_investment_outside.nc]=1
+
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
@@ -87,6 +97,12 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
 
     point=${POINT[$base]}
     run_test "$exe" -B "$bpar" -S "$spar" ${point:+-x "$point"} -o "$ref" "$what"
+    # the modular networks again, the inner Block being solved by the
+    # recursive Lagrangian dual instead of a linear program: the nested form
+    # of an ad hoc Benders decomposition with a Lagrangian dual inside
+    if [ -n "${ld_bcfg}" ] && [ -n "${LD_INNER[$base]}" ]; then
+      run_test "$exe" -B "${ld_bcfg}" -S "$spar" -o "$ref" "$what"
+    fi
 
 done
 

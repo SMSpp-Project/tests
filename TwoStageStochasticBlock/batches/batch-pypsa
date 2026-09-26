@@ -24,7 +24,9 @@
 # duality gap: they are run with BSPar-2S-LD-IP.txt, the :MILPSolver on the
 # integer problem cross-checked with the PrimalProximalHeur, whose interval
 # must contain the optimum [-E], and the recursive Lagrangian dual, declared
-# a relaxation [-R].
+# a relaxation [-R]; on their Benders form the :MILPSolver is cross-checked
+# with BendersDecompositionSolver whose subproblems are solved by the
+# recursive Lagrangian dual (BSPar-BDS-2S-LD.txt), a relaxation as well.
 #
 # these sector-coupled instances are badly scaled: HiGHS aborts on the inner
 # LagBFunction LPs, so the default BlockSolverConfig here (BSPar-2S.txt)
@@ -107,7 +109,11 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
 
     run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -B InnerBCfg.txt \
              -R ",,r" -E ",inf" -r "$ref"
-
+    # the Benders form, whose subproblems (a unit commitment per scenario)
+    # are solved by the recursive Lagrangian dual: BDS gives the bound of the
+    # dual, i.e., it solves a relaxation of the problem
+    run_test "$exe" "$what" -b -S BSPar-BDS-2S-LD.txt -B InnerBCfg.txt \
+             -R ",r" -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

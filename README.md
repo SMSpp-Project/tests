@@ -169,7 +169,10 @@ the `test` directory of the module itself.
 
 - [`InvestmentBlock`](InvestmentBlock), a tester that solves the investment
   problem defined by an `InvestmentBlock` (loaded from a netCDF file) with the
-  configured `:Solver`.
+  configured `:Solver`; `batch-stochastic` also solves the inner Block of the
+  modular instances by the recursive `LagrangianDualSolver`
+  (`InnerBCfg-LD.txt`), i.e., an ad hoc Benders decomposition with a
+  Lagrangian dual inside.
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`

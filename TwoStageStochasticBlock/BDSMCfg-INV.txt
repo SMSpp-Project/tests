@@ -62,8 +62,12 @@ dblRelAcc      1e-8 # relative accuracy required to solution: with 1e-6 the
                     # bundle stops short of it on the instance whose scenarios
                     # differ the most, and gives an upper bound instead of a
                     # value
-dblNZEps       1e-8 # stopping parameter: threshold to declare 0 the
-                    # || residual ||
+dblNZEps       1e-6 # stopping parameter: threshold to declare 0 the
+                    # || residual ||, below which the lower bound is
+                    # certified: with 1e-8 it is not reached when the
+                    # subproblems are solved by a Lagrangian dual, whose
+                    # linearizations are accurate to its own dblRelAcc,
+                    # and the Solver reports the optimum without a bound
 dbltStar       1e+4 # stopping parameter: multiplied to || residual || to
                     # estimate gap
 dblBPar5          4 # first parameter for dynamic max n. of items per

@@ -9,6 +9,7 @@ if (NOT hasParent)
     # Solvers
     find_package(BundleSolver)
     find_package(MILPSolver)
+    find_package(LagrangianDualSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -27,6 +28,12 @@ if (TARGET SMS++::InvestmentBlock)
 
     if (TARGET SMS++::MILPSolver)
         target_link_libraries(IB_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    # the inner Block of batch-stochastic is also solved by the recursive
+    # Lagrangian dual, which the Solver factory only knows if it is linked in
+    if (TARGET SMS++::LagrangianDualSolver)
+        target_link_libraries(IB_test PRIVATE SMS++::LagrangianDualSolver)
     endif ()
 
     # the InvestmentBlock accepts a whole stochastic Block as its inner one;
@@ -71,6 +78,15 @@ if (TARGET SMS++::InvestmentBlock)
         # Make each batch test require the investment_data_extracted fixture
         set_tests_properties(IB_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED investment_data_extracted)
+
+        # batch-stochastic runs the modular instances a second time with the
+        # inner Block solved by the LagrangianDualSolver, which may not be in
+        # the build: there the second run is emptied out
+        if (BATCH_NAME MATCHES "batch-stochastic" AND
+            NOT TARGET SMS++::LagrangianDualSolver)
+            set_tests_properties(IB_test/${BATCH_NAME}
+                                 PROPERTIES ENVIRONMENT "IB_LD_BCFG=")
+        endif ()
     endforeach ()
 endif ()
 
