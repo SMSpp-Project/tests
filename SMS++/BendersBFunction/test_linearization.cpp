@@ -1,12 +1,12 @@
 /*--------------------------------------------------------------------------*/
-/*----------------------------- File test2.cpp -----------------------------*/
+/*---------------------- File test_linearization.cpp -----------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
  * This file contains the implementation of a series of tests for the
  * linearizations that are produced by the BendersBFunction. It constructs a
  * number of simple linear programming problems and solve them by Benders
  * decomposition. It uses *MILPSolver for solving the inner problem and
- * requires a file called solver.txt containing the description of a
+ * requires as argument the name of a file containing the description of a
  * BlockSolverConfig of a Solver for the master problem.
  *
  * \author Rafael Durbano Lobato \n
@@ -1788,5 +1788,5 @@ int main( int argc , char ** argv )
 }
 
 /*--------------------------------------------------------------------------*/
-/*--------------------------- End File test2.cpp ----------------------------*/
+/*-------------------- End File test_linearization.cpp ---------------------*/
 /*--------------------------------------------------------------------------*/

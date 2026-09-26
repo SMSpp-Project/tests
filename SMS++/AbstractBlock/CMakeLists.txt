@@ -23,27 +23,31 @@ smspp_require_labelled_modules()
 # batches/, since each is run with its own tester; the fourth runs its cases
 # in a single call.
 
-# the box-structured AbstractBlock: k sub-Block with n variables each, only
-# box constraints and a separable Objective, solved by a LagrangianDualSolver
-# (whose LagBFunction are solved by a BoxSolver) against a :MILPSolver
+# LagrangianDualSolver (and PrimalProximalHeur, which is of the same module)
+# on the box-structured AbstractBlock: k sub-Block with n variables each, only
+# box constraints and a separable Objective, whose LagBFunction are solved by
+# a BoxSolver, cross-checked against a :MILPSolver
 if (TARGET SMS++::LagrangianDualSolver)
 
-    add_executable(AbstractBlock_Box_test test_box.cpp ../../common_utils.cpp)
-    target_include_directories(AbstractBlock_Box_test PRIVATE ../..)
-    target_link_libraries(AbstractBlock_Box_test PRIVATE
+    add_executable(LagrangianDualSolver_Box_test test_box.cpp
+                                                 ../../common_utils.cpp)
+    target_include_directories(LagrangianDualSolver_Box_test PRIVATE ../..)
+    target_link_libraries(LagrangianDualSolver_Box_test PRIVATE
                           SMS++::LagrangianDualSolver)
 
     if (TARGET SMS++::BundleSolver)
-        target_link_libraries(AbstractBlock_Box_test PRIVATE SMS++::BundleSolver)
+        target_link_libraries(LagrangianDualSolver_Box_test PRIVATE
+                              SMS++::BundleSolver)
     endif ()
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(AbstractBlock_Box_test PRIVATE SMS++::MILPSolver)
+        target_link_libraries(LagrangianDualSolver_Box_test PRIVATE
+                              SMS++::MILPSolver)
     endif ()
 
-    smspp_install(AbstractBlock_Box_test)
+    smspp_install(LagrangianDualSolver_Box_test)
 
-    add_batch_test(AbstractBlock_Box_test batches/batch-box)
+    add_batch_test(LagrangianDualSolver_Box_test batches/batch-box)
 endif ()
 
 # AbstractBlock::mirror(), i.e., the copy of the abstract representation that
@@ -108,8 +112,8 @@ smspp_label_tests()
 
 # each of the four asks for modules the others do not, and the directory
 # declares only what they all need, so the rest is set here
-if (TEST AbstractBlock_Box_test/batches/batch-box)
-    set_tests_properties(AbstractBlock_Box_test/batches/batch-box PROPERTIES
+if (TEST LagrangianDualSolver_Box_test/batches/batch-box)
+    set_tests_properties(LagrangianDualSolver_Box_test/batches/batch-box PROPERTIES
                          LABELS "${SMSPP_TEST_LABELS_AbstractBlock};BundleSolver;LagrangianDualSolver")
 endif ()
 

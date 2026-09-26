@@ -16,8 +16,10 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 # BendersBFunction_test pairs the BendersBFunction with a min-cost flow built
 # directly through MCFClass, so it needs the MCFClassSolver module (which
-# carries MCFClass and pulls in MCFBlock); BendersBFunction_test2 only needs
-# MCFBlock.
+# carries MCFClass and pulls in MCFBlock); BendersBFunction_linearization_test
+# checks the linearizations the BendersBFunction produces on small linear
+# programs whose value is known, the inner problem being solved by a
+# :MILPSolver and the master by the Solver of BundlePar-cwl.txt.
 if (TARGET SMS++::MCFClassSolver)
 
     add_executable(BendersBFunction_test test.cpp
@@ -46,21 +48,25 @@ endif ()
 
 if (TARGET SMS++::MCFBlock)
 
-    add_executable(BendersBFunction_test2 test2.cpp ../../common_utils.cpp)
-    target_include_directories(BendersBFunction_test2 PRIVATE ../..)
+    add_executable(BendersBFunction_linearization_test test_linearization.cpp
+                                                      ../../common_utils.cpp)
+    target_include_directories(BendersBFunction_linearization_test PRIVATE
+                               ../..)
 
     if (TARGET SMS++::BundleSolver)
-        target_link_libraries(BendersBFunction_test2 PRIVATE SMS++::BundleSolver)
+        target_link_libraries(BendersBFunction_linearization_test PRIVATE
+                              SMS++::BundleSolver)
     endif ()
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(BendersBFunction_test2 PRIVATE SMS++::MILPSolver)
+        target_link_libraries(BendersBFunction_linearization_test PRIVATE
+                              SMS++::MILPSolver)
     endif ()
 
-    smspp_install(BendersBFunction_test2)
+    smspp_install(BendersBFunction_linearization_test)
 
-    add_test(NAME BendersBFunction_test2
-             COMMAND BendersBFunction_test2 "BundlePar-cwl.txt"
+    add_test(NAME BendersBFunction_linearization_test
+             COMMAND BendersBFunction_linearization_test "BundlePar-cwl.txt"
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif ()
 

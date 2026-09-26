@@ -150,21 +150,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-static Subset GenerateRand( Index m , Index k )
-{
- // generate a sorted random k-vector of unique integers in 0 ... m - 1
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- sort( rnd.begin() , rnd.end() );
-
- return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
 static void PrintSolution( void )
 {
  std::cout.setf( std::ios::fixed );
@@ -905,7 +890,7 @@ int main( int argc , char **argv )
       }
      }
     else {
-     Subset nms( GenerateRand( time_horizon , tochange ) );
+     Subset nms( GenerateRand( time_horizon , tochange , rg ) );
 
      for( Index i = 0 ; i < tochange ; ++i )
       newcsts[ i ] = fixed_cost( nms[ i ] );
@@ -998,7 +983,7 @@ int main( int argc , char **argv )
       }
      }
     else {
-     Subset nms( GenerateRand( time_horizon , tochange ) );
+     Subset nms( GenerateRand( time_horizon , tochange , rg ) );
 
      for( Index i = 0 ; i < tochange ; ++i )
       newcsts[ i ] = quadratic_cost( nms[ i ] );
@@ -1084,7 +1069,7 @@ int main( int argc , char **argv )
       }
      }
     else {
-     Subset nms( GenerateRand( time_horizon , tochange ) );
+     Subset nms( GenerateRand( time_horizon , tochange , rg ) );
 
      for( Index i = 0 ; i < tochange ; ++i )
       newcsts[ i ] = linear_cost( nms[ i ] );

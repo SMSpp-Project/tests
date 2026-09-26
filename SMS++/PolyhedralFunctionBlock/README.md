@@ -65,6 +65,14 @@ passing is a good sign that no regressions have been done for the tested
 modules, and in particular for `PolyhedralFunction` and
 `PolyhedralFunctionBlock`.
 
+`PolyhedralFunctionBlock_prune_test` is a unit test of
+`PolyhedralFunctionBlock::remove_redundant_rows()`: it builds a convex
+`PolyhedralFunction` with a row parallel to (and dominated by) another one
+and a row that is inactive, and checks that exactly these two are removed,
+the second by the LP that the `:MILPSolver` of `LPPar.txt` solves over the
+epigraph. The geometric pruning alone is tested in
+[PolyhedralFunction](../PolyhedralFunction).
+
 A makefile is also provided that builds the executable including the
 `BundleSolver` module and all its dependencies, in particular `MILPSolver`
 (and, obviously, the core SMS++ library).

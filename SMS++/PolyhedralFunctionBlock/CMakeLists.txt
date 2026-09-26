@@ -27,11 +27,11 @@ endif ()
 
 smspp_install(PolyhedralFunctionBlock_test)
 
-# unit test of PolyhedralFunction::remove_parallel_rows() and of
-# PolyhedralFunctionBlock::remove_redundant_rows(), i.e., of the pruning of
-# the rows: it builds a function whose dominated and inactive rows are known
-# and asks that exactly those be removed, hence it needs no configuration and
-# no other module
+# unit test of PolyhedralFunctionBlock::remove_redundant_rows(), i.e., of
+# the pruning of the rows: it builds a function whose dominated and inactive
+# rows are known and asks that exactly those be removed, the inactive ones by
+# the LP that the :MILPSolver of LPPar.txt solves; the geometric pruning alone
+# is PolyhedralFunction_prune_test
 add_executable(PolyhedralFunctionBlock_prune_test test_prune.cpp)
 target_link_libraries(PolyhedralFunctionBlock_prune_test PRIVATE SMS++::SMS++)
 

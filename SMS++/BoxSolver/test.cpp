@@ -220,21 +220,6 @@ std::uniform_int_distribution<> idis( 0 , NUMBER_SONS );
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-static Subset GenerateRand( Index m , Index k )
-{
- // generate a sorted random k-vector of unique integers in 0 ... m - 1
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- sort( rnd.begin() , rnd.end() );
-
- return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
 static void set_bounds( ColVariable & x )
 {
  if( dis( rg ) < 0.25 )  // in 25% of the cases it is in [ -1 , 1 ]
@@ -885,7 +870,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( nvar , tochange ) );
+     Subset nms( GenerateRand( nvar , tochange , rg ) );
 
      if( isquad ) {  // quadratic objective
       auto qf = static_cast< DQuadFunction * >( obj->get_function() );

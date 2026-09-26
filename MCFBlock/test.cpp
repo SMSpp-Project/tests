@@ -193,27 +193,6 @@ static LinearFunction * LF( Objective * obj )
  }
 
 /*--------------------------------------------------------------------------*/
-// generate a (sorted) random k-vector of unique integers in 0 ... m - 1
-
-static Subset GenerateRand( Index m , Index k , bool ord = true )
-{
- if( k > m ) {
-  std::cerr << "error: GenerateRand( " << m << " , " << k << " )"
-	    << std::endl;
-  exit( 1 );
-  }
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- if( ord )
-  sort( rnd.begin() , rnd.end() );
-
- return( rnd );
- }
-
-/*--------------------------------------------------------------------------*/
 // remove any element >= m from the given Subset
 
 static void Compact( Subset & nms , Index m )
@@ -722,7 +701,7 @@ int main( int argc , char **argv )
      }
     else {
      bool ord = ( dis( rg ) < 0.5 );
-     auto nms = GenerateRand( MCFB->get_NArcs() , tochange , ord );
+     auto nms = GenerateRand( MCFB->get_NArcs() , tochange , rg , ord );
 
      if( lf ) {  // change via abstract representation
       lf->modify_coefficients( std::move( newcsts ) , std::move( nms ) ,
@@ -783,7 +762,7 @@ int main( int argc , char **argv )
      }
     else {
      bool ord = ( dis( rg ) < 0.5 );
-     auto nms = GenerateRand( MCFB->get_NArcs() , tochange , ord );
+     auto nms = GenerateRand( MCFB->get_NArcs() , tochange , rg , ord );
      auto ncit = newcaps.begin();
      for( auto i : nms )
       *(ncit++) = intflow( MCFB->get_U( i ) * rndfctr() );
@@ -907,7 +886,7 @@ int main( int argc , char **argv )
     }
    else {
     bool ord = ( dis( rg ) < 0.5 );
-    auto nms = GenerateRand( MCFB->get_NArcs() , tochange , ord );
+    auto nms = GenerateRand( MCFB->get_NArcs() , tochange , rg , ord );
     for( auto & i : nms )
      if( MCFB->is_deleted( i ) || MCFB->is_closed( i ) ) {
       i = IInf;
@@ -971,7 +950,7 @@ int main( int argc , char **argv )
     }
    else {
     bool ord = ( dis( rg ) < 0.5 );
-    auto nms = GenerateRand( MCFB->get_NArcs() , tochange , ord );
+    auto nms = GenerateRand( MCFB->get_NArcs() , tochange , rg , ord );
     for( auto & i : nms )
      if( MCFB->is_deleted( i ) || ( ! MCFB->is_closed( i ) ) ) {
       i = IInf;
@@ -1014,7 +993,7 @@ int main( int argc , char **argv )
    if( dis( rg ) < 0.5 ) {  // delete somewhere in the middle
     auto nsa =  MCFB->get_NStaticArcs();
     bool ord = ( dis( rg ) < 0.5 );
-    auto nms = GenerateRand( da , tochange , ord );
+    auto nms = GenerateRand( da , tochange , rg , ord );
     for( auto i : nms ) {
      i += nsa;
      if( MCFB->is_deleted( i ) )

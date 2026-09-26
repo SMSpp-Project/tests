@@ -312,6 +312,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   optimum without ever certifying its lower bound, and
   BendersDecompositionSolver reported `-inf`
 
+- the testers are named after the component they test:
+  `AbstractBlock_Box_test` is `LagrangianDualSolver_Box_test`, since what it
+  exercises is the `LagrangianDualSolver` (and the `PrimalProximalHeur` of
+  the same module) on a box-structured `AbstractBlock` whose `LagBFunction`
+  are solved by `BoxSolver`, and its battery is
+  `LagrangianDualSolver_Box_test/batches/batch-box`;
+  `BendersBFunction_test2` is `BendersBFunction_linearization_test`, whose
+  source is `test_linearization.cpp`, since it checks the linearizations the
+  `BendersBFunction` produces on small linear programs whose value is known
+
+- `PolyhedralFunctionBlock_prune_test` tests only
+  `PolyhedralFunctionBlock::remove_redundant_rows()`, which has to remove
+  both the dominated and the inactive row, while the geometric pruning of
+  `PolyhedralFunction::remove_parallel_rows()` is tested by
+  `PolyhedralFunction_prune_test`, on a convex function with the dominated
+  row after and before the dominating one and on a concave function, and
+  needs nothing but the core library
+
+- `GenerateRand()`, the random subset of `k` distinct indices out of
+  `0 ... m - 1` that eight testers copied (and the tester of `MMCFBlock`
+  kept commented out), is written once in `common_utils` and takes the
+  generator as argument, the order of the subset being optional as it was
+  in the testers of `MCFBlock` and of `CapacitatedFacilityLocationBlock`:
+  the draws from the generator are the same as before, so every battery
+  generates the same instances
+
 - the `TwoStageStochasticBlock` suite is configured before those of
   `CapacitatedFacilityLocationBlock` and `UCBlock`, whose batteries of the
   scenario reduction run its `TSSB_scenred_test`

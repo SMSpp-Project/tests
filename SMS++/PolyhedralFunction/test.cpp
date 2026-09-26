@@ -415,21 +415,6 @@ static void enforce_invariant( void )
 
 /*--------------------------------------------------------------------------*/
 
-static Subset GenerateRand( Index m , Index k )
-{
- // generate a sorted random k-vector of unique integers in 0 ... m - 1
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- sort( rnd.begin() , rnd.end() );
-
- return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
 static void ConstructLPConstraint( Index i , FRowConstraint & ci ,
 				   bool setblock = true )
 {
@@ -1345,7 +1330,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange ) );
+     Subset nms( GenerateRand( m , tochange , rg ) );
      Subset nms_kept( nms );  // ordered copy retained for cur_iV erase
 
      // remove them from the LP
@@ -1428,7 +1413,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange ) );
+     Subset nms( GenerateRand( m , tochange , rg ) );
 
      // preserve the existing type of the modified rows (see comment in
      // the ranged branch above)
@@ -1497,7 +1482,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange ) );
+     Subset nms( GenerateRand( m , tochange , rg ) );
 
      // change them in the LP
      Index prev = 0;
@@ -1734,7 +1719,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( ndvar , tochange ) );
+     Subset nms( GenerateRand( ndvar , tochange , rg ) );
 
      // remove them from the LP
      auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );

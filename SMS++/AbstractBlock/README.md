@@ -1,8 +1,8 @@
 # tests/SMS++/AbstractBlock
 
 The four testers posed on an `AbstractBlock`, i.e., on the Block that is
-nothing but its own abstract representation: the box-structured one whose
-Lagrangian dual is computed, the copy of the abstract representation that
+nothing but its own abstract representation: the `LagrangianDualSolver` on
+the box-structured one, the copy of the abstract representation that
 `AbstractBlock::mirror()` makes, the round trip of a linear program through
 a file, and the Benders decomposition of a two-stage linear program. The
 first three are run with their own batch in [batches](batches), the fourth
@@ -11,7 +11,7 @@ runs all its cases in a single call.
 
 ## The box-structured Block and its Lagrangian dual
 
-`AbstractBlock_Box_test` provides very comprehensive tests for
+`LagrangianDualSolver_Box_test` provides very comprehensive tests for
 `LagrangianDualSolver`, `LagBFunction`, `BoxSolver`, any `CDASolver` able to
 handle `C05Function` in the `Objective`, any `CDASolver` able to handle Linear
 Programs (such as `MILPSolver` and its derived classes `CPXMILPSolver`,
@@ -35,7 +35,7 @@ several times, the results are compared.
 
 The usage of the executable is the following:
 
-    ./AbstractBlock_Box_test seed [wchg nvar nson dens #rounds #chng %chng]
+    ./LagrangianDualSolver_Box_test seed [wchg nvar nson dens #rounds #chng %chng]
        wchg: what to change, coded bit-wise [17]
              0 = bounds, 1 = objective
              2 = linking coefficients, 3 = linking lhs/rhs

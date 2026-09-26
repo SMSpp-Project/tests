@@ -320,25 +320,6 @@ static LinearFunction * LF( Constraint * cnst )
 
 /*--------------------------------------------------------------------------*/
 
-static Subset GenerateRand( Index m , Index k , bool ord = true )
-{
- // generate a (sorted) random k-vector of unique integers in 0 ... m - 1
- if( k > m ) {
-  cerr << "error: GenerateRand( " << m << " , " << k << " )" << endl;
-  exit( 1 );
-  }
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- if( ord )
-  sort( rnd.begin() , rnd.end() );
-
- return( rnd );
- }
-
-/*--------------------------------------------------------------------------*/
 // adds k to all the elements of sbst ("shift the names by k")
 
 static void SShift( Subset & sbst , Index k )
@@ -893,7 +874,7 @@ int main( int argc , char **argv )
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
-      auto sbst = GenerateRand( m , tochange , ord );
+      auto sbst = GenerateRand( m , tochange , rg , ord );
       auto NC = rndscale( B1->get_Fixed_Costs().data() , sbst ,
 			  ! ( wchg & 512 ) );
       LOG1( "(s" );
@@ -952,7 +933,7 @@ int main( int argc , char **argv )
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
-      auto sbst = GenerateRand( n * m , tochange , ord );
+      auto sbst = GenerateRand( n * m , tochange , rg , ord );
       auto NC = rndscale( B1->get_Transportation_Costs().data() , sbst ,
 			  true );
       LOG1( "(s" );
@@ -1019,7 +1000,7 @@ int main( int argc , char **argv )
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
-      auto sbst = GenerateRand( m , tochange , ord );
+      auto sbst = GenerateRand( m , tochange , rg , ord );
       auto NC = rndscale( B1->get_Capacities().data() , sbst );
       LOG1( "(s" );
       if( ! ord )
@@ -1067,7 +1048,7 @@ int main( int argc , char **argv )
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
-      auto sbst = GenerateRand( n , tochange , ord );
+      auto sbst = GenerateRand( n , tochange , rg , ord );
       auto NC = rndscale( B1->get_Demands().data() , sbst );
       LOG1( "(s" );
       if( ! ord )
@@ -1129,7 +1110,7 @@ int main( int argc , char **argv )
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
-      auto sbst = GenerateRand( m , tochange , ord );
+      auto sbst = GenerateRand( m , tochange , rg , ord );
       LOG1( "(s" );
       if( ! ord )
        LOG1( ",u" );
@@ -1195,7 +1176,7 @@ int main( int argc , char **argv )
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
-      auto sbst = GenerateRand( m , tochange , ord );
+      auto sbst = GenerateRand( m , tochange , rg , ord );
       LOG1( "(s" );
       if( ! ord )
        LOG1( ",u" );
@@ -1265,7 +1246,7 @@ int main( int argc , char **argv )
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
-      auto sbst = GenerateRand( m , tochange , ord );
+      auto sbst = GenerateRand( m , tochange , rg , ord );
       LOG1( "(s" );
       if( ! ord )
        LOG1( ",u" );
