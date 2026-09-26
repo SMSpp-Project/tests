@@ -21,7 +21,7 @@ the `test` directory of the module itself.
 
 ### The core library ([`SMS++`](SMS++))
 
-- [`AbstractBlock`](SMS++/AbstractBlock), the three testers posed on an
+- [`AbstractBlock`](SMS++/AbstractBlock), the four testers posed on an
   `AbstractBlock`: the box-structured Block of `k` sub-`AbstractBlock` with box
   constraints and a separable `Objective` whose Lagrangian dual is computed by
   a `LagrangianDualSolver` (with `LagBFunction` and `BoxSolver`) and
@@ -32,8 +32,10 @@ the `test` directory of the module itself.
   `AbstractBlock::read_lp()` / `AbstractBlock::read_mps()`, a random linear
   program being written to file by the `:MILPSolver` attached to it, read back
   into a second `AbstractBlock` and solved again, the two optima having to
-  agree. All three then change the instance at random and re-solve many
-  times.
+  agree; all three then change the instance at random and re-solve many
+  times. The fourth solves a small two-stage linear program by
+  `BendersDecompositionSolver`, in every way it has of writing a cut, against
+  the optimum a `:MILPSolver` gives of the monolithic model.
 
 - [`BoxSolver`](SMS++/BoxSolver), a tester which provides very
   comprehensive tests for `BoxSolver` (a very simple `CDASolver` for

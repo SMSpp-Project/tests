@@ -553,6 +553,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `BendersDecompositionSolver`, which is not where a test that needs another
   Block to exist belongs
 
+- `SMS++/AbstractBlock` runs the validation of `BendersDecompositionSolver`
+  on a two-stage linear program written as an `AbstractBlock`, the tester
+  being `test_bds.cpp` (`AbstractBlock_BDS_test`, labelled
+  `SMS++;MILPSolver;BundleSolver;BendersDecompositionSolver`) and its
+  configurations `BSPar-BDS*.txt`, `BDSMCfg.txt`, `BDSMCfg-MILP.txt` and
+  `BDSSCfg.txt`, the master problem of the bundle using the `MPBCfg.txt` of
+  the suite: it comes from the test directory of the module, which is not
+  where a test belongs that needs a `BundleSolver` for the master and a
+  `:MILPSolver` for the subproblems and the reference, neither being a
+  dependency of the module
+
 - `batch-resilient` of `UCBlock`, `TwoStageStochasticBlock`,
   `MultiStageStochasticBlock` and `InvestmentBlock` is now `batch-pypsa`, and
   the instances it reads are in `data/nc4/pypsa-data` instead of

@@ -7,6 +7,7 @@ if (NOT hasParent)
     find_package(BinaryKnapsackBlock)
     # Solvers
     find_package(LagrangianDualSolver)
+    find_package(BendersDecompositionSolver)
     find_package(BundleSolver)
     find_package(MILPSolver)
 endif ()
@@ -15,10 +16,12 @@ endif ()
 smspp_require_labelled_modules()
 
 # ----- Tests --------------------------------------------------------------- #
-# The three testers posed on an AbstractBlock: the box-structured one that the
-# Lagrangian dual is computed of, the copy of the abstract representation, and
-# the round trip of a linear program through a file. Each has its own batch in
-# batches/, since each is run with its own tester.
+# The four testers posed on an AbstractBlock: the box-structured one that the
+# Lagrangian dual is computed of, the copy of the abstract representation, the
+# round trip of a linear program through a file, and the Benders decomposition
+# of a two-stage linear program. The first three have their own batch in
+# batches/, since each is run with its own tester; the fourth runs its cases
+# in a single call.
 
 # the box-structured AbstractBlock: k sub-Block with n variables each, only
 # box constraints and a separable Objective, solved by a LagrangianDualSolver
@@ -76,12 +79,33 @@ if (TARGET SMS++::MILPSolver)
     add_batch_test(AbstractBlock_readwrite_test batches/batch-readwrite)
 endif ()
 
+# BendersDecompositionSolver on a small two-stage linear program written as an
+# AbstractBlock, in every way it has of writing a cut, against the optimum a
+# :MILPSolver gives of the monolithic model; the master of the convex regime
+# is solved by a BundleSolver, hence the tester is built only where both are
+if (TARGET SMS++::BendersDecompositionSolver AND TARGET SMS++::BundleSolver
+    AND TARGET SMS++::MILPSolver)
+
+    add_executable(AbstractBlock_BDS_test test_bds.cpp)
+    target_link_libraries(AbstractBlock_BDS_test PRIVATE
+                          SMS++::SMS++
+                          SMS++::BendersDecompositionSolver
+                          SMS++::BundleSolver
+                          SMS++::MILPSolver)
+
+    smspp_install(AbstractBlock_BDS_test)
+
+    add_test(NAME AbstractBlock_BDS_test
+             COMMAND AbstractBlock_BDS_test
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif ()
+
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
 
-# each of the three asks for one module more than the other two, and the
-# directory declares only what they all need, so the rest is set here
+# each of the four asks for modules the others do not, and the directory
+# declares only what they all need, so the rest is set here
 if (TEST AbstractBlock_Box_test/batches/batch-box)
     set_tests_properties(AbstractBlock_Box_test/batches/batch-box PROPERTIES
                          LABELS "${SMSPP_TEST_LABELS_AbstractBlock};BundleSolver;LagrangianDualSolver")
@@ -90,6 +114,11 @@ endif ()
 if (TEST AbstractBlock_mirror_test/batches/batch-mirror)
     set_tests_properties(AbstractBlock_mirror_test/batches/batch-mirror PROPERTIES
                          LABELS "${SMSPP_TEST_LABELS_AbstractBlock};BinaryKnapsackBlock")
+endif ()
+
+if (TEST AbstractBlock_BDS_test)
+    set_tests_properties(AbstractBlock_BDS_test PROPERTIES
+                         LABELS "${SMSPP_TEST_LABELS_AbstractBlock};BundleSolver;BendersDecompositionSolver")
 endif ()
 
 # --------------------------------------------------------------------------- #

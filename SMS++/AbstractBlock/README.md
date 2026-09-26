@@ -1,10 +1,12 @@
 # tests/SMS++/AbstractBlock
 
-The three testers posed on an `AbstractBlock`, i.e., on the Block that is
+The four testers posed on an `AbstractBlock`, i.e., on the Block that is
 nothing but its own abstract representation: the box-structured one whose
 Lagrangian dual is computed, the copy of the abstract representation that
-`AbstractBlock::mirror()` makes, and the round trip of a linear program
-through a file. Each is run with its own batch in [batches](batches).
+`AbstractBlock::mirror()` makes, the round trip of a linear program through
+a file, and the Benders decomposition of a two-stage linear program. The
+first three are run with their own batch in [batches](batches), the fourth
+runs all its cases in a single call.
 
 
 ## The box-structured Block and its Lagrangian dual
@@ -139,10 +141,48 @@ The usage of the executable is the following:
 [batches/batch-readwrite](batches/batch-readwrite) runs a not-so-large set of
 tests with different sizes and seeds of the random generator.
 
-A makefile is also provided that builds the three executables, including the
-`LagrangianDualSolver` module, the `BundleSolver` module,
-`BinaryKnapsackBlock` and all their dependencies, in particular `MILPSolver`,
-together of course with the core SMS++ library.
+## The Benders decomposition of a two-stage linear program
+
+`AbstractBlock_BDS_test` is a tester for `BendersDecompositionSolver`. It
+writes the instance it runs on out of `AbstractBlock`, so that it needs no
+Block but the ones of the core library: a small two-stage linear program, in
+two equivalent models. One is monolithic, the first-stage `Variable` and the
+second-stage ones in a single `AbstractBlock`, which a `:MILPSolver` solves to
+give the reference optimum; the other is structured, a master `Block` carrying
+the first-stage `Variable` and one nested sub-`Block` per scenario carrying
+the second-stage ones, whose `Constraint` couple the master, which
+`BendersDecompositionSolver` solves. What is checked is that the two optima
+agree within a relative tolerance, whichever way the Solver is asked to work.
+
+Every way the Solver has of writing a cut is run on that instance, one
+`BlockSolverConfig` each: the multi-cut and the single-cut master, the
+cutting-plane and the bundle one, the Pareto-optimal cut, the two
+normalizations of the feasibility cut and its phase one, the combinatorial cut
+of a binary master, the cut that serves for both feasibility and optimality,
+what keeping a subproblem in the master costs, and what the Block is given
+back as at the end of a `compute()`. The instances that make each of them
+matter are built on purpose, i.e., with the subproblems feasible everywhere
+for the optimality cuts and infeasible at some first-stage point for the
+feasibility ones, and in the nested shape a subproblem has when it is a model
+of its own rather than a bare set of rows.
+
+The configurations are the `BSPar-BDS*.txt` files, one per way of writing a
+cut (`BSPar-BDS.txt` the convex regime, whose master is a `BundleSolver`,
+`BSPar-BDS-MILP.txt` the MILP regime, whose master is a `:MILPSolver`, and
+the others each a variant of the latter named after what it changes); the
+master is configured by `BDSMCfg.txt` in the convex regime (with `MPBCfg.txt`
+for the master problem of the bundle) and by `BDSMCfg-MILP.txt` in the MILP
+one, and the subproblems by `BDSSCfg.txt`, which also gives the reference
+optimum of the monolithic model. The tester takes no argument:
+
+    ./AbstractBlock_BDS_test
+
+
+A makefile is also provided that builds the four executables, including the
+`LagrangianDualSolver` module, the `BundleSolver` module, the
+`BendersDecompositionSolver` module, `BinaryKnapsackBlock` and all their
+dependencies, in particular `MILPSolver`, together of course with the core
+SMS++ library.
 
 
 ## Authors
@@ -152,6 +192,10 @@ together of course with the core SMS++ library.
   Università di Pisa
 
 - **Enrico Calandrini**  
+  Dipartimento di Informatica  
+  Università di Pisa
+
+- **Donato Meoli**  
   Dipartimento di Informatica  
   Università di Pisa
 

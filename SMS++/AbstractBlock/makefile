@@ -10,8 +10,8 @@
 #                                                                            #
 ##############################################################################
 
-# module name: the tester of the box-structured Block; the other two
-# are built with "make mirror" and "make readwrite"
+# module name: the tester of the box-structured Block; the other three
+# are built with "make mirror", "make readwrite" and "make bds"
 NAME = AbstractBlock_Box_test
 
 # basic directory
@@ -51,6 +51,11 @@ include $(LgDSLVSDR)/makefile
 # tester of AbstractBlock::mirror() alone
 BKBckSDR = ../../../BinaryKnapsackBlock
 include $(BKBckSDR)/makefile
+
+# BendersDecompositionSolver, for the tester of the Benders decomposition
+# alone
+BnDSLVSDR = ../../../BendersDecompositionSolver
+include $(BnDSLVSDR)/makefile
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -95,13 +100,16 @@ MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CMMNUH)
 $(DIR)/test_box.o: $(DIR)/test_box.cpp $(MH)
 	$(CC) -c $(DIR)/test_box.cpp -o $@ $(MINC) $(SW)
 
-# the other two testers posed on the same Block- - - - - - - - - - - - - - - -
+# the other three testers posed on the same Block - - - - - - - - - - - - - -
 
 mirror: SW = $(SW_RELEASE)
 mirror: $(DIR)/AbstractBlock_mirror_test
 
 readwrite: SW = $(SW_RELEASE)
 readwrite: $(DIR)/AbstractBlock_readwrite_test
+
+bds: SW = $(SW_RELEASE)
+bds: $(DIR)/AbstractBlock_BDS_test
 
 $(DIR)/AbstractBlock_mirror_test: $(MOBJ) $(BKBckOBJ) $(DIR)/test_mirror.o
 	$(CC) -o $@ $(DIR)/test_mirror.o $(MOBJ) $(BKBckOBJ) $(MLIB) \
@@ -110,15 +118,22 @@ $(DIR)/AbstractBlock_mirror_test: $(MOBJ) $(BKBckOBJ) $(DIR)/test_mirror.o
 $(DIR)/AbstractBlock_readwrite_test: $(MOBJ) $(DIR)/test_readwrite.o
 	$(CC) -o $@ $(DIR)/test_readwrite.o $(MOBJ) $(MLIB) $(SW)
 
+$(DIR)/AbstractBlock_BDS_test: $(MOBJ) $(BnDSLVOBJ) $(DIR)/test_bds.o
+	$(CC) -o $@ $(DIR)/test_bds.o $(BnDSLVOBJ) $(MOBJ) $(MLIB) $(SW)
+
 $(DIR)/test_mirror.o: $(DIR)/test_mirror.cpp $(MH) $(BKBckH)
 	$(CC) -c $(DIR)/test_mirror.cpp -o $@ $(MINC) $(BKBckINC) $(SW)
 
 $(DIR)/test_readwrite.o: $(DIR)/test_readwrite.cpp $(MH)
 	$(CC) -c $(DIR)/test_readwrite.cpp -o $@ $(MINC) $(SW)
 
-.PHONY: mirror readwrite
+$(DIR)/test_bds.o: $(DIR)/test_bds.cpp $(MH) $(BnDSLVH)
+	$(CC) -c $(DIR)/test_bds.cpp -o $@ $(MINC) $(BnDSLVINC) $(SW)
+
+.PHONY: mirror readwrite bds
 
 clean::
-	rm -f $(DIR)/AbstractBlock_mirror_test $(DIR)/AbstractBlock_readwrite_test
+	rm -f $(DIR)/AbstractBlock_mirror_test $(DIR)/AbstractBlock_readwrite_test \
+	      $(DIR)/AbstractBlock_BDS_test
 
 ############################ End of makefile #################################
