@@ -35,11 +35,19 @@ if (TARGET SMS++::SingleFlowDCRBlock)
     set_tests_properties(extract_dcr_nc4
                          PROPERTIES FIXTURES_SETUP dcr_data_extracted)
 
+    # the battery that solves the SOCP formulation with CPLEX where Gurobi is
+    # not stable is only there when CPLEX is [see socp-unstable.txt]
+    find_package(CPLEX QUIET)
+
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        if (BATCH_NAME STREQUAL "batches/batch-instances-cplex"
+                AND NOT (CPLEX_FOUND AND TARGET SMS++::MILPSolver))
+            continue ()
+        endif ()
         if (UNIX)
             add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
                      COMMAND bash ${BATCH_FILE}
@@ -53,7 +61,7 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                              "$<TARGET_FILE:SingleFlowDCRBlock_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
-        if (BATCH_NAME STREQUAL "batches/batch-instances")
+        if (BATCH_NAME MATCHES "^batches/batch-instances")
             set_tests_properties(SingleFlowDCRBlock_test/${BATCH_NAME}
                                  PROPERTIES FIXTURES_REQUIRED dcr_data_extracted)
         endif ()

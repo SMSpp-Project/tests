@@ -57,16 +57,19 @@ plus the options that every SMS++ tester understands (`--help` lists them
 all). If a `<file>` is given, the `SingleFlowDCRBlock` is de-serialized out
 of that netCDF file instead of being generated.
 
-Three batch files are provided: `batch` for the SOCP formulation and
+Four batch files are provided: `batch` for the SOCP formulation and
 `batch-pc` for the P/C one, each sweeping a range of network sizes,
-tightnesses and seeds of the random instances, and `batch-instances`, which
-runs both formulations on the instances of the module, i.e., on 10 flows of
-each of 307 real and random networks (see `data/README.md` in
+tightnesses and seeds of the random instances; `batch-instances`, which runs
+both formulations on the instances of the module, i.e., on 10 flows of each
+of 307 real and random networks (see `data/README.md` in
 `SingleFlowDCRBlock`, whose build downloads them), except the SOCP one on
 the 101 instances where Gurobi does not solve it with each of three
-numerical focus settings (0, 2 and 3) and on the one where it takes longer
-than ten minutes (listed in the batch, with the reason); all of them passing
-is a good sign that no regression has been made in the tested modules.
+numerical focus settings (0, 2 and 3), listed with the reason in
+`socp-unstable.txt`, and on the one where it takes longer than ten minutes;
+and `batch-instances-cplex`, which solves the SOCP formulation of those 101
+with CPLEX (`BSPar-cpx.txt`), and which the build adds only when CPLEX is
+available. All of them passing is a good sign that no regression has been
+made in the tested modules.
 
 ## MultiFlowDCRBlock_test
 

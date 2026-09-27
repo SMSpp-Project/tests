@@ -1,0 +1,41 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-cpx.txt - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a SingleFlowDCRBlock in the
+# "SOCP" formulation (see DCRCfg-socp.txt), solved by CPLEX and by the
+# SingleFlowDCRBendersSolver: that of BSPar.txt with CPLEX in place of
+# Gurobi, for the instances on which Gurobi is not stable [see
+# socp-unstable.txt]. CPLEX takes the ComputeConfig of any :MILPSolver, its
+# default numerical emphasis (0) solving all of them, while with emphasis 1
+# it does not end on one of them in ten minutes.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CPXMILPSolver                   # name of 1st Solver
+SingleFlowDCRBendersSolver      # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+*MILPCfg.txt
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the SingleFlowDCRBendersSolver
+* # [none]
+
+# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar-cpx.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

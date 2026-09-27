@@ -17,42 +17,10 @@
 # containing the optimum
 
 # the SOCP formulation is only run where Gurobi solves it whatever its
-# numerical focus, i.e., with NumericFocus 0, 2 (the one of GRBCfg.txt) and
-# 3: on the 101 instances below at least one of the three fails, stopping on
-# numerical difficulties it cannot recover from (status 12), declaring
-# optimal a solution whose value is far from its own bound, or giving an
-# optimum away from the one of the SingleFlowDCRBendersSolver and of the P/C
-# formulation by more than the tolerance, within the one of its cones; a
-# failure that depends on the setting would come and go with the version of
-# Gurobi and with the machine, and these instances are therefore left out
-# rather than kept where the setting of today happens to pass
-socp_unstable="
-garr/Garr200908_1 garr/Garr200908_5 garr/Garr200908_6 garr/Garr200908_8
-garr/Garr200909_5 sndlib/abilene_1 sndlib/di-yuan_8 sndlib/giul39_6
-sndlib/janos-us-ca_8 sndlib/pioro40_5 topo/Abilene_5 topo/Agis_8 topo/Ai3_5
-topo/Amres_4 topo/Amres_5 topo/Amres_6 topo/Ans_6 topo/Arpanet19706_5
-topo/AsnetAm_8 topo/BeyondTheNetwork_5 topo/BeyondTheNetwork_8
-topo/BtLatinAmerica_5 topo/BtLatinAmerica_8 topo/Cesnet1997_6
-topo/Cesnet200511_6 topo/Cesnet200603_6 topo/Cogentco_1 topo/Colt_5
-topo/Columbus_1 topo/Cudi_5 topo/Cynet_1 topo/Cynet_5 topo/Deltacom_5
-topo/Deltacom_9 topo/Digex_5 topo/Digex_6 topo/Evolink_6 topo/Forthnet_5
-topo/Gambia_1 topo/Gambia_6 topo/Gambia_8 topo/Garr200902_5
-topo/Garr200902_6 topo/Garr200908_1 topo/Garr200908_5 topo/Garr200912_8
-topo/Garr201004_5 topo/Garr201005_5 topo/Garr201008_5 topo/Garr201102_8
-topo/Garr201103_1 topo/Garr201104_3 topo/Garr201105_6 topo/Garr201109_8
-topo/Garr201110_6 topo/Garr201110_8 topo/Garr201111_8 topo/Garr201112_8
-topo/Garr201201_8 topo/Geant2009_6 topo/Gridnet_5 topo/GtsCzechRepublic_8
-topo/GtsHungary_8 topo/GtsHungary_9 topo/Harnet_1 topo/HiberniaCanada_5
-topo/HiberniaUs_3 topo/HostwayInternational_2 topo/Intranetwork_8 topo/Ion_6
-topo/IowaStatewideFiberMap_7 topo/IowaStatewideFiberMap_8 topo/Iris_5
-topo/Jgn2Plus_1 topo/Jgn2Plus_5 topo/KentmanAug2005_6 topo/KentmanJan2011_5
-topo/Missouri_8 topo/Niif_5 topo/Oteglobe_8 topo/Renater1999_5
-topo/Renater2004_5 topo/Roedunet_9 topo/RoedunetFibre_5 topo/Sago_5
-topo/Sanet_5 topo/Sinet_5 topo/Switch_1 topo/SwitchL3_5 topo/Telcove_5
-topo/Twaren_8 topo/UniC_5 topo/Uran_5 topo/Uunet_9 topo/Vinaren_8
-waxman/w1_400_04_6 waxman/w1_400_08_8 waxman/w1_600_08_0 waxman/w1_600_08_5
-waxman/w1_700_08_6 waxman/w1_800_04_0
-"
+# numerical focus, the 101 instances where it does not being listed, with
+# the reason, in socp-unstable.txt [and solved by CPLEX in
+# batch-instances-cplex]
+socp_unstable=$(grep -v '^#' "$(dirname "$0")/../socp-unstable.txt")
 
 # the SOCP formulation is not run either where Gurobi takes longer than ten
 # minutes on it
