@@ -711,6 +711,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the tester of `MultiStageStochasticBlock` writes the round trip of the
+  `Solution` to a file of its own name, since the batteries of the suite
+  run in parallel in the same directory and read each other's file
+
 - a tester whose instance file is not there says so and stops with 1, where
   `Block::load( std::string )` wrote on `std::cerr` and returned, leaving an
   empty `Block` on which the run went on until something else broke: on
