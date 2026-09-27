@@ -21,7 +21,7 @@ intLogVerb 0  # silence the solver
 
 # now all the double parameters
 dblRelAcc  1e-09
-dblMaxTime 30     # seconds
+dblMaxTime 10     # seconds
 
 0  # number of string parameters
 

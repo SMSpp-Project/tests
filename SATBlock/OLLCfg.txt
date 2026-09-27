@@ -21,7 +21,7 @@ intMaxSAT 1  # OLL, rather than the hard clauses only
 1  # number of double parameters
 
 # now all the double parameters
-dblMaxTime 30  # seconds
+dblMaxTime 10  # seconds
 
 0  # number of string parameters
 
