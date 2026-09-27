@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the suite of `SATBlock`: its tester reads a `SATBlock` out of a CNF, WCNF
+  or netCDF file and cross-checks, with `SolveAll()`, the Solver of its
+  physical representation (OLL, with CaDiCaL and with MiniSat) with those of
+  its abstract one, i.e., the `:MILPSolver` on its MILP formulation,
+  checking also on the clauses the solution each of them writes;
+  `batch-mse` runs it on the instances of the MaxSAT Evaluation 2024 the
+  module distributes, against their optimum, and `batch-groups` on
+  instances made of groups of clauses written by `smspp_satgen`
+
 - `InvestmentBlock/batches/batch-pypsa` runs the modular network with one
   scenario again with the inner UCBlock solved by the recursive Lagrangian
   dual over its units (`InnerBCfg-LD.txt`), against the reference of PyPSA
