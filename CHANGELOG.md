@@ -59,8 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SingleFlowDCRBlock/batches/batch-instances`, the two formulations of
   the DCR problem on the instances of the module, i.e., on 10 flows of each
-  of 14 real networks, which the build of `SingleFlowDCRBlock` downloads and
-  a ctest fixture extracts before the batteries that read them
+  of 307 real and random networks, which the build of `SingleFlowDCRBlock`
+  downloads and a ctest fixture extracts before the batteries that read
+  them: the P/C one on all of them, the SOCP one on the 2969 that Gurobi
+  solves with each of the numerical focus settings 0, 2 and 3, the other
+  101 being listed in the battery
 
 - `MultiFlowDCRBlock_test` and `SingleFlowDCRBlock/batches-multiflow/batch`,
   which compare on the instances with the first 2 to 5 flows of each network

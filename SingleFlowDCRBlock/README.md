@@ -63,10 +63,10 @@ tightnesses and seeds of the random instances, and `batch-instances`, which
 runs both formulations on the instances of the module, i.e., on 10 flows of
 each of 307 real and random networks (see `data/README.md` in
 `SingleFlowDCRBlock`, whose build downloads them), except the SOCP one on
-the 14 instances where Gurobi does not solve it and on the one where it
-takes longer than ten minutes (listed in the batch, with the reason); all
-of them passing is a good sign that no regression has been made in the
-tested modules.
+the 101 instances where Gurobi does not solve it with each of three
+numerical focus settings (0, 2 and 3) and on the one where it takes longer
+than ten minutes (listed in the batch, with the reason); all of them passing
+is a good sign that no regression has been made in the tested modules.
 
 ## MultiFlowDCRBlock_test
 
