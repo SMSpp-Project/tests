@@ -233,8 +233,9 @@ inner-Block module needed by the instances in `batches/` (currently
   `LagrangianDualSolver` (`BDSSCfg-LDrec.txt`) and a feasible solution
   recovered at the design of the master (`strRecoveryBSC`, each subproblem a
   MILP of `BSCfg1-IP.txt`), which `BSPar-BDS-2S-LD.txt` puts beside the
-  `:MILPSolver` on the Benders form; `BDSCfg-CVX-LD.txt` is
-  the latter in the convex regime (the master of `BDSMCfg-INV.txt`), which
+  `:MILPSolver` on the Benders form; `BDSCfg-CVX-LD.txt` is the latter in
+  the convex regime (the master of `BDSMCfg-INV.txt`, and the feasible
+  solution recovered at the best point of the bundle), which
   `BSPar-BDS-2S-CVX-LD.txt` puts beside it in the same way.
 - `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
   whose components are the units of the scenario (`InnerBSCfg.txt`).
