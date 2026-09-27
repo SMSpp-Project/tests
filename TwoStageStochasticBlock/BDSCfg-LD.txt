@@ -4,7 +4,8 @@
 # The ComputeConfig of the BendersDecompositionSolver whose subproblems are
 # solved by the recursive LagrangianDualSolver (BDSSCfg-LDrec.txt), which
 # relaxes the units of each scenario: that of BDSCfg-IP.txt, the Solver of
-# the subproblems apart.
+# the subproblems apart, and with the recovery of a feasible solution at the
+# design of the master (BSCfg1-IP.txt), which gives the upper bound.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,10 +18,13 @@
 
 0 # number of double parameters
 
-1 # number of string parameters
+2 # number of string parameters
 
 # now all the string parameters
 str_Bsub_BSCfg  BDSSCfg-LDrec.txt # BlockSolverConfig of the subproblems
+strRecoveryBSC  BSCfg1-IP.txt     # the recovery of a feasible solution:
+                                  # each subproblem solved as a MILP at the
+                                  # design of the master
 
 0 # number of vector-of-int parameters
 

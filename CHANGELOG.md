@@ -280,6 +280,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `BDSCfg-LD.txt` recovers a feasible solution at the design of the master
+  (`strRecoveryBSC BSCfg1-IP.txt`), and the thermal run of
+  `TwoStageStochasticBlock/batches/batch-pypsa` checks the interval of
+  BendersDecompositionSolver, its bound below and that solution above,
+  against the reference instead of its bound alone
+
 - `BDSMCfg-INV.txt` declares the residual zero at 1e-6 instead of 1e-8:
   with the subproblems solved by a Lagrangian dual, whose linearizations are
   accurate to its own `dblRelAcc`, the bundle of the master reached the

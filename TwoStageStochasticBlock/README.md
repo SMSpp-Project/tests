@@ -230,8 +230,10 @@ inner-Block module needed by the instances in `batches/` (currently
 - `BDSCfg-IP.txt` — the ComputeConfig of the `BendersDecompositionSolver` of
   `BSPar-BDS-2S-IP.txt` (MILP master, one cut per scenario, 4 threads), and
   `BDSCfg-LD.txt` the same with the subproblems solved by the recursive
-  `LagrangianDualSolver` (`BDSSCfg-LDrec.txt`), which `BSPar-BDS-2S-LD.txt`
-  puts beside the `:MILPSolver` on the Benders form; `BDSCfg-CVX-LD.txt` is
+  `LagrangianDualSolver` (`BDSSCfg-LDrec.txt`) and a feasible solution
+  recovered at the design of the master (`strRecoveryBSC`, each subproblem a
+  MILP of `BSCfg1-IP.txt`), which `BSPar-BDS-2S-LD.txt` puts beside the
+  `:MILPSolver` on the Benders form; `BDSCfg-CVX-LD.txt` is
   the latter in the convex regime (the master of `BDSMCfg-INV.txt`), which
   `BSPar-BDS-2S-CVX-LD.txt` puts beside it in the same way.
 - `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
