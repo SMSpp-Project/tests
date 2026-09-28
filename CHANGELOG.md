@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with the Solver still registered, so that their reoptimization is tested;
   `batch-groups` makes 5 rounds per instance
 
+- the suite of `SATBlock` cross-checks a `BranchAndXSolver` too, which
+  enumerates on the `SATSolver` with CaDiCaL, OLL stopping after 20 calls of
+  the SAT solver in each node (`BXCfg.txt`, `BXBSCfg.txt`, `OLLCfg-node.txt`)
+
 - `InvestmentBlock/batches/batch-pypsa` runs the modular network with one
   scenario again with the inner UCBlock solved by the recursive Lagrangian
   dual over its units (`InnerBCfg-LD.txt`), against the reference of PyPSA
