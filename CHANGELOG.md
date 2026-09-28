@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   module distributes, against their optimum, and `batch-groups` on
   instances made of groups of clauses written by `smspp_satgen`
 
+- the tester of `SATBlock` changes the instance with `-n` rounds of
+  Modification drawn with the seed of `-e` (the costs of a fifth of the
+  variables moved by a step, as a Lagrangian term does, the weights of a
+  range of clauses, or clauses added), repeating the cross-check after each
+  with the Solver still registered, so that their reoptimization is tested;
+  `batch-groups` makes 5 rounds per instance
+
 - `InvestmentBlock/batches/batch-pypsa` runs the modular network with one
   scenario again with the inner UCBlock solved by the recursive Lagrangian
   dual over its units (`InnerBCfg-LD.txt`), against the reference of PyPSA
