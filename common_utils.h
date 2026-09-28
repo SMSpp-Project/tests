@@ -264,6 +264,21 @@ void load_Block_or_exit( Block * block , const std::string & fn ,
                          char frmt = 0 );
 
 /*--------------------------------------------------------------------------*/
+/// the first of the named :Solver that this build has, "" if it has none
+/** Returns the name of the first :Solver of @p names that the factory holds,
+ *  and the empty string when it holds none of them. Which :Solver are there
+ *  depends on the modules the build has and on the external libraries each of
+ *  them has found, and asking the factory for one that is not there throws
+ *  [see Solver::new_Solver()], which kills the run: whoever needs a :Solver
+ *  of a family, any of them, picks it through this. When none is there the
+ *  names looked for and what @p what the run gives up are said on std::cerr,
+ *  so that a build without them reports what it is not checking rather than
+ *  passing in silence. */
+
+std::string first_Solver_of( const std::vector< std::string > & names ,
+                             const std::string & what );
+
+/*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockConfig to a Block
 /** If @p b_config is a plain BlockConfig, simply apply() it to @p block.
  *

@@ -157,6 +157,27 @@ void load_Block_or_exit( Block * block , const std::string & fn , char frmt )
  }
 
 /*--------------------------------------------------------------------------*/
+
+std::string first_Solver_of( const std::vector< std::string > & names ,
+			     const std::string & what )
+{
+ for( const auto & name : names )
+  if( Solver::has_Solver( name ) )
+   return( name );
+
+ std::string all;
+ for( const auto & name : names )
+  all += ( all.empty() ? "" : ", " ) + name;
+
+ std::cerr << ANSI_YELLOW << "[WARNING] none of " << all
+	   << " is in this build, so " << what << " is skipped"
+	   << ANSI_RESET << std::endl;
+
+ return( std::string() );
+
+ }  // end( first_Solver_of )
+
+/*--------------------------------------------------------------------------*/
 /*----------------------------- CONFIGURATION ------------------------------*/
 /*--------------------------------------------------------------------------*/
 

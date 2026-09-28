@@ -737,6 +737,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- a tester picks the `:Solver` it solves with through `first_Solver_of()` of
+  `common_utils`, which returns the first of the given names that the factory
+  holds and says on `std::cerr` which ones it has looked for, and what the
+  run gives up, when it holds none of them: `Solver::new_Solver()` throws on
+  a name that is not there, so `UCBlock_test --scale`, which asked the
+  factory for one name after the other, died with "CPXMILPSolver not present
+  in Solver factory" on every build without CPLEX, the pipeline comprised
+- the two fixtures that bring in the curated knapsack data, `fetch_bk_data`
+  and `run_bk2nc4`, hold the same `RESOURCE_LOCK`: run at once, as `ctest
+  -j2` did, they drive the build system on the same `txt.tgz`, which tar
+  then reads as an archive that ends too soon
 - the archive of the Canad instances of MMCFBlock is extracted by `cmake -E
   tar`, which also works with the tar of macOS, where the option
   `--warning=no-unknown-keyword` of GNU tar stopped the build.

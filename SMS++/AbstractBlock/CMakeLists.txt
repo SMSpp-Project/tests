@@ -52,7 +52,9 @@ endif ()
 # when it changes
 if (TARGET SMS++::BinaryKnapsackBlock AND TARGET SMS++::MILPSolver)
 
-    add_executable(AbstractBlock_mirror_test test_mirror.cpp)
+    add_executable(AbstractBlock_mirror_test test_mirror.cpp
+                                             ../../common_utils.cpp)
+    target_include_directories(AbstractBlock_mirror_test PRIVATE ../..)
     target_link_libraries(AbstractBlock_mirror_test PRIVATE
                           SMS++::SMS++
                           SMS++::BinaryKnapsackBlock

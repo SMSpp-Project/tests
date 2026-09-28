@@ -684,16 +684,11 @@ static void release( UCBlock * uc )
 
 static int test( void )
 {
- for( const auto & name : SolverNames )
-  if( Solver::has_Solver( name ) ) {
-   solver_name = name;
-   break;
-   }
-
- if( solver_name.empty() ) {
-  std::cout << "no :MILPSolver in this build, nothing to check" << std::endl;
+ solver_name = first_Solver_of( SolverNames ,
+			        "the checks of the pollutant budget" );
+ if( solver_name.empty() )
   return( 0 );
-  }
+
  std::cout << "solving with " << solver_name << std::endl;
 
  dir = std::filesystem::temp_directory_path() /
@@ -1343,17 +1338,10 @@ static void check_dp( const std::string & inst , const std::string & dp ,
 
 static int test( void )
 {
- for( const auto & name : SolverNames )
-  if( auto solver = Solver::new_Solver( name ) ) {
-   delete solver;
-   solver_name = name;
-   break;
-   }
-
- if( solver_name.empty() )
-  std::cout << "no :MILPSolver in this build, only the model is checked"
-            << std::endl;
- else
+ solver_name = first_Solver_of( SolverNames ,
+			        "what a :Solver says of the scaled unit; "
+			        "the model is checked all the same" );
+ if( ! solver_name.empty() )
   std::cout << "solving with " << solver_name << std::endl;
 
  dir = std::filesystem::temp_directory_path() /
