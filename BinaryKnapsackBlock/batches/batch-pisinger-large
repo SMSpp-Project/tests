@@ -31,6 +31,13 @@ TIMEOUT="${2:-120}"
 MEMCAP="${3:-8388608}"
 NAMEF="${4:-}"
 
+# the cap is on the address space, not on the memory in use, and OpenBLAS
+# (loaded through the MILP libraries, unused by the knapsack solvers) starts
+# one thread per core up to 64 at load time, each reserving its own stack and
+# buffers: on a machine with many cores that alone takes a parallel solver
+# past 8 GB and it crashes while using a few tens of MB
+export OPENBLAS_NUM_THREADS=1
+
 # each config of the lineup has the greedy relaxation as its FIRST Solver: it
 # is there to bracket the run, not to be judged, this being a coverage
 # benchmark and not a quality one, so it declares nothing, while the empty

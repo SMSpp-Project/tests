@@ -4,8 +4,6 @@
 # A txt description of a BlockSolverConfig for a sub-Block of the consensus
 # rewriting of a SVMBlock, which is the SVM training problem of one chunk
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -65,5 +63,5 @@ intMaxThread    1
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END LPBSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END LPBSCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,55 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LDCfg-easy.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the LagrangianDualSolver of BSPar.txt: that of
+# LDCfg.txt with the easy components, the components that never are, and the
+# stopping parameters these instances need. BSPar-par.txt and
+# BSPar-par-aggr.txt take it with the ParallelBundleSolver in place of the
+# BundleSolver.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+intDoEasy 1 # do easy components for (some) LagBFunction
+
+3 # number of double parameters
+
+dblNZEps  1e-4 # threshold to declare 0 the || residual ||
+dbltStar  1e+4 # multiplies || residual || to estimate the gap
+dbltInit  1e-3 # initial value for t
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+1 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# the components that are never "easy": the ThermalUnitBlock, which have
+# binary variables and their own Solver, and the BatteryUnitBlock, which
+# may have binary variables too
+vstr_LDSl_NoEasy 2 ThermalUnitBlock BatteryUnitBlock
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END LDCfg-easy.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

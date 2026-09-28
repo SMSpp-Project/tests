@@ -6,7 +6,7 @@ source "$(dirname "$0")/../batch_common.sh"
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#set=pypsa-data/tmp_smspp_*.nc
+#set=pypsa-data/ucblock/smspp_*.nc
 set=plan4res-data/FirstSetofInstances/*.nc4
 
 for what in ../../UCBlock/data/nc4/$set; do

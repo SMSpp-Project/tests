@@ -1,0 +1,59 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  MILPCfg-FW.txt - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the :MILPSolver that solves monolithically the father
+# Block of the Frank-Wolfe test, i.e., of the reference the decomposition is
+# compared with.
+#
+# the monolithic :MILPSolver on the problem itself: no compact formulation
+# describes the convex hull of a knapsack, so this is an upper bound on what
+# the decomposition reaches and not the same number, which is why the battery
+# declares it a relaxation
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+2 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0 # log verbosity of the :MILPSolver
+intRelaxIntVars 0 # the problem itself, integrality
+                  # comprised
+
+1 # number of double parameters
+
+# now all the double parameters
+dblRelAcc       1e-8 # relative accuracy required of it
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of ComputeConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END MILPCfg-FW.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

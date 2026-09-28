@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ec-par < exe file > < ignored > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < ignored >  = the BlockSolverConfig files are the two below
+#        < log file > = name of log file, default no log
+#
+# runs batch-ec with the Lagrangian dual driven by ParallelBundleSolver
+# instead of BundleSolver, which is the only thing that changes: the
+# instances, the references and the rest of the configuration are those of
+# batch-ec, so that the two are directly comparable and there is no second
+# copy of either to keep in step. The components of these instances are the
+# units of an energy community, hence several small ones, which is the
+# arrangement the parallel inner loop is meant for.
+#
+# The parallel formulation is chosen by intParFrm [see ParallelBundleSolver]:
+# the default 0 consumes the evaluations in completion order, so the set of
+# components that are evaluated, and with it the trajectory, depends on
+# thread timing and a run is not reproducible bit for bit; the objective
+# values still have to match the references, which is what this checks.
+#
+# The instances are run once per BlockSolverConfig, each of which differs
+# from BSPar.txt in the ParallelBundleSolver and in dblCmpAggr: with the
+# components the master problem sees left as they are (BSPar-par.txt), and
+# with half of them in each of two groups (BSPar-par-aggr.txt). With fewer
+# groups than threads the outer loop cannot spend them all and hands the rest
+# to the groups, which spend them on their members, so that this is the
+# arrangement where the two levels of parallelism are nested.
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+
+for par in BSPar-par.txt BSPar-par-aggr.txt; do
+
+  echo "[ ${par} ]"
+
+  bash "${HERE}/batch-ec" "${1:-./UCBlock_test}" "${par}" "${3:-}"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

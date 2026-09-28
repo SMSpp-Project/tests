@@ -57,6 +57,8 @@
 
 #include "common_utils.h"
 
+#include "AbstractBlock.h"
+
 #include "TwoStageStochasticBlock.h"
 
 #include "UCBlock.h"
@@ -66,6 +68,19 @@
 /*--------------------------------------------------------------------------*/
 
 using namespace SMSpp_di_unipi_it;
+
+/*--------------------------------------------------------------------------*/
+/*-------------------------- WHAT IS DEFINED APART -------------------------*/
+/*--------------------------------------------------------------------------*/
+
+/// assemble the Benders form of @p tssb around it
+/** Returns the father AbstractBlock of the Benders form of @p tssb, i.e., the
+ * shape BendersDecompositionSolver asks for: the here-and-now Variable in a
+ * single copy in the root, one sub-Block per subproblem, and the coupling
+ * written as Constraint of the sub-Block. It is defined in benders_form.cpp,
+ * which is of this tester alone. */
+
+AbstractBlock * benders_form( TwoStageStochasticBlock * tssb );
 
 using FunctionValue = Function::FunctionValue;
 
@@ -93,16 +108,28 @@ const double RefTolerance = 1e-5;
 bool ProxHeur = false;     // false = LagrangianDualSolver
                            // true  = PrimalProximalHeur
 
+/* Whether the Solver are attached to the stochastic Block as it is, or to
+ * the Benders form of it [see benders_form()]: the two describe the same
+ * problem, but a Solver that keeps the here-and-now Variable in a master of
+ * its own needs them in a single copy in the root, which the extensive form
+ * on file does not have. */
+
+bool BenForm = false;
+
 /*--------------------------------------------------------------------------*/
 
 // test-specific command-line options, appended to the standard ones handled
 // by common_utils (the instance positional and -B / -S / -c / -p / -D / -v):
+//   -b / --benders     : solve the Benders form of the instance instead
 //   -w / --warm-start  : 0 = LagrangianDualSolver, 1 = PrimalProximalHeur
 //   -r / --ref         : reference objective value to compare against
+// and -R of common_utils, which declares the Solver that solve a relaxation
+// and switches to the cross-check of the intervals of all the Solver
 
 static bool process_specific_arg( int opt )
 {
  switch( opt ) {
+  case( 'b' ): BenForm = true;                    return( true );
   case( 'w' ): Str2Sthg( optarg , ProxHeur );    return( true );
   case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
   default:                                        return( false );
@@ -122,13 +149,16 @@ int main( int argc , char ** argv )
  // the test only appends its own -w / -r options
 
  docopt_desc = "SMS++ TwoStageStochasticBlock test.\n";
- short_opts += "w:r:";
+ short_opts += "bw:r:";
  const std::vector< option > my_opts = {
+   { "benders"    , no_argument       , nullptr , 'b' } ,
    { "warm-start" , required_argument , nullptr , 'w' } ,
    { "ref"        , required_argument , nullptr , 'r' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
- help += "  -w, --warm-start <0|1>          0 = LagrangianDualSolver, "
+ help += "  -b, --benders                   solve the Benders form of the "
+         "instance [off]\n"
+         "  -w, --warm-start <0|1>          0 = LagrangianDualSolver, "
          "1 = PrimalProximalHeur [0]\n"
          "  -r, --ref <value>               reference objective to compare "
          "against [none]\n";
@@ -180,6 +210,32 @@ int main( int argc , char ** argv )
    delete( ibc );
    }
 
+ /* The Benders form is assembled around the Block the file gives, and it is
+  * that Block, not this one, that the Solver are attached to: the two
+  * describe the same problem, so a :MILPSolver reading the assembled one
+  * whole is still solving the extensive form and is the reference of the
+  * cross-check [see benders_form()]. */
+
+ if( BenForm ) {
+  TestBlock->generate_abstract_variables();
+  TestBlock->generate_abstract_constraints();
+  TestBlock->generate_objective();
+
+  auto root = benders_form(
+               static_cast< TwoStageStochasticBlock * >( TestBlock ) );
+
+  if( ! root ) {
+   std::cout << std::endl
+             << "Error: the Block declares no here-and-now Variable, hence "
+                "there is no Benders form of it" << std::endl;
+   delete bsc;
+   delete TestBlock;
+   exit( 1 );
+   }
+
+  TestBlock = root;
+  }
+
  s_config_Block( TestBlock , bsc , sconf_file );
 
  if( TestBlock->get_registered_solvers().empty() ) {
@@ -218,6 +274,15 @@ int main( int argc , char ** argv )
  const auto getter1 = ObjGetter::LowerBound;
  const auto getter2 = ProxHeur ? ObjGetter::UpperBound : ObjGetter::LowerBound;
 
+ if( ! solver_relaxation.empty() )
+  /* -R says which Solver solve a relaxation, e.g., a Lagrangian dual of a
+   * TSSB whose scenarios are unit commitments, whose bound is below the
+   * optimum by the duality gap: every Solver then enters the cross-check as
+   * the interval of its bounds, as in the other testers, the relaxations
+   * with the one bound that holds for this problem, and there may be any
+   * number of them. */
+  AllPassed = SolveAll( TestBlock , RefObjective , RefTolerance );
+ else
  if( TestBlock->get_registered_solvers().size() > 1 ) {
   double fo1st = -INF;
   bool hs1st = false;

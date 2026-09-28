@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - PDPCfg.txt  - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  PDPCfg.txt - - - - - - - - - - - - - - - -
 #
 # A ComputeConfig for the (exact, parallel) ParallelDPBinaryKnapsackSolver:
 # it runs the full-table dynamic programming over several workers, here four
 # (intMaxThread). Kept as a factored fragment for the cross-check configs.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -44,5 +42,5 @@ intMaxThread 4
 # end of ComputeConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - End PDPCfg.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END PDPCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

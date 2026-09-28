@@ -55,5 +55,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - End InnerBSCfg-incr.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBSCfg-incr.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

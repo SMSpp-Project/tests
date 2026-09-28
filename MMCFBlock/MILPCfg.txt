@@ -1,9 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - MILPCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a :MILPSolver solving a MMCFBlock
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -55,8 +53,8 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END MILPCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END MILPCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -89,8 +89,12 @@ double parE = 0.1;          ///< the half-width of the insensitivity tube
 Index n_repeat = 10;        ///< number of rounds
 double tol = 1e-5;          ///< relative tolerance of the cross-check
 bool reopt = false;         ///< re-solve after changing the training problem
+bool abstract = true;       ///< whether the abstract representation is built
 
 Index ngrid = 0;            ///< values of C of the model selection, 0 = none
+Index npgrid = 0;           ///< values of gamma of the model selection, 0 = none
+Index gorder = 0;           ///< in which order the grid is walked [see run_grid]
+Index gwhich = 0;           ///< which of the two solves the grid takes
 
 Index nincr = 0;            ///< samples learnt one at a time, 0 = none
 
@@ -190,10 +194,12 @@ static SVMBlock * construct( unsigned sd )
  }  // end( construct )
 
 /*--------------------------------------------------------------------------*/
-/// trains the very same data set over a grid of values of C
+/// trains the very same data set over a grid of values of C and of gamma
 /** A model selection, i.e., what one actually does with a SVM: the same data
  * set is trained over and over with a geometric grid of \p ngrid values of C
- * centred on the one that was asked for. Every Solver attached to the
+ * centred on the one that was asked for, and, where \p npgrid asks for it
+ * and the kernel has one, of \p npgrid values of its parameter, walked in
+ * the order \p gorder says. Every Solver attached to the
  * SVMBlock sees the same sequence of Modification, and what it makes of them
  * is its own business: one reading the physical representation can re-optimize
  * from the previous solution, since the multipliers of a value of C are a
@@ -224,9 +230,42 @@ static bool run_grid( SVMBlock * svm , Block * block )
  const double first = parC / 64;
  const double ratio = std::pow( 4096 , 1.0 / ( ngrid > 1 ? ngrid - 1 : 1 ) );
 
- for( Index g = 0 ; g < ngrid ; ++g ) {
-  const double C = first * std::pow( ratio , double( g ) );
+ /* The second dimension of the grid is the parameter of the kernel, which
+  * only a nonlinear one has: a change of C moves the bounds of the dual and
+  * leaves the Hessian alone, while a change of gamma changes the kernel,
+  * hence the Hessian and whatever is cached of it. The two axes therefore
+  * cost differently, and the order in which the grid is walked is part of
+  * the result: with the kernel outermost each of its values is paid once and
+  * the sweep of C re-optimizes along it, with the kernel innermost it is
+  * paid at every point, and the sweep back and forth starts each row of the
+  * grid where the previous one ended instead of at its far end. */
+
+ const bool haspar = ( npgrid > 1 ) && ( kernel != SVMBlock::kLinear );
+ const Index np = haspar ? npgrid : 1;
+ const double gfirst = haspar ? svm->get_gamma() / 64 : 0;
+ const double gratio = std::pow( 4096 , 1.0 / ( np > 1 ? np - 1 : 1 ) );
+
+ std::vector< std::pair< double , double > > point;
+ point.reserve( ngrid * np );
+
+ if( gorder == 3 )
+  for( Index g = 0 ; g < ngrid ; ++g )
+   for( Index h = 0 ; h < np ; ++h )
+    point.emplace_back( first * std::pow( ratio , double( g ) ) ,
+                        gfirst * std::pow( gratio , double( h ) ) );
+ else
+  for( Index h = 0 ; h < np ; ++h )
+   for( Index g = 0 ; g < ngrid ; ++g ) {
+    const Index k = ( ( gorder == 1 ) ||
+                      ( ( gorder == 2 ) && ( h % 2 ) ) ) ? ngrid - 1 - g : g;
+    point.emplace_back( first * std::pow( ratio , double( k ) ) ,
+                        gfirst * std::pow( gratio , double( h ) ) );
+    }
+
+ for( const auto & [ C , gamma ] : point ) {
   svm->set_C( C );
+  if( haspar )
+   svm->set_kernel( kernel , gamma );
 
   std::vector< SolverReading > rd( M );
   std::vector< bool > hs( M , false );
@@ -234,48 +273,69 @@ static bool run_grid( SVMBlock * svm , Block * block )
   std::vector< double > times( M , 0 );
   std::vector< std::string > tokens( M );
 
-  for( std::size_t k = 0 ; k < M ; ++k ) {
-   const auto start = std::chrono::steady_clock::now();
-   status[ k ] = S[ k ]->compute( false );
-   times[ k ] = std::chrono::duration< double >(
-                       std::chrono::steady_clock::now() - start ).count();
+  if( gwhich != 2 )
+   for( std::size_t k = 0 ; k < M ; ++k ) {
+    const auto start = std::chrono::steady_clock::now();
+    status[ k ] = S[ k ]->compute( false );
+    times[ k ] = std::chrono::duration< double >(
+                        std::chrono::steady_clock::now() - start ).count();
 
-   total[ k ] += times[ k ];
-   iters[ k ] += S[ k ]->get_elapsed_iterations();
+    total[ k ] += times[ k ];
+    iters[ k ] += S[ k ]->get_elapsed_iterations();
 
-   hs[ k ] = S[ k ]->has_var_solution();
-   if( hs[ k ] )
-    rd[ k ] = read_bounds( S[ k ] , k );
-   tokens[ k ] = reading_token( rd[ k ] );
-   }
+    hs[ k ] = S[ k ]->has_var_solution();
+    if( hs[ k ] )
+     rd[ k ] = read_bounds( S[ k ] , k );
+    tokens[ k ] = reading_token( rd[ k ] );
+    }
 
   /* What the Modification are worth is the difference between what the
    * Solver that is there does, having the previous solution to start from,
    * and what a Solver of the very same kind and configuration does having
    * just been attached, hence knowing nothing: no Solver is named here, one
-   * of each is simply built out of the Solver factory. */
+   * of each is simply built out of the Solver factory.
+   *
+   * The two share whatever the Block keeps of the kernel, so whichever of
+   * them runs first at a point pays for the rows that point needs and the
+   * other finds them there: taking both in one run therefore charges the
+   * difference to the first of the two. Which of the two is taken is what
+   * \p gwhich says, and a comparison that has to be free of that charges
+   * each of them in a run of its own. */
 
-  for( std::size_t k = 0 ; k < M ; ++k ) {
-   auto fresh = Solver::new_Solver( S[ k ]->classname() );
-   if( ! fresh )
-    continue;
+  if( gwhich != 1 )
+   for( std::size_t k = 0 ; k < M ; ++k ) {
+    auto fresh = Solver::new_Solver( S[ k ]->classname() );
+    if( ! fresh )
+     continue;
 
-   if( auto cfg = S[ k ]->get_ComputeConfig() ) {
-    fresh->set_ComputeConfig( cfg );
-    delete cfg;
+    if( auto cfg = S[ k ]->get_ComputeConfig() ) {
+     fresh->set_ComputeConfig( cfg );
+     delete cfg;
+     }
+
+    block->register_Solver( fresh );
+
+    const auto start = std::chrono::steady_clock::now();
+    const int st = fresh->compute( false );
+    cold[ k ] += std::chrono::duration< double >(
+                        std::chrono::steady_clock::now() - start ).count();
+    citers[ k ] += fresh->get_elapsed_iterations();
+
+    /* With the registered Solver left alone, what the cross-check reads is
+     * the fresh one, there being nothing else to read. */
+
+    if( gwhich == 2 ) {
+     status[ k ] = st;
+     hs[ k ] = fresh->has_var_solution();
+     if( hs[ k ] )
+      rd[ k ] = read_bounds( fresh , k );
+     tokens[ k ] = reading_token( rd[ k ] );
+     times[ k ] = cold[ k ];
+     }
+
+    block->unregister_Solver( fresh );
+    delete fresh;
     }
-
-   block->register_Solver( fresh );
-
-   const auto start = std::chrono::steady_clock::now();
-   fresh->compute( false );
-   cold[ k ] += std::chrono::duration< double >(
-                       std::chrono::steady_clock::now() - start ).count();
-   citers[ k ] += fresh->get_elapsed_iterations();
-
-   block->unregister_Solver( fresh );
-   delete fresh;
-   }
 
   std::string verdict;
   double diff = std::numeric_limits< double >::quiet_NaN();
@@ -290,10 +350,15 @@ static bool run_grid( SVMBlock * svm , Block * block )
   }
 
  svm->set_C( parC );   // leave the training problem as it was found
+ if( haspar )
+  svm->set_kernel( kernel );
 
  std::cout << "  grid of " << ngrid << " values of C, from " << first
-           << " to " << first * std::pow( ratio , double( ngrid - 1 ) )
-           << ", warm vs cold:" << std::endl;
+           << " to " << first * std::pow( ratio , double( ngrid - 1 ) );
+ if( haspar )
+  std::cout << ", times " << np << " values of gamma, from " << gfirst
+            << " to " << gfirst * std::pow( gratio , double( np - 1 ) );
+ std::cout << ", order " << gorder << ", warm vs cold:" << std::endl;
  for( std::size_t k = 0 ; k < M ; ++k ) {
   std::cout << "   " << S[ k ]->classname() << ": " << total[ k ] << " s vs "
             << cold[ k ] << " s";
@@ -497,9 +562,16 @@ static bool run_round( unsigned sd )
    }
   }
 
- svm->generate_abstract_variables();
- svm->generate_abstract_constraints();
- svm->generate_objective();
+ /* A Solver that reads the physical representation needs none of this, and
+  * on a large data set the abstract one costs more than the algorithm: the
+  * objective of the Wolfe dual is a DQuadFunction carrying the whole n x n
+  * Hessian, i.e., what the Gram matrix is kept out of memory for. */
+
+ if( abstract ) {
+  svm->generate_abstract_variables();
+  svm->generate_abstract_constraints();
+  svm->generate_objective();
+  }
 
  // attach the Solver by reading a BlockSolverConfig from file and apply()-ing
  // it to the SVMBlock; the BlockSolverConfig is clear()-ed and kept to do the
@@ -568,7 +640,11 @@ static bool process_specific_arg( int opt )
   case( 't' ): Str2Sthg( optarg , tol );       return( true );
   case( 'g' ): regression = true;              return( true );
   case( 'R' ): reopt = true;                   return( true );
+  case( 'A' ): abstract = false;               return( true );
   case( 'G' ): Str2Sthg( optarg , ngrid );     return( true );
+  case( 'P' ): Str2Sthg( optarg , npgrid );    return( true );
+  case( 'O' ): Str2Sthg( optarg , gorder );    return( true );
+  case( 'X' ): Str2Sthg( optarg , gwhich );    return( true );
   case( 'I' ): Str2Sthg( optarg , nincr );     return( true );
   case( 'd' ): dataset = optarg;               return( true );
   case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
@@ -591,7 +667,7 @@ int main( int argc , char ** argv )
  // -R is --reopt here, a flag, while the standard one takes a value: the
  // standard reading has to go, appending alone would not override it
  override_short_opt( 'R' );
- short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:I:d:Y:gRb";
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:P:O:X:I:d:Y:gRbA";
  const std::vector< option > my_opts = {
    { "seed"     , required_argument , nullptr , 'e' } ,
    { "nsample"  , required_argument , nullptr , 'N' } ,
@@ -608,7 +684,11 @@ int main( int argc , char ** argv )
    { "ref"      , required_argument , nullptr , 'r' } ,
    { "regress"  , no_argument       , nullptr , 'g' } ,
    { "reopt"    , no_argument       , nullptr , 'R' } ,
+   { "noabstract" , no_argument     , nullptr , 'A' } ,
    { "grid"     , required_argument , nullptr , 'G' } ,
+   { "pgrid"    , required_argument , nullptr , 'P' } ,
+   { "order"    , required_argument , nullptr , 'O' } ,
+   { "which"    , required_argument , nullptr , 'X' } ,
    { "incremental" , required_argument , nullptr , 'I' } ,
    { "data"     , required_argument , nullptr , 'd' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
@@ -645,11 +725,39 @@ int main( int argc , char ** argv )
          "under the\n"
          "                                  Solver, re-solving after each "
          "change\n"
+         "  -A, --noabstract                leave the Block in its physical "
+         "representation,\n"
+         "                                  which is all a Solver reading it "
+         "needs\n"
          "  -G, --grid <n>                  train the same data set over a "
          "grid of n\n"
          "                                  values of C, reporting the total "
          "time of\n"
          "                                  each Solver [0 = do not]\n"
+         "  -P, --pgrid <n>                 walk the grid of C at n values "
+         "of the\n"
+         "                                  parameter of the kernel as well "
+         "[0 = do not]\n"
+         "  -O, --order <n>                 in which order the grid is "
+         "walked [0]:\n"
+         "                                    0 = C increasing, the kernel "
+         "outermost\n"
+         "                                    1 = C decreasing, the kernel "
+         "outermost\n"
+         "                                    2 = C back and forth, the "
+         "kernel outermost\n"
+         "                                    3 = the kernel innermost, both "
+         "increasing\n"
+         "  -X, --which <n>                 which solve of each point of the "
+         "grid is taken\n"
+         "                                  [0]: 0 = both, 1 = the registered "
+         "Solver alone,\n"
+         "                                  2 = a freshly attached one alone. "
+         "The two share\n"
+         "                                  what the Block keeps of the "
+         "kernel, so a\n"
+         "                                  comparison free of that takes each "
+         "in its own run\n"
          "  -I, --incremental <n>           learn n more samples one at a "
          "time, timing\n"
          "                                  each Solver over the additions "

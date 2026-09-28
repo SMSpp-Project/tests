@@ -1,0 +1,43 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+#
+# Cross-check BlockSolverConfig for a SATBlock: it attaches the Solver of
+# its physical representation and those of its abstract one, i.e., of its
+# MILP formulation, which must give the same optimum (see batches/):
+#
+#   - CaDiCaLSATSolver   OLL on the clauses, with CaDiCaL
+#   - MiniSATSolver      OLL on the clauses, with MiniSat
+#   - :MILPSolver        the MILP formulation
+#
+# A Solver that is not in the build is left out [see drop_missing_Solvers()
+# in common_utils.cpp]. The two SATSolver share OLLCfg.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+3  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CaDiCaLSATSolver  # 1st: OLL with CaDiCaL
+MiniSATSolver     # 2nd: OLL with MiniSat
+HiGHSMILPSolver   # 3rd: the MILP formulation
+#CPXMILPSolver    #      (uncomment the available backend)
+#GRBMILPSolver
+#SCIPMILPSolver
+
+3  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*OLLCfg.txt
+*OLLCfg.txt
+*MILPCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

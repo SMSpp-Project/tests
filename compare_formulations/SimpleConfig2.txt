@@ -1,18 +1,16 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - SimpleConfig2.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - SimpleConfig2.txt - - - - - - - - - - - - - -
 #
 # A txt description of "any" Configuration for generate_abstract_variables()
 # of "any" Block; in particular this is a SimpleConfiguration< int >
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 SimpleConfiguration<int>     # exact type of the Configuration object
 
-0	# the value of the integer in the SimpleConfiguration
+0       # the value of the integer in the SimpleConfiguration
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END SimpleConfig2.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END SimpleConfig2.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,29 +1,10 @@
 # ----- Requirements -------------------------------------------------------- #
-# If it's not being called by the umbrella, we need to
-# look for the system-installed libraries.
-if (NOT hasParent)
-    # Blocks
-    find_package(SMS++)
-    # Solvers
-    find_package(MILPSolver)
-endif ()
-
-# Skip the suite if some module its labels declare is not in the build
-smspp_require_labelled_modules()
+# Nothing of its own: this directory groups the tests posed on the objects a
+# :MILPSolver is asked to handle, one directory each, and every one of them
+# states what it needs. They are here, and not in MILPSolver/test, because
+# they ask for the cross-check machinery of common_utils.
 
 # ----- Tests --------------------------------------------------------------- #
-if (TARGET SMS++::MILPSolver)
+add_subdirectory(QuadFunction)
 
-    add_executable(MILPSolver_groups_test groups.cpp)
-    target_link_libraries(MILPSolver_groups_test PRIVATE SMS++::MILPSolver)
-
-    smspp_install(MILPSolver_groups_test)
-
-    add_test(NAME MILPSolver_test/groups
-             COMMAND MILPSolver_groups_test
-             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-    # ----- Labels ---------------------------------------------------------- #
-    smspp_label_tests()
-
-endif ()
+# --------------------------------------------------------------------------- #

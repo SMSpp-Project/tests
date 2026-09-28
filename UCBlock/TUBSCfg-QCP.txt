@@ -7,8 +7,6 @@
 # SCIP is used (HiGHS cannot solve QCP models). It is otherwise identical to
 # TUBSCfg-CLP.txt, which uses HiGHS for the non-QCP (DC) case.
 #
-#   Antonio Frangioni
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -81,5 +79,5 @@ dblRelAcc       1e-8 # relative accuracy required to solution = mipmap
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -END TUBSCfg-QCP.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END TUBSCfg-QCP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

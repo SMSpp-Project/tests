@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - SMOBSCfg.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  SMOBSCfg.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the inner Block of a
 # LagBFunction, i.e., one chunk of the consensus structure of a SVMBlock [see
@@ -7,8 +7,6 @@
 # multipliers of the relaxed consensus constraints are the linear term of the
 # primal of the chunk [see SVMBlock::set_linear_term()], which the SMOSolver
 # folds into the dual it solves
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -28,5 +26,5 @@ SMOSolver
 *SMOCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END SMOBSCfg.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END SMOBSCfg.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

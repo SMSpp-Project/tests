@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-LLIN.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-LLIN.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a SVMBlock whose abstract
 # representation encodes the Wolfe dual of the training problem, to be solved
@@ -13,8 +13,6 @@
 # its own rather than being one more Solver in BSPar.txt. Which problems those
 # are is the complement of what LIBSVM has, both losses being fine here and
 # only the linear kernel being so.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -48,5 +46,5 @@ LIBLINEARSolver                 # name of 3rd Solver
 *LLINCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END BSPar-LLIN.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-LLIN.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

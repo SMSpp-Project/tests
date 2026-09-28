@@ -5,8 +5,6 @@
 # (typically, inside the HydroSystemUnitBlock) of a UCBlock, setting the
 # formulation to "linearised"
 #
-#   Antonio Frangioni
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

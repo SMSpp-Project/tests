@@ -9,6 +9,7 @@ if (NOT hasParent)
     find_package(MILPSolver)
     find_package(LagrangianDualSolver)
     find_package(MCFLemonSolver)
+    find_package(MCFClassSolver)
 endif ()
 
 find_package(CPLEX)
@@ -58,7 +59,22 @@ set(CANAD_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad.tgz)
 set(CANAD_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/download_canad.cmake)
 
 file(WRITE ${CANAD_SCRIPT} "
-file(DOWNLOAD \"${CANAD_URL}\" \"${CANAD_ARCHIVE}\" SHOW_PROGRESS)
+file(DOWNLOAD \"${CANAD_URL}\" \"${CANAD_ARCHIVE}\" SHOW_PROGRESS STATUS _status)
+list(GET _status 0 _code)
+list(GET _status 1 _message)
+if(NOT _code EQUAL 0)
+  # what is on disk is whatever the server answered with, and leaving it there
+  # would let the build take it for the archive: the next attempt has to
+  # download again rather than fail while extracting it
+  file(REMOVE \"${CANAD_ARCHIVE}\")
+  message(FATAL_ERROR \"cannot download ${CANAD_URL}: \${_message}\")
+endif()
+file(SIZE \"${CANAD_ARCHIVE}\" _size)
+if(_size LESS 1024)
+  file(REMOVE \"${CANAD_ARCHIVE}\")
+  message(FATAL_ERROR \"${CANAD_ARCHIVE} came down with \${_size} bytes, so the \
+server answered but not with the archive: try again later\")
+endif()
 ")
 
 add_custom_command(
@@ -120,7 +136,7 @@ if (TARGET SMS++::MMCFBlock AND
     TARGET MMCFClass AND
     CPLEX_FOUND)
 
-    add_executable(MMCF_test main.cpp)
+    add_executable(MMCF_test test_reference.cpp)
     target_link_libraries(MMCF_test PRIVATE
                           SMS++::MMCFBlock
                           MMCFClass)
@@ -141,9 +157,10 @@ if (TARGET SMS++::MMCFBlock AND
 
     smspp_install(MMCF_test)
 
-    # the reference tester's batch (block-vs-MMCFCplex); the cross-check tester
-    # below registers its own (batch, batch-c, batch-m, batchML)
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch-ref")
+    # the reference tester's batch (block-vs-MMCFCplex), which lives apart
+    # from those of the cross-check tester below because it is run with this
+    # tester and not with that one
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches-ref/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
@@ -191,6 +208,17 @@ if (TARGET SMS++::MMCFBlock)
         target_link_libraries(MMCFBlock_test PRIVATE SMS++::MCFLemonSolver)
     endif ()
 
+    # the flow relaxation of BSPar-2S.txt asks for MCFSolver< MCFSimplex >
+    if (TARGET SMS++::MCFClassSolver)
+        target_link_libraries(MMCFBlock_test PRIVATE SMS++::MCFClassSolver)
+    endif ()
+
+    # batchML asks for BundleSolverML by name, and the class is in the
+    # factory only if its library is linked [see BundleSolver/CMakeLists.txt]
+    if (TARGET SMS++::BundleSolverML)
+        target_link_libraries(MMCFBlock_test PRIVATE SMS++::BundleSolverML)
+    endif ()
+
     smspp_install(MMCFBlock_test)
 
     # The ML batch (batchML) drives the inner BundleSolverML, which is only
@@ -199,14 +227,14 @@ if (TARGET SMS++::MMCFBlock)
     find_package(Torch QUIET HINTS ${Torch_ROOT})
     set(ML_BATCH "")
     if (Torch_FOUND)
-        set(ML_BATCH "${CMAKE_CURRENT_SOURCE_DIR}/batchML")
+        set(ML_BATCH "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchML")
     endif ()
 
     # Add a test for each batch file
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-c"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-k"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batch-m"
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-c"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-k"
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-m"
                           ${ML_BATCH})
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
@@ -223,9 +251,9 @@ if (TARGET SMS++::MMCFBlock)
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
         # Make each batch test require the data fixtures it reads
-        if (BATCH_NAME STREQUAL "batch")
+        if (BATCH_NAME STREQUAL "batches/batch")
             set(BATCH_FIXTURES "canad_fetched;mnetgen_generated")
-        elseif (BATCH_NAME STREQUAL "batch-m")
+        elseif (BATCH_NAME STREQUAL "batches/batch-m")
             set(BATCH_FIXTURES "mnetgen_generated")
         else ()
             set(BATCH_FIXTURES "canad_fetched")
@@ -234,6 +262,40 @@ if (TARGET SMS++::MMCFBlock)
                              PROPERTIES FIXTURES_REQUIRED "${BATCH_FIXTURES}")
     endforeach ()
 endif ()
+
+    # The benchmark of the machine-learning driven bundle on the instances of
+    # this Block: the harness is the generic one (../ml_bench.cpp), which
+    # reads whichever instance it is given, and this suite compiles into it
+    # the two text formats of the module (ML_BENCH_TEXT) and the splits of
+    # splits-mnetgen. It is built only where Torch is, BundleSolverML being
+    # built into BundleSolver only in that case, and it is no test: it trains
+    # a network and measures, hence it is run by hand.
+    find_package(Torch QUIET HINTS ${Torch_ROOT})
+    if (Torch_FOUND AND TARGET SMS++::BundleSolverML)
+
+        add_executable(MMCFBlock_ML_bench ../ml_bench.cpp)
+        target_include_directories(MMCFBlock_ML_bench PRIVATE ..)
+        target_compile_definitions(MMCFBlock_ML_bench PRIVATE ML_BENCH_TEXT=1)
+        target_link_libraries(MMCFBlock_ML_bench PRIVATE
+                              SMS++::BundleSolverML
+                              SMS++::BundleSolver
+                              SMS++::LagrangianDualSolver
+                              SMS++::MMCFBlock
+                              ${TORCH_LIBRARIES})
+        target_compile_features(MMCFBlock_ML_bench PUBLIC cxx_std_20)
+
+        # on Windows the Torch DLLs have to sit next to the executable
+        if (MSVC)
+            file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+            add_custom_command(TARGET MMCFBlock_ML_bench POST_BUILD
+                               COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                       ${TORCH_DLLS}
+                                       $<TARGET_FILE_DIR:MMCFBlock_ML_bench>
+                               COMMENT "Copying Torch DLLs next to it")
+        endif ()
+
+        smspp_install(MMCFBlock_ML_bench)
+    endif ()
 
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).

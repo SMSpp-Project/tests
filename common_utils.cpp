@@ -18,11 +18,14 @@
 
 #include "common_utils.h"
 
+#include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <exception>
+#include <fstream>
+#include <iomanip>
 #include <limits>
 #include <list>
 #include <map>
@@ -32,7 +35,15 @@
 
 #include <Configuration.h>
 
+#include <DQuadFunction.h>
+
+#include <FRowConstraint.h>
+
+#include <FRealObjective.h>
+
 #include <Objective.h>
+
+#include <QuadFunction.h>
 
 /*--------------------------------------------------------------------------*/
 /*--------------------- MPI / UCX SAFE-DEFAULTS ----------------------------*/
@@ -95,6 +106,23 @@ void PrintResults( bool hs , int rtrn , double fo )
  }
 
 /*--------------------------------------------------------------------------*/
+// what a Solver that failed says of itself
+/* A Solver that returns anything from kError up delivered nothing, and the
+ * line says so; which of the errors it is, however, is the only thing left
+ * to go by when the failure does not repeat, as one of a parallel Solver may
+ * well not, hence the code, and its name where the core gives it one. */
+
+std::string error_token( int status )
+{
+ std::string what = "Error!";
+ if( status == Solver::kError )            what += " (kError)";
+ else if( status == Solver::kBlockLocked ) what += " (Block locked)";
+ else                                      what += " (status " +
+                                            std::to_string( status ) + ")";
+ return( what );
+ }
+
+/*--------------------------------------------------------------------------*/
 // print the exception that reached std::terminate(), then abort
 
 void smspp_terminate( void )
@@ -111,6 +139,21 @@ void smspp_terminate( void )
   std::cerr << "\tUnknown exception" << std::endl;
   }
  std::abort();  // or exit( 1 )
+ }
+
+/*--------------------------------------------------------------------------*/
+// load a Block out of a text file, or stop with a clear message
+
+void load_Block_or_exit( Block * block , const std::string & fn , char frmt )
+{
+ std::ifstream file( Block::get_filename_prefix() + fn , std::fstream::in );
+ if( ! file.is_open() ) {
+  std::cerr << "Error: cannot open " << Block::get_filename_prefix() + fn
+            << std::endl;
+  std::exit( 1 );
+  }
+
+ block->load( file , frmt );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -170,6 +213,78 @@ void b_config_Block( Block * block , Configuration * b_config ,
  }  // end( b_config_Block )
 
 /*--------------------------------------------------------------------------*/
+/* Takes out of a BlockSolverConfig the Solver that this build does not have.
+ * A configuration names every Solver that makes sense on the instances of a
+ * battery, so that a run solves with all of them and compares; but which
+ * Solver are there depends on the modules the build has and on the external
+ * libraries each of them has found, and asking the factory for one that is
+ * not there throws [see Solver::new_Solver()], which would kill the whole
+ * run rather than that one comparison. What is left out is said, name by
+ * name, so that the log of a run tells what it has actually solved with. */
+
+static void drop_missing_Solvers( BlockSolverConfig * bsc ,
+				  const std::string & fn )
+{
+ if( ! bsc )
+  return;
+
+ const auto asked = bsc->num_ComputeConfig();
+
+ /* A BlockSolverConfig that names no Solver at all is how a Solver is
+  * detached rather than a configuration that cannot be applied: there is
+  * nothing to look for in the factory and nothing to skip. */
+ if( ! asked )
+  return;
+
+ for( Block::Index i = asked ; i-- ; ) {
+  const auto & name = bsc->get_SolverName( i );
+  if( Solver::has_Solver( name ) )
+   continue;
+
+  std::cerr << ANSI_YELLOW << "[WARNING] " << name << " is not in this build"
+	    << ", so " << fn << " solves without it" << ANSI_RESET << std::endl;
+
+  /* What -E and -R declare is positional on the order of the
+   * BlockSolverConfig, hence the entry of the Solver that goes has to go with
+   * it: what is left would otherwise be read off the Solver that takes its
+   * place, i.e. a tolerance or a "this one solves a relaxation" landing on
+   * another Solver. A single value applies to every Solver and stays as it
+   * is [see solver_eps and solver_relaxation]. */
+  if( solver_eps.size() > 1 )
+   if( i < solver_eps.size() )
+    solver_eps.erase( solver_eps.begin() + i );
+  if( solver_relaxation.size() > 1 )
+   if( i < solver_relaxation.size() )
+    solver_relaxation.erase( solver_relaxation.begin() + i );
+
+  bsc->remove_ComputeConfig( i );
+  }
+
+ const auto left = bsc->num_ComputeConfig();
+
+ if( ! left ) {
+  /* A configuration none of whose Solver is there cannot be applied to
+   * anything: a run that went through the motions would report that nothing
+   * failed, which is worse than saying that it cannot be done. The status is
+   * the one of a test that has nothing to do rather than of one that failed,
+   * which is what the batteries and ctest read it as
+   * [see SKIP_RETURN_CODE and run_test of batch_common.sh]. */
+  std::cerr << ANSI_YELLOW << "[SKIPPED] none of the " << asked
+	    << " Solver that " << fn << " names is in this build"
+	    << ANSI_RESET << std::endl;
+  exit( 77 );
+  }
+
+ if( ( asked > 1 ) && ( left == 1 ) )
+  std::cerr << ANSI_YELLOW << "[WARNING] " << fn << " names " << asked
+	    << " Solver and this build has one of them, "
+	    << bsc->get_SolverName( 0 )
+	    << ": there is no Solver to cross-check it against, and what this "
+	       "run says is what that one Solver says" << ANSI_RESET
+	    << std::endl;
+ }
+
+/*--------------------------------------------------------------------------*/
 // the same for a BlockSolverConfig, which is also clear()-ed for the final
 // cleanup, see common_utils.h
 
@@ -198,8 +313,10 @@ void s_config_Block( Block * block , Configuration * s_config ,
   // now BlockSolverConfig-ure all Block whose classname() matches
   for( auto b : BFS )
    if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bsc = dynamic_cast< BlockSolverConfig * >( bcit->second ) )
+    if( auto bsc = dynamic_cast< BlockSolverConfig * >( bcit->second ) ) {
+     drop_missing_Solvers( bsc , fn );
      bsc->apply( b );
+     }
     else {
      std::cerr << "Error: meta-Configuration for :Block " << bcit->first
                << " in file " << fn << " is not a BlockSolverConfig"
@@ -217,6 +334,7 @@ void s_config_Block( Block * block , Configuration * s_config ,
   }
 
  if( auto * bsc = dynamic_cast< BlockSolverConfig * >( s_config ) ) {
+  drop_missing_Solvers( bsc , fn );
   bsc->apply( block );          // just apply() it
   if( clear_after )
    bsc->clear();                // clear() it for final cleanup
@@ -325,6 +443,144 @@ static bool tests_verbose()
 }
 
 /*--------------------------------------------------------------------------*/
+// the ColVariable of a Block the father Objective is built over
+
+void collect_vars( Block * b , const std::vector< std::string > & groups ,
+                   std::vector< ColVariable * > & vars )
+{
+ if( ! groups.empty() ) {
+  for( const auto & name : groups ) {
+   auto grp = b->get_static_variable_v< ColVariable >( name );
+   if( ! grp )
+    throw( std::invalid_argument( "collect_vars: no variable group named '" +
+                                  name + "' in the sub-Block" ) );
+   for( auto & v : *grp )
+    vars.push_back( & v );
+   }
+  return;
+  }
+
+ auto obj = dynamic_cast< FRealObjective * >( b->get_objective() );
+ if( ! obj )
+  throw( std::invalid_argument( "collect_vars: child has no FRealObjective" ) );
+ auto f = obj->get_function();
+ const Block::Index n = f->get_num_active_var();
+ for( Block::Index i = 0 ; i < n ; ++i )
+  vars.push_back( static_cast< ColVariable * >( f->get_active_var( i ) ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+// a father AbstractBlock with k copies of the Block a file gives
+
+AbstractBlock * build_father( const std::string & filename , int k ,
+                              const std::string & bconf ,
+                              const std::vector< std::string > & groups ,
+                              std::vector< ColVariable * > & vars )
+{
+ auto father = new AbstractBlock();
+ vars.clear();
+ for( int j = 0 ; j < k ; ++j ) {
+  Block * child = Block::deserialize( filename , father );
+  if( ! child )
+   throw( std::invalid_argument( "build_father: cannot read Block from " +
+                                 filename ) );
+  if( ! bconf.empty() ) {
+   Configuration * bc = Configuration::deserialize( bconf );
+   b_config_Block( child , bc , bconf );
+   delete bc;
+   }
+  child->generate_abstract_variables();
+  child->generate_abstract_constraints();
+  child->generate_objective();
+  father->add_nested_Block( child );
+  collect_vars( child , groups , vars );
+  }
+ return( father );
+ }
+
+/*--------------------------------------------------------------------------*/
+// random data of a convex PolyhedralFunction
+
+void generate_poly( Block::Index nv , int poly_rows , double scale ,
+                    std::mt19937 & rg ,
+                    PolyhedralFunction::MultiVector & A ,
+                    PolyhedralFunction::RealVector & b )
+{
+ using Index = Block::Index;
+ Index nr = poly_rows > 0 ? Index( poly_rows ) : nv + 1;
+ A.assign( nr , PolyhedralFunction::RealVector( nv ) );
+ b.assign( nr , 0 );
+ for( Index r = 0 ; r < nr ; ++r ) {
+  for( Index i = 0 ; i < nv ; ++i )
+   A[ r ][ i ] = scale * rnd( rg );
+  b[ r ] = scale * nv * rnd( rg ) / 4;
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+// a random Function over the given Variable, for the father Objective
+
+Function * make_father_objective( std::vector< ColVariable * > & vars ,
+                                  int obj_type , double scale ,
+                                  int poly_rows , std::mt19937 & rg )
+{
+ using Index = Block::Index;
+ using Coefficient = DQuadFunction::Coefficient;
+ const Index nv = Index( vars.size() );
+
+ if( obj_type == 0 ) {  // DQuadFunction: sum_i ( a_i x_i^2 + b_i x_i ), a_i > 0
+  DQuadFunction::v_coeff_triple tr( nv );
+  for( Index i = 0 ; i < nv ; ++i )
+   tr[ i ] = std::make_tuple( vars[ i ] , Coefficient( scale * rnd( rg ) ) ,
+                              Coefficient( scale * ( 0.5 + pos( rg ) ) ) );
+  return( new DQuadFunction( std::move( tr ) ) );
+  }
+
+ if( obj_type == 1 ) {  // QuadFunction: off-diagonal terms (i+1,i), kept PSD by
+                        // Gershgorin diagonal dominance ( 2 a_i >= sum |q| )
+  QuadFunction::v_off_diag_term nd;
+  std::vector< double > rowabs( nv , 0.0 );
+  for( Index i = 0 ; i + 1 < nv ; ++i ) {
+   double q = scale * 0.3 * rnd( rg );
+   nd.push_back( std::make_tuple( i + 1 , i , Coefficient( q ) ) );
+   rowabs[ i ]     += std::abs( q );
+   rowabs[ i + 1 ] += std::abs( q );
+   }
+  DQuadFunction::v_coeff_triple tr( nv );
+  for( Index i = 0 ; i < nv ; ++i )
+   tr[ i ] = std::make_tuple( vars[ i ] , Coefficient( scale * rnd( rg ) ) ,
+                              Coefficient( 0.5 * rowabs[ i ] +
+                                           scale * ( 0.5 + pos( rg ) ) ) );
+  return( new QuadFunction( std::move( tr ) , std::move( nd ) ) );
+  }
+
+ // obj_type == 2: convex PolyhedralFunction = max_r ( A_r . x + b_r )
+ PolyhedralFunction::MultiVector A;
+ PolyhedralFunction::RealVector b;
+ generate_poly( nv , poly_rows , scale , rg , A , b );
+ PolyhedralFunction::VarVector vv( vars.begin() , vars.end() );
+ auto pf = new PolyhedralFunction( std::move( vv ) , std::move( A ) ,
+                                   std::move( b ) ,
+                                   - Inf< Function::FunctionValue >() );
+ pf->set_is_convex( true , eNoMod );
+ return( pf );
+ }
+
+/*--------------------------------------------------------------------------*/
+// make every Solver of the Block log at the verbosity the -v option asks for
+
+void apply_solver_verbosity( Block * b )
+{
+ if( verbosity_level <= 0 )
+  return;
+
+ for( auto s : b->get_registered_solvers() ) {
+  s->set_log( & std::cout );
+  s->set_par( Solver::intLogVerb , verbosity_level );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
 // print the one line that reports an instance: timings, Solver values,
 // reference and verdict
 
@@ -333,7 +589,8 @@ void print_instance_line( const std::vector< double > & times ,
                           double ref ,
                           const std::string & verdict ,
                           double diff ,
-                          bool always )
+                          bool always ,
+                          const std::vector< std::string > & names )
 {
  // the detailed per-round line (times, solver values, verdict) of a test
  // that re-solves in a loop of modification rounds is "extended" output:
@@ -345,6 +602,35 @@ void print_instance_line( const std::vector< double > & times ,
      ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
   return;
 
+ // with the names of the Solver, one line each, the values aligned one
+ // under the other so that two that do not agree are seen at a glance
+ if( ! names.empty() ) {
+  std::size_t w = 3;   // "Ref"
+  for( const auto & n : names )
+   w = std::max( w , n.size() );
+
+  for( std::size_t k = 0 ; k < value_tokens.size() ; ++k ) {
+   std::cout << "  " << std::left << std::setw( int( w ) )
+             << ( k < names.size() ? names[ k ] : std::string() )
+             << std::right << " = " << value_tokens[ k ];
+   if( k < times.size() )
+    std::cout << "   " << fixd << times[ k ] << " s";
+   std::cout << std::endl;
+   }
+
+  if( ! std::isnan( ref ) ) {
+   std::cout << "  " << std::left << std::setw( int( w ) ) << "Ref"
+             << std::right << " = " << fmt_obj( ref );
+   if( ! std::isnan( diff ) )
+    std::cout << "   (|diff| = " << fmt_obj( diff ) << ")";
+   std::cout << std::endl;
+   }
+
+  std::cout << "  -> " << verdict << std::endl;
+  return;
+  }
+
+ // without them, the Solver are numbered and the report is one line
  for( std::size_t k = 0 ; k < times.size() ; ++k )
   std::cout << ( k ? " - " : "" ) << fixd << times[ k ];
 
@@ -558,6 +844,52 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 /*--------------------------------------------------------------------------*/
 // solve an instance with every Solver, cross-check them, report
 
+void print_solver_parameters( Block * block )
+{
+ if( ( verbosity_level < 2 ) || ( ! block ) )
+  return;
+
+ // one entry per distinct ( Solver class , Block class , parameters ), in
+ // the order they are first met, with the number of Solvers sharing it
+ struct Entry {
+  std::string solver , owner , pars;
+  std::size_t count;
+  };
+ std::vector< Entry > entries;
+
+ std::function< void( Block * ) > visit = [ & ]( Block * b ) {
+  for( auto solver : b->get_registered_solvers() ) {
+   std::ostringstream pars;
+   solver->print_parameters( pars );
+   Entry e{ solver->classname() , b->classname() , pars.str() , 1 };
+   auto it = std::find_if( entries.begin() , entries.end() ,
+                           [ & ]( const Entry & o ) {
+                            return( ( o.solver == e.solver ) &&
+                                    ( o.owner == e.owner ) &&
+                                    ( o.pars == e.pars ) ); } );
+   if( it == entries.end() )
+    entries.push_back( std::move( e ) );
+   else
+    ++it->count;
+   }
+  if( verbosity_level >= 3 )
+   for( auto sb : b->get_nested_Blocks() )
+    visit( sb );
+  };
+ visit( block );
+
+ for( const auto & e : entries ) {
+  std::cout << std::endl << "--- parameters of " << e.solver << " on "
+            << e.owner;
+  if( e.count > 1 )
+   std::cout << " (" << e.count << " Solvers)";
+  std::cout << std::endl << e.pars;
+  }
+ std::cout << std::endl;
+ }
+
+/*--------------------------------------------------------------------------*/
+
 bool SolveAll( Block * block ,
                const SolverClassifier & classify ,
                double ref ,
@@ -594,15 +926,8 @@ bool SolveAll( Block * block ,
    return( false );
    }
 
-  // with -v 2, before solving, print what each Solver was actually given:
-  // the index space of a Solver that wraps another one extends over that of
-  // the wrapped one, so this shows the parameters of the inner Solver too
-  if( verbosity_level >= 2 )
-   for( std::size_t k = 0 ; k < M ; ++k ) {
-    std::cout << std::endl << "--- parameters of Solver " << k << " ("
-              << S[ k ]->classname() << ")" << std::endl;
-    S[ k ]->print_parameters( std::cout );
-    }
+  // with -v 2, before solving, print what each Solver was actually given
+  print_solver_parameters( block );
 
   // solve every Solver, timing each, then read the feasible ones - - - - - - -
   std::vector< int >    status( M );
@@ -641,7 +966,8 @@ bool SolveAll( Block * block ,
     }
    else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
    else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
-   else                                           tok[ k ] = "Error!";
+   else                                           tok[ k ] = error_token(
+							      status[ k ] );
    }
 
   // out-params from the first Solver - - - - - - - - - - - - - - - - - - - -
@@ -654,7 +980,13 @@ bool SolveAll( Block * block ,
   std::string verdict;
   double diff;
   bool ok = cross_check( rd , hs , status , ref , tol , verdict , diff );
-  print_instance_line( times , tok , ref , verdict , diff , true );
+
+  // what each Solver is called, so that the report says who returned what
+  std::vector< std::string > names( M );
+  for( std::size_t k = 0 ; k < M ; ++k )
+   names[ k ] = S[ k ]->classname();
+
+  print_instance_line( times , tok , ref , verdict , diff , true , names );
   return( ok );
   }
  catch( std::exception & e ) {
@@ -716,6 +1048,168 @@ bool SolveBoth( Block * block ,
                    std::numeric_limits< double >::quiet_NaN() , tol ,
                    out_fo1 , out_hs1 , out_time1 , out_it1 ) );
  }
+
+/*--------------------------------------------------------------------------*/
+
+double tree_objective_value( Block * block )
+{
+ double value = 0;
+
+ if( auto obj = dynamic_cast< RealObjective * >( block->get_objective() ) ) {
+  obj->compute();
+  value += obj->value();
+  }
+
+ for( auto sb : block->get_nested_Blocks() )
+  value += tree_objective_value( sb );
+
+ return( value );
+
+ }  // end( tree_objective_value )
+
+/*--------------------------------------------------------------------------*/
+
+bool check_var_solutions( Block * block , double tol )
+{
+ bool allok = true;
+ std::size_t k = 0;
+
+ for( auto slvr : block->get_registered_solvers() ) {
+  const std::size_t h = k++;
+
+  if( is_relaxation( h ) )
+   /* A Solver that solves a relaxation reports the value of the
+    * relaxation, while what it writes in the Variable is a point of the
+    * relaxed problem: the two are the same number only if the objective
+    * is linear on it. A Lagrangian dual is the obvious case, its point
+    * being a convex combination of the solutions of the sub-problems: as
+    * soon as the objective is convex and not linear, the combination
+    * costs strictly less than the combination of the costs, and the
+    * difference is not an error of anybody's. Hence the check does not
+    * apply here. */
+   continue;
+
+  if( ! slvr->has_var_solution() )
+   continue;                    // nothing to read, hence nothing to check
+
+  const double reported = slvr->get_var_value();
+  if( ! std::isfinite( reported ) )
+   continue;                    // nothing to compare the solution with
+
+  double value;
+  try {
+   slvr->get_var_solution();
+   value = tree_objective_value( block );
+   }
+  catch( std::exception & e ) {
+   std::cerr << "Error: Solver " << h << " has a solution it cannot give: "
+             << e.what() << std::endl;
+   allok = false;
+   continue;
+   }
+
+  if( verbosity_level > 0 )
+   std::cout << "solution of Solver " << h << " is worth "
+             << fmt_obj( value ) << ", reported "
+             << fmt_obj( reported ) << std::endl;
+
+  if( std::abs( value - reported ) >
+      tol * std::max( { 1.0 , std::abs( value ) , std::abs( reported ) } ) ) {
+   std::cerr << "Error: the solution of Solver " << h << " is worth "
+             << fmt_obj( value ) << ", but it reports "
+             << fmt_obj( reported ) << std::endl;
+   allok = false;
+   }
+  }
+
+ return( allok );
+
+ }  // end( check_var_solutions )
+
+/*--------------------------------------------------------------------------*/
+
+double own_rows_violation( Block * block )
+{
+ double viol = 0;
+
+ auto see = [ & viol ]( FRowConstraint & cnst ) {
+  if( cnst.is_relaxed() )
+   return;
+  if( auto ret = cnst.compute() ;
+      ( ret <= FRowConstraint::kUnEval ) || ( ret > FRowConstraint::kOK ) ) {
+   viol = Inf< double >();
+   return;
+   }
+  viol = std::max( viol , double( cnst.rel_viol() ) );
+  };
+
+ block->for_each_constraint_group( [ & see ]( const BaseGroup & group ) {
+   group.for_each_as< FRowConstraint >( see ); } );
+
+ return( viol );
+
+ }  // end( own_rows_violation )
+
+/*--------------------------------------------------------------------------*/
+
+bool check_relaxation_solutions( Block * block , double tol , double ref ,
+                                 double ref_tol )
+{
+ bool allok = true;
+ std::size_t k = 0;
+
+ for( auto slvr : block->get_registered_solvers() ) {
+  const std::size_t h = k++;
+
+  if( ! is_relaxation( h ) )
+   continue;                    // check_var_solutions() covers these
+
+  if( ! slvr->has_var_solution() )
+   continue;                    // nothing to read, hence nothing to check
+
+  /* What the reconstruction satisfies the dualised rows is the convex
+   * combination of the answers of the components, and that is a point of the
+   * original problem only where the relaxation is exact. Where it is not,
+   * i.e. where the bound the relaxation reports is strictly better than the
+   * optimum (a unit with a commitment is enough for that), the combination
+   * violates the rows by the very gap, and holding it to them would call a
+   * duality gap an error. */
+  if( ( ! std::isnan( ref ) ) && ( std::abs( slvr->get_var_value() - ref ) >
+                                   ref_tol * std::max( double( 1 ) ,
+                                                       std::abs( ref ) ) ) ) {
+   if( verbosity_level > 0 )
+    std::cout << "relaxation of Solver " << h << " is not exact here, its "
+              << "reconstruction is not held to the dualised rows"
+              << std::endl;
+   continue;
+   }
+
+  double viol;
+  try {
+   slvr->get_var_solution();
+   viol = own_rows_violation( block );
+   }
+  catch( std::exception & e ) {
+   std::cerr << "Error: Solver " << h << " has a solution it cannot give: "
+             << e.what() << std::endl;
+   allok = false;
+   continue;
+   }
+
+  if( verbosity_level > 0 )
+   std::cout << "relaxation of Solver " << h << " violates the dualised rows"
+             << " by " << viol << std::endl;
+
+  if( viol > tol ) {
+   std::cerr << "Error: the solution Solver " << h << " reconstructs violates"
+             << " the dualised rows by " << viol << " > " << tol << std::endl;
+   allok = false;
+   }
+  }
+
+ return( allok );
+
+ }  // end( check_relaxation_solutions )
 
 /*--------------------------------------------------------------------------*/
 // compare a value against the reference one and report
@@ -813,7 +1307,10 @@ std::string help =
  "                                  problem exactly, and only the bound on\n"
  "                                  its side is one on this problem\n"
  "  -D, --dryrun                    skip the compute() call\n"
- "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic, 2 = debug)\n";
+ "  -v, --verbose[=N]               verbose output (0 = silent, 1 = basic,\n"
+ "                                  2 = debug, with the parameters of the\n"
+ "                                  Solvers of the Block, 3 = those of the\n"
+ "                                  sub-Blocks' Solvers too)\n";
 
 /*--------------------------------------------------------------------------*/
 // open an SMS++ nc4 file and check that it is one
@@ -1061,6 +1558,13 @@ void process_args( int argc , char ** argv , bool ( *custom_arg )( int opt ) )
  exe = get_filename( argv[ 0 ] );
  f_argc = argc;
  f_argv = argv;
+
+ // the `verbose` environment variable carries the level as well, so that a
+ // battery, which has no way of passing -v to the test it runs, can ask for
+ // the log of the Solver with `verbose=2 ./batch ...`; -v, where the test
+ // understands it, is read afterwards and wins
+ if( const char * e = std::getenv( "verbose" ) ; e && is_number( e ) )
+  verbosity_level = std::atoi( e );
 
  while( true ) {  // options
   const auto opt = getopt_long( argc , argv , short_opts.data() ,

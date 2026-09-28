@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BDSCfg.txt  - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BDSCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for the BendersDecompositionSolver on
 # the Benders structure of a SVMBlock, i.e., the one where the model stays in
@@ -14,22 +14,23 @@
 # all the same, the regularisation term being where it is, and the :MILPSolver
 # it goes to takes it as such
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
 
 ComputeConfig # exact type of the ComputeConfig object
 
 0  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-1  # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 int_BDSlv_Regime  1  # 0 = convex master, 1 = MILP master
+int_BDSlv_Restore 1  # 0 = the reformulation stays, 1 = the Block is given
+                     #     back as it was at the end of each compute(), which
+                     #     is what the other Solver of this cross-check need
+                     #     in order to see the problem and not the pieces the
+                     #     reformulation leaves it in
 
 0  # number of double parameters
 
@@ -61,5 +62,5 @@ str_Mstr_BSCfg  BDSMCfg.txt # BlockSolverConfig of the master
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END BDSCfg.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BDSCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

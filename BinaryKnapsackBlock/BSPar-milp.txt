@@ -32,8 +32,40 @@ HiGHSMILPSolver                       # 2nd: the exact MILP
 # 1: the greedy relaxation (brackets the optimum), shared fragment
 *GRCfg.txt
 
-# 2: the exact CPLEX MILP, shared fragment
-*MILPCfg.txt
+# 2: the exact MILP (the shared fragment + one thread): HiGHS sizes its pool
+# of threads on the cores of the machine, and on one with many cores the
+# address space those threads reserve goes past the memory cap of the
+# lineups, which is on the address space and not on the memory in use
+*MILPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intMaxThread   1  # a single thread
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -1,9 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - MILPCfg-MIP.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MILPCfg-MIP.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a :MILPSolver solving a UCBlock
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -74,5 +72,5 @@ dblMaxTime      10 # the MIP is not solved to optimality but stopped here,
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END MILPCfg-MIP.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MILPCfg-MIP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

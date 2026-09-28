@@ -1,6 +1,32 @@
-BlockSolverConfig
-1
-1
-SMOSolver
-1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-SMO.txt - - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig registering the ad hoc SMOSolver alone on a SVMBlock,
+# i.e., the training problem solved out of the physical representation with
+# no cross-check against any other Solver. It is the single-Solver run the
+# timings are read off, batch-grid using it as the re-optimizing term of
+# comparison and batch-real as one of the two Solver it sweeps.
+#
+# SMOBSCfg.txt is the same registration for the inner Block of a
+# LagBFunction; this one is meant to be passed to the tester with -S.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+SMOSolver             # name of Solver: the ad hoc SMO
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *SMOCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar-SMO.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

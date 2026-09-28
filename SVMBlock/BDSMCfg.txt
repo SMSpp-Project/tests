@@ -1,13 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - BDSMCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BDSMCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the master problem of the
 # Benders decomposition in the MILP regime: a single :MILPSolver that solves
 # the master (with the epigraph Variable and the dynamically added Benders
 # cuts) at each round of the cut loop.
-#
-#   Antonio Frangioni
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -68,10 +65,10 @@ dblRelAcc     1e-9  # relative accuracy required to solution
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BDSMCfg.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BDSMCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

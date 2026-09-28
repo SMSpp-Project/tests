@@ -42,9 +42,9 @@ REF_OBJ[MSSB_EC_NC_Test_TUB_NB_3S.nc4]=3.764374354168912e+06
 
 # run all the shared-tree instances - - - - - - - - - - - - - - - - - - - - -
 
-for what in ../../UCBlock/data/nc4/EC_Data/MSSB_EC_CO_*_3S_tree.nc4 \
-            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NA_*_3S_tree.nc4 \
-            ../../UCBlock/data/nc4/EC_Data/MSSB_EC_NC_*_3S_tree.nc4; do
+for what in ../../UCBlock/data/nc4/EC_Data/mssb/MSSB_EC_CO_*_3S_tree.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/mssb/MSSB_EC_NA_*_3S_tree.nc4 \
+            ../../UCBlock/data/nc4/EC_Data/mssb/MSSB_EC_NC_*_3S_tree.nc4; do
 
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then

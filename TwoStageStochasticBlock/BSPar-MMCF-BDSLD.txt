@@ -1,0 +1,84 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  BSPar-MMCF-BDSLD.txt - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for the Benders form of a
+# TwoStageStochasticBlock over MMCFBlock (TSSB_test -b), comparing on it:
+#   1  the :MILPSolver, which reads the form whole and so still solves the
+#      extensive one
+#   2  BendersDecompositionSolver on the arcs to build, with a MILP master
+#      (BDSMCfg-MILP.txt) and the scenarios solved by the recursive
+#      Lagrangian dual (BDSSCfg-LDrec.txt), which gives no Farkas
+#      certificate and so needs the complete recourse the instances of
+#      batch-mmcf have (mmcf_tssb_gen -r)
+# Both give the optimum. It is not a third Solver of BSPar-MMCF-BDS.txt
+# since a BendersDecompositionSolver reformulates the Block it is attached
+# to, and a second one on the same Block gives a wrong value
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver              # 1st Solver: MILP
+BendersDecompositionSolver # 2nd Solver: BDSLD
+
+2 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*MILPCfg-IP.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+3 # number of integer parameters
+
+# now all the integer parameters
+int_BDSlv_Regime  1 # the master is a MILP
+int_BDSlv_Restore 1 # the subproblems are reformulated each time
+int_BDSlv_FeasCut 0 # always feasible subproblems
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+2 # number of string parameters
+
+# now all the string parameters
+str_Bsub_BSCfg BDSSCfg-LDrec.txt # BlockSolverConfig of the subproblems
+str_Mstr_BSCfg  BDSMCfg-MILP.txt # BlockSolverConfig of the master
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END BSPar-MMCF-BDSLD.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

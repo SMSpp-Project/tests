@@ -1,0 +1,32 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BKBSCfg.txt - - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig for each BinaryKnapsackBlock of the father Block of the
+# Frank-Wolfe test: the dynamic programme is the Linear Minimization Oracle,
+# i.e., what minimizes over the knapsack the linear objective the
+# decomposition writes into it at every iteration.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - 
+DPBinaryKnapsackSolver  # the oracle: the exact, full-table DP
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# the shared fragment, which sets no parameter
+
+*DPCfg.txt
+
+# end of BlockSolverConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BKBSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

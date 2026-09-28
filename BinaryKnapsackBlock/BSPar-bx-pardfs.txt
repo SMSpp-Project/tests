@@ -9,8 +9,6 @@
 # leaf) is set by the shared BX-baseCfg.txt; only the exploration mode and the
 # thread count are overridden here via the '*BX-baseCfg.txt +' cascade.
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -41,7 +39,8 @@ BranchAndXSolver                      # 2nd: BX, parallel depth-first
 
 # now all the integer parameters
 intSolveMethod 0  # depth-first [see SolveMethod]
-intMaxThread   4  # 4 parallel workers (triggers the parallel tree exploration)
+intMaxThread   4  # 4 parallel workers (triggers the parallel tree
+                  # exploration)
 
 0  # number of double parameters
 
@@ -68,5 +67,5 @@ intMaxThread   4  # 4 parallel workers (triggers the parallel tree exploration)
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - End BSPar-bx-pardfs.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-bx-pardfs.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
