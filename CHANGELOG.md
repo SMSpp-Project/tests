@@ -737,6 +737,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the archive of the Canad instances of MMCFBlock is extracted by `cmake -E
+  tar`, which also works with the tar of macOS, where the option
+  `--warning=no-unknown-keyword` of GNU tar stopped the build.
 - the tester of `MultiStageStochasticBlock` writes the round trip of the
   `Solution` to a file of its own name, since the batteries of the suite
   run in parallel in the same directory and read each other's file
