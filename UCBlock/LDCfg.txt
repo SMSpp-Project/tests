@@ -14,7 +14,7 @@ ComputeConfig         # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-28 # number of integer parameters
+29 # number of integer parameters
 
 # now all the integer parameters
 int_LDSlv_iBCopy       0 # 1 if sub-Block must be R3B-copied
@@ -22,6 +22,10 @@ intPushCostToOwner     0 # the value of intPushCostToOwner for the LagBF
 
 # parameters for PrimalProximalHeur
 intMaxIter    10000     # max number of iterations of the heuristic
+
+#parameter for LagrangianDualRelaxationSolver
+
+ApplyStrategy 1
 
 # then those of BundleSolver as its inner Solver
 intDoEasy              0 # do easy components for (some) LagBFunction
@@ -103,6 +107,7 @@ strLogFileName             log/RabaxLogFile.log    # File where save the log
 # [none]
 
 0 # number of vector-of-double parameters
+
 
 # now all the vector-of-double parameters
 # [none]
