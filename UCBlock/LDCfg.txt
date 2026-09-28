@@ -12,7 +12,7 @@ ComputeConfig         # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-19 # number of integer parameters
+21 # number of integer parameters
 
 # now all the integer parameters
 int_LDSlv_iBCopy       0 # 1 if sub-Block must be R3B-copied
@@ -76,13 +76,14 @@ dbltInit            1e+1 # initial value for t
 dbltSPar2           1e-2 # parameter for the long-term t-strategy
 dbltSPar3              0 # parameter for small heuristic t adjustments
 
-3 # number of string parameters
+4 # number of string parameters
 
 # now all the string parameters
 #str_LDSlv_ISName  ParallelBundleSolver # the inner Solver used by LagrangianDualSolver
 str_LDSlv_ISName           BundleSolver # the inner Solver used by LagrangianDualSolver
-strMPBSolverCfg                 MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
-str_LagBF_BSCfg             LPBSCfg.txt # BlockSolverConfig for the LagBFunctions
+strMPBSolverCfg            MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
+str_LagBF_BSCfg            LPBSCfg.txt # BlockSolverConfig for the LagBFunctions
+strLogFileName             log/RabaxLogFile.log
 # not needed if intDoEasy >= 1 && USE_BundleSolver > 0, this is done "by hand"
 
 0 # number of vector-of-int parameters
