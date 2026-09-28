@@ -1503,8 +1503,8 @@ int main( int argc , char ** argv )
   // How the sub-Blocks are *solved* inside the Lagrangian Dual is NOT set
   // here: it descends entirely from the BlockSolverConfig, whose
   // LagrangianDualSolver gives the inner Solver of the LagBFunctions by
-  // str_LagBF_BSCfg and the components that are never "easy" by
-  // vstr_LDSl_NoEasy (see BSPar.txt)
+  // str_LagBF_BSCfg, and whose inner BundleSolver is told the components
+  // that are never "easy" by vstrNoEasy (see BSPar.txt)
   auto ibc = Configuration::deserialize( bconf_file );
   if( ! ibc ) {
    std::cerr << "Error: cannot load BlockConfig from " << bconf_file

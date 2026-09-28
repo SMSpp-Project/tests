@@ -94,10 +94,10 @@ dbltInit  1e-3 # initial value for t
 1 # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
-# the components that are never "easy": the ThermalUnitBlock, which have
-# binary variables and their own Solver, and the BatteryUnitBlock, which
-# may have binary variables too
-vstr_LDSl_NoEasy 2 ThermalUnitBlock BatteryUnitBlock
+# the components that the inner BundleSolver never treats as "easy": the
+# ThermalUnitBlock, which have binary variables and their own Solver, and
+# the BatteryUnitBlock, which may have binary variables too
+vstrNoEasy 2 ThermalUnitBlock BatteryUnitBlock
 
 # pointer to the "extra" Configuration
 * # [none]

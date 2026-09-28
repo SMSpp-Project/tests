@@ -304,6 +304,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `LDCfg-easy.txt` and `BSPar-DP.txt` of `UCBlock` name the hard components
+  with `vstrNoEasy` of the inner `BundleSolver`, which replaces
+  `vstr_LDSl_NoEasy` of `LagrangianDualSolver`: which components are easy is
+  a concept of `BundleSolver`, and the classes listed are the same
+
 - `BDSCfg-LD.txt` recovers a feasible solution at the design of the master
   (`strRecoveryBSC BSCfg1-IP.txt`), and the thermal run of
   `TwoStageStochasticBlock/batches/batch-pypsa` checks the interval of
@@ -370,10 +375,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the tester of `UCBlock` builds no configuration in code: it reads `-B` and
   `-S` and applies them. The `LagrangianDualSolver` of `BSPar.txt` and
   `BSPar-DP.txt` comes from `LDCfg-easy.txt`, which lists the hard
-  components by class (`vstr_LDSl_NoEasy`), the parallel variants of
-  `batch-ec-par` are `BSPar-par.txt` and `BSPar-par-aggr.txt` rather than a
-  config rewritten by the batch, and the network formulations of
-  `batch-pypsa` are `InnerBCfg-PTDF.txt` and `InnerBCfg-CYCLE.txt`
+  components by class (`vstrNoEasy` of the inner `BundleSolver`), the
+  parallel variants of `batch-ec-par` are `BSPar-par.txt` and
+  `BSPar-par-aggr.txt` rather than a config rewritten by the batch, and the
+  network formulations of `batch-pypsa` are `InnerBCfg-PTDF.txt` and
+  `InnerBCfg-CYCLE.txt`
 
 - the formulation of the unit of `TUDPS_test` is the BlockConfig given with
   `-B`, one file per formulation (`TUBCfg-<form>.txt`, `-PC` with the
