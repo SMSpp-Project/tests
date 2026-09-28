@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-2S.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar-2S.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
 # two different Solver: a :MILPSolver and a LagrangianDualSolver using a
 # BundleSolver as the inner Solver
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -37,8 +35,8 @@ LagrangianDualSolver  # name of 2nd Solver
 
 *LDCfg.txt
 
-# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-2S.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar-2S.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

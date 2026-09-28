@@ -1,12 +1,31 @@
-BlockSolverConfig
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  BSPar-SMO-noshrink.txt - - - - - - - - - - - - -
+#
+# A BlockSolverConfig registering the SMOSolver alone on a SVMBlock, with the
+# shrinking of the active set turned off (intSMOShrink = 0, in
+# SMOCfg-noshrink.txt).
+#
+# It is the term of comparison of BSPar-SMO.txt in batch-grid: the two solve
+# the same problems to the same tolerance, so that what the shrinking is
+# worth is the difference of the times.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
 1  # number of (the names of) Solver in this BlockSolverConfig
+
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-SMOSolver
+SMOSolver             # name of Solver: the ad hoc SMO
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
-# now all the ComputeConfig
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *SMOCfg-noshrink.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END BSPar-SMO-noshrink.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

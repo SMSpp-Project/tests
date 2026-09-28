@@ -1,0 +1,66 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - PPHCfg.txt - - - - - - - - - - - - - - - - 
+#
+# The ComputeConfig of the PrimalProximalHeur of a TwoStageStochasticBlock:
+# the Lagrangian dual of the scenarios, each solved by the inner
+# LagrangianDualSolver over its units (LPBSCfg-LD.txt), followed by the
+# recovery of a feasible solution, the design fixed to its mean over the
+# scenarios and every scenario solved as a MILP (BSCfg1-IP.txt). It gives an
+# upper bound, whose gap from the bound of the dual is not an accuracy it
+# was asked for, hence the batch declares no tolerance for it (-E inf).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+5 # number of integer parameters
+
+# now all the integer parameters
+intInnerMaxIter   200 # max iterations of the inner dual at each step
+int_LDSlv_iBCopy    0 # 1 if sub-Block must be R3B-copied
+intLogVerb          0 # log verbosity of main Bundle algorithm
+intTrgtMng         31 # bit-wise encoding targets and accuracies management
+intRecoveryThreads  1 # the scenarios of the recovery solved one at a time
+
+8 # number of double parameters
+
+# now all the double parameters
+dbl_penaltyFactor 1e-1 # weight of the proximal term
+dblInnerRelAcc    1e-5 # relative accuracy of the inner dual
+dblMaxTime         300 # maximum time for a call
+dblMinNrEvls        -1 # every component is evaluated at each iteration
+dblRelAcc         1e-5 # relative accuracy required to solution
+dbltStar         -1e+0 # stopping parameter: multiplied to || residual ||
+dblmxIncr            2 # max increase of t
+dbltInit          1e-3 # initial value for t
+
+2 # number of string parameters
+
+# now all the string parameters
+str_LagBF_BSCfg  LPBSCfg-LD.txt # BlockSolverConfig for the LagBFunctions
+strRecoveryBSC   BSCfg1-IP.txt  # BlockSolverConfig of the recovery
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END PPHCfg.txt - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

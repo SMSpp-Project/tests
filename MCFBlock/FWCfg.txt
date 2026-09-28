@@ -1,0 +1,61 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - FWCfg.txt - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig every FrankWolfeSolver of the test starts from: what a
+# variant changes of it, it changes in its own FatherBSCfg file, as an
+# override block, so that what they have in common is written here once and
+# only once.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+7 # number of integer parameters
+
+# now all the integer parameters
+intLMOObj       2 # LMOFull (keep the linear arc cost exact in the oracle)
+intLineSearch   0 # auto, i.e., exact: the father is a
+                  # [D]QuadFunction and the cost of a child is
+                  # linear in the step
+intMaxIter      100000 # safety cap on the iterations
+intAlgorithm    1 # 0 vanilla, 1 Away-step, 2 Blended Pairwise
+intMaxAtoms     50 # 0 unbounded; else the cap on the active set
+intMaxThread    1 # number of parallel oracle threads
+intCvxComb      1 # eObjCvxComb (P2); == P1 here, the children being linear
+
+1 # number of double parameters
+
+# now all the double parameters
+dblRelAcc       1e-7 # relative accuracy on the Frank-Wolfe gap
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of ComputeConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END FWCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

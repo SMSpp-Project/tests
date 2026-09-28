@@ -12,8 +12,6 @@
 #   ThermalUnitBlock  -> TUBSCfg-QCP.txt (SCIP, QCP-capable)
 #   *  (catch-all)    -> LPBSCfg-QCP.txt (SCIP, QCP-capable)
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

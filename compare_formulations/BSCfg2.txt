@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSCfg2.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSCfg2.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for any Block that can be solved
 # by a :MILPSolver
-#
-#   Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -39,7 +37,7 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Threads    1    # number of threads
-#CPXPARAM_LPMethod   1    # 0 = auto (default), 1 = primal, 2 = dual, 
+#CPXPARAM_LPMethod   1    # 0 = auto (default), 1 = primal, 2 = dual,
                   # 3 = network, 4 = barrier, 5 = sifting,
                   # 6 = concurrent
 
@@ -81,5 +79,5 @@ strOutputFile   uc2.lp
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSCfg2.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSCfg2.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

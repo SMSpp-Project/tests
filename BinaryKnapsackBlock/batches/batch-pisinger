@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 #
 # usage: batch-pisinger < exe file > < par file > < solver > < log file >
+#                       < fw exe >
 #        < exe file > = path of the executable, default BinaryKnapsackBlock_test
 #        < par file > = BlockSolverConfig file, default BSPar.txt
 #        < solver > = unused
 #        < log file > = name of log file, default no log
+#        < fw exe > = path of the generic Frank-Wolfe tester, optional: given
+#                     one, the same knapsacks are also solved by the
+#                     Frank-Wolfe decomposition of a father Block of K copies
+#                     of them
 #
 # Solver-vs-solver AND solver-vs-reference cross-check on the curated Pisinger
 # instances, all in one: each curated class is a single .csv that carries, per
@@ -40,6 +45,7 @@ DEFAULT_PAR=BSPar-fast.txt
 # (measured worst case over the whole battery: 5.9e-01)
 EPS="${EPS:-,,6e-1}"
 parse_batch_args "$@"
+fwexe=${5:-}   # the generic Frank-Wolfe tester, optional
 
 csvdir="../../BinaryKnapsackBlock/data/txt"
 
@@ -57,5 +63,42 @@ fi
 for csv in "${csvs[@]}"; do
   run_test "$exe" -S "$par" -E "$EPS" -C "$csv"
 done
+
+# the same knapsacks, decomposed by Frank-Wolfe - - - - - - - - - - - - - - - -
+# K copies of a knapsack become the sub-Block of a father whose Objective
+# couples them, each of them solved by its dynamic programme as the Linear
+# Minimization Oracle. What FrankWolfeSolver minimizes is the father objective
+# over the PRODUCT OF THE CONVEX HULLS of the knapsacks, which no compact
+# formulation describes, so its value is a lower bound on what the monolithic
+# :MILPSolver gives on the same father and not the same number: the
+# decomposition is therefore declared a relaxation (-R) and held to nothing
+# (-E), the integrality gap being whatever it is. The instances are the
+# netCDF ones tools/batch writes out of the same curated archive, and they are
+# minimization problems, the father having to have the sense of its children.
+
+if [ -n "${fwexe}" ]; then
+
+  nc4dir="../../BinaryKnapsackBlock/data/nc4"
+  nc4s=( "$nc4dir"/*.nc4 )
+
+  if [ "${#nc4s[@]}" -eq 0 ]; then
+    echo "SKIP the Frank-Wolfe runs: no netCDF instance under $nc4dir"
+  else
+    # one run attaches the reference and every variant of the decomposition
+    # at once, they being in FatherBSCfg.txt. The roles and the tolerances are
+    # positional: the reference claims an optimum, the seven variants that
+    # follow it are relaxations of that optimum and claim nothing, the
+    # integrality gap being whatever it is
+    fwpar=FatherBSPar.txt
+    for what in "${nc4s[@]}"; do
+      for k in 2 3; do
+        run_test "$fwexe" -S "$fwpar" -R ",r,r,r,r,r,r,r" \
+                 -E ",inf,inf,inf,inf,inf,inf,inf" \
+                 -o 0 -k "$k" -e 1 "$what"
+      done
+    done
+  fi
+
+fi
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

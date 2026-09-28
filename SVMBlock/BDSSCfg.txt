@@ -1,13 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BDSSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BDSSCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the subproblem of one chunk of
 # the Benders structure of a SVM training problem, i.e., the linear program
 # giving the loss of that chunk at the model. The Benders cuts are the duals
 # of this problem; any optimal ones do, and the dual simplex is asked for
 # explicitly only to have the same duals from one run to the next
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -70,5 +68,5 @@ dblRelAcc      1e-9  # relative accuracy required to solution
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BDSSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BDSSCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

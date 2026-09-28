@@ -1,0 +1,87 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  BSPar-MMCF-LDLD.txt - - - - - - - - - - - - - - 
+#
+# A txt description of a BlockSolverConfig for a TwoStageStochasticBlock
+# whose scenarios are MMCFBlock of a network design problem, comparing the
+# :MILPSolver with the nested form: a LagrangianDualSolver over the
+# scenarios, each solved by an inner LagrangianDualSolver over its arcs
+# (LPBSCfg-LD.txt), which gives a lower bound (-R ,r), the same as the
+# recursive form of BSPar-MMCF-LDrec.txt.
+# Each Lagrangian dual runs against the MILP alone: a
+# LagrangianDualSolver that does not copy its components
+# (int_LDSlv_iBCopy 0) puts them under its LagBFunctions, and two of them on
+# overlapping trees of Block (the scenarios, or the knapsacks inside them)
+# take them from each other; the MMCFBlock cannot be copied yet
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver        # 1st Solver: MILP
+LagrangianDualSolver # 2nd Solver: LDLD
+
+2 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*MILPCfg-IP.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+3 # number of integer parameters
+
+# now all the integer parameters
+int_LDSlv_iBCopy 0 # 1 if sub-Block must be R3B-copied
+intLogVerb       0 # log verbosity of main Bundle algorithm
+intTrgtMng       3 # targets, and no accuracy, to the scenarios
+
+6 # number of double parameters
+
+# now all the double parameters
+dbltStar     -1e+0 # multiplied to || residual || to estimate the gap
+dbltInit      1e-3 # initial value for t
+dblMinNrEvls    -1 # every scenario at each iteration
+dblmxIncr        2 # max increase of t
+dbltMaior     1e+9 # maximum value for t
+dblRelAcc     1e-5 # relative accuracy required to solution
+
+1 # number of string parameters
+
+# now all the string parameters
+str_LagBF_BSCfg LPBSCfg-LD.txt # BlockSolverConfig of the LagBF
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END BSPar-MMCF-LDLD.txt - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

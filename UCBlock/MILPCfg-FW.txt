@@ -1,0 +1,67 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  MILPCfg-FW.txt - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the :MILPSolver that solves monolithically the father
+# Block of the Frank-Wolfe test, i.e., of the reference the decomposition is
+# compared with.
+#
+# the monolithic :MILPSolver on the DP + P/C relaxation: that formulation
+# characterizes the convex hull of the integer solutions of a unit, so this
+# is the same bound the decomposition reaches
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+2 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0 # log verbosity of the :MILPSolver
+intRelaxIntVars 2 # the continuous relaxation WITH the
+                  # separation of the Perspective Cuts
+
+2 # number of double parameters
+
+# now all the double parameters
+dblRelAcc       1e-8 # relative accuracy required of it
+dblMaxTime      600 # the monolithic DP + P/C relaxation with
+                    # its cut separation loop does not close
+                    # in reasonable time on a unit of 96
+                    # periods in two copies: it is stopped
+                    # here and reports the bound it reached.
+                    # Should the limit bite, what the
+                    # cross-check then compares is that
+                    # bound and not the optimum, so a
+                    # mismatch is the limit and not a defect
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of ComputeConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END MILPCfg-FW.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

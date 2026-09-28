@@ -57,8 +57,8 @@ MOBJ =  $(MMCFOBJ) $(MILPSOBJ) $(libMMCFOBJ) $(SMS++OBJ)
 # libraries
 MLIB =  $(SMS++LIB) $(MILPSLIB) $(MMCFLIB) $(libMMCFLIB)
 
-$(DIR)/$(NAME): $(MOBJ) $(DIR)/main.o
-	$(CC) -o $(DIR)/$(NAME) $(DIR)/main.o $(MOBJ) $(MLIB) $(SW)
+$(DIR)/$(NAME): $(MOBJ) $(DIR)/test_reference.o
+	$(CC) -o $(DIR)/$(NAME) $(DIR)/test_reference.o $(MOBJ) $(MLIB) $(SW)
 
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
@@ -70,7 +70,7 @@ MH =    $(SMS++H) $(MILPSH) $(MMCFH) $(libMMCFH) $(OPTUxH)
 
 # compile command
 
-$(DIR)/main.o: $(DIR)/main.cpp $(MH)
+$(DIR)/test_reference.o: $(DIR)/test_reference.cpp $(MH)
 	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)
 
 ############################ End of makefile ################################

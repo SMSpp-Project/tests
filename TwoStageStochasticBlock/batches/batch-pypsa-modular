@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pypsa-modular < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default ./TSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S-IP.txt
+#        < log file > = name of log file, default no log
+#
+# the Benders form of PyPSA networks whose first stage builds whole modules
+# of solar and wind (p_nom_mod), which pypsa2smspp writes as an integer
+# design of the units, the number of modules, over a second stage that is a
+# linear program: the :MILPSolver solves the integer extensive form and the
+# BendersDecompositionSolver keeps the design integer in its master, and
+# both are checked against the optimum of PyPSA on the same network
+#
+# the same networks with the modules turned off (a name ending in c) have a
+# continuous design, and are also written as a MultiStageStochasticBlock
+# whose scenarios are grouped into outer realizations (o2 in the name): the
+# tree has the same extensive form as the flat network, and the leaves are
+# the subproblems of its Benders form; the InvestmentBlock over the same two
+# (the investment_outside form) is in InvestmentBlock/batches/batch-stochastic
+#
+# on those with a continuous design, whose scenarios are linear programs,
+# three more runs put every other decomposition beside the :MILPSolver: on
+# the Benders form, BDS whose subproblems are solved by the recursive
+# Lagrangian dual over their units, with a MILP master (BSPar-BDS-2S-LD.txt)
+# and with a bundle master (BSPar-BDS-2S-CVX-LD.txt), and on the extensive
+# form the recursive Lagrangian dual itself (BSPar-2S-LDrec-IP.txt), declared
+# a relaxation [-R] although it is exact there; on the integer design they
+# are also exact, or a valid bound, but take minutes, hence they are left out
+#
+# the instances are written by gen_modular_tssb.py and emit_modular_tssb.py
+# in the test/references of pypsa2smspp, whose README says with which values
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./TSSB_test
+DEFAULT_PAR=BSPar-BDS-2S-IP.txt
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ file name ] = PyPSA objective value (Gurobi, MIPGap 1e-9)
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_mod_t48_s10_b2_ucblock.nc4]=3.6832431872e+07
+REF_OBJ[smspp_mod_t168_s5_b1_ucblock.nc4]=8.2602180128e+07
+REF_OBJ[smspp_mod_t48_s10_b2c_ucblock.nc4]=3.6823506884e+07
+REF_OBJ[smspp_mod_t48_s10_b2c_o2_mssb_ucblock.nc4]=3.6823506884e+07
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/pypsa-data/tssb-modular/smspp_*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -b -S "$par" -B InnerBCfg.txt -r "$ref"
+
+    case "$base" in
+      *_b[0-9]c_*|*_b[0-9][0-9]c_*)
+        run_test "$exe" "$what" -b -S BSPar-BDS-2S-LD.txt -B InnerBCfg.txt \
+                 -r "$ref"
+        run_test "$exe" "$what" -b -S BSPar-BDS-2S-CVX-LD.txt \
+                 -B InnerBCfg.txt -r "$ref"
+        run_test "$exe" "$what" -S BSPar-2S-LDrec-IP.txt -B InnerBCfg.txt \
+                 -R ",r" -r "$ref" ;;
+    esac
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

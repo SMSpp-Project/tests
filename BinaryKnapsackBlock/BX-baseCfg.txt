@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BX-baseCfg.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BX-baseCfg.txt - - - - - - - - - - - - - - -
 #
 # Base ComputeConfig for a BranchAndXSolver on a BinaryKnapsackBlock: it only
 # sets the inner BlockSolverConfig (the GreedyRelaxationBinaryKnapsackSolver
@@ -7,8 +7,6 @@
 # serial, no cuts). The cross-check config BSPar.txt includes it once per BX
 # mode and overrides (via '*BX-baseCfg.txt +') only the mode-specific
 # parameters, so the inner-solver configuration is never duplicated.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -47,5 +45,5 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg.txt
 # end of ComputeConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - End BX-baseCfg.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BX-baseCfg.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

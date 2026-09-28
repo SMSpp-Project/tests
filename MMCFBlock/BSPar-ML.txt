@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-ML.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar-ML.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
 # two different Solver: a :MILPSolver and a LagrangianDualSolver using a
@@ -13,8 +13,6 @@
 # BundleSolverML driving t with the network (str_LDSlv_ISName, the
 # network-friendly t-strategy parameters, intMLTrainOnline / intMLSeed /
 # intNTrainRounds).
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -89,8 +87,8 @@ vstr_LDSl_Cfg
 # now all the elements
 GetInnerVarSolConfig.txt
 
-# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSPar-ML.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar-ML.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

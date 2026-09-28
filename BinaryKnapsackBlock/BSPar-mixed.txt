@@ -15,8 +15,6 @@
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments shared
 # with BSPar.txt (included via '*'), so there is no duplicated configuration.
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -47,5 +45,5 @@ IncrementalGreedyRelaxationBinaryKnapsackSolver # 5th: incremental relaxation
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - End BSPar-mixed.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-mixed.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

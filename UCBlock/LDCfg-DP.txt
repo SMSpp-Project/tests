@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - LDCfg-DP.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  LDCfg-DP.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for the LagrangianDualSolver wrapping
 # a BundleSolver as the inner Solver, applied to a UCBlock
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,7 +12,7 @@ ComputeConfig         # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-27 # number of integer parameters
+19 # number of integer parameters
 
 # now all the integer parameters
 int_LDSlv_iBCopy       0 # 1 if sub-Block must be R3B-copied
@@ -25,7 +23,15 @@ intDoEasy              0 # do easy components for (some) LagBFunction
 intMaxIter         10000 # max number of iterations for each call
 intMaxThread           8 # MaxThread, max number of new tasks to spawn
 intLogVerb             0 # log verbosity of main Bundle algorithm
-intWZNorm              2 # which norm to use in the norm-based stopping condition
+intWZNorm             10 # which norm to use in the norm-based stopping condition
+                         # and how dblNZEps is read: 2 = Euclidean norm, plus
+                         # 8 = the threshold scales with the norm of the first
+                         # full subgradient instead of being an absolute value.
+                         # Taken absolutely the usable thresholds shrink with
+                         # the size of the instance, at 1e-6 the 200-unit one
+                         # no longer closes its gap while the 50-unit one
+                         # still does; scaled, the band that works is the same
+                         # on all of them, from 1e-2 down to 1e-6
 intBPar1              20 # discard items when they have been useless for <this> iterations
 intBPar2             100 # max bundle size per component
 intBPar3               1 # max n. of items to fetch from Fi() at each iteration
@@ -43,29 +49,7 @@ intTrgtMng             0 # bit-wise encoding targets and accuracies management:
                          # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                          # bit 4: if Lipschitz constant is used to compute the upper model
 
-# MPSolver parameters : - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-intMPName             15 # MP solver: 0 = QPP, 7 = Cplex/Gurobi with quadratic stabilization
-                         # + 8 = check for duplicate linearizations
-
-# QPPenalty's parameters :- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-intMPlvl               4 # log verbosity of Master Problem
-intQPmp1               0 # MxAdd, how many variables can be added to the base at each
-                         # iteration in BMinQuad (0 = at will)
-intQPmp2               0 # MxRmv, how many variables can be removed from the base at each
-                         # iteration in BMinQuad (0 = at will)
-
-# OSIMPSolver's parameters :- - - - - - - - - - - - - - - - - - - - - - - - -
-
-intOSImp1              0 # Osi(Cpx/Grb)Solver algorithm (0 = auto (default),
-                         # 1 = primal, 2 = dual, 3 = network, 4 = barrier,
-                         # 5 = sifting, 6 = concurrent)
-intOSImp2              0 # pre-processing (reduction)
-intOSImp3              1 # threads
-intRstAlg              2 # parameter to handle the reset of the algorithm
-
-18 # number of double parameters
+17 # number of double parameters
 
 # now all the double parameters
 dblMaxTime           300 # time limit of each call: on the harder instances
@@ -95,13 +79,13 @@ dbltMinor          1e-10 # minimum value for t
 dbltInit            1e+1 # initial value for t
 dbltSPar2           1e-2 # parameter for the long-term t-strategy
 dbltSPar3              0 # parameter for small heuristic t adjustments
-dblCtOff            0.01 # cut-off factor for pricing in MinQuad
 
-2 # number of string parameters
+3 # number of string parameters
 
 # now all the string parameters
 #str_LDSlv_ISName  ParallelBundleSolver # the inner Solver used by LagrangianDualSolver
 str_LDSlv_ISName           BundleSolver # the inner Solver used by LagrangianDualSolver
+strMPBSolverCfg                 MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
 str_LagBF_BSCfg             InnerBSCfg-DP.txt # BlockSolverConfig for the LagBFunctions
 
 0 # number of vector-of-int parameters
@@ -125,5 +109,5 @@ str_LagBF_BSCfg             InnerBSCfg-DP.txt # BlockSolverConfig for the LagBFu
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END LDCfg-DP.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END LDCfg-DP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

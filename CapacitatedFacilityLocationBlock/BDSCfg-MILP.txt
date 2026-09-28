@@ -1,0 +1,57 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -BDSCfg-MILP.txt- - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of a BendersDecompositionSolver in the MILP regime: the
+# master is solved by a :MILPSolver with the Benders cuts added as lazy
+# constraints, for a fixed budget of rounds, which is how the strength of a
+# family of cuts is measured (whoever has the better bound after the same
+# number of rounds has the stronger cuts).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+0  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+int_BDSlv_Regime     1  # 0 = convex master, 1 = MILP master
+int_BDSlv_MaxRounds 30  # the budget of rounds: enough to tell two families
+                        # of cuts apart, few enough that a pure cutting
+                        # plane does not have to converge
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+2  # number of string parameters
+
+# now all the string parameters
+str_Bsub_BSCfg  BDSSCfg.txt       # BlockSolverConfig of the subproblems
+str_Mstr_BSCfg  BDSMCfg-MILP.txt  # BlockSolverConfig of the master
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -END BDSCfg-MILP.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

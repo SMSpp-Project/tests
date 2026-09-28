@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # usage: batch-pypsa < exe file > < bpar file > < spar file > < log file >
-#        < exe file > = path of the executable file, default InvestmentBlock_test
+#        < exe file > = path of the executable file, default IB_test
 #        < bpar file > = BlockConfig file, default InnerBCfg.txt
 #        < spar file > = BlockSolverConfig file, default BSPar.txt
 #        < log file > = name of log file, default no log
@@ -17,7 +17,7 @@
 # executable CLI (exe what bpar spar 0 ref).
 source "$(dirname "$0")/../../batch_common.sh"
 
-DEFAULT_EXE=./InvestmentBlock_test
+DEFAULT_EXE=./IB_test
 DEFAULT_PAR=InnerBCfg.txt
 DEFAULT_SLV=BSPar.txt
 parse_batch_args "$@"
@@ -42,6 +42,20 @@ REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.495190064e+07
 REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-2.400702717e+07
 REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=-2.372297229e+07
 REF_OBJ[smspp_tssb_2n_2gext_1l.nc]=1.508768621e+09
+# one scenario of the modular family of pypsa2smspp (gen_modular_tssb.py, 48
+# periods, 2 buses, modules turned off) with the design in an InvestmentBlock
+# over the UCBlock, the same network UCBlock/batch-pypsa has with the design
+# in the units
+REF_OBJ[smspp_mod_t48_s1_b2c_det_investment.nc]=3.511271121e+07
+
+# the modular network also runs with the inner UCBlock solved by the
+# recursive Lagrangian dual over its units (InnerBCfg-LD.txt)
+declare -A LD_INNER
+LD_INNER[smspp_mod_t48_s1_b2c_det_investment.nc]=1
+
+# the BlockConfig of that run; empty where the LagrangianDualSolver is not
+# in the build
+ld_bcfg="${IB_LD_BCFG-InnerBCfg-LD.txt}"
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -65,6 +79,10 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
     fi
 
     run_test "$exe" "$what" "$bpar" "$spar" 0 "$ref"
+
+    if [ -n "${ld_bcfg}" ] && [ -n "${LD_INNER[$base]}" ]; then
+      run_test "$exe" "$what" "${ld_bcfg}" "$spar" 0 "$ref"
+    fi
 
 done
 

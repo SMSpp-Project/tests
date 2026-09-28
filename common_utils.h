@@ -8,7 +8,8 @@
  *
  * - output and parsing: the ostream manipulators def() and fixd(), the
  *   string-to-T parser Str2Sthg(), the pretty-printer of Solver return codes
- *   PrintResults(), and the std::terminate handler smspp_terminate();
+ *   PrintResults(), the std::terminate handler smspp_terminate() and
+ *   load_Block_or_exit(), which reads a Block out of a text file;
  *
  * - configuration: b_config_Block() and s_config_Block() apply a BlockConfig
  *   or a BlockSolverConfig to a Block, dispatching to the nested sub-Block
@@ -53,12 +54,14 @@
  #define GREEN( x ) "\x1B[32m" #x "\033[0m"
  #define YELLOW( x ) "\x1B[33m" #x "\033[0m"
  // raw on/off codes, for colouring runtime (non-literal) messages
+ #define ANSI_RED    "\x1B[31m"
  #define ANSI_YELLOW "\x1B[33m"
  #define ANSI_RESET  "\033[0m"
 #else
  #define RED( x ) #x
  #define GREEN( x ) #x
  #define YELLOW( x ) #x
+ #define ANSI_RED    ""
  #define ANSI_YELLOW ""
  #define ANSI_RESET  ""
 #endif
@@ -76,12 +79,16 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <random>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include <AbstractBlock.h>
 #include <Block.h>
 #include <BlockSolverConfig.h>
+#include <ColVariable.h>
+#include <PolyhedralFunction.h>
 
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- USING -----------------------------------*/
@@ -242,6 +249,21 @@ void PrintResults( bool hs , int rtrn , double fo );
 void smspp_terminate( void );
 
 /*--------------------------------------------------------------------------*/
+/// load a Block out of a text file, or stop with a clear message
+/** Block::load( std::string ) writes on std::cerr and returns when the file
+ *  cannot be opened, leaving the Block empty, so what the test meets is not
+ *  the missing file but whatever the empty instance breaks first: on a
+ *  CapacitatedFacilityLocationBlock, for one, an exception saying that the
+ *  number of facilities is too small, which reaches std::terminate() and
+ *  dumps core. This opens the file itself, exits with 1 citing @p fn if it
+ *  is not there, and otherwise hands the stream to load(), which being the
+ *  virtual one also spares the caller the Block:: qualification that the
+ *  load() overloads of the derived class would otherwise hide. */
+
+void load_Block_or_exit( Block * block , const std::string & fn ,
+                         char frmt = 0 );
+
+/*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockConfig to a Block
 /** If @p b_config is a plain BlockConfig, simply apply() it to @p block.
  *
@@ -392,19 +414,113 @@ SolverReading read_bounds( Solver * s , std::size_t k );
 SolverClassifier exact_getter( ObjGetter g = ObjGetter::VarValue );
 
 /*--------------------------------------------------------------------------*/
-/// print the uniform per-instance log line
-/** Prints "<t0> - <t1> - ... | S0 = <tok0>  S1 = <tok1>  ... [ ~ Ref = <r>
- *  (|diff| = <d>) ]  -> <verdict>". @p times and @p value_tokens must have the
- *  same length (one entry per Solver); a Ref is printed only if @p ref is not
- *  NaN, and the "(|diff| = ...)" detail only if @p diff is also not NaN. Used
- *  both by SolveAll() and by the tests that keep their own solve loop (so every
- *  test prints the same line).
+/** @name Building a father Block out of the copies of a leaf one
  *
- *  With @p always == false the line is only printed when verbose (the -v
+ * What a test of a decomposition needs before it can decompose anything: a
+ * father Block whose sub-Block are the copies of a leaf Block read from a
+ * file, and an Objective over their Variable that couples them. Nothing of
+ * this is of one Solver rather than another, the father being the same
+ * object whichever :Solver is then asked to solve it.
+ * @{ */
+
+/// a random number in [ -1 , 1 ] drawn from @p rg
+
+inline double rnd( std::mt19937 & rg )
+{ std::uniform_real_distribution<> d( 0.0 , 1.0 ); return( 2 * d( rg ) - 1 ); }
+
+/// a random number in [ 0 , 1 ) drawn from @p rg
+
+inline double pos( std::mt19937 & rg )
+{ std::uniform_real_distribution<> d( 0.0 , 1.0 ); return( d( rg ) ); }
+
+/*--------------------------------------------------------------------------*/
+/// the ColVariable of @p b the father Objective is built over
+/** Collects into @p vars the named static-variable groups of @p b, or, given
+ *  no name, the Variable active in the Objective of @p b.
+ *
+ *  Which Variable the father Objective couples is a choice of the instance:
+ *  for a Block whose objective spans every variable (e.g. MCFBlock)
+ *  collecting from the objective takes them all, while for a Block whose
+ *  formulation carries auxiliary objective variables (e.g. ThermalUnitBlock)
+ *  the named groups pick the "physical" ones, which is what a decomposition
+ *  of that unit is about. */
+
+void collect_vars( Block * b , const std::vector< std::string > & groups ,
+                   std::vector< ColVariable * > & vars );
+
+/*--------------------------------------------------------------------------*/
+/// a father AbstractBlock with @p k copies of the Block in @p filename
+/** Reads the Block in @p filename @p k times, makes the copies the sub-Block
+ *  of a father AbstractBlock, applies the BlockConfig @p bconf to each of
+ *  them if one is named, and collects the Variable of the father Objective
+ *  into @p vars [see collect_vars()]. The father is returned with no
+ *  Objective, which make_father_objective() is there to build. */
+
+AbstractBlock * build_father( const std::string & filename , int k ,
+                              const std::string & bconf ,
+                              const std::vector< std::string > & groups ,
+                              std::vector< ColVariable * > & vars );
+
+/*--------------------------------------------------------------------------*/
+/// random data ( A , b ) of a convex PolyhedralFunction, max_r ( A_r x + b_r )
+
+void generate_poly( Block::Index nv , int poly_rows , double scale ,
+                    std::mt19937 & rg ,
+                    PolyhedralFunction::MultiVector & A ,
+                    PolyhedralFunction::RealVector & b );
+
+/*--------------------------------------------------------------------------*/
+/// a random Function over @p vars, to be the Objective of a father Block
+/** With @p obj_type 0 a DQuadFunction, 1 a QuadFunction and 2 a convex
+ *  PolyhedralFunction; @p scale multiplies the coefficients and @p poly_rows
+ *  is how many rows the third one has (its default being one more than the
+ *  Variable). The quadratic ones are built positive definite, by giving the
+ *  diagonal what Gershgorin asks for. */
+
+Function * make_father_objective( std::vector< ColVariable * > & vars ,
+                                  int obj_type , double scale ,
+                                  int poly_rows , std::mt19937 & rg );
+
+/** @} ---------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------*/
+/// make every Solver of @p b log at the verbosity the command line asks for
+/** If the tester was asked to be verbose (the standard `-v` option, which
+ *  sets verbosity_level), every Solver registered to @p b is made to log to
+ *  std::cout at that verbosity via the standard Solver::intLogVerb parameter.
+ *  This overrides, from the command line, the per-Solver value read from the
+ *  ComputeConfig (default 0), `-v` being an explicit request of whoever runs
+ *  the test. */
+
+void apply_solver_verbosity( Block * b );
+
+/*--------------------------------------------------------------------------*/
+/// print the uniform per-instance log
+/** Reports what each Solver returned, on a line of its own:
+ *
+ *      <name of the Solver>  = <tok>   <t> s
+ *      ...
+ *      Ref                   = <r>     (|diff| = <d>)
+ *      -> <verdict>
+ *
+ *  The names come from @p names, which is what each Solver answers to
+ *  classname(); given none, the Solver are numbered S0, S1, ... and the whole
+ *  report is one line, which is what a test keeping its own solve loop over a
+ *  couple of Solver wants. The names being as long as they are, and what
+ *  makes a failure visible being the disagreement between two values, the
+ *  values are aligned one under the other.
+ *
+ *  @p times and @p value_tokens must have the same length (one entry per
+ *  Solver), and so must @p names when it is given; a Ref is printed only if
+ *  @p ref is not NaN, and the "(|diff| = ...)" detail only if @p diff is also
+ *  not NaN. Used both by SolveAll() and by the tests that keep their own
+ *  solve loop, so that every test prints the same thing.
+ *
+ *  With @p always == false the report is only printed when verbose (the -v
  *  option or the `verbose` environment variable) or on a KO verdict: this is
  *  what the tests that re-solve in a loop of modification rounds use, so
  *  their default output stays terse. SolveAll() passes true instead, so the
- *  one cross-check line per instance is always visible. */
+ *  one cross-check per instance is always visible. */
 
 void print_instance_line( const std::vector< double > & times ,
                           const std::vector< std::string > & value_tokens ,
@@ -412,7 +528,8 @@ void print_instance_line( const std::vector< double > & times ,
                           const std::string & verdict ,
                           double diff =
                            std::numeric_limits< double >::quiet_NaN() ,
-                          bool always = false );
+                          bool always = false ,
+                          const std::vector< std::string > & names = {} );
 
 /*--------------------------------------------------------------------------*/
 /// format a SolverReading as a value token ("v" or "[ lb , ub ]")
@@ -561,6 +678,75 @@ bool SolveBoth( Block * block ,
                 bool   * out_hs1 = nullptr ,
                 double * out_time1 = nullptr ,
                 long   * out_it1 = nullptr );
+
+/*--------------------------------------------------------------------------*/
+/// value of the Objective of @p block and of all its inner Block
+/** Recomputes every Objective of the tree on the current value of the
+ *  Variable and sums them, i.e., what the tree is worth right now. */
+
+double tree_objective_value( Block * block );
+
+/*--------------------------------------------------------------------------*/
+/// check that the solution of each Solver is worth what the Solver says
+/** For every Solver registered to @p block that has one, has the primal
+ *  solution written in the Variable [see Solver::get_var_solution()] and
+ *  checks that tree_objective_value(), recomputed on it, gives back the
+ *  value the Solver reports [see Solver::get_var_value()], to the relative
+ *  tolerance @p tol. A Solver that has no primal solution is skipped, and
+ *  so is one whose reported value is not finite, there being nothing to
+ *  compare the solution with.
+ *
+ *  This is where a solution that is RECONSTRUCTED rather than found gets
+ *  looked at: a LagrangianDualSolver writes the Variable from the convex
+ *  combination that the important linearization of each LagBFunction
+ *  describes, and neither the cross-check nor anything else ever reads that
+ *  number, so a combination that is wrong, or missing, is invisible without
+ *  this. Note that the reconstructed solution is worth the value of the
+ *  relaxation only inasmuch as the residual is zero, which is what the
+ *  stopping parameters of the inner Solver are asked to deliver: hence the
+ *  tolerance here is that of a solution recovered from a converged dual,
+ *  not that of the cross-check. */
+
+bool check_var_solutions( Block * block , double tol = 1e-6 );
+
+/*--------------------------------------------------------------------------*/
+/// largest violation of the Constraint that @p block itself holds
+/** Computes every FRowConstraint of @p block, the static and the dynamic
+ *  ones, and returns the largest relative violation among them. The inner
+ *  Block are NOT visited: what is measured is only what the Block couples,
+ *  which for a Lagrangian relaxation is exactly the set of rows that have
+ *  been dualised. Constraint of other kinds are skipped, the linking rows
+ *  being FRowConstraint wherever this is used. */
+
+double own_rows_violation( Block * block );
+
+/*--------------------------------------------------------------------------*/
+/// check the solution a relaxation Solver reconstructs against the relaxed rows
+/** For every Solver of @p block that is_relaxation() says solves a relaxation
+ *  and that has a primal solution, writes it in the Variable and checks it
+ *  against the rows @p block itself holds, i.e. the ones the relaxation has
+ *  dualised, with own_rows_violation() and the relative tolerance @p tol.
+ *
+ *  check_var_solutions() cannot say anything about these Solver, the value
+ *  they report being that of the relaxation and not of what they write [see
+ *  there], so their reconstructed solution goes unread: a convex combination
+ *  taken with the wrong multipliers, or not taken at all, is invisible. It
+ *  is not invisible here, because at convergence the residual is zero and
+ *  hence the combination satisfies the dualised rows, while a wrong one
+ *  does not. Note that nothing is claimed about the rows of the inner Block:
+ *  the combination is a point of the convex hull of each of them, and for an
+ *  integer sub-problem it is not a point of the sub-problem at all.
+ *
+ *  The residual is zero only in the sense the stopping condition gives to
+ *  "zero", i.e. up to the threshold of dblNZEps, and the violation of the
+ *  dualised rows is of that order: the default tolerance is therefore a
+ *  loose multiple of the thresholds the batteries use, and what it catches
+ *  is a combination that is wrong, not one that is imprecise. */
+
+bool check_relaxation_solutions( Block * block , double tol = 1e-1 ,
+                                 double ref = std::numeric_limits< double
+                                                             >::quiet_NaN() ,
+                                 double ref_tol = 1e-5 );
 
 /*--------------------------------------------------------------------------*/
 /// print "fo ~ Ref = ref (|diff| = ..., OK/KO)" and return whether OK

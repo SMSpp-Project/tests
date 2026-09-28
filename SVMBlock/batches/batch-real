@@ -67,7 +67,7 @@ for set in ${large}; do
   [ -f "${DATA}/${set}" ] || continue
 
   for G in ${glist}; do
-    for slv in BSPar-SMO.txt BSPar-LSVMonly.txt; do
+    for slv in BSPar-SMO.txt BSPar-LSVM-only.txt; do
       run_test "$exe" -S "$slv" -B SVMCfg-dual.txt \
                -d "${DATA}/${set}" -K 0 -G "$G" -C 1 -n 1
     done

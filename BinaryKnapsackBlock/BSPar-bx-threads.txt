@@ -1,0 +1,69 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-bx-threads.txt - - - - - - - - - - - - -
+#
+# Thread-scaling harness of the BranchAndXSolver: the greedy relaxation
+# (which brackets the optimum, so that the cross-check still has something to
+# compare) plus the BranchAndXSolver exploring best-first with depth-first
+# dives, as in BSPar-bx-dive.txt, with intMaxThread swept over 1, 2, 4 and 8
+# to measure the scaling of the parallel tree exploration. Like
+# BSPar-dfsbench.txt it is run by hand, no batch refers to it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GreedyRelaxationBinaryKnapsackSolver  # 1st: relaxation, brackets the optimum
+BranchAndXSolver                      # 2nd: BX, best-first with dives
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the greedy relaxation (brackets the optimum), shared fragment
+*GRCfg.txt
+
+# 2: BranchAndXSolver (the base config + the sweep overrides): the inner
+# greedy leaf comes from BX-baseCfg.txt, only the two entries below change
+*BX-baseCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod 3  # best-first with depth-first dives [see SolveMethod]
+intMaxThread   1  # the swept entry: 1, 2, 4, 8 parallel workers
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-bx-threads.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,12 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a SVMBlock whose abstract
 # representation encodes either the Wolfe dual or the primal formulation of
 # the training problem, to be solved by two different Solver: a :MILPSolver
 # and the ad hoc SMOSolver
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

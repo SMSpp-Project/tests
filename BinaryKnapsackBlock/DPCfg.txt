@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - DPCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - DPCfg.txt - - - - - - - - - - - - - - - -
 #
 # A ComputeConfig for the (exact, full-table) DPBinaryKnapsackSolver:
 # it sets no parameters, and is kept as a factored fragment shared by
 # the BSPar.txt / BSPar-mixed.txt cross-check configs.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -41,5 +39,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of ComputeConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End DPCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END DPCfg.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

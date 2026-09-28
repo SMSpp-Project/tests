@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./TUDPS_test
+#        < fw exe >   = path of the generic Frank-Wolfe tester, optional:
+#                       given one, the same units are also solved by the
+#                       Frank-Wolfe decomposition of a father Block of K
+#                       copies of them
+#
+# runs the 1UC academic instances across thermal formulations (with cuts) under
+# LagrangianDualSolver
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../UCBlock/data/nc4/1UC_Data
+
+wchg=135    # change fixed + linear + quadratic costs (+128: also regen the
+            # abstract representation, exercising the Modification path)
+#iter=0
+
+TUDPS_test=${1:-./TUDPS_test}
+fwexe=${2:-}
+par=BSCfg.txt
+
+# ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
+
+# the formulation of the unit is the BlockConfig TUBCfg-<form>.txt, one per
+# formulation (3bin/T/pt/DP/SU/SD/SUSD), -PC adding the perspective cuts. We
+# test every formulation with cuts. The interval-based formulations
+# (pt/DP/SU/SD/SUSD) are too expensive on large-horizon instances, so there we
+# skip them and keep only 3bin/T.
+for form in 3bin-PC T-PC pt-PC DP-PC SU-PC SD-PC SUSD-PC; do
+  for i in 24 96; do
+    # skip the expensive interval-based formulations on large instances
+    if [ $form != 3bin-PC ] && [ $form != T-PC ] && [ $i -eq 96 ]; then
+      continue
+    fi
+    for j in 1 12 16 23; do
+      # in CI only 5 of the 100 ramp profiles are run (they are variations of
+      # the same shape); the local sweep stays exhaustive
+      if [ -n "$CI" ]; then hlist="1 25 50 75 100"; else hlist=$(seq 1 100); fi
+      for h in $hlist; do
+        #for (( seed = 0 ; seed < 20 ; seed++ )); do
+          seed=0
+
+          what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
+
+          run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" -B "TUBCfg-$form.txt" -n "$iter"
+
+        #done
+      done
+    done
+  done
+done
+
+# the same units, decomposed by Frank-Wolfe - - - - - - - - - - - - - - - - -
+# K copies of a unit become the sub-Block of a father whose Objective couples
+# them, each unit being solved by its dynamic programme as the Linear
+# Minimization Oracle. Since the dynamic programme plus the Perspective Cuts
+# characterize the convex hull of the integer solutions of the unit, the
+# Dantzig-Wolfe value FrankWolfeSolver computes has to be the perspective
+# bound a monolithic :MILPSolver gives on the same father, which is what is
+# cross-checked. Only a handful of the units above are run this way, and only
+# if the battery was given the tester, since the reference solves a monolithic
+# relaxation with a cut separation loop, i.e., minutes per run.
+
+if [ -n "${fwexe}" ]; then
+
+  # the whole lineup (FatherBSPar.txt attaches the reference and every variant
+  # of the decomposition at once) on a 24-period unit: the reference needs the
+  # DP + P/C formulation, which the decomposition does not use, its Oracle
+  # carrying its own dynamic programme, so the cross-check is paid on the
+  # smallest unit there is, where building that formulation costs little
+  fwargs="-B TUBCfg-DP-PC.txt -V p_thermal,u_thermal -o 0 -e 1"
+  fw_run ${DATADIR}/24/S1ramp17_24.nc4 -k 2
+  fw_run ${DATADIR}/24/S12ramp10_24.nc4 -k 2
+
+  # the larger units with the decomposition alone, on the plain T formulation,
+  # which gives the identical result and is cheap to build: there is nothing
+  # to compare it with, so what these runs check is that it runs and what it
+  # costs [see FatherBSPar-fw.txt]
+  fwpar=FatherBSPar-fw.txt
+  fwargs="-B TUBCfg-T.txt -V p_thermal,u_thermal -o 0 -e 1"
+  fw_run ${DATADIR}/96/S1ramp17_96.nc4 -k 2
+  fw_run ${DATADIR}/96/S12ramp10_96.nc4 -k 2
+  fw_run ${DATADIR}/384/S1ramp1_384.nc4 -k 2
+  fw_run ${DATADIR}/96/S1ramp17_96.nc4 -k 3
+  unset fwpar fwargs
+
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,12 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - MILPCfg-NUC.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MILPCfg-NUC.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a ComputeConfig for a :MILPSolver solving a UCBlock
 # to an accuracy tighter than the default of the solver, the value it returns
 # being compared with a reference value that is the optimum of the instance
 # (see batches/batch-nuclear)
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -79,5 +77,5 @@ dblMaxTime      300 # a nuclear unit with the operating rules is a hard MIP:
 # end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END MILPCfg-NUC.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MILPCfg-NUC.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

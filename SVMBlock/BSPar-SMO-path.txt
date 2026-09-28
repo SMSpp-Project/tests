@@ -1,12 +1,31 @@
-BlockSolverConfig
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-SMO-path.txt - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig registering the SMOSolver alone on a SVMBlock, asking
+# it for the exact solution path (intSMOPath = 1, in SMOCfg-path.txt): the
+# samples added to the data set are learnt by growing their multiplier from
+# zero, so that what is left behind is optimal at every step.
+#
+# It is what batch-path runs against BSPar-SMO-nopath.txt, the two having to
+# agree at every addition.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
 1  # number of (the names of) Solver in this BlockSolverConfig
+
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-SMOSolver
+SMOSolver             # name of Solver: the ad hoc SMO
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
-# now all the ComputeConfig
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *SMOCfg-path.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-SMO-path.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

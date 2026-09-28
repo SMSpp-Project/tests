@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar-fast.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-fast.txt - - - - - - - - - - - - - - -
 #
 # Lean cross-check BlockSolverConfig for LARGE instances (e.g., the Pisinger
 # hard instances, see batch-pisinger), where efficiency matters: it attaches,
@@ -13,8 +13,6 @@
 #
 # The per-solver ComputeConfig are the factored *Cfg.txt fragments shared with
 # BSPar.txt; the BranchAndXSolver one overrides BX-baseCfg.txt as there.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -80,5 +78,5 @@ intMaxThread   4
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End BSPar-fast.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-fast.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

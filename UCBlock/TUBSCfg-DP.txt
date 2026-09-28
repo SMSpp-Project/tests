@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - TUBSCfg-DP.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  TUBSCfg-DP.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a ThermalUnitBlock that is
 # solved, to optimality and in the space of its own variables, by the
@@ -7,8 +7,6 @@
 # need: the Lagrangian Dual is the one of the original problem only if each
 # sub-problem is solved exactly, and a proximal heuristic penalising the
 # binary variables needs them to be binary in the sub-problem too.
-#
-#   Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -69,5 +67,5 @@ intLogVerb      0 # log verbosity of the Solver
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END TUBSCfg-DP.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END TUBSCfg-DP.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

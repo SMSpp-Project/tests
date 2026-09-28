@@ -24,19 +24,19 @@
 # --------------------------------------------------------------------------- #
 
 set(SMSPP_TEST_LABELS_BoxSolver                 "SMS++;MILPSolver")
-set(SMSPP_TEST_LABELS_MILPSolver                "SMS++;MILPSolver")
-set(SMSPP_TEST_LABELS_LagrangianDualSolver_Box  "SMS++;BundleSolver;LagrangianDualSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_LagBFunction              "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunction        "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunctionBlock   "SMS++;BundleSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_QuadraticTests            "SMS++;MILPSolver")
-set(SMSPP_TEST_LABELS_Write-Read                "SMS++;MILPSolver")
+set(SMSPP_TEST_LABELS_QuadFunction              "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
-set(SMSPP_TEST_LABELS_AbstractBlock_mirror      "SMS++;BinaryKnapsackBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_BendersBFunction          "BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_BundleSolverML            "BundleSolver;LagrangianDualSolver;MMCFBlock;UCBlock")
+# the four testers posed on an AbstractBlock ask for modules beyond these two,
+# a different set each, and each of them is guarded by its own if( TARGET ),
+# so what the directory declares is what they all need and the rest is set
+# test by test
+set(SMSPP_TEST_LABELS_AbstractBlock             "SMS++;MILPSolver")
+set(SMSPP_TEST_LABELS_BendersBFunction          "SMS++;BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_BinaryKnapsackBlock       "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_CapacitatedFacilityLocation
+set(SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock
                                                 "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver;MCFClassSolver;MCFLemonSolver;MILPSolver")
 # MMCFBlock hosts two testers: MMCF_test (vs the MMCFCplex reference) and
 # MMCFBlock_test (cross-check of a :MILPSolver and a LagrangianDualSolver), so
@@ -44,21 +44,29 @@ set(SMSPP_TEST_LABELS_CapacitatedFacilityLocation
 set(SMSPP_TEST_LABELS_MMCFBlock                 "BundleSolver;LagrangianDualSolver;MCFLemonSolver;MMCFBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_UCBlock                   "BundleSolver;LagrangianDualSolver;UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_MCFBlock                  "MCFBlock;MCFClassSolver;MCFLemonSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_ThermalUnitBlock_Solver   "UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_InvestmentBlock           "BundleSolver;InvestmentBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_TwoStageStochasticBlock   "BundleSolver;LagrangianDualSolver;TwoStageStochasticBlock;UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_MultiStageStochasticBlock "BundleSolver;LagrangianDualSolver;MultiStageStochasticBlock;TwoStageStochasticBlock;UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_LukFiBlock                "BundleSolver;LukFiBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SVMBlock                  "BundleSolver;LagrangianDualSolver;SVMBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SingleFlowDCRBlock        "SingleFlowDCRBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_FrankWolfeSolver          "FrankWolfeSolver;MCFBlock;MCFClassSolver;UCBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SATBlock                  "SATBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test
-# it registered, dynamic batch-file test names included.
+# it registered, dynamic batch-file test names included, and tell ctest that
+# 77 is the status of a test that had nothing to do rather than of one that
+# failed: a tester exits with it when the configuration it is given names only
+# Solver that this build does not have, which is the case of a configuration
+# asking for a Solver of an external library that is not there
+# [see drop_missing_Solvers() of common_utils.cpp].
 function(smspp_label_tests)
     get_filename_component(_dir "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
     get_property(_tests DIRECTORY PROPERTY TESTS)
-    if (_tests AND DEFINED SMSPP_TEST_LABELS_${_dir})
+    if (NOT _tests)
+        return()
+    endif ()
+    set_tests_properties(${_tests} PROPERTIES SKIP_RETURN_CODE 77)
+    if (DEFINED SMSPP_TEST_LABELS_${_dir})
         set_tests_properties(${_tests} PROPERTIES
                              LABELS "${SMSPP_TEST_LABELS_${_dir}}")
     endif ()

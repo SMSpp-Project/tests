@@ -1,13 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSPar-coredp.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-coredp.txt - - - - - - - - - - - - - -
 #
 # Single-exact-solver BlockSolverConfig: the greedy relaxation (which brackets
 # the optimum) plus the exact, non-dominated-state CoreDPBinaryKnapsackSolver.
 # It is the "CoreDP" entry of the hard-instance lineups (batch-jooken and
 # batch-pisinger-large), run one solver per process to map where the core
 # dynamic program survives the large-capacity instances.
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -35,5 +33,5 @@ CoreDPBinaryKnapsackSolver            # 2nd: exact core DP
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - End BSPar-coredp.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-coredp.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -55,6 +55,7 @@
 #include <cstdio>
 #include <fstream>
 #include <memory>
+#include <random>
 
 #include "common_utils.h"
 
@@ -127,7 +128,10 @@ static bool process_specific_arg( int opt )
 
 static bool CheckSolutionRoundTrip( Block * block )
 {
- const std::string fn = "mssb_solution_roundtrip.nc4";
+ // a name of its own, since the batteries run in parallel in the same
+ // directory and would otherwise write and read each other's file
+ const std::string fn = "mssb_solution_roundtrip_" +
+                        std::to_string( std::random_device()() ) + ".nc4";
  bool ok = false;
  try {
   std::unique_ptr< Solution > s1( block->get_Solution() );
