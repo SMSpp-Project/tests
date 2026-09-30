@@ -263,21 +263,6 @@ static double rndfctr( void )
 
 /*--------------------------------------------------------------------------*/
 
-static Subset GenerateRand( Index m , Index k )
-{
- // generate a sorted random k-vector of unique integers in 0 ... m - 1
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- sort( rnd.begin() , rnd.end() );
-
- return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
 // test-specific command-line knobs, set by process_specific_arg(); the
 // standard parameters (instance positional, -B BlockConfig, -S
 // BlockSolverConfig, -c/-p prefixes) are handled centrally by common_utils
@@ -684,16 +669,11 @@ static void release( UCBlock * uc )
 
 static int test( void )
 {
- for( const auto & name : SolverNames )
-  if( Solver::has_Solver( name ) ) {
-   solver_name = name;
-   break;
-   }
-
- if( solver_name.empty() ) {
-  std::cout << "no :MILPSolver in this build, nothing to check" << std::endl;
+ solver_name = first_Solver_of( SolverNames ,
+			        "the checks of the pollutant budget" );
+ if( solver_name.empty() )
   return( 0 );
-  }
+
  std::cout << "solving with " << solver_name << std::endl;
 
  dir = std::filesystem::temp_directory_path() /
@@ -1343,17 +1323,10 @@ static void check_dp( const std::string & inst , const std::string & dp ,
 
 static int test( void )
 {
- for( const auto & name : SolverNames )
-  if( auto solver = Solver::new_Solver( name ) ) {
-   delete solver;
-   solver_name = name;
-   break;
-   }
-
- if( solver_name.empty() )
-  std::cout << "no :MILPSolver in this build, only the model is checked"
-            << std::endl;
- else
+ solver_name = first_Solver_of( SolverNames ,
+			        "what a :Solver says of the scaled unit; "
+			        "the model is checked all the same" );
+ if( ! solver_name.empty() )
   std::cout << "solving with " << solver_name << std::endl;
 
  dir = std::filesystem::temp_directory_path() /
@@ -1530,8 +1503,8 @@ int main( int argc , char ** argv )
   // How the sub-Blocks are *solved* inside the Lagrangian Dual is NOT set
   // here: it descends entirely from the BlockSolverConfig, whose
   // LagrangianDualSolver gives the inner Solver of the LagBFunctions by
-  // str_LagBF_BSCfg and the components that are never "easy" by
-  // vstr_LDSl_NoEasy (see BSPar.txt)
+  // str_LagBF_BSCfg, and whose inner BundleSolver is told the components
+  // that are never "easy" by vstrNoEasy (see BSPar.txt)
   auto ibc = Configuration::deserialize( bconf_file );
   if( ! ibc ) {
    std::cerr << "Error: cannot load BlockConfig from " << bconf_file
@@ -1639,7 +1612,7 @@ int main( int argc , char ** argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange ) );
+     Subset nms( GenerateRand( m , tochange , rg ) );
 
      }
 

@@ -25,6 +25,9 @@ if (TARGET SMS++::SATBlock)
     if (TARGET SMS++::MILPSolver)
         target_link_libraries(SATBlock_test PRIVATE SMS++::MILPSolver)
     endif ()
+    if (TARGET SMS++::BranchAndXSolver)
+        target_link_libraries(SATBlock_test PRIVATE SMS++::BranchAndXSolver)
+    endif ()
 
     smspp_install(SATBlock_test)
 

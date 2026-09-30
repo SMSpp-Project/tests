@@ -18,6 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   module distributes, against their optimum, and `batch-groups` on
   instances made of groups of clauses written by `smspp_satgen`
 
+- the tester of `SATBlock` changes the instance with `-n` rounds of
+  Modification drawn with the seed of `-e` (the costs of a fifth of the
+  variables moved by a step, as a Lagrangian term does, the weights of a
+  range of clauses, or clauses added), repeating the cross-check after each
+  with the Solver still registered, so that their reoptimization is tested;
+  `batch-groups` makes 5 rounds per instance
+
+- the suite of `SATBlock` cross-checks a `BranchAndXSolver` too, which
+  enumerates on the `SATSolver` with CaDiCaL, OLL stopping after 20 calls of
+  the SAT solver in each node (`BXCfg.txt`, `BXBSCfg.txt`, `OLLCfg-node.txt`)
+
 - `InvestmentBlock/batches/batch-pypsa` runs the modular network with one
   scenario again with the inner UCBlock solved by the recursive Lagrangian
   dual over its units (`InnerBCfg-LD.txt`), against the reference of PyPSA
@@ -293,6 +304,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `LDCfg-easy.txt` and `BSPar-DP.txt` of `UCBlock` name the hard components
+  with `vstrNoEasy` of the inner `BundleSolver`, which replaces
+  `vstr_LDSl_NoEasy` of `LagrangianDualSolver`: which components are easy is
+  a concept of `BundleSolver`, and the classes listed are the same
+
 - `BDSCfg-LD.txt` recovers a feasible solution at the design of the master
   (`strRecoveryBSC BSCfg1-IP.txt`), and the thermal run of
   `TwoStageStochasticBlock/batches/batch-pypsa` checks the interval of
@@ -304,6 +320,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   accurate to its own `dblRelAcc`, the bundle of the master reached the
   optimum without ever certifying its lower bound, and
   BendersDecompositionSolver reported `-inf`
+
+- the testers are named after the component they test:
+  `AbstractBlock_Box_test` is `LagrangianDualSolver_Box_test`, since what it
+  exercises is the `LagrangianDualSolver` (and the `PrimalProximalHeur` of
+  the same module) on a box-structured `AbstractBlock` whose `LagBFunction`
+  are solved by `BoxSolver`, and its battery is
+  `LagrangianDualSolver_Box_test/batches/batch-box`;
+  `BendersBFunction_test2` is `BendersBFunction_linearization_test`, whose
+  source is `test_linearization.cpp`, since it checks the linearizations the
+  `BendersBFunction` produces on small linear programs whose value is known
+
+- `PolyhedralFunctionBlock_prune_test` tests only
+  `PolyhedralFunctionBlock::remove_redundant_rows()`, which has to remove
+  both the dominated and the inactive row, while the geometric pruning of
+  `PolyhedralFunction::remove_parallel_rows()` is tested by
+  `PolyhedralFunction_prune_test`, on a convex function with the dominated
+  row after and before the dominating one and on a concave function, and
+  needs nothing but the core library
+
+- `GenerateRand()`, the random subset of `k` distinct indices out of
+  `0 ... m - 1` that eight testers copied (and the tester of `MMCFBlock`
+  kept commented out), is written once in `common_utils` and takes the
+  generator as argument, the order of the subset being optional as it was
+  in the testers of `MCFBlock` and of `CapacitatedFacilityLocationBlock`:
+  the draws from the generator are the same as before, so every battery
+  generates the same instances
 
 - the `TwoStageStochasticBlock` suite is configured before those of
   `CapacitatedFacilityLocationBlock` and `UCBlock`, whose batteries of the
@@ -333,10 +375,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the tester of `UCBlock` builds no configuration in code: it reads `-B` and
   `-S` and applies them. The `LagrangianDualSolver` of `BSPar.txt` and
   `BSPar-DP.txt` comes from `LDCfg-easy.txt`, which lists the hard
-  components by class (`vstr_LDSl_NoEasy`), the parallel variants of
-  `batch-ec-par` are `BSPar-par.txt` and `BSPar-par-aggr.txt` rather than a
-  config rewritten by the batch, and the network formulations of
-  `batch-pypsa` are `InnerBCfg-PTDF.txt` and `InnerBCfg-CYCLE.txt`
+  components by class (`vstrNoEasy` of the inner `BundleSolver`), the
+  parallel variants of `batch-ec-par` are `BSPar-par.txt` and
+  `BSPar-par-aggr.txt` rather than a config rewritten by the batch, and the
+  network formulations of `batch-pypsa` are `InnerBCfg-PTDF.txt` and
+  `InnerBCfg-CYCLE.txt`
 
 - the formulation of the unit of `TUDPS_test` is the BlockConfig given with
   `-B`, one file per formulation (`TUBCfg-<form>.txt`, `-PC` with the
@@ -730,6 +773,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- a tester picks the `:Solver` it solves with through `first_Solver_of()` of
+  `common_utils`, which returns the first of the given names that the factory
+  holds and says on `std::cerr` which ones it has looked for, and what the
+  run gives up, when it holds none of them: `Solver::new_Solver()` throws on
+  a name that is not there, so `UCBlock_test --scale`, which asked the
+  factory for one name after the other, died with "CPXMILPSolver not present
+  in Solver factory" on every build without CPLEX, the pipeline comprised
+- the two fixtures that bring in the curated knapsack data, `fetch_bk_data`
+  and `run_bk2nc4`, hold the same `RESOURCE_LOCK`: run at once, as `ctest
+  -j2` did, they drive the build system on the same `txt.tgz`, which tar
+  then reads as an archive that ends too soon
+- the archive of the Canad instances of MMCFBlock is extracted by `cmake -E
+  tar`, which also works with the tar of macOS, where the option
+  `--warning=no-unknown-keyword` of GNU tar stopped the build.
 - the tester of `MultiStageStochasticBlock` writes the round trip of the
   `Solution` to a file of its own name, since the batteries of the suite
   run in parallel in the same directory and read each other's file

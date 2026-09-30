@@ -10,9 +10,10 @@
 #                                                                            #
 ##############################################################################
 
-# module name: the tester of the box-structured Block; the other three
-# are built with "make mirror", "make readwrite" and "make bds"
-NAME = AbstractBlock_Box_test
+# module name: the tester of LagrangianDualSolver on the box-structured
+# Block; the other three are built with "make mirror", "make readwrite" and
+# "make bds"
+NAME = LagrangianDualSolver_Box_test
 
 # basic directory
 DIR = .

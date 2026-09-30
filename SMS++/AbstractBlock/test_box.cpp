@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------------*/
-/*-------------------------- File test.cpp ---------------------------------*/
+/*------------------------ File test_box.cpp -------------------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
  * Main for testing LagrangianDualSolver with BoxSolver
@@ -163,21 +163,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-static Subset GenerateRand( Index m , Index k )
-{
- // generate a sorted random k-vector of unique integers in 0 ... m - 1
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- sort( rnd.begin() , rnd.end() );
-
- return( std::move( rnd ) );
- }
-
 /*--------------------------------------------------------------------------*/
 
 static void set_bounds( BoxConstraint & b )
@@ -558,7 +543,7 @@ int main( int argc , char **argv )
    for( Index k = 0 ; k < nson ; ++k ) {
     auto son = TestBlock->get_nested_Block( k );
     auto x = son->get_static_variable_v< ColVariable >( "x" );
-    Subset nms( GenerateRand( nvar , ps ) );
+    Subset nms( GenerateRand( nvar , ps , rg ) );
     for( auto nm : nms )
      *(vpit++) = coeff_pair( & (*x)[ nm ] , get_coeff() );
     }
@@ -723,7 +708,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( nvar , tochange ) );
+     Subset nms( GenerateRand( nvar , tochange , rg ) );
 
      if( isquad ) {  // quadratic objective
       auto qf = static_cast< DQuadFunction * >( obj->get_function() );
@@ -762,7 +747,7 @@ int main( int argc , char **argv )
     LOG1( "changed " << tochange << " constraints - " );
 
    auto link = TestBlock->get_static_constraint_v< FRowConstraint >( "link" );
-   Subset nms( GenerateRand( m , tochange ) );
+   Subset nms( GenerateRand( m , tochange , rg ) );
    for( auto nm : nms ) {
     auto lf = static_cast< LinearFunction * >( (*link)[ nm ].get_function() );
     Index av = lf->get_num_active_var();
@@ -781,7 +766,7 @@ int main( int argc , char **argv )
        lf->modify_coefficients( std::move( NC ) , Range( strt , stp ) );
      }
     else {  // in the other 50% of the cases, do a sparse change
-     Subset nmsn( GenerateRand( av , tcn ) );
+     Subset nmsn( GenerateRand( av , tcn , rg ) );
 
      if( tcn == 1 )
       lf->modify_coefficient( nmsn.front() , NC.front() );
@@ -840,7 +825,7 @@ int main( int argc , char **argv )
      for( Index k = 0 ; k < nson ; ++k ) {
       auto son = TestBlock->get_nested_Block( k );
       auto x = son->get_static_variable_v< ColVariable >( "x" );
-      Subset nms( GenerateRand( nvar , ps ) );
+      Subset nms( GenerateRand( nvar , ps , rg ) );
       for( auto nm : nms )
        *(vpit++) = coeff_pair( & (*x)[ nm ] , get_coeff() );
       }
@@ -889,5 +874,5 @@ int main( int argc , char **argv )
  }  // end( main )
 
 /*--------------------------------------------------------------------------*/
-/*------------------------ End File test.cpp -------------------------------*/
+/*---------------------- End File test_box.cpp -----------------------------*/
 /*--------------------------------------------------------------------------*/

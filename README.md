@@ -25,10 +25,11 @@ the `test` directory of the module itself.
   `AbstractBlock`: the box-structured Block of `k` sub-`AbstractBlock` with box
   constraints and a separable `Objective` whose Lagrangian dual is computed by
   a `LagrangianDualSolver` (with `LagBFunction` and `BoxSolver`) and
-  cross-checked against a `:MILPSolver`; `AbstractBlock::mirror()`, i.e., the
-  copy of the abstract representation that every Block has without a line
-  written for it, checked to be the same problem as the original, to take the
-  solution back to it and to follow it when it changes; and
+  cross-checked against a `:MILPSolver` (`LagrangianDualSolver_Box_test`);
+  `AbstractBlock::mirror()`, i.e., the copy of the abstract representation
+  that every Block has without a line written for it, checked to be the same
+  problem as the original, to take the solution back to it and to follow it
+  when it changes; and
   `AbstractBlock::read_lp()` / `AbstractBlock::read_mps()`, a random linear
   program being written to file by the `:MILPSolver` attached to it, read back
   into a second `AbstractBlock` and solved again, the two optima having to
@@ -57,7 +58,9 @@ the `test` directory of the module itself.
 
 - [`BendersBFunction`](SMS++/BendersBFunction): a test of the `BendersBFunction`
   component on a "hand-made" `Block` for Capacitated Facility Location
-  (CFL) problems.
+  (CFL) problems, and `BendersBFunction_linearization_test`, which checks the
+  linearizations the `BendersBFunction` produces on small linear programs
+  whose value is known.
 
 - [`PolyhedralFunction`](SMS++/PolyhedralFunction), a tester which
   provides very comprehensive tests for `PolyhedralFunction` and some tests
@@ -65,7 +68,8 @@ the `test` directory of the module itself.
   `BundleSolver`) and any `CDASolver` able to handle Linear Programs (such
   as `MILPSolver` and its derived classes `CPXMILPSolver` and
   `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
-  core library.
+  core library, plus `PolyhedralFunction_prune_test`, the unit test of the
+  geometric pruning of the rows.
 
 - [`PolyhedralFunctionBlock`](SMS++/PolyhedralFunctionBlock), a tester
   which provides very comprehensive tests for `PolyhedralFunction` and
@@ -74,7 +78,8 @@ the `test` directory of the module itself.
   as `BundleSolver`) and any `CDASolver` able to handle Linear Programs
   (such as `MILPSolver` and its derived classes `CPXMILPSolver` and
   `SCIPMILPSolver`), as well as for some of the mechanics of the SMS++
-  core library.
+  core library, plus `PolyhedralFunctionBlock_prune_test`, the unit test of
+  the LP-based pruning of the rows.
 
 ### The Solver
 

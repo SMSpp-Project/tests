@@ -8,6 +8,8 @@
 #   - CaDiCaLSATSolver   OLL on the clauses, with CaDiCaL
 #   - MiniSATSolver      OLL on the clauses, with MiniSat
 #   - :MILPSolver        the MILP formulation
+#   - BranchAndXSolver   an enumeration on the SATSolver with CaDiCaL, OLL
+#                        within a budget of calls in each node (BXCfg.txt)
 #
 # A Solver that is not in the build is left out [see drop_missing_Solvers()
 # in common_utils.cpp]. The two SATSolver share OLLCfg.txt.
@@ -19,7 +21,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-3  # number of (the names of) Solver in this BlockSolverConfig
+4  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 CaDiCaLSATSolver  # 1st: OLL with CaDiCaL
@@ -28,13 +30,15 @@ HiGHSMILPSolver   # 3rd: the MILP formulation
 #CPXMILPSolver    #      (uncomment the available backend)
 #GRBMILPSolver
 #SCIPMILPSolver
+BranchAndXSolver  # 4th: the enumeration on OLL
 
-3  # number of ComputeConfig in this BlockSolverConfig
+4  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *OLLCfg.txt
 *OLLCfg.txt
 *MILPCfg.txt
+*BXCfg.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -50,6 +50,15 @@ different sizes and seeds of the random generator; all these passing is a
 good sign that no regressions have been done for the tested modules, and
 in particular for `PolyhedralFunction`.
 
+`PolyhedralFunction_prune_test` is a unit test of
+`PolyhedralFunction::remove_parallel_rows()`, i.e., of the geometric pruning
+of the rows: it builds a convex and a concave `PolyhedralFunction` with a row
+parallel to (and dominated by) another one and a row that is inactive but
+parallel to nothing, and checks that exactly the dominated row is removed. It
+takes no argument and needs nothing but the core SMS++ library; the removal
+of the inactive rows, which needs an LP, is tested in
+[PolyhedralFunctionBlock](../PolyhedralFunctionBlock).
+
 A makefile is also provided that builds the executable including the
 `BundleSolver` module and all its dependencies, in particular
 `MILPSolver` (and, obviously, the core SMS++ library).

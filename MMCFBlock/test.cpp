@@ -160,21 +160,6 @@ static double rndfctr( void )
  return( fctr < 0 ? - fctr : fctr * 4 );
  }
 
-------------------------------------------------------------------------------
-
-static Subset GenerateRand( Index m , Index k )
-{
- // generate a sorted random k-vector of unique integers in 0 ... m - 1
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- sort( rnd.begin() , rnd.end() );
-
- return( std::move( rnd ) );
- }
-
 ----------------------------------------------------------------------------*/
 
 /*-------------------------------------------------------------------------*/
@@ -507,7 +492,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange ) );
+     Subset nms( GenerateRand( m , tochange , rg ) );
 
      }
 

@@ -2,7 +2,7 @@
 #
 # usage: batch-box < exe file > < regime | par file >
 #        < exe file > = path of the executable file,
-#                       default ./AbstractBlock_Box_test
+#                       default ./LagrangianDualSolver_Box_test
 #        < regime >   = LDS, the Lagrangian dual cross-checked against the
 #                       Linear Program (default), or PPH, the primal proximal
 #                       heuristic; anything else is taken to be the
@@ -16,7 +16,7 @@
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../../batch_common.sh"
 
-exe=${1:-./AbstractBlock_Box_test}
+exe=${1:-./LagrangianDualSolver_Box_test}
 
 case ${2:-LDS} in
   LDS) par=BSPar.txt    ; what=15 ; iter=   ;;

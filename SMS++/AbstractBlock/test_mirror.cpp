@@ -42,6 +42,8 @@
 #include "Solver.h"
 #include "UpdateSolver.h"
 
+#include "common_utils.h"
+
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- USING -----------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -216,16 +218,11 @@ int main( int argc , char ** argv )
  if( argc > 1 )
   solver_name = argv[ 1 ];
  else
-  for( const auto & name : SolverNames )
-   if( Solver::has_Solver( name ) ) {
-    solver_name = name;
-    break;
-    }
+  solver_name = first_Solver_of( SolverNames ,
+                                 "the checks of the mirrored Block" );
 
- if( solver_name.empty() ) {
-  std::cout << "no :MILPSolver in this build, nothing to check" << std::endl;
+ if( solver_name.empty() )
   return( 0 );
-  }
 
  std::cout << std::left << std::setw( 36 ) << "case" << std::right
            << std::setw( 14 ) << "original" << std::setw( 14 ) << "mirror"

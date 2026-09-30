@@ -29,6 +29,7 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <numeric>
 #include <typeinfo>
 
 #include <SMSTypedefs.h>
@@ -154,6 +155,49 @@ void load_Block_or_exit( Block * block , const std::string & fn , char frmt )
   }
 
  block->load( file , frmt );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+std::string first_Solver_of( const std::vector< std::string > & names ,
+			     const std::string & what )
+{
+ for( const auto & name : names )
+  if( Solver::has_Solver( name ) )
+   return( name );
+
+ std::string all;
+ for( const auto & name : names )
+  all += ( all.empty() ? "" : ", " ) + name;
+
+ std::cerr << ANSI_YELLOW << "[WARNING] none of " << all
+	   << " is in this build, so " << what << " is skipped"
+	   << ANSI_RESET << std::endl;
+
+ return( std::string() );
+
+ }  // end( first_Solver_of )
+
+/*--------------------------------------------------------------------------*/
+// a random subset of k distinct indices out of 0 ... m - 1
+
+Block::Subset GenerateRand( Block::Index m , Block::Index k ,
+                            std::mt19937 & rg , bool ord )
+{
+ if( k > m ) {
+  std::cerr << "error: GenerateRand( " << m << " , " << k << " )"
+            << std::endl;
+  exit( 1 );
+  }
+
+ Block::Subset sbst( m );
+ std::iota( sbst.begin() , sbst.end() , 0 );
+ std::shuffle( sbst.begin() , sbst.end() , rg );
+ sbst.resize( k );
+ if( ord )
+  std::sort( sbst.begin() , sbst.end() );
+
+ return( sbst );
  }
 
 /*--------------------------------------------------------------------------*/

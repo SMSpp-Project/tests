@@ -8,8 +8,9 @@
  *
  * - output and parsing: the ostream manipulators def() and fixd(), the
  *   string-to-T parser Str2Sthg(), the pretty-printer of Solver return codes
- *   PrintResults(), the std::terminate handler smspp_terminate() and
- *   load_Block_or_exit(), which reads a Block out of a text file;
+ *   PrintResults(), the std::terminate handler smspp_terminate(),
+ *   load_Block_or_exit(), which reads a Block out of a text file, and
+ *   GenerateRand(), which draws a random subset of indices;
  *
  * - configuration: b_config_Block() and s_config_Block() apply a BlockConfig
  *   or a BlockSolverConfig to a Block, dispatching to the nested sub-Block
@@ -232,6 +233,19 @@ inline void Str2Sthg( const char * const str , T & sthg )
  }
 
 /*--------------------------------------------------------------------------*/
+/// a random subset of @p k distinct indices out of 0 ... @p m - 1
+/** Shuffles 0 ... @p m - 1 with @p rg and keeps the first @p k elements,
+ *  sorted in increasing order if @p ord is true (the default) and in the
+ *  order the shuffle left them otherwise. The draws from @p rg are those of
+ *  one std::shuffle() of @p m elements whatever @p k and @p ord are, so a
+ *  tester consumes the generator in the same way whichever of the two orders
+ *  it asks for. A @p k larger than @p m is an error of the caller, reported
+ *  on std::cerr before exiting with status 1. */
+
+Block::Subset GenerateRand( Block::Index m , Block::Index k ,
+                            std::mt19937 & rg , bool ord = true );
+
+/*--------------------------------------------------------------------------*/
 /// pretty-print a Solver result (objective value or kInfeasible/kUnbounded/error)
 /** @param hs   has-solution flag (the caller has decoded the Solver return code)
  *  @param rtrn the raw Solver return code (used only when @p hs is false)
@@ -262,6 +276,21 @@ void smspp_terminate( void );
 
 void load_Block_or_exit( Block * block , const std::string & fn ,
                          char frmt = 0 );
+
+/*--------------------------------------------------------------------------*/
+/// the first of the named :Solver that this build has, "" if it has none
+/** Returns the name of the first :Solver of @p names that the factory holds,
+ *  and the empty string when it holds none of them. Which :Solver are there
+ *  depends on the modules the build has and on the external libraries each of
+ *  them has found, and asking the factory for one that is not there throws
+ *  [see Solver::new_Solver()], which kills the run: whoever needs a :Solver
+ *  of a family, any of them, picks it through this. When none is there the
+ *  names looked for and what @p what the run gives up are said on std::cerr,
+ *  so that a build without them reports what it is not checking rather than
+ *  passing in silence. */
+
+std::string first_Solver_of( const std::vector< std::string > & names ,
+                             const std::string & what );
 
 /*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockConfig to a Block

@@ -160,12 +160,16 @@
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-#define DYNAMIC_VARS 0
-// if 1, half of the variables are dynamic
-// WARNING: THE CODE HERE IS LIFTER STRAIGHT FROM PolthedralFunction/test.cpp
-// BUT IT DOES NOT WORK DUE TO NOT-YET-HANDLED COMPLICATIONS IN BundleSolver
-// (ALL C05Function MUST HAVE THE SAME ColVariable, AND THEREFORE ADDING AND
-// REMOVING THEM MUST ALWAYS BE DONE AT THE SAME TIME)
+#define DYNAMIC_VARS 1
+// if 1, half of the variables are dynamic and new shared variables can be
+// added to all the PolyhedralFunction components
+
+#define DYNAMIC_VAR_REMOVALS 0
+// if 1, dynamic variables can also be removed
+
+#if ( DYNAMIC_VAR_REMOVALS > 0 ) && ( DYNAMIC_VARS == 0 )
+ #error "DYNAMIC_VAR_REMOVALS requires DYNAMIC_VARS"
+#endif
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
@@ -627,7 +631,7 @@ static void ConstructObj( AbstractBlock * AB )
 
  auto x = AB->get_static_variable_v< ColVariable >( 0 );
  #if DYNAMIC_VARS > 0
-  auto xd = AB->get_dynamic_variable< ColVariable >( 0 );
+  auto xd = AB->get_dynamic_variable< ColVariable >( "xd" );
  #endif
 
  LinearFunction::v_coeff_pair cp( nvar );
@@ -646,6 +650,23 @@ static void ConstructObj( AbstractBlock * AB )
  auto obj = new FRealObjective( AB , new LinearFunction( std::move( cp ) ) );
  obj->set_sense( convex ? Objective::eMin : Objective::eMax , eNoMod );
  AB->set_objective( obj , eNoMod );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+static ColVariable * GetX( AbstractBlock * AB , Index i )
+{
+ // The logical x vector is split between a static prefix and a dynamic tail.
+ // Never index the static vector with a logical index >= nsvar.
+ if( i < nsvar )
+  return( &( *(AB->get_static_variable_v< ColVariable >( "x" )) )[ i ] );
+
+ #if DYNAMIC_VARS > 0
+  auto xd = AB->get_dynamic_variable< ColVariable >( "xd" );
+  return( & *std::next( xd->begin() , i - nsvar ) );
+ #else
+  return( nullptr );  // unreachable because nsvar == nvar
+ #endif
  }
 
 /*--------------------------------------------------------------------------*/
@@ -912,7 +933,13 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  long int seed = 0;
- Index wchg = 319;
+ Index wchg = 63;
+ #if DYNAMIC_VARS > 0
+  wchg |= 128;
+ #endif
+ #if DYNAMIC_VAR_REMOVALS > 0
+  wchg |= 256;
+ #endif
  double dens = 3;
  Index n_repeat = 40;
  Index n_change = 10;
@@ -932,7 +959,7 @@ int main( int argc , char **argv )
   default: cerr << "Usage: " << argv[ 0 ] <<
 	   " seed [wchg nvar dens #nf #rounds #chng %chng %vert]"
  		<< endl <<
-           "       wchg: what to change, coded bit-wise [319]"
+           "       wchg: what to change, coded bit-wise [" << wchg << "]"
 		<< endl <<
            "             1 = add rows, 2 = delete rows"
 		<< endl <<
@@ -943,9 +970,14 @@ int main( int argc , char **argv )
            "             32 = change linear objective"
 		<< endl <<
            "             64 = change global lower/upper bound"
-  #if DYNAMIC_VARS > 0  
+
+  #if DYNAMIC_VARS > 0
 		<< endl <<
-           "             128 = add variables, 256 = delete variables"
+           "             128 = add variables"
+  #endif
+  #if DYNAMIC_VAR_REMOVALS > 0
+		<< endl <<
+           "             256 = delete variables"
   #endif
 		<< endl <<
            "             512 = do \"abstract\" changes"
@@ -1056,7 +1088,7 @@ int main( int argc , char **argv )
   // now set the Variable, Constraint and Objective in the AbstractBlock
   LPBlock->add_static_variable( *xLP , "x" );
   #if DYNAMIC_VARS > 0
-   LPBlock->add_dynamic_variable( *xLPd );
+   LPBlock->add_dynamic_variable( *xLPd , "xd" );
   #endif
 
   if( nf ) {
@@ -1328,7 +1360,7 @@ int main( int argc , char **argv )
   // now set the Variable, Constraint and Objective in the AbstractBlock
   NDOBlock->add_static_variable( *xNDO , "x" );
   #if DYNAMIC_VARS > 0
-   NDOBlock->add_dynamic_variable( *xNDOd );
+   NDOBlock->add_dynamic_variable( *xNDOd , "xd" );
   #endif
 
   if( nf ) {
@@ -1408,10 +1440,6 @@ int main( int argc , char **argv )
  //     the nested PolyhedralFunctionBlocks know nothing about it.
  #if HAVE_CONSTRAINTS == 1
  {
-  auto LPx = dual_mode
-             ? nullptr
-             : LPBlock->get_static_variable_v< ColVariable >( "x" );
-  auto NDOx = NDOBlock->get_static_variable_v< ColVariable >( "x" );
   auto coupling = dual_mode
                   ? LPBlock->get_dynamic_constraint< FRowConstraint >(
                                                           "PolyF_coupling" )
@@ -1422,9 +1450,9 @@ int main( int argc , char **argv )
   for( Index i = 0 ; i < nvar ; ++i ) {
    const bool flip = ( dis( rg ) < 0.5 );
    if( flip ) {
-    (*NDOx)[ i ].is_positive( true , eNoMod );
-    if( LPx )
-     (*LPx)[ i ].is_positive( true , eNoMod );
+    GetX( NDOBlock , i )->is_positive( true , eNoMod );
+    if( ! dual_mode )
+     GetX( LPBlock , i )->is_positive( true , eNoMod );
     else {
      // dual mode: flip coupling[i] from equality to one-sided
      // inequality. The current setup has set_lhs(rhs) == set_rhs(rhs)
@@ -1486,10 +1514,6 @@ int main( int argc , char **argv )
  {
   const bool apply_constraints = ( ! dual_mode ) || ( nf != 0 );
 
-  auto LPx = ( ! dual_mode )
-             ? LPBlock->get_static_variable_v< ColVariable >( "x" )
-             : nullptr;
-  auto NDOx = NDOBlock->get_static_variable_v< ColVariable >( "x" );
   auto coupling = ( dual_mode && ( nf != 0 ) )
                   ? LPBlock->get_dynamic_constraint< FRowConstraint >(
                                                           "PolyF_coupling" )
@@ -1519,12 +1543,12 @@ int main( int argc , char **argv )
     const double rhs = p > 0.333 ? dis( rg ) : INF;
     if( apply_constraints ) {
      NDObnd->resize( NDObnd->size() + 1 );
-     NDObnd->back().set_variable( & (*NDOx)[ i ] );
+     NDObnd->back().set_variable( GetX( NDOBlock , i ) );
      NDObnd->back().set_lhs( lhs , eNoMod );
      NDObnd->back().set_rhs( rhs , eNoMod );
      if( ! dual_mode ) {
       LPbnd->resize( LPbnd->size() + 1 );
-      LPbnd->back().set_variable( & (*LPx)[ i ] );
+      LPbnd->back().set_variable( GetX( LPBlock , i ) );
       LPbnd->back().set_lhs( lhs , eNoMod );
       LPbnd->back().set_rhs( rhs , eNoMod );
       }
@@ -1545,9 +1569,9 @@ int main( int argc , char **argv )
    else {
     const bool is_pos = ( dis( rg ) < 0.5 );
     if( is_pos && apply_constraints ) {
-     (*NDOx)[ i ].is_positive( true , eNoMod );
+     GetX( NDOBlock , i )->is_positive( true , eNoMod );
      if( ! dual_mode )
-      (*LPx)[ i ].is_positive( true , eNoMod );
+      GetX( LPBlock , i )->is_positive( true , eNoMod );
      else {
       // dual mode + nf != 0: HC==1-style coupling flip
       if( convex )
@@ -1628,10 +1652,6 @@ int main( int argc , char **argv )
  {
   const bool apply_constraints = ( ! dual_mode ) || ( nf != 0 );
 
-  auto LPx = ( ! dual_mode )
-             ? LPBlock->get_static_variable_v< ColVariable >( "x" )
-             : nullptr;
-  auto NDOx = NDOBlock->get_static_variable_v< ColVariable >( "x" );
   auto coupling = ( dual_mode && ( nf != 0 ) )
                   ? LPBlock->get_dynamic_constraint< FRowConstraint >(
                                                           "PolyF_coupling" )
@@ -1651,7 +1671,7 @@ int main( int argc , char **argv )
   if( coupling )
    cit = coupling->begin();
 
-  for( Index i = 0 ; i < nsvar ; ++i ) {
+  for( Index i = 0 ; i < nvar ; ++i ) {
    const bool is_box = ( dis( rg ) < 0.5 );
    if( is_box ) {
     const double p = dis( rg );
@@ -1659,12 +1679,12 @@ int main( int argc , char **argv )
     const double rhs = p > 0.333 ? dis( rg ) : INF;
     if( apply_constraints ) {
      NDObnd->resize( NDObnd->size() + 1 );
-     NDObnd->back().set_variable( & (*NDOx)[ i ] );
+     NDObnd->back().set_variable( GetX( NDOBlock , i ) );
      NDObnd->back().set_lhs( lhs , eNoMod );
      NDObnd->back().set_rhs( rhs , eNoMod );
      if( ! dual_mode ) {
       LinearFunction::v_coeff_pair vars_LP( 1 );
-      vars_LP[ 0 ] = std::make_pair( & (*LPx)[ i ] , 1 );
+      vars_LP[ 0 ] = std::make_pair( GetX( LPBlock , i ) , 1 );
       LPbnd->resize( LPbnd->size() + 1 );
       LPbnd->back().set_function( new LinearFunction( std::move( vars_LP ) ) );
       LPbnd->back().set_lhs( lhs , eNoMod );
@@ -1686,9 +1706,9 @@ int main( int argc , char **argv )
    else {
     const bool is_pos = ( dis( rg ) < 0.5 );
     if( is_pos && apply_constraints ) {
-     (*NDOx)[ i ].is_positive( true , eNoMod );
+     GetX( NDOBlock , i )->is_positive( true , eNoMod );
      if( ! dual_mode )
-      (*LPx)[ i ].is_positive( true , eNoMod );
+      GetX( LPBlock , i )->is_positive( true , eNoMod );
      else {
       if( convex )
        cit->set_rhs( INF , eNoMod );
@@ -1848,9 +1868,10 @@ int main( int argc , char **argv )
  //
  // then the two problems are re-solved
  //
- // IMPORTANT NOTE: only LPBlock is changed, because UpdateSolver takes
- //                 care of intercepting all (physical) Modification and
- //                 map_forward them to NDOBlock
+ // IMPORTANT NOTE: normally only LPBlock is changed, because UpdateSolver
+ //                 maps its physical Modifications to NDOBlock. Adding active
+ //                 Variables is the exception: the new pointers differ in the
+ //                 two R3 Blocks, so both PFs are updated explicitly below.
  //
  // if there are multiple PolyhedralFunctionBlock inside LPBlock and
  // NDOBlock, at each iteration only one of them is changed; however, by
@@ -1914,7 +1935,7 @@ int main( int argc , char **argv )
      vLP = LPBr->get_static_variable< ColVariable >(
                   ( pfb_cfg & 8 ) ? "PolyF_scaled_v" : "PolyF_v" );
      #if DYNAMIC_VARS > 0
-      auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
+      auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
      #endif
 
      std::list< FRowConstraint > nc( tochange );
@@ -2132,7 +2153,7 @@ int main( int argc , char **argv )
                                               ( pfb_cfg & 8 ) ? 2 : 1 );
        }
       #if DYNAMIC_VARS > 0
-       auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
+       auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
       #endif
       auto cnst = LPBr->get_dynamic_constraint< FRowConstraint >( 0 );
 
@@ -2185,7 +2206,7 @@ int main( int argc , char **argv )
                                               ( pfb_cfg & 8 ) ? 2 : 1 );
        }
       #if DYNAMIC_VARS > 0
-       auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
+       auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
       #endif
       auto cnst = LPBr->get_dynamic_constraint< FRowConstraint >( 0 );
 
@@ -2517,50 +2538,99 @@ int main( int argc , char **argv )
    if( tochange ) {
     LOG1( "added " << tochange << " variables - " );
 
-    throw( std::logic_error( "adding variables not implemented yet" ) );
-
-    GenerateA( m , tochange );
-
-    // add them in the LP, *copying* the data
+    // The coordinates are shared by all components: first create matching
+    // Variables in the two parent Blocks, then add one independently generated
+    // column to each pair of PolyhedralFunctions. Variable-addition
+    // Modifications cannot map the new Variable pointers through UpdateSolver,
+    // so the paired PFs are updated explicitly with their matching pointers.
     std::list< ColVariable > nxLPd( tochange );
-    std::vector< Variable * > nxpLP( tochange );
+    PolyhedralFunction::VarVector nxpLP( tochange );
     auto nxit = nxLPd.begin();
     for( Index i = 0 ; i < tochange ; )
      nxpLP[ i++ ] = &(*(nxit++));
 
-    LPBlock->add_dynamic_variables(
-	      *(LPBlock->get_dynamic_variable< ColVariable >( 0 )) , nxLPd );
-
-    if( tochange == 1 )
-     LPBlock->get_PolyhedralFunction().add_variable( nxpLP[ 0 ] , A[ 0 ] );
-    else
-     LPBlock->get_PolyhedralFunction().add_variables( std::move( nxpLP ) ,
-						      MultiVector( A ) );
-
-    // add them in the NDO, letting the data go
     std::list< ColVariable > nxNDOd( tochange );
-    std::vector< Variable * > nxpNDO( tochange );
-     auto nxit = nxNDOd.begin();
-    for( Index i = 0 ; i < tochange ; )
-     nxpNDO[ i++ ] = &(*(nxit++));
+    PolyhedralFunction::VarVector nxpNDO( tochange );
+    auto nxitNDO = nxNDOd.begin();
+    for( Index i = 0 ; i < tochange ; ++i , ++nxitNDO ) {
+     nxpNDO[ i ] = & *nxitNDO;
+     if( dual_mode ) {
+      static_cast< ColVariable * >( nxpLP[ i ] )->set_value( 0 );
+      static_cast< ColVariable * >( nxpLP[ i ] )->is_fixed( true , eNoMod );
+      }
+    }
 
+    // Notify solvers of the structural additions without asking the PFB to
+    // translate them back into PF changes: the paired PFs are extended below.
+    LPBlock->add_dynamic_variables(
+          *(LPBlock->get_dynamic_variable< ColVariable >( "xd" )) , nxLPd ,
+          eNoBlck );
     NDOBlock->add_dynamic_variables(
-	    *(NDOBlock->get_dynamic_variable< ColVariable >( 0 )) , nxNDOd );
+        *(NDOBlock->get_dynamic_variable< ColVariable >( "xd" )) , nxNDOd ,
+        eNoBlck );
 
-    if( tochange == 1 )
-     NDOBlock->get_PolyhedralFunction().add_variable( nxpNDO[ 0 ] , A[ 0 ] );
-    else
-     NDOBlock->get_PolyhedralFunction().add_variables( std::move( nxpNDO ) ,
-						       std::move( A ) );
+    // In the dual representation every new PF coordinate needs its external
+    // coupling row before C05FunctionModVarsAddd is dispatched to the PFB.
+    // The fixed zero LP variable is the row's z term; each PFB then appends
+    // its own theta coefficients to the same row.
+    if( dual_mode ) {
+     auto coupling = LPBlock->get_dynamic_constraint< FRowConstraint >(
+                                                          "PolyF_coupling" );
+     std::list< FRowConstraint > nc( tochange );
+     auto cit = nc.begin();
+     for( Index h = 0 ; h < tochange ; ++h , ++cit ) {
+      cit->set_both( 0.0 , eNoMod );
+      LinearFunction::v_coeff_pair zterm;
+      zterm.emplace_back( nxpLP[ h ] , -1.0 );
+      cit->set_function( new LinearFunction( std::move( zterm ) ) , eNoMod );
+      }
+     LPBlock->add_dynamic_constraints( *coupling , nc , eNoBlck );
+     }
 
-    // update ndvar
+    const Index ncomp = nf ? LPBlock->get_number_nested_Blocks() : 1;
+    for( Index k = 0 ; k < ncomp ; ++k ) {
+     auto pfbLP = nf
+                ? static_cast< p_PFB >( LPBlock->get_nested_Block( k ) )
+                : static_cast< p_PFB >( LPBlock );
+     auto pfbNDO = nf
+                 ? static_cast< p_PFB >( NDOBlock->get_nested_Block( k ) )
+                 : static_cast< p_PFB >( NDOBlock );
+     auto & pfLP = pfbLP->get_PolyhedralFunction();
+     auto & pfNDO = pfbNDO->get_PolyhedralFunction();
+     const Index nr = pfLP.get_nrows();
+     GenerateA( nr , tochange );
+
+     if( tochange == 1 ) {
+      RealVector Aj( nr );
+      for( Index i = 0 ; i < nr ; ++i )
+       Aj[ i ] = A[ i ][ 0 ];
+      pfLP.add_variable( nxpLP[ 0 ] , Aj );
+      pfNDO.add_variable( nxpNDO[ 0 ] , std::move( Aj ) );
+      }
+     else {
+      pfLP.add_variables( PolyhedralFunction::VarVector( nxpLP ) ,
+                          MultiVector( A ) );
+      pfNDO.add_variables( PolyhedralFunction::VarVector( nxpNDO ) ,
+                           std::move( A ) );
+      }
+     }
+
+    // update dimensions
+    nvar += tochange;
     ndvar += tochange;
+
+    PANIC( ndvar ==
+           LPBlock->get_dynamic_variable< ColVariable >( "xd" )->size() );
+    PANIC( ndvar ==
+           NDOBlock->get_dynamic_variable< ColVariable >( "xd" )->size() );
     }
    }
 
+  #if DYNAMIC_VAR_REMOVALS > 0
+
   // remove variables - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  if( ( wchg & 512 ) && ( dis( rg ) <= p_change ) ) {
+  if( ( wchg & 256 ) && ( dis( rg ) <= p_change ) ) {
    Index tochange = min( ndvar , Index( dis( rg ) * n_change ) );
    if( tochange ) {
     LOG1( "removed " << tochange << " variables" );
@@ -2575,7 +2645,7 @@ int main( int argc , char **argv )
      Index stp = strt + tochange;
 
      // remove them from the LP
-     auto xLPd = NDOBlock->get_dynamic_variable< ColVariable >( 0 );
+     auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
      if( tochange == 1 )
       LPBlock->get_PolyhedralFunction().remove_variable( strt );
      else
@@ -2585,7 +2655,7 @@ int main( int argc , char **argv )
      LPBlock->remove_dynamic_variables( *xLPd , Range( strt , stp ) );
 
      // remove them from the NDO
-     auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( 0 );
+     auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( "xd" );
      if( tochange == 1 )
       NDOBlock->get_PolyhedralFunction().remove_variable( strt );
      else
@@ -2599,7 +2669,7 @@ int main( int argc , char **argv )
      Subset nms = GenerateSubset( ndvar , tochange );
 
      // remove them from the LP, *copying* names
-     auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
+     auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
      if( tochange == 1 ) {
       LPBlock->get_PolyhedralFunction().remove_variable( nms[ 0 ] );
       auto vp = &(*std::next( xLPd->begin() , nms[ 0 ] ));
@@ -2611,7 +2681,7 @@ int main( int argc , char **argv )
       }
 
      // remove them from the NDO, finally letting names go
-     auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( 0 );
+     auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( "xd" );
      if( tochange == 1 ) {
       NDOBlock->get_PolyhedralFunction().remove_variable( nms[ 0 ] );
       auto vp = &(*std::next( xNDOd->begin() , nms[ 0 ] ));
@@ -2628,6 +2698,7 @@ int main( int argc , char **argv )
     }
    }
 
+  #endif  // DYNAMIC_VAR_REMOVALS > 0
   #endif  // DYNAMIC_VARS > 0
 
   // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -

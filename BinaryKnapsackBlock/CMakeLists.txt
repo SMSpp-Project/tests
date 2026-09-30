@@ -61,8 +61,13 @@ if (TARGET SMS++::BinaryKnapsackBlock)
         # fixture: write the netCDF instances out of the curated txt
         add_test(NAME run_bk2nc4
                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_bk2nc4)
+        # the lock is shared with fetch_bk_data: both drive the build system
+        # on the same binary directory and on the same txt.tgz, and running
+        # them at once leaves the archive half written, which tar reads as
+        # "unexpected end of file"
         set_tests_properties(run_bk2nc4
-                             PROPERTIES FIXTURES_SETUP bk_nc4_generated)
+                             PROPERTIES FIXTURES_SETUP bk_nc4_generated
+                                        RESOURCE_LOCK bk_data)
 
     endif ()
 
@@ -106,7 +111,8 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     add_test(NAME fetch_bk_data
              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target fetch_bk_data)
     set_tests_properties(fetch_bk_data
-                         PROPERTIES FIXTURES_SETUP bk_data_ready)
+                         PROPERTIES FIXTURES_SETUP bk_data_ready
+                                    RESOURCE_LOCK bk_data)
 
     # the battery is given the Frank-Wolfe tester as well, when it is in the
     # build, as its fifth argument: the same knapsacks are then also solved by

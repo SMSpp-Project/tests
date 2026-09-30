@@ -88,15 +88,9 @@ add_custom_target(download_canad
         DEPENDS ${CANAD_ARCHIVE})
 
 # Custom command to extract the Canad.tgz archive if the .extracted file does not exist
-if (UNIX)
-    set(TAR_FLAGS --warning=no-unknown-keyword -xzf)
-elseif (WIN32)
-    set(TAR_FLAGS xzf)
-endif ()
-
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad/.extracted
-        COMMAND tar ${TAR_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad.tgz
+        COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad.tgz
         COMMAND echo > ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad/.extracted
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data
         COMMENT "Extracting Canad.tgz"

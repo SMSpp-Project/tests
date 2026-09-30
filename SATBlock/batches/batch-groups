@@ -11,7 +11,9 @@
 # decompositions are for, written by smspp_satgen with a planted assignment,
 # so that the hard clauses are satisfiable: every Solver of BSPar.txt, OLL on
 # the clauses and the :MILPSolver on the MILP formulation, must give the same
-# optimum, which here is not known beforehand.
+# optimum, which here is not known beforehand. Each instance is then changed
+# 5 times by the Modification of SATBlock_test -n, the cross-check being
+# repeated after each, which is how the Solver reoptimize.
 
 # run from the test directory so SATBlock_test reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -38,7 +40,7 @@ for k in 2 4; do
         inst="${dir}/k${k}_n${n}_f${f}_s${seed}.wcnf"
         "${satgen}" -k "$k" -n "$n" -f "$f" -g 2 -P -s "$seed" "${inst}" \
           || exit 1
-        run_test "$exe" -S "$par" "${inst}"
+        run_test "$exe" -S "$par" -n 5 -e "$seed" "${inst}"
       done
     done
   done

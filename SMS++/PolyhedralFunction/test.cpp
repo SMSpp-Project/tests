@@ -21,7 +21,7 @@
 /*-------------------------------- MACROS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#define LOG_LEVEL 0
+#define LOG_LEVEL 1
 // 0 = only pass/fail
 // 1 = result of each test
 // 2 = + solver log
@@ -90,7 +90,7 @@
 // SKIP_BEAT + 1, so that the input parameter still dictates the number of
 // Block solutions
 
-#define SKIP_BEAT 3
+#define SKIP_BEAT 0
 
 /*--------------------------------------------------------------------------*/
 
@@ -111,8 +111,15 @@
 
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-#define DYNAMIC_VARS 0
-// if 1, half of the variables are dynamic
+#define DYNAMIC_VARS 1
+// if 1, half of the variables are dynamic and new variables can be added
+
+#define DYNAMIC_VAR_REMOVALS 0
+// if 1, dynamic variables can also be removed
+
+#if ( DYNAMIC_VAR_REMOVALS > 0 ) && ( DYNAMIC_VARS == 0 )
+ #error "DYNAMIC_VAR_REMOVALS requires DYNAMIC_VARS"
+#endif
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
@@ -415,21 +422,6 @@ static void enforce_invariant( void )
 
 /*--------------------------------------------------------------------------*/
 
-static Subset GenerateRand( Index m , Index k )
-{
- // generate a sorted random k-vector of unique integers in 0 ... m - 1
-
- Subset rnd( m );
- std::iota( rnd.begin() , rnd.end() , 0 );
- std::shuffle( rnd.begin() , rnd.end() , rg );
- rnd.resize( k );
- sort( rnd.begin() , rnd.end() );
-
- return( std::move( rnd ) );
- }
-
-/*--------------------------------------------------------------------------*/
-
 static void ConstructLPConstraint( Index i , FRowConstraint & ci ,
 				   bool setblock = true )
 {
@@ -545,7 +537,7 @@ static inline void SetNN( ColVariable & LPxi , ColVariable & NDOxi )
 
 /*--------------------------------------------------------------------------*/
 
-#if DYNAMIC_VARS > 0
+#if DYNAMIC_VAR_REMOVALS > 0
 
 static void RemoveBox( AbstractBlock & AB , Range rng )
 {
@@ -628,7 +620,7 @@ static void RemoveBox( AbstractBlock & AB , const Subset & sbst )
 
 /*--------------------------------------------------------------------------*/
 
-#endif // DYNAMIC_VARS > 0
+#endif // DYNAMIC_VAR_REMOVALS > 0
 
 #if HAVE_CONSTRAINTS == 2
 
@@ -686,7 +678,7 @@ static inline void SetFRow_Box( ColVariable & LPxi , ColVariable & NDOxi )
 
 /*--------------------------------------------------------------------------*/
 
-#if DYNAMIC_VARS > 0
+#if DYNAMIC_VAR_REMOVALS > 0
 
 static void RemoveFRow( AbstractBlock & AB , Range rng )
 {
@@ -769,7 +761,7 @@ static void RemoveFRow( AbstractBlock & AB , const Subset & sbst )
 
 /*--------------------------------------------------------------------------*/
 
-#endif // DYNAMIC_VARS > 0
+#endif // DYNAMIC_VAR_REMOVALS > 0
 
 #endif // HAVE_CONSTRAINT == 3
 
@@ -852,6 +844,11 @@ static bool SolveBoth( void )
    ok = true; verdict = "OK(f)"; decided = true;
    }
 
+  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
+      ( rtrnNDO == Solver::kUnbounded ) ) {
+   ok = true; verdict = "OK(u)"; decided = true;
+   }
+
   if( ( ! decided ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
    /* Weird case: the LP found an optimal solution but the NDO declared the
     * problem unbounded -- the BundleSolver's heuristic unboundedness
@@ -900,11 +897,6 @@ static bool SolveBoth( void )
    ok = true; verdict = "OK(?e?)"; decided = true;
    }
 
-  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
-      ( rtrnNDO == Solver::kUnbounded ) ) {
-   ok = true; verdict = "OK(u)"; decided = true;
-   }
-
   // uniform per-instance line (S0 = LPBlock, S1 = NDOBlock) - - - - - - - - -
   auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
    if( hs )                              return( fmt_obj( fo ) );
@@ -915,7 +907,8 @@ static bool SolveBoth( void )
   print_instance_line(
    { tLP , tNDO } ,
    { tok( hsLP , rtrnLP , foLP ) , tok( hsNDO , rtrnNDO , foNDO ) } ,
-   std::numeric_limits< double >::quiet_NaN() , verdict );
+   std::numeric_limits< double >::quiet_NaN() , verdict ,
+   std::numeric_limits< double >::quiet_NaN() , LOG_LEVEL >= 1 );
   return( ok );
   }
  catch( exception &e ) {
@@ -941,7 +934,13 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  long int seed = 0;
- Index wchg = 127;
+ Index wchg = 31;
+ #if DYNAMIC_VARS > 0
+  wchg |= 32;
+ #endif
+ #if DYNAMIC_VAR_REMOVALS > 0
+  wchg |= 64;
+ #endif
  double dens = 4;  
  double p_change = 0.5;
  Index n_change = 10;
@@ -960,7 +959,7 @@ int main( int argc , char **argv )
   default: cerr << "Usage: " << argv[ 0 ] <<
 	   " seed [wchg nvar dens #rounds #chng %chng %vert]"
  		<< endl <<
-           "       wchg: what to change, coded bit-wise [127]"
+           "       wchg: what to change, coded bit-wise [" << wchg << "]"
 		<< endl <<
            "             1 = add rows, 2 = delete rows"
 		<< endl <<
@@ -969,7 +968,11 @@ int main( int argc , char **argv )
            "             16 = change global lower/upper bound"
           #if DYNAMIC_VARS > 0
 		<< endl <<
-           "             32 = add variables, 64 = delete variables"
+           "             32 = add variables"
+	  #endif
+          #if DYNAMIC_VAR_REMOVALS > 0
+		<< endl <<
+           "             64 = delete variables"
 	  #endif
 	        << endl <<
            "       nvar: number of variables [10]"
@@ -1345,7 +1348,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange ) );
+     Subset nms( GenerateRand( m , tochange , rg ) );
      Subset nms_kept( nms );  // ordered copy retained for cur_iV erase
 
      // remove them from the LP
@@ -1428,7 +1431,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange ) );
+     Subset nms( GenerateRand( m , tochange , rg ) );
 
      // preserve the existing type of the modified rows (see comment in
      // the ranged branch above)
@@ -1497,7 +1500,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange ) );
+     Subset nms( GenerateRand( m , tochange , rg ) );
 
      // change them in the LP
      Index prev = 0;
@@ -1603,8 +1606,8 @@ int main( int argc , char **argv )
     auto LPxd_it = LPxd.begin();
     auto NDOxd_it = NDOBlock->get_dynamic_variable< ColVariable >( "xd"
 								   )->begin();
-    std::next( LPxd_it , ndvar );
-    std::next( NDOxd_it , ndvar );
+    LPxd_it = std::next( LPxd_it , ndvar );
+    NDOxd_it = std::next( NDOxd_it , ndvar );
 
     #if HAVE_CONSTRAINTS == 1
      for( ; LPxd_it != LPxd.end() ; )
@@ -1647,8 +1650,12 @@ int main( int argc , char **argv )
    auto PF = static_cast< p_PF >(
 	       NDOBlock->get_objective< FRealObjective >()->get_function() );
 
-   if( tochange == 1 )
-    PF->add_variable( nxp[ 0 ] , A[ 0 ] );
+   if( tochange == 1 ) {
+    RealVector Aj( m );
+    for( Index i = 0 ; i < m ; ++i )
+     Aj[ i ] = A[ i ][ 0 ];
+    PF->add_variable( nxp[ 0 ] , Aj );
+    }
    else
     PF->add_variables( std::move( nxp ) , std::move( A ) );
 
@@ -1666,8 +1673,10 @@ int main( int argc , char **argv )
 	     NDOBlock->get_dynamic_variable< ColVariable >( "xd" )->size() );
    for( auto & ci :
  	    *(LPBlock->get_dynamic_constraint< FRowConstraint >( "cuts" )) )
-    PANIC( nvar == ci.get_num_active_var() );
+    PANIC( nvar + 1 == ci.get_num_active_var() );
    }
+
+  #if DYNAMIC_VAR_REMOVALS > 0
 
   // remove variables - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1734,7 +1743,7 @@ int main( int argc , char **argv )
      }
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
-     Subset nms( GenerateRand( ndvar , tochange ) );
+     Subset nms( GenerateRand( ndvar , tochange , rg ) );
 
      // remove them from the LP
      auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
@@ -1835,6 +1844,8 @@ int main( int argc , char **argv )
 	          *(LPBlock->get_dynamic_constraint< FRowConstraint >( 0 )) )
      PANIC( ndvar == ci.get_num_active_var() );
     }
+
+  #endif // DYNAMIC_VAR_REMOVALS > 0
   #endif
 
   // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -
