@@ -333,6 +333,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the report of `SolveAll()` starts on a line of its own, below whatever the
+  test printed before it, and pads the values to the widest of them, the
+  reference included, so that the values and the times of the Solver are
+  in columns whatever the length of their names and of their intervals
+
 - `LDCfg-easy.txt` and `BSPar-DP.txt` of `UCBlock` name the hard components
   with `vstrNoEasy` of the inner `BundleSolver`, which replaces
   `vstr_LDSl_NoEasy` of `LagrangianDualSolver`: which components are easy is
