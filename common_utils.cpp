@@ -794,12 +794,16 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  /* A Solver of a relaxation says nothing about whether the problem is
   * feasible: a lower bound of a minimization problem is a lower bound of
   * +INF as well, and the Lagrangian dual of an infeasible problem whose
-  * subproblems are feasible grows without ever proving it. Hence, when all
-  * the Solver that are not relaxations say infeasible and those that are
-  * have a one-sided bound, the infeasibility is unanimous. */
+  * subproblems are feasible grows without ever proving it. Nor does one
+  * whose interval is the whole line, such as a heuristic that has found
+  * nothing. Hence, when all the other Solver say infeasible, and these have
+  * a one-sided bound or no bound at all, the infeasibility is unanimous. */
  std::size_t nOneSided = 0;
  for( std::size_t k = 0 ; k < M ; ++k )
-  if( has_solution[ k ] && ( rd[ k ].valid != SolverReading::kBoth ) )
+  if( has_solution[ k ] &&
+      ( ( rd[ k ].valid != SolverReading::kBoth ) ||
+        ( ( rd[ k ].lb == - std::numeric_limits< double >::infinity() ) &&
+          ( rd[ k ].ub == std::numeric_limits< double >::infinity() ) ) ) )
    ++nOneSided;
  if( ( nInf > 0 ) && ( nFeas == nOneSided ) && ( nInf + nFeas == M ) &&
      std::isnan( ref ) ) {

@@ -14,7 +14,11 @@
 #                           which the batteries declare with -R
 #
 # It is BSPar.txt with the LagrangianDualSolver on top, which needs a
-# structure: a SATBlock without one has no sub-Block to relax.
+# structure: a SATBlock without one has no sub-Block to relax. The
+# IntegralityBarrierSolver of BSPar.txt is not here, since between one
+# compute() and the next the LagrangianDualSolver leaves its costs in the
+# Objective of the sub-Block, which the abstract copy that heuristic works
+# on would read.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -26,14 +30,14 @@ BlockSolverConfig     # exact type of the Configuration object
 5  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CaDiCaLSATSolver      # 1st: OLL with CaDiCaL
-MiniSATSolver         # 2nd: OLL with MiniSat
-HiGHSMILPSolver       # 3rd: the MILP formulation
-#CPXMILPSolver        #      (uncomment the available backend)
+CaDiCaLSATSolver          # 1st: OLL with CaDiCaL
+MiniSATSolver             # 2nd: OLL with MiniSat
+HiGHSMILPSolver           # 3rd: the MILP formulation
+#CPXMILPSolver            #      (uncomment the available backend)
 #GRBMILPSolver
 #SCIPMILPSolver
-BranchAndXSolver      # 4th: the enumeration on OLL
-LagrangianDualSolver  # 5th: the Lagrangian dual
+BranchAndXSolver          # 4th: the enumeration on OLL
+LagrangianDualSolver      # 5th: the Lagrangian dual
 
 5  # number of ComputeConfig in this BlockSolverConfig
 

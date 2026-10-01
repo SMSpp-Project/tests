@@ -10,6 +10,9 @@
 #   - :MILPSolver        the MILP formulation
 #   - BranchAndXSolver   an enumeration on the SATSolver with CaDiCaL, OLL
 #                        within a budget of calls in each node (BXCfg.txt)
+#   - IntegralityBarrierSolver  a heuristic, Frank-Wolfe on an integrality
+#                        penalty divided by a barrier of the slacks
+#                        (IBCfg.txt), held to the point it finds, if any
 #
 # A Solver that is not in the build is left out [see drop_missing_Solvers()
 # in common_utils.cpp]. The two SATSolver share OLLCfg.txt.
@@ -21,24 +24,26 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-4  # number of (the names of) Solver in this BlockSolverConfig
+5  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CaDiCaLSATSolver  # 1st: OLL with CaDiCaL
-MiniSATSolver     # 2nd: OLL with MiniSat
-HiGHSMILPSolver   # 3rd: the MILP formulation
-#CPXMILPSolver    #      (uncomment the available backend)
+CaDiCaLSATSolver          # 1st: OLL with CaDiCaL
+MiniSATSolver             # 2nd: OLL with MiniSat
+HiGHSMILPSolver           # 3rd: the MILP formulation
+#CPXMILPSolver            #      (uncomment the available backend)
 #GRBMILPSolver
 #SCIPMILPSolver
-BranchAndXSolver  # 4th: the enumeration on OLL
+BranchAndXSolver          # 4th: the enumeration on OLL
+IntegralityBarrierSolver  # 5th: Frank-Wolfe on a barrier
 
-4  # number of ComputeConfig in this BlockSolverConfig
+5  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *OLLCfg.txt
 *OLLCfg.txt
 *MILPCfg.txt
 *BXCfg.txt
+*IBCfg.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
