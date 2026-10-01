@@ -17,6 +17,15 @@
 #   - BranchAndXSolver in reoptimization mode (intReoptimize), which retains
 #     the tree and re-seeds from its fenced frontier at each re-solve: same
 #     optimum after every runtime Modification.
+#   - CoreDPBinaryKnapsackSolver again, warm starting each re-solve from the
+#     previous solution (intReopt 1), and also skipping the re-solve when the
+#     changes cannot have made that solution suboptimal (intReopt 2), or
+#     when a bound shows it (intReopt 3): same optimum after every
+#     Modification.
+#   - CoreDPBinaryKnapsackSolver with its optional components switched (the
+#     surrogate relaxation forced as a bound and solved, all of them off, the
+#     adaptive rules of the surrogate and the per-item dominance off): same
+#     optimum, since they only change the running time.
 #
 # The per-solver ComputeConfig are
 # factored into the *Cfg.txt fragments (the MILP/DP/CDP/GR ones are shared
@@ -32,7 +41,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-14  # number of (the names of) Solver in this BlockSolverConfig
+21  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -52,8 +61,15 @@ BranchAndXSolver                      # 11th: BX depth-first, incremental inner
 BranchAndXSolver                      # 12th: BX depth-first parallel, incremental
 BranchAndXSolver                      # 13th: BX best-first, reoptimization on
 ParallelDPBinaryKnapsackSolver        # 14th: the same DP in parallel
+CoreDPBinaryKnapsackSolver            # 15th: core DP, warm started
+CoreDPBinaryKnapsackSolver            # 16th: core DP, surrogate bound
+CoreDPBinaryKnapsackSolver            # 17th: core DP, surrogate on budget
+CoreDPBinaryKnapsackSolver            # 18th: core DP, bare enumeration
+CoreDPBinaryKnapsackSolver            # 19th: core DP, former components
+CoreDPBinaryKnapsackSolver            # 20th: core DP, warm, no-solve check
+CoreDPBinaryKnapsackSolver            # 21st: core DP, warm, bound check
 
-14  # number of ComputeConfig in this BlockSolverConfig
+21  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -378,8 +394,180 @@ intMaxThread    4 # workers
 # now all the vector-of-string parameters
 # [none]
 
-# the "extra" Configuration slot is left out on purpose: an override block
-# that ends here keeps the one of the base
+# pointer to the "extra" Configuration
+* # [none]
+
+# 15th: the core DP warm starting each re-solve from the previous solution
+*CDPCfg-reopt.txt
+
+# 16th-18th: the core DP with its optional components switched: the
+# surrogate relaxation forced from the start, as a bound and solved exactly
+# with the recursion on a budget (which with the trigger at 0 is tiny, so
+# that the fall back to the fractional bound and the retries at doubled work
+# are exercised), and the bare enumeration with all of them off
+*CDPCfg-surrbnd.txt
+
+*CDPCfg-surrsolve.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intSurrAdapt   3    # probe at s = 0 + budgeted recursion
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+*CDPCfg-bare.txt
+
+# 19th: the surrogate solved from the start, with its adaptive rules off
+# (the default probes s = 0 first in the multiplier search), and the fixing
+# by dominance against the last useless item of each side only (the default
+# marks all the items each useless one dominates), on the whole instance
+# (the default fixes the items around the break item that cannot improve)
+*CDPCfg-surrsolve.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+3  # number of integer parameters
+
+# now all the integer parameters
+intSurrAdapt    0   # plain binary search, unbounded recursion
+intDominanceFix 1   # dominance against the last useless item only
+intLazyCore     0   # the whole instance sorted, no fixed core
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 20th: the warm start of the 15th, plus the previous solution returned with
+# no solve when the changes since cannot have made it suboptimal
+*CDPCfg-reopt.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intReopt 2   # warm start + no-solve optimality check
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 21st: as the 20th, and the previous solution also returned when some
+# profit changed against it but the Dantzig bound of flipping each such item
+# cannot beat it
+*CDPCfg-reopt.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intReopt 3   # as 2 + bound test of the suspect items
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
