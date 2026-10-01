@@ -1,0 +1,52 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  OLLCfg-restart.txt - - - - - - - - - - - - -
+#
+# The ComputeConfig of the second SATSolver of BSPar.txt and BSPar-LD.txt:
+# that of OLLCfg.txt with the SAT solver made anew as soon as OLL has grown
+# past what it made in the first compute() with it, and with the cores only
+# trimmed, not minimized, so that the rounds of the batteries go through
+# the paths the first SATSolver does not.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*OLLCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+2 # number of integer parameters
+
+intMaxSATRestart   1 # a new SAT solver when OLL has grown past the first
+intMaxSATMinBudget 0 # the cores are not minimized
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END OLLCfg-restart.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

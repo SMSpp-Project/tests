@@ -5,8 +5,9 @@
 # its physical representation and those of its abstract one, i.e., of its
 # MILP formulation, which must give the same optimum (see batches/):
 #
-#   - CaDiCaLSATSolver   OLL on the clauses, with CaDiCaL
-#   - MiniSATSolver      OLL on the clauses, with MiniSat
+#   - CaDiCaLSATSolver   OLL on the clauses, with CaDiCaL (OLLCfg.txt)
+#   - MiniSATSolver      OLL on the clauses, with MiniSat, the SAT solver
+#                        made anew as OLL grows (OLLCfg-restart.txt)
 #   - :MILPSolver        the MILP formulation
 #   - BranchAndXSolver   an enumeration on the SATSolver with CaDiCaL, OLL
 #                        within a budget of calls in each node (BXCfg.txt)
@@ -15,7 +16,7 @@
 #                        (IBCfg.txt), held to the point it finds, if any
 #
 # A Solver that is not in the build is left out [see drop_missing_Solvers()
-# in common_utils.cpp]. The two SATSolver share OLLCfg.txt.
+# in common_utils.cpp].
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -40,7 +41,7 @@ IntegralityBarrierSolver  # 5th: Frank-Wolfe on a barrier
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *OLLCfg.txt
-*OLLCfg.txt
+*OLLCfg-restart.txt
 *MILPCfg.txt
 *BXCfg.txt
 *IBCfg.txt

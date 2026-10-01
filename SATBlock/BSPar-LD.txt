@@ -7,7 +7,8 @@
 # relaxes the rows of the father and solves the sub-SATBlock by OLL:
 #
 #   - CaDiCaLSATSolver      OLL on the clauses, with CaDiCaL
-#   - MiniSATSolver         OLL on the clauses, with MiniSat
+#   - MiniSATSolver         OLL on the clauses, with MiniSat, the SAT
+#                           solver made anew as OLL grows
 #   - :MILPSolver           the MILP formulation, sub-Block included
 #   - BranchAndXSolver      an enumeration on the SATSolver with CaDiCaL
 #   - LagrangianDualSolver  the Lagrangian dual (LDCfg.txt), a lower bound,
@@ -15,10 +16,11 @@
 #
 # It is BSPar.txt with the LagrangianDualSolver on top, which needs a
 # structure: a SATBlock without one has no sub-Block to relax. The
-# IntegralityBarrierSolver of BSPar.txt is not here, since between one
-# compute() and the next the LagrangianDualSolver leaves its costs in the
-# Objective of the sub-Block, which the abstract copy that heuristic works
-# on would read.
+# IntegralityBarrierSolver of BSPar.txt is not here, since the r of the
+# clauses added to a sub-Block after the LagrangianDualSolver has been
+# registered lose their weight in its Objective when the LagBFunction
+# brings back the original costs, which the abstract copy that heuristic
+# works on would read.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -43,7 +45,7 @@ LagrangianDualSolver      # 5th: the Lagrangian dual
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *OLLCfg.txt
-*OLLCfg.txt
+*OLLCfg-restart.txt
 *MILPCfg.txt
 *BXCfg.txt
 *LDCfg.txt
