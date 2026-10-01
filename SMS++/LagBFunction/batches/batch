@@ -51,4 +51,51 @@ for what in 511 1023 1535 2047 ; do
   done
 done
 
+# bit 11 (= 2048) adds at runtime a dual_pair to a single LagBFunction on
+# an x it does not have (there are some after a removal by bit 10, or from
+# setup with bit 9): with nf = 0 and no other LagBFunction having that x it
+# is a new coordinate of the master, otherwise a coordinate the master
+# already has, the linear objective and the PolyhedralFunction having all
+# the x. The two values cover both setups:
+#   3583 = dense at setup + runtime removal and addition   (1535 | 2048)
+#   4095 = sparse at setup + runtime removal and addition  (2047 | 2048)
+# nf = 0 with 3 LagBFunction is left out under 4095, since then the dual
+# pairs of each LagBFunction are not in the order of the global Variable,
+# which BundleSolver::set_Block() refuses; nf = 0 with a single easy
+# LagBFunction is left out as well, since the instances are then often
+# unbounded along a direction of so small a slope that the test on the
+# norm of z* takes the point for optimal, as happens also without any
+# change of the coordinates
+
+for what in 3583 4095 ; do
+  for nf in -2 -11 0; do
+
+    case $nf in
+      -2)  ts="1" ;;
+      -11) ts="3" ;;
+      0)   if [ $what -eq 3583 ]; then ts="1 3"; else ts="1"; fi ;;
+    esac
+
+    for t in $ts; do
+      # z = 1 is LagBFunction treated as non-easy, -1 is treated as easy
+      for z in 1 -1; do
+        let nt=t*z
+        if [ $nf -eq 0 ] && [ $nt -eq -1 ]; then
+          continue
+        fi
+
+        for size in 2 10 50; do
+          for dens in 3 1.1; do
+            for (( seed = 0 ; seed < 20 ; seed++ )); do
+
+              run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter"
+
+            done
+          done
+        done
+      done
+    done
+  done
+done
+
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

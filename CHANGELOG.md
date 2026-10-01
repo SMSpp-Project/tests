@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- bit 11 (2048) of the `LagBFunction` tester adds at runtime a dual pair to
+  a single `LagBFunction` on an x that it does not have, as one does when
+  dualizing a constraint born during the search, mirroring it on the LP
+  side; the x is a new coordinate of the master when no other component
+  has it, and one the master already has otherwise. `batches/batch` runs it
+  with the dense and the sparse setup (3583 and 4095), with and without
+  the linear objective and the PolyhedralFunction (`nf` = -2, -11, 0), and
+  with hard and easy components
+
 - the testers of `PolyhedralFunction` and `PolyhedralFunctionBlock` remove
   dynamic Variable as well as adding them (`DYNAMIC_VAR_REMOVALS` is 1): in
   the dual representation the coupling rows of the removed coordinates go

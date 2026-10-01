@@ -1004,6 +1004,12 @@ int main( int argc , char **argv )
 		<< endl <<
            "                 exercises dense->sparse auto-promotion + "
                                               "per-Function Mod dispatch)"
+		<< endl <<
+           "            11 = add one dual_pair to a single LagBFunction "
+                                              "(naked; on a new"
+		<< endl <<
+           "                 coordinate of the master or on one it "
+                                              "already has)"
   #if DYNAMIC_VARS > 0
 		<< endl <<
            "             (with DYNAMIC_VARS, bit 7 = add variables, "
@@ -2241,6 +2247,56 @@ int main( int argc , char **argv )
      const auto idx = lf->is_active( & (*xLP)[ j ] );
      if( idx < lf->get_num_active_var() )
       lf->modify_coefficient( idx , 0.0 );
+     }
+    }
+   }
+
+  // per-LagBFunction dual_pair addition- - - - - - - - - - - - - - - - - - -
+  //
+  // bit 11: add to THIS LBF one dual_pair ( xNDO[ j ] , \sum_i f[ i ][ j ] )
+  // on an x_j that it does not have, and mirror it by putting back the
+  // - xLP[ j ] coefficient in every (i, j) constraint on the LPBlock side.
+  // Such j exist after a removal by bit 10, or from setup with bit 9. If no
+  // other component has x_j it comes in as a new coordinate of the master,
+  // otherwise this LBF starts depending on a coordinate the master already
+  // has. The C05FunctionModVarsAddd is issued by add_dual_pairs() with its
+  // default ModParam, as a user adding a dual_pair to a LagBFunction with
+  // the Solver attached does.
+
+  if( LPTr && ( wchg & 2048 ) && ( dis( rg ) <= p_change ) ) {
+   auto xNDO = NDOBlock->get_static_variable_v< ColVariable >( 0 );
+   Subset cand;
+   for( Index j = 0 ; j < nvar ; ++j )
+    if( LBF->is_active( & (*xNDO)[ j ] ) >= LBF->get_num_active_var() )
+     cand.push_back( j );
+
+   if( ! cand.empty() ) {
+    const Index j = cand[ Index( dis( rg ) * cand.size() ) ];
+
+    LOG1( "added dual_pair (j=" << j << ") to LBF - " );
+
+    // NDOBlock side: the dual_pair on the flow variables entering j
+    auto f = NDOTr->get_static_variable< ColVariable , 2 >( "f" );
+    v_coeff_pair cfj( nvar );
+    for( Index i = 0 ; i < nvar ; ++i )
+     cfj[ i ] = std::make_pair( & (*f)[ i ][ j ] , 1.0 );
+
+    LagBFunction::v_dual_pair lp;
+    lp.emplace_back( & (*xNDO)[ j ] , new LinearFunction( std::move( cfj ) ) );
+    LBF->add_dual_pairs( std::move( lp ) );
+
+    // LPBlock side: - xLP[ j ] back in every (i, j) constraint of "pc",
+    // modifying the coefficient zeroed by bit 10 or adding the term that
+    // bit 9 left out
+    auto pc = LPTr->get_static_constraint< FRowConstraint , 2 >( "pc" );
+    auto xLP = LPBlock->get_static_variable_v< ColVariable >( "x" );
+    for( Index i = 0 ; i < nvar ; ++i ) {
+     auto lf = static_cast< p_LF >( (*pc)[ i ][ j ].get_function() );
+     const auto idx = lf->is_active( & (*xLP)[ j ] );
+     if( idx < lf->get_num_active_var() )
+      lf->modify_coefficient( idx , -1.0 );
+     else
+      lf->add_variable( & (*xLP)[ j ] , -1.0 );
      }
     }
    }
