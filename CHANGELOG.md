@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the tester of `SATBlock` applies the BlockConfig of `-B`, e.g., giving
+  the `SATBlock` a structure out of the groups of its variables, and does
+  not check the solution of the Solver declared with `-R`; `batch-structure`
+  gives the instances of `smspp_satgen` both structures (`BPar-R.txt`,
+  `BPar-D.txt`) and cross-checks the Solver of `BSPar-LD.txt`, i.e., those of
+  `BSPar.txt` and the `LagrangianDualSolver` of the rows of the father,
+  whose bound has to be below their optimum
+
 - the suite of `SATBlock`: its tester reads a `SATBlock` out of a CNF, WCNF
   or netCDF file and cross-checks, with `SolveAll()`, the Solver of its
   physical representation (OLL, with CaDiCaL and with MiniSat) with those of

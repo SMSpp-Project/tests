@@ -18,6 +18,12 @@
  * clauses it violates plus the costs of its true variables, has to be the
  * upper bound the Solver declares, or less.
  *
+ * With -B a BlockConfig is applied to the SATBlock before anything else,
+ * e.g., giving it a structure out of the groups of its variables [see
+ * SATBlock::set_structure()], under which the Solver that relax it, such as
+ * the LagrangianDualSolver, are declared with -R: their bound is
+ * cross-checked, the solution they write is not.
+ *
  * With -n the instance is then changed n times, each time by a Modification
  * drawn at random (with the seed of -e) and followed by the cross-check
  * again, the Solver staying registered so that each of them reoptimizes as
@@ -126,6 +132,17 @@ int main( int argc , char ** argv )
 
  auto sat = read_SATBlock();
 
+ if( ! bconf_file.empty() ) {
+  Configuration * bc = Configuration::deserialize( bconf_file );
+  if( ! bc ) {
+   std::cerr << "Error: cannot load " << bconf_file << std::endl;
+   delete sat;
+   exit( 1 );
+   }
+  b_config_Block( sat , bc , bconf_file );
+  delete bc;
+  }
+
  // the Solver of the abstract representation need it, the others ignore it
  sat->generate_abstract_variables();
  sat->generate_abstract_constraints();
@@ -151,7 +168,7 @@ int main( int argc , char ** argv )
  bool solutions_ok = true;
  auto classify = [ & ]( Solver * s , std::size_t k ) {
   auto reading = read_bounds( s , k );
-  if( s->has_var_solution() ) {
+  if( s->has_var_solution() && ! is_relaxation( k ) ) {
    s->get_var_solution();
    const double ub = s->get_ub();
    const double w = sat->get_objective_value();

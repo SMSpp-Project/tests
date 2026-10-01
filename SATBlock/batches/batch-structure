@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# usage: batch-structure < exe file > < par file > < log file > < satgen >
+#        < exe file > = path of the executable, default SATBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar-LD.txt
+#        < log file > = name of log file, default no log
+#        < satgen >   = path of smspp_satgen, default smspp_satgen
+#
+# Cross-check on random weighted partial MaxSAT instances made of groups of
+# clauses bound by a fraction of linking clauses, written by smspp_satgen
+# with a planted assignment and the groups of the variables, each one given
+# both structures out of its groups [see SATBlock::set_structure()]: the
+# relaxation of BPar-R.txt and the decomposition of BPar-D.txt. The Solver
+# of BSPar-LD.txt that see the whole instance must give the same optimum,
+# and the LagrangianDualSolver, the last one, declared to solve a relaxation
+# by -R, a lower bound on it. The physical representation of a SATBlock
+# with a structure does not change, hence no rounds of Modification.
+
+# run from the test directory so SATBlock_test reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./SATBlock_test
+DEFAULT_PAR=BSPar-LD.txt
+parse_batch_args "$@"
+satgen="${4:-smspp_satgen}"
+
+# the instances are written in a directory of their own, removed at the end
+dir="$(mktemp -d)"
+trap 'rm -rf "${dir}"' EXIT
+
+# sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for k in 2 4; do
+  for n in 10 20; do
+    for f in 0.05 0.2; do
+      for seed in 1 2; do
+        inst="${dir}/k${k}_n${n}_f${f}_s${seed}.nc4"
+        "${satgen}" -k "$k" -n "$n" -f "$f" -g 2 -P -s "$seed" "${inst}" \
+          || exit 1
+        for bcf in BPar-R.txt BPar-D.txt; do
+          run_test "$exe" -B "$bcf" -S "$par" -R ",,,,r" "${inst}"
+        done
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

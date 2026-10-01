@@ -28,6 +28,11 @@ if (TARGET SMS++::SATBlock)
     if (TARGET SMS++::BranchAndXSolver)
         target_link_libraries(SATBlock_test PRIVATE SMS++::BranchAndXSolver)
     endif ()
+    # the Lagrangian dual of a SATBlock with a structure [see batch-structure]
+    if (TARGET SMS++::LagrangianDualSolver AND TARGET SMS++::BundleSolver)
+        target_link_libraries(SATBlock_test PRIVATE
+                              SMS++::LagrangianDualSolver SMS++::BundleSolver)
+    endif ()
 
     smspp_install(SATBlock_test)
 
@@ -47,12 +52,17 @@ if (TARGET SMS++::SATBlock)
         set(_satgen "$<TARGET_FILE:satgen>")
     endif ()
 
-    foreach (BATCH_NAME batch-mse batch-groups)
+    # each battery with its BlockSolverConfig
+    foreach (BATCH batch-mse:BSPar.txt batch-groups:BSPar.txt
+                   batch-structure:BSPar-LD.txt)
+        string(REPLACE ":" ";" BATCH "${BATCH}")
+        list(GET BATCH 0 BATCH_NAME)
+        list(GET BATCH 1 BATCH_PAR)
         if (UNIX)
             add_test(NAME SATBlock_test/batches/${BATCH_NAME}
                      COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}
                              ${CMAKE_CURRENT_BINARY_DIR}/SATBlock_test
-                             BSPar.txt "" ${_satgen}
+                             ${BATCH_PAR} "" ${_satgen}
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME SATBlock_test/batches/${BATCH_NAME}
@@ -60,7 +70,7 @@ if (TARGET SMS++::SATBlock)
                      COMMAND "C:/Program Files/Git/bin/bash.exe"
                              "${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}"
                              "$<TARGET_FILE:SATBlock_test>"
-                             BSPar.txt "" ${_satgen}
+                             ${BATCH_PAR} "" ${_satgen}
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
     endforeach ()
