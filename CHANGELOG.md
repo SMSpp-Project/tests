@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whose bound has to be below their optimum, also after 3 rounds of
   Modification that keep the structure
 
+- the suite of `SatellitesBlock`: its tester loads an instance of the
+  Satellite Constellation Design Problem into the `Block` given with `-b`
+  (`ConstellationBlock`, `DiscreteConstellationBlock` or `MultiTargetBlock`)
+  and cross-checks, with `SolveAll()`, a `:MILPSolver` on the whole tree with
+  the `LagrangianDualSolver`, whose sub-Block get their Solver by classname
+  from a meta-`BlockSolverConfig` (`DiscreteSatelliteSolver` or a
+  `:MILPSolver`); `batch` runs it on the instances of the module, against
+  their optimum, the Lagrangian dual being declared a relaxation, and
+  stopped after 50 iterations on `MultiTargetBlock` (`BSPar-target.txt`)
+
 - the suite of `SATBlock`: its tester reads a `SATBlock` out of a CNF, WCNF
   or netCDF file and cross-checks, with `SolveAll()`, the Solver of its
   physical representation (OLL, with CaDiCaL and with MiniSat) with those of

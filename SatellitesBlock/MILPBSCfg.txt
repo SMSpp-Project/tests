@@ -1,0 +1,33 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MILPBSCfg.txt - - - - - - - - - - - - - - - -
+#
+# BlockSolverConfig of a SatelliteBlock, the sub-Block of a
+# ConstellationBlock, and of a SingleTargetBlock, the sub-Block of a
+# MultiTargetBlock, solved by a :MILPSolver. The ad hoc SatelliteSolver is
+# not used for the SatelliteBlock: it fixes the observability threshold to
+# its maximum, hence its value is not a lower bound on the sub-problem, and
+# neither is the Lagrangian dual computed with it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of 1st Solver
+#CPXMILPSolver        #   (uncomment the available backend)
+#SCIPMILPSolver
+#HiGHSMILPSolver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*MILPCfg.txt          # ComputeConfig of the :MILPSolver
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MILPBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
