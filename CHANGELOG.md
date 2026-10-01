@@ -351,6 +351,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- in CI, `MCFBlock/batches/batch` and `batch-dense` leave out the
+  Frank-Wolfe decomposition, a single run of which takes the best part of an
+  hour there (`batch-small` runs it on the small instances),
+  `LagBFunction/batches/batch` runs 3 seeds of the 20, and
+  `UCBlock/batches-tub/batch-reserve` one instance in 10 of each family, so
+  that each fits in the time limit of a test of the nightly pipeline
+
 - the report of `SolveAll()` starts on a line of its own, below whatever the
   test printed before it, and pads the values to the widest of them, the
   reference included, so that the values and the times of the Solver are
@@ -824,6 +831,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   already asks for it
 
 ### Fixed
+
+- `TSSB_test/batches/batch-mmcf` requires the fixture `canad_fetched`, so
+  that the Canad instances its generator reads are there when it starts
+  rather than when `fetch_canad_data` happens to have run before it
+
+- `batch-p4r` declares the interval of the Lagrangian dual on L_B_N_1, 2.5e-3
+  wide while the bundle reports kOK, as it does for L_B_C_24
 
 - the tests of `BinaryKnapsackBlock` and `test_tudps` perturb the solution
   they read back only in the Variable that are not fixed, as writing a

@@ -73,7 +73,10 @@ done   # type
 # :MILPSolver of the same configuration. Only a few of the instances above are
 # run this way, these being the large ones.
 
-if [ -n "${fwexe}" ]; then
+# in CI the decomposition is not run here: a single run of it on these
+# instances takes the best part of an hour there, and batch-small runs the
+# whole lineup of it on the small instances
+if [ -n "${fwexe}" ] && [ -z "$CI" ]; then
 
   # the reduced lineup, the instances of this battery carrying some 65
   # thousand arcs each [see batch, and batch-small for the whole of it]
