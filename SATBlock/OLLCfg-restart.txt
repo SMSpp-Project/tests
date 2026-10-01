@@ -3,9 +3,9 @@
 #
 # The ComputeConfig of the second SATSolver of BSPar.txt and BSPar-LD.txt:
 # that of OLLCfg.txt with the SAT solver made anew as soon as OLL has grown
-# past what it made in the first compute() with it, and with the cores only
-# trimmed, not minimized, so that the rounds of the batteries go through
-# the paths the first SATSolver does not.
+# past what it made in the first compute() with it, with the cores only
+# trimmed, not minimized, and extracted weight-aware, so that the rounds of
+# the batteries go through the paths the first SATSolver does not.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,10 +14,11 @@
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-2 # number of integer parameters
+3 # number of integer parameters
 
 intMaxSATRestart   1 # a new SAT solver when OLL has grown past the first
 intMaxSATMinBudget 0 # the cores are not minimized
+intMaxSATWCE       1 # the cores extracted weight-aware
 
 0 # number of double parameters
 
