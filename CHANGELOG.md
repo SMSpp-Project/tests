@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   formulation whose oracle is the linear relaxation by a `:MILPSolver`
   (`IBCfg.txt`, `FWIBCfg.txt`, `LPCfg.txt`)
 
+- `MMCFBlock/MMCFND_test` with `batches/batch-nd`: the network design problem
+  of `MMCFNetworkDesignBlock`, solved monolithic by the MILP Solver and in
+  Benders form, the two optimal values compared on the p33 instances with 3
+  and 5 commodities
+
 - the tester of `SATBlock` applies the BlockConfig of `-B`, e.g., giving
   the `SATBlock` a structure out of the groups of its variables, and does
   not check the solution of the Solver declared with `-R`; `batch-structure`
@@ -796,6 +801,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   already asks for it
 
 ### Fixed
+
+- the tests of `BinaryKnapsackBlock` and `test_tudps` perturb the solution
+  they read back only in the Variable that are not fixed, as writing a
+  different value in a fixed `ColVariable` throws
 
 - the cross-check of `SolveAll()` declares the infeasibility unanimous when
   all the Solver that are not relaxations say infeasible and those that

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# usage: batch-nd < exe file >
+#        < exe file > = path of the executable file, default ./MMCFND_test
+#
+# runs two small Network Design instances, the Canad p33 with its first 3
+# and 5 commodities (data-nd), in the monolithic formulation (BPar-ND.txt,
+# BSPar-ND.txt) against the Benders one (BPar-ND-Ben.txt,
+# BSPar-ND-Ben.txt), whose cuts come from a LagrangianDualSolver of the
+# MMCFBlock (LDBSCfg-ND.txt), and the cuts at random y against the cost of
+# the flow there
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=data-nd
+
+MMCFND_test=${1:-./MMCFND_test}
+
+for k in 3 5; do
+
+  run_test "$MMCFND_test" "${DATADIR}/p33-k$k.dat" -t s -m BPar-ND.txt \
+           -M BSPar-ND.txt -b BPar-ND-Ben.txt -B BSPar-ND-Ben.txt -r 5 -e $k
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

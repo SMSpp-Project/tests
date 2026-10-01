@@ -1,0 +1,48 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  LDBSCfg-ND.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of the BlockSolverConfig of the hidden copy of the
+# MMCFBlock of a MMCFNetworkDesignBlock in the Benders formulation [see
+# BPar-ND-Ben.txt]: a LagrangianDualSolver relaxing the mutual capacity
+# constraints, whose subproblems, one per commodity, are solved by a
+# :MCFSolver [see LPBSCfg-F.txt], as the 2nd Solver of BSPar.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+1  # the BlockSolverConfig is a "differential" one
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+LagrangianDualSolver  # name of 1st Solver
+1  # number of ComputeConfig in this BlockSolverConfig
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*LDCfg.txt +
+1  # f_diff == 1 ==> only the entries listed below are changed
+3  # number of integer parameters
+# now all the integer parameters
+int_InnerS_WVarSCfg 0 # use first Configuration in the "cache"
+int_LDSlv_iBCopy    0 # 1 if sub-Block must be R3B-copied
+intPushCostToOwner  0 # the value of intPushCostToOwner for the LagBF
+0  # number of double parameters
+# now all the double parameters
+# [none]
+1  # number of string parameters
+# now all the string parameters
+str_LagBF_BSCfg     LPBSCfg-F.txt # Flow relaxation, using a :MCFSolver
+0  # number of vector-of-int parameters
+# now all the vector-of-int parameters
+# [none]
+0  # number of vector-of-double parameters
+# now all the vector-of-double parameters
+# [none]
+0  # number of vector-of-string parameters
+# now all the vector-of-string parameters
+# [none]
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END LDBSCfg-ND.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
