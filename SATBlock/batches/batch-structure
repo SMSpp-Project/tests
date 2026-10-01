@@ -13,8 +13,10 @@
 # relaxation of BPar-R.txt and the decomposition of BPar-D.txt. The Solver
 # of BSPar-LD.txt that see the whole instance must give the same optimum,
 # and the LagrangianDualSolver, the last one, declared to solve a relaxation
-# by -R, a lower bound on it. The physical representation of a SATBlock
-# with a structure does not change, hence no rounds of Modification.
+# by -R, a lower bound on it. Each instance is then changed 3 times by the
+# Modification of SATBlock_test -n, which keep the structure, the
+# cross-check being repeated after each, which is how the Solver, the
+# LagrangianDualSolver included, reoptimize.
 
 # run from the test directory so SATBlock_test reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -42,7 +44,8 @@ for k in 2 4; do
         "${satgen}" -k "$k" -n "$n" -f "$f" -g 2 -P -s "$seed" "${inst}" \
           || exit 1
         for bcf in BPar-R.txt BPar-D.txt; do
-          run_test "$exe" -B "$bcf" -S "$par" -R ",,,,r" "${inst}"
+          run_test "$exe" -B "$bcf" -S "$par" -R ",,,,r" -n 3 -e "$seed" \
+            "${inst}"
         done
       done
     done

@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gives the instances of `smspp_satgen` both structures (`BPar-R.txt`,
   `BPar-D.txt`) and cross-checks the Solver of `BSPar-LD.txt`, i.e., those of
   `BSPar.txt` and the `LagrangianDualSolver` of the rows of the father,
-  whose bound has to be below their optimum
+  whose bound has to be below their optimum, also after 3 rounds of
+  Modification that keep the structure
 
 - the suite of `SATBlock`: its tester reads a `SATBlock` out of a CNF, WCNF
   or netCDF file and cross-checks, with `SolveAll()`, the Solver of its
@@ -780,6 +781,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   already asks for it
 
 ### Fixed
+
+- the cross-check of `SolveAll()` declares the infeasibility unanimous when
+  all the Solver that are not relaxations say infeasible and those that
+  are have a one-sided bound, which is no claim of feasibility (the
+  Lagrangian dual of an infeasible problem with feasible subproblems grows
+  without ever proving it), rather than taking them for a disagreement
 
 - a tester picks the `:Solver` it solves with through `first_Solver_of()` of
   `common_utils`, which returns the first of the given names that the factory
