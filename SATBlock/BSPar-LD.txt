@@ -7,14 +7,20 @@
 # relaxes the rows of the father and solves the sub-SATBlock by OLL:
 #
 #   - CaDiCaLSATSolver      OLL on the clauses, with CaDiCaL
-#   - MiniSATSolver         OLL on the clauses, with MiniSat
+#   - MiniSATSolver         OLL on the clauses, with MiniSat, the SAT
+#                           solver made anew as OLL grows
 #   - :MILPSolver           the MILP formulation, sub-Block included
 #   - BranchAndXSolver      an enumeration on the SATSolver with CaDiCaL
 #   - LagrangianDualSolver  the Lagrangian dual (LDCfg.txt), a lower bound,
 #                           which the batteries declare with -R
 #
 # It is BSPar.txt with the LagrangianDualSolver on top, which needs a
-# structure: a SATBlock without one has no sub-Block to relax.
+# structure: a SATBlock without one has no sub-Block to relax. The
+# IntegralityBarrierSolver of BSPar.txt is not here, since the r of the
+# clauses added to a sub-Block after the LagrangianDualSolver has been
+# registered lose their weight in its Objective when the LagBFunction
+# brings back the original costs, which the abstract copy that heuristic
+# works on would read.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -26,20 +32,20 @@ BlockSolverConfig     # exact type of the Configuration object
 5  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-CaDiCaLSATSolver      # 1st: OLL with CaDiCaL
-MiniSATSolver         # 2nd: OLL with MiniSat
-HiGHSMILPSolver       # 3rd: the MILP formulation
-#CPXMILPSolver        #      (uncomment the available backend)
+CaDiCaLSATSolver          # 1st: OLL with CaDiCaL
+MiniSATSolver             # 2nd: OLL with MiniSat
+HiGHSMILPSolver           # 3rd: the MILP formulation
+#CPXMILPSolver            #      (uncomment the available backend)
 #GRBMILPSolver
 #SCIPMILPSolver
-BranchAndXSolver      # 4th: the enumeration on OLL
-LagrangianDualSolver  # 5th: the Lagrangian dual
+BranchAndXSolver          # 4th: the enumeration on OLL
+LagrangianDualSolver      # 5th: the Lagrangian dual
 
 5  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *OLLCfg.txt
-*OLLCfg.txt
+*OLLCfg-restart.txt
 *MILPCfg.txt
 *BXCfg.txt
 *LDCfg.txt

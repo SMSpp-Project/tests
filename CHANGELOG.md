@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Variable, and its ranged removal from the rows of the LP issues the
   Modification it skipped
 
+- the `IntegralityBarrierSolver` of FrankWolfeSolver in the cross-check of
+  `SATBlock` (`BSPar.txt`), a heuristic on the MILP
+  formulation whose oracle is the linear relaxation by a `:MILPSolver`
+  (`IBCfg.txt`, `FWIBCfg.txt`, `LPCfg.txt`)
+
+- `MMCFBlock/MMCFND_test` with `batches/batch-nd`: the network design problem
+  of `MMCFNetworkDesignBlock`, solved monolithic by the MILP Solver and in
+  Benders form, the two optimal values compared on the p33 instances with 3
+  and 5 commodities
+
 - the tester of `SATBlock` applies the BlockConfig of `-B`, e.g., giving
   the `SATBlock` a structure out of the groups of its variables, and does
   not check the solution of the Solver declared with `-R`; `batch-structure`
@@ -331,6 +341,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dblRelAcc therefore says nothing about what it returns
 
 ### Changed
+
+- the report of `SolveAll()` starts on a line of its own, below whatever the
+  test printed before it, and pads the values to the widest of them, the
+  reference included, so that the values and the times of the Solver are
+  in columns whatever the length of their names and of their intervals
 
 - `LDCfg-easy.txt` and `BSPar-DP.txt` of `UCBlock` name the hard components
   with `vstrNoEasy` of the inner `BundleSolver`, which replaces
@@ -801,11 +816,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the tests of `BinaryKnapsackBlock` and `test_tudps` perturb the solution
+  they read back only in the Variable that are not fixed, as writing a
+  different value in a fixed `ColVariable` throws
+
 - the cross-check of `SolveAll()` declares the infeasibility unanimous when
   all the Solver that are not relaxations say infeasible and those that
   are have a one-sided bound, which is no claim of feasibility (the
   Lagrangian dual of an infeasible problem with feasible subproblems grows
-  without ever proving it), rather than taking them for a disagreement
+  without ever proving it), rather than taking them for a disagreement, and
+  so for a Solver whose interval is the whole line, such as a heuristic that
+  has found nothing
 
 - a tester picks the `:Solver` it solves with through `first_Solver_of()` of
   `common_utils`, which returns the first of the given names that the factory

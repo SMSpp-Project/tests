@@ -7,6 +7,12 @@
 #
 #   - :MILPSolver                         exact MIP (the reference optimum)
 #   - CoreDPBinaryKnapsackSolver          exact core / non-dominated-state DP
+#     re-solving with all its reoptimization (intReopt 3: the previous
+#     solution as the incumbent, and returned with no solve when the changes
+#     or a bound show that it is still optimal)
+#   - RECORDBinaryKnapsackSolver, which hands the core to RECORD under the
+#     same reoptimization; a build without RECORD leaves it out of the run,
+#     which says so [see Solver::has_Solver()]
 #   - GreedyRelaxationBinaryKnapsackSolver  relaxation: must BRACKET the optimum
 #   - BranchAndXSolver, once per exploration mode (best-/depth-/breadth-first,
 #     parallel depth-first, per-node parallel solvers): all are exact and must
@@ -18,9 +24,9 @@
 #     the tree and re-seeds from its fenced frontier at each re-solve: same
 #     optimum after every runtime Modification.
 #
-# The per-solver ComputeConfig are
-# factored into the *Cfg.txt fragments (the MILP/DP/CDP/GR ones are shared
-# with BSPar-mixed.txt) and the BX modes share BX-baseCfg.txt, overriding
+# The per-solver ComputeConfig are factored into the *Cfg.txt fragments (the
+# MILP/DP/GR ones are shared with BSPar-mixed.txt, the core DP and RECORD
+# share CDPCfg-reopt3.txt) and the BX modes share BX-baseCfg.txt, overriding
 # only the mode-specific parameters via '*BX-baseCfg.txt +': no duplication.
 # NOTE: an overriding ComputeConfig that is not the last in the list must end
 # with the '*' extra-Configuration pointer, or the parser runs into the next.
@@ -32,7 +38,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-14  # number of (the names of) Solver in this BlockSolverConfig
+15  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -40,7 +46,7 @@ HiGHSMILPSolver                       # 1st: the exact reference optimum
 #GRBMILPSolver
 #SCIPMILPSolver
 DPBinaryKnapsackSolver                # 2nd: exact full-table DP
-CoreDPBinaryKnapsackSolver            # 3rd: exact core DP
+CoreDPBinaryKnapsackSolver            # 3rd: exact core DP, reoptimizing
 GreedyRelaxationBinaryKnapsackSolver  # 4th: relaxation, brackets the optimum
 BranchAndXSolver                      # 5th: BX best-first (default)
 BranchAndXSolver                      # 6th: BX depth-first (serial)
@@ -52,16 +58,18 @@ BranchAndXSolver                      # 11th: BX depth-first, incremental inner
 BranchAndXSolver                      # 12th: BX depth-first parallel, incremental
 BranchAndXSolver                      # 13th: BX best-first, reoptimization on
 ParallelDPBinaryKnapsackSolver        # 14th: the same DP in parallel
+RECORDBinaryKnapsackSolver            # 15th: RECORD, same as the 3rd
 
-14  # number of ComputeConfig in this BlockSolverConfig
+15  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# 1-4: the exact MILP / DP / core DP solvers + the greedy relaxation (factored
-# fragments shared with BSPar-mixed.txt).
+# 1-4: the exact MILP / DP / core DP solvers + the greedy relaxation (the
+# MILP, DP and greedy fragments shared with BSPar-mixed.txt, the core DP with
+# all its reoptimization).
 *MILPCfg.txt
 *DPCfg.txt
-*CDPCfg.txt
+*CDPCfg-reopt3.txt
 *GRCfg.txt
 
 # 5: BranchAndXSolver, best-first (the base config, no override)
@@ -378,8 +386,11 @@ intMaxThread    4 # workers
 # now all the vector-of-string parameters
 # [none]
 
-# the "extra" Configuration slot is left out on purpose: an override block
-# that ends here keeps the one of the base
+# pointer to the "extra" Configuration
+* # [none]
+
+# 15th: RECORD under the same reoptimization of the 3rd
+*CDPCfg-reopt3.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

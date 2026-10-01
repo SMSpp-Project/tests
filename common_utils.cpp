@@ -27,6 +27,7 @@
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <sstream>
 #include <list>
 #include <map>
 #include <numeric>
@@ -653,18 +654,41 @@ void print_instance_line( const std::vector< double > & times ,
   for( const auto & n : names )
    w = std::max( w , n.size() );
 
+  // and the times as well, one under the other, whatever the values: the
+  // values are padded to the widest of them (the reference included)
+  const std::string reftok = std::isnan( ref ) ? "" : fmt_obj( ref );
+  std::size_t v = reftok.size();
+  for( const auto & t : value_tokens )
+   v = std::max( v , t.size() );
+
+  // the times right-aligned on the decimal point, all having the digits of
+  // fixd()
+  std::vector< std::string > tt( times.size() );
+  std::size_t u = 0;
+  for( std::size_t k = 0 ; k < times.size() ; ++k ) {
+   std::ostringstream os;
+   os << fixd << times[ k ];
+   tt[ k ] = os.str();
+   u = std::max( u , tt[ k ].size() );
+   }
+
+  // the block starts on a line of its own, since whatever the test printed
+  // before it (e.g., "First call: ") would shift its first line
+  std::cout << std::endl;
+
   for( std::size_t k = 0 ; k < value_tokens.size() ; ++k ) {
    std::cout << "  " << std::left << std::setw( int( w ) )
              << ( k < names.size() ? names[ k ] : std::string() )
-             << std::right << " = " << value_tokens[ k ];
+             << " = " << std::setw( int( v ) ) << value_tokens[ k ]
+             << std::right;
    if( k < times.size() )
-    std::cout << "   " << fixd << times[ k ] << " s";
+    std::cout << "   " << std::setw( int( u ) ) << tt[ k ] << " s";
    std::cout << std::endl;
    }
 
   if( ! std::isnan( ref ) ) {
    std::cout << "  " << std::left << std::setw( int( w ) ) << "Ref"
-             << std::right << " = " << fmt_obj( ref );
+             << " = " << std::setw( int( v ) ) << reftok << std::right;
    if( ! std::isnan( diff ) )
     std::cout << "   (|diff| = " << fmt_obj( diff ) << ")";
    std::cout << std::endl;
@@ -794,12 +818,16 @@ bool cross_check( const std::vector< SolverReading > & rd ,
  /* A Solver of a relaxation says nothing about whether the problem is
   * feasible: a lower bound of a minimization problem is a lower bound of
   * +INF as well, and the Lagrangian dual of an infeasible problem whose
-  * subproblems are feasible grows without ever proving it. Hence, when all
-  * the Solver that are not relaxations say infeasible and those that are
-  * have a one-sided bound, the infeasibility is unanimous. */
+  * subproblems are feasible grows without ever proving it. Nor does one
+  * whose interval is the whole line, such as a heuristic that has found
+  * nothing. Hence, when all the other Solver say infeasible, and these have
+  * a one-sided bound or no bound at all, the infeasibility is unanimous. */
  std::size_t nOneSided = 0;
  for( std::size_t k = 0 ; k < M ; ++k )
-  if( has_solution[ k ] && ( rd[ k ].valid != SolverReading::kBoth ) )
+  if( has_solution[ k ] &&
+      ( ( rd[ k ].valid != SolverReading::kBoth ) ||
+        ( ( rd[ k ].lb == - std::numeric_limits< double >::infinity() ) &&
+          ( rd[ k ].ub == std::numeric_limits< double >::infinity() ) ) ) )
    ++nOneSided;
  if( ( nInf > 0 ) && ( nFeas == nOneSided ) && ( nInf + nFeas == M ) &&
      std::isnan( ref ) ) {

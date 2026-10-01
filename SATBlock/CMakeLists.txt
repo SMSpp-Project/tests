@@ -28,6 +28,10 @@ if (TARGET SMS++::SATBlock)
     if (TARGET SMS++::BranchAndXSolver)
         target_link_libraries(SATBlock_test PRIVATE SMS++::BranchAndXSolver)
     endif ()
+    # the heuristic of the barrier of the slacks [see IBCfg.txt]
+    if (TARGET SMS++::FrankWolfeSolver)
+        target_link_libraries(SATBlock_test PRIVATE SMS++::FrankWolfeSolver)
+    endif ()
     # the Lagrangian dual of a SATBlock with a structure [see batch-structure]
     if (TARGET SMS++::LagrangianDualSolver AND TARGET SMS++::BundleSolver)
         target_link_libraries(SATBlock_test PRIVATE

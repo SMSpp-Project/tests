@@ -1,0 +1,57 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - IBCfg.txt - - - - - - - - - - - - - - - -
+#
+# A ComputeConfig for the IntegralityBarrierSolver, a heuristic looking for
+# a feasible point of the MILP formulation of a SATBlock by Frank-Wolfe on
+# an integrality penalty divided by a barrier of the slacks: its runs of
+# Frank-Wolfe are those of FWIBCfg.txt, and its oracle is a :MILPSolver on
+# the linear relaxation (LPCfg.txt). Its upper bound is the value of the
+# point it finds, +INF if it finds none, and its lower bound -INF, so the
+# cross-check only holds it to the point being feasible and no better than
+# the optimum.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig  # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intMaxIter  10  # runs of Frank-Wolfe
+
+1  # number of double parameters
+
+# now all the double parameters
+dblMaxTime  10  # seconds
+
+3  # number of string parameters
+
+# now all the string parameters
+strFWCfg      FWIBCfg.txt      # the runs of Frank-Wolfe
+strLMOSolver  HiGHSMILPSolver  # the oracle
+strLMOCfg     LPCfg.txt        # on the linear relaxation
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END IBCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
