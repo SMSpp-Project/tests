@@ -1,11 +1,14 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - CDPCfg-surrsolve.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CDPCfg-reopt3.txt - - - - - - - - - - - - - - -
 #
 # A ComputeConfig for the (exact, non-dominated-state) CoreDPBinary-
-# KnapsackSolver that solves the surrogate relaxation exactly by recursion
-# (intSurrogate = 2, the default) as soon as the enumeration starts
-# (intSurrTrigger = 0), so that the small instances of the batteries also
-# go through it. It must give the same optimum as the default.
+# KnapsackSolver, and for the Solver deriving from it, that reuses the
+# previous solve as much as it can (intReopt = 3): the previous optimal
+# solution, repaired to the new data, seeds the incumbent, and it is
+# returned with no solve when the changes cannot have made it suboptimal,
+# or when a Lagrangian bound with each item whose profit moved against it
+# flipped cannot beat it. It must give the same optimum as the solve from
+# scratch after every runtime Modification.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,11 +17,10 @@ ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> all non-provided parameters are not changed
 
-2  # number of integer parameters
+1  # number of integer parameters
 
 # now all the integer parameters
-intSurrogate   2    # surrogate relaxation solved exactly
-intSurrTrigger 0    # computed from the start
+intReopt 3   # warm start + no-solve checks
 
 0  # number of double parameters
 
@@ -45,5 +47,5 @@ intSurrTrigger 0    # computed from the start
 # end of ComputeConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - END CDPCfg-surrsolve.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CDPCfg-reopt3.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
