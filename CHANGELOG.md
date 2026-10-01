@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the testers of `PolyhedralFunction` and `PolyhedralFunctionBlock` remove
+  dynamic Variable as well as adding them (`DYNAMIC_VAR_REMOVALS` is 1): in
+  the dual representation the coupling rows of the removed coordinates go
+  first, then the columns of the LP side, which the UpdateSolver mirrors on
+  the NDO side, and the Variables of both Blocks; the removal of the
+  `PolyhedralFunction` tester uses the positions that follow the static
+  Variable, and its ranged removal from the rows of the LP issues the
+  Modification it skipped
+
 - the tester of `SATBlock` applies the BlockConfig of `-B`, e.g., giving
   the `SATBlock` a structure out of the groups of its variables, and does
   not check the solution of the Solver declared with `-R`; `batch-structure`

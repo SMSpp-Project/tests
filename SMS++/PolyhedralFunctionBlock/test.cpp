@@ -164,7 +164,7 @@
 // if 1, half of the variables are dynamic and new shared variables can be
 // added to all the PolyhedralFunction components
 
-#define DYNAMIC_VAR_REMOVALS 0
+#define DYNAMIC_VAR_REMOVALS 1
 // if 1, dynamic variables can also be removed
 
 #if ( DYNAMIC_VAR_REMOVALS > 0 ) && ( DYNAMIC_VARS == 0 )
@@ -2635,66 +2635,69 @@ int main( int argc , char **argv )
    if( tochange ) {
     LOG1( "removed " << tochange << " variables" );
 
-    throw( std::logic_error( "removing variables not implemented yet" ) );
-
-    // in 50% of the cases do a ranged change, in the others a sparse change
-    if( dis( rg ) <= 0.5 ) {
+    // The dynamic coordinates follow the static ones in every
+    // PolyhedralFunction, and in the dual representation the coupling rows
+    // follow the coordinates in the same order: what is removed from the
+    // group at strt is column, and coupling row, nsvar + strt. In the dual
+    // representation the coupling rows go first, since the PFB expects them
+    // to be gone when its PolyhedralFunction announces the removed Variable;
+    // then the columns leave the PolyhedralFunctions and the Variables leave
+    // the Block, both the removal and its indirect Modifications being
+    // eNoBlck so that the PFBs do not translate them back into PF changes,
+    // which have been made already. Unlike the addition, the columns are
+    // removed from the LP side only: a removal is given by indices, which
+    // the UpdateSolver mirrors on the NDO side as it is; the Variables, on
+    // the contrary, leave the two parent Blocks explicitly.
+    Subset nms;
+    if( dis( rg ) <= 0.5 ) {  // in 50% of the cases a ranged change
      LOG1( "(r) - " );
-
-     Index strt = dis( rg ) * ( ndvar - tochange );
-     Index stp = strt + tochange;
-
-     // remove them from the LP
-     auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
-     if( tochange == 1 )
-      LPBlock->get_PolyhedralFunction().remove_variable( strt );
-     else
-      LPBlock->get_PolyhedralFunction().remove_variables( Range( strt ,
-								 stp ) );
-
-     LPBlock->remove_dynamic_variables( *xLPd , Range( strt , stp ) );
-
-     // remove them from the NDO
-     auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( "xd" );
-     if( tochange == 1 )
-      NDOBlock->get_PolyhedralFunction().remove_variable( strt );
-     else
-      NDOBlock->get_PolyhedralFunction().remove_variables( Range( strt ,
-								  stp ) );
-
-     NDOBlock->remove_dynamic_variables( *xNDOd , Range( strt , stp ) );
+     const Index strt = Index( dis( rg ) * ( ndvar - tochange ) );
+     nms.resize( tochange );
+     std::iota( nms.begin() , nms.end() , strt );
      }
-    else {
+    else {                    // in the others a sparse change
      LOG1( "(s) - " );
-     Subset nms = GenerateSubset( ndvar , tochange );
-
-     // remove them from the LP, *copying* names
-     auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
-     if( tochange == 1 ) {
-      LPBlock->get_PolyhedralFunction().remove_variable( nms[ 0 ] );
-      auto vp = &(*std::next( xLPd->begin() , nms[ 0 ] ));
-      LPBlock->remove_dynamic_variable( *xLPd , vp );
-      }
-     else {
-      LPBlock->get_PolyhedralFunction().remove_variables( Subset( nms ) );
-      LPBlock->remove_dynamic_variables( *xLPd , Subset( nms ) );
-      }
-
-     // remove them from the NDO, finally letting names go
-     auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( "xd" );
-     if( tochange == 1 ) {
-      NDOBlock->get_PolyhedralFunction().remove_variable( nms[ 0 ] );
-      auto vp = &(*std::next( xNDOd->begin() , nms[ 0 ] ));
-      NDOBlock->remove_dynamic_variable( *xNDOd , vp );
-      }
-     else {
-      NDOBlock->get_PolyhedralFunction().remove_variables( Subset( nms ) );
-      NDOBlock->remove_dynamic_variables( *xNDOd , std::move( nms ) );
-      }
+     nms = GenerateSubset( ndvar , tochange );
      }
 
-    // update ndvar
+    Subset pfnms( nms.size() );
+    for( Index h = 0 ; h < nms.size() ; ++h )
+     pfnms[ h ] = nsvar + nms[ h ];
+
+    if( dual_mode ) {
+     auto coupling = LPBlock->get_dynamic_constraint< FRowConstraint >(
+                                                          "PolyF_coupling" );
+     LPBlock->remove_dynamic_constraints( *coupling , Subset( pfnms ) ,
+                                          true , eNoBlck );
+     }
+
+    const Index ncomp = nf ? LPBlock->get_number_nested_Blocks() : 1;
+    for( Index k = 0 ; k < ncomp ; ++k ) {
+     auto & pfLP = ( nf
+                     ? static_cast< p_PFB >( LPBlock->get_nested_Block( k ) )
+                     : static_cast< p_PFB >( LPBlock ) )
+                                                  ->get_PolyhedralFunction();
+     if( tochange == 1 )
+      pfLP.remove_variable( pfnms[ 0 ] );
+     else
+      pfLP.remove_variables( Subset( pfnms ) , true );
+     }
+
+    LPBlock->remove_dynamic_variables(
+          *(LPBlock->get_dynamic_variable< ColVariable >( "xd" )) ,
+          Subset( nms ) , true , eNoBlck , eNoBlck );
+    NDOBlock->remove_dynamic_variables(
+        *(NDOBlock->get_dynamic_variable< ColVariable >( "xd" )) ,
+        std::move( nms ) , true , eNoBlck , eNoBlck );
+
+    // update dimensions
+    nvar -= tochange;
     ndvar -= tochange;
+
+    PANIC( ndvar ==
+           LPBlock->get_dynamic_variable< ColVariable >( "xd" )->size() );
+    PANIC( ndvar ==
+           NDOBlock->get_dynamic_variable< ColVariable >( "xd" )->size() );
     }
    }
 
