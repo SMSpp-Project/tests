@@ -103,6 +103,12 @@ Train a network on the training split and write the weights:
     MMCFBlock_ML_bench train <split> <data-dir> <block-cfg> <ml-cfg> \
                    -o <weights> [-e <epochs>]
 
+`<ml-cfg>` must set `intMLTrainOnline` to 1, otherwise `train` stops with an
+error: the harness applies the configuration files as they are and never
+changes a parameter on its own. `BSPar-ML-K.txt` keeps it at 0 because it is
+the B side of `compare`; use `BSPar-ML-K-train.txt`, which is identical to it
+except for that parameter.
+
 Compare two solver configurations over the same split:
 
     MMCFBlock_ML_bench compare <split> <data-dir> <block-cfg> <cfg-A> <cfg-B>

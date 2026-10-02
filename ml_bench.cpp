@@ -348,6 +348,16 @@ static int train( const Args & args ,
       throw( std::runtime_error( "no Solver registered" ) );
 
      ml = ml_inside( solver );
+     
+     // train mode needs the network to be trained online; the harness reads
+     // the configuration files as they are and never changes a parameter, so
+     // a configuration with intMLTrainOnline at 0 is an error here rather
+     // than something to silently override: the run would complete, write a
+     // weights file and learn nothing
+     if( ml && ( ml->get_int_par( BundleSolverML::intMLTrainOnline ) != 1 ) )
+      throw( std::invalid_argument(
+       "train requires intMLTrainOnline = 1, but " + ml_cfg +
+       " sets it to 0; use BSPar-ML-K-train.txt instead" ) );
 
      if( ! ml )
       throw( std::runtime_error(
