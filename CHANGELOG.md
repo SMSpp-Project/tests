@@ -818,6 +818,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- the batteries `batch-aggr` of `MMCFBlock` and of
+  `CapacitatedFacilityLocationBlock`, which measure the times of the partial
+  aggregation of `BundleSolver` for a paper and check nothing (no `ctest`
+  runs them): they live with the other experiments of that paper; with them
+  go `cfg_set_par` and `run_timed` of `batch_common.sh`, which only they used
+
 - the options `-l`, `-n`, `-r` and `-s` of the tester of `InvestmentBlock`,
   which had no effect, and the functions only they or nobody called; the
   configurations of `InvestmentBlock` that the suite never read (`BSCfg.txt`
