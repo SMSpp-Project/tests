@@ -27,6 +27,8 @@ LagBFunction_test=${1:-./LagBFunction_test}
 # in CI 3 seeds of the 20 are run: the others are the same sweep with
 # another random stream, and the whole of it takes more than an hour there
 if [ -n "$CI" ]; then seeds=3; else seeds=20; fi
+# the sweep of bit 11 below takes 10 of them, being wider than the others
+seeds11=$(( seeds < 10 ? seeds : 10 ))
 
 for what in 511 1023 1535 2047 ; do
   for nf in -2 -11; do
@@ -90,7 +92,7 @@ for what in 3583 4095 ; do
 
         for size in 2 10 50; do
           for dens in 3 1.1; do
-            for (( seed = 0 ; seed < seeds ; seed++ )); do
+            for (( seed = 0 ; seed < seeds11 ; seed++ )); do
 
               run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter"
 
