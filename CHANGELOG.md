@@ -836,6 +836,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the test `run_dmx2nc4` of `MCFBlock` and `MCFClassSolver_run_dmx2nc4` share
+  a `RESOURCE_LOCK`: they build the same target, and under `ctest -j` they
+  ran at the same time and wrote the same instances, leaving one of them
+  empty, so that `MCFBlock_test/batches/batch` failed on it
+
 - `check_relaxation_solutions()` does not hold to the dualised rows the
   reconstruction of a Solver that stopped before converging (anything but
   kOK, which `SolveAll()` now records, `last_status()`), since its residual
