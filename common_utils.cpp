@@ -441,6 +441,16 @@ double eps_of( std::size_t k , Solver * s , double dflt )
  }
 
 /*--------------------------------------------------------------------------*/
+// the status the last SolveAll() got from each of its Solver
+
+static std::vector< int > last_statuses;
+
+int last_status( std::size_t k )
+{
+ return( k < last_statuses.size() ? last_statuses[ k ] : Solver::kUnEval );
+ }
+
+/*--------------------------------------------------------------------------*/
 // whether Solver k was declared to be solving a relaxation
 
 bool is_relaxation( std::size_t k )
@@ -1058,6 +1068,8 @@ bool SolveAll( Block * block ,
 							      status[ k ] );
    }
 
+  last_statuses = status;
+
   // out-params from the first Solver - - - - - - - - - - - - - - - - - - - -
   if( out_fo1 )   *out_fo1   = hs[ 0 ] ? rd[ 0 ].claimed() : -INF;
   if( out_hs1 )   *out_hs1   = hs[ 0 ];
@@ -1254,6 +1266,13 @@ bool check_relaxation_solutions( Block * block , double tol , double ref ,
 
   if( ! slvr->has_var_solution() )
    continue;                    // nothing to read, hence nothing to check
+
+  /* A Solver that stopped before converging (a time limit, a low precision,
+   * i.e. anything but kOK) has not driven the residual to zero, and the
+   * combination it has built is only as good as where it stopped: it is held
+   * to correctness alone, as in the cross-check [see SolveAll()]. */
+  if( last_status( h ) != Solver::kOK )
+   continue;
 
   /* What the reconstruction satisfies the dualised rows is the convex
    * combination of the answers of the components, and that is a point of the

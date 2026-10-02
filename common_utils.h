@@ -159,6 +159,12 @@ extern std::vector< bool > solver_relaxation;
 
 bool is_relaxation( std::size_t k );
 
+/// the status the last SolveAll() got from Solver @p k
+/** What compute() returned to the last SolveAll() for its Solver @p k, or
+ *  Solver::kUnEval if it has not solved it. */
+
+int last_status( std::size_t k );
+
 /// the optimality tolerance of Solver @p k
 /** What -E declares for @p k if it declares anything, else the accuracy
  *  Solver @p s was asked for, i.e. its dblRelAcc, which is the number that

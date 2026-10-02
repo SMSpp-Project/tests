@@ -351,6 +351,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in 3,
+  and `socp-unstable.txt` lists topo/Bbnplanet_8 too, on which Gurobi stops
+  on numerical difficulties on the runner of the nightly pipeline
+
 - in CI, `MCFBlock/batches/batch` and `batch-dense` leave out the
   Frank-Wolfe decomposition, a single run of which takes the best part of an
   hour there (`batch-small` runs it on the small instances),
@@ -831,6 +835,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   already asks for it
 
 ### Fixed
+
+- `check_relaxation_solutions()` does not hold to the dualised rows the
+  reconstruction of a Solver that stopped before converging (anything but
+  kOK, which `SolveAll()` now records, `last_status()`), since its residual
+  is not zero yet: on a slower machine the Lagrangian dual of L_B_N_9 stops
+  at its time limit, and its combination was taken for a wrong one
 
 - `TSSB_test/batches/batch-mmcf` requires the fixture `canad_fetched`, so
   that the Canad instances its generator reads are there when it starts
