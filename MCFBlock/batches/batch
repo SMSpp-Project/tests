@@ -89,7 +89,10 @@ done
 # :MILPSolver of the same configuration. Only a few of the instances above are
 # run this way, these being the large ones.
 
-if [ -n "${fwexe}" ]; then
+# in CI the decomposition is not run here: a single run of it on these
+# instances takes the best part of an hour there, and batch-small runs the
+# whole lineup of it on the small instances
+if [ -n "${fwexe}" ] && [ -z "$CI" ]; then
 
   # the reduced lineup (FatherBSPar-fast.txt): on these instances a single run
   # of the decomposition takes the best part of an hour, so the reference is

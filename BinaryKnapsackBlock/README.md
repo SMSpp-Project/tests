@@ -20,7 +20,9 @@ The cross-check lineups are the `BSPar*`, and the principle is that a run
 attaches at once every `:Solver` that has to give the same answer.
 [BSPar.txt](BSPar.txt) is the pure-binary one: a `:MILPSolver` on the exact
 MIP, the full-table `DPBinaryKnapsackSolver` with its parallel and its core
-variants, the `BranchAndXSolver` in each of its exploration modes, and the
+variants (the latter re-solving with all its reoptimization, and
+`RECORDBinaryKnapsackSolver` the same way when the build has RECORD), the
+`BranchAndXSolver` in each of its exploration modes, and the
 `GreedyRelaxationBinaryKnapsackSolver`. The last one solves a relaxation, so
 it is held to bracketing the optimum rather than to equality.
 [BSPar-mixed.txt](BSPar-mixed.txt) is the same for the instances that carry

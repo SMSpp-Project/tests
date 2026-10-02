@@ -193,6 +193,10 @@ if (TARGET SMS++::TwoStageStochasticBlock AND TARGET SMS++::MMCFBlock AND
                          $<TARGET_FILE:TSSB_test>
                          $<TARGET_FILE:mmcf_tssb_gen>
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        # the instances are written out of the Canad ones, which the
+        # fetch_canad_data test of the MMCFBlock suite downloads
+        set_tests_properties(TSSB_test/batches/batch-mmcf
+                             PROPERTIES FIXTURES_REQUIRED canad_fetched)
     endif ()
 endif ()
 

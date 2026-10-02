@@ -257,6 +257,35 @@ if (TARGET SMS++::MMCFBlock)
     endforeach ()
 endif ()
 
+# The third executable solves small Network Design instances (data-nd, a
+# Canad instance with fewer commodities) with MMCFNetworkDesignBlock in the
+# monolithic formulation and in the Benders one, whose cuts come from a
+# LagrangianDualSolver of the MMCFBlock, and cross-checks the two, and the
+# cuts with the cost of the flow.
+if (TARGET SMS++::MMCFBlock AND
+    TARGET SMS++::LagrangianDualSolver AND
+    TARGET SMS++::BundleSolver AND
+    TARGET SMS++::MILPSolver AND
+    TARGET SMS++::MCFClassSolver)
+
+    add_executable(MMCFND_test nd_test.cpp)
+    target_link_libraries(MMCFND_test PRIVATE
+                          SMS++::MMCFBlock
+                          SMS++::LagrangianDualSolver
+                          SMS++::BundleSolver
+                          SMS++::MILPSolver
+                          SMS++::MCFClassSolver)
+
+    smspp_install(MMCFND_test)
+
+    if (UNIX)
+        add_test(NAME MMCFND_test/batches/batch-nd
+                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-nd
+                         ${CMAKE_CURRENT_BINARY_DIR}/MMCFND_test
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    endif ()
+endif ()
+
     # The benchmark of the machine-learning driven bundle on the instances of
     # this Block: the harness is the generic one (../ml_bench.cpp), which
     # reads whichever instance it is given, and this suite compiles into it

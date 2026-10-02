@@ -51,6 +51,7 @@ set(SMSPP_TEST_LABELS_LukFiBlock                "BundleSolver;LukFiBlock;MILPSol
 set(SMSPP_TEST_LABELS_SVMBlock                  "BundleSolver;LagrangianDualSolver;SVMBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SingleFlowDCRBlock        "SingleFlowDCRBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SATBlock                  "SATBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SatellitesBlock           "BundleSolver;LagrangianDualSolver;SatellitesBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test
 # it registered, dynamic batch-file test names included, and tell ctest that

@@ -39,9 +39,12 @@ if (TARGET SMS++::MCFBlock)
     # This test will build and run the run_dmx2nc4 target
     add_test(NAME run_dmx2nc4
              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_dmx2nc4)
-    # Mark it as a fixture that sets up "dmx2nc4_generated"
+    # Mark it as a fixture that sets up "dmx2nc4_generated"; the test
+    # MCFClassSolver_run_dmx2nc4 builds the same target, and the two would
+    # write the same files at once under ctest -j, hence the common lock
     set_tests_properties(run_dmx2nc4
-                         PROPERTIES FIXTURES_SETUP dmx2nc4_generated)
+                         PROPERTIES FIXTURES_SETUP dmx2nc4_generated
+                                    RESOURCE_LOCK MCFBlock_dmx2nc4)
 
     # The Frank-Wolfe decomposition of a father Block whose leaves are the
     # MCFBlock of this suite. The tester is the generic one (../fw_test.cpp):

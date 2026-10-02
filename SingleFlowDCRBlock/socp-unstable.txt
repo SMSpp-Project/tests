@@ -36,6 +36,9 @@ topo/Amres_6
 topo/Ans_6
 topo/Arpanet19706_5
 topo/AsnetAm_8
+# Gurobi stops on numerical difficulties (status 12) on the runner of the
+# nightly pipeline, while it solves it on the machines of ours
+topo/Bbnplanet_8
 topo/BeyondTheNetwork_5
 topo/BeyondTheNetwork_8
 topo/BtLatinAmerica_5

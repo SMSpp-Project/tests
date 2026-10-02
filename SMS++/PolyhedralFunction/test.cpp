@@ -114,7 +114,7 @@
 #define DYNAMIC_VARS 1
 // if 1, half of the variables are dynamic and new variables can be added
 
-#define DYNAMIC_VAR_REMOVALS 0
+#define DYNAMIC_VAR_REMOVALS 1
 // if 1, dynamic variables can also be removed
 
 #if ( DYNAMIC_VAR_REMOVALS > 0 ) && ( DYNAMIC_VARS == 0 )
@@ -1687,6 +1687,10 @@ int main( int argc , char **argv )
     auto PF = static_cast< p_PF >(
 	       NDOBlock->get_objective< FRealObjective >()->get_function() );
 
+    // the dynamic Variable follow the static ones: the one at position strt
+    // of the group is at position nsvar + strt of the PolyhedralFunction,
+    // and at nsvar + strt + 1 of the rows of the LP, v coming first
+
     if( dis( rg ) <= 0.5 ) {  // in 50% of the cases do a ranged removal
      LOG1( "(r) - " );
 
@@ -1700,12 +1704,12 @@ int main( int argc , char **argv )
      if( tochange == 1 )
       for( Index i = 0 ; i < m ; ++i ) {
        auto fi = static_cast< p_LF >( (cnst_it++)->get_function() );
-       fi->remove_variable( strt + 1 );
+       fi->remove_variable( nsvar + strt + 1 );
        }
      else
       for( Index i = 0 ; i < m ; ++i ) {
        auto fi = static_cast< p_LF >( (cnst_it++)->get_function() );
-       fi->remove_variables( Range( strt + 1 , stp + 1 ) , true );
+       fi->remove_variables( Range( nsvar + strt + 1 , nsvar + stp + 1 ) );
        }
     
      #if HAVE_CONSTRAINTS == 2
@@ -1726,9 +1730,9 @@ int main( int argc , char **argv )
      // remove them from the NDO
      auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( "xd" );
      if( tochange == 1 )
-      PF->remove_variable( strt );
+      PF->remove_variable( nsvar + strt );
      else
-      PF->remove_variables( Range( strt , stp ) );
+      PF->remove_variables( Range( nsvar + strt , nsvar + stp ) );
 
      #if HAVE_CONSTRAINTS > 1
       // the variables can now only be active in the associated box
@@ -1752,7 +1756,7 @@ int main( int argc , char **argv )
      if( tochange == 1 ) {
       for( Index i = 0 ; i < m ; ++i ) {
        auto fi = static_cast< p_LF >( (cnst_it++)->get_function() );
-       fi->remove_variable( nms[ 0 ] + 1 );
+       fi->remove_variable( nsvar + nms[ 0 ] + 1 );
        }
 
       #if HAVE_CONSTRAINTS == 2
@@ -1776,7 +1780,7 @@ int main( int argc , char **argv )
        auto fi = static_cast< p_LF >( (cnst_it++)->get_function() );
        Subset nms1( nms );
        for( auto & n1i : nms1 )
-	++n1i;
+	n1i += nsvar + 1;
        fi->remove_variables( std::move( nms1 ) , true );
        }
 
@@ -1799,7 +1803,7 @@ int main( int argc , char **argv )
      // remove them from the NDO
      auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( 0 );
      if( tochange == 1 ) {
-      PF->remove_variable( nms[ 0 ] );
+      PF->remove_variable( nsvar + nms[ 0 ] );
 
       #if HAVE_CONSTRAINTS > 1
        // the variables can now only be active in the associated box
@@ -1814,7 +1818,10 @@ int main( int argc , char **argv )
       NDOBlock->remove_dynamic_variable( *xNDOd , vp );
       }
      else {
-      PF->remove_variables( Subset( nms ) );
+      Subset pfnms( nms );
+      for( auto & pi : pfnms )
+       pi += nsvar;
+      PF->remove_variables( std::move( pfnms ) , true );
 
       #if HAVE_CONSTRAINTS > 1
        // the variables can now only be active in the associated box
@@ -1829,20 +1836,21 @@ int main( int argc , char **argv )
       }
      }
 
-    // update ndvar
+    // update nvar and ndvar
+    nvar -= tochange;
     ndvar -= tochange;
 
     // sanity checks
-    PANIC( ndvar == PF->get_num_active_var() );
+    PANIC( nvar == PF->get_num_active_var() );
     for( auto & ai : PF->get_A() )
-     PANIC( ndvar == ai.size() );
+     PANIC( nvar == ai.size() );
     PANIC( ndvar ==
 	         LPBlock->get_dynamic_variable< ColVariable >( 0 )->size() );
     PANIC( ndvar ==
 	        NDOBlock->get_dynamic_variable< ColVariable >( 0 )->size() );
     for( auto & ci :
 	          *(LPBlock->get_dynamic_constraint< FRowConstraint >( 0 )) )
-     PANIC( ndvar == ci.get_num_active_var() );
+     PANIC( nvar + 1 == ci.get_num_active_var() );
     }
 
   #endif // DYNAMIC_VAR_REMOVALS > 0

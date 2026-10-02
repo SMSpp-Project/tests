@@ -27,6 +27,7 @@
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <sstream>
 #include <list>
 #include <map>
 #include <numeric>
@@ -440,6 +441,16 @@ double eps_of( std::size_t k , Solver * s , double dflt )
  }
 
 /*--------------------------------------------------------------------------*/
+// the status the last SolveAll() got from each of its Solver
+
+static std::vector< int > last_statuses;
+
+int last_status( std::size_t k )
+{
+ return( k < last_statuses.size() ? last_statuses[ k ] : Solver::kUnEval );
+ }
+
+/*--------------------------------------------------------------------------*/
 // whether Solver k was declared to be solving a relaxation
 
 bool is_relaxation( std::size_t k )
@@ -653,18 +664,41 @@ void print_instance_line( const std::vector< double > & times ,
   for( const auto & n : names )
    w = std::max( w , n.size() );
 
+  // and the times as well, one under the other, whatever the values: the
+  // values are padded to the widest of them (the reference included)
+  const std::string reftok = std::isnan( ref ) ? "" : fmt_obj( ref );
+  std::size_t v = reftok.size();
+  for( const auto & t : value_tokens )
+   v = std::max( v , t.size() );
+
+  // the times right-aligned on the decimal point, all having the digits of
+  // fixd()
+  std::vector< std::string > tt( times.size() );
+  std::size_t u = 0;
+  for( std::size_t k = 0 ; k < times.size() ; ++k ) {
+   std::ostringstream os;
+   os << fixd << times[ k ];
+   tt[ k ] = os.str();
+   u = std::max( u , tt[ k ].size() );
+   }
+
+  // the block starts on a line of its own, since whatever the test printed
+  // before it (e.g., "First call: ") would shift its first line
+  std::cout << std::endl;
+
   for( std::size_t k = 0 ; k < value_tokens.size() ; ++k ) {
    std::cout << "  " << std::left << std::setw( int( w ) )
              << ( k < names.size() ? names[ k ] : std::string() )
-             << std::right << " = " << value_tokens[ k ];
+             << " = " << std::setw( int( v ) ) << value_tokens[ k ]
+             << std::right;
    if( k < times.size() )
-    std::cout << "   " << fixd << times[ k ] << " s";
+    std::cout << "   " << std::setw( int( u ) ) << tt[ k ] << " s";
    std::cout << std::endl;
    }
 
   if( ! std::isnan( ref ) ) {
    std::cout << "  " << std::left << std::setw( int( w ) ) << "Ref"
-             << std::right << " = " << fmt_obj( ref );
+             << " = " << std::setw( int( v ) ) << reftok << std::right;
    if( ! std::isnan( diff ) )
     std::cout << "   (|diff| = " << fmt_obj( diff ) << ")";
    std::cout << std::endl;
@@ -789,6 +823,26 @@ bool cross_check( const std::vector< SolverReading > & rd ,
    ok = le( rd[ 0 ].lb , rd[ 0 ].ub , tol );
   verdict_out = ok ? "OK" : "KO";
   return( ok );
+  }
+
+ /* A Solver of a relaxation says nothing about whether the problem is
+  * feasible: a lower bound of a minimization problem is a lower bound of
+  * +INF as well, and the Lagrangian dual of an infeasible problem whose
+  * subproblems are feasible grows without ever proving it. Nor does one
+  * whose interval is the whole line, such as a heuristic that has found
+  * nothing. Hence, when all the other Solver say infeasible, and these have
+  * a one-sided bound or no bound at all, the infeasibility is unanimous. */
+ std::size_t nOneSided = 0;
+ for( std::size_t k = 0 ; k < M ; ++k )
+  if( has_solution[ k ] &&
+      ( ( rd[ k ].valid != SolverReading::kBoth ) ||
+        ( ( rd[ k ].lb == - std::numeric_limits< double >::infinity() ) &&
+          ( rd[ k ].ub == std::numeric_limits< double >::infinity() ) ) ) )
+   ++nOneSided;
+ if( ( nInf > 0 ) && ( nFeas == nOneSided ) && ( nInf + nFeas == M ) &&
+     std::isnan( ref ) ) {
+  if( M >= 2 ) ++mutual_inf_watchdog.n_inf;
+  verdict_out = "OK(e)"; return( true );
   }
 
  // unanimous infeasible / unbounded is a pass only when NO reference was given
@@ -1014,6 +1068,8 @@ bool SolveAll( Block * block ,
 							      status[ k ] );
    }
 
+  last_statuses = status;
+
   // out-params from the first Solver - - - - - - - - - - - - - - - - - - - -
   if( out_fo1 )   *out_fo1   = hs[ 0 ] ? rd[ 0 ].claimed() : -INF;
   if( out_hs1 )   *out_hs1   = hs[ 0 ];
@@ -1210,6 +1266,13 @@ bool check_relaxation_solutions( Block * block , double tol , double ref ,
 
   if( ! slvr->has_var_solution() )
    continue;                    // nothing to read, hence nothing to check
+
+  /* A Solver that stopped before converging (a time limit, a low precision,
+   * i.e. anything but kOK) has not driven the residual to zero, and the
+   * combination it has built is only as good as where it stopped: it is held
+   * to correctness alone, as in the cross-check [see SolveAll()]. */
+  if( last_status( h ) != Solver::kOK )
+   continue;
 
   /* What the reconstruction satisfies the dualised rows is the convex
    * combination of the answers of the components, and that is a point of the

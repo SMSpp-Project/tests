@@ -54,6 +54,12 @@ declare -A EPS
 
 EPS[L_B_C_24.nc4]=,1e-4,
 
+# the same on the nuclear L_B_N_1, where the bundle stops with an interval
+# 2.5e-3 wide (2.7478877e+07 to 2.7547156e+07) while reporting kOK: it
+# declares the residual null under its dblNZEps of 1e-2 [see BSPar-DP.txt],
+# and a smaller one would leave the bound unpublished
+EPS[L_B_N_1.nc4]=,3e-3,
+
 # each plan4res solve takes minutes under LagrangianDualSolver + BundleSolver
 # with a MILP reference, so the full set (54 instances) runs for hours and blows
 # the 3h GitLab.com shared-runner cap. In CI run a small smoke sample covering

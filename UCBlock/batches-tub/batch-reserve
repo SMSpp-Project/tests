@@ -39,9 +39,16 @@ pchg=0.6
 # test every formulation with cuts. On the large-horizon families (L_B_C_26 /
 # L_B_C_31, TimeHorizon 216) the interval-based formulations (pt/DP/SU/SD/SUSD)
 # are too expensive, so we skip them and keep only 3bin/T.
+# in CI one instance in 10 of each family is run: the whole of it takes more
+# than an hour there, and the instances of a family are the same unit on
+# different days
+if [ -n "$CI" ]; then every=10; else every=1; fi
+
 for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
   case "$fam" in L_B_C_26|L_B_C_31) big=1 ;; *) big=0 ;; esac
+  k=0
   for f in "${DATADIR}"/${fam}_*.nc4; do
+    (( k++ % every )) && continue
     for form in 3bin-PC T-PC pt-PC DP-PC SU-PC SD-PC SUSD-PC; do
       # skip the expensive interval-based formulations on large instances
       if [ $form != 3bin-PC ] && [ $form != T-PC ] && [ "$big" = 1 ]; then

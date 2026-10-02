@@ -206,9 +206,11 @@ bool CrossCheckSolvers( void )
   // the same solution must also come out of Solver::get_Solution(), which
   // the "physical" Solver produce out of their own data structures: the x
   // is therefore first scribbled over, so that a Solution silently taken
-  // from the Variable rather than from the Solver cannot pass unnoticed
+  // from the Variable rather than from the Solver cannot pass unnoticed;
+  // a fixed x keeps its value [see ColVariable::set_value()]
   for( Index i = 0 ; i < N ; ++i )
-   BKB->set_x( i , -1 );
+   if( ! BKB->is_fixed( i ) )
+    BKB->set_x( i , -1 );
 
   auto sol = dynamic_cast< BinaryKnapsackSolution * >(
 					     Solvers[ k ]->get_Solution() );

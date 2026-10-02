@@ -18,6 +18,14 @@
  * clauses it violates plus the costs of its true variables, has to be the
  * upper bound the Solver declares, or less.
  *
+ * With -B a BlockConfig is applied to the SATBlock before anything else,
+ * e.g., giving it a structure out of the groups of its variables [see
+ * SATBlock::set_structure()], under which the Solver that relax it, such as
+ * the LagrangianDualSolver, are declared with -R: their bound is
+ * cross-checked, the solution they write is not. The rounds of -n then
+ * keep the structure: a linking clause of the kRelaxation one stays hard or
+ * soft, and the clauses added are on the variables of one group.
+ *
  * With -n the instance is then changed n times, each time by a Modification
  * drawn at random (with the seed of -e) and followed by the cross-check
  * again, the Solver staying registered so that each of them reoptimizes as
@@ -126,6 +134,17 @@ int main( int argc , char ** argv )
 
  auto sat = read_SATBlock();
 
+ if( ! bconf_file.empty() ) {
+  Configuration * bc = Configuration::deserialize( bconf_file );
+  if( ! bc ) {
+   std::cerr << "Error: cannot load " << bconf_file << std::endl;
+   delete sat;
+   exit( 1 );
+   }
+  b_config_Block( sat , bc , bconf_file );
+  delete bc;
+  }
+
  // the Solver of the abstract representation need it, the others ignore it
  sat->generate_abstract_variables();
  sat->generate_abstract_constraints();
@@ -151,7 +170,7 @@ int main( int argc , char ** argv )
  bool solutions_ok = true;
  auto classify = [ & ]( Solver * s , std::size_t k ) {
   auto reading = read_bounds( s , k );
-  if( s->has_var_solution() ) {
+  if( s->has_var_solution() && ! is_relaxation( k ) ) {
    s->get_var_solution();
    const double ub = s->get_ub();
    const double w = sat->get_objective_value();
@@ -217,19 +236,37 @@ int main( int argc , char ** argv )
     const unsigned int first = rnd( m );
     const unsigned int k = 1 + rnd( std::min( 5u , m - first ) );
     std::vector< double > w( k );
-    for( auto & wi : w )
-     wi = new_weight();
+    for( unsigned int j = 0 ; j < k ; ++j ) {
+     w[ j ] = new_weight();
+     // with the kRelaxation structure, a linking clause stays as hard or
+     // as soft as it is [see SATBlock::chg_weights()]
+     if( sat->is_linking( first + j ) &&
+	 ( sat->get_structure_type() == SATBlock::kRelaxation ) &&
+	 ( sat->is_hard( first + j ) != ( w[ j ] == Inf< double >() ) ) )
+      w[ j ] = sat->is_hard( first + j ) ? Inf< double >()
+				       : double( 1 + rnd( unsigned( 2 * scale ) ) );
+     }
     sat->chg_weights( w , Block::Range( first , first + k ) );
     std::cout << "round " << r << ": weights of " << k << " clauses"
 	      << std::endl;
     }
    else {
-    // up to 3 clauses of 1 to 3 literals
+    // up to 3 clauses of 1 to 3 literals; with a structure, on the
+    // variables of one group [see SATBlock::add_clauses()]
+    const auto & grp = sat->get_variable_groups();
+    const bool one_group =
+     sat->get_structure_type() != SATBlock::kNoStructure;
     SATBlock::v_Clause nc( 1 + rnd( 3 ) );
     SATBlock::v_Weight nw( nc.size() );
     for( unsigned int c = 0 ; c < nc.size() ; ++c ) {
-     for( unsigned int l = 1 + rnd( 3 ) ; l-- ; )
-      nc[ c ].push_back( int( 1 + rnd( n ) ) * ( rnd( 2 ) ? 1 : -1 ) );
+     const unsigned int v0 = rnd( n );
+     nc[ c ].push_back( int( 1 + v0 ) * ( rnd( 2 ) ? 1 : -1 ) );
+     for( unsigned int l = rnd( 3 ) ; l-- ; ) {
+      unsigned int v = rnd( n );
+      if( one_group && ( grp[ v ] != grp[ v0 ] ) )
+       v = v0;  // a literal repeated is kept once
+      nc[ c ].push_back( int( 1 + v ) * ( rnd( 2 ) ? 1 : -1 ) );
+      }
      nw[ c ] = new_weight();
      }
     sat->add_clauses( std::move( nc ) , std::move( nw ) );

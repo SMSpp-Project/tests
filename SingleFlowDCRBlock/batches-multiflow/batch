@@ -49,10 +49,17 @@ source "$(dirname "$0")/../../batch_common.sh"
 exe=${1:-./MultiFlowDCRBlock_test}
 DATADIR=../../SingleFlowDCRBlock/data/nc4/multi
 
+# in CI one instance in 3 is run: the whole of it takes more than the hour
+# a test is given there, and the instances of a network differ only by the
+# number of flows
+if [ -n "$CI" ]; then every=3; else every=1; fi
+
 ran=0
+k=0
 for what in "$DATADIR"/{garr,sndlib}/*_[2-5].nc4 \
             "$DATADIR"/waxman/w1_[123]00_*_[2-5].nc4 "$DATADIR"/topo/*_2.nc4; do
   [ -f "$what" ] || continue
+  (( k++ % every )) && continue
   ran=1
   inst=${what#"$DATADIR"/}
   inst=${inst%.nc4}

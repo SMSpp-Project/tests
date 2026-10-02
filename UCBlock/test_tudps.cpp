@@ -329,9 +329,13 @@ static bool CheckGetSolution( Solver * slvr , const char * name )
 
  auto p = TUBlock->get_active_power( 0 );
  auto u = TUBlock->get_commitment( 0 );
+ // a fixed Variable keeps its value [see ColVariable::set_value()], and it
+ // is not scribbled over
  for( Index i = 0 ; i < time_horizon ; ++i , ++p , ++u ) {
-  p->set_value( -1 );
-  u->set_value( 0.5 );
+  if( ! p->is_fixed() )
+   p->set_value( -1 );
+  if( ! u->is_fixed() )
+   u->set_value( 0.5 );
   }
 
  // the modulation of a nuclear unit is scribbled over as well: it is in the
@@ -344,7 +348,8 @@ static bool CheckGetSolution( Solver * slvr , const char * name )
    m.resize( time_horizon );
    for( Index i = 0 ; i < time_horizon ; ++i , ++mi ) {
     m[ i ] = mi->get_value();
-    mi->set_value( 0.5 );
+    if( ! mi->is_fixed() )
+     mi->set_value( 0.5 );
     }
    }
 

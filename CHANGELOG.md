@@ -9,6 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- bit 11 (2048) of the `LagBFunction` tester adds at runtime a dual pair to
+  a single `LagBFunction` on an x that it does not have, as one does when
+  dualizing a constraint born during the search, mirroring it on the LP
+  side; the x is a new coordinate of the master when no other component
+  has it, and one the master already has otherwise. `batches/batch` runs it
+  with the dense and the sparse setup (3583 and 4095), with and without
+  the linear objective and the PolyhedralFunction (`nf` = -2, -11, 0), and
+  with hard and easy components
+
+- the testers of `PolyhedralFunction` and `PolyhedralFunctionBlock` remove
+  dynamic Variable as well as adding them (`DYNAMIC_VAR_REMOVALS` is 1): in
+  the dual representation the coupling rows of the removed coordinates go
+  first, then the columns of the LP side, which the UpdateSolver mirrors on
+  the NDO side, and the Variables of both Blocks; the removal of the
+  `PolyhedralFunction` tester uses the positions that follow the static
+  Variable, and its ranged removal from the rows of the LP issues the
+  Modification it skipped
+
+- the `IntegralityBarrierSolver` of FrankWolfeSolver in the cross-check of
+  `SATBlock` (`BSPar.txt`), a heuristic on the MILP
+  formulation whose oracle is the linear relaxation by a `:MILPSolver`
+  (`IBCfg.txt`, `FWIBCfg.txt`, `LPCfg.txt`)
+
+- `MMCFBlock/MMCFND_test` with `batches/batch-nd`: the network design problem
+  of `MMCFNetworkDesignBlock`, solved monolithic by the MILP Solver and in
+  Benders form, the two optimal values compared on the p33 instances with 3
+  and 5 commodities
+
+- the tester of `SATBlock` applies the BlockConfig of `-B`, e.g., giving
+  the `SATBlock` a structure out of the groups of its variables, and does
+  not check the solution of the Solver declared with `-R`; `batch-structure`
+  gives the instances of `smspp_satgen` both structures (`BPar-R.txt`,
+  `BPar-D.txt`) and cross-checks the Solver of `BSPar-LD.txt`, i.e., those of
+  `BSPar.txt` and the `LagrangianDualSolver` of the rows of the father,
+  whose bound has to be below their optimum, also after 3 rounds of
+  Modification that keep the structure
+
+- the suite of `SatellitesBlock`: its tester loads an instance of the
+  Satellite Constellation Design Problem into the `Block` given with `-b`
+  (`ConstellationBlock`, `DiscreteConstellationBlock` or `MultiTargetBlock`)
+  and cross-checks, with `SolveAll()`, a `:MILPSolver` on the whole tree with
+  the `LagrangianDualSolver`, whose sub-Block get their Solver by classname
+  from a meta-`BlockSolverConfig` (`DiscreteSatelliteSolver` or a
+  `:MILPSolver`); `batch` runs it on the instances of the module, against
+  their optimum, the Lagrangian dual being declared a relaxation, and
+  stopped after 50 iterations on `MultiTargetBlock` (`BSPar-target.txt`)
+
 - the suite of `SATBlock`: its tester reads a `SATBlock` out of a CNF, WCNF
   or netCDF file and cross-checks, with `SolveAll()`, the Solver of its
   physical representation (OLL, with CaDiCaL and with MiniSat) with those of
@@ -303,6 +350,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dblRelAcc therefore says nothing about what it returns
 
 ### Changed
+
+- in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in 3,
+  and `socp-unstable.txt` lists topo/Bbnplanet_8 too, on which Gurobi stops
+  on numerical difficulties on the runner of the nightly pipeline
+
+- in CI, `MCFBlock/batches/batch` and `batch-dense` leave out the
+  Frank-Wolfe decomposition, a single run of which takes the best part of an
+  hour there (`batch-small` runs it on the small instances),
+  `LagBFunction/batches/batch` runs 3 seeds of the 20, and
+  `UCBlock/batches-tub/batch-reserve` one instance in 10 of each family, so
+  that each fits in the time limit of a test of the nightly pipeline
+
+- the report of `SolveAll()` starts on a line of its own, below whatever the
+  test printed before it, and pads the values to the widest of them, the
+  reference included, so that the values and the times of the Solver are
+  in columns whatever the length of their names and of their intervals
 
 - `LDCfg-easy.txt` and `BSPar-DP.txt` of `UCBlock` name the hard components
   with `vstrNoEasy` of the inner `BundleSolver`, which replaces
@@ -755,6 +818,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- the batteries `batch-aggr` of `MMCFBlock` and of
+  `CapacitatedFacilityLocationBlock`, which measure the times of the partial
+  aggregation of `BundleSolver` for a paper and check nothing (no `ctest`
+  runs them): they live with the other experiments of that paper; with them
+  go `cfg_set_par` and `run_timed` of `batch_common.sh`, which only they used
+
 - the options `-l`, `-n`, `-r` and `-s` of the tester of `InvestmentBlock`,
   which had no effect, and the functions only they or nobody called; the
   configurations of `InvestmentBlock` that the suite never read (`BSCfg.txt`
@@ -772,6 +841,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   already asks for it
 
 ### Fixed
+
+- the test `run_dmx2nc4` of `MCFBlock` and `MCFClassSolver_run_dmx2nc4` share
+  a `RESOURCE_LOCK`: they build the same target, and under `ctest -j` they
+  ran at the same time and wrote the same instances, leaving one of them
+  empty, so that `MCFBlock_test/batches/batch` failed on it
+
+- `check_relaxation_solutions()` does not hold to the dualised rows the
+  reconstruction of a Solver that stopped before converging (anything but
+  kOK, which `SolveAll()` now records, `last_status()`), since its residual
+  is not zero yet: on a slower machine the Lagrangian dual of L_B_N_9 stops
+  at its time limit, and its combination was taken for a wrong one
+
+- `TSSB_test/batches/batch-mmcf` requires the fixture `canad_fetched`, so
+  that the Canad instances its generator reads are there when it starts
+  rather than when `fetch_canad_data` happens to have run before it
+
+- `batch-p4r` declares the interval of the Lagrangian dual on L_B_N_1, 2.5e-3
+  wide while the bundle reports kOK, as it does for L_B_C_24
+
+- the tests of `BinaryKnapsackBlock` and `test_tudps` perturb the solution
+  they read back only in the Variable that are not fixed, as writing a
+  different value in a fixed `ColVariable` throws
+
+- the cross-check of `SolveAll()` declares the infeasibility unanimous when
+  all the Solver that are not relaxations say infeasible and those that
+  are have a one-sided bound, which is no claim of feasibility (the
+  Lagrangian dual of an infeasible problem with feasible subproblems grows
+  without ever proving it), rather than taking them for a disagreement, and
+  so for a Solver whose interval is the whole line, such as a heuristic that
+  has found nothing
 
 - a tester picks the `:Solver` it solves with through `first_Solver_of()` of
   `common_utils`, which returns the first of the given names that the factory

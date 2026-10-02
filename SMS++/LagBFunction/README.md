@@ -199,6 +199,11 @@ The usage of the executable is the following:
              5 = modify costs, 6 = modify demands
              7 = modify flow bounds
              8 = change linear objective
+             9 = each LagBFunction dualises a random subset (exercises sparse Lambda)
+            10 = remove one dual_pair from a single LagBFunction (naked, not GroupMod;
+                 exercises dense->sparse auto-promotion + per-Function Mod dispatch)
+            11 = add one dual_pair to a single LagBFunction (naked; on a new
+                 coordinate of the master or on one it already has)
        nvar: number of variables [10]
        |#nf|: number of PolyFunction (< 0: linear function) [1]
        |#nt|: number of transportation (< 0: easy comp.) [1]

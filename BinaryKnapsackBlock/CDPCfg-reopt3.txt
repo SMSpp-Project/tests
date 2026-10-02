@@ -1,0 +1,51 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CDPCfg-reopt3.txt - - - - - - - - - - - - - - -
+#
+# A ComputeConfig for the (exact, non-dominated-state) CoreDPBinary-
+# KnapsackSolver, and for the Solver deriving from it, that reuses the
+# previous solve as much as it can (intReopt = 3): the previous optimal
+# solution, repaired to the new data, seeds the incumbent, and it is
+# returned with no solve when the changes cannot have made it suboptimal,
+# or when a Lagrangian bound with each item whose profit moved against it
+# flipped cannot beat it. It must give the same optimum as the solve from
+# scratch after every runtime Modification.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intReopt 3   # warm start + no-solve checks
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of ComputeConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CDPCfg-reopt3.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

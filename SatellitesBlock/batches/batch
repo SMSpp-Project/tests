@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default SatellitesBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# Cross-check on the instances that SatellitesBlock distributes in data/txt,
+# each loaded into every Block it is an instance of: the :MILPSolver on the
+# whole tree has to find the optimum given with -r, and the Lagrangian dual
+# of the integer problem, declared a relaxation with -R, has to bound it
+# from below.
+
+# run from the test directory so SatellitesBlock_test reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./SatellitesBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+data=../../SatellitesBlock/data/txt
+
+# the instances, with the Block they are loaded into, their optimum and,
+# where it is not the default one, their BlockSolverConfig: that of the
+# MultiTargetBlock stops the bundle early [see BSPar-target.txt]- - - - - -
+
+while read -r block name z bsc; do
+  case "${block}" in ''|'#'*) continue ;; esac
+  run_test "$exe" -S "${bsc:-$par}" -R ,r -b "$block" -r "$z" \
+           "${data}/${name}" < /dev/null
+done <<'END'
+ConstellationBlock          inputheur-const      2
+DiscreteConstellationBlock  inputheur-const      5
+MultiTargetBlock            inputheur-target  2700  BSPar-target.txt
+END
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

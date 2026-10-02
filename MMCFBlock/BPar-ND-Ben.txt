@@ -1,0 +1,41 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BPar-ND-Ben.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockConfig for MMCFNetworkDesignBlock in the
+# Benders formulation: the design Variable, the epigraph one of the cost of
+# the flow and the Benders cuts, separated out of the hidden copy of the
+# MMCFBlock with slack arcs, which LDBSCfg-ND.txt solves [see
+# nd_test.cpp].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+1  # the BlockConfig is a "differential" one
+2  # version of the BlockConfig format
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+# static_constraints
+*    # [none]
+# dynamic_constraints
+SimpleConfiguration<std::pair<int,double>>
+1 1e-6  # (unused) max cuts, relative violation for adding a cut
+# static_variables
+SimpleConfiguration<std::pair<int,double>>
+1 100   # 1 = Benders (formulation), scale of the cost of the slack arcs
+# dynamic_variables
+*    # [none]
+# objective
+*    # [none]
+# is_feasible
+*    # [none]
+# is_optimal
+*    # [none]
+# solution
+*    # [none]
+# extra: the BlockSolverConfig of the hidden copy of the MMCFBlock
+*LDBSCfg-ND.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BPar-ND-Ben.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
