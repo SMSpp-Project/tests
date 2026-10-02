@@ -40,7 +40,7 @@ intWZNorm             10 # which norm to use in the norm-based stopping conditio
                          # still does; scaled, the band that works is the same
                          # on all of them, from 1e-2 down to 1e-6
 intBPar1              20 # discard items when they have been useless for <this> iterations
-intBPar2             100 # max bundle size per component
+intBPar2          100000 # max bundle size per component
 intBPar3               1 # max n. of items to fetch from Fi() at each iteration
 intBPar4               1 # min n. of items to fetch from Fi() at each iteration
 intBPar6               0 # second parameter for dynamic max n. of items per iteration
