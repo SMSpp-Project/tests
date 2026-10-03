@@ -1,13 +1,31 @@
-# Inner BlockSolverConfig used by BranchAndXSolver.
-# The LagrangianDualRelaxationSolver supplies node bounds and branching
-# changes; its own Lagrangian-dual parameters are shared with LDCfg.txt.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  InnerBSCfg-BX-LD.txt - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the relaxation of the BranchAndXSolver of
+# BSPar-BX-LD.txt: the LagrangianDualRelaxationSolver, which gives the
+# bounds of the nodes and the branching Changes [see LDRSCfg.txt].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-BlockSolverConfig
+BlockSolverConfig     # exact type of the Configuration object
 
-1
+1  # the BlockSolverConfig is a "differential" one: values are being set
 
-1
-LagrangianDualRelaxationSolver
+1  # number of (the names of) Solver in this BlockSolverConfig
 
-1
-*LDCfg.txt
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+LagrangianDualRelaxationSolver  # 1st: the Lagrangian Dual of the nodes
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the LagrangianDualRelaxationSolver
+*LDRSCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END InnerBSCfg-BX-LD.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

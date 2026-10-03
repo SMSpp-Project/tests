@@ -9,6 +9,7 @@ if (NOT hasParent)
     find_package(BundleSolver)
     find_package(MILPSolver)
     find_package(FrankWolfeSolver)
+    find_package(BranchAndXSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -31,6 +32,12 @@ if (TARGET SMS++::UCBlock)
 
     if (TARGET SMS++::MILPSolver)
         target_link_libraries(UCBlock_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    # the Branch-and-X of BSPar-BX.txt and BSPar-BX-LD.txt, whose relaxation
+    # is the LagrangianDualRelaxationSolver
+    if (TARGET SMS++::BranchAndXSolver)
+        target_link_libraries(UCBlock_test PRIVATE SMS++::BranchAndXSolver)
     endif ()
 
     smspp_install(UCBlock_test)
