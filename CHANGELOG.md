@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `MMCFBlock/BSPar-ML-K-train.txt`, the configuration of the training of
+  `MMCFBlock_ML_bench`: `BSPar-ML-K.txt` with the online training of the
+  network on, both taking their `ComputeConfig` from `LDCfg-ML-K.txt`;
+  `train` stops with an error when the configuration has
+  `intMLTrainOnline` at 0, since the run would otherwise write weights
+  that learned nothing
+
 - bit 11 (2048) of the `LagBFunction` tester adds at runtime a dual pair to
   a single `LagBFunction` on an x that it does not have, as one does when
   dualizing a constraint born during the search, mirroring it on the LP

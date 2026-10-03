@@ -1,12 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -  BSPar-ML-K.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  BSPar-ML-K-train.txt - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a MMCFBlock solved by a
-# LagrangianDualSolver using a BundleSolverML (the ML-based BundleSolver
-# that predicts the step-size t with a neural network) as the inner
-# Solver, with the same (knapsack) relaxation as BSPar-K.txt; the network
-# only predicts and does not learn, as the B side of compare of
-# MMCFBlock_ML_bench needs. The ComputeConfig is LDCfg-ML-K.txt.
+# BSPar-ML-K.txt with the online training of the network on, i.e., the
+# <ml-cfg> of train of MMCFBlock_ML_bench: the ComputeConfig is
+# LDCfg-ML-K.txt with intMLTrainOnline set to 1, all the rest is the same
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31,12 +28,45 @@ LagrangianDualSolver  # name of 2nd Solver
 
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the LagrangianDualSolver
+# ComputeConfig of the LagrangianDualSolver: LDCfg-ML-K.txt with the
+# online training on
 
-*LDCfg-ML-K.txt
+*LDCfg-ML-K.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intMLTrainOnline    1 # train the network online at the end of each compute()
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
 
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -  END BSPar-ML-K.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - -  END BSPar-ML-K-train.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
