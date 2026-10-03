@@ -210,38 +210,25 @@ Block::Subset GenerateRand( Block::Index m , Block::Index k ,
 void b_config_Block( Block * block , Configuration * b_config ,
                      const std::string & fn )
 {
- // std::list rather than std::vector since it's built by push_back and
- // only trasversed head-to-tail
- std::list< Block * > BFS;
-
- // handle the special case of a "meta" BlockConfig
+ // handle the special case of a "meta" BlockConfig: BlockConfig-ure all
+ // Block whose classname() matches, or the "*" entry (if any) the others
  if( auto * mb =
      dynamic_cast< SimpleConfiguration< std::map< std::string ,
                                                   Configuration * > >
                                         * >( b_config ) ) {
-
-  // construct the list of all Block inside block
-  BFS.push_back( block );
-  for( auto bit = BFS.begin() ; bit != BFS.end() ; ++bit )
-   for( auto el : ( *bit )->get_nested_Blocks() )
-    BFS.push_back( el );
-
-  auto & map = mb->f_value;
-
-  // now BlockConfig-ure all Block whose classname() matches
-  for( auto b : BFS )
-   if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bc = dynamic_cast< BlockConfig * >( bcit->second ) ) {
-     auto cbc = bc->clone();
-     cbc->apply( b );
-     delete cbc;
-     }
-    else {
-     std::cerr << "Error: meta-Configuration for :Block " << bcit->first
-               << " in file " << fn << " is not a BlockConfig" << std::endl;
-     exit( 1 );
-     }
-    }
+  for_each_by_classname( block , mb->f_value ,
+			 [ & ]( Block * b , Configuration * c ) {
+			  auto bc = dynamic_cast< BlockConfig * >( c );
+			  if( ! bc ) {
+			   std::cerr << "Error: meta-Configuration for :Block "
+				     << b->classname() << " in file " << fn
+				     << " is not a BlockConfig" << std::endl;
+			   exit( 1 );
+			   }
+			  auto cbc = bc->clone();
+			  cbc->apply( b );
+			  delete cbc;
+			  } );
 
   return;  // all done
   }
@@ -337,43 +324,30 @@ void s_config_Block( Block * block , Configuration * s_config ,
                      const std::string & fn ,
                      bool clear_after )
 {
- // std::list rather than std::vector since it's built by push_back and
- // only trasversed head-to-tail
- std::list< Block * > BFS;
-
- // handle the special case of a "meta" BlockSolverConfig
+ // handle the special case of a "meta" BlockSolverConfig: the same, father
+ // first, as the Solver of a Block finds those of its sub-Block when it is
+ // compute()-d, not when it is registered
  if( auto * mb =
      dynamic_cast< SimpleConfiguration< std::map< std::string ,
                                                   Configuration * > >
                                         * >( s_config ) ) {
-
-  // construct the list of all Block inside block
-  BFS.push_back( block );
-  for( auto bit = BFS.begin() ; bit != BFS.end() ; ++bit )
-   for( auto el : ( *bit )->get_nested_Blocks() )
-    BFS.push_back( el );
-
-  auto & map = mb->f_value;
-
-  // now BlockSolverConfig-ure all Block whose classname() matches
-  for( auto b : BFS )
-   if( auto bcit = map.find( b->classname() ); bcit != map.end() ) {
-    if( auto bsc = dynamic_cast< BlockSolverConfig * >( bcit->second ) ) {
-     drop_missing_Solvers( bsc , fn );
-     bsc->apply( b );
-     }
-    else {
-     std::cerr << "Error: meta-Configuration for :Block " << bcit->first
-               << " in file " << fn << " is not a BlockSolverConfig"
-               << std::endl;
-     exit( 1 );
-     }
-    }
+  for_each_by_classname( block , mb->f_value ,
+			 [ & ]( Block * b , Configuration * c ) {
+			  auto bsc = dynamic_cast< BlockSolverConfig * >( c );
+			  if( ! bsc ) {
+			   std::cerr << "Error: meta-Configuration for :Block "
+				     << b->classname() << " in file " << fn
+				     << " is not a BlockSolverConfig"
+				     << std::endl;
+			   exit( 1 );
+			   }
+			  drop_missing_Solvers( bsc , fn );
+			  bsc->apply( b );
+			  } );
 
   // finally, clear() all the BlockSolverConfig for final cleanup
   if( clear_after )
-   for( auto & el : map )
-    (el.second)->clear();
+   mb->clear();
 
   return;  // all done
   }
