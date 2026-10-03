@@ -6,8 +6,11 @@
 # LagrangianDualSolver of LDCfg.txt, branching by fixing the variables in
 # the sub-Blocks (intApplyStrategy), with the Lagrangian Dual of each node
 # solved by at most intInnerMaxIter iterations of the bundle (intMaxIter
-# being those of the primal recovery of PrimalProximalHeur) and a bundle
-# large enough for the columns that the unfixings give back.
+# being those of the primal recovery of PrimalProximalHeur), a bundle large
+# enough for the columns that the unfixings give back, and an absolute
+# threshold on the Euclidean norm of the violation of the relaxed
+# constraints (intWZNorm 2, dblNZEps), so that an integral Lagrangian
+# solution is a feasible one.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -16,17 +19,18 @@
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-3  # number of integer parameters
+4  # number of integer parameters
 
 # now all the integer parameters
 intApplyStrategy 1     # branch by fixing in the sub-Blocks
 intInnerMaxIter 10000  # iterations of the Lagrangian Dual per call
 intBPar2 100000        # bundle size, the purged columns come back
+intWZNorm 2            # absolute Euclidean norm of the violation
 
-0  # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
-# [none]
+dblNZEps 1e-4  # integral Lagrangian solution => feasible
 
 0  # number of string parameters
 
