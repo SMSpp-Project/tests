@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - LDRSCfg.txt - - - - - - - - - - - - - - - -
+#
+# A ComputeConfig for the LagrangianDualRelaxationSolver, the relaxation of
+# the BranchAndXSolver of InnerBSCfg-BX-LD.txt: that of the
+# LagrangianDualSolver of LDCfg.txt, branching by fixing the variables in
+# the sub-Blocks (intApplyStrategy), with the Lagrangian Dual of each node
+# solved by at most intInnerMaxIter iterations of the bundle (intMaxIter
+# being those of the primal recovery of PrimalProximalHeur) and a bundle
+# large enough for the columns that the unfixings give back.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+3  # number of integer parameters
+
+# now all the integer parameters
+intApplyStrategy 1     # branch by fixing in the sub-Blocks
+intInnerMaxIter 10000  # iterations of the Lagrangian Dual per call
+intBPar2 100000        # bundle size, the purged columns come back
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END LDRSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
