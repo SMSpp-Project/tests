@@ -417,6 +417,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   difficulties on the runner of the nightly pipeline, a different instance
   at each run, while it solves them on the machines of ours
 
+- the meta BlockConfig and BlockSolverConfig of the tests accept the `"*"`
+  entry for the classnames they do not name, as those of tools do, and the
+  sub-Block of a Block are looked up after it has been configured
+
+- in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in 3,
+  and `socp-unstable.txt` lists topo/Bbnplanet_8 too, on which Gurobi stops
+  on numerical difficulties on the runner of the nightly pipeline
+
 - in CI, `MCFBlock/batches/batch` and `batch-dense` leave out the
   Frank-Wolfe decomposition, a single run of which takes the best part of an
   hour there (`batch-small` runs it on the small instances),
