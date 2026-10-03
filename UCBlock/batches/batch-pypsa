@@ -69,6 +69,17 @@ REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_hydro.nc]=7.898750861e+10
 # same network InvestmentBlock/batch-pypsa has with the design in an
 # InvestmentBlock over the UCBlock
 REF_OBJ[smspp_mod_t48_s1_b2c_det_ucblock.nc]=3.511271121e+07
+# the edge cases of the network (data/gen_network_cases.py of UCBlock), whose
+# DC lines have a susceptance, so that PTDF, CYCLE and KIRCHHOFF below each
+# write their own constraints: parallel lines in the same and in opposite
+# directions, a triangle with a parallel side, two DC components joined by a
+# link, nodes reached only by links with losses, and all of them together
+REF_OBJ[smspp_net_par.nc]=8.966666667e+03
+REF_OBJ[smspp_net_opp.nc]=8.966666667e+03
+REF_OBJ[smspp_net_tri.nc]=5.500000000e+03
+REF_OBJ[smspp_net_comp.nc]=5.450000000e+03
+REF_OBJ[smspp_net_loss.nc]=5.833333333e+03
+REF_OBJ[smspp_net_link.nc]=5.743333333e+03
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

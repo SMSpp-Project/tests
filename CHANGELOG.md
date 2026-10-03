@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- UCBlock/batch-pypsa runs the edge cases of the network of the UCBlock
+  data from 2026-10-03 with the PTDF, CYCLE and KIRCHHOFF formulations
+  against the optimum of PyPSA: parallel DC lines in the same and in
+  opposite directions, a triangle with a parallel side, DC components joined
+  by a link and nodes reached only by links with losses; until then the
+  instances of the battery had no susceptance, so that the three
+  formulations wrote the same transport model
+
 - `MMCFBlock/BSPar-ML-K-train.txt`, the configuration of the training of
   `MMCFBlock_ML_bench`: `BSPar-ML-K.txt` with the online training of the
   network on, both taking their `ComputeConfig` from `LDCfg-ML-K.txt`;
