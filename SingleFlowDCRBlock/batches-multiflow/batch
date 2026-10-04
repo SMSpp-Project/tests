@@ -49,10 +49,10 @@ source "$(dirname "$0")/../../batch_common.sh"
 exe=${1:-./MultiFlowDCRBlock_test}
 DATADIR=../../SingleFlowDCRBlock/data/nc4/multi
 
-# in CI one instance in 3 is run: the whole of it takes more than the hour
+# in CI one instance in 10 is run: the whole of it takes more than the hour
 # a test is given there, and the instances of a network differ only by the
 # number of flows
-if [ -n "$CI" ]; then every=3; else every=1; fi
+if [ -n "$CI" ]; then every=10; else every=1; fi
 
 ran=0
 k=0

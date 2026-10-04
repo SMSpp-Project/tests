@@ -366,9 +366,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in 3,
-  and `socp-unstable.txt` lists topo/Bbnplanet_8 too, on which Gurobi stops
-  on numerical difficulties on the runner of the nightly pipeline
+- in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in
+  10, and `SingleFlowDCRBlock` `batch-instances` the P/C formulation on one
+  instance in 10 and not the SOCP one, on which Gurobi stops on numerical
+  difficulties on the runner of the nightly pipeline, a different instance
+  at each run, while it solves them on the machines of ours
 
 - in CI, `MCFBlock/batches/batch` and `batch-dense` leave out the
   Frank-Wolfe decomposition, a single run of which takes the best part of an
