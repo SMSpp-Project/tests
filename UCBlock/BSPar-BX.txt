@@ -17,7 +17,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 BranchAndXSolver        # RABaX outer enumeration solver
-GRBMILPSolver           # MILP reference solver
+GRBMILPSolver           # MIP reference solver, stopped on time
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -44,6 +44,6 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-BX-LD.txt
 *  # no extra Configuration
 
 # 2nd ComputeConfig: GRBMILPSolver
-*MILPCfg.txt
+*MILPCfg-MIP.txt
 
 # - - - - - - - - - - - END BSPar-RABaX.txt - - - - - - - - - - - - - - - -
