@@ -366,9 +366,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- in CI `UCBlock/batches/batch-bx-ld` runs the units of size 10 only: the
-  four instances take more than the hour a test is given on the runner of
-  the nightly pipeline, the two of size 20 alone most of it
+- `UCBlock/batches/batch-acad-s` cross-checks a `BranchAndXSolver` too, whose
+  nodes are solved by the `LagrangianDualRelaxationSolver` over the same
+  sub-Blocks that the dynamic programming solves exactly, as a fourth Solver
+  of `BSPar-DP-BX.txt` stopped on time, branching on the commitment variables
+  only (`vstrBranchGroups`); in CI it runs on the units of size 10 only, the
+  other ones being solved with `BSPar-DP.txt`, as each instance takes 2 to 8
+  minutes and a test is given an hour on the runner of the nightly pipeline.
+  `batch-bx-ld` and `BSPar-BX-LD.txt`, which ran it alone on four instances,
+  are gone, and the configurations of the Lagrangian Dual and of the
+  Branch-and-Bound are fragments (`LDCfg-DPe.txt`, `LDRSCfg-DP.txt`,
+  `BXLDCfg.txt`, `BXLDCfg-DP.txt`)
 
 - in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in
   10, and `SingleFlowDCRBlock` `batch-instances` the P/C formulation on one

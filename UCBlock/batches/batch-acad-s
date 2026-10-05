@@ -17,10 +17,12 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
-DEFAULT_PAR=BSPar-DP.txt
+DEFAULT_PAR=BSPar-DP-BX.txt
 # the Lagrangian Dual of these instances is solved over sub-Block that the
 # dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
-# the PrimalProximalHeur needs and what makes its inner Solver converge
+# the PrimalProximalHeur needs and what makes its inner Solver converge, and
+# what the BranchAndXSolver needs for an integral Lagrangian solution to be a
+# feasible one [see BSPar-DP-BX.txt]
 # the LagrangianDualSolver here solves a relaxation of the problem, and with
 # the sub-problems solved exactly the bound it gives is the Lagrangian one,
 # which has a duality gap: it is declared as such, so that it is held to
@@ -41,7 +43,15 @@ for size in $sizes; do
 
     what=${DATADIR}/${size}_0_${seed}_w.nc4
 
-    run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt
+    # in CI the BranchAndXSolver of the default configuration runs on the
+    # units of size 10 only: on each instance it takes 2 to 8 minutes, and a
+    # test is given an hour there
+    p=$par
+    if [ -n "$CI" ] && [ "$size" != 10 ] && [ "$par" = "$DEFAULT_PAR" ]; then
+      p=BSPar-DP.txt
+    fi
+
+    run_test "$exe" "$what" -S "$p" -R "$REL" -B InnerBCfg.txt
 
   done
 done

@@ -1,0 +1,59 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  LDCfg-DPe.txt  - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the LagrangianDualSolver of the academic instances whose
+# sub-Blocks are solved exactly [see BSPar-DP.txt]: that of LDCfg-DP.txt,
+# with the easy components, a looser threshold on the residual, and the
+# ThermalUnitBlock and BatteryUnitBlock kept out of the easy components;
+# LDRSCfg-DP.txt starts from it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg-DP.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+intDoEasy 1 # do easy components for (some) LagBFunction
+
+3 # number of double parameters
+
+dblNZEps  1e-2 # threshold to declare 0 the || residual ||:
+               # the publication of the bound on the value of the Lagrangian
+               # Dual is subordinated to || z || being declared zero by this,
+               # so a tighter value does not make that bound better, it makes
+               # it never appear [see dblRelAcc in LDCfg-DP.txt]
+dbltStar  1e+4 # times || residual || estimates the gap
+dbltInit  1e-3 # initial value for t
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+1 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# the components that the inner BundleSolver never treats as "easy": the
+# ThermalUnitBlock, which have binary variables and their own Solver, and
+# the BatteryUnitBlock, which may have binary variables too
+vstrNoEasy 2 ThermalUnitBlock BatteryUnitBlock
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END LDCfg-DPe.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

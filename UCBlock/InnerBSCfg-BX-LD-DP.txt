@@ -1,9 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -  InnerBSCfg-BX-LD.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - InnerBSCfg-BX-LD-DP.txt - - - - - - - - - - - - -
 #
-# The BlockSolverConfig of the relaxation of the BranchAndXSolver of
-# BXLDCfg.txt: the LagrangianDualRelaxationSolver, which gives the bounds of
-# the nodes and the branching Changes [see LDRSCfg.txt].
+# BlockSolverConfig of the relaxation of the BranchAndXSolver of
+# BXLDCfg-DP.txt: the LagrangianDualRelaxationSolver of LDRSCfg-DP.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -21,11 +20,11 @@ LagrangianDualRelaxationSolver  # 1st: the Lagrangian Dual of the nodes
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# 1: the LagrangianDualRelaxationSolver
-*LDRSCfg.txt
+# 1: the LagrangianDualRelaxationSolver, sub-Blocks solved exactly
+*LDRSCfg-DP.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - -  END InnerBSCfg-BX-LD.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBSCfg-BX-LD-DP.txt - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

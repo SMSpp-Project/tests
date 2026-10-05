@@ -34,7 +34,7 @@ if (TARGET SMS++::UCBlock)
         target_link_libraries(UCBlock_test PRIVATE SMS++::MILPSolver)
     endif ()
 
-    # the Branch-and-X of BSPar-BX.txt and BSPar-BX-LD.txt, whose relaxation
+    # the Branch-and-X of BSPar-BX.txt and BSPar-DP-BX.txt, whose relaxation
     # is the LagrangianDualRelaxationSolver
     if (TARGET SMS++::BranchAndXSolver)
         target_link_libraries(UCBlock_test PRIVATE SMS++::BranchAndXSolver)

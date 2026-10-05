@@ -1,0 +1,58 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LDRSCfg-DP.txt  - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the LagrangianDualRelaxationSolver of the academic
+# instances whose sub-Blocks are solved exactly [see BSPar-DP-BX.txt]: that
+# of the LagrangianDualSolver of LDCfg-DPe.txt with the parameters of the
+# relaxation of LDRSCfg.txt, i.e., branching by fixing in the sub-Blocks and
+# an absolute threshold on the Euclidean norm of the violation, so that an
+# integral Lagrangian solution is a feasible one. Only the commitment
+# variables are branched upon: they determine the start-up and shut-down
+# ones, whose fixings the DP of the thermal units does not support.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg-DPe.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+4  # number of integer parameters
+
+# now all the integer parameters
+intApplyStrategy 1     # branch by fixing in the sub-Blocks
+intInnerMaxIter 10000  # iterations of the Lagrangian Dual per call
+intBPar2 100000        # bundle size, the purged columns come back
+intWZNorm 2            # absolute Euclidean norm of the violation
+
+1  # number of double parameters
+
+# now all the double parameters
+dblNZEps 1e-4  # integral Lagrangian solution => feasible
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+1  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+vstrBranchGroups 1 u_thermal  # branch on the commitment only
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END LDRSCfg-DP.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

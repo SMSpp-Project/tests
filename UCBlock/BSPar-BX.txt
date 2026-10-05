@@ -1,49 +1,35 @@
- # - - - - - - - - - - - - - BSPar-RABaX.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BSPar-BX.txt - - - - - - - - - - - - - - - -
 #
-# BlockSolverConfig for comparing RABaX with a MILP reference on a UCBlock.
-# RABaX is the BranchAndXSolver with a LagrangianDualRelaxationSolver as its
-# node relaxation; GRBMILPSolver solves the same UCBlock as the reference.
+# BlockSolverConfig that compares the BranchAndXSolver whose nodes are
+# solved by the Lagrangian Dual [see BXLDCfg.txt] with the :MILPSolver that
+# solves the MIP, stopped on time [see MILPCfg-MIP.txt].
 #
-# The BranchAndXSolver configuration points to InnerBSCfg-BX-LD.txt, which in
-# turn configures LagrangianDualRelaxationSolver and its LDCfg parameters.
-#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of Solvers: RABaX and the MILP reference
+2  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-BranchAndXSolver        # RABaX outer enumeration solver
-GRBMILPSolver           # MIP reference solver, stopped on time
+BranchAndXSolver  # 1st: the Lagrangian Branch-and-Bound
+GRBMILPSolver     # 2nd: the MIP, stopped on time
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
-# 1st ComputeConfig: BranchAndXSolver / RABaX
-ComputeConfig
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
-1  # f_diff == 1: only listed parameters are changed
+# 1: the Branch-and-Bound
+*BXLDCfg.txt
 
-2  # number of integer parameters
-intSolveMethod 0
-intMaxThread 1
-
-0  # number of double parameters
-
-1  # number of string parameters
-strNameOfBlockSolverConfigurationFile InnerBSCfg-BX-LD.txt
-
-0  # number of vector-of-int parameters
-
-0  # number of vector-of-double parameters
-
-0  # number of vector-of-string parameters
-
-*  # no extra Configuration
-
-# 2nd ComputeConfig: GRBMILPSolver
+# 2: the MIP
 *MILPCfg-MIP.txt
 
-# - - - - - - - - - - - END BSPar-RABaX.txt - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BSPar-BX.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
