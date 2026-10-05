@@ -370,6 +370,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Branch-and-Bound are fragments (`LDCfg-DPe.txt`, `LDRSCfg-DP.txt`,
   `BXLDCfg.txt`, `BXLDCfg-DP.txt`)
 
+- `UCBlock/batches/batch-acad-s` cross-checks a second `BranchAndXSolver`,
+  whose nodes are solved by the `LagrangianDualRelaxationSolverML` with the
+  branching rule learned online after 2 nodes of strong branching
+  (`LDRSCfg-DP-ML.txt`, `InnerBSCfg-BX-LD-DP-ML.txt`, `BXLDCfg-DP-ML.txt`),
+  in CI too on the units of size 10; a build without Torch leaves it out of
+  the run, and `UCBlock_test` links `LagrangianDualSolverML` when there is
+
 - in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in
   10, and `SingleFlowDCRBlock` `batch-instances` the P/C formulation on one
   instance in 10 and not the SOCP one, on which Gurobi stops on numerical

@@ -1,11 +1,13 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - BSPar-DP-BX.txt - - - - - - - - - - - - - - -
 #
-# The BlockSolverConfig of BSPar-DP.txt with one more Solver, the
+# The BlockSolverConfig of BSPar-DP.txt with two more Solver, the
 # BranchAndXSolver whose nodes are solved by the Lagrangian Dual over the
-# same exactly solved sub-Blocks [see BXLDCfg-DP.txt]. It is exact, but it
-# is stopped on time, and then gives the bounds of the nodes left open,
-# which the comparison with the other three takes as a pair of bounds.
+# same exactly solved sub-Blocks [see BXLDCfg-DP.txt], and the same with the
+# branching rule learned online [see BXLDCfg-DP-ML.txt], which a build
+# without Torch leaves out of the run. They are exact, but they are stopped
+# on time, and then give the bounds of the nodes left open, which the
+# comparison with the other Solver takes as a pair of bounds.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,7 +16,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-4 # number of (the names of) Solver in this BlockSolverConfig
+5 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
@@ -24,8 +26,9 @@ GRBMILPSolver         # name of 1st Solver
 LagrangianDualSolver  # name of 2nd Solver
 PrimalProximalHeur    # name of 3rd Solver
 BranchAndXSolver      # name of 4th Solver
+BranchAndXSolver      # name of 5th Solver
 
-4 # number of ComputeConfig in this BlockSolverConfig
+5 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -47,6 +50,11 @@ BranchAndXSolver      # name of 4th Solver
 # ComputeConfig of the BranchAndXSolver
 
 *BXLDCfg-DP.txt
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the BranchAndXSolver with the rule learned online
+
+*BXLDCfg-DP-ML.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LDRSCfg-DP-ML.txt - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the LagrangianDualRelaxationSolverML of the academic
+# instances whose sub-Blocks are solved exactly [see BSPar-DP-BX.txt]: that
+# of LDRSCfg-DP.txt with the branching rule learned online, i.e., strong
+# branching on the first nodes and then the model fitted on their data,
+# after a few nodes only, so that a run of the battery fits it and uses it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDRSCfg-DP.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+3  # number of integer parameters
+
+# now all the integer parameters
+intBranchStrategy 3  # learned online (eOnline)
+intStrongCands    2  # candidates, the most fractional ones
+intLearnNodes     2  # nodes of strong branching before the fitting
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END LDRSCfg-DP-ML.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -40,6 +40,14 @@ if (TARGET SMS++::UCBlock)
         target_link_libraries(UCBlock_test PRIVATE SMS++::BranchAndXSolver)
     endif ()
 
+    # the 5th Solver of BSPar-DP-BX.txt asks for the
+    # LagrangianDualRelaxationSolverML by name, and the class is in the
+    # library of its own that only a build with Torch has
+    if (TARGET SMS++::LagrangianDualSolverML)
+        target_link_libraries(UCBlock_test PRIVATE
+                              SMS++::LagrangianDualSolverML)
+    endif ()
+
     smspp_install(UCBlock_test)
 
     # the pollutant budget constraints, on instances the tester writes itself;
