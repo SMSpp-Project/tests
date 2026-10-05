@@ -366,6 +366,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- in CI `UCBlock/batches/batch-bx-ld` runs the units of size 10 only: the
+  four instances take more than the hour a test is given on the runner of
+  the nightly pipeline, the two of size 20 alone most of it
+
 - in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in
   10, and `SingleFlowDCRBlock` `batch-instances` the P/C formulation on one
   instance in 10 and not the SOCP one, on which Gurobi stops on numerical
