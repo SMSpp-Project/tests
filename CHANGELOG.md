@@ -178,14 +178,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   -r`), which the Lagrangian subproblems need, and the knapsacks are solved
   by dynamic programming (`BKBSCfg-DP.txt`, in `InnerBSCfg.txt`)
 
-- `ParallelDPBinaryKnapsackSolver` is in the comparison of the
-  `BinaryKnapsackBlock` battery, as its 14th `Solver`, with the engine it
-  chooses by itself and 4 workers: it was the one `Solver` of that module that
-  no configuration named, hence the one whose code no battery ran. One
-  `Solver` per family in the configuration that family is meant to be used
-  with is what the batteries check, while which of its internal variants is
-  faster is a matter for a measurement
-
 - a configuration that names a `Solver` this build does not have no longer
   makes a run fail: the testers take those names out of the `BlockSolverConfig`
   before applying it [see `Solver::has_Solver()`] and warn, in the yellow of

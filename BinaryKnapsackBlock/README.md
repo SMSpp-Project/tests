@@ -33,7 +33,7 @@ not finish. The rest are the harnesses of one path at a time, i.e., the lazy
 bounding protocol, the reoptimization, the diving and the thread scaling of
 the `BranchAndXSolver`. The `ComputeConfig` they share are the fragments
 [MILPCfg.txt](MILPCfg.txt), [DPCfg.txt](DPCfg.txt), [CDPCfg.txt](CDPCfg.txt),
-[PDPCfg.txt](PDPCfg.txt), [GRCfg.txt](GRCfg.txt) and
+[GRCfg.txt](GRCfg.txt) and
 [BX-baseCfg.txt](BX-baseCfg.txt), each written once and pointed at by whoever
 needs it.
 
