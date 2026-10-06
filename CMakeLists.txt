@@ -144,6 +144,7 @@ add_subdirectory(SVMBlock)
 add_subdirectory(SingleFlowDCRBlock)
 add_subdirectory(SATBlock)
 add_subdirectory(SatellitesBlock)
+add_subdirectory(MultiKnapsackAssignBlock)
 
 # the one tester that is posed on no Block in particular: it reads whichever
 # two the configurations name and compares the two formulations

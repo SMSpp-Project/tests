@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the suite `MultiKnapsackAssignBlock`, which cross-checks on the instances
+  of the module a `:MILPSolver` on the whole tree and the Lagrangian
+  decomposition into `BinaryKnapsackBlock` solved by the
+  `CoreDPBinaryKnapsackSolver`, the latter declared a relaxation
+
 - the tester of `LagBFunction` can write the transportation components with
   a size Variable tau_k (`SIZE_EASY`, 0 unless given at compile time), their
   balances and capacities scaled by it, so that the master problem ties
@@ -911,6 +916,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   already asks for it
 
 ### Fixed
+
+- `SolveAll()` takes the side of the bound of a Solver declared a relaxation
+  from the sense of the objective of the Block, which a Block without an
+  Objective of its own (its objective being the sum of these of its
+  sub-Block, as for `MultiKnapsackAssignBlock`) also gives: before, the
+  bound of such a maximization problem was taken for a lower one
 
 - `UCBlock/MPBCfg.txt` asks Gurobi for `FeasibilityTol` 1e-8 rather than
   the 1e-9 of the other `MPBCfg.txt`: the units of the Lagrangian relaxation
