@@ -251,11 +251,13 @@
  *
  * With SIZE_EASY == 0, or when the transportation components are treated
  * as hard, the original balances and BoxConstraint bounds are retained.
- * The macro does not select the stabilization in NDOPar.txt. Use
- * -DSIZE_EASY=0 to disable scaling, e.g. for unscaled proximal tests.
+ * The macro does not select the stabilization in NDOPar.txt; it can be
+ * given at compile time, e.g., -DSIZE_EASY=1, and it is 0 otherwise.
  */
 
-#define SIZE_EASY 0
+#ifndef SIZE_EASY
+ #define SIZE_EASY 0
+#endif
 
 /*--------------------------------------------------------------------------*/
 // if nonzero, the two Block are not solved at every round of changes, but

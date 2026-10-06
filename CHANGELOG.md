@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the tester of `LagBFunction` can write the transportation components with
+  a size Variable tau_k (`SIZE_EASY`, 0 unless given at compile time), their
+  balances and capacities scaled by it, so that the master problem ties
+  tau_k to its lambda and the easy components can be used with the level and
+  doubly stabilized master problems
+
 - UCBlock/batch-pypsa runs the edge cases of the network of the UCBlock
   data from 2026-10-03 with the PTDF, CYCLE and KIRCHHOFF formulations
   against the optimum of PyPSA: parallel DC lines in the same and in

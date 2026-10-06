@@ -41,12 +41,12 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints
 intMaxThread    1 # single-threaded for deterministic master reproducibility
 
-# All suggested CPLEX parameter (uncomment based on Solver)
-#CPXPARAM_QPMethod                 2   
+# suggested CPLEX parameters (uncomment for CPLEX)
+#CPXPARAM_QPMethod                2   # 2 = dual simplex for the QP master
 #CPXPARAM_Preprocessing_Presolve  0   # disable presolve
 
-# All suggested GUROBI parameter (uncomment based on Solver)
-Method        1  # 0 = primal, 1 = dual simplex, 2 = barrier: the multipliers
+# suggested Gurobi parameters (uncomment for Gurobi)
+Method        1   # 0 = primal, 1 = dual simplex, 2 = barrier: the multipliers
                   # of the master ARE the algorithm, and an interior point has
                   # them only to about 1e-7 relative, which the stopping test
                   # of the bundle cannot survive; besides, the barrier cannot
@@ -86,7 +86,7 @@ OptimalityTol   1e-09 # how much a reduced cost of the master may be off
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile master.lp         # write the master lp to a file
+#strOutputFile master.lp # write the master LP to a file
 
 # All specific HiGHS parameter (uncomment based on Solver)
 #presolve  off    # disable presolve for reproducibility
