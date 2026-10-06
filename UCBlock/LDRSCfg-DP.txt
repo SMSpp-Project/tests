@@ -21,7 +21,7 @@
 
 # now all the integer parameters
 intApplyStrategy 1     # branch by fixing in the sub-Blocks
-intInnerMaxIter 10000  # iterations of the Lagrangian Dual per call
+intMaxThread 0         # threads the primal recovery spawns: none
 intBPar2 100000        # bundle size, the purged columns come back
 intWZNorm 2            # absolute Euclidean norm of the violation
 
@@ -30,10 +30,10 @@ intWZNorm 2            # absolute Euclidean norm of the violation
 # now all the double parameters
 dblNZEps 1e-4  # integral Lagrangian solution => feasible
 
-0  # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
-# [none]
+str_LDSlv_ISCfg ISCfg-LDRS.txt  # ComputeConfig of the inner Solver
 
 0  # number of vector-of-int parameters
 

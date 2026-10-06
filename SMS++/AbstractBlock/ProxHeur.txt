@@ -36,7 +36,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-20 # number of integer parameters
+19 # number of integer parameters
 
 # now all the integer parameters
 intMPStbl              0 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
@@ -46,9 +46,6 @@ int_LDSlv_NNMult      1 # 1 if Lagrangian multipliers must be >= 0
 
 # then those of BundleSolver as its inner Solver
 intDoEasy             0 # do not do easy components even for LagBFunction
-intInnerMaxIter   10000 # max number of iterations of each call to the inner
-                        # Solver, the iterations of the heuristic itself
-                        # being capped by intMaxIter
 intLogVerb            0 # LogVerb, log verbosity of main Bundle algorithm
 
 intWZNorm             2 # which norm to use in the norm-based stopping condition
@@ -61,7 +58,7 @@ intBPar7             11 # how to deal with the global pools
 intMnSSC              0 # min number of consecutive SS with the same t for a t increase
 intMnNSC              1 # min number of consecutive NS with the same t for a t decrease
 inttSPar1            12 # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
-intMaxThread          1
+intMaxThread          0 # threads the primal recovery spawns: none
 
 intMaxNrEvls          2 # maximum number of function evaluations at each iteration
 
@@ -73,14 +70,12 @@ intTrgtMng            0 # bit-wise encoding targets and accuracies management:
                         # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
                         # bit 4: if Lipschitz constant is used to compute the upper model
 
-18 # number of double parameters
+17 # number of double parameters
 
 # now all the double parameters
 dblRelAcc          1e-7 # relative accuracy required of the solution the
                         # heuristic produces: it stops as soon as its
                         # gap is this small, and returns kOK
-dblInnerRelAcc     1e-7 # relative accuracy the inner Solver solves the
-                        # Lagrangian Dual with
 dblNZEps           1e-8 # stopping parameter: threshold to declare 0 the || residual ||
 dbltStar           1e+2 # stopping parameter: multiplied to || residual || to estimate gap
 dblBPar5              4 # first parameter for dynamic max n. of items per iteration
@@ -99,13 +94,14 @@ dbltSPar3             0 # parameter for small heuristic t adjustments
 
 dbl_penaltyFactor  1e+5
 
-4 # number of string parameters
+5 # number of string parameters
 
 # now all the string parameters
 # first those of LagrangianDualSolver proper
 strWarmStartBSC   WarmStartCfg.txt # BlockSolverConfig of the warm start,
                                    # empty = no warm start
 str_LDSlv_ISName      BundleSolver # the inner Solver used by LagrangianDualSolver
+str_LDSlv_ISCfg      ISCfg-PPH.txt # ComputeConfig of the inner Solver
 strMPBSolverCfg         MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
 str_LagBF_BSCfg        QPBSCfg.txt # the BlockSolverConfig for inner Block
 

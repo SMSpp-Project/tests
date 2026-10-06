@@ -382,6 +382,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   looks at the rounding of the iterate every iteration because
   `FWIBCfg.txt` says so (`intEverykIt` 1)
 
+- the inner Solver of the `PrimalProximalHeur` and of the
+  `LagrangianDualRelaxationSolver` takes its iterations and its accuracy
+  from its own ComputeConfig, given with `str_LDSlv_ISCfg`:
+  `ISCfg-PPH.txt` in `UCBlock`, `TwoStageStochasticBlock` and
+  `SMS++/AbstractBlock`, and `ISCfg-LDRS.txt` in `UCBlock`, in place of
+  `intInnerMaxIter` and `dblInnerRelAcc`; `intMaxThread`, which the two
+  Solver now keep for the threads of their primal recovery, is 0 in their
+  configurations, as `intRecoveryThreads` was 1, and `UCBlock/PPHCfg-DP.txt`
+  is `PPHCfg.txt` with only what differs
+
 - `UCBlock/batches/batch-acad-s` cross-checks a `BranchAndXSolver` too, whose
   nodes are solved by the `LagrangianDualRelaxationSolver` over the same
   sub-Blocks that the dynamic programming solves exactly, as a fourth Solver

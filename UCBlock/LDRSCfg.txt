@@ -5,7 +5,7 @@
 # the BranchAndXSolver of InnerBSCfg-BX-LD.txt: that of the
 # LagrangianDualSolver of LDCfg.txt, branching by fixing the variables in
 # the sub-Blocks (intApplyStrategy), with the Lagrangian Dual of each node
-# solved by at most intInnerMaxIter iterations of the bundle (intMaxIter
+# solved by the bundle with the ComputeConfig of ISCfg-LDRS.txt (intMaxIter
 # being those of the primal recovery of PrimalProximalHeur), a bundle large
 # enough for the columns that the unfixings give back, and an absolute
 # threshold on the Euclidean norm of the violation of the relaxed
@@ -23,7 +23,7 @@
 
 # now all the integer parameters
 intApplyStrategy 1     # branch by fixing in the sub-Blocks
-intInnerMaxIter 10000  # iterations of the Lagrangian Dual per call
+intMaxThread 0         # threads the primal recovery spawns: none
 intBPar2 100000        # bundle size, the purged columns come back
 intWZNorm 2            # absolute Euclidean norm of the violation
 
@@ -32,10 +32,10 @@ intWZNorm 2            # absolute Euclidean norm of the violation
 # now all the double parameters
 dblNZEps 1e-4  # integral Lagrangian solution => feasible
 
-0  # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
-# [none]
+str_LDSlv_ISCfg ISCfg-LDRS.txt  # ComputeConfig of the inner Solver
 
 0  # number of vector-of-int parameters
 

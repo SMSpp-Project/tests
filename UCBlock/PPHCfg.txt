@@ -13,23 +13,18 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-17 # number of integer parameters
+16 # number of integer parameters
 
 # now all the integer parameters
 intMaxIter         10 # max number of iterations of the heuristic itself
                       # (default = Inf<int>()); set explicitly for the test
                       # battery so it terminates even when penalty < 1e-3 is
                       # unreachable on large instances (NumStatVar * R >> 1e-3)
-intInnerMaxIter   500 # max number of iterations of each call to the inner
-                      # Solver, which has to converge for the fractional
-                      # solution the penalty is built on to mean anything;
-                      # the cap is what the first penalized call, the only
-                      # one that does not converge, is stopped by
 intUseWarmStartPSol 0 # 0 = the first iteration is not penalized and its
                       # bound is the valid one, 1 = the primal solution of
                       # the warm start is the first proximal center
 intDoEasy           1 # do easy components for (some) LagBFunction
-intMaxThread        1 # MaxThread, max number of new tasks to spawn
+intMaxThread        0 # threads the primal recovery spawns: none
 intLogVerb          0 # log verbosity of main Bundle algorithm
 intWZNorm           2 # which norm to use in the norm-based stopping condition
 intBPar1           20 # discard items when they have been useless for <this> iterations
@@ -43,14 +38,12 @@ intMnNSC            1 # min number of consecutive NS with the same t for a t dec
 inttSPar1          12 # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
 intMaxNrEvls        2 # maximum number of function evaluations at each iteration
 
-6 # number of double parameters
+5 # number of double parameters
 
 # now all the double parameters
 dblRelAcc          1e-4 # relative accuracy required of the solution the
                         # heuristic produces: it stops as soon as its
                         # gap is this small, and returns kOK
-dblInnerRelAcc     1e-4 # relative accuracy the inner Solver solves the
-                        # Lagrangian Dual with
 dblNZEps           1e-4 # stopping parameter: threshold to declare 0 the || residual ||
 dbltStar           1e+4 # stopping parameter: multiplied to || residual || to estimate gap
 #dblBPar5             4 # first parameter for dynamic max n. of items per iteration
@@ -68,13 +61,14 @@ dbltInit           1e-3 # initial value for t
 
 dbl_penaltyFactor  1e+3
 
-4 # number of string parameters
+5 # number of string parameters
 
 # now all the string parameters
 #str_LDSlv_ISName ParallelBundleSolver # the inner Solver used by LagrangianDualSolver
 strWarmStartBSC     WarmStartCfg.txt # BlockSolverConfig of the warm start,
                                      # empty = no warm start
 str_LDSlv_ISName          BundleSolver # the inner Solver used by LagrangianDualSolver
+str_LDSlv_ISCfg          ISCfg-PPH.txt # ComputeConfig of the inner Solver
 strMPBSolverCfg              MPBCfg.txt # BlockSolverConfig for the Solver of
                                         # the MasterProblemBlock
 str_LagBF_BSCfg         InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions,
