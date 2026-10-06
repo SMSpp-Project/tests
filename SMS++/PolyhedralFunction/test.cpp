@@ -395,7 +395,7 @@ static void SetGlobalBound( void );
 // if the current PF violates the BundleSolver invariant (no diagonal row
 // AND no finite bound), restore it by injecting a finite bound on both
 // the LP side (BoxConstraint on v) and the NDO side
-// (PolyhedralFunction::modify_bound). Invoked just before each SolveBoth
+// (PolyhedralFunction::modify_bound). Invoked just before each SolveEach
 // call so deletions and bound updates earlier in this round can never
 // leave the function unevaluable
 static void enforce_invariant( void )
@@ -796,12 +796,13 @@ static void printAb( const MultiVector & tA , const RealVector & tb ,
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void )
+static bool SolveEach( void )
 {
- // two separate Block with one Solver each, LPBlock against NDOBlock: the
- // verdict below is bespoke (it handles the conditional bound of
+ // two separate Block, LPBlock with one Solver and NDOBlock with as many as
+ // its BlockSolverConfig attaches, each of the latter checked against the
+ // former: the verdict below is bespoke (it handles the conditional bound of
  // BundleSolver), while the per-instance line is that of common_utils, with
- // S0 = the LPBlock value and S1 = the NDOBlock one.
+ // S0 = the LPBlock value and S1, S2, ... those of the NDOBlock Solver
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
@@ -818,96 +819,105 @@ static bool SolveBoth( void )
   double foLP = hsLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
                      : ( convex ? INF : -INF );
 
-  // solve the NODBlock - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrNDO = ( NDOBlock->get_registered_solvers() ).front();
-  #if DETACH_NDO
-   NDOBlock->unregister_Solver( slvrNDO );
-   NDOBlock->register_Solver( slvrNDO );
-  #endif
-  auto startNDO = std::chrono::system_clock::now();
-  int rtrnNDO = slvrNDO->compute( false );
-  auto endNDO = std::chrono::system_clock::now();
-  double tNDO = std::chrono::duration< double >( endNDO - startNDO ).count();
-  bool hsNDO = ( ( rtrnNDO >= Solver::kOK ) && ( rtrnNDO < Solver::kError ) )
-              || ( rtrnNDO == Solver::kLowPrecision );
-  double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
-                       : ( convex ? INF : -INF );
-
-  // bespoke verdict (sets ok + verdict; the conditional-bound branches keep
-  // their bound-doubling side effects) - - - - - - - - - - - - - - - - - - -
-  bool ok = false;
-  std::string verdict = "KO";
-  bool decided = false;
-
-  if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 5e-7 *
-			 max( double( 1 ) , abs( max( foLP , foNDO ) ) ) ) ) {
-   ok = true; verdict = "OK(f)"; decided = true;
-   }
-
-  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
-      ( rtrnNDO == Solver::kUnbounded ) ) {
-   ok = true; verdict = "OK(u)"; decided = true;
-   }
-
-  if( ( ! decided ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
-   /* Weird case: the LP found an optimal solution but the NDO declared the
-    * problem unbounded -- the BundleSolver's heuristic unboundedness
-    * detection firing because the value reached the "conditional" valid
-    * bound installed via set_valid_(lower/upper)_bound(). Accept and double
-    * the bound for more headroom next time. */
-   bool fo_at_or_past_bound =
-       convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
-              : ( foNDO >= bound * ( 1 - 1e-9 ) );
-   bool fo_unbounded_sentinel =
-       ( foNDO == INF ) || ( foNDO == - INF );
-   bool foLP_past_bound =
-       convex ? ( foLP <= - bound * ( 1 - 1e-9 ) )
-              : ( foLP >= bound * ( 1 - 1e-9 ) );
-   if( fo_at_or_past_bound || fo_unbounded_sentinel || foLP_past_bound ) {
-    bound *= 2;
-    if( convex )
-     NDOBlock->set_valid_lower_bound( -bound );
-    else
-     NDOBlock->set_valid_upper_bound( bound );
-    ok = true; verdict = "OK(?bound?)"; decided = true;
-    }
-   }
-
-  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) ) {
-   /* Symmetric weird case: the LP says the problem is unbounded; if the NDO
-    * stopped at (or past) the conditional bound, accept and double it. */
-   bool foNDO_at_or_past_bound =
-       convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
-              : ( foNDO >= bound * ( 1 - 1e-9 ) );
-   bool foNDO_unbounded =
-       convex ? ( foNDO == INF || foNDO == - INF )
-              : ( foNDO == INF || foNDO == - INF );
-   if( foNDO_at_or_past_bound || foNDO_unbounded ) {
-    bound *= 2;
-    if( convex )
-     NDOBlock->set_valid_lower_bound( -bound , true );
-    else
-     NDOBlock->set_valid_upper_bound( bound , true );
-    ok = true; verdict = "OK(?bound?)"; decided = true;
-    }
-   }
-
-  if( ( ! decided ) && ( rtrnLP == Solver::kInfeasible ) &&
-      ( rtrnNDO == Solver::kInfeasible ) ) {
-   ok = true; verdict = "OK(?e?)"; decided = true;
-   }
-
-  // uniform per-instance line (S0 = LPBlock, S1 = NDOBlock) - - - - - - - - -
   auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
    if( hs )                              return( fmt_obj( fo ) );
    if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
    if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
    return( "Error!" );
    };
+  std::vector< double > times = { tLP };
+  std::vector< std::string > values = { tok( hsLP , rtrnLP , foLP ) };
+
+  // solve the NDOBlock with each of its Solver- - - - - - - - - - - - - - - -
+  // the conditional bound is doubled once, after all of them, if any of
+  // them has stopped at it
+  bool ok = true;
+  std::string verdict;
+  bool dbl_bound = false;
+  bool dbl_bound_cond = false;
+  const auto slvrs = NDOBlock->get_registered_solvers();  // a copy
+  for( auto slvrNDO : slvrs ) {
+   #if DETACH_NDO
+    NDOBlock->unregister_Solver( slvrNDO );
+    NDOBlock->register_Solver( slvrNDO );
+   #endif
+   auto startNDO = std::chrono::system_clock::now();
+   int rtrnNDO = slvrNDO->compute( false );
+   auto endNDO = std::chrono::system_clock::now();
+   times.push_back(
+           std::chrono::duration< double >( endNDO - startNDO ).count() );
+   bool hsNDO = ( ( rtrnNDO >= Solver::kOK ) && ( rtrnNDO < Solver::kError ) )
+                || ( rtrnNDO == Solver::kLowPrecision );
+   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
+                        : ( convex ? INF : -INF );
+   values.push_back( tok( hsNDO , rtrnNDO , foNDO ) );
+
+   // bespoke verdict of this Solver
+   std::string v = "KO";
+
+   if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= 5e-7 *
+                          max( double( 1 ) , abs( max( foLP , foNDO ) ) ) ) )
+    v = "OK(f)";
+
+   if( ( v == "KO" ) && ( rtrnLP == Solver::kUnbounded ) &&
+       ( rtrnNDO == Solver::kUnbounded ) )
+    v = "OK(u)";
+
+   if( ( v == "KO" ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
+    /* Weird case: the LP found an optimal solution but the NDO declared the
+     * problem unbounded -- the BundleSolver's heuristic unboundedness
+     * detection firing because the value reached the "conditional" valid
+     * bound installed via set_valid_(lower/upper)_bound(). Accept and double
+     * the bound for more headroom next time. */
+    bool fo_at_or_past_bound =
+        convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
+               : ( foNDO >= bound * ( 1 - 1e-9 ) );
+    bool fo_unbounded_sentinel =
+        ( foNDO == INF ) || ( foNDO == - INF );
+    bool foLP_past_bound =
+        convex ? ( foLP <= - bound * ( 1 - 1e-9 ) )
+               : ( foLP >= bound * ( 1 - 1e-9 ) );
+    if( fo_at_or_past_bound || fo_unbounded_sentinel || foLP_past_bound ) {
+     dbl_bound = true;
+     v = "OK(?bound?)";
+     }
+    }
+
+   if( ( v == "KO" ) && ( rtrnLP == Solver::kUnbounded ) ) {
+    /* Symmetric weird case: the LP says the problem is unbounded; if the NDO
+     * stopped at (or past) the conditional bound, accept and double it. */
+    bool foNDO_at_or_past_bound =
+        convex ? ( foNDO <= - bound * ( 1 - 1e-9 ) )
+               : ( foNDO >= bound * ( 1 - 1e-9 ) );
+    bool foNDO_unbounded = ( foNDO == INF ) || ( foNDO == - INF );
+    if( foNDO_at_or_past_bound || foNDO_unbounded ) {
+     dbl_bound = dbl_bound_cond = true;
+     v = "OK(?bound?)";
+     }
+    }
+
+   if( ( v == "KO" ) && ( rtrnLP == Solver::kInfeasible ) &&
+       ( rtrnNDO == Solver::kInfeasible ) )
+    v = "OK(?e?)";
+
+   // the verdict of the line is the first KO, or that of the last Solver
+   if( v == "KO" )
+    ok = false;
+   if( verdict.empty() || ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
+    verdict = v;
+   }
+
+  if( dbl_bound ) {
+   bound *= 2;
+   if( convex )
+    NDOBlock->set_valid_lower_bound( -bound , dbl_bound_cond );
+   else
+    NDOBlock->set_valid_upper_bound( bound , dbl_bound_cond );
+   }
+
+  // uniform per-instance line (S0 = LPBlock, S1, S2, ... = NDOBlock) - - - -
   print_instance_line(
-   { tLP , tNDO } ,
-   { tok( hsLP , rtrnLP , foLP ) , tok( hsNDO , rtrnNDO , foNDO ) } ,
-   std::numeric_limits< double >::quiet_NaN() , verdict ,
+   times , values , std::numeric_limits< double >::quiet_NaN() , verdict ,
    std::numeric_limits< double >::quiet_NaN() , LOG_LEVEL >= 1 );
   return( ok );
   }
@@ -1224,7 +1234,8 @@ int main( int argc , char **argv )
 
  #if( LOG_LEVEL >= 2 )
   #if( LOG_ON_COUT )
-   ( ( NDOBlock->get_registered_solvers() ).front() )->set_log( &cout );
+   for( auto slvr : NDOBlock->get_registered_solvers() )
+    slvr->set_log( &cout );
   #else
    ofstream LOGFile( logF , ofstream::out );
    if( ! LOGFile.is_open() )
@@ -1232,7 +1243,8 @@ int main( int argc , char **argv )
    else {
     LOGFile.setf( ios::scientific, ios::floatfield );
     LOGFile << setprecision( 10 );
-    ( ( NDOBlock->get_registered_solvers() ).front() )->set_log( &LOGFile );
+    for( auto slvr : NDOBlock->get_registered_solvers() )
+     slvr->set_log( &LOGFile );
     }
   #endif
 
@@ -1251,7 +1263,7 @@ int main( int argc , char **argv )
  // generation may have left only verticals with no bound)
  enforce_invariant();
 
- bool AllPassed = SolveBoth();
+ bool AllPassed = SolveEach();
  
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1881,7 +1893,7 @@ int main( int argc , char **argv )
    // updates earlier in this round may have left the function with only
    // verticals and no bound, which would make the BundleSolver stall
    enforce_invariant();
-   AllPassed &= SolveBoth();
+   AllPassed &= SolveEach();
    }
   #if( LOG_LEVEL >= 1 )
   else
