@@ -1750,9 +1750,9 @@ int main( int argc , char **argv )
      Subset nms( GenerateRand( ndvar , tochange , rg ) );
 
      // remove them from the LP
-     auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( 0 );
+     auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
      auto cnst_it =
-             LPBlock->get_dynamic_constraint< FRowConstraint >( 0 )->begin();
+             LPBlock->get_dynamic_constraint< FRowConstraint >( "cuts" )->begin();
      if( tochange == 1 ) {
       for( Index i = 0 ; i < m ; ++i ) {
        auto fi = static_cast< p_LF >( (cnst_it++)->get_function() );
@@ -1801,7 +1801,7 @@ int main( int argc , char **argv )
       }
 
      // remove them from the NDO
-     auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( 0 );
+     auto xNDOd = NDOBlock->get_dynamic_variable< ColVariable >( "xd" );
      if( tochange == 1 ) {
       PF->remove_variable( nsvar + nms[ 0 ] );
 
@@ -1845,11 +1845,11 @@ int main( int argc , char **argv )
     for( auto & ai : PF->get_A() )
      PANIC( nvar == ai.size() );
     PANIC( ndvar ==
-	         LPBlock->get_dynamic_variable< ColVariable >( 0 )->size() );
+	         LPBlock->get_dynamic_variable< ColVariable >( "xd" )->size() );
     PANIC( ndvar ==
-	        NDOBlock->get_dynamic_variable< ColVariable >( 0 )->size() );
+	        NDOBlock->get_dynamic_variable< ColVariable >( "xd" )->size() );
     for( auto & ci :
-	          *(LPBlock->get_dynamic_constraint< FRowConstraint >( 0 )) )
+	          *(LPBlock->get_dynamic_constraint< FRowConstraint >( "cuts" )) )
      PANIC( nvar + 1 == ci.get_num_active_var() );
     }
 
