@@ -75,12 +75,15 @@ dblRelAcc       1e-08 # relative accuracy required to solution
 dblAAccSol      1e-08 # absolute accuracy required to solution
 dblRAccSol      1e-08 # relative accuracy of the solution pool
 
-# The master has to satisfy its own rows *tighter* than the oracle satisfies
-# its own feasibility, or the loop cannot end: a step that violates a
-# vertical row by less than the default 1e-6 is feasible for the master and
-# infeasible for the subproblem, which answers with the very cut that is
-# already there, and the same iteration repeats forever.
-FeasibilityTol  1e-09 # how much a row of the master may be violated
+# The other MPBCfg.txt of the tests ask the master to satisfy its rows to
+# 1e-9, tighter than the oracle satisfies its own feasibility, since a step
+# violating a vertical row by less than the default 1e-6 is feasible for
+# the master and not for the subproblem, which answers with the very cut
+# that is already there. The units of the Lagrangian relaxation of the UC
+# are always feasible and solved exactly (e.g., by DP), so that there are no
+# vertical rows; 1e-9 is instead too tight for Gurobi on these masters,
+# which stop with status 12 (numerical difficulties) after the presolve.
+FeasibilityTol  1e-08 # how much a row of the master may be violated
 OptimalityTol   1e-09 # how much a reduced cost of the master may be off
 
 # All specific HiGHS parameter (uncomment based on Solver)

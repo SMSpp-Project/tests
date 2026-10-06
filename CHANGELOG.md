@@ -870,6 +870,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `UCBlock/MPBCfg.txt` asks Gurobi for `FeasibilityTol` 1e-8 rather than
+  the 1e-9 of the other `MPBCfg.txt`: the units of the Lagrangian relaxation
+  of the UC give no vertical rows, against which the tighter value is there,
+  and with it the master stopped with status 12 (numerical difficulties)
+  after the presolve, 18 times in a row on T-Ramp 10_0_4_w
+
 - the test `run_dmx2nc4` of `MCFBlock` and `MCFClassSolver_run_dmx2nc4` share
   a `RESOURCE_LOCK`: they build the same target, and under `ctest -j` they
   ran at the same time and wrote the same instances, leaving one of them
