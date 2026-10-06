@@ -4,7 +4,7 @@
 # A ComputeConfig for a :MILPSolver solving the linear relaxation of the
 # MILP formulation of a SATBlock, i.e., MILPCfg.txt with the integrality
 # relaxed: it is the oracle of the Frank-Wolfe method of the
-# IntegralityBarrierSolver [see IBCfg.txt].
+# IntegralityBarrierSolver [see IBLPBSCfg.txt].
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -375,6 +375,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the `IntegralityBarrierSolver` of the cross-check of `SATBlock` gets its
+  oracle from the `BlockSolverConfig` `IBLPBSCfg.txt`, a `:MILPSolver` on
+  the linear relaxation (`LPCfg.txt`), which it applies to the copy of the
+  formulation (`strLMOBSCfg` of `IBCfg.txt`), and its Frank-Wolfe method
+  looks at the rounding of the iterate every iteration because
+  `FWIBCfg.txt` says so (`intEverykIt` 1)
+
 - `UCBlock/batches/batch-acad-s` cross-checks a `BranchAndXSolver` too, whose
   nodes are solved by the `LagrangianDualRelaxationSolver` over the same
   sub-Blocks that the dynamic programming solves exactly, as a fourth Solver
