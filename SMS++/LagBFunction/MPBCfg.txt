@@ -41,22 +41,19 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints
 intMaxThread    1 # single-threaded for deterministic master reproducibility
 
-# All specific CPLEX parameter (uncomment based on Solver)
-#CPXPARAM_LPMethod                4   # 0 = auto, 1 = primal, 2 = dual, 4 = barrier, 6 = concurrent
-#CPXPARAM_Preprocessing_Presolve  0   # disable presolve for reproducibility
-#CPXPARAM_Emphasis_Numerical      1   # numerical precision emphasis
-Threads 1 # actual number of threads the back-end uses
-#CPXPARAM_Threads 1 # the same one for CPLEX
+# All suggested CPLEX parameter (uncomment based on Solver)
+#CPXPARAM_QPMethod                 2   
+#CPXPARAM_Preprocessing_Presolve  0   # disable presolve
 
-# All specific GUROBI parameter (uncomment based on Solver)
-Method        1   # 0 = primal, 1 = dual simplex, 2 = barrier: the multipliers
+# All suggested GUROBI parameter (uncomment based on Solver)
+Method        1  # 0 = primal, 1 = dual simplex, 2 = barrier: the multipliers
                   # of the master ARE the algorithm, and an interior point has
                   # them only to about 1e-7 relative, which the stopping test
                   # of the bundle cannot survive; besides, the barrier cannot
                   # restart from the previous basis, so it re-solves the master
                   # from scratch at every call, while the simplex re-optimises
                   # after the new columns for a fraction of the iterations
-#Presolve      0   # 0 = off, 1 = conservative, 2 = aggressive (default -1)
+Presolve      0   # 0 = off, 1 = conservative, 2 = aggressive (default -1)
 #NumericFocus  3   # 0 = auto (default), 1..3 = increasing precision focus
 
 5 # number of double parameters
@@ -72,19 +69,24 @@ dblRAccSol      1e-08 # relative accuracy of the solution pool
 # infeasible for the subproblem, which answers with the very cut that is
 # already there, and the same iteration repeats forever.
 # the name is the one of the back-end that is active above
+
+# Gurobi parameter
 FeasibilityTol  1e-09 # how much a row of the master may be violated
 OptimalityTol   1e-09 # how much a reduced cost of the master may be off
+
+# CPLEX parameter
 #CPXPARAM_Simplex_Tolerances_Feasibility 1e-09 # the same two for CPLEX
 #CPXPARAM_Simplex_Tolerances_Optimality  1e-09
+#CPXPARAM_Barrier_ConvergeTol 1e-12
 
-# All specific HiGHS parameter (uncomment based on Solver)
+# HiGHS parameter
 #primal_feasibility_tolerance     1e-9
 #dual_feasibility_tolerance       1e-9
 
 0 # number of string parameters
 
 # now all the string parameters
-#strOutputFile master.lp
+#strOutputFile master.lp         # write the master lp to a file
 
 # All specific HiGHS parameter (uncomment based on Solver)
 #presolve  off    # disable presolve for reproducibility
