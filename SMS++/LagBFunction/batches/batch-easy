@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# usage: batch-easy [exe file] [mixed|static|updates|sparse|all-easy|all]
+#        exe file = path of the executable, default ./LagBFunction_test
+#        profile = test selection, default mixed (static + updates)
+# Run from tests/SMS++/LagBFunction, with its existing configurations.
+# SEEDS and ROUNDS override the defaults of 5 each.
+# Negative nt enables easy components; NDOPar.txt selects stabilization.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+LagBFunction_test=${1:-./LagBFunction_test}
+phase=${2:-mixed}
+seeds=${SEEDS:-5}
+rounds=${ROUNDS:-5}
+
+case "$phase" in
+    mixed|static|updates|sparse|all-easy|all) ;;
+    *) echo "Unknown profile: $phase" >&2; exit 2 ;;
+esac
+for value in "$seeds" "$rounds"; do
+    if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
+        echo "SEEDS and ROUNDS must be positive integers." >&2
+        exit 2
+    fi
+done
+
+# CLI order: seed wchg nvar nf nt dens rounds max_changes change_probability.
+# nf=1/2: hard polyhedral components; nf=-2 also adds a linear objective.
+# All mixed profiles use nt<0, with one or three easy components.
+for group in static updates sparse all-easy; do
+    case "$phase:$group" in
+        all:*|mixed:static|mixed:updates|static:static|updates:updates|sparse:sparse|all-easy:all-easy) ;;
+        *) continue ;;
+    esac
+
+    for size in 3 10 30; do
+        for ((seed = 0; seed < seeds; ++seed)); do
+            if [[ "$group" == all-easy ]]; then
+                # nf=0 means there are no hard components. Exercise this
+                # separately while the all-easy stabilization path is audited.
+                for nt in -1 -3; do
+                    run_test "$LagBFunction_test" "$seed" 0 "$size" 0 "$nt" 3 0 5 0.75
+                    for mask in 32 64 128 224; do
+                        run_test "$LagBFunction_test" "$seed" "$mask" "$size" 0 "$nt" 3 "$rounds" 5 0.75
+                    done
+                done
+                continue
+            fi
+
+            for nf in 1 2 -2; do
+                nt=-3
+                [[ "$nf" == 1 ]] && nt=-1
+                case "$group" in
+                    static)
+                        for density in 1.1 3; do
+                            run_test "$LagBFunction_test" "$seed" 0 "$size" "$nf" "$nt" "$density" 0 5 0.75
+                        done
+                        ;;
+                    updates)
+                        # Isolate inner costs, balance data, and capacities;
+                        # then combine them (224), also changing hard rows,
+                        # constants and bounds (255). Assumes DYNAMIC_VARS=0.
+                        for mask in 32 64 128 224 255; do
+                            run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75
+                        done
+                        ;;
+                    sparse)
+                        # Bit 9 selects partial coupling to the outer variables.
+                        # 736 = 512 + 224: sparse coupling plus inner updates.
+                        run_test "$LagBFunction_test" "$seed" 512 "$size" "$nf" "$nt" 3 0 5 0.75
+                        run_test "$LagBFunction_test" "$seed" 736 "$size" "$nf" "$nt" 3 "$rounds" 5 0.75
+                        ;;
+                esac
+            done
+        done
+    done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
