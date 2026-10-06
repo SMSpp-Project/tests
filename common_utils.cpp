@@ -1023,12 +1023,12 @@ bool SolveAll( Block * block ,
     rd[ k ] = classify( S[ k ] , k );
     // a Solver declared a relaxation by -R bounds the optimum of the
     // relaxation: of this problem it bounds only the side the relaxation
-    // is on, which the sense of the Objective decides
-    if( is_relaxation( k ) ) {
-     auto obj = block->get_objective();
-     rd[ k ].valid = ( obj && ( obj->get_sense() == Objective::eMax ) )
+    // is on, which the sense of the Objective decides (that of the Block,
+    // which one without an Objective of its own, its objective being the
+    // sum of these of its sub-Block, gives all the same)
+    if( is_relaxation( k ) )
+     rd[ k ].valid = ( block->get_objective_sense() == Objective::eMax )
                      ? SolverReading::kUpper : SolverReading::kLower;
-     }
     tok[ k ] = reading_token( rd[ k ] );
     // a Solver that did not return kOK did not deliver what it was asked
     // and is therefore only held to correctness: say so in the line, since
