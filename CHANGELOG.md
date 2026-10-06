@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tau_k to its lambda and the easy components can be used with the level and
   doubly stabilized master problems
 
+- the testers of `PolyhedralFunction` and `LagBFunction` check every Solver
+  the BlockSolverConfig of NDOBlock attaches against the LP, one column each
+  in the per-instance line; the `ComputeConfig` of their `BundleSolver` is
+  the fragment `BSCfg.txt`. `PolyhedralFunction/NDOPar.txt` attaches three
+  `BundleSolver`, with the proximal stabilization and with the trust region
+  in the dual and in the primal master problem. In `LagBFunction` the trust
+  region has its own battery, `batches/batch-tr`, which runs `batches/batch`
+  with `NDOPar-TR.txt`, given to the tester as its last argument: with an
+  easy `LagBFunction` two `BundleSolver` cannot share the same Block, since
+  the master of each takes the inner Block of the component as a sub-Block
+
 - UCBlock/batch-pypsa runs the edge cases of the network of the UCBlock
   data from 2026-10-03 with the PTDF, CYCLE and KIRCHHOFF formulations
   against the optimum of PyPSA: parallel DC lines in the same and in

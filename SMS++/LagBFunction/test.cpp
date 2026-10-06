@@ -863,8 +863,10 @@ static bool NDO_improves_along_LP_ray( Solver * slvrLP )
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void ) 
+static bool SolveEach( void )
 {
+ // LPBlock with one Solver and NDOBlock with as many as its BlockSolverConfig
+ // attaches, each of the latter checked against the former
  try {
   // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
   Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
@@ -881,26 +883,14 @@ static bool SolveBoth( void )
   double foLP = hsLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
                      : ( convex ? INF : -INF );
 
-  // solve the NODBlock - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrNDO = ( NDOBlock->get_registered_solvers() ).front();
-  #if DETACH_NDO
-   NDOBlock->unregister_Solver( slvrNDO );
-   NDOBlock->register_Solver( slvrNDO );
-  #endif
-  auto startNDO = std::chrono::system_clock::now();
-  int rtrnNDO = slvrNDO->compute( false );
-  auto endNDO = std::chrono::system_clock::now();
-  double tNDO = std::chrono::duration< double >( endNDO - startNDO ).count();
-  bool hsNDO = ( ( rtrnNDO >= Solver::kOK ) && ( rtrnNDO < Solver::kError ) )
-              || ( rtrnNDO == Solver::kLowPrecision );
-  double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
-                       : ( convex ? INF : -INF );
-
-  // bespoke verdict, LPBlock against NDOBlock, covering the conditional
-  // valid-bound doubling, then the per-instance line of common_utils - - - -
-  bool ok = false;
-  std::string verdict = "KO";
-  bool decided = false;
+  auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
+   if( hs )                              return( fmt_obj( fo ) );
+   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+   return( "Error!" );
+   };
+  std::vector< double > times = { tLP };
+  std::vector< std::string > values = { tok( hsLP , rtrnLP , foLP ) };
 
   /* The two values are compared at the relative tolerance below, save that a
    * Solver answering kLowPrecision has declared that it did not reach the
@@ -912,8 +902,6 @@ static bool SolveBoth( void )
    * tolerance: the answer is off by the gap at worst, and the comparison
    * carries the ordinary tolerance on top of it. */
 
-  double tol = 2e-7 * max( double( 1 ) , abs( max( foLP , foNDO ) ) );
-
   auto declared_gap = []( Solver * slvr , int rtrn ) -> double {
    if( rtrn != Solver::kLowPrecision )
     return( 0 );
@@ -924,64 +912,89 @@ static bool SolveBoth( void )
    return( abs( ub - lb ) );
    };
 
-  const double gap = declared_gap( slvrLP , rtrnLP ) +
-                     declared_gap( slvrNDO , rtrnNDO );
-  const bool inexact = ( gap > 0 );
-  tol += gap;
+  // solve the NDOBlock with each of its Solver- - - - - - - - - - - - - - - -
+  // bespoke verdict of each against LPBlock, covering the conditional valid
+  // bound, which is doubled once, after all of them, if any of them has
+  // stopped at it; then the per-instance line of common_utils
+  bool ok = true;
+  std::string verdict;
+  bool dbl_bound = false;
+  const auto slvrs = NDOBlock->get_registered_solvers();  // a copy
+  for( auto slvrNDO : slvrs ) {
+   #if DETACH_NDO
+    NDOBlock->unregister_Solver( slvrNDO );
+    NDOBlock->register_Solver( slvrNDO );
+   #endif
+   auto startNDO = std::chrono::system_clock::now();
+   int rtrnNDO = slvrNDO->compute( false );
+   auto endNDO = std::chrono::system_clock::now();
+   times.push_back(
+           std::chrono::duration< double >( endNDO - startNDO ).count() );
+   bool hsNDO = ( ( rtrnNDO >= Solver::kOK ) && ( rtrnNDO < Solver::kError ) )
+                || ( rtrnNDO == Solver::kLowPrecision );
+   double foNDO = hsNDO ? ( convex ? slvrNDO->get_ub() : slvrNDO->get_lb() )
+                        : ( convex ? INF : -INF );
+   values.push_back( tok( hsNDO , rtrnNDO , foNDO ) );
 
-  if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= tol ) ) {
-   ok = true; verdict = inexact ? "OK(f~)" : "OK(f)"; decided = true;
-   }
+   std::string v = "KO";
 
-  if( ( ! decided ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
-   /* Weird case: the LP found an optimal solution but the NDO declared the
-    * problem unbounded below, because the tentative lb is too high; if so,
-    * accept the run and lower (double) the bound. */
-   if( ( convex && ( foNDO <= bound * ( 1 + 1e-9 ) ) ) ||
-       ( ( ! convex ) && ( foNDO >= bound * ( 1 + 1e-9 ) ) ) ) {
-    bound *= 2;
-    if( convex )
-     NDOBlock->set_valid_lower_bound( -bound );
-    else
-     NDOBlock->set_valid_upper_bound( bound );
-    ok = true; verdict = "OK(?bound?)"; decided = true;
+   const double gap = declared_gap( slvrLP , rtrnLP ) +
+                      declared_gap( slvrNDO , rtrnNDO );
+   const double tol = 2e-7 * max( double( 1 ) , abs( max( foLP , foNDO ) ) )
+                      + gap;
+
+   if( hsLP && hsNDO && ( abs( foLP - foNDO ) <= tol ) )
+    v = ( gap > 0 ) ? "OK(f~)" : "OK(f)";
+
+   if( ( v == "KO" ) && hsLP && ( rtrnNDO == Solver::kUnbounded ) ) {
+    /* Weird case: the LP found an optimal solution but the NDO declared the
+     * problem unbounded below, because the tentative lb is too high; if so,
+     * accept the run and lower (double) the bound. */
+    if( ( convex && ( foNDO <= bound * ( 1 + 1e-9 ) ) ) ||
+        ( ( ! convex ) && ( foNDO >= bound * ( 1 + 1e-9 ) ) ) ) {
+     dbl_bound = true;
+     v = "OK(?bound?)";
+     }
     }
-   }
 
-  if( ( ! decided ) && ( rtrnLP == Solver::kInfeasible ) &&
-      ( rtrnNDO == Solver::kInfeasible ) ) {
-   ok = true; verdict = "OK(?e?)"; decided = true;
-   }
+   if( ( v == "KO" ) && ( rtrnLP == Solver::kInfeasible ) &&
+       ( rtrnNDO == Solver::kInfeasible ) )
+    v = "OK(?e?)";
 
-  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
-      ( rtrnNDO == Solver::kUnbounded ) ) {
-   ok = true; verdict = "OK(u)"; decided = true;
-   }
+   if( ( v == "KO" ) && ( rtrnLP == Solver::kUnbounded ) &&
+       ( rtrnNDO == Solver::kUnbounded ) )
+    v = "OK(u)";
 
-  if( ( ! decided ) && ( rtrnLP == Solver::kUnbounded ) &&
-      ( ( rtrnNDO == Solver::kStopIter ) ||
-        ( rtrnNDO == Solver::kStopTime ) ) ) {
-   /* The LP has been proved unbounded, and the NDO Solver has run out of
-    * iterations or of time on its way down, which is what it does when the
-    * objective decreases so slowly along the unbounded direction that the
-    * tentative bound cannot be crossed in time. The two agree if the
-    * objective of NDOBlock improves along the ray the LP gives as the
-    * certificate [see NDO_improves_along_LP_ray()]. */
-   if( NDO_improves_along_LP_ray( slvrLP ) ) {
-    ok = true; verdict = "OK(u~)"; decided = true;
+   if( ( v == "KO" ) && ( rtrnLP == Solver::kUnbounded ) &&
+       ( ( rtrnNDO == Solver::kStopIter ) ||
+         ( rtrnNDO == Solver::kStopTime ) ) ) {
+    /* The LP has been proved unbounded, and the NDO Solver has run out of
+     * iterations or of time on its way down, which is what it does when the
+     * objective decreases so slowly along the unbounded direction that the
+     * tentative bound cannot be crossed in time. The two agree if the
+     * objective of NDOBlock improves along the ray the LP gives as the
+     * certificate [see NDO_improves_along_LP_ray()]. */
+    if( NDO_improves_along_LP_ray( slvrLP ) )
+     v = "OK(u~)";
     }
+
+   // the verdict of the line is the first KO, or that of the last Solver
+   if( v == "KO" )
+    ok = false;
+   if( verdict.empty() || ( verdict.compare( 0 , 2 , "KO" ) != 0 ) )
+    verdict = v;
    }
 
-  auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
-   if( hs )                              return( fmt_obj( fo ) );
-   if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
-   if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
-   return( "Error!" );
-   };
-  print_instance_line(
-   { tLP , tNDO } ,
-   { tok( hsLP , rtrnLP , foLP ) , tok( hsNDO , rtrnNDO , foNDO ) } ,
-   std::numeric_limits< double >::quiet_NaN() , verdict );
+  if( dbl_bound ) {
+   bound *= 2;
+   if( convex )
+    NDOBlock->set_valid_lower_bound( -bound );
+   else
+    NDOBlock->set_valid_upper_bound( bound );
+   }
+
+  print_instance_line( times , values ,
+                       std::numeric_limits< double >::quiet_NaN() , verdict );
   return( ok );
   }
  catch( exception &e ) {
@@ -992,7 +1005,7 @@ static bool SolveBoth( void )
   cerr << "Error: unknown exception thrown" << endl;
   exit( 1 );
   }
- }  // end( SolveBoth )
+ }  // end( SolveEach )
 
 /*--------------------------------------------------------------------------*/
 
@@ -1014,8 +1027,10 @@ int main( int argc , char **argv )
  Index n_repeat = 40;
  Index n_change = 10;
  double p_change = 0.5;
+ std::string ndo_par = "NDOPar.txt";
 
  switch( argc ) {
+  case( 11 ): ndo_par = argv[ 10 ];
   case( 10 ): Str2Sthg( argv[ 9 ] , p_change );
   case( 9 ): Str2Sthg( argv[ 8 ] , n_change );
   case( 8 ): Str2Sthg( argv[ 7 ] , n_repeat );
@@ -1027,7 +1042,7 @@ int main( int argc , char **argv )
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
              break;
   default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar #nf #nt dens #rounds #chng %chng]"
+	   " seed [wchg nvar #nf #nt dens #rounds #chng %chng ndopar]"
  		<< endl <<
            "       wchg: what to change, coded bit-wise [511]"
 		<< endl <<
@@ -1076,6 +1091,8 @@ int main( int argc , char **argv )
            "       #chng: number of changes [10]"
 	        << endl <<
            "       %chng: probability of changing [0.5]"
+	        << endl <<
+           "       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt]"
 	        << endl;
 	   return( 1 );
   }
@@ -1731,10 +1748,11 @@ int main( int argc , char **argv )
   // can mutate the BundleSolver intDoEasy parameter below (which requires
   // the static BlockSolverConfig type). Meta-config (nested map) is NOT
   // supported here because of the per-Solver mutation pattern.
-  auto cfg = Configuration::deserialize( "NDOPar.txt" );
+  auto cfg = Configuration::deserialize( ndo_par );
   auto bsc = dynamic_cast< BlockSolverConfig * >( cfg );
   if( ! bsc ) {
-   cerr << "Error: NDOPar.txt does not contain a BlockSolverConfig" << endl;
+   cerr << "Error: " << ndo_par << " does not contain a BlockSolverConfig"
+        << endl;
    delete( cfg );
    return( 1 );
    }
@@ -1761,7 +1779,7 @@ int main( int argc , char **argv )
     bsc->get_SolverConfig( i )->set_par( "intDoEasy" , val );
     }
 
-  s_config_Block( NDOBlock , bsc , "NDOPar.txt" );
+  s_config_Block( NDOBlock , bsc , ndo_par );
   delete( bsc );
 
   #if( LOG_LEVEL >= 4 )
@@ -1804,7 +1822,8 @@ int main( int argc , char **argv )
 
  #if( LOG_LEVEL >= 2 )
   #if( LOG_ON_COUT )
-   ( ( NDOBlock->get_registered_solvers() ).front() )->set_log( &cout );
+   for( auto slvr : NDOBlock->get_registered_solvers() )
+    slvr->set_log( &cout );
   #else
    ofstream LOGFile( logF , ofstream::out );
    if( ! LOGFile.is_open() )
@@ -1812,7 +1831,8 @@ int main( int argc , char **argv )
    else {
     LOGFile.setf( ios::scientific, ios::floatfield );
     LOGFile << setprecision( 10 );
-    ( ( NDOBlock->get_registered_solvers() ).front() )->set_log( &LOGFile );
+    for( auto slvr : NDOBlock->get_registered_solvers() )
+     slvr->set_log( &LOGFile );
     }
   #endif
 
@@ -1830,7 +1850,7 @@ int main( int argc , char **argv )
 
  LOG1( "First call: " );
 
- bool AllPassed = SolveBoth();
+ bool AllPassed = SolveEach();
  
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2654,7 +2674,7 @@ int main( int argc , char **argv )
   // ... every SKIP_BEAT + 1 rounds
 
   if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) )
-   AllPassed &= SolveBoth();
+   AllPassed &= SolveEach();
   #if( LOG_LEVEL >= 1 )
   else
    cout << endl;

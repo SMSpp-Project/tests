@@ -1,10 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -  NDOPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  NDOPar-TR.txt  - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the Block possibly having a
 # "linear objective" and multiple sub-Block having a "C05 objective", some
-# of which being LagBFunction, solved by the tester for LagBFunction: the
-# BundleSolver of BSCfg.txt [see also NDOPar-TR.txt]
+# of which being LagBFunction, solved by the tester for LagBFunction in the
+# battery batch-tr: the BundleSolver of BSCfg.txt with the trust region
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -22,11 +22,47 @@ BundleSolver          # name of Solver
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# trust region
 
-*BSCfg.txt
+*BSCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intMPStbl         4 # trust region
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -  END NDOPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END NDOPar-TR.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

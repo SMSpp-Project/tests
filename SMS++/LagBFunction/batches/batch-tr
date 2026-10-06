@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#
+# usage: batch-tr < exe file >
+#        < exe file > = path of the executable file, default ./LagBFunction_test
+#
+# The battery of batch with the BundleSolver of NDOPar-TR.txt, i.e., with the
+# trust region. It cannot be a second Solver in NDOPar.txt: with an easy
+# LagBFunction the master problem of each BundleSolver takes its inner Block
+# as a sub-Block, and the second one takes it away from the first.
+
+ndopar=NDOPar-TR.txt
+source "$(dirname "$0")/batch" "$@"
