@@ -970,7 +970,8 @@ bool SolveAll( Block * block ,
                bool   * out_hs1 ,
                double * out_time1 ,
                long   * out_it1 ,
-               BlockSolverConfig * bsc )
+               BlockSolverConfig * bsc ,
+               Solution * start )
 {
  constexpr double INF = std::numeric_limits< double >::has_infinity
                         ? std::numeric_limits< double >::infinity()
@@ -1009,10 +1010,13 @@ bool SolveAll( Block * block ,
   std::vector< SolverReading > rd( M );
   std::vector< std::string > tok( M );
   for( std::size_t k = 0 ; k < M ; ++k ) {
-   auto start = std::chrono::system_clock::now();
+   // the same starting point for every Solver, if one is given
+   if( start )
+    start->write( block );
+   auto t_start = std::chrono::system_clock::now();
    status[ k ] = S[ k ]->compute( false );
-   auto end = std::chrono::system_clock::now();
-   times[ k ] = std::chrono::duration< double >( end - start ).count();
+   auto t_end = std::chrono::system_clock::now();
+   times[ k ] = std::chrono::duration< double >( t_end - t_start ).count();
    iters[ k ] = S[ k ]->get_elapsed_iterations();
    hs[ k ] = ( ( ( status[ k ] >= Solver::kOK )
                  && ( status[ k ] < Solver::kError )

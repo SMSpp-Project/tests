@@ -90,6 +90,7 @@
 #include <BlockSolverConfig.h>
 #include <ColVariable.h>
 #include <PolyhedralFunction.h>
+#include <Solution.h>
 
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- USING -----------------------------------*/
@@ -666,7 +667,13 @@ void print_solver_parameters( Block * block );
  *  order, rather than ALL the Solver registered to the Block: this keeps
  *  the cross-check to the Solver the test itself attached even when
  *  somebody else (say, an enumerative Solver under test) has registered
- *  further Solver of its own to the same Block. */
+ *  further Solver of its own to the same Block.
+ *
+ *  If @p start is given, it is written into @p block before each Solver
+ *  computes, so that a Solver that starts from the values of the Variable
+ *  it finds in the Block starts from the same point whatever ran before it,
+ *  and the comparison does not depend on the order of the Solver. Without
+ *  it, each Solver finds what the previous one has left. */
 
 bool SolveAll( Block * block ,
                const SolverClassifier & classify ,
@@ -676,7 +683,8 @@ bool SolveAll( Block * block ,
                bool   * out_hs1 = nullptr ,
                double * out_time1 = nullptr ,
                long   * out_it1 = nullptr ,
-               BlockSolverConfig * bsc = nullptr );
+               BlockSolverConfig * bsc = nullptr ,
+               Solution * start = nullptr );
 
 /*--------------------------------------------------------------------------*/
 /// SolveAll() reading every Solver with read_bounds(), the usual case

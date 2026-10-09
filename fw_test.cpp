@@ -183,8 +183,17 @@ int main( int argc , char ** argv )
    }
   apply_solver_verbosity( father );  // -v drives Solver::intLogVerb
 
+  // the point every Solver starts from is the one the father has before
+  // any of them computes: a FrankWolfeSolver starts from the vertex the
+  // oracle gives at the values it finds in the Block, which would otherwise
+  // be those the previous Solver has left, and the variants of one run
+  // would be compared from different starting points
+  Solution * start = father->get_Solution( nullptr , false );
+
   bool ok = SolveAll( father , exact_getter( ObjGetter::VarValue ) ,
-                      std::numeric_limits< double >::quiet_NaN() , 1e-5 );
+                      std::numeric_limits< double >::quiet_NaN() , 1e-5 ,
+                      nullptr , nullptr , nullptr , nullptr , nullptr ,
+                      start );
 
   // Modification rounds: perturb the father objective (linear coefficients)
   // and the first sub-Block objective, then re-solve. This exercises the
@@ -218,7 +227,9 @@ int main( int argc , char ** argv )
      perturb( fo->get_function() );
     }
    bool okr = SolveAll( father , exact_getter( ObjGetter::VarValue ) ,
-                        std::numeric_limits< double >::quiet_NaN() , 1e-5 );
+                        std::numeric_limits< double >::quiet_NaN() , 1e-5 ,
+                        nullptr , nullptr , nullptr , nullptr , nullptr ,
+                        start );
    cout << "  Modification round " << ( r + 1 ) << ": "
         << ( okr ? "ok" : "MISMATCH" ) << endl;
    ok = ok && okr;
@@ -226,6 +237,7 @@ int main( int argc , char ** argv )
 
   cout << ( ok ? GREEN( All tests passed!! ) : RED( Shit happened!! ) ) << endl;
 
+  delete start;
   s_config_Block( father , bsc );
   if( rbsc ) { s_config_Block( father , rbsc ); delete rbsc; }
   delete bsc;

@@ -917,6 +917,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the variants of `FrankWolfeSolver` in one run of `fw_test` start from the
+  same point: a `FrankWolfeSolver` starts from the vertex its oracle gives
+  at the values it finds in the `Block`, which were those the previous
+  `Solver` had left, so that the same variant gave a different value
+  according to what ran before it and the comparison depended on the order
+  of the `BlockSolverConfig`; `SolveAll()` takes a `Solution` to write into
+  the `Block` before each `Solver`, and `fw_test` passes the one the father
+  has before any of them computes
+
 - `SolveAll()` takes the side of the bound of a Solver declared a relaxation
   from the sense of the objective of the Block, which a Block without an
   Objective of its own (its objective being the sum of these of its
