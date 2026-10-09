@@ -9,11 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- the tester of `LagBFunction` can write the transportation components with
-  a size Variable tau_k (`SIZE_EASY`, 0 unless given at compile time), their
-  balances and capacities scaled by it, so that the master problem ties
-  tau_k to its lambda and the easy components can be used with the level and
-  doubly stabilized master problems
+- the tester of `LagBFunction` can write the transportation components with a
+  size Variable tau, their balances and capacities scaled by it, so that the
+  master problem scales them by its lambda and the easy components can be
+  used with the level and doubly stabilized master problems: the last
+  argument of the tester, `size`, is 0 for none, in which case the master
+  scales a copy of the inner Block if bit 5 of `intDoEasy` asks for it, 1 for
+  a Variable of the inner Block (`Block::set_owned_size_variable()`), which
+  the master ties to lambda, and 2 for lambda itself, given to the inner
+  Block, a `SizedTransportBlock`, by `Block::set_size_variable()`; bits 4 and
+  5 of `intDoEasy` are taken from the configuration file, so that the file
+  says whether the master uses the size Variable and the copies.
+  `batches/batch-easy`, with the path of `batch_common.sh` corrected, is a
+  ctest test, and its `sized` rows (in the default profile) run the three
+  ways of scaling with the proximal, level and doubly stabilized masters
+  (`NDOPar-Mirror.txt`, `NDOPar-Lvl.txt`, `NDOPar-DS.txt`, all with
+  `intDoEasy` 33) and with the doubly stabilized one that leaves the easy
+  components unscaled (`NDOPar-DS-NoSize.txt`, `intDoEasy` 17), also with bit
+  12 (4096) of the tester, by which the inner Block of an easy `LagBFunction`
+  issues an NBModification, which a copy in the master cannot follow and
+  which puts the inner Block back in its place
 
 - the testers of `PolyhedralFunction` and `LagBFunction` check every Solver
   the BlockSolverConfig of NDOBlock attaches against the LP, one column each

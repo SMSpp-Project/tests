@@ -2,9 +2,12 @@
 # - - - - - - - - - - - - - - - -  BSCfg.txt  - - - - - - - - - - - - - - - -
 #
 # The ComputeConfig of the BundleSolver of the tester for LagBFunction, with
-# the proximal stabilization; NDOPar.txt attaches it as it is and, as a
-# differential override of it, with the trust region (in the dual master
-# problem, the only one that takes the easy components)
+# the proximal stabilization; NDOPar.txt attaches it as it is, while
+# NDOPar-TR.txt, NDOPar-Mirror.txt, NDOPar-Lvl.txt, NDOPar-DS.txt and
+# NDOPar-DS-NoSize.txt attach differential overrides of it, with the trust
+# region, other ways of scaling the easy components, the level and the
+# doubly stabilized methods (in the dual master problem, the only one that
+# takes the easy components)
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

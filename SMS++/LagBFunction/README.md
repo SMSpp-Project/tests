@@ -191,7 +191,8 @@ results of the two `Solver` are compared.
 
 The usage of the executable is the following:
 
-       ./LagBFunction_test seed [wchg nvar #nf #nt dens #rounds #chng %chng]
+       ./LagBFunction_test seed [wchg nvar #nf #nt dens #rounds #chng %chng
+                                 ndopar size]
        wchg: what to change, coded bit-wise [511]
              0 = add rows, 1 = delete rows 
              2 = modify rows, 3 = modify constants
@@ -204,6 +205,8 @@ The usage of the executable is the following:
                  exercises dense->sparse auto-promotion + per-Function Mod dispatch)
             11 = add one dual_pair to a single LagBFunction (naked; on a new
                  coordinate of the master or on one it already has)
+            12 = the inner Block of an easy LagBFunction issues an
+                 NBModification
        nvar: number of variables [10]
        |#nf|: number of PolyFunction (< 0: linear function) [1]
        |#nt|: number of transportation (< 0: easy comp.) [1]
@@ -211,11 +214,34 @@ The usage of the executable is the following:
        #rounds: how many iterations [40]
        #chng: number of changes [10]
        %chng: probability of changing [0.5]
+       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt]
+       size: size Variable of easy comp. (0 none, 1 owned, 2 given) [0]
 
-A batch file is provided that runs a largish (but typically terminating
-within half an hour) set of tests with different sizes and seeds of the
-random generator; all these passing is a good sign that no regressions
-have been done for the tested modules.
+An empty argument keeps the default. With size 1 or 2 the balances and
+capacities of an easy transportation problem are written with a size
+Variable tau, i.e., as sum_j f_ij - s_i tau = 0 and f_ij - U_ij tau <= 0,
+which the dual master problem of `BundleSolver` ties to its mass lambda, so
+that the easy components can be used with the level and doubly stabilized
+master problems and with a global lower bound: with 1 tau is a Variable of
+the inner `Block`, declared with `Block::set_owned_size_variable()`, with 2
+the inner `Block` is given a Variable of the master by
+`Block::set_size_variable()`. With 0 the inner `Block` is a plain
+`AbstractBlock`, which takes no size Variable: the master leaves it
+unscaled, unless bit 5 (+32) of `intDoEasy` in the configuration has it
+scale a copy of it that it has in its place, following the changes of the
+inner `Block`. Bit 4 (+16) has the master leave all the easy components
+unscaled.
+
+A batch file `batches/batch` is provided that runs a largish (but
+typically terminating within half an hour) set of tests with different
+sizes and seeds of the random generator; all these passing is a good sign
+that no regressions have been done for the tested modules.
+`batches/batch-tr` runs it with the trust region (`NDOPar-TR.txt`), and
+`batches/batch-easy` stresses the easy components, with the proximal
+stabilization, and with the level and doubly stabilized methods
+(`NDOPar-Lvl.txt`, `NDOPar-DS.txt`) and the three ways of scaling, the
+copies being asked for by these two and by `NDOPar-Mirror.txt`, also with
+the scaling left out by the master (`NDOPar-DS-NoSize.txt`).
 
 A makefile is also provided that builds the executable including the
 BundleSolver module and all its dependencies, in particular MILPSolver

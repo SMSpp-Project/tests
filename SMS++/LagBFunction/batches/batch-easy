@@ -1,22 +1,26 @@
 #!/usr/bin/env bash
 #
-# usage: batch-easy [exe file] [mixed|static|updates|sparse|all-easy|all]
+# usage: batch-easy [exe file] [mixed|static|updates|sized|sparse|all-easy|all]
 #        exe file = path of the executable, default ./LagBFunction_test
-#        profile = test selection, default mixed (static + updates)
+#        profile = test selection, default mixed (static + updates + sized)
 # Run from tests/SMS++/LagBFunction, with its existing configurations.
-# SEEDS and ROUNDS override the defaults of 5 each.
-# Negative nt enables easy components; NDOPar.txt selects stabilization.
+# SEEDS and ROUNDS override the defaults of 5 each (2 seeds in CI).
+# Negative nt enables easy components. The stabilization is the one of the
+# BlockSolverConfig of NDOBlock, NDOPar.txt (proximal) unless a row names
+# another one, and so is whether the master scales the easy components by
+# their size Variable, which the last argument of the tester writes in them.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
+source "$(dirname "$0")/../../../batch_common.sh"
 
 LagBFunction_test=${1:-./LagBFunction_test}
 phase=${2:-mixed}
-seeds=${SEEDS:-5}
+# in CI 2 seeds of the 5 are run, the whole of it taking about half an hour
+if [ -n "$CI" ]; then seeds=${SEEDS:-2}; else seeds=${SEEDS:-5}; fi
 rounds=${ROUNDS:-5}
 
 case "$phase" in
-    mixed|static|updates|sparse|all-easy|all) ;;
+    mixed|static|updates|sized|sparse|all-easy|all) ;;
     *) echo "Unknown profile: $phase" >&2; exit 2 ;;
 esac
 for value in "$seeds" "$rounds"; do
@@ -26,12 +30,12 @@ for value in "$seeds" "$rounds"; do
     fi
 done
 
-# CLI order: seed wchg nvar nf nt dens rounds max_changes change_probability.
-# nf=1/2: hard polyhedral components; nf=-2 also adds a linear objective.
-# All mixed profiles use nt<0, with one or three easy components.
-for group in static updates sparse all-easy; do
+# CLI order: seed wchg nvar nf nt dens rounds max_changes change_probability
+# ndopar size. nf=1/2: hard polyhedral components; nf=-2 also adds a linear
+# objective. All mixed profiles use nt<0, with one or three easy components.
+for group in static updates sized sparse all-easy; do
     case "$phase:$group" in
-        all:*|mixed:static|mixed:updates|static:static|updates:updates|sparse:sparse|all-easy:all-easy) ;;
+        all:*|mixed:static|mixed:updates|mixed:sized|static:static|updates:updates|sized:sized|sparse:sparse|all-easy:all-easy) ;;
         *) continue ;;
     esac
 
@@ -64,6 +68,32 @@ for group in static updates sparse all-easy; do
                         # constants and bounds (255). Assumes DYNAMIC_VARS=0.
                         for mask in 32 64 128 224 255; do
                             run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75
+                        done
+                        ;;
+                    sized)
+                        # The easy components scaled by a sized copy of the
+                        # inner Block that the master has in its place (0,
+                        # bit 5 of intDoEasy, which NDOPar-Mirror.txt,
+                        # NDOPar-Lvl.txt and NDOPar-DS.txt set), by a size
+                        # Variable that the inner Block owns (1), or by one
+                        # it is given by the master (2), with the proximal,
+                        # level and doubly stabilized masters, and with the
+                        # doubly stabilized one that leaves them unscaled
+                        # (bit 4 of intDoEasy). 240 = 224 + 16 also changes
+                        # the global lower bound, 4320 = 4096 + 224 has the
+                        # inner Block issue the NBModification that puts it
+                        # back in the master in place of its copy.
+                        for ndopar in NDOPar.txt NDOPar-Lvl.txt NDOPar-DS.txt \
+                                      NDOPar-DS-NoSize.txt; do
+                            for sz in 0 1 2; do
+                                par=$ndopar
+                                [[ "$ndopar$sz" == NDOPar.txt0 ]] &&
+                                    par=NDOPar-Mirror.txt
+                                run_test "$LagBFunction_test" "$seed" 0 "$size" "$nf" "$nt" 3 0 5 0.75 "$par" "$sz"
+                                for mask in 240 4320; do
+                                    run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$par" "$sz"
+                                done
+                            done
                         done
                         ;;
                     sparse)
