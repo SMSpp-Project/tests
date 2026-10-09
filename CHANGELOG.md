@@ -21,24 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - the tester of `LagBFunction` can write the transportation components with a
   size Variable tau, their balances and capacities scaled by it, so that the
-  master problem scales them by its lambda and the easy components can be
-  used with the level and doubly stabilized master problems: the last
-  argument of the tester, `size`, is 0 for none, in which case the master
-  scales a copy of the inner Block if bit 5 of `intDoEasy` asks for it, 1 for
-  a Variable of the inner Block (`Block::set_owned_size_variable()`), which
-  the master ties to lambda, and 2 for lambda itself, given to the inner
-  Block, a `SizedTransportBlock`, by `Block::set_size_variable()`; bits 4 and
-  5 of `intDoEasy` are taken from the configuration file, so that the file
-  says whether the master uses the size Variable and the copies.
+  master problem scales them by its lambda and the easy components can be used
+  with the level and doubly stabilized master problems: the argument `size` of
+  the tester, the one before `detach`, is 0 for none, in which case the master
+  scales a copy of the inner Block if bit 5 of `intDoEasy` asks for it, 1 for a
+  Variable of the inner Block (`Block::set_owned_size_variable()`), which the
+  master ties to lambda, and 2 for lambda itself, given to the inner Block, a
+  `SizedTransportBlock`, by `Block::set_size_variable()`; bits 4 and 5 of
+  `intDoEasy` are taken from the configuration file, so that the file says
+  whether the master uses the size Variable and the copies
   `batches/batch-easy`, with the path of `batch_common.sh` corrected, is a
-  ctest test, and its `sized` rows (in the default profile) run the three
-  ways of scaling with the proximal, level and doubly stabilized masters
-  (`NDOPar-Mirror.txt`, `NDOPar-Lvl.txt`, `NDOPar-DS.txt`, all with
-  `intDoEasy` 33) and with the doubly stabilized one that leaves the easy
-  components unscaled (`NDOPar-DS-NoSize.txt`, `intDoEasy` 17), also with bit
-  12 (4096) of the tester, by which the inner Block of an easy `LagBFunction`
-  issues an NBModification, which a copy in the master cannot follow and
-  which puts the inner Block back in its place
+  ctest test, and its `sized` rows (in the default profile) run the three ways
+  of scaling with the proximal, level and doubly stabilized masters
+  (`NDOPar-Mirror.txt`, `NDOPar-Lvl.txt`, `NDOPar-DS.txt`, all with `intDoEasy`
+  33) and with the doubly stabilized one that leaves the easy components
+  unscaled (`NDOPar-DS-NoSize.txt`, `intDoEasy` 17), also with bit 12 (4096) of
+  the tester, by which the inner Block of an easy `LagBFunction` issues an
+  NBModification, which a copy in the master cannot follow and which puts the
+  inner Block back in its place
 
 - the testers of `PolyhedralFunction` and `LagBFunction` check every Solver
   the BlockSolverConfig of NDOBlock attaches against the LP, one column each
@@ -83,9 +83,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Modification it skipped
 
 - the `IntegralityBarrierSolver` of FrankWolfeSolver in the cross-check of
-  `SATBlock` (`BSPar.txt`), a heuristic on the MILP
-  formulation whose oracle is the linear relaxation by a `:MILPSolver`
-  (`IBCfg.txt`, `FWIBCfg.txt`, `LPCfg.txt`)
+  `SATBlock` (`BSPar.txt`), a heuristic on the MILP formulation whose oracle
+  is the `BlockSolverConfig` `IBLPBSCfg.txt`, a `:MILPSolver` on the linear
+  relaxation (`LPCfg.txt`) applied to the copy of the formulation
+  (`strLMOBSCfg` of `IBCfg.txt`), its Frank-Wolfe method looking at the
+  rounding of the iterate every iteration (`intEverykIt` 1 of `FWIBCfg.txt`)
 
 - `MMCFBlock/MMCFND_test` with `batches/batch-nd`: the network design problem
   of `MMCFNetworkDesignBlock`, solved monolithic by the MILP Solver and in
@@ -408,13 +410,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   overrides of `BSCfg.txt` as the `-Dual.txt` version of `NDOPar-Mirror.txt`,
   `NDOPar-Lvl.txt`, `NDOPar-DS.txt` and `NDOPar-DS-NoSize.txt` are
 
-- the `IntegralityBarrierSolver` of the cross-check of `SATBlock` gets its
-  oracle from the `BlockSolverConfig` `IBLPBSCfg.txt`, a `:MILPSolver` on
-  the linear relaxation (`LPCfg.txt`), which it applies to the copy of the
-  formulation (`strLMOBSCfg` of `IBCfg.txt`), and its Frank-Wolfe method
-  looks at the rounding of the iterate every iteration because
-  `FWIBCfg.txt` says so (`intEverykIt` 1)
-
 - the inner Solver of the `PrimalProximalHeur` and of the
   `LagrangianDualRelaxationSolver` takes its iterations and its accuracy
   from its own ComputeConfig, given with `str_LDSlv_ISCfg`:
@@ -453,10 +448,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the meta BlockConfig and BlockSolverConfig of the tests accept the `"*"`
   entry for the classnames they do not name, as those of tools do, and the
   sub-Block of a Block are looked up after it has been configured
-
-- in CI `MultiFlowDCRBlock` `batches-multiflow/batch` runs one instance in 3,
-  and `socp-unstable.txt` lists topo/Bbnplanet_8 too, on which Gurobi stops
-  on numerical difficulties on the runner of the nightly pipeline
 
 - in CI, `MCFBlock/batches/batch` and `batch-dense` leave out the
   Frank-Wolfe decomposition, a single run of which takes the best part of an
@@ -956,9 +947,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SolveAll()` takes the side of the bound of a Solver declared a relaxation
   from the sense of the objective of the Block, which a Block without an
-  Objective of its own (its objective being the sum of these of its
-  sub-Block, as for `MultiKnapsackAssignBlock`) also gives: before, the
-  bound of such a maximization problem was taken for a lower one
+  Objective of its own (its objective being the sum of those of its
+  sub-Block, as for `MultiKnapsackAssignBlock`) also gives, the bound of
+  such a maximization problem having been taken for a lower one
 
 - `SMS++/AbstractBlock/test_box` changes the RHS of the <= linking rows and
   the LHS of the >= ones, and checks each against the value it set
@@ -1010,13 +1001,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a name that is not there, so `UCBlock_test --scale`, which asked the
   factory for one name after the other, died with "CPXMILPSolver not present
   in Solver factory" on every build without CPLEX, the pipeline comprised
+
 - the two fixtures that bring in the curated knapsack data, `fetch_bk_data`
   and `run_bk2nc4`, hold the same `RESOURCE_LOCK`: run at once, as `ctest
   -j2` did, they drive the build system on the same `txt.tgz`, which tar
   then reads as an archive that ends too soon
+
 - the archive of the Canad instances of MMCFBlock is extracted by `cmake -E
   tar`, which also works with the tar of macOS, where the option
-  `--warning=no-unknown-keyword` of GNU tar stopped the build.
+  `--warning=no-unknown-keyword` of GNU tar stopped the build
+
 - the tester of `MultiStageStochasticBlock` writes the round trip of the
   `Solution` to a file of its own name, since the batteries of the suite
   run in parallel in the same directory and read each other's file
