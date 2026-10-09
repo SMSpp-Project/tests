@@ -82,12 +82,16 @@ for group in static updates sized sparse all-easy; do
                         # (bit 4 of intDoEasy). 240 = 224 + 16 also changes
                         # the global lower bound, 4320 = 4096 + 224 has the
                         # inner Block issue the NBModification that puts it
-                        # back in the master in place of its copy.
+                        # back in the master in place of its copy. An inner
+                        # Block given lambda by a master belongs to that one
+                        # only, hence with 2 the two BundleSolver of
+                        # NDOPar.txt are replaced by the proximal one of
+                        # NDOPar-Mirror.txt, which takes lambda before copies.
                         for ndopar in NDOPar.txt NDOPar-Lvl.txt NDOPar-DS.txt \
                                       NDOPar-DS-NoSize.txt; do
                             for sz in 0 1 2; do
                                 par=$ndopar
-                                [[ "$ndopar$sz" == NDOPar.txt0 ]] &&
+                                [[ "$ndopar" == NDOPar.txt && "$sz" != 1 ]] &&
                                     par=NDOPar-Mirror.txt
                                 run_test "$LagBFunction_test" "$seed" 0 "$size" "$nf" "$nt" 3 0 5 0.75 "$par" "$sz"
                                 for mask in 240 4320; do
