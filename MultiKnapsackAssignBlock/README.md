@@ -10,8 +10,9 @@ are the `BinaryKnapsackBlock` of the pairs of a knapsack and a class. It is
 then solved by every `Solver` that the `BlockSolverConfig` registers to it,
 and what they answer is cross-checked:
 
-- a `:MILPSolver` on the abstract representation of the whole tree
-  (`MILPCfg.txt`);
+- a `:MILPSolver` on the abstract representation of the whole tree, within
+  a time limit of 60 seconds (`MILPCfg.txt`), which gives an interval that
+  contains the optimum, if not the optimum itself;
 
 - the `LagrangianDualSolver`, relaxing the constraints that link the
   sub-`Block` (each item in at most one knapsack, each knapsack given at
@@ -20,8 +21,8 @@ and what they answer is cross-checked:
   classname from the meta-`BlockSolverConfig` `SubBSPar.txt`, i.e., the
   `CoreDPBinaryKnapsackSolver` of `KnapBSCfg.txt`. The problem being an
   integer one, the Lagrangian dual is a relaxation of it, which the battery
-  declares with `-R ,r`: its upper bound has to stay above the optimum of
-  the `:MILPSolver`.
+  declares with `-R ,r`: its upper bound has to stay above the value of the
+  best solution that the `:MILPSolver` finds.
 
 The usage of the executable is the following:
 

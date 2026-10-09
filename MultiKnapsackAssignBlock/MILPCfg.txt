@@ -19,10 +19,10 @@ intLogVerb       0    # log verbosity of the MILPSolver
 intRelaxIntVars  0    # the integer problem, not its continuous relaxation
 intMaxThread     1    # single-threaded, for reproducibility
 
-0  # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
-# [none]
+dblMaxTime       60   # a bound, not the optimum, is enough for the check
 
 0  # number of string parameters
 
