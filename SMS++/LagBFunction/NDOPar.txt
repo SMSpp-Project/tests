@@ -3,8 +3,9 @@
 #
 # A txt description of a BlockSolverConfig for the Block possibly having a
 # "linear objective" and multiple sub-Block having a "C05 objective", some
-# of which being LagBFunction, solved by the tester for LagBFunction: the
-# BundleSolver of BSCfg.txt [see also NDOPar-TR.txt]
+# of which being LagBFunction, solved by the tester for LagBFunction: two
+# BundleSolver, each checked against the LP of LPPar.txt, with the proximal
+# stabilization of BSCfg.txt and with the trust region
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,17 +14,59 @@ BlockSolverConfig     # exact type of the Configuration object
 
 0  # the BlockSolverConfig is not a "differential" one: values are being set
 
-1  # number of (the names of) Solver in this BlockSolverConfig
+2  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-BundleSolver          # name of Solver
+BundleSolver          # name of 1st Solver
+BundleSolver          # name of 2nd Solver
 
-1  # number of ComputeConfig in this BlockSolverConfig
+2  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# proximal stabilization
 
 *BSCfg.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# trust region
+
+*BSCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intMPStbl         4 # trust region
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
