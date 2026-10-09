@@ -790,7 +790,7 @@ int main( int argc , char **argv )
      continue;
 
     auto lhs = li.get_lhs();
-    auto rhs = li.get_lhs();
+    auto rhs = li.get_rhs();
     if( lhs == rhs )
      continue;
 

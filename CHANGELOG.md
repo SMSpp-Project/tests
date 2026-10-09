@@ -966,6 +966,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sub-Block, as for `MultiKnapsackAssignBlock`) also gives: before, the
   bound of such a maximization problem was taken for a lower one
 
+- `SMS++/AbstractBlock/test_box` changes the RHS of the <= linking rows and
+  the LHS of the >= ones, and checks each against the value it set
+
+- the `CapacitatedFacilityLocationBlock` batteries require the fixture that
+  extracts data/txt, which they read, and the conversion to netCDF waits for
+  it
+
 - `UCBlock/MPBCfg.txt` asks Gurobi for `FeasibilityTol` 1e-8 rather than
   the 1e-9 of the other `MPBCfg.txt`: the units of the Lagrangian relaxation
   of the UC give no vertical rows, against which the tighter value is there,

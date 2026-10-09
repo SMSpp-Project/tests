@@ -740,7 +740,21 @@ int main( int argc , char **argv )
                                       TUBlock->get_time_horizon() ) );
   }
 
+ // env-gated: price the spinning reserves with a constant (negative) cost, so
+ // the reserve-rewarded multi-piece per-period cost path of the DP solvers is
+ // exercised (for profiling the reserve overhead of the base solver). The
+ // cost is given before the Objective is generated: a reserve whose cost is
+ // zero then is not in it [see ThermalUnitBlock::generate_objective()],
+ // and after the Variable are, which the cost needs
  TUBlock->generate_abstract_variables();
+ if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
+  std::vector< double > rcv( TUBlock->get_time_horizon() , std::atof( rc ) );
+  TUBlock->set_primary_spinning_reserve_cost( rcv.begin() ,
+                                              Range( 0 , rcv.size() ) );
+  TUBlock->set_secondary_spinning_reserve_cost( rcv.begin() ,
+                                                Range( 0 , rcv.size() ) );
+  }
+
  TUBlock->generate_objective( nullptr );
 
  // env-gated check of the fixed Variable of the operating rules: with
@@ -785,17 +799,6 @@ int main( int argc , char **argv )
   std::vector< double > qcost( time_horizon , std::atof( qcost_env ) );
   TUBlock->set_reactive_linear_term( qcost.begin() ,
                                      Range( 0 , time_horizon ) );
-  }
-
- // env-gated: price the spinning reserves with a constant (negative) cost, so
- // the reserve-rewarded multi-piece per-period cost path of the DP solvers is
- // exercised (for profiling the reserve overhead of the base solver).
- if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
-  std::vector< double > rcv( time_horizon , std::atof( rc ) );
-  TUBlock->set_primary_spinning_reserve_cost( rcv.begin() ,
-                                              Range( 0 , time_horizon ) );
-  TUBlock->set_secondary_spinning_reserve_cost( rcv.begin() ,
-                                                Range( 0 , time_horizon ) );
   }
 
  // attach the Solver(s) to the ThermalUnitBlock- - - - - - - - - - - - - - -

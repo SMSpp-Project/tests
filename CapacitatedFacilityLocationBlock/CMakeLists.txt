@@ -46,13 +46,29 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
 
     smspp_install(CFL_test)
 
-    # Create a test fixture to generate .nc4 files by running run_cfl2nc4.
+    # The ORLib instances in data/txt come with the archive that
+    # CapacitatedFacilityLocationBlock downloads and unpacks, which is the
+    # business of a test fixture and not of the build: hanging an
+    # executable on the extraction would put the download in the default
+    # target, and a registry that is down would then stop the build of the
+    # library as well.
+    # This test will build and run the extract_cfl_txt target
+    add_test(NAME extract_cfl_txt
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                     --target extract_cfl_txt)
+    # Mark extract_cfl_txt as a fixture that sets up "cfl_txt_extracted"
+    set_tests_properties(extract_cfl_txt
+                         PROPERTIES FIXTURES_SETUP cfl_txt_extracted)
+
+    # Create a test fixture to generate .nc4 files by running run_cfl2nc4,
+    # which converts the instances of data/txt, hence comes after them.
     # This test will build and run the run_cfl2nc4 target
     add_test(NAME run_cfl2nc4
              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_cfl2nc4)
     # Mark run_cfl2nc4 as a fixture that sets up "cfl2nc4_generated"
     set_tests_properties(run_cfl2nc4
-                         PROPERTIES FIXTURES_SETUP cfl2nc4_generated)
+                         PROPERTIES FIXTURES_SETUP cfl2nc4_generated
+                                    FIXTURES_REQUIRED cfl_txt_extracted)
 
     # Add a test for each batch file. All batch scripts live in batches/; each
     # one cd-s into the directory holding its config files (BPar*, BSPar*,
@@ -95,9 +111,11 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:CFL_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
-        # Make each batch test require the cfl2nc4_generated fixture
+        # Make each batch test require both fixtures: the batteries read the
+        # instances of data/txt as well as the netCDF ones
         set_tests_properties(CFL_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED cfl2nc4_generated)
+                             PROPERTIES FIXTURES_REQUIRED
+                             "cfl2nc4_generated;cfl_txt_extracted")
     endforeach ()
 
     # The generic Benders decomposition of BendersDecompositionSolver against
@@ -116,20 +134,8 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
                 SMS++::MILPSolver)
         smspp_install(CFL_BDS_test)
 
-        # The ORLib instance the test reads comes with the archive that
-        # CapacitatedFacilityLocationBlock downloads and unpacks, which is the
-        # business of a test fixture and not of the build: hanging the
-        # executable on the extraction would put the download in the default
-        # target, and a registry that is down would then stop the build of the
-        # library as well.
-        # This test will build and run the extract_cfl_txt target
-        add_test(NAME extract_cfl_txt
-                 COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                         --target extract_cfl_txt)
-        # Mark extract_cfl_txt as a fixture that sets up "cfl_txt_extracted"
-        set_tests_properties(extract_cfl_txt
-                             PROPERTIES FIXTURES_SETUP cfl_txt_extracted)
-
+        # the ORLib instance the test reads is in data/txt [see
+        # extract_cfl_txt above]
         add_test(NAME CFL_BDS_test
                  COMMAND CFL_BDS_test
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

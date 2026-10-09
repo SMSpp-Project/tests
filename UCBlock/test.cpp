@@ -1102,6 +1102,10 @@ static std::string write( const std::string & name , bool nuclear ,
  s.addVar( "ActivePowerCost" , netCDF::NcDouble() , dT ).putVar( cost.data() );
  s.addVar( "PrimaryCost" , netCDF::NcDouble() , dT ).putVar( cost.data() );
  s.addVar( "SecondaryCost" , netCDF::NcDouble() , dT ).putVar( cost.data() );
+ // the reactive power of a SlackUnitBlock is bounded by its data, 0 when
+ // they are absent: it covers the reactive demand when the unit is off
+ s.addVar( "MaxReactivePower" , netCDF::NcDouble() ,
+           dT ).putVar( big.data() );
 
  return( path );
  }
