@@ -2,14 +2,21 @@
 /*--------------------------- File test.cpp --------------------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
- * Main for testing BinaryKnapsackBlock, comparing the results of two 
- * different Solvers attached to it.
+ * Main for testing BinaryKnapsackBlock, comparing the results of all the
+ * Solvers attached to it: every exact Solver must agree on the optimal value,
+ * every relaxation Solver must bracket it (see CrossCheckSolvers() and
+ * batches/batch and batch-mixed for the cross-check of all the mathematically
+ * equivalent formulations).
  *
  * \author Federica Di Pasquale \n
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
  *
  * \author Antonio Frangioni \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
+ *
+ * \author Donato Meoli \n
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
  */
@@ -19,9 +26,11 @@
 
 #define STEP 3  // after modifications solve again at each multiple of STEP
 
-#define LOG_LEVEL 0
+#ifndef LOG_LEVEL
+ #define LOG_LEVEL 0
+#endif
 // 0 = only pass/fail
-// 1 = list of modifications
+// 1 = list of modifications (and per-solve timings)
 // 2 = also print verbose header about main configuration at start
 
 #if( LOG_LEVEL > 0 )
@@ -43,13 +52,19 @@
 /*----------------------------- INCLUDES -----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include "common_utils.h"
+
 #include "BinaryKnapsackBlock.h"
 
-#include "BlockSolverConfig.h"
+#include "ChangeSolver.h"
 
 #include <random>
 
 #include <chrono>
+
+#include <cstdlib>
+
+#include <fstream>
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------- USING ------------------------------------*/
@@ -77,7 +92,7 @@ using c_Subset = Block::c_Subset;
 /*--------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------------*/
-/*------------------------------ GLOBALS -----------------------------------*/
+/*------------------------------- GLOBALS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
 BinaryKnapsackBlock * BKB;          // The Binary Knapsack Block
@@ -90,15 +105,15 @@ Index N = 100;                         // number of items
 static constexpr Index rangeW = 100;   // range values of weights
 static constexpr double rangeP = 100;  // range values of profits
 
+// when have_ref is true (the Pisinger mode, see -C / run_pisinger()),
+// CrossCheckSolvers additionally checks the optimum against the published
+// reference value ref_opt
+bool have_ref = false;
+double ref_opt = 0;
+
 /*--------------------------------------------------------------------------*/
 /*----------------------------- FUNCTIONS ----------------------------------*/
 /*--------------------------------------------------------------------------*/
-
-template< class T >
-static void Str2Sthg( const char * str , T & sthg ) {
- istringstream( str ) >> sthg;
- }
-
 /*--------------------------------------------------------------------------*/
 // Generate a random Range of size m < N
 
@@ -127,117 +142,245 @@ Subset generateSubset( Index m )
 
 /*--------------------------------------------------------------------------*/
 
-bool SolveBoth( void )
+bool CrossCheckSolvers( void )
 {
- // get the two Solvers - - - - - - - - - - - - - - - - - - - - - - - - - -
- // sort of assuming they are different, although they may not be
- auto Solver1 = BKB->get_registered_solvers().front();
- auto Solver2 = BKB->get_registered_solvers().back();
-
- // solve with both Solvers - - - - - - - - - - - - - - - - - - - - - - - -
-
- #if( LOG_LEVEL >= 1 )
-  auto start = std::chrono::system_clock::now();
- #endif
-
- auto status1 = Solver1->compute();     
-
- #if( LOG_LEVEL >= 1 )
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration< double > elapsed = end - start;
-  cout.setf( ios::scientific, ios::floatfield );
-  cout << setprecision( 2 ) << elapsed.count();
-  start = std::chrono::system_clock::now();
- #endif
-
- auto status2 = Solver2->compute();     
-
- #if( LOG_LEVEL >= 1 )
-  end = std::chrono::system_clock::now();
-  elapsed = end - start;
-  cout.setf( ios::scientific, ios::floatfield );
-  cout << setprecision( 2 ) << " - " << elapsed.count() << " - ";
- #endif
-
- // check status- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-
- if( ( status1 == Solver::kInfeasible ) &&
-     ( status2 == Solver::kInfeasible ) ) {
-  LOG( "OK(u)" );
-  return( true );
-  }
-
- if( ( status1 == Solver::kInfeasible ) ||
-     ( status2 == Solver::kInfeasible ) ) {
-  cout << "Error: Solver1 ";
-  if( status1 == Solver::kInfeasible ) cout << "in";
-  cout << "feasible but Solver2 ";
-  if( status2 == Solver::kInfeasible ) cout << "in";
-  cout << "feasible";
+ // cross-check ALL the registered Solver via the shared common_utils engine:
+ // every exact one must agree on the optimal value z*, every relaxation
+ // Solver must bracket it, and (in the Pisinger mode, have_ref) z* must match
+ // the published optimum ref_opt. The engine also prints the uniform
+ // per-instance line with every Solver value; what is added here is the
+ // BinaryKnapsackBlock-specific self-consistency check, i.e., that the value
+ // each Solver reports is the one its own solution has
+ const auto & reg = BKB->get_registered_solvers();
+ std::vector< Solver * > Solvers( reg.begin() , reg.end() );
+ const std::size_t M = Solvers.size();
+ if( M < 2 ) {
+  cerr << "Error: CrossCheckSolvers needs at least two registered Solver";
   return( false );
   }
 
- // get optimal values- - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the reading of a Solver, its [ get_lb() , get_ub() ] interval and the
+ // tolerance it is held to, lives in common_utils; the classifier is invoked
+ // by SolveAll() only for the Solver that found a solution, so it is wrapped
+ // here to record which ones the self-consistency check below can read a
+ // primal x from: the infeasible ones have none, and neither has a Solver
+ // that claims no optimum, i.e., the relaxation
+ std::vector< char > feasible( M , 0 );
+ std::vector< char > bracket( M , 0 );
+ // a :RelaxationSolver has no optimum to write in the Variable, so the
+ // self-consistency check below skips it; what it does have is the bracket
+ // of the base contract, whose two ends are valid bounds on the optimum of
+ // THIS problem [see GreedyRelaxationBinaryKnapsackSolver::get_lb()], so it
+ // is an ordinary inexact Solver as far as the cross-check goes and it is
+ // held to the width its -E declares, like every other one
+ SolverClassifier classify =
+  [ &feasible , &bracket ]( Solver * s , std::size_t k ) -> SolverReading {
+   feasible[ k ] = 1;
+   bracket[ k ] = bool( dynamic_cast< RelaxationSolver * >( s ) );
+   return( read_bounds( s , k ) );
+   };
 
- double Value1 = Solver1->get_var_value(); 
-
- double Value2 = Solver2->get_var_value();  
-
- // get solutions - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
- Solver1->get_var_solution();
- 
- double checksol = 0;
- for( Index i = 0 ; i < N ; ++i )
-  checksol += BKB->get_x( i ) * BKB->get_Profit( i );
-
- if( abs( checksol - Value1 ) > 1e-06 ) {
-  cerr << "Error computing solution Solver1: " << "checksol " << checksol
-       << " != Value1 " << Value1;
+ const double ref = have_ref ? ref_opt
+                  : std::numeric_limits< double >::quiet_NaN();
+ if( ! SolveAll( BKB , classify , ref , 2e-06 ) )
   return( false );
+
+ // BinaryKnapsackBlock-specific self-consistency: every feasible exact Solver's
+ // reported value must equal the value recomputed from its returned solution
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  if( ! feasible[ k ] )
+   continue;                               // infeasible: no primal x to read
+  if( bracket[ k ] )
+   continue;                               // relaxations have no primal x
+  const double value = Solvers[ k ]->get_var_value();
+  Solvers[ k ]->get_var_solution();
+  double checksol = 0;
+  for( Index i = 0 ; i < N ; ++i )
+   checksol += BKB->get_x( i ) * BKB->get_Profit( i );
+  if( abs( checksol - value ) > 1e-06 * max( abs( value ) , 1.0 ) ) {
+   cerr << "Error: Solver " << k << " solution value " << checksol
+        << " != its reported value " << value << endl;
+   return( false );
+   }
+
+  // the same solution must also come out of Solver::get_Solution(), which
+  // the "physical" Solver produce out of their own data structures: the x
+  // is therefore first scribbled over, so that a Solution silently taken
+  // from the Variable rather than from the Solver cannot pass unnoticed;
+  // a fixed x keeps its value [see ColVariable::set_value()]
+  for( Index i = 0 ; i < N ; ++i )
+   if( ! BKB->is_fixed( i ) )
+    BKB->set_x( i , -1 );
+
+  auto sol = dynamic_cast< BinaryKnapsackSolution * >(
+					     Solvers[ k ]->get_Solution() );
+  if( ! sol ) {
+   cerr << "Error: Solver " << k << " did not return a BinaryKnapsackSolution"
+        << endl;
+   return( false );
+   }
+
+  if( sol->get_x().size() != N ) {
+   cerr << "Error: Solver " << k << " Solution has " << sol->get_x().size()
+        << " entries != " << N << endl;
+   delete sol;
+   return( false );
+   }
+
+  double solvalue = 0;
+  for( Index i = 0 ; i < N ; ++i )
+   solvalue += sol->get_x()[ i ] * BKB->get_Profit( i );
+  if( abs( solvalue - value ) > 1e-06 * max( abs( value ) , 1.0 ) ) {
+   cerr << "Error: Solver " << k << " get_Solution() value " << solvalue
+        << " != its reported value " << value << endl;
+   delete sol;
+   return( false );
+   }
+
+  sol->write( BKB );      // put the Variable back to the solution
+  delete sol;
   }
 
- Solver2->get_var_solution();
-
- checksol = 0;
- for( Index i = 0 ; i < N ; ++i )
-  checksol += BKB->get_x( i ) * BKB->get_Profit( i );
- 
- if( abs( checksol - Value2 ) > 1e-06 ) {
-  cerr << "Error computing solution Solver2: " << "checksol " << checksol
-       << " != Value2 " << Value2;
-  return( false );
-  }
-
- // compare optimal values- - - - - - - - - - - - - - - - - - - - - - - - - 
- 
- double gap = ( Value2 - Value1 ) / max( abs( Value1 ) , 1.0 ) ;
- if( abs( gap ) < 2e-06 ) {
-  LOG( "OK(f)" );
-  return( true );
-  }
- 
- cout << "Error: Value1 = " << Value1 << ", Value2 = " << Value2;
- return( false );     
- } 
+ return( true );
+ }
 
 /*--------------------------------------------------------------------------*/
-/// Custom terminate function to print the exception message
+// a Pisinger benchmark instance read from a .csv (see read_pisinger())
 
-void smspp_terminate( void ) {
+struct PisingerInst {
+ std::string name;
+ Index N;
+ double C, z;
+ std::vector< double > W, P;
+ };
 
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
+/*--------------------------------------------------------------------------*/
+// read every instance of a Pisinger .csv, each a block "knapPI_... / n N /
+// c C / z Z / time T / <idx,profit,weight,xstar> lines / -----"
+
+static std::vector< PisingerInst > read_pisinger( const std::string & path )
+{
+ std::vector< PisingerInst > out;
+ std::ifstream in( path );
+ std::string line;
+ while( std::getline( in , line ) ) {
+  if( line.compare( 0 , 6 , "knapPI" ) != 0 )
+   continue;
+  if( ! line.empty() && line.back() == '\r' )
+   line.pop_back();
+  PisingerInst pi;
+  pi.name = line;
+  unsigned nn = 0;
+  std::getline( in , line ); std::sscanf( line.c_str() , "n %u" , & nn );
+  std::getline( in , line ); std::sscanf( line.c_str() , "c %lf" , & pi.C );
+  std::getline( in , line ); std::sscanf( line.c_str() , "z %lf" , & pi.z );
+  std::getline( in , line );                      // "time ..."
+  pi.N = nn; pi.W.resize( nn ); pi.P.resize( nn );
+  for( Index i = 0 ; i < pi.N ; ++i ) {
+   std::getline( in , line );
+   long idx; double p, w;
+   std::sscanf( line.c_str() , "%ld,%lf,%lf" , & idx , & p , & w );
+   pi.P[ i ] = p; pi.W[ i ] = w;
+   }
+  out.push_back( std::move( pi ) );
+  }
+ return( out );
  }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
- } catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
+
+/*--------------------------------------------------------------------------*/
+// the Pisinger mode (-C <csv>): test every instance of the .csv with ALL the
+// attached Solver (the CrossCheckSolvers() solver-vs-solver cross-check) AND against
+// the published optimum z (solver-vs-reference), reusing one Block and one set
+// of Solver across the whole class (the data of each instance is set with the
+// chg_*() Modification, to which the Solver react)
+
+static bool run_pisinger( const std::string & csv , const std::string & sconf )
+{
+ auto insts = read_pisinger( csv );
+ if( insts.empty() ) {
+  cerr << "Error: no instance read from " << csv << endl;
+  return( false );
+  }
+
+ // build the Block from the first instance (Pisinger is pure 0-1: all integer)
+ BKB = new BinaryKnapsackBlock();
+ BKB->load( insts[ 0 ].N , insts[ 0 ].C ,
+            std::vector< double >( insts[ 0 ].W ) ,
+            std::vector< double >( insts[ 0 ].P ) );
+ BKB->generate_abstract_variables();
+ BKB->generate_abstract_constraints();
+ BKB->generate_objective();
+
+ Configuration * bsc = Configuration::deserialize( sconf );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from " << sconf << endl;
+  return( false );
+  }
+ s_config_Block( BKB , bsc , sconf );
+ if( BKB->get_registered_solvers().empty() ) {
+  cerr << "Error: BlockSolverConfig did not register any Solver" << endl;
+  return( false );
+  }
+
+ bool AllPassed = true;
+ have_ref = true;
+ for( std::size_t k = 0 ; k < insts.size() ; ++k ) {
+  N = insts[ k ].N;
+  BKB->chg_weights( insts[ k ].W.begin() );       // all the weights
+  BKB->chg_profits( insts[ k ].P.begin() );       // all the profits
+  BKB->chg_capacity( insts[ k ].C );
+  ref_opt = insts[ k ].z;
+  LOG( insts[ k ].name << ": " );
+  AllPassed &= CrossCheckSolvers();
+  }
+ have_ref = false;
+
+ if( AllPassed )
+  cout << GREEN( All tests passed!! ) << endl;
+ else
+  cout << RED( Shit happened!! ) << endl;
+
+ s_config_Block( BKB , bsc );
+ delete bsc;
+ delete BKB;
+ return( AllPassed );
  }
- std::abort(); // or exit(1)
-}
+
+/*--------------------------------------------------------------------------*/
+
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameter (-S BlockSolverConfig) is handled centrally by
+// common_utils. This tester GENERATES its own BinaryKnapsackBlock from the
+// seed, so it takes no instance positional (filename_optional = true).
+// (N is declared as a global above.)
+long int seed = 123123;     // seed
+Index wchg = 127;           // what to change, coded bit-wise
+Index n_repeat = 100;       // number of repetitions
+double delta = 0.01;        // capacity parameter
+double nW = 0.1;            // percentage of negative weights
+double nP = 0.1;            // percentage of negative profits
+double nI = 0.5;            // percentage of integer variables
+double nM = 0.2;            // max percentage of items to modify
+std::string pisinger_csv;   // if set (-C), test these Pisinger instances vs z
+
+/*--------------------------------------------------------------------------*/
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
+  case( 'N' ): Str2Sthg( optarg , N );         return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 'd' ): Str2Sthg( optarg , delta );     return( true );
+  case( 'W' ): Str2Sthg( optarg , nW );        return( true );
+  case( 'P' ): Str2Sthg( optarg , nP );        return( true );
+  case( 'i' ): Str2Sthg( optarg , nI );        return( true );
+  case( 'M' ): Str2Sthg( optarg , nM );        return( true );
+  case( 'C' ): pisinger_csv = optarg;          return( true );
+  default:                                     return( false );
+  }
+ }
 
 /*--------------------------------------------------------------------------*/
 
@@ -248,46 +391,60 @@ int main( int argc , char **argv )
 
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the standard parameter (-S) is parsed by common_utils; the test only
+ // appends its own knobs and reads no instance file (it generates one)
 
- long int seed = 123123;                // seed
- Index wchg = 127;                      // what to change, coded bit-wise
- Index n_repeat = 100;                  // number of repetitions
- double delta = 0.01;                   // capacity parameter
- double nW = 0.1;                       // percentage of negative weights
- double nP = 0.1;                       // percentage of positive weights
- double nI = 0.5;                       // percentage of integer variables
- double nM = 0.2;                       // max percentage of items to modify
- // for small knapsacks nM * N may be too small (always 0 or 1 at most)
- // minM defines the minimum absolute number of items that can be modified
+ // for small knapsacks nM * N may be too small (always 0 or 1 at most):
+ // minM is the minimum absolute number of items that can be modified
  int minM = 10;
 
- switch( argc ) {
-  case( 10 ): Str2Sthg( argv[ 9 ] , nM );
-  case( 9 ): Str2Sthg( argv[ 8 ] , nI );
-  case( 8 ): Str2Sthg( argv[ 7 ] , nP );
-  case( 7 ): Str2Sthg( argv[ 6 ] , nW );
-  case( 6 ): Str2Sthg( argv[ 5 ] , delta );
-  case( 5 ): Str2Sthg( argv[ 4 ] , n_repeat );
-  case( 4 ): Str2Sthg( argv[ 3 ] , N );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ]
-		<< " seed [wchg N n_repeat delta nW nP nI nM]"
-        << endl << "       wchg: what to change, coded bit-wise [127]"
-	<< endl << "             1 = change sense, 2 = change capacity "
-        << endl << "             3 = change profits, 4 = change weights"
-        << endl << "             5 = fix, 6 = unfix, 7 = change integrality"
-	<< endl << "       N: number of variables [100]"
-        << endl << "       n_repeat: number of repetitions [100]"
-        << endl << "       delta: Capacity parameter [0.01]"
-        << endl << "       nW: percentage of negative weights [0.1]"
-        << endl << "       nP: percentage of negative profits [0.1]"
-        << endl << "       nI: percentage of integer variables [0.5]"
-        << endl << "       nM: max percentage of items to modify [0.2]"
-        << endl; 
-   return( 1 );
-  }
+ docopt_desc = "SMS++ BinaryKnapsackBlock test.\n";
+ filename_optional = true;
+ short_opts += "e:k:N:n:d:W:P:i:M:C:";
+ const std::vector< option > my_opts = {
+   { "seed"   , required_argument , nullptr , 'e' } ,
+   { "wchg"   , required_argument , nullptr , 'k' } ,
+   { "nvar"   , required_argument , nullptr , 'N' } ,
+   { "rounds" , required_argument , nullptr , 'n' } ,
+   { "delta"  , required_argument , nullptr , 'd' } ,
+   { "nW"     , required_argument , nullptr , 'W' } ,
+   { "nP"     , required_argument , nullptr , 'P' } ,
+   { "nI"     , required_argument , nullptr , 'i' } ,
+   { "nM"     , required_argument , nullptr , 'M' } ,
+   { "csv"    , required_argument , nullptr , 'C' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [127]:\n"
+         "                                    1 sense, 2 capacity, 4 profits,\n"
+         "                                    8 weights, 16 fix, 32 unfix,\n"
+         "                                    64 integrality\n"
+         "  -N, --nvar <n>                  number of variables [100]\n"
+         "  -n, --rounds <n>                number of repetitions [100]\n"
+         "  -d, --delta <x>                 capacity parameter [0.01]\n"
+         "  -W, --nW <x>                    fraction of negative weights "
+         "[0.1]\n"
+         "  -P, --nP <x>                    fraction of negative profits "
+         "[0.1]\n"
+         "  -i, --nI <x>                    fraction of integer variables "
+         "[0.5]\n"
+         "  -M, --nM <x>                    max fraction of items to modify "
+         "[0.2]\n"
+         "  -C, --csv <file>                Pisinger .csv: test its instances "
+         "against their published optimum z\n";
+
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
+
+ // Pisinger mode: instead of generating a random instance and mutating it,
+ // run all the attached Solver on every instance of the given .csv, checking
+ // they agree with one another AND with the published optimum (see
+ // run_pisinger())
+ if( ! pisinger_csv.empty() )
+  return( run_pisinger( pisinger_csv , sconf_file ) ? 0 : 1 );
 
  // sanity checks - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  
@@ -398,20 +555,29 @@ int main( int argc , char **argv )
   BKB->load( N , C , std::move( W ) , std::move( P ) , std::move( I ) );
  else
   BKB->load( N , C , std::move( W ) , std::move( P ) );
- 
- // attach two Solver to the BinaryKnapsackBlock- - - - - - - - - - - - - - - 
+
+ // build the abstract representation (Objective + Constraint) up front, so
+ // that the test works also with solver configurations that do not trigger it
+ // themselves (e.g. the pure-DP benchmark config with no :MILPSolver); the
+ // generate_abstract_*() are idempotent, hence a no-op when already built
+ BKB->generate_abstract_variables();
+ BKB->generate_abstract_constraints();
+ BKB->generate_objective();
+
+ // attach two Solver to the BinaryKnapsackBlock- - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do it by using a single a BlockSolverConfig, read from file
- 
- auto bsc = dynamic_cast< BlockSolverConfig * >(
-		     Configuration::deserialize( "BinaryKnapsackPar.txt" ) );
- if( ! bsc ) {
-  cerr << "Error: configuration file not a BlockSolverConfig" << endl;
-  exit( 1 );    
-  }
+ // BSC may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >;
+ // s_config_Block() dispatches on the runtime type and clears the config(s)
+ // for final cleanup.
 
- bsc->apply( BKB );
- bsc->clear();  // keep the clear()-ed BlockSolverConfig for final cleanup
+ Configuration * bsc = Configuration::deserialize( sconf_file );
+ if( ! bsc ) {
+  cerr << "Error: cannot load BSC from " << sconf_file << endl;
+  exit( 1 );
+  }
+ s_config_Block( BKB , bsc , sconf_file );
 
  // check Solvers - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -444,7 +610,7 @@ int main( int argc , char **argv )
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  LOG( "0: " );
- bool AllPassed = SolveBoth();
+ bool AllPassed = CrossCheckSolvers();
  
  // modifications loop- - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -582,8 +748,8 @@ int main( int argc , char **argv )
       for( Index j = rng.first ; j < rng.second ; j++ ) {
        auto x = BKB->get_Var( j );
        if( ! x->is_fixed() ) {
-	x->set_value( *nXit++ );
-	x->is_fixed( true );   
+        x->set_value( *nXit++ );
+        x->is_fixed( true );
         }
        }
       LOG( "(AR)" );
@@ -600,8 +766,8 @@ int main( int argc , char **argv )
       for( auto j : nms ) {
        auto x = BKB->get_Var( j );
        if( ! x->is_fixed() ) {
-	x->set_value( *nXit++ );
-	x->is_fixed( true );   
+        x->set_value( *nXit++ );
+        x->is_fixed( true );
         }
        }
       LOG( "(AS)" );
@@ -695,7 +861,7 @@ int main( int argc , char **argv )
   // finally, re-solve - - - - - - - - - - - - - - - - - - - - - - - - - - -
  
   if( ! ( i % STEP ) )
-   AllPassed &= SolveBoth();
+   AllPassed &= CrossCheckSolvers();
 
   }  // end( main loop ) - - - - - - - - - - - - - - - - - - - - - - - - - -
      //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -704,12 +870,13 @@ int main( int argc , char **argv )
  if( AllPassed )
   cout << GREEN( All tests passed!! ) << endl;
  else
-  cout << RED( Errors happened!! ) << endl;    
+  cout << RED( Shit happened!! ) << endl;    
 
  // final cleanup - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
- bsc->apply( BKB );  // remove the Solver by apply()-ing the clear()-ed bsc
+ s_config_Block( BKB , bsc );  // remove the Solver by re-apply()-ing the
+                               // clear()-ed bsc (or meta-config)
 
  delete( bsc );      // delete the BlockSolverConfig
 

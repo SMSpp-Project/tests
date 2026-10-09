@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+#
+# usage: batch-instances-cplex < exe file >
+#        < exe file > = path of the executable file, default
+#                       ./SingleFlowDCRBlock_test
+#
+# runs SingleFlowDCRBlock_test on the instances of the module on which
+# Gurobi does not solve the SOCP formulation with each of its numerical
+# focus settings, listed with the reason in socp-unstable.txt, which
+# batch-instances therefore leaves out of that formulation: here CPLEX
+# solves it [see BSPar-cpx.txt], cross-checked as there by the
+# SingleFlowDCRBendersSolver, so that no instance of the module is left
+# without the exact formulation where CPLEX is available (the build only
+# adds this battery then)
+#
+# the SingleFlowDCRBendersSolver stops on its own criterion and does not
+# declare how much of a gap it leaves, so "-E ,inf" holds it to the base
+# Solver contract alone, i.e. to the interval [ get_lb() , get_ub() ]
+# containing the optimum
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+exe=${1:-./SingleFlowDCRBlock_test}
+DATADIR=../../SingleFlowDCRBlock/data/nc4/single
+
+ran=0
+for inst in $(grep -v '^#' "$(dirname "$0")/../socp-unstable.txt"); do
+  what=$DATADIR/$inst.nc4
+  [ -f "$what" ] || continue
+  ran=1
+  run_test "$exe" "$what" -B DCRCfg-socp.txt -S BSPar-cpx.txt -E ,inf
+done
+
+# a batch that has found no instance at all has tested nothing, and saying so
+# is the only way to tell it apart from one where everything went well
+if [ "$ran" -eq 0 ]; then
+  echo "No instance found in $DATADIR"
+  exit 1
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

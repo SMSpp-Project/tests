@@ -39,13 +39,12 @@ using namespace SMSpp_di_unipi_it;
 const char *const logF = "log.bn";
 
 /*--------------------------------------------------------------------------*/
-/*--------------------------------- Main -----------------------------------*/
+/*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
 /// Custom terminate function to print the exception message
 
 void smspp_terminate( void ) {
-
  std::cerr << "Uncaught exception in executing SMS++:\n";
  try {
   std::rethrow_exception( std::current_exception() );
@@ -59,6 +58,8 @@ void smspp_terminate( void ) {
  std::abort(); // or exit(1)
 }
 
+/*--------------------------------------------------------------------------*/
+/*--------------------------------- Main -----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
@@ -88,9 +89,9 @@ int main( int argc , char **argv )
 
  cout << *sLukFi;
 
- ProbFile.open( argc < 3 ? "BSC.txt" : argv[ 2 ] );
+ ProbFile.open( argc < 3 ? "BSCfg.txt" : argv[ 2 ] );
  if( ! ProbFile.is_open() ) {
-  cerr << "Error: cannot open file " << ( argc < 3 ? "BSC.txt" : argv[ 2 ] )
+  cerr << "Error: cannot open file " << ( argc < 3 ? "BSCfg.txt" : argv[ 2 ] )
        << endl;
   return( 1 );
   }
@@ -101,6 +102,16 @@ int main( int argc , char **argv )
 
  bsc->apply( sLukFi );
  bsc->clear();
+
+ // a BlockSolverConfig that attaches no Solver (e.g., one read from an
+ // empty or malformed file, or a "differential" one) leaves nothing to run
+ if( sLukFi->get_registered_solvers().empty() ) {
+  cerr << "Error: no Solver attached to the LukFiBlock by "
+       << ( argc < 3 ? "BSCfg.txt" : argv[ 2 ] ) << endl;
+  delete bsc;
+  delete sLukFi;
+  return( 1 );
+  }
 
  auto slvr = ( sLukFi->get_registered_solvers() ).front();
 

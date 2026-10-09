@@ -1,0 +1,69 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-target.txt  - - - - - - - - - - - - - - -
+#
+# BlockSolverConfig for a MultiTargetBlock: the same two Solver as
+# BSPar.txt, but the bundle of the LagrangianDualSolver stops after a few
+# iterations, each of which solves a :MILPSolver per SingleTargetBlock and
+# costs much more than on the constellation Blocks; stopped early, the
+# Lagrangian dual still gives a lower bound, which is what -R checks.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of 1st Solver
+#CPXMILPSolver        #   (uncomment the available backend)
+#SCIPMILPSolver
+#HiGHSMILPSolver
+LagrangianDualSolver  # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*MILPCfg.txt          # ComputeConfig of the :MILPSolver
+
+*LDCfg.txt +          # ComputeConfig of the LagrangianDualSolver, changed
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1  # number of integer parameters
+
+intMaxIter         50 # MaxIter, max number of iterations for each call
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-target.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

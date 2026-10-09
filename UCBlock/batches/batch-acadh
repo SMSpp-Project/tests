@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+#
+# usage: batch-acadh < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs the hydrothermal academic instances
+#
+# for LagrangianDualSolver + BundleSolver:
+# correct value of tStar: 1e+0
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar-DP.txt
+# the Lagrangian Dual of these instances is solved over sub-Block that the
+# dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
+# the PrimalProximalHeur needs and what makes its inner Solver converge
+# the LagrangianDualSolver here solves a relaxation of the problem, and with
+# the sub-problems solved exactly the bound it gives is the Lagrangian one,
+# which has a duality gap: it is declared as such, so that it is held to
+# solving its own problem exactly while of this one it only bounds the side
+# a relaxation bounds [see BSPar-DP.txt]
+REL="${REL:-,r}"
+
+parse_batch_args "$@"
+
+# hydrothermal academic instances - - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/UC_Data/HT-Ramp
+
+if [ -n "$CI" ]; then sizes="20_10 100_50 200_100";                     seeds="1"
+else                  sizes="20_10 50_20 75_35 100_50 150_75 200_100";  seeds="1 2"; fi
+
+for size in $sizes; do
+  for seed in $seeds; do
+
+    what=${DATADIR}/${size}_${seed}_w.nc4
+
+    run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+

@@ -1,0 +1,40 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BPar-ND.txt - - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockConfig for MMCFNetworkDesignBlock in the
+# monolithic formulation: the MMCFBlock is its sub-Block, with the design
+# Variable in its mutual capacity and forcing constraints, and the whole
+# problem is in the abstract representation [see nd_test.cpp].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+1  # the BlockConfig is a "differential" one
+2  # version of the BlockConfig format
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+# static_constraints
+SimpleConfiguration<int>
+1    # use [1] or not [0] the forcing constraints of the MMCFBlock
+# dynamic_constraints
+*    # [none]
+# static_variables
+SimpleConfiguration<int>
+0    # 0 = monolithic, 1 = Benders (formulation)
+# dynamic_variables
+*    # [none]
+# objective
+*    # [none]
+# is_feasible
+*    # [none]
+# is_optimal
+*    # [none]
+# solution
+*    # [none]
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BPar-ND.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

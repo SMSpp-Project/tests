@@ -1,0 +1,9 @@
+# The tests build and run nothing of their own here: what they are built and
+# run by is the pipeline of the umbrella, which has the modules they test.
+# What this pipeline holds is their CHANGELOG, in the format and against the
+# commits of a merge request [see ci/changelog.yml of the umbrella].
+
+include:
+  - project: smspp/smspp-project
+    ref: develop
+    file: /ci/changelog.yml

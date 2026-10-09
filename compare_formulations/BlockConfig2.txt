@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BlockConfig2.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  BlockConfig2.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockConfig object for configuring the static
 # (abstract) Variable of "any" Block only, taking the corresponding
-# Configuration form SimpleConfig2.txt 
-#
-#   Antonio Frangioni
+# Configuration form SimpleConfig2.txt
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,6 +12,11 @@ BlockConfig     # exact type of the Configuration object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
 
 # static constraints Configuration
 * #none
@@ -43,5 +46,5 @@ BlockConfig     # exact type of the Configuration object
 * #none
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BlockConfig2.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END BlockConfig2.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

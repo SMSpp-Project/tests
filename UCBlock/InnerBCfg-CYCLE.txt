@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBCfg-CYCLE.txt - - - - - - - - - - - - - -
+#
+# The "meta"-BlockConfig of InnerBCfg.txt with the CYCLE formulation of the
+# DCNetworkBlock [see DCNBCfg-CYCLE.txt], for batch-pypsa, which solves every
+# instance with each formulation of the network.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+4 # the number of elements in the map
+
+ThermalUnitBlock        *TUBCfg.txt
+DCNetworkBlock          *DCNBCfg-CYCLE.txt
+ACNetworkBlock          *ACBCfg.txt
+PolyhedralFunctionBlock *PFBCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBCfg-CYCLE.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

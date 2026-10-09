@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pypsa < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs all the PyPSA instances of pypsa-data/ucblock and pypsa-data/pollutants
+# and checks that the PyPsa objective value matches the given reference one;
+# those in pypsa-data/pollutants are 3n_3c_1gext_1h_1bext_2l with the global
+# constraints of the PyPsa network on the dispatch, translated by pypsa2smspp
+# into the pollutant budget constraints of UCBlock: a CO2 limit twice and half
+# the emissions of the unconstrained dispatch, a CO2 and a NOx limit, a CO2
+# floor, a CO2 equality, an operational limit on a carrier, and CO2 limits
+# where a store and a hydro storage unit contribute through their final level
+# (the instances are written by test/pollutant_generator.py of pypsa2smspp)
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+# all the PyPSA instances are pure-LD subproblems on a single
+# ECNetworkBlock-like component: BundleSolver requires intDoEasy=0, so the
+# EASY variant is the default here (the standard BSPar.txt, intDoEasy=1,
+# would raise "BundleSolver: all components are easy, this is no supported"),
+# with the one parameter of the Bundle these instances need changed, the
+# threshold under which the norm of the residual is taken to be zero
+# [see BSPar-PYPSA.txt]
+DEFAULT_PAR=BSPar-PYPSA.txt
+parse_batch_args "$@"
+
+# of the three Solver of BSPar-PYPSA.txt only the first one, the MILP,
+# answers this problem: the LagrangianDualSolver solves its dual, and the
+# PrimalProximalHeur the same dual with a primal recovery on top, so both
+# are declared relaxations and held to bounding the side a relaxation
+# bounds, rather than to a value and to an upper bound they need not have
+REL="${REL:-,r,r}"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ filename ] = PyPsa objective value
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_1n_1c_1g.nc]=1.517348289e+11
+REF_OBJ[smspp_1n_1c_1g_1h.nc]=2.793939844e+10
+REF_OBJ[smspp_1n_1c_1gext.nc]=1.447274894e+11
+REF_OBJ[smspp_2n_1c_1g_1b_2l.nc]=1.476439209e+11
+REF_OBJ[smspp_2n_1c_1gext_1bext_2l.nc]=1.435139638e+11
+REF_OBJ[smspp_2n_1c_1gext_1bext_2lext.nc]=3.050227529e+10
+REF_OBJ[smspp_2n_2c_1g_1lext.nc]=2.446649078e+11
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l.nc]=1.501972958e+09
+REF_OBJ[smspp_3n_3c_2gext_1l_1ml.nc]=4.736469299e+11
+REF_OBJ[smspp_3n_3c_2gext_1lext_1mlext.nc]=1.495190064e+07
+REF_OBJ[smspp_sector_1n_1cn_1gn.nc]=-2.400702717e+07
+REF_OBJ[smspp_sector_1n_1cn_1gnext.nc]=-2.372297229e+07
+REF_OBJ[smspp_tssb_2n_2gext_1l.nc]=1.508768621e+09
+
+# the instances with pollutant budget constraints
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_200.nc]=1.501972958e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_50.nc]=6.679866968e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_nox.nc]=5.233050238e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_min.nc]=1.572466474e+09
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_ccgt_limit.nc]=6.679866968e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_h2.nc]=6.679866968e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_eq.nc]=2.339416779e+10
+REF_OBJ[smspp_3n_3c_1gext_1h_1bext_2l_co2_hydro.nc]=7.898750861e+10
+# one scenario of the modular family of pypsa2smspp (gen_modular_tssb.py, 48
+# periods, 2 buses, modules turned off) with the design in the units, the
+# same network InvestmentBlock/batch-pypsa has with the design in an
+# InvestmentBlock over the UCBlock
+REF_OBJ[smspp_mod_t48_s1_b2c_det_ucblock.nc]=3.511271121e+07
+# the edge cases of the network (data/gen_network_cases.py of UCBlock), whose
+# DC lines have a susceptance, so that PTDF, CYCLE and KIRCHHOFF below each
+# write their own constraints: parallel lines in the same and in opposite
+# directions, a triangle with a parallel side, two DC components joined by a
+# link, nodes reached only by links with losses, and all of them together
+REF_OBJ[smspp_net_par.nc]=8.966666667e+03
+REF_OBJ[smspp_net_opp.nc]=8.966666667e+03
+REF_OBJ[smspp_net_tri.nc]=5.500000000e+03
+REF_OBJ[smspp_net_comp.nc]=5.450000000e+03
+REF_OBJ[smspp_net_loss.nc]=5.833333333e+03
+REF_OBJ[smspp_net_link.nc]=5.743333333e+03
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# each instance with each formulation of the network: PTDF, CYCLE and the
+# KIRCHHOFF of InnerBCfg.txt
+for bcfg in InnerBCfg-PTDF.txt InnerBCfg-CYCLE.txt InnerBCfg.txt; do
+
+    for what in ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_*.nc \
+                ../../UCBlock/data/nc4/pypsa-data/pollutants/smspp_*.nc; do
+
+        # skip if pattern did not match any file
+        if [ ! -f "$what" ]; then
+          continue
+        fi
+
+        base=$(basename "$what")
+
+        ref=${REF_OBJ[$base]}
+
+        if [ -z "$ref" ]; then
+          echo "No reference objective defined for file: $base"
+          exit 1
+        fi
+
+        run_test "$exe" "$what" -S "$par" -R "$REL" \
+                 -B "$bcfg" -r "$ref"
+
+    done
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

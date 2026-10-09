@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+#
+# Cross-check BlockSolverConfig for a SATBlock: it attaches the Solver of
+# its physical representation and those of its abstract one, i.e., of its
+# MILP formulation, which must give the same optimum (see batches/):
+#
+#   - CaDiCaLSATSolver   OLL on the clauses, with CaDiCaL (OLLCfg.txt)
+#   - MiniSATSolver      OLL on the clauses, with MiniSat, the SAT solver
+#                        made anew as OLL grows (OLLCfg-restart.txt)
+#   - :MILPSolver        the MILP formulation
+#   - BranchAndXSolver   an enumeration on the SATSolver with CaDiCaL, OLL
+#                        within a budget of calls in each node (BXCfg.txt)
+#   - IntegralityBarrierSolver  a heuristic, Frank-Wolfe on an integrality
+#                        penalty divided by a barrier of the slacks
+#                        (IBCfg.txt), held to the point it finds, if any
+#
+# A Solver that is not in the build is left out [see drop_missing_Solvers()
+# in common_utils.cpp].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+5  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CaDiCaLSATSolver          # 1st: OLL with CaDiCaL
+MiniSATSolver             # 2nd: OLL with MiniSat
+HiGHSMILPSolver           # 3rd: the MILP formulation
+#CPXMILPSolver            #      (uncomment the available backend)
+#GRBMILPSolver
+#SCIPMILPSolver
+BranchAndXSolver          # 4th: the enumeration on OLL
+IntegralityBarrierSolver  # 5th: Frank-Wolfe on a barrier
+
+5  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*OLLCfg.txt
+*OLLCfg-restart.txt
+*MILPCfg.txt
+*BXCfg.txt
+*IBCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

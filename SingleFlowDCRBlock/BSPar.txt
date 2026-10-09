@@ -1,0 +1,42 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a SingleFlowDCRBlock in the
+# "SOCP" formulation (see DCRCfg-socp.txt), solved by a :MILPSolver that
+# copes with the conic constraints and by the SingleFlowDCRBendersSolver.
+# Note that not every :MILPSolver does: CPLEX and Gurobi solve the
+# mixed-integer conic program, HiGHS and SCIP are left commented out.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver                   # name of 1st Solver
+#CPXMILPSolver                  # name of 1st Solver
+#HiGHSMILPSolver                # no mixed-integer conic constraints
+#SCIPMILPSolver                 # no mixed-integer conic constraints
+SingleFlowDCRBendersSolver      # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+*GRBCfg.txt       # MILPCfg.txt for a :MILPSolver other than Gurobi
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the SingleFlowDCRBendersSolver
+* # [none]
+
+# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

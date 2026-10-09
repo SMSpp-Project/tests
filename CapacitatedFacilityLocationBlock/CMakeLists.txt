@@ -1,0 +1,197 @@
+# ----- Requirements -------------------------------------------------------- #
+# If it's not being called by the umbrella, we need to
+# look for the system-installed libraries.
+if (NOT hasParent)
+    # Blocks
+    find_package(CapacitatedFacilityLocationBlock)
+    # Solvers
+    find_package(LagrangianDualSolver)
+    find_package(BundleSolver)
+    find_package(MILPSolver)
+    find_package(MCFClassSolver)
+    find_package(MCFLemonSolver)
+    find_package(BendersDecompositionSolver)
+endif ()
+
+# Skip the suite if some module its labels declare is not in the build
+smspp_require_labelled_modules()
+
+# ----- Tests --------------------------------------------------------------- #
+if (TARGET SMS++::CapacitatedFacilityLocationBlock)
+
+    add_executable(CFL_test test.cpp ../common_utils.cpp)
+    target_include_directories(CFL_test PRIVATE ..)
+    target_link_libraries(CFL_test PRIVATE
+                          SMS++::CapacitatedFacilityLocationBlock)
+
+    if (TARGET SMS++::LagrangianDualSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::LagrangianDualSolver)
+    endif ()
+
+    if (TARGET SMS++::BundleSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::BundleSolver)
+    endif ()
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    if (TARGET SMS++::MCFClassSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::MCFClassSolver)
+    endif ()
+
+    if (TARGET SMS++::MCFLemonSolver)
+        target_link_libraries(CFL_test PRIVATE SMS++::MCFLemonSolver)
+    endif ()
+
+    smspp_install(CFL_test)
+
+    # The ORLib instances in data/txt come with the archive that
+    # CapacitatedFacilityLocationBlock downloads and unpacks, which is the
+    # business of a test fixture and not of the build: hanging an
+    # executable on the extraction would put the download in the default
+    # target, and a registry that is down would then stop the build of the
+    # library as well.
+    # This test will build and run the extract_cfl_txt target
+    add_test(NAME extract_cfl_txt
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                     --target extract_cfl_txt)
+    # Mark extract_cfl_txt as a fixture that sets up "cfl_txt_extracted"
+    set_tests_properties(extract_cfl_txt
+                         PROPERTIES FIXTURES_SETUP cfl_txt_extracted)
+
+    # Create a test fixture to generate .nc4 files by running run_cfl2nc4,
+    # which converts the instances of data/txt, hence comes after them.
+    # This test will build and run the run_cfl2nc4 target
+    add_test(NAME run_cfl2nc4
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_cfl2nc4)
+    # Mark run_cfl2nc4 as a fixture that sets up "cfl2nc4_generated"
+    set_tests_properties(run_cfl2nc4
+                         PROPERTIES FIXTURES_SETUP cfl2nc4_generated
+                                    FIXTURES_REQUIRED cfl_txt_extracted)
+
+    # Add a test for each batch file. All batch scripts live in batches/; each
+    # one cd-s into the directory holding its config files (BPar*, BSPar*,
+    # R3BCfg) so the same scripts work both via ctest and when launched by
+    # hand. Only the scenarios that currently pass are registered.
+    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-s"
+                          # default arrangement (natural-LP vs MCF flow), small instances
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
+                          # default arrangement, full instance set
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-cuts"
+                          # strong-LP vs weak + dynamic strong-cut separation
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ld"
+                          # knapsack Lagrangian dual (LP knapsack leaf) vs natural LP: LD == LP
+                          #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ldvscuts"
+                          # disabled (not a bug): it compares the integer-knapsack Lagrangian dual
+                          # (demand relaxed, decomposed per facility) against the cut-strengthened LP
+                          # bound (demand exact, with cross-facility cuts). These are two distinct
+                          # valid lower bounds: the cuts can exceed the per-facility dual, so their
+                          # difference is neither zero nor sign-definite in general (verified ~7e-4
+                          # on some instances, identical with the DP and the :MILPSolver integer
+                          # leaves and immune to bundle tuning), so the strict 1e-5 equality is
+                          # ill-posed. The batch file documents the per-instance gaps and offers a
+                          # commented run_test variant with an ad-hoc 2e-3 tolerance that makes it pass.
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ben"
+                          # Benders-formulation LP test
+                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mcf")
+                          # MCF flow-relaxation test
+
+    foreach (BATCH_FILE ${BATCH_FILES})
+        # Remove the source directory prefix to get the batch name
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        if (UNIX)
+            add_test(NAME CFL_test/${BATCH_NAME}
+                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/CFL_test
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        elseif (WIN32)
+            add_test(NAME CFL_test/${BATCH_NAME}
+                     # using Git for Windows that includes Git Bash
+                     COMMAND "C:/Program Files/Git/bin/bash.exe"
+                             "${BATCH_FILE}" "$<TARGET_FILE:CFL_test>"
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        endif ()
+        # Make each batch test require both fixtures: the batteries read the
+        # instances of data/txt as well as the netCDF ones
+        set_tests_properties(CFL_test/${BATCH_NAME}
+                             PROPERTIES FIXTURES_REQUIRED
+                             "cfl2nc4_generated;cfl_txt_extracted")
+    endforeach ()
+
+    # The generic Benders decomposition of BendersDecompositionSolver against
+    # the ad hoc one the Block carries in its BenForm formulation, on a real
+    # ORLib instance: the two describe the same problem, hence what is checked
+    # is that they agree, and what is reported is what each of them costs.
+    # BendersDecompositionSolver is not among the labels of this suite, the
+    # rest of which runs without it, so the tester is built only where it is.
+    if (TARGET SMS++::BendersDecompositionSolver)
+
+        add_executable(CFL_BDS_test test_bds.cpp)
+        target_link_libraries(CFL_BDS_test PRIVATE
+                SMS++::CapacitatedFacilityLocationBlock
+                SMS++::BendersDecompositionSolver
+                SMS++::BundleSolver
+                SMS++::MILPSolver)
+        smspp_install(CFL_BDS_test)
+
+        # the ORLib instance the test reads is in data/txt [see
+        # extract_cfl_txt above]
+        add_test(NAME CFL_BDS_test
+                 COMMAND CFL_BDS_test
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        set_tests_properties(CFL_BDS_test
+                             PROPERTIES FIXTURES_REQUIRED cfl_txt_extracted)
+
+    endif ()
+endif ()
+
+# The scenario generator of this Block and the battery that reduces what it
+# writes: the reduction is asked of ScenarioReductionSolver, but what it is
+# asked of is the facility location instances, hence it belongs to this suite.
+# The generator writes the TwoStageStochasticBlock that the battery then
+# reduces and solves with the generic tester of the scenario reduction, which
+# lives in tests/TwoStageStochasticBlock since the Block it reads is a
+# TwoStageStochasticBlock, so the battery is run with the two of them and not
+# with the tester of this suite.
+if (TARGET SMS++::CapacitatedFacilityLocationBlock
+    AND TARGET SMS++::TwoStageStochasticBlock)
+
+    add_executable(CFLScenarioGenerator
+                   CFLScenarioGenerator.cpp ../common_utils.cpp)
+    target_include_directories(CFLScenarioGenerator PRIVATE ..)
+    target_link_libraries(CFLScenarioGenerator PRIVATE
+                          SMS++::CapacitatedFacilityLocationBlock
+                          SMS++::StochasticBlock
+                          SMS++::TwoStageStochasticBlock)
+
+    if (TARGET SMS++::MILPSolver)
+        target_link_libraries(CFLScenarioGenerator PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    smspp_install(CFLScenarioGenerator)
+
+    if (TARGET TSSB_scenred_test)
+        add_batch_test(CFLScenarioGenerator batches-scenred/batch
+                       TSSB_scenred_test)
+        # the battery reads the netCDF instances the fixture writes
+        set_tests_properties(CFLScenarioGenerator/batches-scenred/batch
+                             PROPERTIES FIXTURES_REQUIRED cfl2nc4_generated)
+    endif ()
+endif ()
+
+# Tag this directory's tests with their per-module CI labels
+# (the label map lives in cmake/TestLabels.cmake).
+smspp_label_tests()
+
+# The battery of the scenario reduction runs, through the tester of
+# tests/TwoStageStochasticBlock, three modules more than the rest of the suite
+# declares, so it is labelled with them here rather than in the map of the
+# directory.
+set(_batch CFLScenarioGenerator/batches-scenred/batch)
+if (TEST ${_batch})
+    set(_labels ${SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock}
+                ScenarioReductionSolver StochasticBlock TwoStageStochasticBlock)
+    set_tests_properties(${_batch} PROPERTIES LABELS "${_labels}")
+endif ()
+
+# --------------------------------------------------------------------------- #

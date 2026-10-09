@@ -1,0 +1,52 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BPar-R.txt - - - - - - - - - - - - - - - -
+#
+# A BlockConfig for a SATBlock whose variables are dealt out to groups,
+# giving it the structure of the Lagrangian relaxation [see
+# SATBlock::set_structure()]: one sub-SATBlock per group, with the clauses
+# of the group, and the clauses that link the groups as rows of the father,
+# which the LagrangianDualSolver of BSPar-LD.txt relaxes.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig  # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+SimpleConfiguration<int>
+1  # 0 = none, 1 = linking clauses in the father, 2 = decomposition
+
+# static_constraints
+*  # [none]
+
+# dynamic_constraints
+*  # [none]
+
+# static_variables
+*  # [none]
+
+# dynamic_variables
+*  # [none]
+
+# objective
+*  # [none]
+
+# is_feasible
+*  # [none]
+
+# is_optimal
+*  # [none]
+
+# solution
+*  # [none]
+
+# extra
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BPar-R.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

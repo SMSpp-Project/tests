@@ -1,0 +1,257 @@
+# test/UCBlock
+
+A tester which provides initial tests for `LagrangianDualSolver`,
+`LagBFunction`, any `CDASolver` able to handle `C05Function` in the
+`Objective` (such as `BundleSolver`), any `CDASolver` able to handle
+Linear Programs (such as `MILPSolver` and its derived classes
+`CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block`
+for Unit-Commitment problems, as well as for quite a lot of the
+mechanics of the "core" SMS++ library.
+
+This executable, given the filename of a netCDF file containing the
+description of a `UCBlock` (instance of the Unit-Commitment problem),
+solves it with every `Solver` listed in the given `BlockSolverConfig`
+and cross-checks their results against each other, and against a
+reference objective value where one is known (printing the running
+time of each). Every `Solver` enters the comparison as its
+`[get_lb(), get_ub()]` interval, valid by the base `Solver` contract,
+and is measured against the best bounds all of them together provide,
+the optimum not being known: every `Solver` has to be correct, i.e. not
+to contradict those bounds, and the one that returns `kOK`, i.e. that
+says it delivered what it was asked, also has to be as close to them as
+it declared. That declaration is the `dblRelAcc` of its `ComputeConfig`,
+unless the `-E` option overrides it, positionally with respect to the
+`BlockSolverConfig`: this is what the batches do for the heuristic,
+whose `dblRelAcc` is the stopping condition of an inner `Solver` and
+says nothing about the quality of the solution it returns. Bringing a
+further `Solver` into the comparison is therefore only a matter of
+listing it in the `BlockSolverConfig`.
+
+The usage of the executable is the following:
+
+       ./UCBlock_test UC-file [BSC-file]
+       BSC-file: BlockSolverConfig description [BSPar.txt]
+
+The test are supposed to be run on the pure-thermal "academic" UC
+instances available at
+
+http://groups.di.unipi.it/optimize/Data/UC.html
+
+(translated in netCDF with the translator available in the `UCBlock`
+repo). The layout assumes that the instances are in the sub-folder
+"data", that can be symlinked from the `UCBlock` repo such as in
+
+    ln -s ../../../UCBlock/data/nc4/UC_Data/T-Ramp data
+
+A makefile is also provided that builds the executable including the
+`LagrangianDualSolver` module, the `BundleSolver` module and all its
+dependencies, in particular `MILPSolver` together of course with the
+core SMS++ library, and the `UCBlock` module.
+
+It must be noted, however, that since the Unit Commitment problem has
+integer variables, the Lagrangian Dual and the original integer
+problem are not equivalent (the Lagrangian Dual is a relaxation) and
+the Lagrangian Dual and the continuous relaxation of the integer
+problem are not equivalent (the Lagrangian Dual is a better
+relaxation, i.e., it provides tighter = larger lower bounds).
+
+There are only two cases in which the Lagrangian Dual and the
+continuous relaxation of the integer problem are equivalent:
+
+1. if the ThermalUnitBlock subproblems (currently the only ones
+   that contain integer variables) are solved only in the sense
+   of their continuous relaxation, as in this case the two
+   relaxations coincide whatever formulation of the
+   ThermalUnitBlock is used;
+
+2. if the ThermalUnitBlock subproblems (currently the only ones
+   that contain integer variables) are solved to integer optimality
+   but the "DP formulation" of the ThermalUnitBlock is used in
+   the :MILPSolver together with "Perspective Cuts" (P/C).
+
+This is why different BlockConfig [TUBCfg\*] and BlockSolverConfig
+[TUBSCfg\*] are provided for the ThermalUnitBlock subproblems:
+
+- TUBCfg-DP-PC.txt is supposed to go together with either
+  TUBSCfg-DP.txt or TUBSCfg-ILP.txt: it forces the "DP formulation"
+  to be used and P/Cs to be separated, which means that the
+  :MILPSolver provides the same strong bound as the Lagrangian Dual
+  where the ThermalUnitBlock are solved to integer optimality (this
+  should be done by the more efficient ThermalUnitExtDPSolver, but
+  using a :MILPSolver ran to integer optimality is mathematically
+  equivalent and it may be nice to further test the equivalence
+  between the "abstract" and the "physical" solution);
+
+- TUBCfg-LP.txt is supposed to go together with TUBSCfg-CLP.txt;
+  there the user can arbitrarily change which formulation is used,
+  comprised whether or not P/Cs are separated, as the two bounds
+  will be equivalent anyway; yet, note that "large" formulations
+  like SU, SD and especially DP may make both the :MILPSolver
+  applied to the whole UC and these applied to the ThermalUnitBlock
+  subproblems rather slow.
+
+Since the "DP formulation" is rather large, the batch file
+batches/batch-acad-s is provided for the first case that only
+solves the set of "academic" UC instances that are appropriately
+small. Instead, batches/batch-acad is meant for the second case
+and solves them all. 
+
+Both batches automatically copy the right TUBCfg\*.txt and
+TUBSCfg\*.txt for the intended tests to succeed.
+
+
+## The Frank-Wolfe decomposition of a father of K units
+
+The same units are also solved as the leaves of a decomposition: a unit is
+read `K` times, the `K` copies become the sub-`Block` of a father
+`AbstractBlock` carrying a random objective over their `Variable`, and the
+`FrankWolfeSolver` that decomposes the father, with the
+`ThermalUnitDPSolver` of each unit as the Linear Minimization Oracle
+(`TUBSCfg-DP.txt`), is cross-checked against a monolithic `:MILPSolver`. The
+tester is the generic one, [`fw_test.cpp`](../fw_test.cpp), the same the suite
+of `MCFBlock` builds on its own Block, so that which Block is read and which
+`:Solver` are attached is the configurations' business and nothing of what
+follows is in the source.
+
+The reference `:MILPSolver` solves the continuous relaxation *with* the cut
+separation loop (`MILPCfg-FW.txt`, `intRelaxIntVars = 2`) over the DP
+formulation plus Perspective Cuts (`TUBCfg-DP-PC.txt`); since that characterizes
+the convex hull of the integer solutions of the unit, the Dantzig-Wolfe value
+`FrankWolfeSolver` computes (`intCvxComb = 1`) has to equal the perspective
+bound, which is what is checked, i.e., Frank-Wolfe is here a decomposition
+alternative to DP + P/C. The runs are in the batteries of the single units,
+[`batches-tub`](batches-tub), together with those of the dynamic programming
+solver, being posed on the same instances; only a few of them, the reference
+being a monolithic relaxation with a cut separation loop, i.e., minutes per
+run.
+
+The configurations are the same set, with the same names, in every suite that
+poses this tester on its own `Block`. `FatherBSPar.txt` is the
+meta-`BlockSolverConfig` that dispatches by classname: the father goes to
+`FatherBSCfg.txt` and each leaf to the `BlockSolverConfig` that makes its
+`:Solver` the oracle. `FatherBSCfg.txt` registers the monolithic reference and
+one `FrankWolfeSolver` per variant of the decomposition, the way the `BSPar`
+of a suite do with the `:Solver` of its `Block`, so that a single run
+cross-checks the variants against one another and all of them against the
+reference; the variants are vanilla, Away-step, Blended Pairwise, Away-step
+with aggregation, vanilla with the oracles in parallel, and the two that take
+the direction from a stabilized master of two and of ten pieces, the master of
+the last being a `MasterProblemBlock` solved by the `:Solver` of
+`MPBCfg-FW.txt`, which names a backend that solves QPs.
+
+Each variant is written as an override of `FWCfg.txt`, the fragment holding
+what they have in common, so that what a variant changes is the only thing its
+lines say; the reference reads `MILPCfg-FW.txt`. An override block writes the
+extra-`Configuration` slot even when it changes nothing of it, because one
+that leaves it out is read on to the end of the stream and swallows the
+`ComputeConfig` that follows it. What `intLMOObj` selects is not among the
+variants: that parameter decides whether the sub-`Block` objectives enter the
+problem at all, and not merely what the oracle is shown, so `LMOLinear` solves
+a different problem and has nothing to be compared with here.
+
+Three more shapes of the same lineup exist, and no battery rewrites a
+configuration file to select a variant. `FatherBSPar-fast.txt` keeps the
+reference and the two variants that between them walk the most of the
+machinery, Away-step with aggregation and the master problem one, for the
+instances on which a single run costs the best part of an hour;
+`FatherBSPar-fw.txt` keeps a variant alone, with nothing to compare it with,
+for the runs that only time it; `FatherBSPar-milp.txt` keeps the reference
+alone, for the same reason.
+
+Here the oracle of each unit is its `ThermalUnitDPSolver` (`TUBSCfg-DP.txt`,
+the one the rest of the suite already uses, rather than a copy of it), and a
+run of the decomposition alone takes `TUBCfg-T.txt`, the plain `T`
+formulation, which gives the identical result much faster, the oracle having
+its own dynamic programme and making no use of the abstract one.
+
+## The scenarios of a unit commitment, and their reduction
+
+`UCScenarioGenerator` reads a unit commitment instance and writes a set of
+scenarios out of it, the uncertainty being a time series rather than the
+single static vector of a facility location: the demand over time, the
+renewable power available over time, or both. It writes both the plain
+scenario file and the `TwoStageStochasticBlock` that carries it, which is what
+the reduction reads.
+
+    ./UCScenarioGenerator -i <instance.nc4> -o <scenarios.nc4>
+                          --tssb-output <tssb.nc4> -n 20 -v 0.3 -s 42
+                          --no-maxpower --no-validate
+
+`-i` is the instance (required), `-o` where the scenarios go,
+`--tssb-output` the file the reduction reads, `-n` how many scenarios, `-v`
+how much the demand or the renewable power varies between them, `-s` the seed
+of the random generator, `--no-demand` / `--no-maxpower` which of the two
+uncertainties to leave out, and `--no-validate` skips solving each scenario
+once, which is slow and, with the demand uncertain, unreliable. With `T`
+periods, `nd` demand nodes and `ni` intermittent units a scenario is `nd * T`
+long with the demand alone, `ni * T` with the generation alone and the sum of
+the two by default; how many of them there are is fixed when the file is
+written, so a sweep over that number is a file each.
+
+The reduction itself is asked of `TSSB_scenred_test`, the generic tester of
+the scenario reduction of the `TwoStageStochasticBlock` suite, which reads
+the same file whatever Block wrote it:
+
+    ./TSSB_scenred_test -i <tssb.nc4> -m cssc -r 5 -c BSCfg-scenred.txt
+
+with `-m` the method (`baseline`, `dupacova`, `bestfit`, `firstfit`, `cssc`),
+`-r` how many representatives to keep and `-c` the `BlockSolverConfig`.
+`cssc` asks for an instance that carries a `ThermalUnitBlock`, i.e., one of
+the `_TUB` ones of `UCBlock/data/nc4/EC_Data/ucblock`; without it only the
+heuristics run.
+
+[batches/batch-scenred](batches/batch-scenred) walks the two steps over
+instances, seeds, numbers of scenarios and of representatives and methods,
+and writes what each run gives into a CSV. It is run with the generator and
+that tester, and every directory it reads defaults to a path relative to
+itself, so it runs from any working directory and against any build tree; the
+same paths can be given as flags (`--generator --solve --instances --n --k
+--seeds --methods --solver --variation --uncertainty --instance-dir
+--scenario-dir --config-dir --output`) or in the environment (`GEN`, `SOLVE`,
+`IDIR`, `SDIR`, `CFGDIR`).
+
+
+## The benchmark of the machine-learning driven bundle
+
+`UCBlock_ML_bench` trains and measures `BundleSolverML`, the bundle solver
+that predicts the proximal parameter `t` with a small neural network, on the
+instances of this Block. The harness is the generic one,
+[`ml_bench.cpp`](../ml_bench.cpp), the same the suite of `MMCFBlock` builds on
+its own instances; it is built only where Torch is, `BundleSolverML` being
+built into `BundleSolver` only in that case, and it is run by hand, being a
+measurement and not a check.
+
+The instances are not in the repository, they are a separate download and have
+to stay such: `<data-dir>` is where they are. The train, validation and test
+splits are here instead, beside the batteries, since they are small and are
+what makes a run reproducible.
+
+Train a network on the training split and write the weights:
+
+    UCBlock_ML_bench train <split> <data-dir> <block-cfg> <ml-cfg> \
+                   -o <weights> [-e <epochs>]
+
+Compare two solver configurations over the same split:
+
+    UCBlock_ML_bench compare <split> <data-dir> <block-cfg> <cfg-A> <cfg-B> \
+                     [-r <weights>] [-o <results.csv>]
+
+`-c <dir>` prefixes the configuration files, `-r <file>` gives the B side the
+weights a training run wrote (without it, B runs untrained).
+
+
+## Authors
+
+- **Antonio Frangioni**  
+  Dipartimento di Informatica  
+  Università di Pisa
+
+- **Donato Meoli**  
+  Dipartimento di Informatica  
+  Università di Pisa
+
+## License
+
+This code is provided free of charge under the [GNU Lesser General Public
+License version 3.0](https://opensource.org/licenses/lgpl-3.0.html) -
+see the [LICENSE](LICENSE) file for details.

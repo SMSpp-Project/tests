@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pypsa < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default MSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-MS.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs the multi-stage counterpart of the stochastic PyPSA instances and
+# checks that the PyPsa objective value matches the given reference one.
+#
+# the two-stage family (see the batch-pypsa of TwoStageStochasticBlock)
+# perturbs demand, renewable availability and hydro inflow all at once, in one
+# flat list of scenarios. These are drawn from the same PyPSA-Eur network by
+# splitting that single axis in two: the climate year, which scales the
+# availability of the renewables and the hydro inflow, is the OUTER stage,
+# while the demand, whose realizations are drawn conditional on the climate
+# year, is the INNER one. Each instance says which half of the climate the
+# outer stage acts upon, the availability of the renewables, the hydro inflow
+# or both, i.e., they are the counterparts of the maxpower, hydroinflow and
+# complete instances of the two-stage family; the demand one has no
+# counterpart here, for the demand is the inner stage of all of them.
+#
+# The reference is the optimum of the equivalent flat network solved by PyPsa,
+# which coincides with the tree one as long as the only here-and-now Variable
+# are the design ones. Unlike the two-stage batch, this one checks the
+# :MILPSolver on the deterministic equivalent against that reference alone,
+# and not against a LagrangianDualSolver as well: relaxing the outer
+# non-anticipativity constraints leaves one TwoStageStochasticBlock per
+# LagBFunction, and a LagBFunction requires its inner Block to carry an
+# FRealObjective of its own [see LagBFunction.cpp], which a
+# TwoStageStochasticBlock has not, its objective being the scaled sum of the
+# objectives of its sub-Blocks.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./MSSB_test
+DEFAULT_PAR=BSPar-MS.txt
+DEFAULT_SLV=0
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ file name ] = PyPsa objective value of the equivalent flat
+# network, solved by Gurobi; c<n>_d<m> is the size of the tree, n climate
+# years each carrying m demand realizations
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_renewables.nc]=3.488357705e+09
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_hydro.nc]=3.454083599e+09
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_both.nc]=3.488357705e+09
+REF_OBJ[smspp_network_small_fewsectors__snap24__c4_d3_both.nc]=3.435694613e+09
+# the modular family of pypsa2smspp (gen_modular_tssb.py, 48 periods, 10
+# scenarios in 2 outer realizations, 2 buses, modules turned off), the same
+# network TwoStageStochasticBlock/batch-pypsa-modular has as a TSSB and
+# InvestmentBlock/batch-stochastic under an InvestmentBlock
+REF_OBJ[smspp_mod_t48_s10_b2c_o2_mssb_ucblock.nc]=3.682350688e+07
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/pypsa-data/mssb/smspp_*.nc; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

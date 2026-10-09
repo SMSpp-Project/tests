@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default
+#                       MultiKnapsackAssignBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# Cross-check on the instances that MultiKnapsackAssignBlock distributes in
+# data/txt: the :MILPSolver on the whole tree and the Lagrangian dual of the
+# integer problem, declared a relaxation with -R, which has to bound the
+# optimum of the former from above.
+
+# run from the test directory so the tester reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./MultiKnapsackAssignBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+data=../../MultiKnapsackAssignBlock/data/txt
+
+# the instances: 50 and 100 items, 2 classes and 4 knapsacks or 4 classes
+# and 8 knapsacks, uncorrelated, weakly or strongly correlated- - - - - - -
+
+for n in 50 100; do
+  for rm in r2-m4 r4-m8; do
+    for c in u w s; do
+      run_test "$exe" -S "$par" -R ,r "${data}/mkap-n${n}-${rm}-${c}.txt" \
+               < /dev/null
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

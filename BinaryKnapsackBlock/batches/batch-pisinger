@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pisinger < exe file > < par file > < solver > < log file >
+#                       < fw exe >
+#        < exe file > = path of the executable, default BinaryKnapsackBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < solver > = unused
+#        < log file > = name of log file, default no log
+#        < fw exe > = path of the generic Frank-Wolfe tester, optional: given
+#                     one, the same knapsacks are also solved by the
+#                     Frank-Wolfe decomposition of a father Block of K copies
+#                     of them
+#
+# Solver-vs-solver AND solver-vs-reference cross-check on the curated Pisinger
+# instances, all in one: each curated class is a single .csv that carries, per
+# instance, the PUBLISHED Pisinger optimum z (and x*). With -C the test loads
+# every instance of a .csv in ONE process (no per-instance start-up) and runs
+# it through ALL the equivalent solvers attached by the par file (see BSPar.txt:
+# the exact MILP, the full-table / core DP, and the BranchAndXSolver in each of
+# its exploration modes, with the greedy relaxation bracketing the optimum),
+# checking they agree with one another AND that their optimum matches z. This is
+# orders of magnitude faster than launching one block_solver process per
+# instance, and unlike the standalone bkbench it exercises every solver.
+#
+# The raw .csv are kept next to the stripped instances by data/fetch-txt and
+# shipped in the curated txt.tgz (fetched by the fetch_bk_data fixture, see the
+# test CMakeLists). If no .csv is found the check is skipped.
+
+set -u
+
+# run from the test directory so the configuration files are read there
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./BinaryKnapsackBlock_test
+# the large Pisinger instances use the lean config (one best solver per
+# family, no full-table DP); pass BSPar.txt explicitly for the full cross-check
+DEFAULT_PAR=BSPar-fast.txt
+# the accuracy each Solver is held to is the dblRelAcc of its ComputeConfig,
+# except for the greedy relaxation, the third one in BSPar-fast.txt, which is
+# held instead to the quality of the bounds it produces on these instances
+# (measured worst case over the whole battery: 5.9e-01)
+EPS="${EPS:-,,6e-1}"
+parse_batch_args "$@"
+fwexe=${5:-}   # the generic Frank-Wolfe tester, optional
+
+csvdir="../../BinaryKnapsackBlock/data/txt"
+
+shopt -s globstar nullglob
+csvs=( "$csvdir"/*.csv )
+
+if [ "${#csvs[@]}" -eq 0 ]; then
+  echo "SKIP batch-pisinger: no curated Pisinger .csv under $csvdir"
+  echo "  (regenerate the curated data with data/fetch-txt, which keeps the"
+  echo "   raw .csv carrying the published optima, to enable this cross-check)"
+  exit 0
+fi
+
+# sweep: each .csv class is solved, in one process, by every attached solver - -
+for csv in "${csvs[@]}"; do
+  run_test "$exe" -S "$par" -E "$EPS" -C "$csv"
+done
+
+# the same knapsacks, decomposed by Frank-Wolfe - - - - - - - - - - - - - - - -
+# K copies of a knapsack become the sub-Block of a father whose Objective
+# couples them, each of them solved by its dynamic programme as the Linear
+# Minimization Oracle. What FrankWolfeSolver minimizes is the father objective
+# over the PRODUCT OF THE CONVEX HULLS of the knapsacks, which no compact
+# formulation describes, so its value is a lower bound on what the monolithic
+# :MILPSolver gives on the same father and not the same number: the
+# decomposition is therefore declared a relaxation (-R) and held to nothing
+# (-E), the integrality gap being whatever it is. The instances are the
+# netCDF ones tools/batch writes out of the same curated archive, and they are
+# minimization problems, the father having to have the sense of its children.
+
+if [ -n "${fwexe}" ]; then
+
+  nc4dir="../../BinaryKnapsackBlock/data/nc4"
+  nc4s=( "$nc4dir"/*.nc4 )
+
+  if [ "${#nc4s[@]}" -eq 0 ]; then
+    echo "SKIP the Frank-Wolfe runs: no netCDF instance under $nc4dir"
+  else
+    # one run attaches the reference and every variant of the decomposition
+    # at once, they being in FatherBSCfg.txt. The roles and the tolerances are
+    # positional: the reference claims an optimum, the seven variants that
+    # follow it are relaxations of that optimum and claim nothing, the
+    # integrality gap being whatever it is
+    fwpar=FatherBSPar.txt
+    for what in "${nc4s[@]}"; do
+      for k in 2 3; do
+        run_test "$fwexe" -S "$fwpar" -R ",r,r,r,r,r,r,r" \
+                 -E ",inf,inf,inf,inf,inf,inf,inf" \
+                 -o 0 -k "$k" -e 1 "$what"
+      done
+    done
+  fi
+
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+#
+# usage: batch-primal < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# exercises the training problem itself, which only exists for the linear
+# kernel, no other one having an explicit finite-dimensional feature map: the
+# loss and the bias variants, written either as one Block or as the chunks
+# tied by consensus constraints that a Lagrangian Solver attacks
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+parse_batch_args "$@"
+
+# Each chunk carries 1/P of the regularisation term together with the loss of
+# its own samples, so the finer the rewriting the flatter each subproblem:
+# below a handful of samples per chunk the subproblems become nearly linear,
+# the Lagrangian function very nonsmooth and the bundle breaks down, which is
+# a regime of no practical interest and is deliberately not exercised. With
+# N = 60 samples the sweep therefore stops at 15 chunks, i.e. 4 samples each.
+# In CI only the coarser (and much faster) granularities are run.
+if [ -n "$CI" ]; then slist="1 2 3"; else slist="1 2 3 5 10 15"; fi
+
+for s in ${slist}; do
+
+  # with one chunk the SVMBlock has no sub-Block, hence there is nothing for
+  # a Lagrangian Solver to relax and the plain BlockSolverConfig is used;
+  # with more than one the consensus structure is there and the Lagrangian
+  # Solver joins in, SMOSolver staying in either case, since it solves the
+  # training problem out of the data set whatever the structure
+  if [ ${s} -eq 1 ]; then
+    par=BSPar.txt
+  else
+    par=BSPar-LD.txt
+  fi
+
+  # wf: the linear (0) or the quadratic (+1) penalty of the training errors,
+  # and the bias free (0) or regularised (+2); which problem is encoded is
+  # what the BlockConfig says, and this batch is the one about the primal
+  for wf in 0 1 2 3; do
+    for task in "" "-g"; do
+
+      run_test "$exe" -S "$par" -B SVMCfg-primal.txt -f "$wf" -s "$s" \
+               -N 60 -M 4 -C 1 -n 1 -e 1 $task
+
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

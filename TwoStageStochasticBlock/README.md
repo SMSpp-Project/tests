@@ -1,0 +1,262 @@
+# test/TwoStageStochasticBlock
+
+A tester which provides initial tests for `TwoStageStochasticBlock`,
+the SMS++ Block that wraps a deterministic-equivalent two-stage
+stochastic program around an inner Block cloned once per scenario,
+with a `DiscreteScenarioSet` attached and a set of "here-and-now"
+non-anticipativity constraints linking the first-stage variables
+across scenarios, as well as for `LagrangianDualSolver`,
+`LagBFunction`, any `CDASolver` able to handle `C05Function` in the
+`Objective` (such as `BundleSolver`), any `CDASolver` able to handle
+Linear Programs (such as `MILPSolver` and its derived classes
+`CPXMILPSolver` and `SCIPMILPSolver`), and for quite a lot of the
+mechanics of the "core" SMS++ library.
+
+This executable, given the filename of a netCDF file containing the
+description of a `TwoStageStochasticBlock`, solves its deterministic
+equivalent with a `:MILPSolver` and with a `LagrangianDualSolver`
+using `BundleSolver` as the inner Solver, comparing the results
+against each other (and against an optional reference objective value
+passed on the command line). The running times are printed. The
+relative tolerance for the comparison is fixed at `1e-5`.
+
+The usage of the executable is the following:
+
+       ./TSSB_test TSSB-file [BSC-file ws ref]
+       BSC-file: BlockSolverConfig description [BSPar-2S.txt]
+       ws:       0 = LagrangianDualSolver, 1 = reserved [0]
+       ref:      reference objective value to compare against [none]
+
+The inner Block cloned per scenario can be any SMS++ Block: the
+tester is problem-agnostic. The instances shipped under `batches/`
+happen to embed a `UCBlock` (for energy-community-type applications),
+but nothing in the executable assumes a specific inner Block type —
+any two-stage stochastic problem that can be expressed as a
+`TwoStageStochasticBlock` is in scope.
+
+A second tester, `TSSB_BDS_test`, puts the three ways of solving
+the same two-stage stochastic investment problem one against the
+other on the same data: the extensive form given to a `:MILPSolver`,
+the generic Benders decomposition of `BendersDecompositionSolver`,
+whose master carries the design Variable and whose subproblems are the
+scenarios, and the ad hoc one an `InvestmentBlock` over the whole
+`TwoStageStochasticBlock` carries, i.e., an `InvestmentFunction` whose
+value is the entire stochastic problem and which therefore yields one
+aggregated linearization per iteration. Being three formulations of
+one problem the optima must coincide, which is what is checked; the
+iterations and the times are printed. It is built only where
+`BendersDecompositionSolver` and `InvestmentBlock` are in the build,
+the rest of the suite running without them.
+
+The same tester also takes an instance written in its extensive form,
+i.e., with the design replicated in the scenarios and tied by the
+non-anticipativity `Constraint`: no file format carries the structure
+the Benders `Solver` asks for, since `AbstractBlock` only deserializes
+a .lp/.mps model and a model of its own cannot name the `Variable` of
+a sub-`Block`, so that structure is assembled around the `Block` the
+file gives, one copy of the here-and-now `Variable` in the root and
+one wrapper per scenario carrying the coupling. Whatever `Solver` the
+`BlockSolverConfig` names are then cross-checked on the `Block` that
+comes out, a `:MILPSolver` reading it whole being the extensive form.
+
+The usage of the second executable is the following:
+
+       ./TSSB_BDS_test [TSSB-file] [-S BSC-file] [-B BC-file] [-r ref]
+       TSSB-file: instance to read [tssb_investment.nc4]
+       BSC-file:  BlockSolverConfig; naming one is what asks for the
+                  cross-check on the instance read from file
+       BC-file:   BlockConfig applied to the instance [none]
+       ref:       reference objective value to compare against [none]
+
+`batches/batch-bds` repeats the three-form comparison on instances of
+growing size, from 3 to 100 scenarios and from 24 to 96 time steps,
+which is where the forms part ways: the generic one takes many more
+iterations, each of which is one LP per scenario, while the ad hoc one
+takes few, each of which is the whole stochastic problem. The
+instances are written by `gen_investment.py`, which needs a Python
+with `netCDF4`, and are thrown away at the end.
+
+`batches/batch-pypsa` runs each of its instances twice, once per
+structure the `Solver` ask for: on the stochastic `Block` as the file
+gives it, where a `:MILPSolver` and a `LagrangianDualSolver` are
+cross-checked, and on the Benders form of it, where the same
+`:MILPSolver`, which reads the assembled `Block` whole and is
+therefore still solving the extensive form, is cross-checked against
+`BendersDecompositionSolver`.
+
+`batches/batch-pypsa-invest` runs the second of the two on the same
+PyPSA networks written with the capital costs scaled by the same
+factor the horizon is cut by. Without that scaling the capital cost
+of an extendable asset pays for a whole year while the operation it
+saves is that of the snapshots that are kept, so the expansion is
+bought far less than it would be and the first stage decides little;
+with it the design is built, which is what gives the master of a
+decomposition something to decide. It is not registered with CTest:
+the Benders `Solver` takes minutes on those instances, its master
+being a cutting plane with no stabilization on a design that is
+continuous.
+
+`batches/batch-ec` given a `BlockSolverConfig` that names a
+`BendersDecompositionSolver`, e.g., `BSPar-BDS-2S-IP.txt`, runs the
+Benders form of the energy community instances instead. Their design
+is integer, and the reference values of EnergyCommunity.jl are those
+of the continuous relaxation, which on the NC instances is below the
+integer optimum, so what is checked there is that the Benders `Solver`
+and the `:MILPSolver` on the integer problem agree. The instances with
+no asset have no design, hence no Benders form, and those with a
+`ThermalUnitBlock` have a commitment in the second stage, which the
+subproblems relax, so that the Benders `Solver` only gives a bound on
+them: both are skipped.
+
+`batches/batch-pypsa-modular` runs the same cross-check on PyPSA
+networks whose first stage builds whole modules of solar and wind
+(`p_nom_mod`), which pypsa2smspp writes as an integer design of the
+units over a second stage that is a linear program, and checks both
+`Solver` against the optimum of PyPSA on the same network. The same
+batch holds one of those networks with the modules turned off, i.e.,
+with a continuous design, written both as a `TwoStageStochasticBlock`
+and as a `MultiStageStochasticBlock` whose scenarios are grouped into
+two outer realizations: the tree has the same extensive form as the
+flat network, and the Benders form takes its leaves as the
+subproblems. The `investment_outside` form of the same two, i.e., the
+ad hoc Benders decomposition of an `InvestmentBlock` over the whole
+stochastic Block, is run by `InvestmentBlock/batches/batch-stochastic`
+against the same reference. The instances are written by
+`gen_modular_tssb.py` and `emit_modular_tssb.py`, in the
+`scripts/smspp_instances/references` of pypsa-eur-instances.
+
+`TSSB_scenred_test` is the generic tester of the scenario reduction: it
+reads a `TwoStageStochasticBlock` out of a netCDF file, with its scenario
+set and the `AbstractPath` that say which the here-and-now `Variable` are,
+reduces the scenarios to the `K` representatives a method picks, solves the
+reduced problem and reports its gap against the value the whole set gives:
+
+    ./TSSB_scenred_test -i <tssb.nc4> -m <method> -r <K>
+                        -c <BlockSolverConfig>
+
+with `-m` one of `baseline`, `dupacova`, `bestfit` and `firstfit`, the
+heuristics of `ScenarioReductionSolver`, and `cssc`, i.e.,
+`CSSCScenarioReductionSolver`, which solves the scenario subproblems with
+the `:MILPSolver` of the `BlockSolverConfig`. Nothing in it knows of any
+concrete Block, and writing such a file is the business of the Block of the
+second stage: it registers no test of its own and is run by the
+`batches-scenred` batteries of the `UCBlock` and
+`CapacitatedFacilityLocationBlock` suites, on the instances their
+generators write. It is built with `make scenred`.
+
+A makefile is also provided that builds the executable including the
+`TwoStageStochasticBlock`, `LagrangianDualSolver`, `BundleSolver`,
+`MILPSolver` modules and the core SMS++ library, together with the
+inner-Block module needed by the instances in `batches/` (currently
+`UCBlock`).
+
+## Configuration files
+
+- `BSPar-BDS.txt` — `BlockSolverConfig` attaching
+  `BendersDecompositionSolver` to the structured form, in the convex
+  regime: the master is solved by the bundle `BDSMCfg.txt`
+  names, whose `MasterProblemBlock` is configured by `MPBCfg-BDS.txt`,
+  and each scenario subproblem by the `:MILPSolver` of
+  `BDSSCfg.txt`, which is also what solves the extensive form
+  the comparison is checked against.
+- `BSPar-BDS-2S.txt` — the cross-check on the Benders form the tester
+  assembles around an instance on file: a `:MILPSolver`, which reads
+  the whole tree and is therefore solving the extensive form, and
+  `BendersDecompositionSolver` in its MILP regime, which is asked to
+  give the Block back at the end of each `compute()` so that the two
+  can stand on it together. `BSPar-BDS-2S-CVX.txt` is the same in the
+  convex regime, where the value functions enter the `Objective` of
+  the master and a bundle drives the loop: that is the regime for a
+  first stage that decides something, and it takes from 1.2 to 2.3
+  times less than the MILP one on the instances where the expansion
+  is built. It reads the master configuration from `BDSMCfg-INV.txt`,
+  which is `BDSMCfg.txt` with the initial value of t and the accuracy
+  required at what the scale of those instances asks for: with the
+  ones of `BDSMCfg.txt`, which are those of the small problem the
+  Solver was written on, the bundle stops short of the optimum on
+  three of the four. `BSPar-BDS-2S-IP.txt` is the cross-check for an
+  instance whose design is integer, e.g., a number of modules: the
+  Benders `Solver` keeps the design integer in its master, so the
+  `:MILPSolver` solves the integer problem as well, and the
+  subproblems of a round are evaluated by 4 threads
+  (`intMaxThread`).
+- `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
+  bundle over the `InvestmentBlock`; `IBOCfg.txt` is the `OBlockConfig`
+  of that Block, which reformulates its bounds and gives the
+  `InvestmentFunction` its ComputeConfig (`IFCfg.txt`), whose extra
+  Configuration is `InvBSCfg.txt`, the `BlockSolverConfig` of the inner
+  Block, which is what fixes the design in every scenario rather than
+  mapping it into the right-hand side.
+- `BSPar-2S.txt` — outer `BlockSolverConfig` registering `:MILPSolver`
+  (default `GRBMILPSolver`) + `LagrangianDualSolver`. The
+  `LagrangianDualSolver` parameters
+  (`intPushCostToOwner=1`, `intDoEasy=1`, `dbltStar=-1`, etc.) are set
+  so that the Lagrangian relaxation behaves the same way as in the
+  standalone `tssb_solver` tool.
+- `LPBSCfg.txt` — `BlockSolverConfig` for the `LagBFunction` instances
+  produced by `LagrangianDualSolver` (CPLEX with LP relaxation
+  enabled).
+- `BSCfg.txt` — alternative LP/QP `BlockSolverConfig` (HiGHS with IPM)
+  that may be referenced from `LPBSCfg.txt` when a deterministic LP
+  oracle is required.
+- `BSPar-2S-LD.txt` — outer `BlockSolverConfig` of the nested chain, in
+  which each scenario sub-problem is solved by an inner
+  `LagrangianDualSolver` (`LPBSCfg-LD.txt`) instead of a `:MILPSolver`.
+  A component of the outer Lagrangian Dual is there an entire inner one,
+  which is why every component is evaluated at each iteration
+  (`dblMinNrEvls=-1`). The third Solver is the recursive form
+  (`intRecursive=1`), which relaxes the linking constraints of the
+  scenarios and those of the units within them at once, its components
+  being the units of all the scenarios (`InnerBSCfg.txt`): the nested and
+  the recursive form give the same bound, which is stronger than that of
+  the continuous relaxation the `:MILPSolver` solves (`MILPCfg.txt`), so
+  that the latter is to be declared a relaxation (`-R r,,`). Its two
+  duals are the fragments `LDLDCfg.txt` and `LDrecCfg.txt`.
+- `BSPar-2S-LD-IP.txt` — a `:MILPSolver` on the integer problem
+  (`MILPCfg-IP.txt`), the `PrimalProximalHeur` (`PPHCfg.txt`) and the
+  recursive `LagrangianDualSolver` (`LDrecCfg.txt`), for a TSSB whose
+  scenarios may be unit commitments: there the dual gives a bound below the
+  optimum by the duality gap, and the heuristic that bound and a feasible
+  solution above the optimum. The batch declares the dual a relaxation and
+  no tolerance for the heuristic (`-R ,,r -E ,inf`), which makes the tester
+  cross-check the intervals of the bounds of all the Solver instead of
+  requiring the values to be equal. The heuristic comes before the dual:
+  after it, it throws "Variable belonging to wrong Block".
+- `BSPar-2S-LDrec-IP.txt` — the `:MILPSolver` on the integer problem and
+  the recursive dual alone, for a TSSB whose second stage is continuous,
+  where the inner dual of the `PrimalProximalHeur` would have only easy
+  components; `batch-pypsa-modular` runs it on the modular family with a
+  continuous design.
+- `BDSCfg-IP.txt` — the ComputeConfig of the `BendersDecompositionSolver` of
+  `BSPar-BDS-2S-IP.txt` (MILP master, one cut per scenario, 4 threads), and
+  `BDSCfg-LD.txt` the same with the subproblems solved by the recursive
+  `LagrangianDualSolver` (`BDSSCfg-LDrec.txt`) and a feasible solution
+  recovered at the design of the master (`strRecoveryBSC`, each subproblem a
+  MILP of `BSCfg1-IP.txt`), which `BSPar-BDS-2S-LD.txt` puts beside the
+  `:MILPSolver` on the Benders form; `BDSCfg-CVX-LD.txt` is the latter in
+  the convex regime (the master of `BDSMCfg-INV.txt`, and the feasible
+  solution recovered at the best point of the bundle), which
+  `BSPar-BDS-2S-CVX-LD.txt` puts beside it in the same way.
+- `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
+  whose components are the units of the scenario (`InnerBSCfg.txt`).
+  `LPBSCfg-LD-noeasy.txt` is the same with `intDoEasy=0`, which the
+  instances with no installable asset need: there every unit is "easy",
+  and a Lagrangian Dual all of whose components are easy is not
+  supported.
+
+
+## Authors
+
+- **Antonio Frangioni**  
+  Dipartimento di Informatica  
+  Università di Pisa
+
+- **Donato Meoli**  
+  Dipartimento di Informatica  
+  Università di Pisa
+
+## License
+
+This code is provided free of charge under the [GNU Lesser General Public
+License version 3.0](https://opensource.org/licenses/lgpl-3.0.html) -
+see the [LICENSE](LICENSE) file for details.

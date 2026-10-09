@@ -1,0 +1,41 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-BDS-2S-LD.txt - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for the Benders form of a
+# TwoStageStochasticBlock whose second stage is continuous: a :MILPSolver on
+# the deterministic equivalent as an integer problem, which gives the
+# optimum, and the BendersDecompositionSolver whose subproblems are solved by
+# the recursive LagrangianDualSolver over their units (BDSCfg-LD.txt), which
+# is exact where the subproblems are linear programs.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of 1st Solver
+BendersDecompositionSolver # name of 2nd Solver
+
+2 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver, on the integer problem
+
+*MILPCfg-IP.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the BendersDecompositionSolver over the recursive dual
+
+*BDSCfg-LD.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-BDS-2S-LD.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,82 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar-2S.txt - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a TwoStageStochasticBlock to
+# be solved by two different Solver: a :MILPSolver on the deterministic
+# equivalent and a LagrangianDualSolver using a BundleSolver as the inner
+# Solver
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver        # name of 1st Solver
+GRBMILPSolver        # name of 1st Solver
+#SCIPMILPSolver       # name of 1st Solver
+#HiGHSMILPSolver       # name of 1st Solver
+LagrangianDualSolver  # name of 2nd Solver
+
+2 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+
+*MILPCfg.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver; it mostly is the
+# ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+3 # number of integer parameters
+
+# now all the integer parameters
+int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
+intLogVerb        0 # log verbosity of main Bundle algorithm
+intTrgtMng       31 # bit-wise encoding targets and accuracies management:
+                    # bit 0: if lower/upper target is set to each convex/concave component
+                    # bit 1: if upper/lower target is set to each convex/concave component
+                    # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
+                    # bit 4: if Lipschitz constant is used to compute the upper model
+
+2 # number of double parameters
+
+# now all the double parameters
+dbltStar         -1e+0 # stopping parameter: multiplied to || residual || to estimate gap
+dbltInit          1e-3 # initial value for t
+
+1 # number of string parameters
+
+# now all the string parameters
+str_LagBF_BSCfg  InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar-2S.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

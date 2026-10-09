@@ -1,0 +1,97 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSCfg.txt  - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the BundleSolver of the tester for LagBFunction, with
+# the proximal stabilization; NDOPar.txt attaches it as it is together
+# with a differential override with the trust region, while
+# NDOPar-Mirror.txt, NDOPar-Lvl.txt, NDOPar-DS.txt and NDOPar-DS-NoSize.txt
+# attach overrides with other ways of scaling the easy components, the
+# level and the doubly stabilized methods (in the dual master problem, the
+# only one that takes the easy components)
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig       # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+22 # number of integer parameters
+
+# now all the integer parameters
+intMaxIter   100000 # MaxIter, max number of iterations for each call
+intMaxThread      0 # MaxThread, max number of new tasks to spawn
+intEverykIt       1 # periodicity of eEverykIteration events
+intLogVerb        0 # LogVerb, log verbosity of main Bundle algorithm
+intWZNorm         2 # which norm to use in the norm-based stopping condition
+intBPar1         20 # discard items useless for <this> iterations
+intBPar2        400 # max bundle size per component
+intBPar3          1 # max n. of items to fetch from Fi() at each iteration
+intBPar4          1 # min n. of items to fetch from Fi() at each iteration
+intBPar6          0 # second parameter for dynamic max n. of items
+intBPar7         11 # how to deal with the global pools
+intMnSSC          0 # min n. of consecutive SS, same t, for an increase
+intMnNSC          1 # min n. of consecutive NS, same t, for a decrease
+inttSPar1         0 # long-term t-strategy (0 none, 4 soft, 8 hard, 12 bal.)
+intMaxNrEvls      2 # max number of function evaluations per iteration
+intFrcLstSS       0 # if all the components need be computed at the optimum
+intTrgtMng        0 # bit-wise encoding targets and accuracies management:
+                    # bit 0: lower/upper target to convex/concave cmp.
+                    # bit 1: upper/lower target to convex/concave cmp.
+                    # bit 2-3: accuracy (2 = upper - lower, 3 = EpsU)
+                    # bit 4: Lipschitz constant for the upper model
+
+## Master Problem related parameters
+
+intMPPrimal       0 # wheter the MP should be considered in its primal form
+intMPV2Form       1 # dual MP storage frame: 0 = displacement, 1 = iterate
+intMPHScaling     2 # PFB scaling: 0 none, 1 local, 2 global, 3 both
+intMPStbl         0 # 0 prox, 1 level, 2 doubly, 4 trust region
+intDoEasy         1 # Wheter easy components should be treated exactly
+
+15 # number of double parameters
+
+# now all the double parameters
+dblRelAcc     5e-8 # relative accuracy required to solution
+dblNZEps      1e-8 # threshold to declare 0 the || residual ||
+dbltStar      1e+4 # times || residual || to estimate the gap
+dblBPar5         4 # first parameter for dynamic max n. of items
+dblm1        -0.01 # NS if (~) Fi(Lambda1) >= Fi(Lambda) + |m1| v*
+dblm2         0.99 # SS if Fi(Lambda1) <= Fi(Lambda) + (1 - m2) v*
+dblm3         0.99 # a NR is computed if \sigma^* < - t * m3 * || z* ||
+dblmxIncr       10 # max increase of t
+dblmnIncr      1.5 # min increase of t (each time it is increased)
+dblmxDecr      0.1 # max decrease of t
+dblmnDecr     0.66 # min decrease of t (each time it is decreased)
+dbltMaior     1e+4 # maximum value for t
+dbltMinor     1e-4 # minimum value for t
+dbltInit         1 # initial value for t
+dbltSPar2    0.001 # parameter for the long-term t-strategy
+
+1 # number of string parameters
+
+# now all the string parameters
+strMPBSolverCfg   MPBCfg.txt # BlockSolverConfig of the master's Solver
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  END BSCfg.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

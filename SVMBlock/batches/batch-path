@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# usage: batch-path < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# the exact solution path: the samples that are added to the data set are
+# learnt one at a time by growing their multiplier from zero while every other
+# dual index is kept at its own optimality condition, so that what is left
+# behind is optimal at every step, rather than by iterating from the previous
+# solution. The two are the same Solver under a different value of
+# intSMOPath, hence the same runs are made twice, with the path on and with it
+# off: they have to agree at every addition, which is the test, while what the
+# walk is worth is in the events against the iterations that the tester
+# reports at the end of each run
+#
+#   Donato Meoli
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar-SMO-path.txt
+parse_batch_args "$@"
+
+# in CI a single value of C, the point there being that the walk runs at all
+# and agrees with the iteration; the grid of C is what says how the two
+# compare, the events not growing with it while the iterations do
+if [ -n "$CI" ]; then clist="1"; else clist="1 10 100"; fi
+
+for C in ${clist}; do
+  for cfg in BSPar-SMO-path.txt BSPar-SMO-nopath.txt; do
+    for task in "" "-g"; do
+
+      run_test "$exe" -S "$cfg" -B SVMCfg-dual.txt \
+               -N 100 -M 4 -C "$C" -I 100 -n 1 -e 1 $task
+
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

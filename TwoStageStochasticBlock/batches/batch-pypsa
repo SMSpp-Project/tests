@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+#
+# usage: batch-pypsa < exe file > < par file > < solver > < log file >
+#        < exe file > = path of the executable file, default TSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-2S.txt
+#        < solver > = 0 or 1, default 0
+#        < log file > = name of log file, default no log
+#
+# runs all the stochastic PyPSA instances and checks that the PyPsa
+# objective value matches the given reference one.
+#
+# each instance is run twice, i.e. once per structure the Solver ask for: on
+# the stochastic Block as the file gives it, where a :MILPSolver on the
+# deterministic equivalent and a LagrangianDualSolver are cross-checked, and
+# on the Benders form of it that the tester assembles [-b], where the same
+# :MILPSolver, which reads the assembled Block whole and is therefore still
+# solving the extensive form, is cross-checked against
+# BendersDecompositionSolver. The second run is skipped where that Solver is
+# not in the build, its configuration naming it.
+#
+# the instances of the thermal family of pypsa2smspp (gen_thermal_tssb.py,
+# units x periods x scenarios in the name) are unit commitments in every
+# scenario, where a Lagrangian dual gives a bound below the optimum by the
+# duality gap: they are run with BSPar-2S-LD-IP.txt, the :MILPSolver on the
+# integer problem cross-checked with the PrimalProximalHeur, whose interval
+# must contain the optimum [-E], and the recursive Lagrangian dual, declared
+# a relaxation [-R]; on their Benders form the :MILPSolver is cross-checked
+# with BendersDecompositionSolver whose subproblems are solved by the
+# recursive Lagrangian dual and a feasible solution is recovered at the
+# design of its master, with a MILP master (BSPar-BDS-2S-LD.txt) and with a
+# bundle master (BSPar-BDS-2S-CVX-LD.txt), whose intervals, as that of the
+# PrimalProximalHeur, must contain the optimum [-E].
+#
+# these sector-coupled instances are badly scaled: HiGHS aborts on the inner
+# LagBFunction LPs, so the default BlockSolverConfig here (BSPar-2S.txt)
+# solves the LagrangianDual inner with Gurobi and tightens the bundle stopping.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./TSSB_test
+DEFAULT_PAR=BSPar-2S.txt
+
+# the BlockSolverConfig of the run on the Benders form; the environment
+# empties it where BendersDecompositionSolver is not in the build, since its
+# configuration names it and the factory would not find it
+bds_par="${TSSB_BDS_PAR-BSPar-BDS-2S.txt}"
+DEFAULT_SLV=0
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ file name ] = PyPsa objective value
+# (Obj_PyPSA column of the summary_all_cases.csv produced by the
+# transformation_pypsa_smspp harness; same single instance
+# network_small_fewsectors__snap100__scen3 perturbed in four ways, the
+# perturbation being the last part of the file name).
+
+declare -A REF_OBJ
+
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_demand.nc]=4.822693602e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_maxpower.nc]=3.812776176e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_hydroinflow.nc]=3.742200254e+09
+REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_complete.nc]=4.920921646e+09
+
+# the thermal family: the optimum of PyPSA and Gurobi on the deterministic
+# equivalent that extensive_thermal_tssb.py writes, which the :MILPSolver
+# of SMS++ matches to the digits it prints
+declare -A REF_TUC
+REF_TUC[smspp_tuc_u10_t24_s3_b1.nc4]=5.438118773e+06
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for what in ../../UCBlock/data/nc4/pypsa-data/tssb/smspp_*.nc; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+
+    # the Benders form of the same instance, where the Solver that keeps the
+    # design in a master of its own can stand beside a :MILPSolver
+    if [ -n "${bds_par}" ]; then
+      run_test "$exe" "$what" -b -S "${bds_par}" -B InnerBCfg.txt -r "$ref"
+    fi
+
+done
+
+for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_TUC[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -B InnerBCfg.txt \
+             -R ",,r" -E ",inf" -r "$ref"
+    # the Benders form, whose subproblems (a unit commitment per scenario)
+    # are solved by the recursive Lagrangian dual: BDS gives the bound of the
+    # dual below and, recovering a feasible solution at the design of its
+    # master (strRecoveryBSC of BDSCfg-LD.txt), its value above, an interval
+    # that has to contain the optimum [-E], with a MILP master and with a
+    # bundle master, whose design is the best point of the bundle
+    run_test "$exe" "$what" -b -S BSPar-BDS-2S-LD.txt -B InnerBCfg.txt \
+             -R "," -E ",inf" -r "$ref"
+    run_test "$exe" "$what" -b -S BSPar-BDS-2S-CVX-LD.txt -B InnerBCfg.txt \
+             -R "," -E ",inf" -r "$ref"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

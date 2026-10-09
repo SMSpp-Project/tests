@@ -1,0 +1,43 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar-pc.txt - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a SingleFlowDCRBlock in the
+# "P/C" formulation (see DCRCfg-pc.txt), whose constraints are all linear
+# and are therefore solved by any :MILPSolver, and by the
+# SingleFlowDCRBendersSolver. Since the P/C formulation only outer-
+# approximates the two cones, the :MILPSolver here solves a relaxation of
+# the DCR problem, which is what the -R option of the test declares.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+HiGHSMILPSolver                 # name of 1st Solver
+#CPXMILPSolver                  # name of 1st Solver
+#GRBMILPSolver                  # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
+SingleFlowDCRBendersSolver      # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+*MILPCfg.txt
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the SingleFlowDCRBendersSolver
+* # [none]
+
+# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar-pc.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

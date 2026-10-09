@@ -1,0 +1,63 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-DP-BX.txt - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of BSPar-DP.txt with two more Solver, the
+# BranchAndXSolver whose nodes are solved by the Lagrangian Dual over the
+# same exactly solved sub-Blocks [see BXLDCfg-DP.txt], and the same with the
+# branching rule learned online [see BXLDCfg-DP-ML.txt], which a build
+# without Torch leaves out of the run. They are exact, but they are stopped
+# on time, and then give the bounds of the nodes left open, which the
+# comparison with the other Solver takes as a pair of bounds.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+5 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver        # name of 1st Solver
+GRBMILPSolver         # name of 1st Solver
+#SCIPMILPSolver       # name of 1st Solver
+#HiGHSMILPSolver      # name of 1st Solver
+LagrangianDualSolver  # name of 2nd Solver
+PrimalProximalHeur    # name of 3rd Solver
+BranchAndXSolver      # name of 4th Solver
+BranchAndXSolver      # name of 5th Solver
+
+5 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+
+*MILPCfg-MIP.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver [see LDCfg-DPe.txt]
+
+*LDCfg-DPe.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the PrimalProximalHeur
+
+*PPHCfg-DP.txt
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the BranchAndXSolver
+
+*BXLDCfg-DP.txt
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the BranchAndXSolver with the rule learned online
+
+*BXLDCfg-DP-ML.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-DP-BX.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# usage: batch-libsvm < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# the three-way cross-check: a general-purpose :MILPSolver on the abstract
+# representation, the ad hoc SMOSolver and LIBSVM, the reference
+# implementation, on the physical one. They address the same training problem,
+# hence they have to agree on its optimal value, and LIBSVM being an
+# independent implementation of the very algorithm SMOSolver implements makes
+# it the natural reference to check the latter against.
+#
+# The sweep is smaller than that of batch-dual because LIBSVM only trains the
+# problems it can express: the linear loss with the bias not regularised
+# (hence wf == 0 alone) and any kernel but the Laplacian one (hence K == 3 is
+# left out, as is the sigmoid one, which is not a Mercer kernel and on which
+# no two Solver need agree). It is also run on more, and larger, data sets
+# than the other batches: LIBSVM is fast, so what is worth exercising here is
+# the agreement on many different problems.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar-LSVM.txt
+parse_batch_args "$@"
+
+# 0 = linear, 1 = polynomial, 2 = gaussian
+for K in 0 1 2; do
+
+  # classification and regression
+  for task in "" "-g"; do
+    for C in 0.1 1 10; do
+
+      run_test "$exe" -S "$par" -B SVMCfg-dual.txt -f 0 -K "$K" -C "$C" \
+               -N 60 -M 4 -n 3 -e 1 $task
+
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

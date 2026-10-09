@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default ./LagBFunction_test
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../../batch_common.sh"
+
+# what (= wchg) is the wchg bit-mask covering both the runtime mutation
+# menu and the sparse Lambda mode selectors: bits 0..8 cover the legacy
+# mutations (rows / costs / demands / bounds / linear obj...); bit 9
+# (= 512) enables the per-LagBFunction sparse-subset variant at setup
+# (each LBF dualises a random subset of the x's instead of all of them,
+# triggering BundleSolver's sparse Lambda path at set_Block); bit 10
+# (= 1024) enables runtime per-LBF dual_pair removal (a naked
+# FunctionModVarsRngd on a single LBF, which exercises the dense →
+# sparse auto-promotion in the 4th Modification loop and the per-
+# Function sparse handlers). The four sweep values cover every path:
+#   511  = legacy dense throughout
+#   1023 = sparse from setup
+#   1535 = dense at setup + runtime auto-promotion (511 | 1024)
+#   2047 = sparse from setup + runtime per-LBF Mod      (1023 | 1024)
+#iter=3
+
+LagBFunction_test=${1:-./LagBFunction_test}
+
+# the BlockSolverConfig of NDOBlock: the LagBFunction are hard components
+# with z = 1, easy ones with z = -1, and since every mask below changes their
+# demands the BundleSolver then keep all their dual values
+ndopar() {
+    if [ "$1" -gt 0 ]; then echo NDOPar-Hard.txt; else echo NDOPar-Dual.txt; fi
+}
+
+# in CI 3 seeds of the 20 are run: the others are the same sweep with
+# another random stream, and the whole of it takes more than an hour there
+if [ -n "$CI" ]; then seeds=3; else seeds=20; fi
+# the sweep of bit 11 below takes 10 of them, being wider than the others
+seeds11=$(( seeds < 10 ? seeds : 10 ))
+
+for what in 511 1023 1535 2047 ; do
+  for nf in -2 -11; do
+
+    if [ $nf -eq -2 ]; then
+      t=1
+    else
+      t=3
+    fi
+
+    # z = 1 is LagBFunction treated as non-easy, -1 is treated as easy
+    for z in 1 -1; do
+      let nt=t*z
+      par=$( ndopar $z )
+
+      #for size in 2 10 50 100
+      for size in 2 10 50; do
+        for dens in 3 1.1; do
+          for (( seed = 0 ; seed < seeds ; seed++ )); do
+
+            run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter" 10 0.5 "$par"
+
+          done
+        done
+      done
+    done
+  done
+done
+
+# bit 11 (= 2048) adds at runtime a dual_pair to a single LagBFunction on
+# an x it does not have (there are some after a removal by bit 10, or from
+# setup with bit 9): with nf = 0 and no other LagBFunction having that x it
+# is a new coordinate of the master, otherwise a coordinate the master
+# already has, the linear objective and the PolyhedralFunction having all
+# the x. The two values cover both setups:
+#   3583 = dense at setup + runtime removal and addition   (1535 | 2048)
+#   4095 = sparse at setup + runtime removal and addition  (2047 | 2048)
+# nf = 0 with 3 LagBFunction is left out under 4095, since then the dual
+# pairs of each LagBFunction are not in the order of the global Variable,
+# which BundleSolver::set_Block() refuses; nf = 0 with a single easy
+# LagBFunction is left out as well, since the instances are then often
+# unbounded along a direction of so small a slope that the test on the
+# norm of z* takes the point for optimal, as happens also without any
+# change of the coordinates
+
+for what in 3583 4095 ; do
+  for nf in -2 -11 0; do
+
+    case $nf in
+      -2)  ts="1" ;;
+      -11) ts="3" ;;
+      0)   if [ $what -eq 3583 ]; then ts="1 3"; else ts="1"; fi ;;
+    esac
+
+    for t in $ts; do
+      # z = 1 is LagBFunction treated as non-easy, -1 is treated as easy
+      for z in 1 -1; do
+        let nt=t*z
+        par=$( ndopar $z )
+        if [ $nf -eq 0 ] && [ $nt -eq -1 ]; then
+          continue
+        fi
+
+        for size in 2 10 50; do
+          for dens in 3 1.1; do
+            for (( seed = 0 ; seed < seeds11 ; seed++ )); do
+
+              run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter" 10 0.5 "$par"
+
+            done
+          done
+        done
+      done
+    done
+  done
+done
+
+# the Solver of NDOBlock unregistered and registered again before each
+# compute() (the last argument of the tester), so that they build their data
+# anew out of the changed Block and read again the global pools of its
+# Function, with all the changes of 511 between two calls; 6 seeds of the 20
+# are enough for that, which is not otherwise different from the above
+
+seedsd=$(( seeds < 6 ? seeds : 6 ))
+for nf in -2 -11; do
+  if [ $nf -eq -2 ]; then t=1; else t=3; fi
+  for z in 1 -1; do
+    let nt=t*z
+    par=$( ndopar $z )
+    for size in 2 10; do
+      for dens in 3 1.1; do
+        for (( seed = 0 ; seed < seedsd ; seed++ )); do
+
+          run_test "$LagBFunction_test" "$seed" 511 "$size" "$nf" "$nt" "$dens" "$iter" 10 0.5 "$par" 0 1
+
+        done
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

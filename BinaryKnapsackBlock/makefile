@@ -37,13 +37,17 @@ include $(BKBkSDR)/makefile-c
 MILPSSDR = $(BKBkSDR)/../MILPSolver
 include $(MILPSSDR)/makefile-s
 
+# BranchAndXSolver, likewise: the SMS++ stuff is defined already
+BAXSLVSDR = $(BKBkSDR)/../BranchAndXSolver
+include $(BAXSLVSDR)/makefile-s
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BKBkOBJ) $(MILPSOBJ)
+MOBJ =  $(BKBkOBJ) $(MILPSOBJ) $(BAXSLVOBJ) $(CMMNUOBJ)
 
 # libraries
-MLIB =  $(BKBkLIB) $(MILPSLIB) $(libCPLEXLIB)
+MLIB =  $(BKBkLIB) $(MILPSLIB) $(BAXSLVLIB) $(libCPLEXLIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $(DIR)/test.o $(MOBJ) $(MLIB) $(SW)
@@ -51,12 +55,13 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(BKBkINC) $(MILPSINC)
+MINC =  $(BKBkINC) $(MILPSINC) $(BAXSLVINC) $(CMMNUINC)
 
 # includes
-MH =    $(BKBkH)
+MH =    $(BKBkH) $(BAXSLVH) $(CMMNUH)
 
 # compile command
+
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)

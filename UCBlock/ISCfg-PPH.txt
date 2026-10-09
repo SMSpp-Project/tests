@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - ISCfg-PPH.txt - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the inner BundleSolver of the PrimalProximalHeur of
+# PPHCfg.txt and PPHCfg-DP.txt (str_LDSlv_ISCfg), i.e., how each Lagrangian
+# Dual is solved at each proximal iteration: the inner Solver has to converge
+# for the fractional solution the penalty is built on to mean anything, and
+# the cap on its iterations is what the first penalized call, the only one
+# that does not converge, is stopped by.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig  # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intMaxIter   500 # max number of iterations of each call
+
+1  # number of double parameters
+
+# now all the double parameters
+dblRelAcc   1e-4 # relative accuracy of each Lagrangian Dual
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END ISCfg-PPH.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

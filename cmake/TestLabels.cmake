@@ -1,0 +1,93 @@
+# --------------------------------------------------------------------------- #
+#    Per-module CI test labels                                                #
+#                                                                             #
+#    Single source of the map "test -> the modules that exercise it". Each    #
+#    test is tagged with CTest LABELS naming every module it links or finds,  #
+#    so a module's CI can run exactly the relevant tests, and only those,     #
+#    with no hard-coded paths:                                                #
+#                                                                             #
+#        ctest -L <module>                                                    #
+#                                                                             #
+#    where <module> is the module (repository) name, e.g. on GitHub           #
+#    `ctest -L "${GITHUB_REPOSITORY##*/}"` and on GitLab                      #
+#    `ctest -L "$CI_PROJECT_NAME"`. A test thus runs in the CI of every       #
+#    module it depends on, so a change to any of them re-checks it.           #
+#                                                                             #
+#    To extend it when adding a test: add one SMSPP_TEST_LABELS_<dir> entry   #
+#    below (keyed by the test directory name) and call smspp_label_tests()    #
+#    at the end of that directory's CMakeLists.txt. The labels are the        #
+#    module names the test exercises; `SMS++` denotes the core library.       #
+#                                                                             #
+#                                Donato Meoli                                 #
+#                         Dipartimento di Informatica                         #
+#                             Universita' di Pisa                             #
+# --------------------------------------------------------------------------- #
+
+set(SMSPP_TEST_LABELS_BoxSolver                 "SMS++;MILPSolver")
+set(SMSPP_TEST_LABELS_LagBFunction              "SMS++;BundleSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_PolyhedralFunction        "SMS++;BundleSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_PolyhedralFunctionBlock   "SMS++;BundleSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_QuadFunction              "SMS++;MILPSolver")
+set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
+# the four testers posed on an AbstractBlock ask for modules beyond these two,
+# a different set each, and each of them is guarded by its own if( TARGET ),
+# so what the directory declares is what they all need and the rest is set
+# test by test
+set(SMSPP_TEST_LABELS_AbstractBlock             "SMS++;MILPSolver")
+set(SMSPP_TEST_LABELS_BendersBFunction          "SMS++;BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_BinaryKnapsackBlock       "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock
+                                                "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver;MCFClassSolver;MCFLemonSolver;MILPSolver")
+# MMCFBlock hosts two testers: MMCF_test (vs the MMCFCplex reference) and
+# MMCFBlock_test (cross-check of a :MILPSolver and a LagrangianDualSolver), so
+# the label is the union of what the two exercise
+set(SMSPP_TEST_LABELS_MMCFBlock                 "BundleSolver;LagrangianDualSolver;MCFLemonSolver;MMCFBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_UCBlock                   "BundleSolver;LagrangianDualSolver;UCBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_MCFBlock                  "MCFBlock;MCFClassSolver;MCFLemonSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_InvestmentBlock           "BundleSolver;InvestmentBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_TwoStageStochasticBlock   "BundleSolver;LagrangianDualSolver;TwoStageStochasticBlock;UCBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_MultiStageStochasticBlock "BundleSolver;LagrangianDualSolver;MultiStageStochasticBlock;TwoStageStochasticBlock;UCBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_LukFiBlock                "BundleSolver;LukFiBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SVMBlock                  "BundleSolver;LagrangianDualSolver;SVMBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SingleFlowDCRBlock        "SingleFlowDCRBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SATBlock                  "SATBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SatellitesBlock           "BundleSolver;LagrangianDualSolver;SatellitesBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_MultiKnapsackAssignBlock  "BundleSolver;LagrangianDualSolver;MultiKnapsackAssignBlock;MILPSolver")
+
+# Attach the labels of the current directory (keyed by its name) to every test
+# it registered, dynamic batch-file test names included, and tell ctest that
+# 77 is the status of a test that had nothing to do rather than of one that
+# failed: a tester exits with it when the configuration it is given names only
+# Solver that this build does not have, which is the case of a configuration
+# asking for a Solver of an external library that is not there
+# [see drop_missing_Solvers() of common_utils.cpp].
+function(smspp_label_tests)
+    get_filename_component(_dir "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+    get_property(_tests DIRECTORY PROPERTY TESTS)
+    if (NOT _tests)
+        return()
+    endif ()
+    set_tests_properties(${_tests} PROPERTIES SKIP_RETURN_CODE 77)
+    if (DEFINED SMSPP_TEST_LABELS_${_dir})
+        set_tests_properties(${_tests} PROPERTIES
+                             LABELS "${SMSPP_TEST_LABELS_${_dir}}")
+    endif ()
+endfunction()
+
+# Skip the whole suite unless every module its labels declare is in the build:
+# the labels are exactly the modules the tests exercise, and a test registered
+# with some of them missing only dies at run time with "<module> not present
+# in Solver factory". A macro so that return() leaves the calling directory.
+macro(smspp_require_labelled_modules)
+    get_filename_component(_dir "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+    if (DEFINED SMSPP_TEST_LABELS_${_dir})
+        foreach (_mod IN LISTS SMSPP_TEST_LABELS_${_dir})
+            if (NOT (_mod STREQUAL "SMS++") AND NOT TARGET SMS++::${_mod})
+                message(STATUS "Skipping tests/${_dir}: ${_mod} not in build")
+                return()
+            endif ()
+        endforeach ()
+    endif ()
+endmacro()
+
+# --------------------------------------------------------------------------- #

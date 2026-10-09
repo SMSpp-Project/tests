@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# usage: batch-acad-s < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# runs only "small" pure thermal academic instances, intended for being used
+# when the ThermalUnitBlock subproblems are solved to integer optimality
+# (typically using ThermalUnitExtDPSolver, although a :MILPSolver would
+# be a less efficient option)
+#
+# for LagrangianDualSolver + BundleSolver:
+# correct value of tStar: 1e+0
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar-DP-BX.txt
+# the Lagrangian Dual of these instances is solved over sub-Block that the
+# dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
+# the PrimalProximalHeur needs and what makes its inner Solver converge, and
+# what the BranchAndXSolver needs for an integral Lagrangian solution to be a
+# feasible one [see BSPar-DP-BX.txt]
+# the LagrangianDualSolver here solves a relaxation of the problem, and with
+# the sub-problems solved exactly the bound it gives is the Lagrangian one,
+# which has a duality gap: it is declared as such, so that it is held to
+# solving its own problem exactly while of this one it only bounds the side
+# a relaxation bounds [see BSPar-DP.txt]
+REL="${REL:-,r}"
+
+parse_batch_args "$@"
+
+# small thermal academic instances- - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/UC_Data/T-Ramp
+
+sizes="10 20 50"
+
+for size in $sizes; do
+  for (( seed = 1 ; seed < 6 ; seed++ )); do
+
+    what=${DATADIR}/${size}_0_${seed}_w.nc4
+
+    # in CI the BranchAndXSolver of the default configuration runs on the
+    # units of size 10 only: on each instance it takes 2 to 8 minutes, and a
+    # test is given an hour there
+    p=$par
+    if [ -n "$CI" ] && [ "$size" != 10 ] && [ "$par" = "$DEFAULT_PAR" ]; then
+      p=BSPar-DP.txt
+    fi
+
+    run_test "$exe" "$what" -S "$p" -R "$REL" -B InnerBCfg.txt
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

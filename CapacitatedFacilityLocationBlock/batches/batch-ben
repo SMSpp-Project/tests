@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ben < exe file > < log file >
+#        < exe file > = path of the executable file, default ../CFL_test
+#        < log file > = name of the log file, default no log (stdout)
+#
+# "Benders friendly" arrangement: B1 is the natural-formulation LP, B2 is a
+# copy CapacitatedFacilityLocationBlock in BenForm (feasibility-cuts variant)
+# whose hidden BendersBFunction separates cuts from an inner MCFBlock; runs
+# the small ORLib instances and checks that the two LP bounds coincide
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+# run from the Ben config directory so CFL_test reads the BenForm config
+# files (BPar*, BSPar*, R3BCfg) there
+cd "$(dirname "$0")/../Ben" || exit 1
+
+
+DATADIR=../../../CapacitatedFacilityLocationBlock/data
+
+CFL_test=${1:-../CFL_test}
+mlf=${2:-}
+
+niter=0
+# wchg = 287 = change facility/transportation costs, capacities, demands,
+# close facilities (bits 0..4) and the abstract representation (+256).
+# fix-open (bit 6) is not supported by BenForm; re-open (bit 5) and
+# problem-type change (bit 7) are left out.
+wchg=287
+rounds=40
+maxseed=1
+
+# ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
+  64 81 93 111 122 134 51 71 82 94 112 123 41 61 72 84; do
+  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+
+    what=${DATADIR}/txt/ORLib/cap${f}.txt
+
+    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# usage: batch-dual < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# exercises the Wolfe dual, which is the only thing there is for a nonlinear
+# kernel: it sweeps the kernels, the loss and the bias variants and the
+# trade-off parameter, cross-checking the ad hoc SMOSolver against a
+# general-purpose :MILPSolver on the dense quadratic program the dual is
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+# 0 = linear, 1 = polynomial, 2 = gaussian, 3 = laplacian, 4 = sigmoid; the
+# sigmoid one is not a Mercer kernel, hence the dual may well be indefinite
+# and the two Solver need not agree, so it is left out
+for K in 0 1 2 3; do
+
+  # wf: the linear (0) or the quadratic (+1) penalty of the training errors,
+  # and the bias free (0) or regularised (+2); which problem is encoded is
+  # what the BlockConfig says, and this batch is the one about the dual
+  for wf in 0 1 2 3; do
+    for task in "" "-g"; do
+      for C in 0.1 1 10; do
+
+        run_test "$exe" -S "$par" -B SVMCfg-dual.txt -f "$wf" -K "$K" -C "$C" \
+                 -N 40 -M 3 -n 2 -e 1 $task
+
+      done
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# tests/batch_common.sh
+#
+# Shared helpers for SMS++ test batch scripts. Each batch should:
+#   1. Source this file: source "$(dirname "$0")/../../batch_common.sh"
+#      (adjust the relative path to the batch's depth)
+#   2. Set: DEFAULT_EXE, DEFAULT_PAR (and optionally DEFAULT_SLV, DEFAULT_PAR2)
+#   3. Call parse_batch_args "$@" to populate $exe / $par / $slv / $mlf
+#      from the positional args (with fall-back to defaults)
+#   4. Loop over instances, calling run_test "$exe" args... for each. The
+#      function appends to $mlf if set, exits on non-zero retVal, and
+#      preserves the printed "[<instance> <par> <slv> <ref>]: " prefix.
+#
+# The argument layout standardised here is:
+#   < exe file >  = path of the executable, default: $DEFAULT_EXE
+#   < par file >  = BlockSolverConfig file, default: $DEFAULT_PAR
+#   < solver >    = 0 or 1, default: $DEFAULT_SLV -- ONLY for the batches that
+#                   set DEFAULT_SLV, i.e. that select the Solver from the
+#                   command line; where the BlockSolverConfig attaches every
+#                   Solver to cross-check, there is nothing to select and the
+#                   slot does not exist
+#   < log file >  = output log file (no log if absent)
+#
+# Some batches use two configs (a BlockConfig + a BlockSolverConfig) instead
+# of (par, slv); they should set DEFAULT_PAR2 and ignore $slv at run-time.
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# colors
+
+if [ -t 1 ]; then
+    RED='\033[31m'
+    GREEN='\033[32m'
+    NC='\033[0m'
+else
+    RED=''
+    GREEN=''
+    NC=''
+fi
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# parse standard batch arguments
+#
+# Reads the positional args from the caller. Sets globals:
+#   exe : argv[1] or $DEFAULT_EXE
+#   par : argv[2] or $DEFAULT_PAR
+#   slv : argv[3] or $DEFAULT_SLV, only if the batch sets DEFAULT_SLV
+#   mlf : the argument past the last one used above, or unset (no log)
+#
+# The < solver > slot is there only for the batches that declare DEFAULT_SLV;
+# for the others the log file is argv[3], so that a batch never carries an
+# argument it has no use for.
+
+parse_batch_args() {
+    exe="${1:-${DEFAULT_EXE}}"
+    par="${2:-${DEFAULT_PAR}}"
+    if [ -n "${DEFAULT_SLV+set}" ]; then
+        slv="${3:-${DEFAULT_SLV}}"
+        mlf="${4:-}"
+    else
+        slv=""
+        mlf="${3:-}"
+    fi
+
+    if [ -z "${exe}" ]; then
+        echo "batch_common: DEFAULT_EXE not set and no exe argument given" >&2
+        exit 1
+    fi
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# run a single test invocation and check its return value
+#
+# Usage: print_header <label>
+# Prints the "[<label>]:" header on its own line (to $mlf if set, else stdout),
+# so the per-round output of the test below it starts on a fresh line. Batches
+# whose displayed label differs from the actual executable arguments, or that
+# do not exit on error, can reuse this directly.
+print_header() {
+    if [ -z "${mlf}" ]; then
+        printf "[%s]:\n" "$1"
+    else
+        printf "[%s]:\n" "$1" >> "${mlf}"
+    fi
+}
+
+# Usage: run_test <exe> <args...>
+# Effects:
+#   - prints the "[<args>]:" header on its own line (via print_header)
+#   - tees stdout/stderr to $mlf if set (else stdout only)
+#   - exits 1 if the invocation returns non-zero
+#
+# The extended per-round log is enabled uniformly, for every test, via the
+# `verbose` environment variable (e.g. `verbose=1 ./batch ...` or
+# `verbose=1 ctest ...`): the test binaries read it from the inherited
+# environment, so it works regardless of whether a test understands the -v
+# option. Do NOT append -v here: tests that parse positional arguments by hand
+# would mis-read it. A number asks for that level, `verbose=2 ./batch ...`
+# being what gives the log of each Solver, which is the only way to have it
+# from inside a battery.
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the Frank-Wolfe decomposition of the same instance
+#
+#   fw_run < instance file > [ further arguments ]
+#
+# A battery that walks the instances of a Block can hand each of them to the
+# generic Frank-Wolfe tester as well, which it receives as its second
+# executable ($fwexe): the instance is read K times into a father Block whose
+# Objective couples the copies, and the value FrankWolfeSolver computes by
+# decomposing it is cross-checked against the monolithic :MILPSolver of the
+# same configuration. The configurations are those of the suite, like every
+# other Solver's: the meta-BlockSolverConfig of the father is $fwpar, named
+# FatherBSPar*.txt since the father is what this tester adds to the Block of
+# the suite, and $fwargs is whatever else the Block asks for (the BlockConfig
+# of the formulation, the variable groups, the father objective). Nothing is
+# run if the battery was given no such executable, i.e., if FrankWolfeSolver
+# is not in the build.
+
+fw_run() {
+    [ -n "${fwexe:-}" ] && [ -x "${fwexe}" ] || return 0
+    run_test "${fwexe}" -S "${fwpar:-FatherBSPar.txt}" ${fwargs:-} "$@"
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# A run that exits with 77 had nothing to do rather than failing: the tester
+# answers that when the configuration it is given names only Solver that this
+# build does not have, which is what an external library that is not there
+# looks like from here [see drop_missing_Solvers() of common_utils.cpp]. Those
+# runs are counted and named at the end of the battery, and they do not stop
+# it, while any other nonzero status does.
+
+SKIPPED_RUNS=0
+
+run_test() {
+    local _exe=$1
+    shift
+    print_header "$*"
+    if [ -z "${mlf}" ]; then
+        "${_exe}" "$@"
+    else
+        "${_exe}" "$@" >> "${mlf}"
+    fi
+    local _rv=$?
+    if [ ${_rv} -eq 77 ]; then
+        SKIPPED_RUNS=$(( SKIPPED_RUNS + 1 ))
+        return 0
+    fi
+    if [ ${_rv} -ne 0 ]; then
+        exit 1
+    fi
+}
+

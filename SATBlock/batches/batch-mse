@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# usage: batch-mse < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default SATBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# Cross-check on the instances of the exact weighted track of the MaxSAT
+# Evaluation 2024 that SATBlock distributes in data/wcnf/mse24-small, one per
+# family, each with the optimum RC2 finds for it: every Solver of BSPar.txt,
+# OLL on the clauses and the :MILPSolver on the MILP formulation, is checked
+# against the others and against that optimum. A Solver stopped by its time
+# limit is held to an interval around the optimum instead.
+
+# run from the test directory so SATBlock_test reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./SATBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+data=../../SATBlock/data/wcnf/mse24-small
+
+# the instances, with their optimum - - - - - - - - - - - - - - - - - - - - -
+
+while read -r name z; do
+  case "${name}" in ''|'#'*) continue ;; esac
+  run_test "$exe" -S "$par" -r "$z" "${data}/${name}"
+done < "${data}/optima.txt"
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

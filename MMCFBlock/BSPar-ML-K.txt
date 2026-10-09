@@ -1,0 +1,42 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSPar-ML-K.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a MMCFBlock solved by a
+# LagrangianDualSolver using a BundleSolverML (the ML-based BundleSolver
+# that predicts the step-size t with a neural network) as the inner
+# Solver, with the same (knapsack) relaxation as BSPar-K.txt; the network
+# only predicts and does not learn, as the B side of compare of
+# MMCFBlock_ML_bench needs. The ComputeConfig is LDCfg-ML-K.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver        # name of 1st Solver
+#GRBMILPSolver        # name of 1st Solver
+#SCIPMILPSolver       # name of 1st Solver
+LagrangianDualSolver  # name of 2nd Solver
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver
+
+*LDCfg-ML-K.txt
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSPar-ML-K.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

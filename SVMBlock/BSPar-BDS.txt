@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar-BDS.txt - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a SVMBlock split into chunks
+# the *Benders* way, i.e., with the model and the regularisation term left in
+# the master and each chunk holding only the slacks of its own samples, to be
+# solved by three different Solver: a :MILPSolver on the abstract
+# representation of the whole thing, the ad hoc SMOSolver on the physical one,
+# which knows nothing of the split, and BendersDecompositionSolver, which is
+# the Solver the structure is there for.
+#
+# The three address the same training problem, hence they have to agree on its
+# optimal value: the split is a structure of one instance and not another
+# problem, which is the whole point of the comparison. This is the same
+# cross-check BSPar-LD.txt does on the consensus structure, i.e., the other
+# way of splitting the very same sum.
+#
+# The three can be attached to one Block because the Benders Solver is asked
+# to give it back as it was at the end of each compute() [int_BDSlv_Restore in
+# BDSCfg.txt]: it does not read the Block, it restructures it, grafting the
+# root into a master of its own and taking the complicating Variable out of
+# the Constraint of the chunks, and while that lasts the problem the others
+# would find is not the one they were attached to. What the restoring costs is
+# the reformulation, paid at every compute(), and the pool of cuts, which is
+# made of pieces of the master and goes with it, so that nothing is warm
+# started here.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+3  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver                  # name of 1st Solver
+GRBMILPSolver                   # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
+#HiGHSMILPSolver                # name of 1st Solver
+SMOSolver                       # name of 2nd Solver
+BendersDecompositionSolver      # name of 3rd Solver
+
+3  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+*LPCCfg.txt
+
+*SMOCfg.txt
+
+*BDSCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar-BDS.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

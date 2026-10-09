@@ -1,0 +1,802 @@
+/*--------------------------------------------------------------------------*/
+/*------------------------------ File test.cpp -----------------------------*/
+/*--------------------------------------------------------------------------*/
+/** @file
+ * Main for testing SVMBlock, SVCBlock, SVRBlock and SMOSolver.
+ *
+ * A data set is generated out of a seed, a SVCBlock or a SVRBlock is loaded
+ * with it and its abstract representation is generated for the problem that
+ * the BlockConfig asks for, the Wolfe dual or the training problem itself,
+ * with the loss and the treatment of the bias that the bit-wise value \p wf
+ * selects; with more than one chunk the training problem is rather rewritten
+ * as the consensus reformulation set_structure() gives it, which is what a
+ * Lagrangian Solver attacks.
+ *
+ * All the :Solver of the given BlockSolverConfig are then registered and
+ * the results they obtain are cross-checked against each other, which is the
+ * test: the ad hoc SMOSolver, a general-purpose :MILPSolver and, on the
+ * consensus rewriting, a LagrangianDualSolver all have to agree on the
+ * optimal value of the same training problem, whichever formulation of it the
+ * abstract representation encodes.
+ *
+ * The whole thing is repeated for a given number of rounds, each one with a
+ * different data set drawn from the same distribution. Alternatively, the
+ * SVMBlock can be read from a netCDF file given as the positional argument.
+ *
+ * \author Donato Meoli \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
+ *
+ * \copyright &copy; by Donato Meoli
+ */
+/*--------------------------------------------------------------------------*/
+/*------------------------------ INCLUDES ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+#include "SVCBlock.h"
+
+#include "SVRBlock.h"
+
+#include "SMOSolver.h"
+
+#include "common_utils.h"
+
+#include <chrono>
+
+#include <fstream>
+
+#include <random>
+
+/*--------------------------------------------------------------------------*/
+/*-------------------------------- USING -----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+using namespace SMSpp_di_unipi_it;
+
+using Index = Block::Index;
+using doubleVec = SVMBlock::doubleVec;
+
+/*--------------------------------------------------------------------------*/
+/*----------------------------- CONSTANTS ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+/// bit 0 of wf: the training errors are penalised quadratically
+static constexpr Index SqrLoss = 1;
+
+/// bit 1 of wf: the bias is regularised together with the weights
+static constexpr Index RegBias = 2;
+
+/*--------------------------------------------------------------------------*/
+/*------------------------------- GLOBALS ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+// test-specific command-line knobs, set by process_specific_arg(); the
+// standard parameters (-S BlockSolverConfig, -v, ...) are handled centrally
+// by common_utils. This tester GENERATES its own data set out of the seed,
+// so the instance positional is optional (filename_optional = true).
+
+long int seed = 1;          ///< seed of the pseudo-random generator
+Index nsample = 60;         ///< number of samples of the generated data set
+Index nfeature = 4;         ///< number of features of each sample
+Index nchunk = 1;           ///< chunks the samples are dealt out to, 1 = none
+bool benders = false;       ///< the Benders structure instead of the consensus
+Index wf = 0;               ///< what formulation, coded bit-wise
+int kernel = SVMBlock::kLinear;   ///< which kernel
+double kmemory = -1;              ///< MB the Gram matrix may take, < 0 = default
+bool regression = false;    ///< if the model is a regression one
+double parC = 1;            ///< the trade-off parameter C
+double parE = 0.1;          ///< the half-width of the insensitivity tube
+Index n_repeat = 10;        ///< number of rounds
+double tol = 1e-5;          ///< relative tolerance of the cross-check
+bool reopt = false;         ///< re-solve after changing the training problem
+bool abstract = true;       ///< whether the abstract representation is built
+
+Index ngrid = 0;            ///< values of C of the model selection, 0 = none
+Index npgrid = 0;           ///< values of gamma of the model selection, 0 = none
+Index gorder = 0;           ///< in which order the grid is walked [see run_grid]
+Index gwhich = 0;           ///< which of the two solves the grid takes
+
+Index nincr = 0;            ///< samples learnt one at a time, 0 = none
+
+/// the data set to read instead of generating one, in the format of LIBSVM
+std::string dataset;
+
+/*--------------------------------------------------------------------------*/
+/*------------------------------ FUNCTIONS ---------------------------------*/
+/*--------------------------------------------------------------------------*/
+/// generates a data set of \p n samples of \p m features out of \p sd
+/** Generates a data set that the model can fit well, so that the training
+ * problem is neither trivial nor degenerate: two gaussian clouds separated
+ * along the first feature for the classification case, an affine function of
+ * the features plus a small noise for the regression one. */
+
+static void generate( Index n , Index m , doubleVec & X , doubleVec & y ,
+                      unsigned sd )
+{
+ std::mt19937 rng( sd );
+ std::normal_distribution< double > gauss( 0 , 1 );
+ std::normal_distribution< double > noise( 0 , 0.05 );
+
+ X.resize( std::size_t( n ) * m );
+ y.resize( n );
+
+ if( ! regression ) {
+  for( Index i = 0 ; i < n ; ++i ) {
+   const double lbl = ( i % 2 ) ? 1 : -1;
+   y[ i ] = lbl;
+   for( Index j = 0 ; j < m ; ++j )
+    X[ std::size_t( i ) * m + j ] = gauss( rng ) + ( j ? 0 : 1.5 * lbl );
+   }
+  return;
+  }
+
+ doubleVec w( m );
+ for( Index j = 0 ; j < m ; ++j )
+  w[ j ] = gauss( rng );
+
+ for( Index i = 0 ; i < n ; ++i ) {
+  double v = 0.5;
+  for( Index j = 0 ; j < m ; ++j ) {
+   const double xij = gauss( rng );
+   X[ std::size_t( i ) * m + j ] = xij;
+   v += w[ j ] * xij;
+   }
+  y[ i ] = v + noise( rng );
+  }
+
+ }  // end( generate )
+
+/*--------------------------------------------------------------------------*/
+/// constructs the SVMBlock of the round, generated or read from a data set
+
+static SVMBlock * construct( unsigned sd )
+{
+ if( ! filename.empty() ) {
+  auto block = dynamic_cast< SVMBlock * >( Block::deserialize( filename ) );
+  if( ! block )
+   throw( std::invalid_argument( filename + " does not contain a SVMBlock" ) );
+  return( block );
+  }
+
+ auto svm = dynamic_cast< SVMBlock * >(
+  Block::new_Block( regression ? "SVRBlock" : "SVCBlock" ) );
+
+ svm->set_kernel( kernel );
+ if( kmemory >= 0 )
+  svm->set_K_memory( kmemory * 1024 * 1024 );
+ svm->set_C( parC );
+ svm->set_squared_loss( wf & SqrLoss );
+ svm->set_reg_bias( wf & RegBias );
+
+ if( auto svr = dynamic_cast< SVRBlock * >( svm ) )
+  svr->set_epsilon( parE );
+
+ /* A data set of the LIBSVM repository, i.e. real data, as opposed to the
+  * generated ones: the file holds the samples and the targets and nothing
+  * else, so the hyper-parameters are the ones the options say, exactly as
+  * for a generated instance. */
+
+ if( ! dataset.empty() ) {
+  std::ifstream in( dataset );
+  if( ! in.is_open() )
+   throw( std::invalid_argument( "cannot open the data set " + dataset ) );
+
+  svm->load( in , 'l' );
+  return( svm );
+  }
+
+ doubleVec X , y;
+ generate( nsample , nfeature , X , y , sd );
+ svm->load( nsample , nfeature , std::move( X ) , std::move( y ) );
+
+ return( svm );
+
+ }  // end( construct )
+
+/*--------------------------------------------------------------------------*/
+/// trains the very same data set over a grid of values of C and of gamma
+/** A model selection, i.e., what one actually does with a SVM: the same data
+ * set is trained over and over with a geometric grid of \p ngrid values of C
+ * centred on the one that was asked for, and, where \p npgrid asks for it
+ * and the kernel has one, of \p npgrid values of its parameter, walked in
+ * the order \p gorder says. Every Solver attached to the
+ * SVMBlock sees the same sequence of Modification, and what it makes of them
+ * is its own business: one reading the physical representation can re-optimize
+ * from the previous solution, since the multipliers of a value of C are a
+ * sensible starting point for the next, while one that trains from scratch
+ * pays the whole thing again at each value. The results still have to agree
+ * at every point of the grid, which is what makes the times comparable, and
+ * the total time of each Solver over the whole grid is what the exercise is
+ * about. */
+
+static bool run_grid( SVMBlock * svm , Block * block )
+{
+ const auto & reg = block->get_registered_solvers();
+ std::vector< Solver * > S( reg.begin() , reg.end() );
+ const std::size_t M = S.size();
+
+ std::vector< double > total( M , 0 ) , cold( M , 0 );
+ std::vector< long > iters( M , 0 ) , citers( M , 0 );
+
+ bool ok = true;
+
+ /* The grid always spans the same range, four orders of magnitude around the
+  * given C, and \p ngrid says with which resolution: this is what a grid
+  * search actually looks like, the range being dictated by the problem and
+  * the resolution by how much time one is willing to spend. It is also the
+  * axis along which re-optimization is worth something, since the finer the
+  * grid the closer two consecutive problems are. */
+
+ const double first = parC / 64;
+ const double ratio = std::pow( 4096 , 1.0 / ( ngrid > 1 ? ngrid - 1 : 1 ) );
+
+ /* The second dimension of the grid is the parameter of the kernel, which
+  * only a nonlinear one has: a change of C moves the bounds of the dual and
+  * leaves the Hessian alone, while a change of gamma changes the kernel,
+  * hence the Hessian and whatever is cached of it. The two axes therefore
+  * cost differently, and the order in which the grid is walked is part of
+  * the result: with the kernel outermost each of its values is paid once and
+  * the sweep of C re-optimizes along it, with the kernel innermost it is
+  * paid at every point, and the sweep back and forth starts each row of the
+  * grid where the previous one ended instead of at its far end. */
+
+ const bool haspar = ( npgrid > 1 ) && ( kernel != SVMBlock::kLinear );
+ const Index np = haspar ? npgrid : 1;
+ const double gfirst = haspar ? svm->get_gamma() / 64 : 0;
+ const double gratio = std::pow( 4096 , 1.0 / ( np > 1 ? np - 1 : 1 ) );
+
+ std::vector< std::pair< double , double > > point;
+ point.reserve( ngrid * np );
+
+ if( gorder == 3 )
+  for( Index g = 0 ; g < ngrid ; ++g )
+   for( Index h = 0 ; h < np ; ++h )
+    point.emplace_back( first * std::pow( ratio , double( g ) ) ,
+                        gfirst * std::pow( gratio , double( h ) ) );
+ else
+  for( Index h = 0 ; h < np ; ++h )
+   for( Index g = 0 ; g < ngrid ; ++g ) {
+    const Index k = ( ( gorder == 1 ) ||
+                      ( ( gorder == 2 ) && ( h % 2 ) ) ) ? ngrid - 1 - g : g;
+    point.emplace_back( first * std::pow( ratio , double( k ) ) ,
+                        gfirst * std::pow( gratio , double( h ) ) );
+    }
+
+ for( const auto & [ C , gamma ] : point ) {
+  svm->set_C( C );
+  if( haspar )
+   svm->set_kernel( kernel , gamma );
+
+  std::vector< SolverReading > rd( M );
+  std::vector< bool > hs( M , false );
+  std::vector< int > status( M , Solver::kError );
+  std::vector< double > times( M , 0 );
+  std::vector< std::string > tokens( M );
+
+  if( gwhich != 2 )
+   for( std::size_t k = 0 ; k < M ; ++k ) {
+    const auto start = std::chrono::steady_clock::now();
+    status[ k ] = S[ k ]->compute( false );
+    times[ k ] = std::chrono::duration< double >(
+                        std::chrono::steady_clock::now() - start ).count();
+
+    total[ k ] += times[ k ];
+    iters[ k ] += S[ k ]->get_elapsed_iterations();
+
+    hs[ k ] = S[ k ]->has_var_solution();
+    if( hs[ k ] )
+     rd[ k ] = read_bounds( S[ k ] , k );
+    tokens[ k ] = reading_token( rd[ k ] );
+    }
+
+  /* What the Modification are worth is the difference between what the
+   * Solver that is there does, having the previous solution to start from,
+   * and what a Solver of the very same kind and configuration does having
+   * just been attached, hence knowing nothing: no Solver is named here, one
+   * of each is simply built out of the Solver factory.
+   *
+   * The two share whatever the Block keeps of the kernel, so whichever of
+   * them runs first at a point pays for the rows that point needs and the
+   * other finds them there: taking both in one run therefore charges the
+   * difference to the first of the two. Which of the two is taken is what
+   * \p gwhich says, and a comparison that has to be free of that charges
+   * each of them in a run of its own. */
+
+  if( gwhich != 1 )
+   for( std::size_t k = 0 ; k < M ; ++k ) {
+    auto fresh = Solver::new_Solver( S[ k ]->classname() );
+    if( ! fresh )
+     continue;
+
+    if( auto cfg = S[ k ]->get_ComputeConfig() ) {
+     fresh->set_ComputeConfig( cfg );
+     delete cfg;
+     }
+
+    block->register_Solver( fresh );
+
+    const auto start = std::chrono::steady_clock::now();
+    const int st = fresh->compute( false );
+    cold[ k ] += std::chrono::duration< double >(
+                        std::chrono::steady_clock::now() - start ).count();
+    citers[ k ] += fresh->get_elapsed_iterations();
+
+    /* With the registered Solver left alone, what the cross-check reads is
+     * the fresh one, there being nothing else to read. */
+
+    if( gwhich == 2 ) {
+     status[ k ] = st;
+     hs[ k ] = fresh->has_var_solution();
+     if( hs[ k ] )
+      rd[ k ] = read_bounds( fresh , k );
+     tokens[ k ] = reading_token( rd[ k ] );
+     times[ k ] = cold[ k ];
+     }
+
+    block->unregister_Solver( fresh );
+    delete fresh;
+    }
+
+  std::string verdict;
+  double diff = std::numeric_limits< double >::quiet_NaN();
+  const bool good = cross_check( rd , hs , status ,
+                                 std::numeric_limits< double >::quiet_NaN() ,
+                                 tol , verdict , diff );
+  ok &= good;
+
+  print_instance_line( times , tokens ,
+                       std::numeric_limits< double >::quiet_NaN() , verdict ,
+                       diff , ! good );
+  }
+
+ svm->set_C( parC );   // leave the training problem as it was found
+ if( haspar )
+  svm->set_kernel( kernel );
+
+ std::cout << "  grid of " << ngrid << " values of C, from " << first
+           << " to " << first * std::pow( ratio , double( ngrid - 1 ) );
+ if( haspar )
+  std::cout << ", times " << np << " values of gamma, from " << gfirst
+            << " to " << gfirst * std::pow( gratio , double( np - 1 ) );
+ std::cout << ", order " << gorder << ", warm vs cold:" << std::endl;
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  std::cout << "   " << S[ k ]->classname() << ": " << total[ k ] << " s vs "
+            << cold[ k ] << " s";
+  if( iters[ k ] || citers[ k ] )
+   std::cout << " , " << iters[ k ] << " vs " << citers[ k ] << " iterations";
+  std::cout << std::endl;
+  }
+
+ return( ok );
+
+ }  // end( run_grid )
+
+/*--------------------------------------------------------------------------*/
+/// learns \p nincr samples one at a time, timing each Solver over the walk
+/** Adds \p nincr samples to the data set one at a time, re-solving after each
+ * addition with every Solver attached to the SVMBlock and accumulating the
+ * time and the iterations each of them takes. This is the operation the exact
+ * solution path is for: a Solver that walks it grows the multiplier of the
+ * new sample from zero keeping every other index at its own optimality
+ * condition, so that what the addition costs is the events of one walk, while
+ * a Solver that iterates pays the iterations its warm start still needs.
+ *
+ * No Solver is named here, and nothing tells one from the other: which of the
+ * two an SMOSolver does is its intSMOPath parameter, i.e. a matter of the
+ * ComputeConfig it is given, so the two columns of the comparison are two
+ * runs of this same function with two configurations. The Solver still have
+ * to agree with each other at every addition, which is what makes the times
+ * comparable. */
+
+static bool run_incremental( SVMBlock * svm , Block * block )
+{
+ const auto & reg = block->get_registered_solvers();
+ std::vector< Solver * > S( reg.begin() , reg.end() );
+ const std::size_t M = S.size();
+
+ std::vector< double > total( M , 0 );
+ std::vector< long > iters( M , 0 );
+
+ bool ok = true;
+
+ /* The samples to be learnt are drawn exactly as those of the data set are,
+  * with another seed: they belong to the same distribution, hence the model
+  * has to move to accommodate them, which is the point, but they are not the
+  * ones it has already been trained on. */
+
+ doubleVec nX , ny;
+ generate( nincr , nfeature , nX , ny , seed + 2000 );
+
+ for( Index a = 0 ; a < nincr ; ++a ) {
+  doubleVec X1( nX.begin() + std::size_t( a ) * nfeature ,
+                nX.begin() + std::size_t( a + 1 ) * nfeature );
+  doubleVec y1( 1 , ny[ a ] );
+
+  svm->add_samples( 1 , X1 , y1 );
+
+  std::vector< SolverReading > rd( M );
+  std::vector< bool > hs( M , false );
+  std::vector< int > status( M , Solver::kError );
+  std::vector< double > times( M , 0 );
+  std::vector< std::string > tokens( M );
+
+  for( std::size_t k = 0 ; k < M ; ++k ) {
+   const auto start = std::chrono::steady_clock::now();
+   status[ k ] = S[ k ]->compute( false );
+   times[ k ] = std::chrono::duration< double >(
+                       std::chrono::steady_clock::now() - start ).count();
+
+   total[ k ] += times[ k ];
+   iters[ k ] += S[ k ]->get_elapsed_iterations();
+
+   hs[ k ] = S[ k ]->has_var_solution();
+   if( hs[ k ] )
+    rd[ k ] = read_bounds( S[ k ] , k );
+   tokens[ k ] = reading_token( rd[ k ] );
+   }
+
+  std::string verdict;
+  double diff = std::numeric_limits< double >::quiet_NaN();
+  const bool good = cross_check( rd , hs , status ,
+                                 std::numeric_limits< double >::quiet_NaN() ,
+                                 tol , verdict , diff );
+  ok &= good;
+
+  print_instance_line( times , tokens ,
+                       std::numeric_limits< double >::quiet_NaN() , verdict ,
+                       diff , ! good );
+  }
+
+ std::cout << "  " << nincr << " samples learnt one at a time on top of "
+           << nsample << ":" << std::endl;
+ for( std::size_t k = 0 ; k < M ; ++k ) {
+  std::cout << "   " << S[ k ]->classname() << ": " << total[ k ] << " s";
+  if( iters[ k ] )
+   std::cout << " , " << iters[ k ] << " iterations";
+  std::cout << std::endl;
+  }
+
+ return( ok );
+
+ }  // end( run_incremental )
+
+/*--------------------------------------------------------------------------*/
+/// changes the training problem under the Solver, re-solving after each change
+/** Subjects the SVMBlock to a sequence of changes of its data, re-solving it
+ * after each one with all the Solver that are attached to it: since they keep
+ * having to agree with each other, this is a check that each of them makes
+ * the right sense of the Modification, be it a Solver reading the physical
+ * representation, such as SMOSolver, which can then re-optimize starting from
+ * the previous solution, or one working on the abstract representation, which
+ * the SVMBlock has to keep up to date. */
+
+static bool run_changes( SVMBlock * svm , Block * block )
+{
+ bool ok = true;
+
+ auto step = [ & ]( const std::string & what ) {
+  std::cout << "  after " << what << ": ";
+  ok &= SolveAll( block , std::numeric_limits< double >::quiet_NaN() , tol );
+  };
+
+ svm->set_C( parC * 8 );
+ step( "C increased" );
+
+ svm->set_C( parC / 8 );
+ step( "C decreased" );
+
+ svm->set_squared_loss( ! ( wf & SqrLoss ) );
+ step( "the loss changed" );
+
+ svm->set_C( parC );
+ step( "C changed back" );
+
+ svm->set_squared_loss( wf & SqrLoss );
+ step( "the loss changed back" );
+
+ if( auto svr = dynamic_cast< SVRBlock * >( svm ) ) {
+  svr->set_epsilon( parE * 4 );
+  step( "epsilon increased" );
+
+  svm->chg_target( svm->get_y()[ 0 ] + 1 , 0 );
+  step( "a target changed" );
+  }
+ else {
+  svm->chg_target( - svm->get_y()[ 0 ] , 0 );
+  step( "a target flipped" );
+  }
+
+ // whatever changes the Hessian of the dual as a whole makes the SVMBlock
+ // rebuild its abstract representation and issue a NBModification
+ svm->set_reg_bias( ! ( wf & RegBias ) );
+ step( "the bias regularised or not" );
+
+ if( svm->get_generated_problem() != SVMBlock::kPrimal ) {
+  svm->set_kernel( kernel == SVMBlock::kLinear ? SVMBlock::kGaussian
+                                               : SVMBlock::kLinear );
+  step( "the kernel changed" );
+  }
+
+ // and so does a whole new data set, of a different size
+ doubleVec X , y;
+ generate( ( nsample * 2 ) / 3 + 1 , nfeature , X , y , seed + 1000 );
+ svm->load( ( nsample * 2 ) / 3 + 1 , nfeature , std::move( X ) ,
+            std::move( y ) );
+ step( "a new data set" );
+
+ return( ok );
+
+ }  // end( run_changes )
+
+/*--------------------------------------------------------------------------*/
+/// runs one round: builds the SVMBlock, solves it with every Solver, checks
+
+static bool run_round( unsigned sd )
+{
+ auto svm = construct( sd );
+
+ /* Whether the training problem is one Block or the chunks tied by the
+  * consensus constraints is a *structure* of the SVMBlock, chosen by
+  * set_structure(); which problem the abstract representation encodes is
+  * instead a Configuration of the Variable. Both come out of the BlockConfig
+  * when one is given, the number of chunks otherwise being said by -s. */
+ Block * block = svm;
+
+ if( ! bconf_file.empty() ) {
+  auto bc = Configuration::deserialize( bconf_file );
+  b_config_Block( svm , bc , bconf_file );
+  }
+
+ if( nchunk > 1 ) {
+  /* The two structures are the two dual ways of splitting the same sum: a
+   * SimpleConfiguration< int > is the consensus one, which is what the
+   * SVMBlock had when it was the only one, and the pair says which. */
+  if( benders ) {
+   SimpleConfiguration< std::pair< int , int > >
+    strc( std::make_pair( int( SVMBlock::kBenders ) , int( nchunk ) ) );
+   svm->set_structure( & strc );
+   }
+  else {
+   SimpleConfiguration< int > chunks( nchunk );
+   svm->set_structure( & chunks );
+   }
+  }
+
+ /* A Solver that reads the physical representation needs none of this, and
+  * on a large data set the abstract one costs more than the algorithm: the
+  * objective of the Wolfe dual is a DQuadFunction carrying the whole n x n
+  * Hessian, i.e., what the Gram matrix is kept out of memory for. */
+
+ if( abstract ) {
+  svm->generate_abstract_variables();
+  svm->generate_abstract_constraints();
+  svm->generate_objective();
+  }
+
+ // attach the Solver by reading a BlockSolverConfig from file and apply()-ing
+ // it to the SVMBlock; the BlockSolverConfig is clear()-ed and kept to do the
+ // cleanup at the end. It may be a plain BlockSolverConfig or a meta-config
+ // SimpleConfiguration< std::map< std::string , Configuration * > >
+ auto bsc = Configuration::deserialize( sconf_file );
+ s_config_Block( block , bsc , sconf_file );
+
+ if( block->get_registered_solvers().empty() ) {
+  std::cerr << "Error: the BlockSolverConfig registered no Solver"
+            << std::endl;
+  return( false );
+  }
+
+ /* Every Solver is read as an exact optimum up to the test tolerance, taken
+  * from the finite one of the bounds it returns: this covers a :MILPSolver
+  * and SMOSolver, which close the gap, as well as a LagrangianDualSolver,
+  * whose lower bound is the optimal value itself since the training problem
+  * is convex and the consensus rewriting is an exact one. */
+ bool ok = SolveAll( block , RefObjective , tol );
+
+ /* The training problem can also be changed under the Solver, which then have
+  * to keep agreeing with each other: the consensus rewriting is left out,
+  * since there the Solver are attached to the assembled Block and not to the
+  * SVMBlock the changes would be made to. */
+ if( reopt && ( nchunk <= 1 ) )
+  ok &= run_changes( svm , block );
+
+ if( ngrid && ( nchunk <= 1 ) )
+  ok &= run_grid( svm , block );
+
+ /* Learning one sample at a time only makes sense on a generated data set,
+  * the samples that are added having to come from the same distribution as
+  * those that are there. */
+ if( nincr && ( nchunk <= 1 ) && dataset.empty() )
+  ok &= run_incremental( svm , block );
+
+ s_config_Block( block , bsc );  // remove the Solver by re-apply()-ing the
+ delete bsc;                     // clear()-ed BlockSolverConfig
+
+ if( block != svm )
+  delete block;
+ delete svm;
+
+ return( ok );
+
+ }  // end( run_round )
+
+/*--------------------------------------------------------------------------*/
+/// processes the test-specific command-line options
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
+  case( 'N' ): Str2Sthg( optarg , nsample );   return( true );
+  case( 'M' ): Str2Sthg( optarg , nfeature );  return( true );
+  case( 's' ): Str2Sthg( optarg , nchunk );    return( true );
+  case( 'b' ): benders = true;                 return( true );
+  case( 'f' ): Str2Sthg( optarg , wf );        return( true );
+  case( 'K' ): Str2Sthg( optarg , kernel );    return( true );
+  case( 'Y' ): Str2Sthg( optarg , kmemory );   return( true );
+  case( 'C' ): Str2Sthg( optarg , parC );      return( true );
+  case( 'E' ): Str2Sthg( optarg , parE );      return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
+  case( 't' ): Str2Sthg( optarg , tol );       return( true );
+  case( 'g' ): regression = true;              return( true );
+  case( 'R' ): reopt = true;                   return( true );
+  case( 'A' ): abstract = false;               return( true );
+  case( 'G' ): Str2Sthg( optarg , ngrid );     return( true );
+  case( 'P' ): Str2Sthg( optarg , npgrid );    return( true );
+  case( 'O' ): Str2Sthg( optarg , gorder );    return( true );
+  case( 'X' ): Str2Sthg( optarg , gwhich );    return( true );
+  case( 'I' ): Str2Sthg( optarg , nincr );     return( true );
+  case( 'd' ): dataset = optarg;               return( true );
+  case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
+  }
+
+ return( false );
+
+ }  // end( process_specific_arg )
+
+/*--------------------------------------------------------------------------*/
+/*-------------------------------- main() ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+int main( int argc , char ** argv )
+{
+ std::set_terminate( smspp_terminate );
+
+ docopt_desc = "SMS++ SVMBlock test.\n";
+ filename_optional = true;
+ // -R is --reopt here, a flag, while the standard one takes a value: the
+ // standard reading has to go, appending alone would not override it
+ override_short_opt( 'R' );
+ short_opts += "e:N:M:s:f:K:C:E:n:t:r:G:P:O:X:I:d:Y:gRbA";
+ const std::vector< option > my_opts = {
+   { "seed"     , required_argument , nullptr , 'e' } ,
+   { "nsample"  , required_argument , nullptr , 'N' } ,
+   { "nfeature" , required_argument , nullptr , 'M' } ,
+   { "nchunk"   , required_argument , nullptr , 's' } ,
+   { "benders"  , no_argument       , nullptr , 'b' } ,
+   { "wf"       , required_argument , nullptr , 'f' } ,
+   { "kernel"   , required_argument , nullptr , 'K' } ,
+   { "kmemory"  , required_argument , nullptr , 'Y' } ,
+   { "parC"     , required_argument , nullptr , 'C' } ,
+   { "epsilon"  , required_argument , nullptr , 'E' } ,
+   { "rounds"   , required_argument , nullptr , 'n' } ,
+   { "tol"      , required_argument , nullptr , 't' } ,
+   { "ref"      , required_argument , nullptr , 'r' } ,
+   { "regress"  , no_argument       , nullptr , 'g' } ,
+   { "reopt"    , no_argument       , nullptr , 'R' } ,
+   { "noabstract" , no_argument     , nullptr , 'A' } ,
+   { "grid"     , required_argument , nullptr , 'G' } ,
+   { "pgrid"    , required_argument , nullptr , 'P' } ,
+   { "order"    , required_argument , nullptr , 'O' } ,
+   { "which"    , required_argument , nullptr , 'X' } ,
+   { "incremental" , required_argument , nullptr , 'I' } ,
+   { "data"     , required_argument , nullptr , 'd' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
+         "  -N, --nsample <n>               number of samples [60]\n"
+         "  -M, --nfeature <n>              number of features [4]\n"
+         "  -s, --nchunk <n>                deal the samples out to n "
+         "chunks [1]\n"
+         "  -b, --benders                   the chunks hold the slacks and "
+         "the model stays\n"
+         "                                  in the master, instead of the "
+         "consensus\n"
+         "                                  rewriting where each chunk holds "
+         "a model\n"
+         "  -f, --wf <bits>                 the loss and the bias, bit-wise "
+         "[0]:\n"
+         "                                    1 = squared loss\n"
+         "                                    2 = regularised bias\n"
+         "  -Y, --kmemory <MB>              memory the Gram matrix may take: "
+         "under it the\n"
+         "                                  whole matrix is built, over it "
+         "its rows are\n"
+         "                                  computed and cached [1024]\n"
+         "  -K, --kernel <n>                kernel: 0 linear, 1 poly,\n"
+         "                                  2 gaussian, 3 laplacian, "
+         "4 sigmoid [0]\n"
+         "  -C, --parC <x>                  trade-off parameter C [1]\n"
+         "  -E, --epsilon <x>               half-width of the insensitivity "
+         "tube [0.1]\n"
+         "  -g, --regress                   regression instead of "
+         "classification\n"
+         "  -R, --reopt                     also change the training problem "
+         "under the\n"
+         "                                  Solver, re-solving after each "
+         "change\n"
+         "  -A, --noabstract                leave the Block in its physical "
+         "representation,\n"
+         "                                  which is all a Solver reading it "
+         "needs\n"
+         "  -G, --grid <n>                  train the same data set over a "
+         "grid of n\n"
+         "                                  values of C, reporting the total "
+         "time of\n"
+         "                                  each Solver [0 = do not]\n"
+         "  -P, --pgrid <n>                 walk the grid of C at n values "
+         "of the\n"
+         "                                  parameter of the kernel as well "
+         "[0 = do not]\n"
+         "  -O, --order <n>                 in which order the grid is "
+         "walked [0]:\n"
+         "                                    0 = C increasing, the kernel "
+         "outermost\n"
+         "                                    1 = C decreasing, the kernel "
+         "outermost\n"
+         "                                    2 = C back and forth, the "
+         "kernel outermost\n"
+         "                                    3 = the kernel innermost, both "
+         "increasing\n"
+         "  -X, --which <n>                 which solve of each point of the "
+         "grid is taken\n"
+         "                                  [0]: 0 = both, 1 = the registered "
+         "Solver alone,\n"
+         "                                  2 = a freshly attached one alone. "
+         "The two share\n"
+         "                                  what the Block keeps of the "
+         "kernel, so a\n"
+         "                                  comparison free of that takes each "
+         "in its own run\n"
+         "  -I, --incremental <n>           learn n more samples one at a "
+         "time, timing\n"
+         "                                  each Solver over the additions "
+         "[0 = do not]\n"
+         "  -d, --data <file>               a data set in the sparse format "
+         "of LIBSVM,\n"
+         "                                  which replaces the generated one; "
+         "the\n"
+         "                                  hyper-parameters are still the "
+         "ones above\n"
+         "  -n, --rounds <n>                how many rounds [10]\n"
+         "  -t, --tol <x>                   relative tolerance of the "
+         "cross-check [1e-5]\n"
+         "  -r, --ref <x>                   reference objective value\n";
+
+ process_args( argc , argv , process_specific_arg );
+
+ // the BlockSolverConfig (-S) must be provided explicitly: the test never
+ // falls back to a hardcoded default Configuration
+ require_solver_config();
+
+
+ bool AllPassed = true;
+
+ // a file is one instance, a seed is a family of them
+ const Index rounds = ( filename.empty() && dataset.empty() ) ? n_repeat : 1;
+
+ for( Index r = 0 ; r < rounds ; ++r )
+  AllPassed &= run_round( seed + r );
+
+ if( AllPassed )
+  std::cout << GREEN( All tests passed!! ) << std::endl;
+ else
+  std::cout << RED( Shit happened!! ) << std::endl;
+
+ return( AllPassed ? 0 : 1 );
+
+ }  // end( main )
+
+/*--------------------------------------------------------------------------*/
+/*---------------------------- End File test.cpp ---------------------------*/
+/*--------------------------------------------------------------------------*/

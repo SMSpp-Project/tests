@@ -1,0 +1,55 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - PPHCfg-DP.txt - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the PrimalProximalHeur of the instances whose
+# sub-Blocks are solved exactly [see BSPar-DP.txt and BSPar-DP-BX.txt]: that
+# of PPHCfg.txt, with the LagBFunctions solved by the BlockSolverConfig of
+# InnerBSCfg-DP.txt and a time limit for the heuristic.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*PPHCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblMaxTime  300  # time limit of the heuristic, shared out among its inner
+                 # calls: what it has found when it expires is a feasible
+                 # solution all the same
+
+1  # number of string parameters
+
+# now all the string parameters
+str_LagBF_BSCfg  InnerBSCfg-DP.txt  # BlockSolverConfig for the
+                                    # LagBFunctions, the same the
+                                    # LagrangianDualSolver uses
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END PPHCfg-DP.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

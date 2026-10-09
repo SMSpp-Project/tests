@@ -1,0 +1,58 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - FWIBCfg.txt - - - - - - - - - - - - - - - -
+#
+# A ComputeConfig for the FrankWolfeSolver of the IntegralityBarrierSolver
+# [see IBCfg.txt]: the oracle is given the gradient of the barrier alone,
+# the costs of the SATBlock being left out, since what is looked for is a
+# feasible point, the step is fixed, the function not being convex, and the
+# rounding of the iterate is looked at every iteration. Each run starts
+# from the vertex the oracle gives (intInitPoint at its default), and the
+# oracle is the first Solver of the copy of the SATBlock (intLMOSlvr at its
+# default) [see IBLPBSCfg.txt].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig  # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+4  # number of integer parameters
+
+# now all the integer parameters
+intLMOObj      0  # the oracle minimizes the gradient alone
+intLineSearch  3  # the fixed step of dblFWStep
+intMaxIter   100  # iterations of each run
+intEverykIt    1  # the rounding looked at every iteration
+
+1  # number of double parameters
+
+# now all the double parameters
+dblFWStep   0.75  # the step
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END FWIBCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

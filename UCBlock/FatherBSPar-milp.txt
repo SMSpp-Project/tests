@@ -1,0 +1,24 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  FatherBSPar-milp.txt - - - - - - - - - - - - -
+#
+# The meta-BlockSolverConfig of the runs that time the reference alone: a map
+# classname --> BlockSolverConfig, which s_config_Block() dispatches over the
+# father AbstractBlock.
+#
+# The leaves are left without a Solver: the reference solves the father
+# monolithically and asks nothing of them.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig, i.e., a map classname --> its
+# BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+1 # the number of elements in the map
+
+AbstractBlock  *FatherBSCfg-milp.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END FatherBSPar-milp.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file > < fw exe >
+#        < exe file > = path of the executable file, default ./MCFBlock_test
+#        < fw exe >    = the generic Frank-Wolfe tester, optional: given
+#                       one, a few of the same instances are also solved by
+#                       the Frank-Wolfe decomposition of a father Block of K
+#                       copies of them
+#
+# runs net/goto MCF instances of several sizes through the MCFBlock-vs-MILP
+# comparison, over 3 seeds each
+#
+# the sweep is split in two so that neither half approaches the three hour cap
+# a job has on the GitLab.com shared runners: the dense instances, which are
+# what costs, are in batch-dense, everything else is here. The two together
+# are the whole sweep.
+#
+# each instance is run twice, with two "what to change" masks:
+# - 255 = change everything, arc deletions included: this exercises the full
+#         remove_arc/add_arc Modification path, but deletions can permanently
+#         drop arcs needed for feasibility (the emergency recovery can re-open
+#         closed arcs but cannot un-delete removed ones), so a run may degrade
+#         into mostly-infeasible cross-checks;
+# - 223 = everything *except* arc deletions (255 & ~32): the instance always
+#         stays feasible, so this is the run that delivers the meaningful
+#         solution-vs-solution comparisons.
+# the two are complementary: 255 for code-path coverage, 223 for comparison
+# value.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DATADIR=../../MCFBlock/data
+
+# "what to change" masks: 255 = all (with arc deletions), 223 = all but
+# deletions (255 & ~32); see the header for the rationale
+wchg_list="255 223"
+#rounds=40
+
+MCFBlock_test=${1:-./MCFBlock_test}
+fwexe=${2:-}
+# the Solver of BSPar.txt but the two LEMON algorithms that are slow on
+# these instances, see BSPar-large.txt
+par=BSPar-large.txt
+
+# in CI one seed of the three is run: the other two are the same sweep with
+# another random stream, and the whole of it takes more than an hour there
+if [ -n "$CI" ]; then seeds=1; else seeds=3; fi
+
+for type in net goto; do
+
+  for (( seed = 0; seed < seeds ; seed++ )); do
+
+    #for sz in 8_8 8_32 10_8 12_8 14_8
+    for sz in 8_8 8_32 10_8 12_8; do
+      for h in 1 2 3 4 5; do
+
+        what=${DATADIR}/nc4/${type}${sz}_${h}.nc4
+
+        for wchg in $wchg_list; do
+          run_test "$MCFBlock_test" "$what" -S "$par" -e "$seed" -k "$wchg"
+        done # wchg
+
+      done # h
+    done   # sz
+
+  done # seed
+done   # type
+
+# the same instances solved once as they are, with no change, by every Solver
+# of a MCFBlock (BSPar-static.txt): the two LEMON algorithms left out above,
+# and the four LEMON algorithms on SmartDigraph, which does not support the
+# changes of the arcs
+
+for type in net goto; do
+  for sz in 8_8 8_32 10_8 12_8; do
+    for h in 1 2 3 4 5; do
+      run_test "$MCFBlock_test" ${DATADIR}/nc4/${type}${sz}_${h}.nc4 \
+               -S BSPar-static.txt -k 0 -n 0
+    done
+  done
+done
+
+# the same instances, decomposed by Frank-Wolfe - - - - - - - - - - - - - - -
+# K copies of the Block become the sub-Block of a father whose Objective
+# couples them, each of them solved by its network simplex as the Linear
+# Minimization Oracle and the Oracle of the K run in parallel; the value
+# FrankWolfeSolver computes is cross-checked against the monolithic
+# :MILPSolver of the same configuration. Only a few of the instances above are
+# run this way, these being the large ones.
+
+# in CI the decomposition is not run here: a single run of it on these
+# instances takes the best part of an hour there, and batch-small runs the
+# whole lineup of it on the small instances
+if [ -n "${fwexe}" ] && [ -z "$CI" ]; then
+
+  # the reduced lineup (FatherBSPar-fast.txt): on these instances a single run
+  # of the decomposition takes the best part of an hour, so the reference is
+  # compared with the two variants that between them walk the most of the
+  # machinery and not with all of them, the whole lineup being batch-small
+  fwpar=FatherBSPar-fast.txt
+
+  fwargs="-o 0 -k 2 -e 1"
+  fw_run ${DATADIR}/nc4/goto10_8_1.nc4
+  fw_run ${DATADIR}/nc4/goto10_8_2.nc4
+  fwargs="-o 1 -k 2 -e 1"
+  fw_run ${DATADIR}/nc4/goto10_8_1.nc4
+
+  # the same, with the network simplex of LEMON as the LMO of each sub-Block
+  fwpar=FatherBSPar-lemon.txt
+  fwargs="-o 0 -k 2 -e 1"
+  fw_run ${DATADIR}/nc4/goto10_8_1.nc4
+
+  unset fwpar fwargs
+
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

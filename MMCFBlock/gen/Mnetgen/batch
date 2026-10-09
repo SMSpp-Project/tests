@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#
+# usage: batch < mnetgen exe >
+#        < mnetgen exe > = path of the mnetgen generator, default ./mnetgen
 
 # Batch file for generating MMCF problems with the mnetgen random generator
 #
@@ -55,3 +58,5 @@ for i in 256; do
     done
   done
 done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

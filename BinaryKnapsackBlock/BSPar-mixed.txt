@@ -1,0 +1,49 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-mixed.txt - - - - - - - - - - - - - - -
+#
+# Cross-check BlockSolverConfig for a MIXED-binary BinaryKnapsackBlock (some
+# continuous variables): attaches every solver that handles continuous
+# variables and must give the SAME optimal value: the :MILPSolver (the exact
+# reference), the two exact dynamic programs (full-table DPBinaryKnapsackSolver
+# and core CoreDPBinaryKnapsackSolver), and the greedy relaxation in both its
+# from-scratch and incremental flavours, whose true bounds must BRACKET that
+# optimum (see SolveAll() in test.cpp). The BranchAndXSolver is NOT here: it
+# branches on binary variables, so it only applies to pure-binary instances
+# (see BSPar.txt); the incremental greedy is attached as a standalone
+# relaxation, the same role its from-scratch sibling plays here.
+#
+# The per-solver ComputeConfig are factored into the *Cfg.txt fragments shared
+# with BSPar.txt (included via '*'), so there is no duplicated configuration.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+5  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+HiGHSMILPSolver                       # 1st: the exact reference optimum
+#CPXMILPSolver                        #      (uncomment the available backend)
+#GRBMILPSolver
+#SCIPMILPSolver
+DPBinaryKnapsackSolver                         # 2nd: exact full-table DP
+CoreDPBinaryKnapsackSolver                     # 3rd: exact core DP
+GreedyRelaxationBinaryKnapsackSolver           # 4th: relaxation, brackets
+GreedyRelaxationBinaryKnapsackSolver           # 5th: relaxation, incremental
+
+5  # number of ComputeConfig in this BlockSolverConfig
+# now all the ComputeConfig (factored, shared with BSPar.txt) - - - - - - -
+*MILPCfg.txt
+*DPCfg.txt
+*CDPCfg.txt
+*GRCfg.txt
+*GRCfg-incr.txt  # the greedy fill kept across the Changes
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-mixed.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

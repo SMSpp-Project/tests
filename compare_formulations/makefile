@@ -32,6 +32,10 @@ include ../makefile_common
 SMS++SDR = ../../SMS++
 include $(SMS++SDR)/lib/makefile-c
 
+# define input macros for UCBlock makefile, then include it
+UCBckDIR = ../../UCBlock
+include $(UCBckDIR)/lib/makefile
+
 # MILPSolver
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-c
@@ -39,23 +43,24 @@ include $(MILPSSDR)/makefile-c
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(MILPSOBJ) $(SMS++OBJ)
+MOBJ =  $(CMMNUOBJ) $(MILPSOBJ) $(UCBckOBJ) $(SMS++OBJ)
 
 # libraries
-MLIB =  $(SMS++LIB) $(MILPSLIB)
+MLIB =  $(SMS++LIB) $(UCBckLIB) $(MILPSLIB)
 
 $(DIR)/$(NAME): $(DIR)/test.o $(MOBJ)
-	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
+	$(CC) -o $(DIR)/$(NAME) $+ $(MLIB) $(SW)
 
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(MILPSINC)
+MINC =  $(SMS++INC) $(UCBckINC) $(MILPSINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(MILPSH)
+MH =    $(SMS++H) $(UCBckH) $(MILPSH) $(CMMNUH)
 
 # compile command
+
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)

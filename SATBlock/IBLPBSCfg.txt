@@ -1,0 +1,34 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - IBLPBSCfg.txt - - - - - - - - - - - - - - -
+#
+# A BlockSolverConfig for the abstract copy of the MILP formulation of a
+# SATBlock that the IntegralityBarrierSolver makes [see IBCfg.txt]: it
+# registers there the oracle of its Frank-Wolfe method, a :MILPSolver on the
+# linear relaxation (LPCfg.txt), the first Solver of the copy, which is the
+# one intLMOSlvr of FWIBCfg.txt picks.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig  # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+HiGHSMILPSolver   # the linear relaxation
+#CPXMILPSolver    # (uncomment the available backend)
+#GRBMILPSolver
+#SCIPMILPSolver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*LPCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END IBLPBSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
