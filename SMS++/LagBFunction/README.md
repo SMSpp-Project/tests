@@ -192,7 +192,7 @@ results of the two `Solver` are compared.
 The usage of the executable is the following:
 
        ./LagBFunction_test seed [wchg nvar #nf #nt dens #rounds #chng %chng
-                                 ndopar size]
+                                 ndopar size detach]
        wchg: what to change, coded bit-wise [511]
              0 = add rows, 1 = delete rows 
              2 = modify rows, 3 = modify constants
@@ -214,10 +214,22 @@ The usage of the executable is the following:
        #rounds: how many iterations [40]
        #chng: number of changes [10]
        %chng: probability of changing [0.5]
-       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt]
+       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt, NDOPar-Hard.txt
+               if #nt > 0]
        size: size Variable of easy comp. (0 none, 1 owned, 2 given) [0]
+       detach: if the Solver of NDOBlock are detached and re-attached
+               before each compute() [0]
 
-An empty argument keeps the default. With size 1 or 2 the balances and
+An empty argument keeps the default. Whether the `BundleSolver` treat the
+`LagBFunction` as easy components, and which of their dual values they keep,
+is `intDoEasy` in the BlockSolverConfig `ndopar`, which must agree with the
+sign of #nt: `NDOPar.txt` treats them as easy without keeping any dual
+value, `NDOPar-Hard.txt` as hard, `NDOPar-Dual.txt` as easy keeping all
+their dual values (bits 2 and 3 of `intDoEasy`) and `NDOPar-RC.txt` as
+easy keeping their reduced costs (bit 3), each of the others having a
+`-Dual.txt` version as well. With detach 1 each `Solver` is unregistered
+from NDOBlock and registered again before each `compute()`, so that it
+builds its data structures anew out of the changed Block. With size 1 or 2 the balances and
 capacities of an easy transportation problem are written with a size
 Variable tau, i.e., as sum_j f_ij - s_i tau = 0 and f_ij - U_ij tau <= 0,
 which the dual master problem of `BundleSolver` ties to its mass lambda, so
@@ -242,7 +254,8 @@ and the trust-region one, which are checked in the same run.
 stabilization, and with the level and doubly stabilized methods
 (`NDOPar-Lvl.txt`, `NDOPar-DS.txt`) and the three ways of scaling, the
 copies being asked for by these two and by `NDOPar-Mirror.txt`, also with
-the scaling left out by the master (`NDOPar-DS-NoSize.txt`).
+the scaling left out by the master (`NDOPar-DS-NoSize.txt`). Both batteries
+also have rows with detach 1, with all the changes between two calls.
 
 A makefile is also provided that builds the executable including the
 BundleSolver module and all its dependencies, in particular MILPSolver

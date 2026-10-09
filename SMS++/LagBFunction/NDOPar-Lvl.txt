@@ -7,8 +7,8 @@
 # battery batch-easy: the BundleSolver of BSCfg.txt with the level
 # stabilization, whose dual master problem scales the easy components by
 # their size Variable, or by a copy of their inner Block when this has
-# none (bit 5 of intDoEasy; the tester sets the bits 0 to 3 as the changes
-# it makes require)
+# none (bit 5 of intDoEasy), keeping none of their dual values, which
+# NDOPar-Lvl-Dual.txt keeps
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

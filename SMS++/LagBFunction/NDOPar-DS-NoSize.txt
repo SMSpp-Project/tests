@@ -6,8 +6,8 @@
 # of which being LagBFunction, solved by the tester for LagBFunction in the
 # battery batch-easy: the BundleSolver of NDOPar-DS.txt, whose dual master
 # problem does not scale the easy components by their size Variable, i.e.,
-# has the mass of the lower model fixed to 1 (bit 4 of intDoEasy; the
-# tester sets the bits 0 to 3 as the changes it makes require)
+# has the mass of the lower model fixed to 1 (bit 4 of intDoEasy), keeping
+# none of their dual values, which NDOPar-DS-NoSize-Dual.txt keeps
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

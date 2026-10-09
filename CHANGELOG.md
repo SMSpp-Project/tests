@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the tester of `LagBFunction` takes as its last argument, `detach`, whether
+  the Solver of NDOBlock are unregistered and registered again before each
+  `compute()`, which was the compile-time macro `DETACH_NDO`; `batch` and
+  `batch-easy` have rows with it, with all the changes between two calls
+
 - the suite `MultiKnapsackAssignBlock`, which cross-checks on the instances
   of the module a `:MILPSolver` on the whole tree and the Lagrangian
   decomposition into `BinaryKnapsackBlock` solved by the
@@ -398,6 +403,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dblRelAcc therefore says nothing about what it returns
 
 ### Changed
+
+- the tester of `LagBFunction` no longer writes `intDoEasy` of the
+  `BundleSolver` it attaches: whether they treat the `LagBFunction` as easy
+  components and which of their dual values they keep is in the
+  BlockSolverConfig `ndopar`, `NDOPar.txt` by default and `NDOPar-Hard.txt`
+  with positive #nt, and the rows of `batch` and `batch-easy` name the one
+  their changes want, out of `NDOPar-Hard.txt`, `NDOPar-Dual.txt` (all the
+  dual values) and `NDOPar-RC.txt` (the reduced costs), differential
+  overrides of `BSCfg.txt` as the `-Dual.txt` version of `NDOPar-Mirror.txt`,
+  `NDOPar-Lvl.txt`, `NDOPar-DS.txt` and `NDOPar-DS-NoSize.txt` are
 
 - the `IntegralityBarrierSolver` of the cross-check of `SATBlock` gets its
   oracle from the `BlockSolverConfig` `IBLPBSCfg.txt`, a `:MILPSolver` on

@@ -1,14 +1,13 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -  NDOPar-DS.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  NDOPar-Mirror-Dual.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the Block possibly having a
 # "linear objective" and multiple sub-Block having a "C05 objective", some
 # of which being LagBFunction, solved by the tester for LagBFunction in the
-# battery batch-easy: the BundleSolver of BSCfg.txt with the doubly
-# stabilized method, whose dual master problem scales the easy components
-# by their size Variable, or by a copy of their inner Block when this has
-# none (bit 5 of intDoEasy), keeping none of their dual values, which
-# NDOPar-DS-Dual.txt keeps
+# battery batch-easy: the BundleSolver of NDOPar-Mirror.txt, which also
+# keeps all the dual values of the easy components (bits 2 and 3 of
+# intDoEasy), as the runs that change their demands (bit 6 of wchg) have it
+# do
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -26,17 +25,16 @@ BundleSolver          # name of Solver
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# doubly stabilized
+# proximal, all the dual values of the easy components
 
 *BSCfg.txt +
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-2 # number of integer parameters
+1 # number of integer parameters
 
 # now all the integer parameters
-intMPStbl         2 # doubly stabilized
-intDoEasy        33 # easy components, scaled through a copy if need be
+intDoEasy        45 # copies if need be, all dual values
 
 0 # number of double parameters
 
@@ -69,5 +67,5 @@ intDoEasy        33 # easy components, scaled through a copy if need be
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -  END NDOPar-DS.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - -  END NDOPar-Mirror-Dual.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

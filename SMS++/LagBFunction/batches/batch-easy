@@ -5,10 +5,11 @@
 #        profile = test selection, default mixed (static + updates + sized)
 # Run from tests/SMS++/LagBFunction, with its existing configurations.
 # SEEDS and ROUNDS override the defaults of 5 each (2 seeds in CI).
-# Negative nt enables easy components. The stabilization is the one of the
-# BlockSolverConfig of NDOBlock, NDOPar.txt (proximal) unless a row names
-# another one, and so is whether the master scales the easy components by
-# their size Variable, which the last argument of the tester writes in them.
+# Negative nt enables easy components. The BlockSolverConfig of NDOBlock
+# that a row names, NDOPar.txt (proximal and trust region) by default, says
+# how the BundleSolver treat them: the stabilization, which of their dual
+# values are kept [see ndopar() below] and whether the master scales them by
+# their size Variable, which the size argument of the tester writes in them.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../../batch_common.sh"
@@ -30,8 +31,23 @@ for value in "$seeds" "$rounds"; do
     fi
 done
 
+# The BlockSolverConfig of a row, out of the base name of its stabilization:
+# the BundleSolver keep all the dual values of the easy components when the
+# demands change (bit 6 of the mask), their reduced costs when the flow
+# bounds do (bit 7), none of them otherwise.
+ndopar() {
+    local mask=$1 base=${2:-NDOPar}
+    if (( mask & 64 )); then
+        echo "$base-Dual.txt"
+    elif (( mask & 128 )); then
+        echo "$base-RC.txt"
+    else
+        echo "$base.txt"
+    fi
+}
+
 # CLI order: seed wchg nvar nf nt dens rounds max_changes change_probability
-# ndopar size. nf=1/2: hard polyhedral components; nf=-2 also adds a linear
+# ndopar size detach. nf=1/2: hard polyhedral components; nf=-2 also adds a linear
 # objective. All mixed profiles use nt<0, with one or three easy components.
 for group in static updates sized sparse all-easy; do
     case "$phase:$group" in
@@ -47,7 +63,7 @@ for group in static updates sized sparse all-easy; do
                 for nt in -1 -3; do
                     run_test "$LagBFunction_test" "$seed" 0 "$size" 0 "$nt" 3 0 5 0.75
                     for mask in 32 64 128 224; do
-                        run_test "$LagBFunction_test" "$seed" "$mask" "$size" 0 "$nt" 3 "$rounds" 5 0.75
+                        run_test "$LagBFunction_test" "$seed" "$mask" "$size" 0 "$nt" 3 "$rounds" 5 0.75 "$(ndopar $mask)"
                     done
                 done
                 continue
@@ -67,8 +83,11 @@ for group in static updates sized sparse all-easy; do
                         # then combine them (224), also changing hard rows,
                         # constants and bounds (255). Assumes DYNAMIC_VARS=0.
                         for mask in 32 64 128 224 255; do
-                            run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75
+                            run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$(ndopar $mask)"
                         done
+                        # all of them again, with the Solver unregistered
+                        # and registered again before each compute()
+                        run_test "$LagBFunction_test" "$seed" 255 "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$(ndopar 255)" 0 1
                         ;;
                     sized)
                         # The easy components scaled by a sized copy of the
@@ -87,15 +106,17 @@ for group in static updates sized sparse all-easy; do
                         # only, hence with 2 the two BundleSolver of
                         # NDOPar.txt are replaced by the proximal one of
                         # NDOPar-Mirror.txt, which takes lambda before copies.
-                        for ndopar in NDOPar.txt NDOPar-Lvl.txt NDOPar-DS.txt \
-                                      NDOPar-DS-NoSize.txt; do
+                        # The masks change the demands, hence the -Dual.txt
+                        # version of each of these files.
+                        for base in NDOPar NDOPar-Lvl NDOPar-DS \
+                                    NDOPar-DS-NoSize; do
                             for sz in 0 1 2; do
-                                par=$ndopar
-                                [[ "$ndopar" == NDOPar.txt && "$sz" != 1 ]] &&
-                                    par=NDOPar-Mirror.txt
-                                run_test "$LagBFunction_test" "$seed" 0 "$size" "$nf" "$nt" 3 0 5 0.75 "$par" "$sz"
+                                par=$base
+                                [[ "$base" == NDOPar && "$sz" != 1 ]] &&
+                                    par=NDOPar-Mirror
+                                run_test "$LagBFunction_test" "$seed" 0 "$size" "$nf" "$nt" 3 0 5 0.75 "$par.txt" "$sz"
                                 for mask in 240 4320; do
-                                    run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$par" "$sz"
+                                    run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$(ndopar $mask $par)" "$sz"
                                 done
                             done
                         done
@@ -104,7 +125,7 @@ for group in static updates sized sparse all-easy; do
                         # Bit 9 selects partial coupling to the outer variables.
                         # 736 = 512 + 224: sparse coupling plus inner updates.
                         run_test "$LagBFunction_test" "$seed" 512 "$size" "$nf" "$nt" 3 0 5 0.75
-                        run_test "$LagBFunction_test" "$seed" 736 "$size" "$nf" "$nt" 3 "$rounds" 5 0.75
+                        run_test "$LagBFunction_test" "$seed" 736 "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$(ndopar 736)"
                         ;;
                 esac
             done

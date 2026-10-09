@@ -1,15 +1,13 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -  NDOPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  NDOPar-Dual.txt  - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the Block possibly having a
 # "linear objective" and multiple sub-Block having a "C05 objective", some
-# of which being LagBFunction, solved by the tester for LagBFunction: two
-# BundleSolver, each checked against the LP of LPPar.txt, with the proximal
-# stabilization of BSCfg.txt and with the trust region, which treat the easy
-# components as such and keep none of their dual values (intDoEasy 1);
-# NDOPar-Hard.txt, NDOPar-Dual.txt and NDOPar-RC.txt are the same two
-# without easy components, keeping all their dual values, and keeping their
-# reduced costs
+# of which being LagBFunction, solved by the tester for LagBFunction: the
+# two BundleSolver of NDOPar.txt, the proximal and the trust region one,
+# which also keep all the dual values of the easy components (bits 2 and 3
+# of intDoEasy), as the runs that change their demands (bit 6 of wchg) have
+# them do
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -28,12 +26,7 @@ BundleSolver          # name of 2nd Solver
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# proximal stabilization
-
-*BSCfg.txt
-
-# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# trust region
+# proximal stabilization, all the dual values of the easy components
 
 *BSCfg.txt +
 
@@ -42,7 +35,48 @@ BundleSolver          # name of 2nd Solver
 1 # number of integer parameters
 
 # now all the integer parameters
+intDoEasy        13 # easy components, all their dual values
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# trust region, all the dual values of the easy components
+
+*BSCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+2 # number of integer parameters
+
+# now all the integer parameters
 intMPStbl         4 # trust region
+intDoEasy        13 # easy components, all their dual values
 
 0 # number of double parameters
 
@@ -75,5 +109,5 @@ intMPStbl         4 # trust region
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -  END NDOPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END NDOPar-Dual.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

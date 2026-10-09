@@ -218,11 +218,6 @@
 #define HAVE_CONSTRAINTS 2
 
 /*--------------------------------------------------------------------------*/
-// if nonzero, the Solver attached to the NDOBlock is detached and re-attached
-// to it at all iterations
-
-#define DETACH_NDO 0
-
 // if nonzero, the Solver attached to the LPBlock is detached and re-attached
 // to it at all iterations
 
@@ -369,6 +364,9 @@ MultiVector U;             // arc capacities
 RealVector s;              // supplies == demands
 
 int SizeEasy = 0;          // how an easy transportation problem is sized
+
+bool DetachNDO = false;    // if the Solver of NDOBlock are detached and
+                           // re-attached to it before each compute()
 
 /* The last command line parameter, size, says how the inner Block of an easy
  * LagBFunction carries the size Variable that the dual master problem of
@@ -1045,10 +1043,10 @@ static bool SolveEach( void )
   bool dbl_bound = false;
   const auto slvrs = NDOBlock->get_registered_solvers();  // a copy
   for( auto slvrNDO : slvrs ) {
-   #if DETACH_NDO
+   if( DetachNDO ) {
     NDOBlock->unregister_Solver( slvrNDO );
     NDOBlock->register_Solver( slvrNDO );
-   #endif
+    }
    auto startNDO = std::chrono::system_clock::now();
    int rtrnNDO = slvrNDO->compute( false );
    auto endNDO = std::chrono::system_clock::now();
@@ -1151,9 +1149,10 @@ int main( int argc , char **argv )
  Index n_repeat = 40;
  Index n_change = 10;
  double p_change = 0.5;
- std::string ndo_par = "NDOPar.txt";
+ std::string ndo_par;
 
  switch( argc ) {
+  case( 13 ): Str2Sthg( argv[ 12 ] , DetachNDO );
   case( 12 ): Str2Sthg( argv[ 11 ] , SizeEasy );
   case( 11 ): if( *argv[ 10 ] )
                ndo_par = argv[ 10 ];
@@ -1168,7 +1167,8 @@ int main( int argc , char **argv )
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
              break;
   default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar #nf #nt dens #rounds #chng %chng ndopar size]"
+	   " seed [wchg nvar #nf #nt dens #rounds #chng %chng ndopar size"
+           " detach]"
  		<< endl <<
            "       wchg: what to change, coded bit-wise [511]"
 		<< endl <<
@@ -1221,10 +1221,14 @@ int main( int argc , char **argv )
 	        << endl <<
            "       %chng: probability of changing [0.5]"
 	        << endl <<
-           "       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt]"
+           "       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt, "
+                                    "NDOPar-Hard.txt if #nt > 0]"
 	        << endl <<
            "       size: size Variable of easy comp. (0 none, 1 owned, "
                                               "2 given) [0]"
+	        << endl <<
+           "       detach: if the Solver of NDOBlock are detached and "
+                                              "re-attached [0]"
 	        << endl;
 	   return( 1 );
   }
@@ -1243,6 +1247,9 @@ int main( int argc , char **argv )
  nf = std::abs( nf );
  bool HasEasy = ( nt < 0 );
  nt = std::abs( nt );
+
+ if( ndo_par.empty() )
+  ndo_par = ( nt && ( ! HasEasy ) ) ? "NDOPar-Hard.txt" : "NDOPar.txt";
 
  // wchg bit 9: each LagBFunction dualises only a random subset (about
  // half) of the NDOBlock x variables, instead of all of them. Different
@@ -1865,51 +1872,18 @@ int main( int argc , char **argv )
   }
 
  {
-  // for NDOBlock do this by reading appropriate BlockSolverConfig from
-  // files and apply() it to the NDOBlock
-  // load the BSC via Configuration::deserialize; dynamic_cast back so we
-  // can mutate the BundleSolver intDoEasy parameter below (which requires
-  // the static BlockSolverConfig type). Meta-config (nested map) is NOT
-  // supported here because of the per-Solver mutation pattern.
+  // for NDOBlock do this by reading the BlockSolverConfig, or the
+  // meta-config, of ndo_par and apply() it to the NDOBlock; whether the
+  // Solver treat the LagBFunction as easy components, and which of their
+  // dual values they keep, is in that file (intDoEasy of BundleSolver),
+  // which must agree with the sign of #nt
   auto cfg = Configuration::deserialize( ndo_par );
-  auto bsc = dynamic_cast< BlockSolverConfig * >( cfg );
-  if( ! bsc ) {
-   cerr << "Error: " << ndo_par << " does not contain a BlockSolverConfig"
-        << endl;
-   delete( cfg );
+  if( ! cfg ) {
+   cerr << "Error: cannot load BSC from " << ndo_par << endl;
    return( 1 );
    }
-
-  // specialised treatment for BundleSolver:  ensure the "easy components"
-  // parameter is properly set as HasEasy requires
-  //
-  // completely by chance ;-P, the bits 5, 6 and 7 of wchg correspond to the
-  // bits 1, 2 and 3 of intDoEasy in BundleSolver, in that if, say, bit 5 of
-  // wchg is 1 than bit 1 of intDoEasy must be 1 because the corresponding
-  // data structure needs be kept. however, if bit 6 of wchg is 1, then also
-  // bit 3 (in addition to bit 2) of intDoEasy must be 1. set intDoEasy to
-  // the "minimum" set of 1 bits required to support wchg. bits 4 and 5,
-  // which say whether the easy components are scaled by their size
-  // Variable or by a copy of their inner Block, are those of the file
-  for( Index i = 0 ; i < bsc->num_ComputeConfig() ; ++i )
-   if( ( bsc->get_SolverName( i ) == "BundleSolver" ) ||
-       ( bsc->get_SolverName( i ) == "ParallelBundleSolver" ) ) {
-    int val = 0;
-    if( HasEasy ) {
-     val = 1 | ( ( wchg & 224 ) >> 4 );
-     if( wchg & 64 )
-      val |= 8;
-     if( auto cc = bsc->get_SolverConfig( i ) )
-      for( const auto & [ name , value ] : cc->int_pars )
-       if( name == "intDoEasy" )
-        val |= value & 48;
-     }
-
-    bsc->get_SolverConfig( i )->set_par( "intDoEasy" , val );
-    }
-
-  s_config_Block( NDOBlock , bsc , ndo_par );
-  delete( bsc );
+  s_config_Block( NDOBlock , cfg , ndo_par );
+  delete( cfg );
 
   #if( LOG_LEVEL >= 4 )
    // in the extremely verbose mode, set an event that spits out the LPs

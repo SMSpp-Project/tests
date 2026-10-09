@@ -1,14 +1,13 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -  NDOPar-DS.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  NDOPar-Hard.txt  - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the Block possibly having a
 # "linear objective" and multiple sub-Block having a "C05 objective", some
-# of which being LagBFunction, solved by the tester for LagBFunction in the
-# battery batch-easy: the BundleSolver of BSCfg.txt with the doubly
-# stabilized method, whose dual master problem scales the easy components
-# by their size Variable, or by a copy of their inner Block when this has
-# none (bit 5 of intDoEasy), keeping none of their dual values, which
-# NDOPar-DS-Dual.txt keeps
+# of which being LagBFunction, solved by the tester for LagBFunction: the
+# two BundleSolver of NDOPar.txt, the proximal and the trust region one,
+# which treat all the components as hard ones (intDoEasy 0), so that each
+# LagBFunction is computed by the Solver of its inner Block; for the runs
+# with positive #nt
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,16 +16,57 @@ BlockSolverConfig     # exact type of the Configuration object
 
 0  # the BlockSolverConfig is not a "differential" one: values are being set
 
-1  # number of (the names of) Solver in this BlockSolverConfig
+2  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-BundleSolver          # name of Solver
+BundleSolver          # name of 1st Solver
+BundleSolver          # name of 2nd Solver
 
-1  # number of ComputeConfig in this BlockSolverConfig
+2  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# doubly stabilized
+# proximal stabilization, no easy components
+
+*BSCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intDoEasy         0 # no easy components
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# trust region, no easy components
 
 *BSCfg.txt +
 
@@ -35,8 +75,8 @@ BundleSolver          # name of Solver
 2 # number of integer parameters
 
 # now all the integer parameters
-intMPStbl         2 # doubly stabilized
-intDoEasy        33 # easy components, scaled through a copy if need be
+intMPStbl         4 # trust region
+intDoEasy         0 # no easy components
 
 0 # number of double parameters
 
@@ -69,5 +109,5 @@ intDoEasy        33 # easy components, scaled through a copy if need be
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -  END NDOPar-DS.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END NDOPar-Hard.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
