@@ -228,37 +228,6 @@
 
 #define DETACH_LP 0
 
-/*--------------------------------------------------------------------------
- *  SIZE_EASY controls the support for size-scaled easy components.
- *
- * In the dual level formulation, the multiplier lambda can differ from
- * one, so the feasible set of each easy component must scale with it.
- * Each easy inner Block exposes a nonnegative size variable tau_k and
- * writes its balances and finite capacities as
- *
- *          sum_j f_ij - s_i tau_k = 0,
- *          sum_i f_ij - s_j tau_k = 0,
- *          f_ij - U_ij tau_k <= 0.
- *
- * MPB then imposes tau_k = lambda. Merely registering tau_k without
- * scaling these constraints would leave the original feasible set in
- * the master and would not implement the dual level model.
- *
- * The same representation supports other dual formulations in which
- * lambda varies, including doubly stabilized and global-LB models.
- * tau_k starts at one but is not fixed. Independent value evaluations
- * fix only the copied tau_k to one, recovering the original problem.
- *
- * With SIZE_EASY == 0, or when the transportation components are treated
- * as hard, the original balances and BoxConstraint bounds are retained.
- * The macro does not select the stabilization in NDOPar.txt; it can be
- * given at compile time, e.g., -DSIZE_EASY=1, and it is 0 otherwise.
- */
-
-#ifndef SIZE_EASY
- #define SIZE_EASY 0
-#endif
-
 /*--------------------------------------------------------------------------*/
 // if nonzero, the two Block are not solved at every round of changes, but
 // only every SKIP_BEAT + 1 rounds. this allows changes to accumulate, and
@@ -302,7 +271,9 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -397,8 +368,134 @@ MultiVector C;             // arc costs
 MultiVector U;             // arc capacities
 RealVector s;              // supplies == demands
 
+int SizeEasy = 0;          // how an easy transportation problem is sized
+
+/* The last command line parameter, size, says how the inner Block of an easy
+ * LagBFunction carries the size Variable that the dual master problem of
+ * BundleSolver scales it with [see MasterProblemBlock::configure()]: in the
+ * dual of the level and doubly stabilized master problems, as in that of any
+ * master problem with a global lower bound, the mass lambda of the lower
+ * model may differ from one, and the feasible set of each easy component has
+ * to be scaled with it. With a size Variable tau the balance and capacity
+ * constraints read
+ *
+ *          sum_j f_ij - s_i tau = 0,
+ *          sum_i f_ij - s_j tau = 0,
+ *          f_ij - U_ij tau <= 0,
+ *
+ * and tau is
+ *
+ * - 0: absent, the balances keep their right-hand sides and the capacities
+ *   are BoxConstraint; the inner Block is a plain AbstractBlock, which takes
+ *   no size Variable, so that lambda is fixed to one, unless bit 5 of
+ *   intDoEasy has the master put in its place a copy of it sized by lambda
+ *   [see AbstractBlock::set_size_variable()], in which the master writes
+ *   the changes the tester makes to it;
+ *
+ * - 1: a nonnegative ColVariable of the inner Block, declared with
+ *   Block::set_owned_size_variable() and tied to lambda by the master;
+ *
+ * - 2: a Variable of the master given to the inner Block, a
+ *   SizedTransportBlock, by Block::set_size_variable(), which writes it into
+ *   the rows above as it gets it; the capacities are FRowConstraint, so that
+ *   they can take it.
+ *
+ * Whether the master uses the size Variable, or the copy, is up to intDoEasy
+ * of the BundleSolver [see BundleSolver::intDoEasy], and the stabilization
+ * is up to its ComputeConfig. With a hard LagBFunction the parameter is
+ * ignored.
+ * The changes of supplies and capacities are written in the coefficients of
+ * tau when it is there, in the right-hand sides otherwise. */
+
+/*--------------------------------------------------------------------------*/
+/*------------------------------- CLASSES ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+/// the transportation problem of an easy LagBFunction that takes its size
+/** An AbstractBlock with the transportation problem built by main(), whose
+ * balances "sc" and "dc" and finite capacities "bc" are all FRowConstraint,
+ * which takes the size Variable of its father [see
+ * Block::set_size_variable()]: each of those rows, whose finite sides are
+ * all equal to some c, gets the Variable with coefficient - c, and the
+ * finite sides go to zero. The supplies and capacities are then the
+ * coefficients of the Variable, which is how main() changes them [see
+ * size_variable_of()]. It takes a single Variable, and the same one again
+ * changes nothing; the rows that are there are rewritten, at any time, and
+ * \p issueAMod says which Modification are issued. */
+
+class SizedTransportBlock : public AbstractBlock
+{
+ public:
+
+ bool set_size_variable( Variable * size_var ,
+                         c_ModParam issueAMod = eNoBlck ) override {
+  auto tau = dynamic_cast< ColVariable * >( size_var );
+  if( ( ! tau ) || ( f_size && ( f_size != tau ) ) )
+   return( false );
+  if( f_size )  // there already
+   return( true );
+
+  f_size = tau;
+  auto scale = [ & ]( FRowConstraint & row ) {
+   const double c = std::isfinite( row.get_rhs() ) ? row.get_rhs()
+                                                     : row.get_lhs();
+   static_cast< p_LF >( row.get_function() )->add_variable( tau , - c ,
+                                                            issueAMod );
+   // the row registers itself with the Variable only when it receives the
+   // Modification, which issueAMod may not ask for
+   const auto & act = tau->active_stuff();
+   ThinVarDepInterface * me = & row;
+   if( ! std::binary_search( act.begin() , act.end() , me ) )
+    tau->add_active( me );
+   if( row.get_lhs() == row.get_rhs() )
+    row.set_both( 0.0 , issueAMod );
+   else
+    if( std::isfinite( row.get_rhs() ) )
+     row.set_rhs( 0.0 , issueAMod );
+    else
+     row.set_lhs( 0.0 , issueAMod );
+   };
+
+  for( auto & row : *get_static_constraint_v< FRowConstraint >( "sc" ) )
+   scale( row );
+  for( auto & row : *get_static_constraint_v< FRowConstraint >( "dc" ) )
+   scale( row );
+  #if DYNAMIC_bc
+   if( auto bc = get_dynamic_constraint< FRowConstraint >( "bc" ) )
+  #else
+   if( auto bc = get_static_constraint_v< FRowConstraint >( "bc" ) )
+  #endif
+    for( auto & row : *bc )
+     scale( row );
+
+  return( true );
+  }
+
+ /// the size Variable this Block has taken, nullptr if none
+ [[nodiscard]] ColVariable * get_given_size_variable( void ) const {
+  return( f_size );
+  }
+
+ private:
+
+ ColVariable * f_size = nullptr;  ///< the size Variable taken, if any
+};
+
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
+/*--------------------------------------------------------------------------*/
+/// the size Variable the rows of the transportation problem \p tb carry
+/** The one \p tb owns [see Block::get_size_variable()] or the one it has
+ * taken [see SizedTransportBlock], and nullptr if its rows carry none. */
+
+static ColVariable * size_variable_of( Block * tb )
+{
+ if( auto tau = tb->get_size_variable() )
+  return( static_cast< ColVariable * >( tau ) );
+ if( auto stb = dynamic_cast< SizedTransportBlock * >( tb ) )
+  return( stb->get_given_size_variable() );
+ return( nullptr );
+ }
+
 /*--------------------------------------------------------------------------*/
 // convex ==> minimize ==> negative numbers
 
@@ -692,17 +789,33 @@ static double LBF_value_by_copy( LagBFunction * lbf )
   return( NaN );
 
  // Evaluate the original transportation problem, irrespective of the
- // size chosen for this component in the last master solution.
- if( auto size_var = lbf->get_inner_block()->get_size_variable() ) {
-  auto tau = dynamic_cast< ColVariable * >( size_var );
-  if( ! tau )
-   return( NaN );
-  auto tau_copy = copy.mirror_of( tau );
-  if( ! tau_copy )
-   return( NaN );
-  tau_copy->is_fixed( false , eNoMod );
-  tau_copy->set_value( 1.0 );
-  tau_copy->is_fixed( true , eNoMod );
+ // size chosen for this component in the last master solution: the size
+ // Variable is fixed to 1 in the copy if it is a Variable of the inner
+ // Block, and otherwise, being shared by the copy, taken out of its rows
+ // with its coefficient moved into their sides
+ if( auto tau = size_variable_of( lbf->get_inner_block() ) ) {
+  if( auto tau_copy = copy.mirror_of( tau ) ) {
+   tau_copy->is_fixed( false , eNoMod );
+   tau_copy->set_value( 1.0 );
+   tau_copy->is_fixed( true , eNoMod );
+   }
+  else {
+   std::vector< FRowConstraint * > rows;
+   for( auto stuff : tau->active_stuff() )
+    if( auto row = dynamic_cast< FRowConstraint * >( stuff ) )
+     if( row->get_Block() == & copy )
+      rows.push_back( row );
+   for( auto row : rows ) {
+    auto lf = static_cast< p_LF >( row->get_function() );
+    const Index ti = lf->is_active( tau );
+    const double a = lf->get_coefficient( ti );
+    row->remove_variable( ti , eNoMod );
+    if( std::isfinite( row->get_lhs() ) )
+     row->set_lhs( row->get_lhs() - a , eNoMod );
+    if( std::isfinite( row->get_rhs() ) )
+     row->set_rhs( row->get_rhs() - a , eNoMod );
+    }
+   }
   }
 
  auto obj = copy.get_objective< FRealObjective >();
@@ -773,21 +886,31 @@ static double LBF_value_by_copy( LagBFunction * lbf )
 /*--------------------------------------------------------------------------*/
 /// the value of the objective of NDOBlock in the current values of x
 /** A LagBFunction whose inner Block has a size variable or no Solver is
- * valued by copy [see LBF_value_by_copy()], any other Function by computing
- * it. A sized inner Block must be evaluated at unit size. */
+ * valued by copy [see LBF_value_by_copy()], a PolyhedralFunctionBlock by
+ * computing its PolyhedralFunction, since it may have no Objective, and any
+ * other Function by computing it; a Block with no Objective, as NDOBlock
+ * without the linear function, gives nothing. A sized inner Block must be
+ * evaluated at unit size. */
 
 static double NDO_value( void )
 {
  double value = 0;
- if( auto obj = NDOBlock->get_objective< FRealObjective >() ) {
+ if( auto obj = dynamic_cast< FRealObjective * >(
+                                            NDOBlock->get_objective() ) ) {
   obj->compute();
   value += obj->value();
   }
- for( Index b = 0 ; b < NDOBlock->get_number_nested_Blocks() ; ++b )
-  if( auto obj =
-      NDOBlock->get_nested_Block( b )->get_objective< FRealObjective >() ) {
+ for( Index b = 0 ; b < NDOBlock->get_number_nested_Blocks() ; ++b ) {
+  auto nb = NDOBlock->get_nested_Block( b );
+  if( auto pfb = dynamic_cast< p_PFB >( nb ) ) {
+   auto & pf = pfb->get_PolyhedralFunction();
+   pf.compute();
+   value += pf.get_value();
+   continue;
+   }
+  if( auto obj = dynamic_cast< FRealObjective * >( nb->get_objective() ) ) {
    auto lbf = dynamic_cast< LagBFunction * >( obj->get_function() );
-   if( lbf && ( lbf->get_inner_block()->get_size_variable() ||
+   if( lbf && ( size_variable_of( lbf->get_inner_block() ) ||
                 lbf->get_inner_block()->get_registered_solvers().empty() ) )
     value += LBF_value_by_copy( lbf );
    else {
@@ -795,6 +918,7 @@ static double NDO_value( void )
     value += obj->value();
     }
    }
+  }
  return( value );
  }
 
@@ -1030,7 +1154,9 @@ int main( int argc , char **argv )
  std::string ndo_par = "NDOPar.txt";
 
  switch( argc ) {
-  case( 11 ): ndo_par = argv[ 10 ];
+  case( 12 ): Str2Sthg( argv[ 11 ] , SizeEasy );
+  case( 11 ): if( *argv[ 10 ] )
+               ndo_par = argv[ 10 ];
   case( 10 ): Str2Sthg( argv[ 9 ] , p_change );
   case( 9 ): Str2Sthg( argv[ 8 ] , n_change );
   case( 8 ): Str2Sthg( argv[ 7 ] , n_repeat );
@@ -1042,7 +1168,7 @@ int main( int argc , char **argv )
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
              break;
   default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar #nf #nt dens #rounds #chng %chng ndopar]"
+	   " seed [wchg nvar #nf #nt dens #rounds #chng %chng ndopar size]"
  		<< endl <<
            "       wchg: what to change, coded bit-wise [511]"
 		<< endl <<
@@ -1072,6 +1198,9 @@ int main( int argc , char **argv )
 		<< endl <<
            "                 coordinate of the master or on one it "
                                               "already has)"
+		<< endl <<
+           "            12 = the inner Block of an easy LagBFunction "
+                                              "issues an NBModification"
   #if DYNAMIC_VARS > 0
 		<< endl <<
            "             (with DYNAMIC_VARS, bit 7 = add variables, "
@@ -1093,12 +1222,20 @@ int main( int argc , char **argv )
            "       %chng: probability of changing [0.5]"
 	        << endl <<
            "       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt]"
+	        << endl <<
+           "       size: size Variable of easy comp. (0 none, 1 owned, "
+                                              "2 given) [0]"
 	        << endl;
 	   return( 1 );
   }
 
  if( nvar < 1 ) {
   cout << "error: nvar too small";
+  exit( 1 );
+  }
+
+ if( ( SizeEasy < 0 ) || ( SizeEasy > 2 ) ) {
+  cout << "error: size must be 0, 1 or 2";
   exit( 1 );
   }
 
@@ -1437,24 +1574,26 @@ int main( int argc , char **argv )
    auto TNDOp = new AbstractBlock( NDOBlock );
    TNDOp->set_name( "NDO-TB_" + std::to_string( p ) );
 
-   // construct the inner Block for the LagBFunction
-   auto IBNDOp = new AbstractBlock();
+   // construct the inner Block for the LagBFunction, one that takes its
+   // size Variable if it is to be given one [see SizeEasy]
+   const bool own_size = HasEasy && ( SizeEasy == 1 );
+   const bool row_caps = HasEasy && ( SizeEasy > 0 );
+   p_AB IBNDOp = ( HasEasy && ( SizeEasy == 2 ) )
+                 ? new SizedTransportBlock() : new AbstractBlock();
    IBNDOp->set_name( "IB-NDO-TB_" + std::to_string( p ) );
 
-   // Give each easy inner Block its own size column. MPB links it to lambda.
-   #if SIZE_EASY
-    ColVariable * tau_k = nullptr;
+   // the size Variable owned by the inner Block, if any, which the master
+   // ties to lambda
+   ColVariable * tau_k = nullptr;
+   if( own_size ) {
+    tau_k = new ColVariable();
 
-    if( HasEasy ) {
-     tau_k = new ColVariable();
+    tau_k->set_type( ColVariable::kNonNegative , eNoMod );
+    tau_k->set_value( 1.0 );  // initial value only; tau_k remains free
 
-     tau_k->set_type( ColVariable::kNonNegative , eNoMod );
-     tau_k->set_value( 1.0 );  // initial value only; tau_k remains free
-
-     IBNDOp->add_static_variable( *tau_k , "tau" );
-     IBNDOp->set_owned_size_variable( tau_k );
-     }
-   #endif
+    IBNDOp->add_static_variable( *tau_k , "tau" );
+    IBNDOp->set_owned_size_variable( tau_k );
+    }
 
    // construct the flow variables
    auto f = new boost::multi_array< ColVariable , 2 >(
@@ -1479,17 +1618,12 @@ int main( int argc , char **argv )
     for( Index j = 0 ; j < nvar ; ++j )
      lf->add_variable( &(*f)[ i ][ j ] , 1.0 , eNoMod );
 
-    #if SIZE_EASY
-     if( HasEasy ) {
-      lf->add_variable( tau_k , -s[ i ] , eNoMod );
-      (*sc)[ i ].set_both( 0.0 , eNoMod );
-      }
-     else {
-      (*sc)[ i ].set_both( s[ i ] , eNoMod );
-      }
-    #else
+    if( own_size ) {
+     lf->add_variable( tau_k , -s[ i ] , eNoMod );
+     (*sc)[ i ].set_both( 0.0 , eNoMod );
+     }
+    else
      (*sc)[ i ].set_both( s[ i ] , eNoMod );
-    #endif
 
     (*sc)[ i ].set_function( lf , eNoMod );
     }
@@ -1508,17 +1642,12 @@ int main( int argc , char **argv )
     for( Index i = 0 ; i < nvar ; ++i )
      lf->add_variable( &(*f)[ i ][ j ] , 1.0 , eNoMod );
 
-    #if SIZE_EASY
-     if( HasEasy ) {
-      lf->add_variable( tau_k , -s[ j ] , eNoMod );
-      (*dc)[ j ].set_both( 0.0 , eNoMod );
-      }
-     else {
-      (*dc)[ j ].set_both( s[ j ] , eNoMod );
-      }
-    #else
+    if( own_size ) {
+     lf->add_variable( tau_k , -s[ j ] , eNoMod );
+     (*dc)[ j ].set_both( 0.0 , eNoMod );
+     }
+    else
      (*dc)[ j ].set_both( s[ j ] , eNoMod );
-    #endif
 
     (*dc)[ j ].set_function( lf , eNoMod );
     }
@@ -1527,7 +1656,35 @@ int main( int argc , char **argv )
    IBNDOp->add_static_constraint( *dc , "dc" );
 
    if( nic ) {  // construct the finite capacity constraints (if any)
-    auto add_box_constraints = [&]() {
+    if( row_caps ) {
+     // f[i][j] <= U[i][j], or f[i][j] - U[i][j] * tau_k <= 0: a row, so
+     // that it can take the size Variable
+     #if DYNAMIC_bc
+      auto bc = new std::list< FRowConstraint >( nic );
+     #else
+      auto bc = new std::vector< FRowConstraint >( nic );
+     #endif
+     auto bcit = bc->begin();
+
+     for( Index i = 0 ; i < nvar ; ++i )
+      for( Index j = 0 ; j < nvar ; ++j )
+       if( U[ i ][ j ] < INF ) {
+        auto lf = new LinearFunction();
+        lf->add_variable( &(*f)[ i ][ j ] , 1.0 , eNoMod );
+        if( own_size )
+         lf->add_variable( tau_k , -U[ i ][ j ] , eNoMod );
+        bcit->set_function( lf , eNoMod );
+        bcit->set_lhs( -INF , eNoMod );
+        (bcit++)->set_rhs( own_size ? 0.0 : U[ i ][ j ] , eNoMod );
+        }
+
+     #if DYNAMIC_bc
+      IBNDOp->add_dynamic_constraint( *bc , "bc" );
+     #else
+      IBNDOp->add_static_constraint( *bc , "bc" );
+     #endif
+     }
+    else {
      #if DYNAMIC_bc
       auto bc = new std::list< BoxConstraint >( nic );
      #else
@@ -1547,41 +1704,7 @@ int main( int argc , char **argv )
      #else
       IBNDOp->add_static_constraint( *bc , "bc" );
      #endif
-     };
-
-    #if SIZE_EASY
-     if( HasEasy ) {
-      #if DYNAMIC_bc
-       auto bc = new std::list< FRowConstraint >( nic );
-      #else
-       auto bc = new std::vector< FRowConstraint >( nic );
-      #endif
-      auto bcit = bc->begin();
-
-      for( Index i = 0 ; i < nvar ; ++i )
-       for( Index j = 0 ; j < nvar ; ++j )
-        if( U[ i ][ j ] < INF ) {
-         // f[i][j] - U[i][j] * tau_k <= 0
-         auto lf = new LinearFunction();
-         lf->add_variable( &(*f)[ i ][ j ] , 1.0 , eNoMod );
-         lf->add_variable( tau_k , -U[ i ][ j ] , eNoMod );
-         bcit->set_function( lf , eNoMod );
-         bcit->set_lhs( -INF , eNoMod );
-         (bcit++)->set_rhs( 0.0 , eNoMod );
-         }
-
-      #if DYNAMIC_bc
-       IBNDOp->add_dynamic_constraint( *bc , "bc" );
-      #else
-       IBNDOp->add_static_constraint( *bc , "bc" );
-      #endif
-      }
-     else {
-      add_box_constraints();
-      }
-    #else
-     add_box_constraints();
-    #endif
+     }
     }
  
    // construct the objective
@@ -1765,7 +1888,9 @@ int main( int argc , char **argv )
   // wchg is 1 than bit 1 of intDoEasy must be 1 because the corresponding
   // data structure needs be kept. however, if bit 6 of wchg is 1, then also
   // bit 3 (in addition to bit 2) of intDoEasy must be 1. set intDoEasy to
-  // the "minimum" set of 1 bits required to support wchg
+  // the "minimum" set of 1 bits required to support wchg. bits 4 and 5,
+  // which say whether the easy components are scaled by their size
+  // Variable or by a copy of their inner Block, are those of the file
   for( Index i = 0 ; i < bsc->num_ComputeConfig() ; ++i )
    if( ( bsc->get_SolverName( i ) == "BundleSolver" ) ||
        ( bsc->get_SolverName( i ) == "ParallelBundleSolver" ) ) {
@@ -1774,6 +1899,10 @@ int main( int argc , char **argv )
      val = 1 | ( ( wchg & 224 ) >> 4 );
      if( wchg & 64 )
       val |= 8;
+     if( auto cc = bsc->get_SolverConfig( i ) )
+      for( const auto & [ name , value ] : cc->int_pars )
+       if( name == "intDoEasy" )
+        val |= value & 48;
      }
 
     bsc->get_SolverConfig( i )->set_par( "intDoEasy" , val );
@@ -2217,17 +2346,15 @@ int main( int argc , char **argv )
    Observer::ChnlName chnl = NDOTr->open_channel();
    const auto iAM = Observer::make_par( eModBlck , chnl );
 
+   auto tau = size_variable_of( NDOTr );
    auto update_balances = [&]( std::vector< FRowConstraint > * rows ) {
-    #if SIZE_EASY
-     if( HasEasy ) {
-      auto tau = NDOTr->get_size_variable();
-      for( Index j = 0 ; j < nvar ; ++j ) {
-       auto lf = static_cast< p_LF >( (*rows)[ j ].get_function() );
-       lf->modify_coefficient( lf->is_active( tau ) , -s[ j ] , iAM );
-       }
-      return;  // the scaled rows keep both sides equal to zero
+    if( tau ) {
+     for( Index j = 0 ; j < nvar ; ++j ) {
+      auto lf = static_cast< p_LF >( (*rows)[ j ].get_function() );
+      lf->modify_coefficient( lf->is_active( tau ) , -s[ j ] , iAM );
       }
-    #endif
+     return;  // the scaled rows keep both sides equal to zero
+     }
     for( Index j = 0 ; j < nvar ; ++j )
      (*rows)[ j ].set_both( s[ j ] , iAM );
     };
@@ -2282,23 +2409,22 @@ int main( int argc , char **argv )
      // if a bound is zero it must remain so, and if it is nonzero it must
      // remain so
 
+     auto tau = size_variable_of( NDOTr );
      auto update_bound = [&]( RowConstraint & bound , double & value ) {
-      #if SIZE_EASY
-       if( HasEasy ) {
-        auto blf = static_cast< p_LF >(
-                              static_cast< FRowConstraint & >( bound ).
-                              get_function() );
-        const Index ti = blf->is_active( NDOTr->get_size_variable() );
-        if( blf->get_coefficient( ti ) != 0 ) {
-         while( value == 0 )
-          value = 5 * dis( rg );
-         blf->modify_coefficient( ti , -value , iAM );
-         }
-        else
-         value = 0;
-        return;  // the scaled capacity row keeps its RHS at zero
+      if( tau ) {
+       auto blf = static_cast< p_LF >(
+                             static_cast< FRowConstraint & >( bound ).
+                             get_function() );
+       const Index ti = blf->is_active( tau );
+       if( blf->get_coefficient( ti ) != 0 ) {
+        while( value == 0 )
+         value = 5 * dis( rg );
+        blf->modify_coefficient( ti , -value , iAM );
         }
-      #endif
+       else
+        value = 0;
+       return;  // the scaled capacity row keeps its RHS at zero
+       }
       if( bound.get_rhs() != 0 ) {
        while( value == 0 )
         value = 5 * dis( rg );
@@ -2366,20 +2492,31 @@ int main( int argc , char **argv )
     #endif
     };
 
-   #if SIZE_EASY
-    if( HasEasy ) {
-     #if DYNAMIC_bc
-      change_bounds( NDOTr->get_dynamic_constraint< FRowConstraint >( "bc" ) );
-     #else
-      change_bounds( NDOTr->get_static_constraint_v< FRowConstraint >( "bc" ) );
-     #endif
-     }
-    else {
-     change_box_bounds();
-     }
-   #else
+   // the capacities are rows whenever there is a size Variable to take
+   if( HasEasy && SizeEasy ) {
+    #if DYNAMIC_bc
+     change_bounds( NDOTr->get_dynamic_constraint< FRowConstraint >( "bc" ) );
+    #else
+     change_bounds( NDOTr->get_static_constraint_v< FRowConstraint >( "bc" ) );
+    #endif
+    }
+   else
     change_box_bounds();
-   #endif
+   }
+
+  // the inner Block "changes everything" - - - - - - - - - - - - - - - - - -
+  //
+  // bit 12: the inner Block of an easy LagBFunction issues the "nuclear"
+  // NBModification, which says that anything may have changed and which a
+  // sized copy of it in the master cannot follow [see
+  // AbstractBlock::mirror_forward_Modification()]: the master puts the inner
+  // Block back in place of the copy, unscaled, and fixes its lambda to 1
+  // [see MasterProblemBlock::EasyMirror]; nothing has changed in fact, so
+  // that the two Block stay the same problem
+
+  if( LPTr && HasEasy && ( wchg & 4096 ) && ( dis( rg ) <= p_change ) ) {
+   LOG1( "everything changed - " );
+   NDOTr->add_Modification( std::make_shared< NBModification >( NDOTr ) );
    }
 
   // per-LagBFunction dual_pair removal - - - - - - - - - - - - - - - - - - -
