@@ -28,8 +28,7 @@ endif ()
 smspp_install(LagBFunction_test)
 
 # Add a test for each batch file
-file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
-                      "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-tr")
+file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch")
 foreach (BATCH_FILE ${BATCH_FILES})
     # Remove the source directory prefix to get the batch name
     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})

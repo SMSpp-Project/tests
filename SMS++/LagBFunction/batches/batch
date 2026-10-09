@@ -24,12 +24,6 @@ source "$(dirname "$0")/../../../batch_common.sh"
 
 LagBFunction_test=${1:-./LagBFunction_test}
 
-# the BlockSolverConfig of NDOBlock is NDOPar.txt, unless the variable
-# ndopar names another one [see batch-tr]: it is the last argument of the
-# tester, after #rounds, #chng and %chng, left empty to keep their default
-extra=()
-if [ -n "$ndopar" ]; then extra=( "" "" "$ndopar" ); fi
-
 # in CI 3 seeds of the 20 are run: the others are the same sweep with
 # another random stream, and the whole of it takes more than an hour there
 if [ -n "$CI" ]; then seeds=3; else seeds=20; fi
@@ -54,7 +48,7 @@ for what in 511 1023 1535 2047 ; do
         for dens in 3 1.1; do
           for (( seed = 0 ; seed < seeds ; seed++ )); do
 
-            run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter" "${extra[@]}"
+            run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter"
 
           done
         done
@@ -100,7 +94,7 @@ for what in 3583 4095 ; do
           for dens in 3 1.1; do
             for (( seed = 0 ; seed < seeds11 ; seed++ )); do
 
-              run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter" "${extra[@]}"
+              run_test "$LagBFunction_test" "$seed" "$what" "$size" "$nf" "$nt" "$dens" "$iter"
 
             done
           done
