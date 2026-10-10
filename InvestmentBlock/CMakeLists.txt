@@ -51,13 +51,17 @@ if (TARGET SMS++::InvestmentBlock)
 
     smspp_install(IB_test)
 
-    # Create a test fixture to generate .nc4 files by running extract_investment_nc4.
-    # This test will build and run the extract_investment_nc4 target
+    # the instances of InvestmentBlock, downloaded and extracted when the tests
+    # that read them are run, not when they are built [see the CMakeLists.txt
+    # of the module]; the lock is shared by the tests that build a target of
+    # the data of the module, which under ctest -j would write the same files
+    # at once
     add_test(NAME extract_investment_nc4
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target extract_investment_nc4)
-    # Mark extract_investment_nc4 as a fixture that sets up "investment_data_extracted"
-    set_tests_properties(extract_investment_nc4
-                         PROPERTIES FIXTURES_SETUP investment_data_extracted)
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                     --target extract_investment_nc4)
+    set_tests_properties(extract_investment_nc4 PROPERTIES
+                         FIXTURES_SETUP investment_nc4_extracted
+                         RESOURCE_LOCK investment_data)
 
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-*")
@@ -75,9 +79,9 @@ if (TARGET SMS++::InvestmentBlock)
                      "${BATCH_FILE}" "$<TARGET_FILE:IB_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
-        # Make each batch test require the investment_data_extracted fixture
+        # Make each batch test require the investment_nc4_extracted fixture
         set_tests_properties(IB_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED investment_data_extracted)
+                             PROPERTIES FIXTURES_REQUIRED investment_nc4_extracted)
 
         # batch-stochastic and batch-pypsa run the modular instances a second
         # time with the inner Block solved by the LagrangianDualSolver, which

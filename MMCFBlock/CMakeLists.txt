@@ -25,7 +25,7 @@ if (UNIX)
     add_custom_command(
             OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
             COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch ${CMAKE_CURRENT_BINARY_DIR}/gen/Mnetgen/mnetgen
-            COMMAND echo > ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
+            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
             COMMENT "Running mnetgen"
             VERBATIM
@@ -36,7 +36,7 @@ elseif (WIN32)
             # using Git for Windows that includes Git Bash
             COMMAND "C:/Program Files/Git/bin/bash.exe"
             "${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch" "$<TARGET_FILE:mnetgen>"
-            COMMAND echo > ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
+            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
             COMMENT "Running mnetgen"
             VERBATIM
@@ -50,61 +50,81 @@ add_custom_target(run_mnetgen
 # Ensure that run_mnetgen is executed after the build
 add_dependencies(run_mnetgen mnetgen)
 
-# Fetch the Canad instances: download Canad.tgz from the GitLab Package
-# Registry and extract it under data/; the fetch_canad_data target is the
-# test fixture's only dependency.
-# Download Canad.tgz from GitLab Package Registry if it doesn't exist
-set(CANAD_URL "https://gitlab.com/api/v4/projects/15602443/packages/generic/Canad/latest/Canad.tgz")
-set(CANAD_ARCHIVE ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad.tgz)
-set(CANAD_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/download_canad.cmake)
+# ----- Data ---------------------------------------------------------------- #
+# The Canad instances, which the batches read; their version in the Package
+# Registry is the only one published, before the archives were versioned.
+#
+# The instances the tests read are, for each <fmt> of DATA_FORMATS, the
+# archive <fmt>.tgz in the GitLab Package Registry of the project
+# DATA_PROJECT, extracted into data/<fmt>. Nothing of this is built with the
+# tests: extract_<DATA_PREFIX>_<fmt> downloads the archive (by building
+# download_<DATA_PREFIX>_<fmt>) and extracts it, and it is built when the
+# tests that read the instances are run, by a test that sets up the fixture
+# <DATA_PREFIX>_<fmt>_extracted they require.
+#
+# A published version is never replaced: new data go out under a new
+# version, written here first [see the upload scripts in data/], and the
+# archive and the marker of its extraction carry it in their name, so that a
+# tree holding the data of an older version (a cache of the CI, or a clone
+# that has been extracted before) downloads and extracts again instead of
+# taking them for the current ones.
+set(DATA_VERSION latest)
+set(DATA_PROJECT 15602443)
+set(DATA_PREFIX mmcf)
+set(DATA_FORMATS Canad)
 
-file(WRITE ${CANAD_SCRIPT} "
-file(DOWNLOAD \"${CANAD_URL}\" \"${CANAD_ARCHIVE}\" SHOW_PROGRESS STATUS _status)
+foreach (fmt ${DATA_FORMATS})
+    set(url "https://gitlab.com/api/v4/projects/${DATA_PROJECT}/packages/\
+generic/${fmt}/${DATA_VERSION}/${fmt}.tgz")
+    set(archive ${CMAKE_CURRENT_SOURCE_DIR}/data/${fmt}-${DATA_VERSION}.tgz)
+    set(script
+        ${CMAKE_CURRENT_BINARY_DIR}/download_${DATA_PREFIX}_${fmt}.cmake)
+    # the marker of the extraction, on which what is made from the instances
+    # depends too
+    set(DATA_MARKER_${fmt}
+        ${CMAKE_CURRENT_SOURCE_DIR}/data/.extracted-${fmt}-${DATA_VERSION})
+
+    file(WRITE ${script} "
+file(DOWNLOAD \"${url}\" \"${archive}\" SHOW_PROGRESS STATUS _status)
 list(GET _status 0 _code)
 list(GET _status 1 _message)
 if(NOT _code EQUAL 0)
   # what is on disk is whatever the server answered with, and leaving it there
   # would let the build take it for the archive: the next attempt has to
   # download again rather than fail while extracting it
-  file(REMOVE \"${CANAD_ARCHIVE}\")
-  message(FATAL_ERROR \"cannot download ${CANAD_URL}: \${_message}\")
+  file(REMOVE \"${archive}\")
+  message(FATAL_ERROR \"cannot download ${url}: \${_message}\")
 endif()
-file(SIZE \"${CANAD_ARCHIVE}\" _size)
+file(SIZE \"${archive}\" _size)
 if(_size LESS 1024)
-  file(REMOVE \"${CANAD_ARCHIVE}\")
-  message(FATAL_ERROR \"${CANAD_ARCHIVE} came down with \${_size} bytes, so the \
+  file(REMOVE \"${archive}\")
+  message(FATAL_ERROR \"${archive} came down with \${_size} bytes, so the \
 server answered but not with the archive: try again later\")
 endif()
 ")
 
-add_custom_command(
-        OUTPUT ${CANAD_ARCHIVE}
-        COMMAND ${CMAKE_COMMAND} -E echo "Downloading Canad.tgz from GitLab Package Registry..."
-        COMMAND ${CMAKE_COMMAND} -P ${CANAD_SCRIPT}
-        COMMENT "Downloading Canad.tgz"
-        VERBATIM)
+    add_custom_command(
+            OUTPUT ${archive}
+            COMMAND ${CMAKE_COMMAND} -P ${script}
+            COMMENT "Downloading ${fmt}.tgz from the GitLab Package Registry"
+            VERBATIM)
+    add_custom_target(download_${DATA_PREFIX}_${fmt} DEPENDS ${archive})
 
-add_custom_target(download_canad
-        DEPENDS ${CANAD_ARCHIVE})
-
-# Custom command to extract the Canad.tgz archive if the .extracted file does not exist
-add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad/.extracted
-        COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad.tgz
-        COMMAND echo > ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad/.extracted
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data
-        COMMENT "Extracting Canad.tgz"
-        VERBATIM
-        DEPENDS download_canad)
-
-# The .dat instances are ready as soon as the archive is extracted: this is
-# the terminal target the test fixtures depend on (see also
-# tests/MMCFBlock).
-add_custom_target(fetch_canad_data
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/data/Canad/.extracted)
-
-# Ensure that the extraction is executed after the download
-add_dependencies(fetch_canad_data download_canad)
+    add_custom_command(
+            OUTPUT ${DATA_MARKER_${fmt}}
+            COMMAND ${CMAKE_COMMAND} -E tar xzf ${archive}
+            COMMAND ${CMAKE_COMMAND} -E touch ${DATA_MARKER_${fmt}}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/data
+            COMMENT "Extracting ${fmt}.tgz"
+            VERBATIM
+            DEPENDS ${archive})
+    add_custom_target(extract_${DATA_PREFIX}_${fmt}
+                      DEPENDS ${DATA_MARKER_${fmt}})
+    # the archive is the output of a command in both targets: it has to be
+    # downloaded once, before it is extracted
+    add_dependencies(extract_${DATA_PREFIX}_${fmt}
+                     download_${DATA_PREFIX}_${fmt})
+endforeach ()
 
 # Skip the suite if some module its labels declare is not in the build
 smspp_require_labelled_modules()
@@ -118,13 +138,16 @@ add_test(NAME run_mnetgen
 set_tests_properties(run_mnetgen
                      PROPERTIES FIXTURES_SETUP mnetgen_generated)
 
-# Create a test fixture to download the Canad instances by running
-# fetch_canad_data. This test will build and run the fetch_canad_data target
-add_test(NAME fetch_canad_data
-         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target fetch_canad_data)
-# Mark fetch_canad_data as a fixture that sets up "canad_fetched"
-set_tests_properties(fetch_canad_data
-                     PROPERTIES FIXTURES_SETUP canad_fetched)
+# the instances of the suite, downloaded and extracted when the tests that read
+# them are run, not when they are built [see the section Data above]; the lock
+# is shared by the tests that build a target of the data of the suite, which
+# under ctest -j would write the same files at once
+add_test(NAME extract_mmcf_Canad
+         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                 --target extract_mmcf_Canad)
+set_tests_properties(extract_mmcf_Canad PROPERTIES
+                     FIXTURES_SETUP mmcf_Canad_extracted
+                     RESOURCE_LOCK mmcf_data)
 
 if (TARGET SMS++::MMCFBlock AND
     TARGET MMCFClass AND
@@ -172,7 +195,7 @@ if (TARGET SMS++::MMCFBlock AND
         # Make each batch test require the data fixtures it reads
         set_tests_properties(MMCF_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED
-                             "canad_fetched;mnetgen_generated")
+                             "mmcf_Canad_extracted;mnetgen_generated")
     endforeach ()
 endif ()
 
@@ -246,11 +269,11 @@ if (TARGET SMS++::MMCFBlock)
         endif ()
         # Make each batch test require the data fixtures it reads
         if (BATCH_NAME STREQUAL "batches/batch")
-            set(BATCH_FIXTURES "canad_fetched;mnetgen_generated")
+            set(BATCH_FIXTURES "mmcf_Canad_extracted;mnetgen_generated")
         elseif (BATCH_NAME STREQUAL "batches/batch-m")
             set(BATCH_FIXTURES "mnetgen_generated")
         else ()
-            set(BATCH_FIXTURES "canad_fetched")
+            set(BATCH_FIXTURES "mmcf_Canad_extracted")
         endif ()
         set_tests_properties(MMCFBlock_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED "${BATCH_FIXTURES}")

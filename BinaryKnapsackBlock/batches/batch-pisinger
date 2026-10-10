@@ -23,8 +23,8 @@
 # instance, and unlike the standalone bkbench it exercises every solver.
 #
 # The raw .csv are kept next to the stripped instances by data/fetch-txt and
-# shipped in the curated txt.tgz (fetched by the fetch_bk_data fixture, see the
-# test CMakeLists). If no .csv is found the check is skipped.
+# shipped in the curated txt.tgz (fetched by the extract_bk_txt fixture, see
+# the test CMakeLists). If no .csv is found the check is skipped.
 
 set -u
 

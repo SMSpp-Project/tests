@@ -63,13 +63,13 @@ if (TARGET SMS++::MultiStageStochasticBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:MSSB_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
-        # Re-use the same `uc_data_extracted` fixture set up by
+        # Re-use the same `uc_nc4_extracted` fixture set up by
         # tests/UCBlock/CMakeLists.txt: it builds the
         # extract_uc_nc4 target which produces the EC nc4 files used here.
         # CTest fixtures are global, so referencing it from a different
         # subdirectory just adds a dependency without redefining the test.
         set_tests_properties(MSSB_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
+                             PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
     endforeach ()
 endif ()
 
