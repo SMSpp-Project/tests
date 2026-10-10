@@ -69,11 +69,6 @@
 #define BOUND_FINITE 0
 
 /*--------------------------------------------------------------------------*/
-// if nonzero, the Solver attached to the NDOBlock is detached and re-attached
-// to it at all iterations
-
-#define DETACH_NDO 0
-
 // if nonzero, the Solver attached to the LPBlock is detached and re-attached
 // to it at all iterations
 
@@ -237,6 +232,9 @@ bool cur_bnd_finite = false; // whether the current PF's global bound is
                              // logically inconsistent for the master
 
 double p_vert = 0.0;       // probability that a generated row is vertical
+
+bool DetachNDO = false;    // if the Solver of NDOBlock are detached and
+                           // re-attached to it before each compute()
 
 // number of diagonal (non-vertical) rows currently in the PF
 static Index n_diagonal( void )
@@ -837,10 +835,10 @@ static bool SolveEach( void )
   bool dbl_bound_cond = false;
   const auto slvrs = NDOBlock->get_registered_solvers();  // a copy
   for( auto slvrNDO : slvrs ) {
-   #if DETACH_NDO
+   if( DetachNDO ) {
     NDOBlock->unregister_Solver( slvrNDO );
     NDOBlock->register_Solver( slvrNDO );
-   #endif
+    }
    auto startNDO = std::chrono::system_clock::now();
    int rtrnNDO = slvrNDO->compute( false );
    auto endNDO = std::chrono::system_clock::now();
@@ -957,6 +955,7 @@ int main( int argc , char **argv )
  Index n_repeat = 40;
 
  switch( argc ) {
+  case( 10 ): Str2Sthg( argv[ 9 ] , DetachNDO );
   case( 9 ): Str2Sthg( argv[ 8 ] , p_vert );
   case( 8 ): Str2Sthg( argv[ 7 ] , p_change );
   case( 7 ): Str2Sthg( argv[ 6 ] , n_change );
@@ -967,7 +966,7 @@ int main( int argc , char **argv )
   case( 2 ): Str2Sthg( argv[ 1 ] , seed );
              break;
   default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar dens #rounds #chng %chng %vert]"
+	   " seed [wchg nvar dens #rounds #chng %chng %vert detach]"
  		<< endl <<
            "       wchg: what to change, coded bit-wise [" << wchg << "]"
 		<< endl <<
@@ -996,6 +995,9 @@ int main( int argc , char **argv )
            "       %chng: probability of changing [0.5]"
 	        << endl <<
            "       %vert: probability that a generated row is vertical [0]"
+	        << endl <<
+           "       detach: if the Solver of NDOBlock are detached and "
+                                              "re-attached [0]"
 	        << endl;
 	   return( 1 );
   }
