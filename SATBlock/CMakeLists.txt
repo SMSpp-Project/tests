@@ -40,14 +40,18 @@ if (TARGET SMS++::SATBlock)
 
     smspp_install(SATBlock_test)
 
-    # the batteries on the instances of the module need them downloaded and
-    # extracted first, which this test does, building the target of the module
-    # that does it
-    add_test(NAME fetch_sat_data
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                     --target fetch_sat_data)
-    set_tests_properties(fetch_sat_data
-                         PROPERTIES FIXTURES_SETUP sat_data_ready)
+    # the instances of SATBlock, downloaded and extracted when the tests that
+    # read them are run, not when they are built [see the CMakeLists.txt of the
+    # module]; the lock is shared by the tests that build a target of the data
+    # of the module, which under ctest -j would write the same files at once
+    foreach (fmt cnf wcnf)
+        add_test(NAME extract_sat_${fmt}
+                 COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                         --target extract_sat_${fmt})
+        set_tests_properties(extract_sat_${fmt} PROPERTIES
+                             FIXTURES_SETUP sat_${fmt}_extracted
+                             RESOURCE_LOCK sat_data)
+    endforeach ()
 
     # the generator of the instances made of groups of clauses, when it is a
     # target of this build, otherwise the one installed [see batch-groups]
@@ -79,7 +83,7 @@ if (TARGET SMS++::SATBlock)
         endif ()
     endforeach ()
     set_tests_properties(SATBlock_test/batches/batch-mse
-                         PROPERTIES FIXTURES_REQUIRED sat_data_ready)
+                         PROPERTIES FIXTURES_REQUIRED sat_wcnf_extracted)
 
 endif ()
 

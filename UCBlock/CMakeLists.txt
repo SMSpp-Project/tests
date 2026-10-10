@@ -65,13 +65,16 @@ if (TARGET SMS++::UCBlock)
     add_test(NAME UCBlock_test/scale
              COMMAND UCBlock_test --scale)
 
-    # Create a test fixture to generate .nc4 files by running extract_uc_nc4.
-    # This test will build and run the extract_uc_nc4 target
+    # the instances of UCBlock, downloaded and extracted when the tests that
+    # read them are run, not when they are built [see the CMakeLists.txt of the
+    # module]; the lock is shared by the tests that build a target of the data
+    # of the module, which under ctest -j would write the same files at once
     add_test(NAME extract_uc_nc4
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target extract_uc_nc4)
-    # Mark extract_uc_nc4 as a fixture that sets up "uc_data_extracted"
-    set_tests_properties(extract_uc_nc4
-                         PROPERTIES FIXTURES_SETUP uc_data_extracted)
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                     --target extract_uc_nc4)
+    set_tests_properties(extract_uc_nc4 PROPERTIES
+                         FIXTURES_SETUP uc_nc4_extracted
+                         RESOURCE_LOCK uc_data)
 
     # Register every batch: each one covers a family of instances (academic,
     # plan4res, energy community, PyPSA, AC OPF) and cross-checks all the
@@ -92,9 +95,9 @@ if (TARGET SMS++::UCBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:UCBlock_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
-        # Make each batch test require the uc_data_extracted fixture
+        # Make each batch test require the uc_nc4_extracted fixture
         set_tests_properties(UCBlock_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
+                             PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
     endforeach ()
 
     # The Frank-Wolfe decomposition of a father Block whose leaves are the
@@ -146,7 +149,7 @@ if (TARGET SMS++::UCBlock)
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
         add_batch_test(TUDPS_test ${BATCH_NAME} UCBlock_FW_test)
         set_tests_properties(TUDPS_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
+                             PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
     endforeach ()
 
 endif ()
@@ -180,7 +183,7 @@ if (TARGET SMS++::UCBlock AND TARGET SMS++::StochasticBlock)
         add_batch_test(UCScenarioGenerator batches-scenred/batch
                        TSSB_scenred_test)
         set_tests_properties(UCScenarioGenerator/batches-scenred/batch
-                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
+                             PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
     endif ()
 endif ()
 

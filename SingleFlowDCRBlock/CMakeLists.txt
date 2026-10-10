@@ -27,13 +27,17 @@ if (TARGET SMS++::SingleFlowDCRBlock)
 
     smspp_install(SingleFlowDCRBlock_test)
 
-    # the batteries on the instances of the module need them extracted first,
-    # which this test does, building the target that downloads them
+    # the instances of SingleFlowDCRBlock, downloaded and extracted when the
+    # tests that read them are run, not when they are built [see the
+    # CMakeLists.txt of the module]; the lock is shared by the tests that build
+    # a target of the data of the module, which under ctest -j would write the
+    # same files at once
     add_test(NAME extract_dcr_nc4
              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                      --target extract_dcr_nc4)
-    set_tests_properties(extract_dcr_nc4
-                         PROPERTIES FIXTURES_SETUP dcr_data_extracted)
+    set_tests_properties(extract_dcr_nc4 PROPERTIES
+                         FIXTURES_SETUP dcr_nc4_extracted
+                         RESOURCE_LOCK dcr_data)
 
     # the battery that solves the SOCP formulation with CPLEX where Gurobi is
     # not stable is only there when CPLEX is [see socp-unstable.txt]
@@ -63,7 +67,7 @@ if (TARGET SMS++::SingleFlowDCRBlock)
         endif ()
         if (BATCH_NAME MATCHES "^batches/batch-instances")
             set_tests_properties(SingleFlowDCRBlock_test/${BATCH_NAME}
-                                 PROPERTIES FIXTURES_REQUIRED dcr_data_extracted)
+                                 PROPERTIES FIXTURES_REQUIRED dcr_nc4_extracted)
         endif ()
     endforeach ()
 
@@ -106,7 +110,7 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             endif ()
             set_tests_properties(MultiFlowDCRBlock_test/${BATCH_NAME}
-                                 PROPERTIES FIXTURES_REQUIRED dcr_data_extracted)
+                                 PROPERTIES FIXTURES_REQUIRED dcr_nc4_extracted)
         endforeach ()
     endif ()
 endif ()

@@ -64,7 +64,7 @@ The batteries are in [batches](batches), one per family of instances:
   them cracks, a timeout or an out-of-memory being an outcome and not a
   failure.
 
-The curated data is fetched and unpacked by the `fetch_bk_data` and
+The curated data is fetched and unpacked by the `extract_bk_txt` and
 `fetch_jooken_data` fixtures, the netCDF instances the decomposition reads are
 written by the `run_bk2nc4` one, and every battery skips itself, saying so,
 when what it reads is not there.

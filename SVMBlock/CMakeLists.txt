@@ -17,14 +17,16 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::SVMBlock)
 
-    # Create a test fixture to fetch the LIBSVM data sets by running
-    # extract_svm_libsvm, the target the SVMBlock module declares: the data
-    # live with the module, as UCBlock's and CapacitatedFacilityLocationBlock's
-    # do, and batch-real is the batch that runs on them
+    # the instances of SVMBlock, downloaded and extracted when the tests that
+    # read them are run, not when they are built [see the CMakeLists.txt of the
+    # module]; the lock is shared by the tests that build a target of the data
+    # of the module, which under ctest -j would write the same files at once
     add_test(NAME extract_svm_libsvm
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target extract_svm_libsvm)
-    set_tests_properties(extract_svm_libsvm
-                         PROPERTIES FIXTURES_SETUP svm_data_extracted)
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                     --target extract_svm_libsvm)
+    set_tests_properties(extract_svm_libsvm PROPERTIES
+                         FIXTURES_SETUP svm_libsvm_extracted
+                         RESOURCE_LOCK svm_data)
 
     add_executable(SVM_test test.cpp ../common_utils.cpp)
     target_include_directories(SVM_test PRIVATE ..)
@@ -103,7 +105,7 @@ if (TARGET SMS++::SVMBlock)
             # the batch that runs on the LIBSVM data sets needs them there
             if (BATCH_NAME MATCHES "batch-real")
                 set_tests_properties(SVM_test/${BATCH_NAME}
-                                     PROPERTIES FIXTURES_REQUIRED svm_data_extracted)
+                                     PROPERTIES FIXTURES_REQUIRED svm_libsvm_extracted)
             endif ()
         elseif (WIN32)
             add_test(NAME SVM_test/${BATCH_NAME}

@@ -58,16 +58,15 @@ if (TARGET SMS++::BinaryKnapsackBlock)
 
         smspp_install(BinaryKnapsackBlock_FW_test)
 
-        # fixture: write the netCDF instances out of the curated txt
+        # the netCDF instances bk2nc4 writes out of those of data/txt, when the
+        # tests that read them are run [see the CMakeLists.txt of
+        # BinaryKnapsackBlock]; the lock is that of the data of the module
         add_test(NAME run_bk2nc4
-                 COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_bk2nc4)
-        # the lock is shared with fetch_bk_data: both drive the build system
-        # on the same binary directory and on the same txt.tgz, and running
-        # them at once leaves the archive half written, which tar reads as
-        # "unexpected end of file"
-        set_tests_properties(run_bk2nc4
-                             PROPERTIES FIXTURES_SETUP bk_nc4_generated
-                                        RESOURCE_LOCK bk_data)
+                 COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                         --target run_bk2nc4)
+        set_tests_properties(run_bk2nc4 PROPERTIES
+                             FIXTURES_SETUP bk2nc4_generated
+                             RESOURCE_LOCK bk_data)
 
     endif ()
 
@@ -105,14 +104,18 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     # exact MILP / DP / core DP / BranchAndXSolver, with the greedy relaxation
     # bracketing), so a single in-process pass checks them against one another
     # (solver-vs-solver) AND against z (solver-vs-reference). The curated data
-    # is downloaded and extracted by the fetch_bk_data fixture.
-    # fixture: download the curated txt.tgz from the Package Registry and
-    # extract it (provides the raw .csv carrying the published optima)
-    add_test(NAME fetch_bk_data
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target fetch_bk_data)
-    set_tests_properties(fetch_bk_data
-                         PROPERTIES FIXTURES_SETUP bk_data_ready
-                                    RESOURCE_LOCK bk_data)
+    # is downloaded and extracted by the extract_bk_txt fixture.
+    # the instances of BinaryKnapsackBlock, downloaded and extracted when the
+    # tests that read them are run, not when they are built [see the
+    # CMakeLists.txt of the module]; the lock is shared by the tests that build
+    # a target of the data of the module, which under ctest -j would write the
+    # same files at once
+    add_test(NAME extract_bk_txt
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                     --target extract_bk_txt)
+    set_tests_properties(extract_bk_txt PROPERTIES
+                         FIXTURES_SETUP bk_txt_extracted
+                         RESOURCE_LOCK bk_data)
 
     # the battery is given the Frank-Wolfe tester as well, when it is in the
     # build, as its fifth argument: the same knapsacks are then also solved by
@@ -141,10 +144,10 @@ if (TARGET SMS++::BinaryKnapsackBlock)
     # decomposition the netCDF instances written out of it
     if (TARGET BinaryKnapsackBlock_FW_test)
         set_tests_properties(BinaryKnapsackBlock_test/batch-pisinger
-                             PROPERTIES FIXTURES_REQUIRED "bk_data_ready;bk_nc4_generated")
+                             PROPERTIES FIXTURES_REQUIRED "bk_txt_extracted;bk2nc4_generated")
     else ()
         set_tests_properties(BinaryKnapsackBlock_test/batch-pisinger
-                             PROPERTIES FIXTURES_REQUIRED bk_data_ready)
+                             PROPERTIES FIXTURES_REQUIRED bk_txt_extracted)
     endif ()
 
     # ----- Jooken hard-instance validation (batches/batch-jooken) ---------- #

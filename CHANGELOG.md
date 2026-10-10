@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- the tests that set up the instances of a module are named after the
+  target they build (`extract_<prefix>_<fmt>`, `run_<tool>`), set up the
+  fixture `<prefix>_<fmt>_extracted` or `<tool>_generated` and share the
+  lock `<prefix>_data`; `fetch_bk_data`, `fetch_sat_data` and
+  `fetch_canad_data` are now `extract_bk_txt`, `extract_sat_cnf` with
+  `extract_sat_wcnf`, and `extract_mmcf_Canad`, whose archive MMCFBlock
+  downloads as the modules do
+
 ## [0.7.0] - 2026-10-09
 
 ### Added
