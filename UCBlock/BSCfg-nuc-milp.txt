@@ -1,11 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSCfg-nuc.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSCfg-nuc-milp.txt- - - - - - - - - - - - - - -
 #
-# BlockSolverConfig that attaches to a single NuclearUnitBlock the
-# :MILPSolver as the 1st (reference) Solver and NuclearUnitExtDPSolver as the
-# 2nd one, so that TUDPS_test compares the dynamic program with the MILP in
-# the formulation of the BlockConfig of the unit (e.g., T with Perspective
-# Cuts)
+# BlockSolverConfig of the copy of a NuclearUnitBlock that a BlockCopySolver
+# solves [see CopyCfg-nuc.txt]: the :MILPSolver alone
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,23 +11,20 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+1  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver         # name of 1st Solver
 GRBMILPSolver          # name of 1st Solver
-#SCIPMILPSolver        # name of 1st Solver
-#HiGHSMILPSolver       # name of 1st Solver
-NuclearUnitExtDPSolver # name of 2nd Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
-# now all the ComputeConfig (the 2nd Solver has none)
+# now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*MILPCfg-NUB.txt
+*MILPCfg-NUB-copy.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSCfg-nuc.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSCfg-nuc-milp.txt- - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

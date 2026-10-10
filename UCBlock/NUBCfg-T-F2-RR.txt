@@ -1,0 +1,59 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - NUBCfg-T-F2-RR.txt- - - - - - - - - - - - - - -
+#
+# The BlockConfig of a NuclearUnitBlock that selects the T formulation of the
+# thermal part, without Perspective Cuts, and the formulation F2 of the
+# operating rules, with the rows of the reach of the output (ReachRows)
+# (static_variables = 8705), for the BlockCopySolver of BSCfg-nuc-forms.txt
+# and BSCfg-nuc-graph.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static_constraints
+*  # [none]
+
+# dynamic_constraints
+*  # [none]
+
+# static_variables: the formulation, 0 = 3bin, 1 = T, 2 = pt, 3 = DP,
+# 4 = SU, 5 = SD, 6 = SUSD, +8 with Perspective Cuts,
+# +32 TightRules, +64 TightRamp, +128 TightCuts, +256 k the formulation
+# of the operating rules (k = 1 F0, 2 F2, 3 F3a, 4 F4, 5 F5, 6 F6, 7 F7),
+# +2048 the stability after a start-up by rows of single instants,
+# +4096 the deep decreases by the rows of the default formulation,
+# +8192 the rows of the reach of the output from a start-up and towards
+# a shut-down
+SimpleConfiguration<int>
+8705
+
+# dynamic_variables
+*  # [none]
+
+# objective
+*  # [none]
+
+# is_feasible
+*  # [none]
+
+# is_optimal
+*  # [none]
+
+# solution
+*  # [none]
+
+# extra
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END NUBCfg-T-F2-RR.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

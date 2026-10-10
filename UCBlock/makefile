@@ -88,11 +88,16 @@ $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 tudps: SW = $(SW_RELEASE)
 tudps: $(DIR)/TUDPS_test
 
-$(DIR)/TUDPS_test: $(MOBJ) $(DIR)/test_tudps.o
-	$(CC) -o $@ $(DIR)/test_tudps.o $(MOBJ) $(MLIB) $(SW)
+$(DIR)/TUDPS_test: $(MOBJ) $(DIR)/test_tudps.o $(DIR)/BlockCopySolver.o
+	$(CC) -o $@ $(DIR)/test_tudps.o $(DIR)/BlockCopySolver.o $(MOBJ) \
+	$(MLIB) $(SW)
 
 $(DIR)/test_tudps.o: $(DIR)/test_tudps.cpp $(MH)
 	$(CC) -c $(DIR)/test_tudps.cpp -o $@ $(MINC) $(SW)
+
+$(DIR)/BlockCopySolver.o: $(DIR)/BlockCopySolver.cpp \
+	$(DIR)/BlockCopySolver.h $(MH)
+	$(CC) -c $(DIR)/BlockCopySolver.cpp -o $@ $(MINC) $(SW)
 
 # the generator of the scenarios of this Block- - - - - - - - - - - - - - - -
 # it reads a unit commitment instance and writes both the scenario set and the
@@ -134,6 +139,6 @@ $(DIR)/fw_test.o: ../fw_test.cpp $(MH) $(FWSlvH)
 .PHONY: tudps fw
 
 clean::
-	rm -f $(DIR)/TUDPS_test $(DIR)/UCBlock_FW_test
+	rm -f $(DIR)/TUDPS_test $(DIR)/UCBlock_FW_test $(DIR)/BlockCopySolver.o
 
 ############################ End of makefile #################################

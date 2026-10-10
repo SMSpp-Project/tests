@@ -26,7 +26,11 @@
 # reserves and reactive power, and is run in four regimes: energy only, a
 # rewarded spinning reserve (TUDPS_RESCOST), a priced reactive power
 # (TUDPS_QCOST) and a few rounds of changes of the costs, plus a run with
-# part of the modulation variables fixed (TUDPS_FIXMOD). In CI only the first
+# part of the modulation variables fixed (TUDPS_FIXMOD). In the runs that
+# solve once, the formulations of the operating rules other than the
+# default one are compared with it too, each by a BlockCopySolver of
+# BSCfg-nuc-forms.txt (the compact ones) and, outside CI, of
+# BSCfg-nuc-graph.txt (the flows on the label graph). In CI only the first
 # unit of the first seed of each family is run.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -37,6 +41,10 @@ RULESDIR=../../UCBlock/data/nc4/1UC_Data/nuclear/48
 
 TUDPS_test=${1:-./TUDPS_test}
 par=BSCfg-nuc.txt
+# the same, with a BlockCopySolver for each compact formulation of the rules,
+# and for each flow on their label graph (far slower, not in the short run)
+forms=BSCfg-nuc-forms.txt
+graph=BSCfg-nuc-graph.txt
 
 seed=0
 wchg=0      # just solve and compare the optimum (no cost perturbation here)
@@ -60,13 +68,16 @@ if [ -z "$files" ]; then
 fi
 
 for f in $files; do
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+  run_test "$TUDPS_test" "$f" -S "$forms" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
   TUDPS_RESCOST=-0.05 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$forms" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
   TUDPS_QCOST=-0.01 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$forms" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
   TUDPS_FIXMOD=7 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$forms" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+  if [ -z "$CI" ]; then
+    run_test "$TUDPS_test" "$f" -S "$graph" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+  fi
   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -B "TUBCfg-$form.txt" -n 5
 done
 

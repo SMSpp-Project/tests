@@ -7,7 +7,10 @@
  * A ThermalUnitBlock instance is loaded from netCDF file, two different
  * Solver are registered to the ThermalUnitBlock, the second of which is
  * assumed to be a ThermalUnitDPSolver, the ThermalUnitBlock is solved by
- * the Solver and the results are compared. The ThermalUnitBlock is then
+ * the Solver and the results are compared. Any further Solver registered
+ * between the first and the last one (e.g., a BlockCopySolver that solves a
+ * copy of the unit in another formulation, see BlockCopySolver.h) is
+ * compared with the first one as well. The ThermalUnitBlock is then
  * repeatedly randomly modified and re-solved several times, the results are
  * compared.
  *
@@ -556,6 +559,40 @@ static bool SolveBoth( void )
   if( ( ! decided ) && ( rtrn1st == Solver::kUnbounded ) &&
       ( rtrn2nd == Solver::kUnbounded ) ) {
    ok = true; verdict = "OK(u)"; decided = true;
+   }
+
+  // the Solver between the first and the last one (e.g., a BlockCopySolver
+  // for each formulation of the unit, see BlockCopySolver.h), each against
+  // the first one as the last one is, its Solution included
+  {
+   const auto & slvs = TUBlock->get_registered_solvers();
+   auto it = std::next( slvs.begin() );
+   for( Index k = 2 ; k < slvs.size() ; ++k , ++it ) {
+    const int rtrn = ( *it )->compute( false );
+    const bool hs = ( ( ( rtrn >= Solver::kOK ) && ( rtrn < Solver::kError )
+                        && ( rtrn != Solver::kUnbounded )
+                        && ( rtrn != Solver::kInfeasible ) )
+                      || ( rtrn == Solver::kLowPrecision ) );
+    const double fo = hs ? ( *it )->get_var_value() : -INF;
+    bool same = hs ? ( hs1st && ( abs( fo1st - fo ) <= 1e-4 *
+                                  std::max( double( 1 ) ,
+                                            std::max( abs( fo1st ) ,
+                                                      abs( fo ) ) ) ) )
+                   : ( ( ! hs1st ) && ( rtrn == rtrn1st ) );
+    #if CHECK_GET_SOLUTION
+     const std::string nm = "Solver" + std::to_string( k );
+     if( same && hs && ( *it )->has_var_solution() )
+      same = CheckGetSolution( *it , nm.c_str() );
+    #endif
+    if( ! same ) {
+     std::cerr.setf( std::ios::scientific , std::ios::floatfield );
+     std::cerr << std::setprecision( 9 );
+     std::cerr << "Error: Solver " << k << " reports " << fo << " (status "
+               << rtrn << ") instead of " << fo1st << std::endl;
+     ok = false;
+     verdict = "KO(" + std::to_string( k ) + ")";
+     }
+    }
    }
 
   {

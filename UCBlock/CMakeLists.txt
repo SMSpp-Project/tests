@@ -125,7 +125,8 @@ if (TARGET SMS++::UCBlock)
     # tests of UCBlock and not a suite of its own. Its batteries live apart,
     # in batches-tub, because they walk the instances that carry one unit
     # alone rather than a whole unit commitment.
-    add_executable(TUDPS_test test_tudps.cpp ../common_utils.cpp)
+    add_executable(TUDPS_test test_tudps.cpp BlockCopySolver.cpp
+                   ../common_utils.cpp)
     target_include_directories(TUDPS_test PRIVATE ..)
     target_link_libraries(TUDPS_test PRIVATE SMS++::UCBlock)
 

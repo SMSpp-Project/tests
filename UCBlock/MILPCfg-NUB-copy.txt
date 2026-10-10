@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - MILPCfg-NUB-copy.txt- - - - - - - - - - - - - - -
+#
+# ComputeConfig of the :MILPSolver of the copies of a NuclearUnitBlock that
+# the BlockCopySolver of BSCfg-nuc-forms.txt and BSCfg-nuc-graph.txt solve
+# [see BSCfg-nuc-milp.txt]: that of MILPCfg-NUB.txt, on one thread and with
+# no cut separated (the copies have no Perspective Cuts), to an accuracy well
+# below the one of the comparison
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*MILPCfg-NUB.txt +
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intCutSepPar     0    # no cut separated
+Threads          1    # one thread (GRBMILPSolver)
+
+1  # number of double parameters
+
+# now all the double parameters
+dblRelAcc        1e-9 # relative accuracy required to the solution
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END MILPCfg-NUB-copy.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

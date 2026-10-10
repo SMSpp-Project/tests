@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `UCBlock/BlockCopySolver`, a `Solver` of the testers that solves a copy of
+  its `Block` in the formulation of a `BlockConfig` of its own, and
+  `TUDPS_test` compares with the first `Solver` every `Solver` registered
+  between the first and the last one: the battery `batch-nuclear` of
+  `TUDPS_test` compares, in the runs that solve once, each formulation of the
+  operating rules of `NuclearUnitBlock` with the default one
+  (`BSCfg-nuc-forms.txt`, the compact ones, and `BSCfg-nuc-graph.txt`, the
+  flows on the label graph, outside CI, the copies on the T formulation
+  without Perspective Cuts), the `:MILPSolver` of a single unit being
+  written once in `MILPCfg-NUB.txt`
+
 ## [0.7.0] - 2026-10-09
 
 ### Added
