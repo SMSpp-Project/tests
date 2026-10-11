@@ -30,10 +30,9 @@
 # solve once, the formulations of the operating rules other than the
 # default one are compared with it too, each by a BlockCopySolver of
 # BSCfg-nuc-forms.txt (the compact ones, with the caps of the runs by the
-# reach of the rules) and, outside CI,
-# of BSCfg-nuc-graph.txt (the flows on the label graph and F2 on the outputs
-# of the runs of the network formulations). In CI only the first
-# unit of the first seed of each family is run.
+# reach of the rules) and, outside CI, of BSCfg-nuc-graph.txt (the flows on
+# the label graph). In CI only the first unit of the first seed of each
+# family is run.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"

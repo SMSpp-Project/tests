@@ -19,9 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   flows on the label graph, outside CI, the copies on the T formulation
   without Perspective Cuts), the `:MILPSolver` of a single unit being
   written once in `MILPCfg-NUB.txt`; the forms also compare F2 on SUSD with
-  the caps of the runs by the reach of the rules and, outside CI, F2
-  written on the outputs of the runs of SUSD and of DP
-  (`NUBCfg-SUSD-F2-RC.txt`, `NUBCfg-SUSD-F2-RU.txt`, `NUBCfg-DP-F2-RU.txt`)
+  the caps of the runs by the reach of the rules (`NUBCfg-SUSD-F2-RC.txt`)
 
 - `UCBlock/batches/batch-p4r` also runs the multi-energy instances of
   UCBlock (a combined heat and power plant as a `ConversionUnitBlock` and as
