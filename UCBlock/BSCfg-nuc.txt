@@ -1,12 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSCfg-nuc.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSCfg-nuc.txt - - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig that attaches, to a (single-TUB) NuclearUnitBlock,
 # a :MILPSolver as the 1st (reference) Solver and the EXT DP solver
-# (NuclearUnitExtDPSolver) as the 2nd Solver, so the batch compares the nuclear ext DP
-# against the MILP on the T+PC formulation (the DP is the 2nd / "back" Solver).
-#
-#   Antonio Frangioni, Donato Meoli
+# (NuclearUnitExtDPSolver) as the 2nd Solver, so the batch compares the
+# nuclear ext DP against the MILP on the T+PC formulation (the DP is the 2nd
+# / "back" Solver).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -117,5 +116,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSCfg-nuc.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSCfg-nuc.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
