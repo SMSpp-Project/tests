@@ -245,6 +245,38 @@ void b_config_Block( Block * block , Configuration * b_config ,
  }  // end( b_config_Block )
 
 /*--------------------------------------------------------------------------*/
+// the list of the (meta-)BlockConfig of the variants of a battery
+
+SimpleConfiguration< std::vector< Configuration * > > *
+ read_BlockConfig_variants( const std::string & fn )
+{
+ auto c = Configuration::deserialize( fn );
+ auto vc = dynamic_cast< SimpleConfiguration<
+                          std::vector< Configuration * > > * >( c );
+ if( ! vc ) {
+  std::cerr << "Error: " << fn << " does not contain a "
+            << "SimpleConfiguration< std::vector< Configuration * > >"
+            << std::endl;
+  delete c;
+  exit( 1 );
+  }
+
+ if( vc->f_value.empty() ) {
+  std::cerr << "Error: " << fn << " lists no variant" << std::endl;
+  exit( 1 );
+  }
+
+ for( std::size_t k = 0 ; k < vc->f_value.size() ; ++k )
+  if( ! vc->f_value[ k ] ) {
+   std::cerr << "Error: variant " << k << " of " << fn << " is empty"
+             << std::endl;
+   exit( 1 );
+   }
+
+ return( vc );
+ }
+
+/*--------------------------------------------------------------------------*/
 /* Takes out of a BlockSolverConfig the Solver that this build does not have.
  * A configuration names every Solver that makes sense on the instances of a
  * battery, so that a run solves with all of them and compares; but which

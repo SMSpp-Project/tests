@@ -317,6 +317,29 @@ void b_config_Block( Block * block , Configuration * b_config ,
                      const std::string & fn );
 
 /*--------------------------------------------------------------------------*/
+/// read the list of the (meta-)BlockConfig a battery tries on one instance
+/** A battery that compares formulations reads the instance once per variant
+ *  and gives each copy its own (meta-)BlockConfig, which b_config_Block()
+ *  applies; the variants are the elements of a
+ *
+ *    SimpleConfiguration< std::vector< Configuration * > >
+ *
+ *  in file @p fn, each of them a BlockConfig or a meta one, typically the
+ *  "*file" of one that the battery already has. The list is the business of
+ *  the battery and not of the Block: a BlockConfig applies to one Block, and
+ *  what a battery wants is the same Block several times, each time
+ *  configured differently and solved by the same Solver, so that two
+ *  formulations that do not give the same optimum are seen.
+ *
+ *  Returns the list, which the caller deletes once the copies have been
+ *  configured; a file that cannot be read, that holds anything else, or
+ *  whose list is empty or has an empty element, is an error citing @p fn,
+ *  and the run stops with exit(1). */
+
+SimpleConfiguration< std::vector< Configuration * > > *
+ read_BlockConfig_variants( const std::string & fn );
+
+/*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockSolverConfig to a Block, optionally clear() for cleanup
 /** Mirror of b_config_Block() for BlockSolverConfig. The differences are:
  *

@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `TUDPS_test` compares formulations with each other: given with `-F` a
+  list of (meta-)`BlockConfig`, a
+  `SimpleConfiguration<std::vector<Configuration*>>` such as
+  `UCBlock/TUBVar-PC.txt`, it reads the unit once per element, gives each
+  copy its own `BlockConfig` and the same `BlockSolverConfig`, makes each
+  random change to all the copies, and besides the two `Solver` of each copy
+  checks that the copies have the same optimum, which no battery did while
+  each formulation was a run of its own; `read_BlockConfig_variants()` of
+  `common_utils` reads the list for any tester
+
 - `UCBlock/batches/batch-p4r` also runs the multi-energy instances of
   UCBlock (a combined heat and power plant as a `ConversionUnitBlock` and as
   a `ThermalUnitBlock` with hyperarcs, a meshed network with a heat node)
@@ -18,6 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `InnerBSCfg-DP.txt`]
 
 ### Changed
+
+- the batteries of `UCBlock/batches-tub` that looped over the formulations
+  of the unit in bash (`batch`, `batch-acad-all`, `batch-acad-red`,
+  `batch-mustrun`, `batch-reserve`, `batch-reserve-red`, `batch-shutdown`)
+  run each instance once with `-F` and the list of its formulations
+  (`TUBVar-PC.txt`, `TUBVar-PC-3bin-T.txt` on the long horizons,
+  `TUBVar-mustrun.txt`, `TUBVar-shutdown.txt`); each run reports the
+  `Solver` of every formulation as before and, when they agree, the line
+  `formulations ... agree in <n> solves` before its verdict
 
 - the comments of `UCBlock/batches/batch-ac` and of the AC configurations
   say what is solved: a convex relaxation of the AC model, whose McCormick

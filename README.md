@@ -161,7 +161,9 @@ the `test` directory of the module itself.
   quite a lot of the mechanics of the SMS++ core library. The same suite runs
   `TUDPS_test`, which compares the `ThermalUnitExtDPSolver` specialised
   Dynamic Programming `:Solver` with a `:MILPSolver` on some of the (many)
-  different formulations `ThermalUnitBlock` supports; its batches are in
+  different formulations `ThermalUnitBlock` supports, and the formulations
+  with each other, the unit being read once per `BlockConfig` of the list
+  that the battery gives with `-F`; its batches are in
   `batches-tub`, the batteries that walk the instances carrying one unit
   alone, thermal or nuclear. Each of them runs that family with every
   `:Solver` that applies to it: besides the dynamic programme against the
