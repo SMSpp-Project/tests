@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   written on the outputs of the runs of SUSD and of DP
   (`NUBCfg-SUSD-F2-RC.txt`, `NUBCfg-SUSD-F2-RU.txt`, `NUBCfg-DP-F2-RU.txt`)
 
+- `UCBlock/batches/batch-p4r` also runs the multi-energy instances of
+  UCBlock (a combined heat and power plant as a `ConversionUnitBlock` and as
+  a `ThermalUnitBlock` with hyperarcs, a meshed network with a heat node)
+  against their known optimum, skipping them when they are not in the data;
+  the `ConversionUnitBlock` inner to the `LagrangianDualSolver` is solved
+  with its integer commitment [see `CUBSCfg-MIP.txt` and
+  `InnerBSCfg-DP.txt`]
+
 ### Changed
 
 - the tests that set up the instances of a module are named after the

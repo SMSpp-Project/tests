@@ -1,0 +1,37 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  CUBSCfg-MIP.txt  - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a ConversionUnitBlock
+# inner to a LagrangianDualSolver, solved with its integer commitment
+# by a :MILPSolver [see MILPCfg-MIP.txt], so that the binary variables
+# of the sub-problem are binary for the proximal penalty of the
+# PrimalProximalHeur
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver        # name of Solver
+GRBMILPSolver         # name of Solver
+#SCIPMILPSolver       # name of Solver
+#HiGHSMILPSolver      # name of Solver
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+
+*MILPCfg-MIP.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END CUBSCfg-MIP.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
