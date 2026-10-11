@@ -4,8 +4,8 @@
 # A txt description of a BlockSolverConfig for a ThermalUnitBlock whose
 # continuous relaxation is being solved (to optimality) by a :MILPSolver,
 # for the AC case where the reactive-power terms make that relaxation a QCP:
-# SCIP is used (HiGHS cannot solve QCP models). It is otherwise identical to
-# TUBSCfg-CLP.txt, which uses HiGHS for the non-QCP (DC) case.
+# GUROBI is used (HiGHS cannot solve QCP models). It is otherwise identical
+# to TUBSCfg-CLP.txt, which uses HiGHS for the non-QCP (DC) case.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

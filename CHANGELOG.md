@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the comments of `UCBlock/batches/batch-ac` and of the AC configurations
+  say what is solved: a convex relaxation of the AC model, whose McCormick
+  inequalities are not separated in a continuous solve, by GUROBI (not
+  SCIP); the 24h instances stay skipped, with the measured reason (the
+  `:MILPSolver` alone solves one in a few minutes, the Lagrangian chain does
+  not converge in 90 minutes and exceeds the sessions of the license)
+
 - the tests that set up the instances of a module are named after the
   target they build (`extract_<prefix>_<fmt>`, `run_<tool>`), set up the
   fixture `<prefix>_<fmt>_extracted` or `<tool>_generated` and share the

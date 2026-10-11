@@ -8,15 +8,13 @@
 # It is BSPar.txt with the two differences the AC case needs, both
 # expressed as overrides of the shared *Cfg.txt fragments:
 #
-#   - the LP-reproducibility recipe for the :MILPSolver (Method, Presolve,
-#     NumericFocus), since the AC LP relaxations are more degenerate than the
-#     DC ones (SOCP cone + McCormick envelopes) and the default settings can
-#     pick a different optimal vertex than the LagrangianDualSolver, producing
-#     a small gap between the two;
+#   - the reproducibility recipe for the :MILPSolver (Method, Presolve,
+#     NumericFocus), since the AC relaxations, convex QCPs with second-order
+#     cones, are more degenerate than the DC ones and the default settings
+#     can pick a different optimal point than the LagrangianDualSolver,
+#     producing a small gap between the two;
 #   - InnerBSCfg-AC.txt as the BlockSolverConfig of the LagBFunctions (the AC
-#     ThermalUnitBlock is a QCP, solved by SCIP).
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
+#     ThermalUnitBlock is a QCP, solved by GUROBI).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -113,7 +111,7 @@ NumericFocus        3    # 0 = auto (default), 1..3 = increasing precision focus
 # ComputeConfig of the LagrangianDualSolver; it mostly is the
 # ComputeConfig of the inner Solver, which is a [Parallel]BundleSolver. Only
 # the BlockSolverConfig of the LagBFunctions changes for the AC case (the
-# ThermalUnitBlock QCP is solved by SCIP), so override just that string; the
+# ThermalUnitBlock QCP is solved by GUROBI), so override just that string; the
 # rest, str_LDSlv_ISName included, comes from the shared LDCfg.txt fragment.
 
 *LDCfg.txt +
@@ -134,7 +132,7 @@ NumericFocus        3    # 0 = auto (default), 1..3 = increasing precision focus
 
 # now all the string parameters
 str_LagBF_BSCfg          InnerBSCfg-AC.txt # BlockSolverConfig for the LagBFunctions
-                                           # (AC: ThermalUnitBlock QCP -> SCIP)
+                                           # (AC: QCP -> GUROBI)
 
 0 # number of vector-of-int parameters
 
@@ -178,7 +176,7 @@ intDoEasy 0 # the AC continuous relaxation has no non-easy component
 
 # now all the string parameters
 str_LagBF_BSCfg          InnerBSCfg-AC.txt # BlockSolverConfig for the LagBFunctions
-                                           # (AC: ThermalUnitBlock QCP -> SCIP)
+                                           # (AC: QCP -> GUROBI)
 
 0 # number of vector-of-int parameters
 

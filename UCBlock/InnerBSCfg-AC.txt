@@ -5,12 +5,12 @@
 # (a map from a Block classname() to the BlockSolverConfig that solves each
 # inner sub-Block of the Lagrangian Dual), but for AC instances. There the
 # reactive-power / voltage terms make the inner Blocks (ThermalUnitBlock and
-# the ACNetworkBlock that the catch-all solves) QCPs, which HiGHS cannot solve,
-# so both are routed to the SCIP configs TUBSCfg-QCP.txt / LPBSCfg-QCP.txt
-# instead of the HiGHS TUBSCfg-CLP.txt / LPBSCfg.txt.
+# the ACNetworkBlock that the catch-all solves) QCPs, which HiGHS cannot
+# solve, so both are routed to the GUROBI configs TUBSCfg-QCP.txt /
+# LPBSCfg-QCP.txt instead of the HiGHS TUBSCfg-CLP.txt / LPBSCfg.txt.
 #
-#   ThermalUnitBlock  -> TUBSCfg-QCP.txt (SCIP, QCP-capable)
-#   *  (catch-all)    -> LPBSCfg-QCP.txt (SCIP, QCP-capable)
+#   ThermalUnitBlock  -> TUBSCfg-QCP.txt (GUROBI, QCP-capable)
+#   *  (catch-all)    -> LPBSCfg-QCP.txt (GUROBI, QCP-capable)
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

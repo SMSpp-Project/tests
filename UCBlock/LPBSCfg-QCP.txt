@@ -5,8 +5,9 @@
 # LP / QP / QCP (continuous, convex, separable) and can be solved by a
 # :MILPSolver. The AC counterpart of LPBSCfg.txt: on AC instances the inner
 # Block (e.g. an ACNetworkBlock) carries the reactive-power / voltage
-# quadratic constraints, i.e. it is a QCP, which HiGHS cannot solve; SCIP is
-# used instead. It is otherwise identical to LPBSCfg.txt (HiGHS, non-QCP case).
+# quadratic constraints, i.e. it is a convex QCP, which HiGHS cannot solve;
+# GUROBI is used instead, with the duals of the quadratic rows. It is
+# otherwise identical to LPBSCfg.txt (HiGHS, non-QCP case).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -39,8 +40,10 @@ QCPDual         1 # ask GUROBI for the duals of the quadratic constraints:
                   # the AC instances relax to a QCP, and whoever solves
                   # the Lagrangian Dual needs them [no effect on a LP]
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
-intCutSepPar    7 # separate the ACNetworkBlock McCormick valid inequalities,
-                  # as dynamic constraints, at the root node & sub-nodes + lazy
+intCutSepPar    7 # separate user cuts at the root node & sub-nodes and
+                  # lazy constraints; no effect with intRelaxIntVars 1,
+                  # which installs no callback, hence the McCormick
+                  # inequalities of ACNetworkBlock are not separated
 
 # All specific SCIP parameter (uncomment based on Solver)
 #lp/checkstability 0 # 0 = accept unstable LP, 1 = abort node (default)
