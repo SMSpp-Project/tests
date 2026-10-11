@@ -32,7 +32,9 @@ BlockConfig # exact type of the Configuration object
 # +2048 the stability after a start-up by rows of single instants,
 # +4096 the deep decreases by the rows of the default formulation,
 # +8192 the rows of the reach of the output from a start-up and towards
-# a shut-down
+# a shut-down, +16384 the caps of the runs of the network formulations by
+# the reach of the rules, +32768 the rows of F2 on the private outputs of
+# the network formulations, +65536 the perspective cuts on the bands
 SimpleConfiguration<int>
 8705
 

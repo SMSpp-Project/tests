@@ -5,8 +5,9 @@
 # operating rules of the Block (the default one on T with Perspective Cuts,
 # TUBCfg-T-PC.txt): the :MILPSolver (1st, the reference), one BlockCopySolver
 # for each compact formulation of the rules, which solves the copy of the
-# unit in it, and NuclearUnitExtDPSolver (last), so that TUDPS_test compares
-# all of them with the first one in one run
+# unit in it (also F2 on the SUSD formulation with the caps of the runs by
+# the reach of the rules), and NuclearUnitExtDPSolver (last), so that
+# TUDPS_test compares all of them with the first one in one run
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -15,7 +16,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-10  # number of (the names of) Solver in this BlockSolverConfig
+11  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver         # name of 1st Solver
@@ -28,9 +29,10 @@ BlockCopySolver        # name of 6th Solver (F2-DF1)
 BlockCopySolver        # name of 7th Solver (F2-RR)
 BlockCopySolver        # name of 8th Solver (F3a)
 BlockCopySolver        # name of 9th Solver (F4)
-NuclearUnitExtDPSolver # name of 10th Solver
+BlockCopySolver        # name of 10th Solver (F2-SUSD-RC)
+NuclearUnitExtDPSolver # name of 11th Solver
 
-9  # number of ComputeConfig in this BlockSolverConfig
+10  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig (the last Solver has none)
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -329,6 +331,45 @@ strBlockCfg  NUBCfg-T-F3a.txt
 
 # now all the string parameters
 strBlockCfg  NUBCfg-T-F4.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 10th ComputeConfig: F2-SUSD-RC - - - - - - - - - - - - - - - - - - - - - -
+*CopyCfg-nuc.txt +
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strBlockCfg  NUBCfg-SUSD-F2-RC.txt
 
 0  # number of vector-of-int parameters
 

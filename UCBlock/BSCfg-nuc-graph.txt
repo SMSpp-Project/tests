@@ -2,8 +2,10 @@
 # - - - - - - - - - - - - - BSCfg-nuc-graph.txt - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig of a single NuclearUnitBlock as BSCfg-nuc-forms.txt, with
-# a BlockCopySolver for each flow on the label graph of the rules (F5, F6),
-# which are far slower to solve and therefore run outside the short battery
+# a BlockCopySolver for each flow on the label graph of the rules (F5, F6)
+# and for F2 written also on the outputs of the runs of the SUSD and DP
+# formulations, which are far slower to solve and therefore run outside the
+# short battery
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -12,16 +14,18 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-4  # number of (the names of) Solver in this BlockSolverConfig
+6  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver         # name of 1st Solver
 GRBMILPSolver          # name of 1st Solver (reference)
 BlockCopySolver        # name of 2nd Solver (F5)
 BlockCopySolver        # name of 3rd Solver (F6)
-NuclearUnitExtDPSolver # name of 4th Solver
+BlockCopySolver        # name of 4th Solver (F2-SUSD-RU)
+BlockCopySolver        # name of 5th Solver (F2-DP-RU)
+NuclearUnitExtDPSolver # name of 6th Solver
 
-3  # number of ComputeConfig in this BlockSolverConfig
+5  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig (the last Solver has none)
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -86,6 +90,84 @@ strBlockCfg  NUBCfg-T-F5.txt
 
 # now all the string parameters
 strBlockCfg  NUBCfg-T-F6.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 4th ComputeConfig: F2-SUSD-RU - - - - - - - - - - - - - - - - - - - - - -
+*CopyCfg-nuc.txt +
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strBlockCfg  NUBCfg-SUSD-F2-RU.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 5th ComputeConfig: F2-DP-RU - - - - - - - - - - - - - - - - - - - - - - -
+*CopyCfg-nuc.txt +
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strBlockCfg  NUBCfg-DP-F2-RU.txt
 
 0  # number of vector-of-int parameters
 
