@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `:MILPSolver` alone solves one in a few minutes, the Lagrangian chain does
   not converge in 90 minutes and exceeds the sessions of the license)
 
+- `compare` of `ml_bench` prints a line when each side of an instance starts
+  and one when it ends, with its time and iterations or why it failed, so
+  that a side that does not end is seen while it runs
+
 - the tests that set up the instances of a module are named after the
   target they build (`extract_<prefix>_<fmt>`, `run_<tool>`), set up the
   fixture `<prefix>_<fmt>_extracted` or `<tool>_generated` and share the
