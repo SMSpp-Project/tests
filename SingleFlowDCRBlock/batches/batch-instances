@@ -9,7 +9,8 @@
 # (see data/README.md there), in both formulations: the SOCP one, which is
 # exact, and the "P/C" one, whose cuts only outer-approximate the cones, so
 # that the :MILPSolver solves a relaxation of the DCR problem, which -R
-# declares to the cross-check, as in batch-pc
+# declares to the cross-check; where both are run, it is in one run with
+# the variants of DCRVar.txt, the two copies being compared with each other
 #
 # the SingleFlowDCRBendersSolver stops on its own criterion and does not
 # declare how much of a gap it leaves, so "-E ,inf" holds it to the base
@@ -36,7 +37,7 @@ DATADIR=../../SingleFlowDCRBlock/data/nc4/single
 # in 10: on the runner of the pipeline Gurobi stops on numerical
 # difficulties on instances that are stable on the machines of ours, a
 # different one at each run, while what matters there is that nothing has
-# changed, which batch does on the SOCP formulation and this on the P/C one
+# changed, which batch does on both formulations and this on the P/C one
 if [ -n "$CI" ]; then socp=0; every=10; else socp=1; every=1; fi
 
 ran=0
@@ -49,7 +50,8 @@ for what in "$DATADIR"/*/*.nc4; do
   case " $(echo $socp_unstable $socp_too_long) " in
     *" ${inst%.nc4} "*) ;;
     *) if [ "$socp" = 1 ]; then
-        run_test "$exe" "$what" -B DCRCfg-socp.txt -S BSPar.txt -E ,inf
+         run_test "$exe" "$what" -F DCRVar.txt -E ,inf
+         continue
        fi ;;
   esac
   run_test "$exe" "$what" -B DCRCfg-pc.txt -S BSPar-pc.txt -R r, -E ,inf

@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 #
-# usage: batch < exe file > < par file > < block config >
+# usage: batch < exe file >
 #        < exe file >     = path of the executable file, default
 #                           ./SingleFlowDCRBlock_test
-#        < par file >     = BlockSolverConfig file, default BSPar.txt
-#        < block config > = BlockConfig file, default DCRCfg-socp.txt
 #
 # sweeps SingleFlowDCRBlock_test over a range of network sizes, 5 seeds
 # each, and over three values of the "tightness" of the deadline: 1.05 is
@@ -12,6 +10,13 @@
 # that few routings are feasible and the delay constraint is what decides,
 # while at 4 the deadline is loose and the problem is essentially a
 # min-cost path
+#
+# each instance in both formulations, the variants of DCRVar.txt: the SOCP
+# one, which is exact, and the "P/C" one, in which the two cone constraints
+# are only outer-approximated by the linear cuts that have been separated so
+# far, so that its :MILPSolver solves a relaxation of the DCR problem, which
+# the variant declares; the Solver of each are cross-checked, then those of
+# the two copies against each other
 #
 # the SingleFlowDCRBendersSolver stops on its own criterion and does not
 # declare how much of a gap it leaves, so "-E ,inf" holds it to the base
@@ -21,8 +26,6 @@
 source "$(dirname "$0")/../../batch_common.sh"
 
 exe=${1:-./SingleFlowDCRBlock_test}
-par=${2:-BSPar.txt}
-bcf=${3:-DCRCfg-socp.txt}
 
 for n in 10 20 40; do
 
@@ -31,7 +34,7 @@ for n in 10 20 40; do
   for t in 1.05 1.5 4; do
     for (( seed = 0 ; seed < 5 ; seed++ )); do
 
-      run_test "$exe" -B "$bcf" -S "$par" -E ,inf -n "$n" -m "$m" \
+      run_test "$exe" -F DCRVar.txt -E ,inf -n "$n" -m "$m" \
                -t "$t" -e "$seed"
 
     done # seed

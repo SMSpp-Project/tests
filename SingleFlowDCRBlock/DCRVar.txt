@@ -1,0 +1,42 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - DCRVar.txt- - - - - - - - - - - - - - - - -
+#
+# The variants of a SingleFlowDCRBlock that batch and batch-instances
+# compare: the SOCP formulation of DCRCfg-socp.txt, solved exactly by the
+# Solver of BSPar.txt, and the P/C one of DCRCfg-pc.txt, whose cuts only
+# outer-approximate the cones, so that the :MILPSolver of BSPar-pc.txt solves
+# a relaxation of the problem. Each variant is the vector of its BlockConfig,
+# its BlockSolverConfig and which of its Solver solve a relaxation (1) or not
+# (0), i.e., its own -R. The instance is read once per variant and the Solver
+# of the two copies are compared with each other [see -F of
+# SingleFlowDCRBlock_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of variants of the BlockConfig
+
+# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 1st variant: the SOCP formulation, both Solver exact
+SimpleConfiguration<std::vector<Configuration*>>
+3  # its BlockConfig, its BlockSolverConfig, its -R
+*DCRCfg-socp.txt        # its BlockConfig
+*BSPar.txt              # its BlockSolverConfig
+SimpleConfiguration<std::vector<int>>
+2  0 0                  # no Solver solves a relaxation
+
+# 2nd variant: the P/C formulation, the :MILPSolver a relaxation
+SimpleConfiguration<std::vector<Configuration*>>
+3  # its BlockConfig, its BlockSolverConfig, its -R
+*DCRCfg-pc.txt          # its BlockConfig
+*BSPar-pc.txt           # its BlockSolverConfig
+SimpleConfiguration<std::vector<int>>
+2  1 0                  # the :MILPSolver solves a relaxation
+
+# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END DCRVar.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

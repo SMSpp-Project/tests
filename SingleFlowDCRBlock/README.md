@@ -57,10 +57,13 @@ plus the options that every SMS++ tester understands (`--help` lists them
 all). If a `<file>` is given, the `SingleFlowDCRBlock` is de-serialized out
 of that netCDF file instead of being generated.
 
-Four batch files are provided: `batch` for the SOCP formulation and
-`batch-pc` for the P/C one, each sweeping a range of network sizes,
-tightnesses and seeds of the random instances; `batch-instances`, which runs
-both formulations on the instances of the module, i.e., on 10 flows of each
+Three batch files are provided: `batch`, sweeping a range of network sizes,
+tightnesses and seeds of the random instances, each in both formulations in
+one run with `-F DCRVar.txt`, whose variants carry their own
+`BlockSolverConfig` and say which of their `Solver` solve a relaxation, so
+that the copies are compared with each other as well; `batch-instances`,
+which runs both formulations in the same way on the instances of the
+module, i.e., on 10 flows of each
 of 307 real and random networks (see `data/README.md` in
 `SingleFlowDCRBlock`, whose build downloads them), except the SOCP one on
 the 101 instances where Gurobi does not solve it with each of three

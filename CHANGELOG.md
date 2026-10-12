@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `SingleFlowDCRBlock/batches/batch` runs each instance in both
+  formulations, the SOCP and the P/C one, with `-F DCRVar.txt`, whose
+  variants carry their `BlockSolverConfig` and their `-R`, and compares
+  them with each other; `batch-pc` is gone, and `batch-instances` runs the
+  two formulations in one run where it runs both
+
 - a variant of `-F` may be the vector of its `BlockConfig`, its
   `BlockSolverConfig` and a `SimpleConfiguration<std::vector<int>>` saying
   which of its `Solver` solve a relaxation, i.e., its own `-R`;
