@@ -84,6 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the testers no longer define their own `RED`/`GREEN` macros, which are
+  those of `common_utils.h`, and `UCBlock_test` and `MMCFBlock_test` no
+  longer carry the commented-out template of a loop of changes they never
+  made, nor the random generator and the macros it would have used
+
 - `MCFBlock/batches/batch` and `batch-dense` share `batches/mcf_battery.sh`,
   the sweep of the changes over the instances being the values of its
   parameters [see `sweep`], each battery naming only its sizes; the runs are

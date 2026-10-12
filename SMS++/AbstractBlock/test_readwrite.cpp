@@ -46,15 +46,6 @@
 
 #define PANIC( x ) if( ! ( x ) ) PANICMSG
 
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
 /*--------------------------------------------------------------------------*/
 
 // This option enable to write/read files in different formats.

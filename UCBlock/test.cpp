@@ -155,30 +155,6 @@
 #define USE_BundleSolver 1
 
 /*--------------------------------------------------------------------------*/
-// if nonzero, the 1st Solver attached to the UCBlock is detached
-// and re-attached to it at all iterations
-
-#define DETACH_1ST 0
-
-// if nonzero, the 2nd Solver attached to the UCBlock is detached and
-// re-attached to it at all iterations
-
-#define DETACH_2ND 0
-
-/*--------------------------------------------------------------------------*/
-// if nonzero, the two Block are not solved at every round of changes, but
-// only every SKIP_BEAT + 1 rounds. this allows changes to accumulate, and
-// therefore puts more pressure on the Modification handling of the Solver
-// (in case this tries to do "smart" things rather than dumbly processing
-// each one in turn)
-//
-// note that the number of rounds of changes is them multiplied by
-// SKIP_BEAT + 1, so that the input parameter still dictates the number of
-// Block solutions
-
-#define SKIP_BEAT 0
-
-/*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -241,9 +217,6 @@ const FunctionValue INF = SMSpp_di_unipi_it::Inf< FunctionValue >();
 
 Block * TestBlock;         // the [UC]Block that is solved
 
-std::mt19937 rg;           // base random generator
-std::uniform_real_distribution<> dis( 0.0 , 1.0 );
-
 // if not-NaN, the objective value of the (only) Solver attached to the Block
 // is compared against a reference value passed on the command line
 
@@ -251,16 +224,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-static double rndfctr( void )
-{
- // return a random number between 0.5 and 2, with 50% probability of being
- // < 1
- double fctr = dis( rg ) - 0.5;
- return( fctr < 0 ? - fctr : fctr * 4 );
- }
-
 /*--------------------------------------------------------------------------*/
 
 // test-specific command-line knobs, set by process_specific_arg(); the
@@ -1458,8 +1421,6 @@ int main( int argc , char ** argv )
  // standard params (instance positional + -B + -S) are parsed by
  // common_utils; the test only appends its own knobs
 
- assert( SKIP_BEAT >= 0 );
-
  docopt_desc = "SMS++ LagrangianDualSolver-on-UCBlock test.\n";
  short_opts += "r:V:";
  const std::vector< option > my_opts = {
@@ -1591,72 +1552,6 @@ int main( int argc , char ** argv )
  for( auto b : blocks )
   AllPassed &= check_relaxation_solutions( b , RelaxationViol ,
                                            RefObjective );
-
- // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // now, for n_repeat times:
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- //
- // then the TestBlock is re-solved with both Solver
-
- /*!!
- for( Index rep = 0 ; rep < n_repeat * ( SKIP_BEAT + 1 ) ; ) {
-  LOG1( rep << ": ");
-
-  // do stuff 1 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  if( ( wchg & 1 ) && ( dis( rg ) <= p_change ) )
-   if( Index tochange = Index( dis( rg ) * n_change ) ) {
-    LOG1( "... " << tochange << " ... - " );
-
-    }
-
-  // do stuff 2 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  if( ( wchg & 2 ) && ( dis( rg ) <= p_change ) )
-   if( Index tochange = min( m - 1 , Index( dis( rg ) * n_change ) ) ) {
-    LOG1( "... " << tochange << " ..." );
-
-    
-    if( dis( rg ) <= 0.5 ) {  // in 50% of the cases do a ranged change
-     LOG1( "(r) - " );
-
-     }
-    else {  // in the other 50% of the cases, do a sparse change
-     LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange , rg ) );
-
-     }
-
-    }
-
-  // ...
-
-
-  // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -
-
-  #if( LOG_LEVEL >= 3 )
-   ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
-		                     MILPSolver::strOutputFile , "LPBlock-" +
-		                     std::to_string( rep ) + ".lp" );
-  #endif
-
-  // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -
-  // ... every SKIP_BEAT + 1 rounds
-
-  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) )
-   AllPassed &= SolveBoth();
-  #if( LOG_LEVEL >= 1 )
-  else
-   std::cout << std::endl;
-  #endif
-
-  }  // end( main loop )- - - - - - - - - - - - - - - - - - - - - - - - - - -
-     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-     !!*/
 
  #if( LOG_LEVEL >= 0 )
   if( ! std::isnan( RefObjective ) ||
