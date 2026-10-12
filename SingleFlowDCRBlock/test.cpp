@@ -331,55 +331,72 @@ int main( int argc , char ** argv )
  filename_optional = true;
 
  process_args( argc , argv , process_specific_arg );
- require_solver_config();
 
  if( n_nodes < 2 ) {
   std::cerr << "Error: at least two nodes are needed" << std::endl;
   exit( 1 );
   }
 
- // the Block: either the given netCDF file or a random instance - - - - - -
+ // the variants of the BlockConfig: the list of -F, the one of -B, or none
+ // [see get_BlockConfig_variants()]
+ auto bv = get_BlockConfig_variants( true );
 
- SingleFlowDCRBlock * block;
- if( ! filename.empty() ) {
-  block = dynamic_cast< SingleFlowDCRBlock * >(
-                                       Block::deserialize( filename ) );
-  if( ! block ) {
-   std::cerr << "Error: " << filename
-             << " does not contain a SingleFlowDCRBlock" << std::endl;
-   exit( 1 );
+ // the Block, once per variant: either the given netCDF file or a random
+ // instance, the same for all of them - - - - - - - - - - - - - - - - - - -
+
+ std::vector< Block * > blocks;
+ std::vector< Configuration * > sconfs;
+ for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+  SingleFlowDCRBlock * block;
+  if( ! filename.empty() ) {
+   block = dynamic_cast< SingleFlowDCRBlock * >(
+                                        Block::deserialize( filename ) );
+   if( ! block ) {
+    std::cerr << "Error: " << filename
+              << " does not contain a SingleFlowDCRBlock" << std::endl;
+    exit( 1 );
+    }
    }
+  else {
+   rg.seed( seed );
+   block = dynamic_cast< SingleFlowDCRBlock * >(
+                        Block::new_Block( "SingleFlowDCRBlock" ) );
+   build_random_instance( block );
+   }
+
+  // configure it - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  if( bv.configs[ k ] )
+   b_config_Block( block , bv.configs[ k ] , bv.file );
+
+  auto sconf = solver_config_of( bv , k );
+  s_config_Block( block , sconf , sconf_file );
+
+  blocks.push_back( block );
+  sconfs.push_back( sconf );
   }
- else {
-  rg.seed( seed );
-  block = dynamic_cast< SingleFlowDCRBlock * >(
-                       Block::new_Block( "SingleFlowDCRBlock" ) );
-  build_random_instance( block );
-  }
 
- // configure it- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ delete( bv.owner );
 
- if( ! bconf_file.empty() )
-  b_config_Block( block , Configuration::deserialize( bconf_file ) ,
-                  bconf_file );
-
- auto sconf = Configuration::deserialize( sconf_file );
- s_config_Block( block , sconf , sconf_file );
-
- // solve it and cross-check what the Solver say - - - - - - - - - - - - - -
+ // solve them and cross-check what the Solver say- - - - - - - - - - - - -
 
  c_double tol = 1e-5;
- bool ok = SolveAll( block , RefObjective , tol );
+ bool ok = SolveVariants( blocks , bv.names , read_bounds , RefObjective ,
+                          tol );
 
  // then check the Solution they produce - - - - - - - - - - - - - - - - - -
 
- ok &= check_solutions( block , 1e-4 );
+ for( auto block : blocks )
+  ok &= check_solutions( static_cast< SingleFlowDCRBlock * >( block ) ,
+                         1e-4 );
 
  // clean up- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- s_config_Block( block , sconf );  // sconf has been clear()-ed before
- delete( sconf );
- delete( block );
+ for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
+  s_config_Block( blocks[ k ] , sconfs[ k ] );  // clear()-ed before
+  delete( sconfs[ k ] );
+  delete( blocks[ k ] );
+  }
 
  return( ok ? 0 : 1 );
 
