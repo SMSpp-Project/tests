@@ -44,6 +44,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `UCBlock_test --scale` no longer builds the `BlockConfig` of the
+  formulations of the unit in code: it reads them from the lists
+  `UCBlock/TUBVar.txt` (the seven formulations, new) and
+  `UCBlock/TUBVar-PC.txt` (the seven with the Perspective Cuts) with
+  `read_BlockConfig_variants()`, and it is run in the directory of the
+  suite, which holds them
+
+- `b_config_Block()` of `common_utils` applies a clone of a plain
+  `BlockConfig`, as it already did for a meta one: `apply()` moves the
+  `Configuration` it holds into the `Block`, so the same `BlockConfig`
+  applied twice gave nothing the second time
+
 - the batteries of `UCBlock/batches-tub` that looped over the formulations
   of the unit in bash (`batch`, `batch-acad-all`, `batch-acad-red`,
   `batch-mustrun`, `batch-reserve`, `batch-reserve-red`, `batch-shutdown`)

@@ -63,7 +63,8 @@ if (TARGET SMS++::UCBlock)
     # model is checked with no Solver at all, the optimum and the DP Solvers
     # only when a :MILPSolver is in the build
     add_test(NAME UCBlock_test/scale
-             COMMAND UCBlock_test --scale)
+             COMMAND UCBlock_test --scale
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     # the instances of UCBlock, downloaded and extracted when the tests that
     # read them are run, not when they are built [see the CMakeLists.txt of the

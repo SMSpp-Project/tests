@@ -233,9 +233,14 @@ void b_config_Block( Block * block , Configuration * b_config ,
   return;  // all done
   }
 
+ // apply() moves the Configuration of the BlockConfig into the Block, hence a
+ // clone() is applied, as for the meta one: @p b_config stays whole, and
+ // can be applied again, e.g., to the next copy of the same Block
  if( auto * bc = dynamic_cast< BlockConfig * >( b_config ) ) {
-  bc->apply( block );  // just apply() it
-  return;              // all done
+  auto cbc = bc->clone();
+  cbc->apply( block );
+  delete cbc;
+  return;  // all done
   }
 
  std::cerr << "Error: " << fn

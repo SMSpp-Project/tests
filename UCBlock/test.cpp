@@ -1121,19 +1121,30 @@ static UCBlock * load( const std::string & path )
  }
 
 /*--------------------------------------------------------------------------*/
-/// gives the unit the formulation wf and builds the abstract representation
-/** A negative \p wf leaves the formulation of the unit alone. */
+/// gives the unit the BlockConfig bc and builds the abstract representation
+/** A null \p bc leaves the formulation of the unit alone. */
 
-static void generate( UCBlock * uc , int wf )
+static void generate( UCBlock * uc , Configuration * bc )
 {
- if( wf >= 0 ) {
-  BlockConfig bc;
-  bc.f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
-  bc.apply( uc->get_unit_block( 0 ) );
-  }
+ if( bc )
+  b_config_Block( uc->get_unit_block( 0 ) , bc , "" );
  uc->generate_abstract_variables();
  uc->generate_abstract_constraints();
  uc->generate_objective();
+ }
+
+/*--------------------------------------------------------------------------*/
+/// what the checks call the formulation that the BlockConfig bc gives
+
+static std::string formulation( Configuration * bc )
+{
+ int wf = 1;  // the T formulation, the one of a unit given no formulation
+ if( auto b = dynamic_cast< BlockConfig * >( bc ) )
+  if( auto sc = dynamic_cast< SimpleConfiguration< int > * >(
+				       b->f_static_variables_Configuration ) )
+   wf = sc->f_value;
+ return( "formulation " + std::to_string( wf & 7 ) +
+         ( ( wf & 8 ) ? " with P/C" : "" ) );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -1226,11 +1237,11 @@ static double solve( Block * b , Index i = 0 )
  * give, and its optimum is the same. Scaling must leave the data of the unit,
  * which are those of one copy, where they are. */
 
-static void check_model( const std::string & inst , int wf ,
+static void check_model( const std::string & inst , Configuration * bc ,
                          const std::string & what )
 {
  auto A = load( inst );
- generate( A , wf );
+ generate( A , bc );
  // the Solver is attached before the unit is scaled, as it is when an
  // InvestmentBlock scales it: what the scaling writes into the Objective
  // then comes back to the unit, which must not take it for a change of the
@@ -1247,13 +1258,10 @@ static void check_model( const std::string & inst , int wf ,
         what + ": the start-up cost of one copy is left alone" );
 
  auto B = load( inst );
- if( wf >= 0 ) {
-  BlockConfig bc;
-  bc.f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
-  bc.apply( B->get_unit_block( 0 ) );
-  }
+ if( bc )
+  b_config_Block( B->get_unit_block( 0 ) , bc , "" );
  B->get_unit_block( 0 )->scale( Kappa , eNoMod , eNoMod );
- generate( B , -1 );
+ generate( B , nullptr );
 
  check( snapshot( A ) == snapshot( B ) ,
         what + ": scaled after == scaled before" );
@@ -1286,7 +1294,7 @@ static void check_dp( const std::string & inst , const std::string & dp ,
   return;
 
  auto uc = load( inst );
- generate( uc , -1 );
+ generate( uc , nullptr );
  auto tu = static_cast< ThermalUnitBlock * >( uc->get_unit_block( 0 ) );
  attach( tu , { dp , solver_name } );
 
@@ -1340,34 +1348,36 @@ static int test( void )
  const auto thermal = write( "thermal" , false );
  const auto nuclear = write( "nuclear" , true );
 
- // the seven formulations of the thermal unit, with and without the
- // perspective cuts, each of which lays the Objective out its own way
- for( int form = 0 ; form <= 6 ; ++form )
-  for( int pc = 0 ; pc <= 1 ; ++pc ) {
-   const int wf = form + 8 * pc;
-   check_model( thermal , wf ,
-                "thermal, formulation " + std::to_string( form ) +
-                ( pc ? " with P/C" : "" ) );
-   }
+ // the seven formulations of the thermal unit, without and with the
+ // perspective cuts, each of which lays the Objective out its own way: they
+ // are the BlockConfig that TUBVar.txt and TUBVar-PC.txt list, read from the
+ // directory the test is run in
+ auto plain = read_BlockConfig_variants( "TUBVar.txt" );
+ auto cuts = read_BlockConfig_variants( "TUBVar-PC.txt" );
+ for( auto vl : { plain , cuts } )
+  for( auto bc : vl->f_value )
+   check_model( thermal , bc , "thermal, " + formulation( bc ) );
 
- check_model( nuclear , -1 , "nuclear" );
+ check_model( nuclear , nullptr , "nuclear" );
 
  // a thermal unit asked to follow a reference schedule: the deviation from
  // it is weighed with the scale factor as every other term, the schedule
  // being that of one unit [see ThermalUnitBlock::generate_objective()]. The
  // DP Solvers know nothing of it, hence they are not asked about it
  const auto with_schedule = write( "schedule" , false , true );
- for( int form = 0 ; form <= 6 ; ++form )
-  check_model( with_schedule , form ,
-               "thermal with a schedule, formulation " +
-               std::to_string( form ) );
+ for( auto bc : plain->f_value )
+  check_model( with_schedule , bc ,
+               "thermal with a schedule, " + formulation( bc ) );
+
+ delete plain;
+ delete cuts;
 
  // the DP Solvers have no term for the deviation from a reference schedule,
  // hence they refuse a unit that has one instead of answering for a unit
  // that pays nothing to depart from its schedule
  if( ! solver_name.empty() ) {
   auto uc = load( with_schedule );
-  generate( uc , -1 );
+  generate( uc , nullptr );
   auto tu = uc->get_unit_block( 0 );
   for( const auto & dp : { "ThermalUnitDPSolver" , "ThermalUnitExtDPSolver" } ) {
    bool refused = false;
@@ -1390,7 +1400,7 @@ static int test( void )
  // put back
  {
   auto uc = load( thermal );
-  generate( uc , -1 );
+  generate( uc , nullptr );
   const auto before = snapshot( uc );
   const auto & d = uc->get_active_power_demand();
   const Index N = d.shape()[ 0 ];

@@ -301,7 +301,9 @@ std::string first_Solver_of( const std::vector< std::string > & names ,
 
 /*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockConfig to a Block
-/** If @p b_config is a plain BlockConfig, simply apply() it to @p block.
+/** If @p b_config is a plain BlockConfig, apply() a clone() of it to
+ *  @p block, since apply() moves the Configuration it holds into the Block:
+ *  @p b_config is left whole, and it can be applied again.
  *
  *  If it is a
  *
