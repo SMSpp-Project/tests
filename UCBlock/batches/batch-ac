@@ -88,9 +88,13 @@ done
 # below the optimum, and the PrimalProximalHeur stops at its time limit, in
 # some 485 s, with that bound and no feasible solution; with the 4
 # single-period instances the batch takes 81 minutes, all OK(f) (dantzig,
-# load 210-350, 2026-10-12). The other 47 are skipped.
+# load 210-350, 2026-10-12). The other 47 are skipped, and in CI the sample
+# too: each instance takes some 8 minutes and more memory than a runner has.
 
-for case in c01 c14 da g2 d2_c03 d2_c12; do
+sample="c01 c14 da g2 d2_c03 d2_c12"
+if [ -n "$CI" ]; then sample=""; fi
+
+for case in $sample; do
     what=${DATADIR}/ES_acopf_srd_id_${case}_24h_1.nc4
     if [ ! -f "$what" ]; then
       continue
