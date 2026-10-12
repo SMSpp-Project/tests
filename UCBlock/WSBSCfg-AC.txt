@@ -1,0 +1,66 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  WSBSCfg-AC.txt - - - - - - - - - - - - - - - -
+#
+# BlockSolverConfig of the warm start of the PrimalProximalHeur of the AC
+# instances [see PPHCfg-AC.txt], i.e., of the continuous relaxation whose
+# duals give the first multipliers: the :MILPSolver of MILPCfg-AC.txt, with
+# the duals of the quadratic rows, in place of WarmStartCfg.txt of
+# LagrangianDualSolver. On the 24h instances the barrier of GUROBI with the
+# presolve stops on that relaxation with numerical trouble (status 12, also
+# with BarHomogeneous 1 or NumericFocus 3), which leaves the heuristic with
+# no warm start; with the settings of MILPCfg-AC.txt it solves it, in some
+# 150 s.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+GRBMILPSolver         # name of the Solver (HiGHS cannot solve QCP)
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+*MILPCfg-AC.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+QCPDual 1 # the duals of the quadratic rows
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END WSBSCfg-AC.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

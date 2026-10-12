@@ -19,6 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   each formulation was a run of its own; `read_BlockConfig_variants()` of
   `common_utils` reads the list for any tester
 
+- `UCBlock/batches/batch-ac` also runs 6 of the 53 AC instances over 24
+  hours (`ES_acopf_srd_id_*_24h_1`: c01, c14, da, g2, d2_c03, d2_c12, both
+  days and the extremes of the total demand), on the SOCP relaxation of
+  `ACNetworkBlock` [`InnerBCfg-SOCP.txt`, `ACBCfg-SOCP.txt`], with a limit
+  on the iterations of the `LagrangianDualSolver` (with `dblMaxTime` it ends
+  with `kError` past the limit) and on the time of the `PrimalProximalHeur`
+  [`BSPar-AC-24h.txt`, `LDCfg-AC-24h.txt`, `PPHCfg-AC-24h.txt`]: their
+  verdict says that the bounds are consistent, not that the values agree;
+  `BSPar-AC.txt` is made of the fragments `MILPCfg-AC.txt` (now with
+  `NonConvex 0`, so that GUROBI reports the optimum of the convex relaxation
+  as its lower bound and not `OBJBOUND`), `LDCfg-AC.txt` and `PPHCfg-AC.txt`,
+  whose warm start [`WSBSCfg-AC.txt`] solves the relaxation with the
+  settings of `MILPCfg-AC.txt`, on which it no longer stops on numerical
+  trouble (GUROBI status 12)
+
 - `UCBlock/batches/batch-p4r` also runs the multi-energy instances of
   UCBlock (a combined heat and power plant as a `ConversionUnitBlock` and as
   a `ThermalUnitBlock` with hyperarcs, a meshed network with a heat node)

@@ -5,7 +5,8 @@
 #        < par file > = BlockSolverConfig file, default BSPar.txt
 #        < log file > = name of log file, default no log
 #
-# runs the single-period AC OPF instances. ACNetworkBlock derives from
+# runs the single-period AC OPF instances and a sample of those over 24
+# hours. ACNetworkBlock derives from
 # DCNetworkBlock but entirely redefines its constraints with a convex
 # relaxation of the AC model, by default the SOCP relaxation strengthened by
 # the envelopes of the trigonometric terms (see the class description of
@@ -14,6 +15,19 @@
 # relaxation (intRelaxIntVars 1), where the McCormick inequalities of the
 # strengthening are not separated, so its value is that of the SOCP
 # relaxation.
+#
+# The verdict is not the same on the two sets. On the single-period
+# instances every Solver solves its problem to optimality and the values
+# have to agree (OK(f)). On those over 24 hours the LagrangianDualSolver
+# stops after a number of iterations and the PrimalProximalHeur at a time
+# limit [see BSPar-AC-24h.txt], and a
+# Solver that is stopped owes only the consistency of its bounds: the lower
+# bound of the LagrangianDualSolver (a relaxation, see REL below) not above
+# the upper bound of the others, the bounds of the heuristic not across
+# those of the :MILPSolver, which alone is held to its optimum; this is
+# the criterion of cross_check() in common_utils.cpp for a Solver that does
+# not return kOK, so the verdict of an instance over 24 hours says that the
+# bounds are consistent, not that the values are equal.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
@@ -49,28 +63,40 @@ for what in ${DATADIR}/*.nc4; do
       continue
     fi
 
-    # skip the 24h instances: 1236 nodes x 1543 lines x 24 time steps give
-    # 609573 rows and 177696 quadratic rows, all convex (GUROBI accepts the
-    # continuous relaxation with NonConvex 0, 171096 second-order cones after
-    # presolve). The :MILPSolver alone solves it by barrier in some 275 s,
-    # 160 s with the plain SOCP relaxation (static variables 0 in the
-    # BlockConfig of ACNetworkBlock), which has the same value (5.4553668e9
-    # and 5.4553687e9 on c01, within the barrier tolerance); but the
-    # Lagrangian chain, which needs QCPDual to get the duals of the quadratic
-    # constraints at all [see LPBSCfg-QCP.txt], does not converge in 90
-    # minutes even on the plain SOCP, stops a sub-problem on numerical
-    # difficulties (GUROBI status 12) and exceeds the sessions of the GUROBI
-    # license (error 10030) with its parallel sub-problems (dantzig, load
-    # 200-270, 2026-10-11). Taking them would mean a time limit on the
-    # LagrangianDualSolver and on the heuristic, or the :MILPSolver alone
-    # with no cross-check: until that is decided, this batch stays on the
-    # single-period benchmarks.
+    # the 24h instances are run below, on a sample
     case "$(basename "$what")" in
       *_24h_*) continue ;;
     esac
 
     run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt
 
+done
+
+# a sample of the instances over 24 hours - - - - - - - - - - - - - - - - - -
+# The 53 instances ES_acopf_srd_id_*_24h_1 are the same grid (1236 nodes,
+# 1543 lines) with the same units (153 ThermalUnitBlock, 777
+# IntermittentUnitBlock, 37 HydroUnitBlock, 15 BatteryUnitBlock): they only
+# differ in the demand, of two days (a total of 731536 to 737451 for the
+# first, 694686 to 699517 for d2) and of the cases c00-c23, da, g1 and g2.
+# The sample has both days, the largest and the smallest total demand of
+# each (g2 and c14, d2_c03 and d2_c12), the family da and c01. Each is
+# 439221 rows and 111024 quadratic rows, all convex, with the SOCP
+# relaxation [see InnerBCfg-SOCP.txt], which in a continuous solve has the
+# value of the strengthened one with some 30% fewer rows. On them the
+# :MILPSolver takes 95-135 s, the LagrangianDualSolver stops after its 15
+# iterations in 145-250 s with a lower bound 0.19% (first day) to 0.7% (d2)
+# below the optimum, and the PrimalProximalHeur stops at its time limit, in
+# some 485 s, with that bound and no feasible solution; with the 4
+# single-period instances the batch takes 81 minutes, all OK(f) (dantzig,
+# load 210-350, 2026-10-12). The other 47 are skipped.
+
+for case in c01 c14 da g2 d2_c03 d2_c12; do
+    what=${DATADIR}/ES_acopf_srd_id_${case}_24h_1.nc4
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+    run_test "$exe" "$what" -S BSPar-AC-24h.txt -R "$REL" \
+             -B InnerBCfg-SOCP.txt
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
