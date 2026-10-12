@@ -786,6 +786,22 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
                     const std::vector< std::vector< bool > > & relax = {} );
 
 /*--------------------------------------------------------------------------*/
+/// the main of a tester that loads a Block out of a file and cross-checks
+/// its Solver
+/** The Block is a new @p classname, or the one -b names if @p any_class,
+ *  loaded out of the instance file [see Block::load()] once per variant of
+ *  its BlockConfig [see get_BlockConfig_variants()], each copy with the
+ *  Solver of its BlockSolverConfig, and the Solver are compared with
+ *  SolveVariants() within the tolerance @p tol, and with the reference
+ *  objective value of -r. A run whose BlockSolverConfig names no Solver of
+ *  this build has nothing to do and returns 77. @p desc is the description
+ *  of the tester in its help. Returns the exit code of the tester. */
+
+int load_solve_test( int argc , char ** argv , const std::string & desc ,
+                     const std::string & classname , bool any_class = false ,
+                     double tol = 1e-6 );
+
+/*--------------------------------------------------------------------------*/
 /// the (meta-)BlockConfig of a run: the list of -F, or the one of -B
 /** A tester that compares formulations gets its variants from -F, a file
  *  read by read_BlockConfig_variants(), and a tester run with -B gets the

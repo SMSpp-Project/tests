@@ -84,6 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `SatellitesBlock_test` and `MultiKnapsackAssignBlock_test` are a call of
+  `load_solve_test()` of `common_utils`, which loads the Block out of the
+  file, once per variant of `-F`, and cross-checks its Solver with
+  `SolveVariants()`; their runs are those they made before
+
 - the testers no longer define their own `RED`/`GREEN` macros, which are
   those of `common_utils.h`, and `UCBlock_test` and `MMCFBlock_test` no
   longer carry the commented-out template of a loop of changes they never

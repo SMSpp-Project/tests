@@ -1202,6 +1202,95 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
  }
 
 /*--------------------------------------------------------------------------*/
+// the main of a tester that loads a Block out of a file and cross-checks
+// its Solver
+
+int load_solve_test( int argc , char ** argv , const std::string & desc ,
+                     const std::string & classname , bool any_class ,
+                     double tol )
+{
+ std::set_terminate( smspp_terminate );
+
+ static std::string block_class;
+ block_class = classname;
+ static bool b_option;
+ b_option = any_class;
+
+ docopt_desc = desc;
+ short_opts += any_class ? "b:r:" : "r:";
+ std::vector< option > my_opts;
+ if( any_class )
+  my_opts.push_back( { "block" , required_argument , nullptr , 'b' } );
+ my_opts.push_back( { "ref" , required_argument , nullptr , 'r' } );
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ if( any_class )
+  help += "  -b, --block <classname>         the Block the instance is "
+          "loaded into [" + classname + "]\n";
+ help += "  -r, --ref <value>               the optimum of the instance "
+         "[none]\n";
+
+ process_args( argc , argv , []( int opt ) {
+   switch( opt ) {
+    case( 'b' ):
+     if( ! b_option )
+      return( false );
+     block_class = optarg;
+     return( true );
+    case( 'r' ): Str2Sthg( optarg , RefObjective ); return( true );
+    default:                                        return( false );
+    }
+   } );
+
+ auto bv = get_BlockConfig_variants( true );
+
+ std::vector< Block * > blocks;
+ std::vector< Configuration * > bscs;
+ std::vector< BlockSolverConfig * > bsolvers;
+ std::vector< std::vector< bool > > relax;
+ auto clean = [ & ]( void ) {
+  for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
+   // detach the Solver by applying the cleared BlockSolverConfig, then free
+   bscs[ k ]->clear();
+   s_config_Block( blocks[ k ] , bscs[ k ] , sconf_file );
+   delete bscs[ k ];
+   delete blocks[ k ];
+   }
+  delete bv.owner;
+  };
+
+ for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+  auto block = Block::new_Block( block_class );
+  if( ! block ) {
+   std::cerr << "Error: " << block_class << " not present in Block factory"
+             << std::endl;
+   exit( 1 );
+   }
+
+  block->load( filename );
+
+  if( bv.configs[ k ] )
+   b_config_Block( block , bv.configs[ k ] , bv.file );
+
+  auto bsc = solver_config_of( bv , k );
+  relax.push_back( attach_variant_Solvers( block , bsc , bv , k , false ) );
+  blocks.push_back( block );
+  bscs.push_back( bsc );
+  bsolvers.push_back( dynamic_cast< BlockSolverConfig * >( bsc ) );
+  if( block->get_registered_solvers().empty() ) {
+   // none of the Solver it names is in this build: nothing to do
+   clean();
+   return( 77 );
+   }
+  }
+
+ const bool ok = SolveVariants( blocks , bv.names , read_bounds ,
+                                RefObjective , tol , bsolvers , relax );
+ clean();
+ return( ok ? 0 : 1 );
+ }
+
+/*--------------------------------------------------------------------------*/
 // the (meta-)BlockConfig of a run: the list of -F, or the one of -B
 
 BlockConfigVariants get_BlockConfig_variants( bool optional )
