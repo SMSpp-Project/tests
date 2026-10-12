@@ -84,6 +84,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `UCBlock/batches/batch-ec` solves each instance with the three
+  formulations of the network (`InnerBVar-DCN.txt`, `InnerBVar-DCN-CI.txt`
+  in CI) and compares them with each other
+
+- `UCBlock/batches-tub/batch-nuclear` compares the formulations of the
+  `NuclearUnitBlock`: the T formulation with Perspective Cuts and its tight
+  forms of the operating rules (`NUBVar.txt` with
+  `NUBCfg-T-PC-{R,M,RM,RC}.txt`, `NUBVar-CI.txt` in CI), which describe the
+  same set of schedules
+
 - the batteries of `MultiStageStochasticBlock` and `batch-ec` of
   `TwoStageStochasticBlock` solve each instance with the three formulations
   of the network of its inner Block (`InnerBVar-DCN.txt`, PTDF and

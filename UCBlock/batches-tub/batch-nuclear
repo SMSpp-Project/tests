@@ -40,11 +40,14 @@ par=BSCfg-nuc.txt
 
 seed=0
 wchg=0      # just solve and compare the optimum (no cost perturbation here)
-form=T-PC   # the T formulation with Perspective Cuts
+# the formulations of the unit compared with each other: the T formulation
+# with Perspective Cuts and its tight forms of the operating rules, all of
+# them the same set of schedules [see NUBVar.txt]; in CI only the two ends
+if [ -n "$CI" ]; then vars=NUBVar-CI.txt; else vars=NUBVar.txt; fi
 
 # the original model - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 for f in "${DATADIR}"/*/*.nc4; do
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -B "TUBCfg-$form.txt"
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -F "$vars"
 done
 
 # the operating rules - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -60,14 +63,14 @@ if [ -z "$files" ]; then
 fi
 
 for f in $files; do
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$vars" -n 0
   TUDPS_RESCOST=-0.05 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$vars" -n 0
   TUDPS_QCOST=-0.01 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$vars" -n 0
   TUDPS_FIXMOD=7 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -B "TUBCfg-$form.txt" -n 5
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$vars" -n 0
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -F "$vars" -n 5
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

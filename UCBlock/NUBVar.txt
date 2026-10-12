@@ -1,0 +1,30 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - NUBVar.txt- - - - - - - - - - - - - - - - -
+#
+# The variants of the BlockConfig of a NuclearUnitBlock that batch-nuclear
+# compares: the T formulation of the thermal unit with Perspective Cuts, and
+# the same with the tight forms of the operating rules [see
+# NUBCfg-T-PC-*.txt]. They all describe the same set of schedules, hence the
+# unit is read once per variant, each copy is solved by the same
+# BlockSolverConfig and the copies are compared with each other [see -F of
+# TUDPS_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+5  # number of variants of the BlockConfig
+
+# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*TUBCfg-T-PC.txt        # 1st variant: T-PC
+*NUBCfg-T-PC-R.txt      # 2nd variant: T-PC, tight rows
+*NUBCfg-T-PC-M.txt      # 3rd variant: T-PC, tight big-M
+*NUBCfg-T-PC-RM.txt     # 4th variant: T-PC, both
+*NUBCfg-T-PC-RC.txt     # 5th variant: T-PC, separated tight rows
+
+# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END NUBVar.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
