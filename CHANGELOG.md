@@ -77,6 +77,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the batteries of `CapacitatedFacilityLocationBlock` share
+  `batches/cfl_battery.sh`, the arguments, the runs of an instance for
+  every seed and the ORLib, Yang and TBED instances: each of them only says
+  its variants, its changes, its seeds and which instances it runs, the
+  runs being those it made before
+
 - the header and END boxes of the configuration files that lacked them or
   had them with another name or the name glued to the dashes, the author
   lines and the lines over 77 columns, the comments being rewrapped and

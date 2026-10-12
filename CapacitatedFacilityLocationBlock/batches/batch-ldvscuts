@@ -31,25 +31,15 @@
 # CPLEX, and the gap is larger: on the 68 runs of this batch only 4 pass at
 # 1e-5 and 14 at 2e-3, the largest relative gap being 7.6e-2.
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
-
-# run from the test root (one level up), where the config files are
-cd "$(dirname "$0")/.." || exit 1
-
-DATADIR=../../CapacitatedFacilityLocationBlock/data
-
-CFL_test=${1:-./CFL_test}
-mlf=${2:-}
+# the common part, which reads the arguments [see cfl_battery.sh]
+source "$(dirname "$0")/cfl_battery.sh" "$@"
 
 # the original Block and its R3Block, each with its configuration
 vars=CFLBVar-ldvscuts.txt
 
-niter=0
 # wchg = 257 = change facility costs (bit 0) and the abstract representation
 # (+256)
 wchg=257
-rounds=40
 maxseed=1
 
 # ad-hoc relative tolerance that absorbs the legitimate LD-vs-cuts bound
@@ -59,17 +49,12 @@ cmptol=2e-3
 
 # ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
-  64 81 93 111 122 134 51 71 82 94 112 123 41 61 72 84; do
-  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+cfl_orlib "${cfl_orlib_small[@]}"
 
-    what=${DATADIR}/txt/ORLib/cap${f}.txt
-
-    run_test "$CFL_test" "$what" -F "$vars" -t c -s "$niter" -e "$seed" -k "$wchg" -n "$rounds"
-    # ... or, with the ad-hoc tolerance (#chng %chng cmptol):
-    # run_test "$CFL_test" "$what" -F "$vars" -t c -s "$niter" -e "$seed" -k "$wchg" -n "$rounds" -m 10 -q 0.5 -T "$cmptol"
-
-  done
-done
+# ... or, with the ad-hoc tolerance, each run also given -m 10 -q 0.5 -T
+# "$cmptol" (#chng %chng cmptol): replace the call above with
+#   for f in "${cfl_orlib_small[@]}"; do
+#     cfl_run "${DATADIR}/txt/ORLib/cap${f}.txt" c -m 10 -q 0.5 -T "$cmptol"
+#   done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
