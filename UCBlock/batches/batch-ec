@@ -13,6 +13,12 @@ source "$(dirname "$0")/../../batch_common.sh"
 
 DEFAULT_EXE=./UCBlock_test
 DEFAULT_PAR=BSPar.txt
+# the LagrangianDualRelaxationSolver of the BlockSolverConfig (the 4th
+# Solver) is a relaxation: its upper bound is the other side of the
+# relaxation, not of this problem, so it is declared one, and only its
+# lower bound is held, to correctness alone [see BSPar.txt]
+REL="${REL:-,,,r}"
+EPS="${EPS:-,,,inf}"
 parse_batch_args "$@"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
@@ -67,7 +73,8 @@ for what in ../../UCBlock/data/nc4/EC_Data/ucblock/EC_CO_*.nc4 \
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" -B InnerBCfg.txt \
+             -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

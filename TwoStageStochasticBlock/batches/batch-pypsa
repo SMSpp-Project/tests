@@ -23,9 +23,10 @@
 # scenario, where a Lagrangian dual gives a bound below the optimum by the
 # duality gap: they are run with BSPar-2S-LD-IP.txt, the :MILPSolver on the
 # integer problem cross-checked with the PrimalProximalHeur, whose interval
-# must contain the optimum [-E], and the recursive Lagrangian dual, declared
-# a relaxation [-R]; on their Benders form the :MILPSolver is cross-checked
-# with BendersDecompositionSolver whose subproblems are solved by the
+# must contain the optimum [-E], and the recursive Lagrangian dual and the
+# LagrangianDualRelaxationSolver, declared relaxations [-R]; on their
+# Benders form the :MILPSolver is cross-checked with
+# BendersDecompositionSolver whose subproblems are solved by the
 # recursive Lagrangian dual and a feasible solution is recovered at the
 # design of its master, with a MILP master (BSPar-BDS-2S-LD.txt) and with a
 # bundle master (BSPar-BDS-2S-CVX-LD.txt), whose intervals, as that of the
@@ -111,7 +112,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
     fi
 
     run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -B InnerBCfg.txt \
-             -R ",,r" -E ",inf" -r "$ref"
+             -R ",,r,r" -E ",inf,,inf" -r "$ref"
     # the Benders form, whose subproblems (a unit commitment per scenario)
     # are solved by the recursive Lagrangian dual: BDS gives the bound of the
     # dual below and, recovering a feasible solution at the design of its

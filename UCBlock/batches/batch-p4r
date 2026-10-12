@@ -36,7 +36,12 @@ DEFAULT_PAR=BSPar-DP.txt
 # which has a duality gap: it is declared as such, so that it is held to
 # solving its own problem exactly while of this one it only bounds the side
 # a relaxation bounds [see BSPar-DP.txt]
-REL="${REL:-,r}"
+REL="${REL:-,r,,r}"
+# the LagrangianDualRelaxationSolver of the BlockSolverConfig (the 4th
+# Solver) is a relaxation: its upper bound is the other side of the
+# relaxation, not of this problem, so it is declared one in REL, and only
+# its lower bound is held, to correctness alone [see BSPar-DP.txt]
+EPS4=",,,inf"   # the default of the instances not in EPS below
 
 parse_batch_args "$@"
 
@@ -54,13 +59,13 @@ DATADIR=../../UCBlock/data/nc4/plan4res-data
 
 declare -A EPS
 
-EPS[L_B_C_24.nc4]=,1e-4,
+EPS[L_B_C_24.nc4]=,1e-4,,inf
 
 # the same on the nuclear L_B_N_1, where the bundle stops with an interval
 # 2.5e-3 wide (2.7478877e+07 to 2.7547156e+07) while reporting kOK: it
 # declares the residual null under its dblNZEps of 1e-2 [see BSPar-DP.txt],
 # and a smaller one would leave the bound unpublished
-EPS[L_B_N_1.nc4]=,3e-3,
+EPS[L_B_N_1.nc4]=,3e-3,,inf
 
 # each plan4res solve takes minutes under LagrangianDualSolver + BundleSolver
 # with a MILP reference, so the full set (54 instances) runs for hours and blows
@@ -76,7 +81,7 @@ if [ -n "$CI" ]; then
     for rel in $instances; do
         eps=${EPS[$(basename "$rel")]}
         run_test "$exe" "${DATADIR}/${rel}" -S "$par" -R "$REL" \
-                 ${eps:+-E "$eps"} -B InnerBCfg.txt
+                 -E "${eps:-$EPS4}" -B InnerBCfg.txt
     done
 else
     for what in "${DATADIR}"/FirstSetofInstances/*.nc4 \
@@ -85,7 +90,7 @@ else
 
         eps=${EPS[$(basename "$what")]}
 
-        run_test "$exe" "$what" -S "$par" -R "$REL" ${eps:+-E "$eps"} \
+        run_test "$exe" "$what" -S "$par" -R "$REL" -E "${eps:-$EPS4}" \
                  -B InnerBCfg.txt
 
     done
@@ -129,7 +134,8 @@ for what in ../../UCBlock/data/nc4/multi-energy/me_*.nc4; do
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt -r "$ref"
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS4" -B InnerBCfg.txt \
+             -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

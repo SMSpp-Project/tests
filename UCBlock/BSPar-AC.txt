@@ -3,7 +3,8 @@
 #
 # A txt description of a BlockSolverConfig for a UCBlock with an
 # ACNetworkBlock, cross-checked by a :MILPSolver, a LagrangianDualSolver
-# (using a BundleSolver as the inner Solver) and a PrimalProximalHeur. It is
+# (using a BundleSolver as the inner Solver), a PrimalProximalHeur and a
+# LagrangianDualRelaxationSolver with the ComputeConfig of the latter. It is
 # BSPar.txt with what the AC case needs, in the fragments MILPCfg-AC.txt
 # (the GUROBI settings of the AC relaxations), LDCfg-AC.txt and
 # PPHCfg-AC.txt (the sub-Blocks are QCPs, solved by GUROBI).
@@ -15,19 +16,21 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3 # number of (the names of) Solver in this BlockSolverConfig
+4 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver (HiGHS cannot solve QCP)
 LagrangianDualSolver  # name of 2nd Solver
 PrimalProximalHeur    # name of 3rd Solver
+LagrangianDualRelaxationSolver  # name of 4th Solver
 
-3 # number of ComputeConfig in this BlockSolverConfig
+4 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 *MILPCfg-AC.txt        # the :MILPSolver
 *LDCfg-AC.txt          # the LagrangianDualSolver
 *PPHCfg-AC.txt         # the PrimalProximalHeur
+*PPHCfg-AC.txt         # the LagrangianDualRelaxationSolver
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BSPar-AC.txt  - - - - - - - - - - - - - - -

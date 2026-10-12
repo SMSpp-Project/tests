@@ -2,15 +2,18 @@
 # - - - - - - - - - - - - - - BSPar-2S-LD-IP.txt - - - - - - - - - - - - - - 
 #
 # A txt description of a BlockSolverConfig for a TwoStageStochasticBlock,
-# whose scenarios may be unit commitments, to be solved by three different
+# whose scenarios may be unit commitments, to be solved by four different
 # Solver: a :MILPSolver on the deterministic equivalent as an integer
 # problem, which gives the optimum, the recursive LagrangianDualSolver
 # (LDrecCfg.txt), which relaxes the scenarios and the units within them at
 # once and gives the bound of the dual, below the optimum by the duality gap,
 # and the PrimalProximalHeur (PPHCfg.txt), which gives that bound and a
-# feasible solution above the optimum. The batch declares the dual a
-# relaxation and no tolerance for the heuristic (-R ,,r -E ,inf), so that
-# each is only required to bound the optimum on its side.
+# feasible solution above the optimum, and the
+# LagrangianDualRelaxationSolver with the same ComputeConfig, whose upper
+# bound is the other side of its relaxation. The batch declares the dual and
+# the latter relaxations and no tolerance for them and for the heuristic
+# (-R ,,r,r -E ,inf,,inf), so that each is only required to bound the
+# optimum on its side.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -19,14 +22,15 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3 # number of (the names of) Solver in this BlockSolverConfig
+4 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver
 PrimalProximalHeur    # name of 2nd Solver
 LagrangianDualSolver  # name of 3rd Solver
+LagrangianDualRelaxationSolver  # name of 4th Solver
 
-3 # number of ComputeConfig in this BlockSolverConfig
+4 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -44,6 +48,7 @@ LagrangianDualSolver  # name of 3rd Solver
 # scenarios and the units within them at once
 
 *LDrecCfg.txt
+*PPHCfg.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

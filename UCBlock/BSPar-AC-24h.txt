@@ -3,9 +3,10 @@
 #
 # The BlockSolverConfig of BSPar-AC.txt for the AC instances over 24 hours,
 # with a limit on the iterations of the LagrangianDualSolver and on the time
-# of the PrimalProximalHeur [see LDCfg-AC-24h.txt and PPHCfg-AC-24h.txt]: the
-# :MILPSolver solves the continuous relaxation to optimality, the other two
-# only bound it, and the cross-check asks that the bounds be consistent.
+# of the PrimalProximalHeur and of the LagrangianDualRelaxationSolver [see
+# LDCfg-AC-24h.txt and PPHCfg-AC-24h.txt]: the :MILPSolver solves the
+# continuous relaxation to optimality, the other three only bound it, and
+# the cross-check asks that the bounds be consistent.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,19 +15,21 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3 # number of (the names of) Solver in this BlockSolverConfig
+4 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver (HiGHS cannot solve QCP)
 LagrangianDualSolver  # name of 2nd Solver
 PrimalProximalHeur    # name of 3rd Solver
+LagrangianDualRelaxationSolver  # name of 4th Solver
 
-3 # number of ComputeConfig in this BlockSolverConfig
+4 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 *MILPCfg-AC.txt        # the :MILPSolver
 *LDCfg-AC-24h.txt      # the LagrangianDualSolver
 *PPHCfg-AC-24h.txt     # the PrimalProximalHeur
+*PPHCfg-AC-24h.txt     # the LagrangianDualRelaxationSolver
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END BSPar-AC-24h.txt  - - - - - - - - - - - - - -

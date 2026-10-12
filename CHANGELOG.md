@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the `LagrangianDualRelaxationSolver` next to the `PrimalProximalHeur` in
+  the cross-checks of `UCBlock` (`BSPar.txt`, `BSPar-DP.txt`, `BSPar-AC.txt`,
+  `BSPar-AC-24h.txt`, `BSPar-PYPSA.txt`, `BSPar-par.txt`,
+  `BSPar-par-aggr.txt`) and of `TwoStageStochasticBlock`
+  (`BSPar-2S-LD-IP.txt`), with the same `ComputeConfig` (that of
+  `BSPar-PYPSA.txt` now the fragment `PPHCfg-PYPSA.txt`); its upper bound is
+  the other side of the relaxation, so the batteries declare it a relaxation
+  and hold its lower bound to correctness alone (`-R ...,r -E ...,inf`)
+
 - `SolveVariants()` of `common_utils`: given copies of a `Block`, each
   configured by one variant of its `BlockConfig`, it cross-checks the
   `Solver` of each copy as `SolveAll()` does and then the `Solver` of all

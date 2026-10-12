@@ -34,7 +34,12 @@ parse_batch_args "$@"
 # PrimalProximalHeur the same dual with a primal recovery on top, so both
 # are declared relaxations and held to bounding the side a relaxation
 # bounds, rather than to a value and to an upper bound they need not have
-REL="${REL:-,r,r}"
+REL="${REL:-,r,r,r}"
+# the LagrangianDualRelaxationSolver of the BlockSolverConfig (the 4th
+# Solver) is a relaxation: its upper bound is the other side of the
+# relaxation, not of this problem, so it is declared one, and only its
+# lower bound is held, to correctness alone [see BSPar-PYPSA.txt]
+EPS="${EPS:-,,,inf}"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = PyPsa objective value
@@ -104,7 +109,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_*.nc \
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -R "$REL" \
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" \
              -F InnerBVar-DCN.txt -r "$ref"
 
 done

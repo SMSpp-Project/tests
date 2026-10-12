@@ -68,7 +68,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/nuclear/smspp_*.nc; do
 
     run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
 
-    run_test "$exe" "$what" -S BSPar-DP.txt -R ",r,r" -E ",1e-2," \
+    run_test "$exe" "$what" -S BSPar-DP.txt -R ",r,r,r" -E ",1e-2,,inf" \
              -B InnerBCfg.txt
 
 done
