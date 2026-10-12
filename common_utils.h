@@ -334,7 +334,14 @@ void b_config_Block( Block * block , Configuration * b_config ,
  *
  *  whose first element is that (meta-)BlockConfig and whose second is the
  *  (meta-)BlockSolverConfig of that variant, for the formulations that are
- *  solved by Solver of their own [see solver_config_of()]. The list is the business of
+ *  solved by Solver of their own [see solver_config_of()], or else a
+ *
+ *    SimpleConfiguration< std::vector< Configuration * > >
+ *
+ *  of the same two and of a third, a SimpleConfiguration< std::vector< int
+ *  > > saying which of the Solver of that variant solve a relaxation of the
+ *  problem (1) and which do not (0), in their order, i.e., the -R of that
+ *  variant alone [see attach_variant_Solvers()]. The list is the business of
  *  the battery and not of the Block: a BlockConfig applies to one Block, and
  *  what a battery wants is the same Block several times, each time
  *  configured differently and solved by the same Solver, so that two
@@ -765,15 +772,18 @@ bool SolveAll( Block * block ,
  *  With one copy this is SolveAll() and nothing else, so that a tester given
  *  one BlockConfig prints what it always printed. @p bscs, if not empty,
  *  gives the BlockSolverConfig of each copy, which restricts its comparison
- *  to the Solver that it registered [see SolveAll()]; @p classify, @p ref and
- *  @p tol are those of SolveAll(). */
+ *  to the Solver that it registered [see SolveAll()]; @p relax, if not empty,
+ *  gives for each copy which of its Solver solve a relaxation, in place of
+ *  -R [see attach_variant_Solvers()]; @p classify, @p ref and @p tol are
+ *  those of SolveAll(). */
 
 bool SolveVariants( const std::vector< Block * > & blocks ,
                     const std::vector< std::string > & names ,
                     const SolverClassifier & classify ,
                     double ref = std::numeric_limits< double >::quiet_NaN() ,
                     double tol = 1e-5 ,
-                    const std::vector< BlockSolverConfig * > & bscs = {} );
+                    const std::vector< BlockSolverConfig * > & bscs = {} ,
+                    const std::vector< std::vector< bool > > & relax = {} );
 
 /*--------------------------------------------------------------------------*/
 /// the (meta-)BlockConfig of a run: the list of -F, or the one of -B
@@ -793,6 +803,7 @@ struct BlockConfigVariants {
  Configuration * owner = nullptr;          ///< what holds them, to delete
  std::vector< Configuration * > configs;   ///< the (meta-)BlockConfig
  std::vector< Configuration * > solvers;   ///< their BlockSolverConfig
+ std::vector< std::vector< int > > relax;  ///< their -R, empty if none
  std::vector< std::string > names;         ///< what each is called
  std::string file;                         ///< the file they come from
  };
@@ -808,6 +819,21 @@ BlockConfigVariants get_BlockConfig_variants( bool optional = false );
 
 Configuration * solver_config_of( const BlockConfigVariants & v ,
                                   std::size_t k );
+
+/*--------------------------------------------------------------------------*/
+/// s_config_Block() of the BlockSolverConfig @p bsc of the variant @p k
+/** Applies @p bsc to @p block as s_config_Block() does (@p clear_after is
+ *  its), and returns which of the Solver it attached solve a relaxation:
+ *  those that the variant says, if it says anything, else those of -R, in
+ *  either case without the Solver that this build does not have [see
+ *  s_config_Block()]. What is returned is what SolveVariants() wants for
+ *  that copy; -R itself is left as it was. */
+
+std::vector< bool > attach_variant_Solvers( Block * block ,
+                                            Configuration * bsc ,
+                                            const BlockConfigVariants & v ,
+                                            std::size_t k ,
+                                            bool clear_after = true );
 
 /*--------------------------------------------------------------------------*/
 /// SolveAll() of the one or two Solver registered to @p block

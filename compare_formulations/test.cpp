@@ -83,6 +83,7 @@ int main( int argc , char **argv )
 
  std::vector< Block * > blocks;
  std::vector< Configuration * > bscs;
+ std::vector< std::vector< bool > > relax;
  for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
   auto b = Block::deserialize( filename );
   if( ! b ) {
@@ -93,7 +94,7 @@ int main( int argc , char **argv )
   b_config_Block( b , bv.configs[ k ] , bv.file );
 
   auto bsc = solver_config_of( bv , k );
-  s_config_Block( b , bsc , bv.file );
+  relax.push_back( attach_variant_Solvers( b , bsc , bv , k ) );
   if( b->get_registered_solvers().empty() ) {
    std::cerr << "Error: no Solver registered to variant " << bv.names[ k ]
              << std::endl;
@@ -110,7 +111,7 @@ int main( int argc , char **argv )
 
  bool ok = SolveVariants( blocks , bv.names ,
                           exact_getter( ObjGetter::VarValue ) ,
-                          RefObjective , 2e-7 );
+                          RefObjective , 2e-7 , {} , relax );
 
  if( ok )
   std::cout << GREEN( Test passed!! ) << std::endl;

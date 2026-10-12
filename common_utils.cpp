@@ -276,6 +276,10 @@ SimpleConfiguration< std::vector< Configuration * > > *
   if( auto p = dynamic_cast< SimpleConfiguration< std::pair< Configuration * ,
                                        Configuration * > > * >( e ) )
    e = p->f_value.first;
+  else
+   if( auto q = dynamic_cast< SimpleConfiguration< std::vector<
+                                         Configuration * > > * >( e ) )
+    e = q->f_value.empty() ? nullptr : q->f_value.front();
   if( ! e ) {
    std::cerr << "Error: variant " << k << " of " << fn << " is empty"
              << std::endl;
@@ -1146,23 +1150,34 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
                     const std::vector< std::string > & names ,
                     const SolverClassifier & classify ,
                     double ref , double tol ,
-                    const std::vector< BlockSolverConfig * > & bscs )
+                    const std::vector< BlockSolverConfig * > & bscs ,
+                    const std::vector< std::vector< bool > > & relax )
 {
  auto bsc_of = [ & bscs ]( std::size_t k ) {
   return( k < bscs.size() ? bscs[ k ] : nullptr );
   };
 
+ // SolveAll() of the copy k, with its own -R if it has one
+ auto solve = [ & ]( std::size_t k , SolveRecord * rec ) {
+  const auto global = solver_relaxation;
+  if( k < relax.size() )
+   solver_relaxation = relax[ k ];
+  const bool ok = SolveAll( blocks[ k ] , classify , ref , tol , nullptr ,
+                            nullptr , nullptr , nullptr , bsc_of( k ) ,
+                            nullptr , rec );
+  solver_relaxation = global;
+  return( ok );
+  };
+
  if( blocks.size() == 1 )
-  return( SolveAll( blocks.front() , classify , ref , tol , nullptr ,
-                    nullptr , nullptr , nullptr , bsc_of( 0 ) ) );
+  return( solve( 0 , nullptr ) );
 
  bool ok = true;
  SolveRecord all;
  for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
   std::cout << "variant " << names[ k ] << ":";
   SolveRecord rec;
-  ok &= SolveAll( blocks[ k ] , classify , ref , tol , nullptr , nullptr ,
-                  nullptr , nullptr , bsc_of( k ) , nullptr , & rec );
+  ok &= solve( k , & rec );
   all.rd.insert( all.rd.end() , rec.rd.begin() , rec.rd.end() );
   all.hs.insert( all.hs.end() , rec.hs.begin() , rec.hs.end() );
   all.status.insert( all.status.end() , rec.status.begin() ,
@@ -1216,10 +1231,33 @@ BlockConfigVariants get_BlockConfig_variants( bool optional )
     v.configs.push_back( p->f_value.first );
     v.solvers.push_back( p->f_value.second );
     }
-   else {
-    v.configs.push_back( e );
-    v.solvers.push_back( nullptr );
-    }
+   else
+    if( auto q = dynamic_cast< SimpleConfiguration< std::vector<
+                                      Configuration * > > * >( e ) ) {
+     // the BlockConfig, the BlockSolverConfig and which of its Solver solve
+     // a relaxation
+     const auto & w = q->f_value;
+     auto r = w.size() > 2 ? dynamic_cast< SimpleConfiguration<
+                                  std::vector< int > > * >( w[ 2 ] ) : nullptr;
+     if( ( w.size() < 2 ) || ( w.size() > 3 ) ||
+         ( ( w.size() == 3 ) && ( ! r ) ) ) {
+      std::cerr << "Error: variant " << k << " of " << vconf_file
+                << " is not a BlockConfig, a BlockSolverConfig and the"
+                << " SimpleConfiguration< std::vector< int > > of its -R"
+                << std::endl;
+      exit( 1 );
+      }
+     v.configs.push_back( w[ 0 ] );
+     v.solvers.push_back( w[ 1 ] );
+     if( r ) {
+      v.relax.resize( k + 1 );
+      v.relax[ k ] = r->f_value;
+      }
+     }
+    else {
+     v.configs.push_back( e );
+     v.solvers.push_back( nullptr );
+     }
    v.names.push_back( "F" + std::to_string( k ) );
    }
   v.file = vconf_file;
@@ -1237,6 +1275,27 @@ BlockConfigVariants get_BlockConfig_variants( bool optional )
  v.names = { bconf_file };
  v.file = bconf_file;
  return( v );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the BlockSolverConfig of a variant applied, with its -R
+
+std::vector< bool > attach_variant_Solvers( Block * block ,
+                                            Configuration * bsc ,
+                                            const BlockConfigVariants & v ,
+                                            std::size_t k ,
+                                            bool clear_after )
+{
+ // the -R of the variant goes through s_config_Block(), which takes out of
+ // it the Solver that are not there, as it does of -R
+ const auto global = solver_relaxation;
+ const bool own = ( k < v.relax.size() ) && ( ! v.relax[ k ].empty() );
+ if( own )
+  solver_relaxation.assign( v.relax[ k ].begin() , v.relax[ k ].end() );
+ s_config_Block( block , bsc , v.file , clear_after );
+ auto mine = solver_relaxation;
+ solver_relaxation = global;
+ return( mine );
  }
 
 /*--------------------------------------------------------------------------*/

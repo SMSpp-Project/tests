@@ -145,6 +145,7 @@ int main( int argc , char ** argv )
 
  std::vector< SATBlock * > sats;
  std::vector< Configuration * > bscs;
+ std::vector< std::vector< bool > > relax;
  for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
   auto sat = read_SATBlock();
   if( bv.configs[ k ] )
@@ -156,7 +157,7 @@ int main( int argc , char ** argv )
   sat->generate_objective();
 
   auto bsc = solver_config_of( bv , k );
-  s_config_Block( sat , bsc , sconf_file , false );
+  relax.push_back( attach_variant_Solvers( sat , bsc , bv , k , false ) );
   sats.push_back( sat );
   bscs.push_back( bsc );
   if( sat->get_registered_solvers().empty() ) {
@@ -204,7 +205,7 @@ int main( int argc , char ** argv )
   };
 
  bool ok = SolveVariants( blocks , bv.names , classify , RefObjective , tol ,
-                          bsolvers );
+                          bsolvers , relax );
  ok = ok && solutions_ok;
 
  // the rounds of Modification: the steps of the costs and the new weights
@@ -303,7 +304,7 @@ int main( int argc , char ** argv )
     }
 
   const bool rok = SolveVariants( blocks , bv.names , classify ,
-                                  RefObjective , tol , bsolvers );
+                                  RefObjective , tol , bsolvers , relax );
   ok = ok && rok && solutions_ok;
   }
 

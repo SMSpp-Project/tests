@@ -346,6 +346,7 @@ int main( int argc , char ** argv )
 
  std::vector< Block * > blocks;
  std::vector< Configuration * > sconfs;
+ std::vector< std::vector< bool > > relax;
  for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
   SingleFlowDCRBlock * block;
   if( ! filename.empty() ) {
@@ -370,7 +371,7 @@ int main( int argc , char ** argv )
    b_config_Block( block , bv.configs[ k ] , bv.file );
 
   auto sconf = solver_config_of( bv , k );
-  s_config_Block( block , sconf , sconf_file );
+  relax.push_back( attach_variant_Solvers( block , sconf , bv , k ) );
 
   blocks.push_back( block );
   sconfs.push_back( sconf );
@@ -382,7 +383,7 @@ int main( int argc , char ** argv )
 
  c_double tol = 1e-5;
  bool ok = SolveVariants( blocks , bv.names , read_bounds , RefObjective ,
-                          tol );
+                          tol , {} , relax );
 
  // then check the Solution they produce - - - - - - - - - - - - - - - - - -
 

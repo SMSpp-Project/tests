@@ -60,6 +60,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- a variant of `-F` may be the vector of its `BlockConfig`, its
+  `BlockSolverConfig` and a `SimpleConfiguration<std::vector<int>>` saying
+  which of its `Solver` solve a relaxation, i.e., its own `-R`;
+  `attach_variant_Solvers()` of `common_utils` applies the
+  `BlockSolverConfig` of a copy and gives `SolveVariants()` the `-R` of
+  that copy, each copy taking out of it the `Solver` this build does not
+  have (before, a run of several copies took them out of `-R` once per
+  copy)
+
 - `SATBlock_test` and `SingleFlowDCRBlock_test` take `-F` [see
   `SolveVariants()`], given which they read the instance once per
   `BlockConfig` of the list; `SATBlock/batches/batch-structure` gives each

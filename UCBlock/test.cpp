@@ -1498,6 +1498,7 @@ int main( int argc , char ** argv )
 
  std::vector< Block * > blocks;
  std::vector< BlockSolverConfig * > bscs;
+ std::vector< std::vector< bool > > relax;
  for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
   auto ibc = bv.configs[ k ];
   auto b = Block::deserialize( filename );
@@ -1519,7 +1520,7 @@ int main( int argc , char ** argv )
 
   // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
   // dispatches on the runtime type, applies, and clear()s for cleanup
-  s_config_Block( b , bsc , sconf_file );
+  relax.push_back( attach_variant_Solvers( b , bsc , bv , k ) );
 
   if( b->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!" << std::endl;
@@ -1572,7 +1573,7 @@ int main( int argc , char ** argv )
  // and then the Solver of all the copies against each other, since whatever
  // the formulation they bound the same optimum [see SolveVariants()]
  bool AllPassed = SolveVariants( blocks , bv.names , read_bounds ,
-                                 RefObjective , 1e-5 );
+                                 RefObjective , 1e-5 , {} , relax );
 
  // each Solver that has a solution must have one that is worth what the
  // Solver says: the cross-check compares the values the Solver report with
