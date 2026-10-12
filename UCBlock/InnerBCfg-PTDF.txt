@@ -8,15 +8,13 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
-SimpleConfiguration<std::map<std::string,Configuration*>>
+# the "meta"-BlockConfig of InnerBCfg.txt, of which only the BlockConfig of
+# the DCNetworkBlock changes
+*InnerBCfg.txt +
 
-4 # the number of elements in the map
+1  # the number of the elements of the map that change
 
-ThermalUnitBlock        *TUBCfg.txt
 DCNetworkBlock          *DCNBCfg-PTDF.txt
-ACNetworkBlock          *ACBCfg.txt
-PolyhedralFunctionBlock *PFBCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END InnerBCfg-PTDF.txt  - - - - - - - - - - - - -

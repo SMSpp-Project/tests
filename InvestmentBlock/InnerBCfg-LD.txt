@@ -17,16 +17,13 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
-SimpleConfiguration<std::map<std::string,Configuration*>>
+# the "meta"-BlockConfig of InnerBCfg.txt, of which only the BlockConfig of
+# the InvestmentBlock changes
+*InnerBCfg.txt +
 
-5 # the number of elements in the map
+1  # the number of the elements of the map that change
+
 InvestmentBlock         *IBOCfg-LD.txt
-
-ThermalUnitBlock        *TUBCfg.txt
-DCNetworkBlock          *DCNBCfg.txt
-ACNetworkBlock          *ACBCfg.txt
-PolyhedralFunctionBlock *PFBCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - END InnerBCfg-LD.txt - - - - - - - - - - -

@@ -60,6 +60,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `UCBlock/InnerBCfg-PTDF.txt`, `UCBlock/InnerBCfg-CYCLE.txt` and
+  `InvestmentBlock/InnerBCfg-LD.txt` are the delta of `InnerBCfg.txt`
+  (`*InnerBCfg.txt +` and the one entry that changes), and
+  `UCBlock/TUBVar-shutdown.txt` that of `TUBVar.txt` (the two variants it
+  adds), which needs the cascade override of the map and of the vector
+  `SimpleConfiguration` of the SMS++ core
+
 - `MMCFND_test` takes the two formulations of `MMCFNetworkDesignBlock`
   with `-F NDVar.txt` (pairs `BlockConfig` + `BlockSolverConfig`) instead
   of `-m`/`-M`/`-b`/`-B`, its options being parsed by `common_utils`
