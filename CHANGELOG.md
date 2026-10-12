@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the other side of the relaxation, so the batteries declare it a relaxation
   and hold its lower bound to correctness alone (`-R ...,r -E ...,inf`)
 
+- `SVM_FW_test` in the suite of `SVMBlock` and its battery `batch-fw`:
+  `FrankWolfeSolver` on two problems built out of the data sets of the
+  suite, the least-squares fit in Euclidean balls, a feasible region that is
+  not a polytope whose oracle is the closed-form `BallSolver` of the tester,
+  and the Wolfe dual of the SVM on a box, whose oracle is `BoxSolver`, the
+  variants of the direction of `FWBSCfg.txt` cross-checked against a
+  `:MILPSolver` by their bounds
+
 - `SolveVariants()` of `common_utils`: given copies of a `Block`, each
   configured by one variant of its `BlockConfig`, it cross-checks the
   `Solver` of each copy as `SolveAll()` does and then the `Solver` of all

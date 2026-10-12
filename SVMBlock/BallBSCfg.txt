@@ -1,0 +1,30 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BallBSCfg.txt - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of each ball of the least-squares fit of the
+# Frank-Wolfe test: its oracle is the BallSolver of the tester, which
+# minimizes a linear function over the ball in closed form, the minimum
+# being - r c / || c ||, and has no parameter.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+BallSolver            # the closed-form oracle of the ball
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+* # [none]
+
+# end of BlockSolverConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BallBSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
