@@ -74,13 +74,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   settings of `MILPCfg-AC.txt`, on which it no longer stops on numerical
   trouble (GUROBI status 12)
 
-- `UCBlock/batches/batch-p4r` also runs the multi-energy instances of
-  UCBlock (a combined heat and power plant as a `ConversionUnitBlock` and as
-  a `ThermalUnitBlock` with hyperarcs, a meshed network with a heat node)
-  against their known optimum, skipping them when they are not in the data;
-  the `ConversionUnitBlock` inner to the `LagrangianDualSolver` is solved
-  with its integer commitment [see `CUBSCfg-MIP.txt` and
-  `InnerBSCfg-DP.txt`]
+- `UCBlock/batches/batch-conversion` runs the instances with a
+  `ConversionUnitBlock`: the multi-energy ones of UCBlock (a combined heat
+  and power plant as a `ConversionUnitBlock` and as a `ThermalUnitBlock`
+  with hyperarcs, a meshed network with a heat node) against their known
+  optimum, and those that pypsa2smspp makes of the committable links of its
+  test networks (`nc4/conversion`, data version 2026-10-14: time-varying
+  efficiency, delays, modules, design) against the optimum of PyPSA, each
+  with the three formulations of the network (`InnerBVar-DCN.txt`), skipping
+  them when they are not in the data; the `ConversionUnitBlock` inner to the
+  `LagrangianDualSolver` is solved with its integer commitment [see
+  `CUBSCfg-MIP.txt` and `InnerBSCfg-DP.txt`], and on the units of several
+  modules, whose commitment is integer and not binary, the
+  `PrimalProximalHeur` only bounds the optimum and is declared a
+  relaxation
 
 ### Changed
 

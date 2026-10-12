@@ -157,7 +157,10 @@ the `test` directory of the module itself.
   `BundleSolver`), any `CDASolver` able to handle Linear Programs (such as
   `CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block` for
   Unit-Commitment problems (including the pollutant budget constraints, both
-  against PyPSA and on small instances with known optima), as well as for
+  against PyPSA and on small instances with known optima, and the units that
+  convert energy among carriers, `ConversionUnitBlock`, in
+  `batch-conversion`, against PyPSA and against the known optima of
+  multi-energy instances), as well as for
   quite a lot of the mechanics of the SMS++ core library. The same suite runs
   `TUDPS_test`, which compares the `ThermalUnitExtDPSolver` specialised
   Dynamic Programming `:Solver` with a `:MILPSolver` on some of the (many)

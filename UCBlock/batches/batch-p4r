@@ -17,8 +17,6 @@
 #   pHydro                single-node thermal fleet coupled to a cascade of
 #                         HydroUnitBlocks placed directly under the UCBlock
 #
-# and the multi-energy instances of UCBlock (electricity and heat)
-#
 # for LagrangianDualSolver + BundleSolver:
 # correct value of tStar: 1e-2
 # correct value of dblCtOff: 0.1
@@ -95,47 +93,5 @@ else
 
     done
 fi
-
-# the multi-energy instances - - - - - - - - - - - - - - - - - - - - - - - -
-# Electricity and heat on two nodes, the heat demand of the source model being
-# a node balance: a combined heat and power plant written as a
-# ConversionUnitBlock (me_*_unit) and the same plant as a ThermalUnitBlock
-# whose output hyperarcs split into electricity and heat (me_*_hyperarc),
-# back-pressure (bp), with a reserve (bpres), with a CO2 budget over the heat
-# node (bppol), extraction-condensing (ec), and a meshed electric network
-# with a heat node (mesh); the reference is the optimum by hand and by an
-# independent MILP [see data/gen_multi_energy.py of UCBlock]. They take
-# milliseconds, hence they run in CI too.
-
-declare -A REF_OBJ
-
-REF_OBJ[me_bp_unit.nc4]=21700
-REF_OBJ[me_bp_hyperarc.nc4]=21700
-REF_OBJ[me_bpres_unit.nc4]=21700
-REF_OBJ[me_bpres_hyperarc.nc4]=21700
-REF_OBJ[me_bppol_unit.nc4]=22350
-REF_OBJ[me_bppol_hyperarc.nc4]=22350
-REF_OBJ[me_ec_unit.nc4]=28900
-REF_OBJ[me_ec_hyperarc.nc4]=28900
-REF_OBJ[me_mesh_unit.nc4]=31600
-
-for what in ../../UCBlock/data/nc4/multi-energy/me_*.nc4; do
-
-    # skip if pattern did not match any file
-    if [ ! -f "$what" ]; then
-      continue
-    fi
-
-    base=$(basename "$what")
-    ref=${REF_OBJ[$base]}
-
-    if [ -z "$ref" ]; then
-      echo "No reference objective defined for file: $base"
-      exit 1
-    fi
-
-    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS4" -B InnerBCfg.txt \
-             -r "$ref"
-done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
