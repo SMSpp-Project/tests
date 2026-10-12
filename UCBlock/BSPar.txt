@@ -36,8 +36,6 @@
 # NOTE: an overriding ComputeConfig that is not the last in the list must end
 # with the '*' extra-Configuration pointer, or the parser runs into the next.
 #
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

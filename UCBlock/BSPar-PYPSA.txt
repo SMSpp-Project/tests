@@ -6,8 +6,6 @@
 # changed, intWZNorm, whose value here stops the Bundle at the first
 # iteration [see the 2nd ComputeConfig].
 #
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
