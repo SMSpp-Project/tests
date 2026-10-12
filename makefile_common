@@ -79,7 +79,16 @@ CMMNUINC = -I$(TSTROOT)
 $(CMMNUOBJ): $(CMMNUH) $(SMS++H) $(TSTROOT)/common_utils.cpp
 	$(CC) -c $(TSTROOT)/common_utils.cpp -o $@ $(MINC) $(SW)
 
+# the main of the testers of the stochastic Block, stochastic_test.{cpp,h},
+# which their makefiles append to MOBJ / MH as above
+
+STCHTOBJ = $(TSTROOT)/stochastic_test.o
+STCHTH   = $(TSTROOT)/stochastic_test.h
+
+$(STCHTOBJ): $(STCHTH) $(CMMNUH) $(SMS++H) $(TSTROOT)/stochastic_test.cpp
+	$(CC) -c $(TSTROOT)/stochastic_test.cpp -o $@ $(MINC) $(SW)
+
 clean::
-	rm -f $(CMMNUOBJ)
+	rm -f $(CMMNUOBJ) $(STCHTOBJ)
 
 ############################ End of makefile #################################

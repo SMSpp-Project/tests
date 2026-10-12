@@ -18,7 +18,7 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::MultiStageStochasticBlock)
 
-    add_executable(MSSB_test test.cpp ../common_utils.cpp)
+    add_executable(MSSB_test test.cpp ../stochastic_test.cpp ../common_utils.cpp)
     target_include_directories(MSSB_test PRIVATE ..)
     target_link_libraries(MSSB_test PRIVATE SMS++::MultiStageStochasticBlock)
 

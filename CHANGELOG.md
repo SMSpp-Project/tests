@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `TSSB_test` and `MSSB_test` are one main, `stochastic_test.{cpp,h}`, the
+  two `test.cpp` only saying which class they read and what they add (the
+  Benders form of `-b`, the round trip of the `Solution`); both take `-F`,
+  reading the instance once per variant of the `BlockConfig` and comparing
+  the copies with `SolveVariants()`, and `-R`
+
 - `MMCFND_test` takes the two formulations of `MMCFNetworkDesignBlock`
   with `-F NDVar.txt` (pairs `BlockConfig` + `BlockSolverConfig`) instead
   of `-m`/`-M`/`-b`/`-B`, its options being parsed by `common_utils`

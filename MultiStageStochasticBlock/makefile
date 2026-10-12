@@ -59,7 +59,7 @@ include $(MSSBkSDR)/makefile
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(CMMNUOBJ) $(BNDSLVOBJ) $(LgDSLVOBJ) $(MSSBkOBJ) $(TSSBkOBJ) $(StcBlkOBJ) $(UCBckOBJ) $(SMS++OBJ)
+MOBJ =  $(CMMNUOBJ) $(STCHTOBJ) $(BNDSLVOBJ) $(LgDSLVOBJ) $(MSSBkOBJ) $(TSSBkOBJ) $(StcBlkOBJ) $(UCBckOBJ) $(SMS++OBJ)
 
 # libraries
 MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LgDSLVLIB) $(UCBckLIB) $(StcBlkLIB)
@@ -73,7 +73,7 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(UCBckINC) $(StcBlkINC) $(TSSBkINC) $(MSSBkINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(UCBckH) $(StcBlkH) $(TSSBkH) $(MSSBkH) $(CMMNUH)
+MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(UCBckH) $(StcBlkH) $(TSSBkH) $(MSSBkH) $(CMMNUH) $(STCHTH)
 
 # compile command
 
