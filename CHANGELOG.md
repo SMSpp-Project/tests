@@ -151,6 +151,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `CapacitatedFacilityLocationBlock/CFLBSCfg-ldvscuts.txt` gives its
+  `GRBMILPSolver` the parameters of GUROBI (it gave those of CPLEX, which
+  stopped every run of `batch-ldvscuts`), the root node being solved with
+  its cut loop (`NodeLimit 1`); the battery stays off ctest, the gap
+  between the two bounds being larger than with CPLEX
+
 - `compare_formulations/BSCfg1.txt` and `BSCfg2.txt` attach a
   `GRBMILPSolver` rather than a `HiGHSMILPSolver`, which cannot separate the
   user cuts that `intCutSepPar 7` asks for, so that the batch failed on
