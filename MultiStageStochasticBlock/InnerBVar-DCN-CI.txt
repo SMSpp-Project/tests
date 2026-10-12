@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -InnerBVar-DCN-CI.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - InnerBVar-DCN-CI.txt  - - - - - - - - - - - - - -
 #
 # The variants of InnerBVar-DCN.txt that the batteries of this suite compare
 # in CI, where their time is short: the PTDF and the KIRCHHOFF formulations
@@ -19,5 +19,5 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -END InnerBVar-DCN-CI.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBVar-DCN-CI.txt  - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

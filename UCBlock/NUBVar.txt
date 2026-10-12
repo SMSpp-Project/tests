@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - NUBVar.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - NUBVar.txt  - - - - - - - - - - - - - - - - -
 #
 # The variants of the BlockConfig of a NuclearUnitBlock that batch-nuclear
 # compares: the T formulation of the thermal unit with Perspective Cuts, and
@@ -26,5 +26,5 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END NUBVar.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END NUBVar.txt  - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -  BKBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BKBSCfg.txt - - - - - - - - - - - - - - - - -
 #
 # A BlockSolverConfig for each BinaryKnapsackBlock of the father Block of the
 # Frank-Wolfe test: the dynamic programme is the Linear Minimization Oracle,
@@ -28,5 +28,5 @@ DPBinaryKnapsackSolver  # the oracle: the exact, full-table DP
 # end of BlockSolverConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -  END BKBSCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BKBSCfg.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

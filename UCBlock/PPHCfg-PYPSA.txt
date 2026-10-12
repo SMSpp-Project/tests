@@ -46,5 +46,5 @@ intDoEasy 0 # these instances have no non-easy component
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END PPHCfg-PYPSA.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END PPHCfg-PYPSA.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

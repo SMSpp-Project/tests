@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - CFLBSCfg-mcf.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBSCfg-mcf.txt  - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
 # CapacitatedFacilityLocationBlock to be solved by a :MILPSolver
@@ -89,5 +89,5 @@ Threads     1       # avoid parallel
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -END CFLBSCfg-mcf.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBSCfg-mcf.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

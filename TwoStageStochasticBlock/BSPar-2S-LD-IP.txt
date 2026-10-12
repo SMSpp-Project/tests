@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-2S-LD-IP.txt - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - BSPar-2S-LD-IP.txt  - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a TwoStageStochasticBlock,
 # whose scenarios may be unit commitments, to be solved by four different
@@ -53,5 +53,5 @@ LagrangianDualRelaxationSolver  # name of 4th Solver
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BSPar-2S-LD-IP.txt - - - - - - - - - - - - - 
+# - - - - - - - - - - - - END BSPar-2S-LD-IP.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

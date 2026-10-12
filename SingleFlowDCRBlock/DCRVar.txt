@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - DCRVar.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - DCRVar.txt  - - - - - - - - - - - - - - - - -
 #
 # The variants of a SingleFlowDCRBlock that batch and batch-instances
 # compare: the SOCP formulation of DCRCfg-socp.txt, solved exactly by the
@@ -38,5 +38,5 @@ SimpleConfiguration<std::vector<int>>
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END DCRVar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END DCRVar.txt  - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

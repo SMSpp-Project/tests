@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - PPHCfg.txt - - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - - PPHCfg.txt  - - - - - - - - - - - - - - - - -
 #
 # The ComputeConfig of the PrimalProximalHeur of a TwoStageStochasticBlock:
 # the Lagrangian dual of the scenarios, each solved by the inner
@@ -61,5 +61,5 @@ strRecoveryBSC   BSCfg1-IP.txt  # BlockSolverConfig of the recovery
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END PPHCfg.txt - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - END PPHCfg.txt  - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

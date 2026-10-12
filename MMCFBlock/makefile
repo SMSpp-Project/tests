@@ -73,4 +73,4 @@ MH =    $(SMS++H) $(MILPSH) $(MMCFH) $(libMMCFH) $(OPTUxH)
 $(DIR)/test_reference.o: $(DIR)/test_reference.cpp $(MH)
 	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)
 
-############################ End of makefile ################################
+############################ End of makefile #################################

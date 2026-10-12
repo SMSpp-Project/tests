@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - TUBVar-mustrun.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - TUBVar-mustrun.txt  - - - - - - - - - - - - - - -
 #
 # The variants of the BlockConfig of a ThermalUnitBlock that batch-mustrun
 # compares on a unit that is on at every instant: the 3bin, T, pt and DP
@@ -25,5 +25,5 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - END TUBVar-mustrun.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END TUBVar-mustrun.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

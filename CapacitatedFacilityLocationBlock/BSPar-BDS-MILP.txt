@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - BSPar-BDS-MILP.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - BSPar-BDS-MILP.txt  - - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of a Block with a single BendersDecompositionSolver
 # in the MILP regime [see BDSCfg-MILP.txt].
@@ -22,5 +22,5 @@ BendersDecompositionSolver  # name of 1st Solver
 *BDSCfg-MILP.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - END BSPar-BDS-MILP.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END BSPar-BDS-MILP.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

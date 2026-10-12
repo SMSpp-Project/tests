@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - NUBCfg-T-PC-RM.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - NUBCfg-T-PC-RM.txt  - - - - - - - - - - - - - - -
 #
 # The BlockConfig of a NuclearUnitBlock that selects the T formulation of the
 # thermal unit with Perspective Cuts and, for the operating rules, the tight
@@ -50,5 +50,5 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END NUBCfg-T-PC-RM.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - END NUBCfg-T-PC-RM.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

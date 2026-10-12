@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -NUBVar-CI.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - NUBVar-CI.txt - - - - - - - - - - - - - - - -
 #
 # The variants of the BlockConfig of a NuclearUnitBlock that batch-nuclear
 # compares in CI, where its time is short: the T formulation of the thermal
@@ -20,5 +20,5 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -END NUBVar-CI.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END NUBVar-CI.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

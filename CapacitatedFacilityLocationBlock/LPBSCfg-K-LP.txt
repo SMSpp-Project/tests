@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - LPBSCfg-K-LP.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LPBSCfg-K-LP.txt  - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a BinaryKnapsackBlock solved
 # by a :MILPSolver
@@ -58,5 +58,5 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 * # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -END LPBSCfg-K-LP.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END LPBSCfg-K-LP.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

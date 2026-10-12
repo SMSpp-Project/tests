@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - CFLBCfg-BF.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBCfg-BF.txt  - - - - - - - - - - - - - - - -
 #
 # The BlockConfig of the copy of a CapacitatedFacilityLocationBlock in
 # CFLBVar-ben.txt: the Benders friendly formulation with feasibility cuts
@@ -125,5 +125,5 @@ dblRelAcc 1e-9
 *  # extra
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END CFLBCfg-BF.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBCfg-BF.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

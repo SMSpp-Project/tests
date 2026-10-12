@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - InnerBCfg-PTDF.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - InnerBCfg-PTDF.txt  - - - - - - - - - - - - - - -
 #
 # The "meta"-BlockConfig of InnerBCfg.txt with the PTDF formulation of the
 # DCNetworkBlock [see DCNBCfg-PTDF.txt], for the batteries that solve every
@@ -21,5 +21,5 @@ PolyhedralFunctionBlock *PFBCfg.txt
 MMCFBlock               *MMCFBCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - END InnerBCfg-PTDF.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBCfg-PTDF.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

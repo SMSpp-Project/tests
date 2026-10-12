@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BenBSCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BenBSCfg.txt  - - - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of a CapacitatedFacilityLocationBlock in the Benders
 # friendly formulation: a GRBMILPSolver that solves its continuous relaxation
@@ -48,5 +48,5 @@ dblRelAcc 1e-7
 *  # extra
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BenBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BenBSCfg.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

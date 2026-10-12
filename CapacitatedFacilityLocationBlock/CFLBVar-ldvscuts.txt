@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - CFLBVar-ldvscuts.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - CFLBVar-ldvscuts.txt  - - - - - - - - - - - - - -
 #
 # The variants that batch-ldvscuts compares: the natural formulation with the
 # separated strong forcing constraints, solved by a :MILPSolver, against a
@@ -36,5 +36,5 @@ SimpleConfiguration<std::vector<Configuration*>>
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -END CFLBVar-ldvscuts.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - END CFLBVar-ldvscuts.txt  - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

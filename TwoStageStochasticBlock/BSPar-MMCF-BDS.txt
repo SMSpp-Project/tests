@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - BSPar-MMCF-BDS.txt - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - BSPar-MMCF-BDS.txt  - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the Benders form of a
 # TwoStageStochasticBlock over MMCFBlock (TSSB_test -b), comparing on it:
@@ -77,5 +77,5 @@ str_Mstr_BSCfg BDSMCfg-MILP.txt # BlockSolverConfig of the master
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END BSPar-MMCF-BDS.txt - - - - - - - - - - - - - 
+# - - - - - - - - - - - - END BSPar-MMCF-BDS.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
