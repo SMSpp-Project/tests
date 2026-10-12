@@ -628,7 +628,6 @@ Index n_change = 10;
 Index n_repeat = 100;
 double sd_cost = 0;   // the shut-down cost given to the unit, if any
 bool must_run = false;   // the unit is on at every instant of the horizon
-std::string vconf_file;  // the list of the variants of the BlockConfig (-F)
 
 const char * qcost_env = nullptr;  // the TUDPS_QCOST environment variable
 
@@ -681,7 +680,6 @@ static bool process_specific_arg( int opt )
   case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
   case( 'd' ): Str2Sthg( optarg , sd_cost );   return( true );
   case( 'u' ): must_run = true;                return( true );
-  case( 'F' ): vconf_file = optarg;            return( true );
   default:                                     return( false );
   }
  }
@@ -1137,7 +1135,7 @@ static bool CrossCheck( const std::vector< Reading > & rd )
 // solves every copy of the unit with its two Solver, then compares the
 // copies with each other
 
-static bool SolveVariants( void )
+static bool SolveCopies( void )
 {
  bool ok = true;
  std::vector< Reading > rd( variants.size() );
@@ -1172,7 +1170,7 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ ThermalUnitBlock Solver test.\n";
- short_opts += "e:k:n:m:q:d:uF:";
+ short_opts += "e:k:n:m:q:d:u";
  const std::vector< option > my_opts = {
    { "seed"   , required_argument , nullptr , 'e' } ,
    { "wchg"   , required_argument , nullptr , 'k' } ,
@@ -1180,8 +1178,7 @@ int main( int argc , char **argv )
    { "nchng"  , required_argument , nullptr , 'm' } ,
    { "pchng"  , required_argument , nullptr , 'q' } ,
    { "sdcost" , required_argument , nullptr , 'd' } ,
-   { "mustrun" , no_argument , nullptr , 'u' } ,
-   { "variants" , required_argument , nullptr , 'F' } };
+   { "mustrun" , no_argument , nullptr , 'u' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
@@ -1199,30 +1196,14 @@ int main( int argc , char **argv )
          "                                  having none [0]\n"
          "  -u, --mustrun                   the unit is on at every instant,\n"
          "                                  as a generator PyPSA does not\n"
-         "                                  commit\n"
-         "  -F, --variants <file>           the list of the (meta-)\n"
-         "                                  BlockConfig of the unit, a\n"
-         "                                  SimpleConfiguration< std::vector<\n"
-         "                                  Configuration * > >, in place of\n"
-         "                                  -B: the unit is read once per\n"
-         "                                  variant, each copy is solved\n"
-         "                                  with the BlockSolverConfig of -S\n"
-         "                                  and the copies are compared\n";
+         "                                  commit\n";
 
  process_args( argc , argv , process_specific_arg );
 
  // the BlockSolverConfig (-S) and the BlockConfig (-B), which gives the
  // formulation of the unit (e.g., TUBCfg-T.txt), or the list of them (-F),
  // must be provided explicitly: the test never falls back to a hardcoded
- // default Configuration
- require_solver_config();
- if( vconf_file.empty() )
-  require_block_config();
- else
-  if( ! bconf_file.empty() ) {
-   std::cerr << "Error: -B and -F are alternative" << std::endl;
-   exit( 1 );
-   }
+ // default Configuration [see get_BlockConfig_variants()]
 
  rg.seed( seed );  // seed the pseudo-random number generator
 
@@ -1234,23 +1215,10 @@ int main( int argc , char **argv )
  // back, as the changes below depend on it: 0 3bin, 1 T, 2 pt, 3 DP, 4 SU,
  // 5 SD, 6 SUSD, +8 also Perspective Cuts
 
- Configuration * bconfs;  // what holds the BlockConfig, deleted below
- std::vector< Configuration * > blist;
- std::string bfn;
- if( vconf_file.empty() ) {
-  bconfs = Configuration::deserialize( bconf_file );
-  blist = { bconfs };
-  bfn = bconf_file;
-  }
- else {
-  auto vc = read_BlockConfig_variants( vconf_file );
-  blist = vc->f_value;
-  bconfs = vc;
-  bfn = vconf_file;
-  }
+ auto bv = get_BlockConfig_variants();
 
- for( std::size_t k = 0 ; k < blist.size() ; ++k ) {
-  auto tub = read_unit( blist[ k ] , bfn );
+ for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+  auto tub = read_unit( bv.configs[ k ] , bv.file );
 
   int f = 1;  // the T formulation, the one of a unit given no BlockConfig
   if( auto bc = tub->get_BlockConfig() )
@@ -1261,8 +1229,6 @@ int main( int argc , char **argv )
   variants.push_back( { tub , nullptr , f ,
 			std::to_string( k ) + ":" + formulation_name( f ) } );
   }
-
- delete bconfs;
 
  // save some original data of the ThermalUnitBlock - - - - - - - - - - - - -
  // they are the same in every copy
@@ -1293,11 +1259,7 @@ int main( int argc , char **argv )
  // for final cleanup.
 
  for( auto & v : variants ) {
-  v.bsc = Configuration::deserialize( sconf_file );
-  if( ! v.bsc ) {
-   std::cerr << "Error: cannot load BSC from " << sconf_file << std::endl;
-   exit( 1 );
-   }
+  v.bsc = solver_config_of( bv , &v - variants.data() );
   s_config_Block( v.tub , v.bsc , sconf_file );
 
   if( v.tub->get_registered_solvers().size() < 2 ) {
@@ -1307,12 +1269,14 @@ int main( int argc , char **argv )
    }
   }
 
+ delete bv.owner;
+
  // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  LOG1( "First call: " );
 
- bool AllPassed = SolveVariants();
+ bool AllPassed = SolveCopies();
  Index n_solved = 1;
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1376,7 +1340,7 @@ int main( int argc , char **argv )
   // ... every SKIP_BEAT + 1 rounds
 
   if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) ) {
-   if( ! SolveVariants() )
+   if( ! SolveCopies() )
     AllPassed = false;
    ++n_solved;
    }

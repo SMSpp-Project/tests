@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #
-# usage: batch < bpar file > < bspar file >
+# usage: batch
+#
+# compares the variants of MetaVar.txt on the plan4res instances
 
 source "$(dirname "$0")/../batch_common.sh"
 
@@ -11,7 +13,7 @@ set=plan4res-data/FirstSetofInstances/*.nc4
 
 for what in ../../UCBlock/data/nc4/$set; do
 
-    run_test ./compare_formulations "$what" -B MetaConfig1.txt -X MetaConfig2.txt -S BSCfg1.txt -Y BSCfg2.txt
+    run_test ./compare_formulations "$what" -F MetaVar.txt
 
 done
 

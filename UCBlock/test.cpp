@@ -1474,31 +1474,40 @@ int main( int argc , char ** argv )
 
  process_args( argc , argv , process_specific_arg );
 
- // both the BlockConfig (-B, the inner formulation) and the
- // BlockSolverConfig (-S) must be provided explicitly: the test never falls
- // back to a hardcoded default Configuration
- require_block_config();
- require_solver_config();
+ // both the BlockConfig (-B, the inner formulation), or the list of them
+ // (-F), and the BlockSolverConfig (-S) must be provided explicitly: the
+ // test never falls back to a hardcoded default Configuration
+ auto bv = get_BlockConfig_variants();
 
- // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // read the Block, once per variant, and attach the Solver(s) to it- - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
- TestBlock = Block::deserialize( filename );
- if( ! TestBlock ) {
-  std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
-  exit( 1 );
-  }
-
- // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
- // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // do this by reading an appropriate BlockSolverConfig from file and
- // apply() it to the TestBlock; note that the BlockSolverConfig is
+ // the (meta-)BlockConfig of each variant drives the *formulation* of the
+ // sub-Blocks: a SimpleConfiguration< map< classname, Configuration* >>
+ // mapping a Block classname to the BlockConfig to apply to every sub-Block of
+ // that class, dispatched by b_config_Block over the whole tree, the
+ // PolyhedralFunctionBlock inside a HydroSystemUnitBlock included: e.g.,
+ // InnerBCfg.txt -> ThermalUnitBlock formulation (TUBCfg.txt) and
+ // DCNetworkBlock formulation (DCNBCfg.txt, or the variants that
+ // InnerBCfg-PTDF.txt and InnerBCfg-CYCLE.txt point at). How the sub-Blocks
+ // are *solved* inside the Lagrangian Dual is NOT set here: it descends
+ // entirely from the BlockSolverConfig, whose LagrangianDualSolver gives the
+ // inner Solver of the LagBFunctions by str_LagBF_BSCfg, and whose inner
+ // BundleSolver is told the components that are never "easy" by vstrNoEasy
+ // (see BSPar.txt). Each copy reads its own BlockSolverConfig, which is
  // clear()-ed and kept to do the cleanup at the end
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( sconf_file );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
+ std::vector< Block * > blocks;
+ std::vector< BlockSolverConfig * > bscs;
+ for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+  auto ibc = bv.configs[ k ];
+  auto b = Block::deserialize( filename );
+  if( ! b ) {
+   std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
+   exit( 1 );
+   }
+
+  auto c = solver_config_of( bv , k );
+  auto bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
    std::cerr << "Error: configuration file not a BlockSolverConfig"
              << std::endl;
@@ -1506,42 +1515,26 @@ int main( int argc , char ** argv )
    exit( 1 );
    }
 
-  // load the inner (meta-)BlockConfig that drives the *formulation* of the
-  // sub-Blocks: a SimpleConfiguration< map< classname, Configuration* >>
-  // mapping a Block classname to the BlockConfig to apply to every sub-Block of
-  // that class, dispatched by b_config_Block over the whole tree, the
-  // PolyhedralFunctionBlock inside a HydroSystemUnitBlock included (see
-  // tests/compare_formulations): e.g., InnerBCfg.txt -> ThermalUnitBlock
-  // formulation (TUBCfg.txt) and DCNetworkBlock formulation (DCNBCfg.txt, or
-  // the variants that InnerBCfg-PTDF.txt and InnerBCfg-CYCLE.txt point at).
-  // How the sub-Blocks are *solved* inside the Lagrangian Dual is NOT set
-  // here: it descends entirely from the BlockSolverConfig, whose
-  // LagrangianDualSolver gives the inner Solver of the LagBFunctions by
-  // str_LagBF_BSCfg, and whose inner BundleSolver is told the components
-  // that are never "easy" by vstrNoEasy (see BSPar.txt)
-  auto ibc = Configuration::deserialize( bconf_file );
-  if( ! ibc ) {
-   std::cerr << "Error: cannot load BlockConfig from " << bconf_file
-             << std::endl;
-   delete( c );
-   exit( 1 );
-   }
-
-  b_config_Block( TestBlock , ibc , bconf_file );
-
-  // cleanup the inner (meta-)BlockConfig (its destructor deletes the contained
-  // per-classname BlockConfig)
-  delete( ibc );
+  b_config_Block( b , ibc , bv.file );
 
   // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
   // dispatches on the runtime type, applies, and clear()s for cleanup
-  s_config_Block( TestBlock , bsc , sconf_file );
+  s_config_Block( b , bsc , sconf_file );
 
-  if( TestBlock->get_registered_solvers().empty() ) {
+  if( b->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!" << std::endl;
    exit( 1 );
    }
+
+  blocks.push_back( b );
+  bscs.push_back( bsc );
   }
+
+ // cleanup the (meta-)BlockConfig (their destructor deletes the contained
+ // per-classname BlockConfig)
+ delete( bv.owner );
+
+ TestBlock = blocks.front();
 
  // open log-file- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1574,7 +1567,12 @@ int main( int argc , char ** argv )
  // of its ComputeConfig unless -E overrides it: the batches do so for the
  // PrimalProximalHeur, whose dblRelAcc is what the inner Solver is asked
  // and not what its primal solution is worth
- bool AllPassed = SolveAll( TestBlock , RefObjective , 1e-5 );
+ //
+ // with several variants of the BlockConfig, each copy is cross-checked so,
+ // and then the Solver of all the copies against each other, since whatever
+ // the formulation they bound the same optimum [see SolveVariants()]
+ bool AllPassed = SolveVariants( blocks , bv.names , read_bounds ,
+                                 RefObjective , 1e-5 );
 
  // each Solver that has a solution must have one that is worth what the
  // Solver says: the cross-check compares the values the Solver report with
@@ -1582,14 +1580,16 @@ int main( int argc , char ** argv )
  // It is the only place where the solution the LagrangianDualSolver
  // RECONSTRUCTS is read back, that being written from the convex
  // combination the important linearization of each LagBFunction describes
- AllPassed &= check_var_solutions( TestBlock );
+ for( auto b : blocks )
+  AllPassed &= check_var_solutions( b );
 
  // a Solver that solves a relaxation is not covered by the check above, the
  // value it reports not being that of what it writes: what its reconstructed
  // solution can be held to is the rows this Block couples, i.e. the ones the
  // relaxation has dualised, which it satisfies where the relaxation is exact
- AllPassed &= check_relaxation_solutions( TestBlock , RelaxationViol ,
-                                          RefObjective );
+ for( auto b : blocks )
+  AllPassed &= check_relaxation_solutions( b , RelaxationViol ,
+                                           RefObjective );
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1675,18 +1675,20 @@ int main( int argc , char ** argv )
  // apply() the clear()-ed BlockSolverConfig to cleanup Solver
  //!bsc->apply( TestBlock );
 
- // then delete the BlockSolverConfig
- delete( bsc );
+ for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
+  // then delete the BlockSolverConfig
+  delete( bscs[ k ] );
 
- #if USE_BundleSolver
-  // since some Solver have been attached "by hand" to some sub-Block,
-  // unregister "by hand" any remaining Solver attached to them
-  for( auto sb : TestBlock->get_nested_Blocks() )
-   sb->unregister_Solvers();
- #endif
+  #if USE_BundleSolver
+   // since some Solver have been attached "by hand" to some sub-Block,
+   // unregister "by hand" any remaining Solver attached to them
+   for( auto sb : blocks[ k ]->get_nested_Blocks() )
+    sb->unregister_Solvers();
+  #endif
 
- // finally the AbstractBlock can be deleted
- delete( TestBlock );
+  // finally the AbstractBlock can be deleted
+  delete( blocks[ k ] );
+  }
 
  // terminate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

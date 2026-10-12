@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SolveVariants()` of `common_utils`: given copies of a `Block`, each
+  configured by one variant of its `BlockConfig`, it cross-checks the
+  `Solver` of each copy as `SolveAll()` does and then the `Solver` of all
+  the copies against each other, since whatever the formulation they bound
+  the same optimum; `-F <list>` is a standard option of the testers, the
+  list a `SimpleConfiguration<std::vector<Configuration*>>` whose elements
+  are (meta-)`BlockConfig` or pairs (meta-)`BlockConfig` +
+  `BlockSolverConfig` (`SimpleConfiguration<std::pair<Configuration*,
+  Configuration*>>`), read by `get_BlockConfig_variants()`, and
+  `solver_config_of()` gives the `BlockSolverConfig` of each copy
+
+- `UCBlock_test` takes `-F`, and `UCBlock/batches/batch-pypsa` runs each
+  PyPSA instance once with the formulations of the `DCNetworkBlock` listed
+  in `InnerBVar-DCN.txt` (PTDF, CYCLE, KIRCHHOFF) instead of once per
+  formulation, comparing them with each other as well as with PyPSA
+
 - `TUDPS_test` compares formulations with each other: given with `-F` a
   list of (meta-)`BlockConfig`, a
   `SimpleConfiguration<std::vector<Configuration*>>` such as
@@ -43,6 +59,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `InnerBSCfg-DP.txt`]
 
 ### Changed
+
+- `compare_formulations` is a thin wrapper of `SolveVariants()`: it takes
+  `-F` and the variants of `MetaVar.txt`, each a pair `BlockConfig` +
+  `BlockSolverConfig`, instead of `-X`/`-Y`; its CMake target links
+  `UCBlock` and `MILPSolver` when they are in the build, without which it
+  could not read the instances of its batch
 
 - `UCBlock_test --scale` no longer builds the `BlockConfig` of the
   formulations of the unit in code: it reads them from the lists

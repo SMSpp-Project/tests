@@ -112,6 +112,7 @@ extern std::string exe;             ///< name of the executable file
 extern std::string filename;        ///< input filename (last positional argv)
 extern std::string bconf_file;      ///< BlockConfig filename (-B)
 extern std::string sconf_file;      ///< BlockSolverConfig filename (-S)
+extern std::string vconf_file;      ///< list of BlockConfig variants (-F)
 extern std::string block_prefix;    ///< prefix for all Block filenames (-p)
 extern std::string conf_prefix;     ///< prefix for all Configuration filenames (-c)
 
@@ -327,7 +328,13 @@ void b_config_Block( Block * block , Configuration * b_config ,
  *    SimpleConfiguration< std::vector< Configuration * > >
  *
  *  in file @p fn, each of them a BlockConfig or a meta one, typically the
- *  "*file" of one that the battery already has. The list is the business of
+ *  "*file" of one that the battery already has, or else a
+ *
+ *    SimpleConfiguration< std::pair< Configuration * , Configuration * > >
+ *
+ *  whose first element is that (meta-)BlockConfig and whose second is the
+ *  (meta-)BlockSolverConfig of that variant, for the formulations that are
+ *  solved by Solver of their own [see solver_config_of()]. The list is the business of
  *  the battery and not of the Block: a BlockConfig applies to one Block, and
  *  what a battery wants is the same Block several times, each time
  *  configured differently and solved by the same Solver, so that two
@@ -672,6 +679,22 @@ bool cross_check( const std::vector< SolverReading > & rd ,
 void print_solver_parameters( Block * block );
 
 /*--------------------------------------------------------------------------*/
+/// what SolveAll() read of each Solver, for a comparison across Block
+/** One entry per Solver, in the order of the comparison: its reading, if it
+ *  has a solution, its status, its time, the token printed for it and its
+ *  name. SolveAll() fills it if given one, and SolveVariants() compares the
+ *  records of the copies of a Block with each other. */
+
+struct SolveRecord {
+ std::vector< SolverReading > rd;      ///< the reading of each Solver
+ std::vector< bool > hs;               ///< whether it has a solution
+ std::vector< int > status;            ///< what compute() returned
+ std::vector< double > times;          ///< how long it took
+ std::vector< std::string > tok;       ///< the token printed for it
+ std::vector< std::string > names;     ///< its classname()
+ };
+
+/*--------------------------------------------------------------------------*/
 /// run EVERY Solver registered on @p block and cross-check the results
 /** For each instance it computes every Solver (timing each), maps each
  *  result to a SolverReading via @p classify, hands the readings to
@@ -709,7 +732,8 @@ bool SolveAll( Block * block ,
                double * out_time1 = nullptr ,
                long   * out_it1 = nullptr ,
                BlockSolverConfig * bsc = nullptr ,
-               Solution * start = nullptr );
+               Solution * start = nullptr ,
+               SolveRecord * record = nullptr );
 
 /*--------------------------------------------------------------------------*/
 /// SolveAll() reading every Solver with read_bounds(), the usual case
@@ -724,6 +748,64 @@ bool SolveAll( Block * block ,
                double * out_time1 = nullptr ,
                long   * out_it1 = nullptr ,
                BlockSolverConfig * bsc = nullptr );
+
+/*--------------------------------------------------------------------------*/
+/// SolveAll() of each copy of a Block, then the copies against each other
+/** @p blocks are copies of the same Block, each configured by one variant of
+ *  its (meta-)BlockConfig [see read_BlockConfig_variants()] and with its
+ *  Solver attached, @p names what the variants are called in the report.
+ *  Each copy is solved by SolveAll() as if it were alone, with its line
+ *  headed by "variant <name>:", and then the readings of all the Solver of
+ *  all the copies go through one cross_check(), since they are bounds on the
+ *  same optimum whatever the formulation: a formulation that solves another
+ *  problem makes the exact Solver of its copy contradict those of the
+ *  others. That joint check is printed as one more block, each Solver named
+ *  "<variant> <classname>", and the result is the conjunction of all.
+ *
+ *  With one copy this is SolveAll() and nothing else, so that a tester given
+ *  one BlockConfig prints what it always printed. @p bscs, if not empty,
+ *  gives the BlockSolverConfig of each copy, which restricts its comparison
+ *  to the Solver that it registered [see SolveAll()]; @p classify, @p ref and
+ *  @p tol are those of SolveAll(). */
+
+bool SolveVariants( const std::vector< Block * > & blocks ,
+                    const std::vector< std::string > & names ,
+                    const SolverClassifier & classify ,
+                    double ref = std::numeric_limits< double >::quiet_NaN() ,
+                    double tol = 1e-5 ,
+                    const std::vector< BlockSolverConfig * > & bscs = {} );
+
+/*--------------------------------------------------------------------------*/
+/// the (meta-)BlockConfig of a run: the list of -F, or the one of -B
+/** A tester that compares formulations gets its variants from -F, a file
+ *  read by read_BlockConfig_variants(), and a tester run with -B gets the
+ *  single BlockConfig of that file as a list of one; exactly one of the two
+ *  must be given, otherwise the run stops with exit(1). The variants are
+ *  named F0, F1, ... in the order of the list; with -B the one variant is
+ *  named after the file. A variant that is a pair also carries its own
+ *  (meta-)BlockSolverConfig, nullptr otherwise. The caller deletes the
+ *  returned owner once the copies are configured and their Solver
+ *  attached. */
+
+struct BlockConfigVariants {
+ Configuration * owner = nullptr;          ///< what holds them, to delete
+ std::vector< Configuration * > configs;   ///< the (meta-)BlockConfig
+ std::vector< Configuration * > solvers;   ///< their BlockSolverConfig
+ std::vector< std::string > names;         ///< what each is called
+ std::string file;                         ///< the file they come from
+ };
+
+BlockConfigVariants get_BlockConfig_variants( void );
+
+/*--------------------------------------------------------------------------*/
+/// the (meta-)BlockSolverConfig of the variant @p k of @p v
+/** A clone() of the one of its pair, if the variant is one, else the one of
+ *  -S read anew, so that each copy has its own to apply(), clear() and keep
+ *  for the cleanup; the caller deletes it. A variant with no
+ *  BlockSolverConfig of its own and no -S stops the run with exit(1). */
+
+Configuration * solver_config_of( const BlockConfigVariants & v ,
+                                  std::size_t k );
 
 /*--------------------------------------------------------------------------*/
 /// SolveAll() of the one or two Solver registered to @p block

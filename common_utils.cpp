@@ -271,12 +271,17 @@ SimpleConfiguration< std::vector< Configuration * > > *
   exit( 1 );
   }
 
- for( std::size_t k = 0 ; k < vc->f_value.size() ; ++k )
-  if( ! vc->f_value[ k ] ) {
+ for( std::size_t k = 0 ; k < vc->f_value.size() ; ++k ) {
+  auto e = vc->f_value[ k ];
+  if( auto p = dynamic_cast< SimpleConfiguration< std::pair< Configuration * ,
+                                       Configuration * > > * >( e ) )
+   e = p->f_value.first;
+  if( ! e ) {
    std::cerr << "Error: variant " << k << " of " << fn << " is empty"
              << std::endl;
    exit( 1 );
    }
+  }
 
  return( vc );
  }
@@ -1008,7 +1013,8 @@ bool SolveAll( Block * block ,
                double * out_time1 ,
                long   * out_it1 ,
                BlockSolverConfig * bsc ,
-               Solution * start )
+               Solution * start ,
+               SolveRecord * record )
 {
  constexpr double INF = std::numeric_limits< double >::has_infinity
                         ? std::numeric_limits< double >::infinity()
@@ -1102,6 +1108,10 @@ bool SolveAll( Block * block ,
    names[ k ] = S[ k ]->classname();
 
   print_instance_line( times , tok , ref , verdict , diff , true , names );
+
+  if( record )
+   *record = { rd , hs , status , times , tok , names };
+
   return( ok );
   }
  catch( std::exception & e ) {
@@ -1127,6 +1137,124 @@ bool SolveAll( Block * block ,
 {
  return( SolveAll( block , read_bounds , ref , tol ,
                    out_fo1 , out_hs1 , out_time1 , out_it1 , bsc ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+// SolveAll() of each copy of a Block, then the copies against each other
+
+bool SolveVariants( const std::vector< Block * > & blocks ,
+                    const std::vector< std::string > & names ,
+                    const SolverClassifier & classify ,
+                    double ref , double tol ,
+                    const std::vector< BlockSolverConfig * > & bscs )
+{
+ auto bsc_of = [ & bscs ]( std::size_t k ) {
+  return( k < bscs.size() ? bscs[ k ] : nullptr );
+  };
+
+ if( blocks.size() == 1 )
+  return( SolveAll( blocks.front() , classify , ref , tol , nullptr ,
+                    nullptr , nullptr , nullptr , bsc_of( 0 ) ) );
+
+ bool ok = true;
+ SolveRecord all;
+ for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
+  std::cout << "variant " << names[ k ] << ":";
+  SolveRecord rec;
+  ok &= SolveAll( blocks[ k ] , classify , ref , tol , nullptr , nullptr ,
+                  nullptr , nullptr , bsc_of( k ) , nullptr , & rec );
+  all.rd.insert( all.rd.end() , rec.rd.begin() , rec.rd.end() );
+  all.hs.insert( all.hs.end() , rec.hs.begin() , rec.hs.end() );
+  all.status.insert( all.status.end() , rec.status.begin() ,
+                     rec.status.end() );
+  all.times.insert( all.times.end() , rec.times.begin() , rec.times.end() );
+  all.tok.insert( all.tok.end() , rec.tok.begin() , rec.tok.end() );
+  for( const auto & n : rec.names )
+   all.names.push_back( names[ k ] + " " + n );
+  }
+
+ // the Solver of all the copies against each other: they bound the same
+ // optimum, whatever the formulation of the copy they are attached to
+ std::string verdict;
+ double diff;
+ const bool cross = cross_check( all.rd , all.hs , all.status , ref , tol ,
+                                 verdict , diff );
+ std::cout << "variants against each other:";
+ print_instance_line( all.times , all.tok , ref , verdict , diff , true ,
+                      all.names );
+
+ return( ok && cross );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the (meta-)BlockConfig of a run: the list of -F, or the one of -B
+
+BlockConfigVariants get_BlockConfig_variants( void )
+{
+ BlockConfigVariants v;
+
+ if( vconf_file.empty() == bconf_file.empty() ) {
+  std::cerr << "Error: give either a BlockConfig (-B) or a list of them (-F)"
+            << std::endl;
+  exit( 1 );
+  }
+
+ if( ! vconf_file.empty() ) {
+  auto vc = read_BlockConfig_variants( vconf_file );
+  v.owner = vc;
+  for( std::size_t k = 0 ; k < vc->f_value.size() ; ++k ) {
+   auto e = vc->f_value[ k ];
+   if( auto p = dynamic_cast< SimpleConfiguration< std::pair<
+                 Configuration * , Configuration * > > * >( e ) ) {
+    v.configs.push_back( p->f_value.first );
+    v.solvers.push_back( p->f_value.second );
+    }
+   else {
+    v.configs.push_back( e );
+    v.solvers.push_back( nullptr );
+    }
+   v.names.push_back( "F" + std::to_string( k ) );
+   }
+  v.file = vconf_file;
+  return( v );
+  }
+
+ v.owner = Configuration::deserialize( bconf_file );
+ if( ! v.owner ) {
+  std::cerr << "Error: cannot load BlockConfig from " << bconf_file
+            << std::endl;
+  exit( 1 );
+  }
+ v.configs = { v.owner };
+ v.solvers = { nullptr };
+ v.names = { bconf_file };
+ v.file = bconf_file;
+ return( v );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the (meta-)BlockSolverConfig of a variant
+
+Configuration * solver_config_of( const BlockConfigVariants & v ,
+                                  std::size_t k )
+{
+ if( ( k < v.solvers.size() ) && v.solvers[ k ] )
+  return( v.solvers[ k ]->clone() );
+
+ if( sconf_file.empty() ) {
+  std::cerr << "Error: variant " << v.names[ k ] << " of " << v.file
+            << " has no BlockSolverConfig and none is given with -S"
+            << std::endl;
+  exit( 1 );
+  }
+
+ auto c = Configuration::deserialize( sconf_file );
+ if( ! c ) {
+  std::cerr << "Error: cannot load the BlockSolverConfig " << sconf_file
+            << std::endl;
+  exit( 1 );
+  }
+ return( c );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -1379,6 +1507,7 @@ std::string exe;
 std::string filename;
 std::string bconf_file;
 std::string sconf_file;
+std::string vconf_file;
 std::string block_prefix;
 std::string conf_prefix;
 
@@ -1396,11 +1525,12 @@ std::vector< bool > solver_relaxation;
 // the getopt baseline shared by the tests that opt in; those that need
 // extra switches override short_opts / long_opts / help in their main()
 // before calling process_args()
-std::string short_opts = "B:S:p:c:E:R:Dv::h";
+std::string short_opts = "B:F:S:p:c:E:R:Dv::h";
 
 std::vector< option > long_opts = {
  { "help"            , no_argument       , nullptr , 'h' } ,
  { "blockcfg"        , required_argument , nullptr , 'B' } ,
+ { "variants"        , required_argument , nullptr , 'F' } ,
  { "solvercfg"       , required_argument , nullptr , 'S' } ,
  { "prefix"          , required_argument , nullptr , 'p' } ,
  { "configdir"       , required_argument , nullptr , 'c' } ,
@@ -1414,6 +1544,10 @@ std::vector< option > long_opts = {
 std::string help =
  "  -h, --help                      print this help\n"
  "  -B, --blockcfg <file>           Block Configuration\n"
+ "  -F, --variants <file>           list of Block Configurations, in place\n"
+ "                                  of -B: the Block is read once per\n"
+ "                                  element, the copies are solved by the\n"
+ "                                  same Solver and compared to each other\n"
  "  -S, --solvercfg <file>          Solver Configuration\n"
  "  -p, --prefix <path>             the prefix for all Block filenames\n"
  "  -c, --configdir <path>          the prefix for all Config filenames\n"
@@ -1606,6 +1740,7 @@ bool process_standard_arg( int opt )
 {
  switch( opt ) {
   case 'B': bconf_file = std::string( optarg ); break;
+  case 'F': vconf_file = std::string( optarg ); break;
   case 'S': sconf_file = std::string( optarg ); break;
   case 'p': {
    block_prefix = normalize_prefix( std::string( optarg ) );

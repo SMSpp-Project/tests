@@ -1,0 +1,34 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - MetaVar.txt - - - - - - - - - - - - - - - -
+#
+# The variants that the batch compares: the two "meta"-BlockConfig
+# MetaConfig1.txt and MetaConfig2.txt, which differ in the BlockConfig of
+# the DCNetworkBlock, each with its BlockSolverConfig, BSCfg1.txt and
+# BSCfg2.txt, which differ only in the file the model is written to. Each
+# variant is a pair BlockConfig + BlockSolverConfig; the instance is read
+# once per variant and the Solver of all the copies are compared with each
+# other [see -F of compare_formulations].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of variants of the BlockConfig
+
+# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 1st variant: the BlockConfig and the BlockSolverConfig
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+*MetaConfig1.txt        # its (meta-)BlockConfig
+*BSCfg1.txt             # its BlockSolverConfig
+
+# 2nd variant: the BlockConfig and the BlockSolverConfig
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+*MetaConfig2.txt        # its (meta-)BlockConfig
+*BSCfg2.txt             # its BlockSolverConfig
+
+# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END MetaVar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

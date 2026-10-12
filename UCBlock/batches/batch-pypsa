@@ -84,30 +84,28 @@ REF_OBJ[smspp_net_link.nc]=5.743333333e+03
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # each instance with each formulation of the network: PTDF, CYCLE and the
-# KIRCHHOFF of InnerBCfg.txt
-for bcfg in InnerBCfg-PTDF.txt InnerBCfg-CYCLE.txt InnerBCfg.txt; do
+# KIRCHHOFF of InnerBCfg.txt, the list of InnerBVar-DCN.txt; the instance is
+# read once per formulation, and the Solver of all the copies are compared
+# with each other as well as with the reference
+for what in ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_*.nc \
+            ../../UCBlock/data/nc4/pypsa-data/pollutants/smspp_*.nc; do
 
-    for what in ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_*.nc \
-                ../../UCBlock/data/nc4/pypsa-data/pollutants/smspp_*.nc; do
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
 
-        # skip if pattern did not match any file
-        if [ ! -f "$what" ]; then
-          continue
-        fi
+    base=$(basename "$what")
 
-        base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
 
-        ref=${REF_OBJ[$base]}
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
 
-        if [ -z "$ref" ]; then
-          echo "No reference objective defined for file: $base"
-          exit 1
-        fi
-
-        run_test "$exe" "$what" -S "$par" -R "$REL" \
-                 -B "$bcfg" -r "$ref"
-
-    done
+    run_test "$exe" "$what" -S "$par" -R "$REL" \
+             -F InnerBVar-DCN.txt -r "$ref"
 
 done
 
