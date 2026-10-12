@@ -220,6 +220,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `extract_sat_wcnf`, and `extract_mmcf_Canad`, whose archive MMCFBlock
   downloads as the modules do
 
+### Removed
+
+- `UCBlock/batches-tub/batch-acad-all`, which made the runs of
+  `batches-tub/batch` but those of Frank-Wolfe, so that ctest made them
+  twice
+
 ### Fixed
 
 - `MMCFBlock_test` passes only if every round of the online training of
