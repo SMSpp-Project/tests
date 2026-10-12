@@ -26,6 +26,14 @@
  * keep the structure: a linking clause of the kRelaxation one stays hard or
  * soft, and the clauses added are on the variables of one group.
  *
+ * With -F rather than -B the SATBlock is read once per BlockConfig of the
+ * list [see read_BlockConfig_variants()], e.g., once with each structure,
+ * each copy gets the Solver of the BlockSolverConfig and every round makes
+ * the same change to all of them, a linking clause staying hard or soft if
+ * any copy has the kRelaxation structure; the Solver of each copy are
+ * cross-checked, and then those of all the copies against each other, as
+ * the copies are the same problem [see SolveVariants()].
+ *
  * With -n the instance is then changed n times, each time by a Modification
  * drawn at random (with the seed of -e) and followed by the cross-check
  * again, the Solver staying registered so that each of them reoptimizes as
@@ -130,46 +138,52 @@ int main( int argc , char ** argv )
 	 "solution [0]\n"
 	 "  -e, --seed <n>                  seed of the Modification [1]\n";
  process_args( argc , argv , process_specific_arg );
- require_solver_config();
 
- auto sat = read_SATBlock();
+ // the instance once per variant of its BlockConfig (-F), or once with the
+ // one of -B or with none [see get_BlockConfig_variants()]
+ auto bv = get_BlockConfig_variants( true );
 
- if( ! bconf_file.empty() ) {
-  Configuration * bc = Configuration::deserialize( bconf_file );
-  if( ! bc ) {
-   std::cerr << "Error: cannot load " << bconf_file << std::endl;
-   delete sat;
-   exit( 1 );
+ std::vector< SATBlock * > sats;
+ std::vector< Configuration * > bscs;
+ for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+  auto sat = read_SATBlock();
+  if( bv.configs[ k ] )
+   b_config_Block( sat , bv.configs[ k ] , bv.file );
+
+  // the Solver of the abstract representation need it, the others ignore it
+  sat->generate_abstract_variables();
+  sat->generate_abstract_constraints();
+  sat->generate_objective();
+
+  auto bsc = solver_config_of( bv , k );
+  s_config_Block( sat , bsc , sconf_file , false );
+  sats.push_back( sat );
+  bscs.push_back( bsc );
+  if( sat->get_registered_solvers().empty() ) {
+   // none of the Solver it names is in this build: nothing to do
+   for( std::size_t h = 0 ; h < sats.size() ; ++h ) {
+    delete bscs[ h ];
+    delete sats[ h ];
+    }
+   delete bv.owner;
+   return( 77 );
    }
-  b_config_Block( sat , bc , bconf_file );
-  delete bc;
   }
 
- // the Solver of the abstract representation need it, the others ignore it
- sat->generate_abstract_variables();
- sat->generate_abstract_constraints();
- sat->generate_objective();
+ delete bv.owner;
 
- Configuration * bsc = Configuration::deserialize( sconf_file );
- if( ! bsc ) {
-  std::cerr << "Error: cannot load " << sconf_file << std::endl;
-  delete sat;
-  exit( 1 );
-  }
- s_config_Block( sat , bsc , sconf_file , false );
- if( sat->get_registered_solvers().empty() ) {
-  // none of the Solver it names is in this build: nothing to do
-  delete bsc;
-  delete sat;
-  return( 77 );
-  }
+ std::vector< Block * > blocks( sats.begin() , sats.end() );
+ std::vector< BlockSolverConfig * > bsolvers;
+ for( auto c : bscs )
+  bsolvers.push_back( dynamic_cast< BlockSolverConfig * >( c ) );
 
  // each Solver is read by its bounds, and the solution it writes is checked
- // on the physical representation
+ // on the physical representation of the copy it is attached to
  constexpr double tol = 1e-6;
  bool solutions_ok = true;
  auto classify = [ & ]( Solver * s , std::size_t k ) {
   auto reading = read_bounds( s , k );
+  auto sat = static_cast< SATBlock * >( s->get_Block() );
   if( s->has_var_solution() && ! is_relaxation( k ) ) {
    s->get_var_solution();
    const double ub = s->get_ub();
@@ -189,13 +203,15 @@ int main( int argc , char ** argv )
   return( reading );
   };
 
- bool ok = SolveAll( sat , classify , RefObjective , tol , nullptr , nullptr ,
-		     nullptr , nullptr ,
-		     dynamic_cast< BlockSolverConfig * >( bsc ) );
+ bool ok = SolveVariants( blocks , bv.names , classify , RefObjective , tol ,
+                          bsolvers );
  ok = ok && solutions_ok;
 
  // the rounds of Modification: the steps of the costs and the new weights
- // are integer and scaled on the median soft weight
+ // are integer and scaled on the median soft weight. Each is drawn once,
+ // out of the data of the first copy, which are those of all of them, and
+ // made to every copy
+ auto sat = sats.front();
  std::mt19937_64 rg( seed );
  auto rnd = [ & ]( unsigned int k ) { return( unsigned( rg() % k ) ); };
  const unsigned int n = sat->get_number_variables();
@@ -218,6 +234,13 @@ int main( int argc , char ** argv )
  costs.resize( n , 0 );
  const double step = std::max( 1.0 , std::round( scale / 10 ) );
 
+ // a linking clause stays as hard or as soft as it is when any copy has the
+ // kRelaxation structure [see SATBlock::chg_weights()], so that all the
+ // copies get the same change
+ const bool relaxation = std::any_of( sats.begin() , sats.end() ,
+                                      []( auto b ) {
+  return( b->get_structure_type() == SATBlock::kRelaxation ); } );
+
  for( unsigned int r = 1 ; r <= n_rounds ; ++r ) {
   RefObjective = std::numeric_limits< double >::quiet_NaN();
   const unsigned int what = rnd( 5 );
@@ -226,7 +249,8 @@ int main( int argc , char ** argv )
    for( unsigned int i = 0 ; i < n ; ++i )
     if( rnd( 5 ) == 0 )
      costs[ i ] += step * ( double( rnd( 3 ) ) - 1 );
-   sat->chg_costs( costs , Block::Range( 0 , n ) );
+   for( auto b : sats )
+    b->chg_costs( costs , Block::Range( 0 , n ) );
    std::cout << "round " << r << ": costs" << std::endl;
    }
   else
@@ -238,15 +262,13 @@ int main( int argc , char ** argv )
     std::vector< double > w( k );
     for( unsigned int j = 0 ; j < k ; ++j ) {
      w[ j ] = new_weight();
-     // with the kRelaxation structure, a linking clause stays as hard or
-     // as soft as it is [see SATBlock::chg_weights()]
-     if( sat->is_linking( first + j ) &&
-	 ( sat->get_structure_type() == SATBlock::kRelaxation ) &&
+     if( sat->is_linking( first + j ) && relaxation &&
 	 ( sat->is_hard( first + j ) != ( w[ j ] == Inf< double >() ) ) )
       w[ j ] = sat->is_hard( first + j ) ? Inf< double >()
 				       : double( 1 + rnd( unsigned( 2 * scale ) ) );
      }
-    sat->chg_weights( w , Block::Range( first , first + k ) );
+    for( auto b : sats )
+     b->chg_weights( w , Block::Range( first , first + k ) );
     std::cout << "round " << r << ": weights of " << k << " clauses"
 	      << std::endl;
     }
@@ -269,22 +291,29 @@ int main( int argc , char ** argv )
       }
      nw[ c ] = new_weight();
      }
-    sat->add_clauses( std::move( nc ) , std::move( nw ) );
-    std::cout << "round " << r << ": " << nw.size() << " clauses added"
+    const auto nadd = nw.size();
+    for( std::size_t h = 0 ; h < sats.size() ; ++h )
+     if( h + 1 < sats.size() )
+      sats[ h ]->add_clauses( SATBlock::v_Clause( nc ) ,
+                              SATBlock::v_Weight( nw ) );
+     else
+      sats[ h ]->add_clauses( std::move( nc ) , std::move( nw ) );
+    std::cout << "round " << r << ": " << nadd << " clauses added"
 	      << std::endl;
     }
 
-  const bool rok = SolveAll( sat , classify , RefObjective , tol , nullptr ,
-			     nullptr , nullptr , nullptr ,
-			     dynamic_cast< BlockSolverConfig * >( bsc ) );
+  const bool rok = SolveVariants( blocks , bv.names , classify ,
+                                  RefObjective , tol , bsolvers );
   ok = ok && rok && solutions_ok;
   }
 
  // detach the Solver by applying the cleared BlockSolverConfig, then free
- bsc->clear();
- s_config_Block( sat , bsc , sconf_file );
- delete bsc;
- delete sat;
+ for( std::size_t h = 0 ; h < sats.size() ; ++h ) {
+  bscs[ h ]->clear();
+  s_config_Block( sats[ h ] , bscs[ h ] , sconf_file );
+  delete bscs[ h ];
+  delete sats[ h ];
+  }
 
  return( ok ? 0 : 1 );
  }

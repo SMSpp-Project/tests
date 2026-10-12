@@ -1189,9 +1189,16 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
 /*--------------------------------------------------------------------------*/
 // the (meta-)BlockConfig of a run: the list of -F, or the one of -B
 
-BlockConfigVariants get_BlockConfig_variants( void )
+BlockConfigVariants get_BlockConfig_variants( bool optional )
 {
  BlockConfigVariants v;
+
+ if( optional && vconf_file.empty() && bconf_file.empty() ) {
+  v.configs = { nullptr };
+  v.solvers = { nullptr };
+  v.names = { "" };
+  return( v );
+  }
 
  if( vconf_file.empty() == bconf_file.empty() ) {
   std::cerr << "Error: give either a BlockConfig (-B) or a list of them (-F)"

@@ -60,6 +60,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `SATBlock_test` and `SingleFlowDCRBlock_test` take `-F` [see
+  `SolveVariants()`], given which they read the instance once per
+  `BlockConfig` of the list; `SATBlock/batches/batch-structure` gives each
+  instance both structures in one run (`SATBVar.txt`: the relaxation of
+  `BPar-R.txt` and the decomposition of `BPar-D.txt`), each round of
+  Modification making the same change to both copies, and compares them
+  with each other; `get_BlockConfig_variants()` takes `optional`, for the
+  testers that may be given no `BlockConfig` at all
+
 - the tester of `CapacitatedFacilityLocationBlock` takes its configuration
   from the list of `-F`, one per battery (`CFLBVar*.txt`): the pair
   `BlockConfig` + `BlockSolverConfig` of the original `Block`, then one or

@@ -780,7 +780,9 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
 /** A tester that compares formulations gets its variants from -F, a file
  *  read by read_BlockConfig_variants(), and a tester run with -B gets the
  *  single BlockConfig of that file as a list of one; exactly one of the two
- *  must be given, otherwise the run stops with exit(1). The variants are
+ *  must be given, otherwise the run stops with exit(1), unless @p optional,
+ *  in which case a run given neither has one variant with no BlockConfig
+ *  (a nullptr), the Block being left as it is read. The variants are
  *  named F0, F1, ... in the order of the list; with -B the one variant is
  *  named after the file. A variant that is a pair also carries its own
  *  (meta-)BlockSolverConfig, nullptr otherwise. The caller deletes the
@@ -795,7 +797,7 @@ struct BlockConfigVariants {
  std::string file;                         ///< the file they come from
  };
 
-BlockConfigVariants get_BlockConfig_variants( void );
+BlockConfigVariants get_BlockConfig_variants( bool optional = false );
 
 /*--------------------------------------------------------------------------*/
 /// the (meta-)BlockSolverConfig of the variant @p k of @p v
