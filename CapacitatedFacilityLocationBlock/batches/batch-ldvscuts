@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # usage: batch-ldvscuts < exe file > < log file >
-#        < exe file > = path of the executable file, default ../CFL_test
+#        < exe file > = path of the executable file, default ./CFL_test
 #        < log file > = name of the log file, default no log (stdout)
 #
 # Lagrangian-dual vs cuts arrangement: same knapsack Lagrangian-dual R3Block
@@ -30,15 +30,16 @@
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
-# run from the LDVScuts config directory so CFL_test reads its config files
-# (BPar*, BSPar*, R3BCfg) there
-cd "$(dirname "$0")/../LDVScuts" || exit 1
+# run from the test root (one level up), where the config files are
+cd "$(dirname "$0")/.." || exit 1
 
+DATADIR=../../CapacitatedFacilityLocationBlock/data
 
-DATADIR=../../../CapacitatedFacilityLocationBlock/data
-
-CFL_test=${1:-../CFL_test}
+CFL_test=${1:-./CFL_test}
 mlf=${2:-}
+
+# the original Block and its R3Block, each with its configuration
+vars=CFLBVar-ldvscuts.txt
 
 niter=0
 # wchg = 257 = change facility costs (bit 0) and the abstract representation
@@ -60,9 +61,9 @@ for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
 
     what=${DATADIR}/txt/ORLib/cap${f}.txt
 
-    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
+    run_test "$CFL_test" "$what" -F "$vars" -t c -s "$niter" -e "$seed" -k "$wchg" -n "$rounds"
     # ... or, with the ad-hoc tolerance, all instances pass (#chng %chng cmptol):
-    # run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds" 10 0.5 "$cmptol"
+    # run_test "$CFL_test" "$what" -F "$vars" -t c -s "$niter" -e "$seed" -k "$wchg" -n "$rounds" -m 10 -q 0.5 -T "$cmptol"
 
   done
 done

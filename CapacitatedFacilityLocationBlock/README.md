@@ -12,22 +12,26 @@ mechanics of the "core" SMS++ library.
 This executable, given the filename and (optionally) filetype of one
 Capacitated Facility Location (CFL) instance in one of the several supported
 file formats, reads the instance in a `CapacitatedFacilityLocationBlock`. It
-then creates another `Block` via the R3Block mechanism, as configured by the
-file R3BCfg.txt; this can then be either another
-`CapacitatedFacilityLocationBlock` or a `MCFBlock` representing the continuous
-relaxation of CFL (as a Min-Cost Flow problem). The two `Block` are
-`BlockConfig`-ured by the files BPar1.txt and BPar2.txt, respectively, and a
-`Solver` is attached to each by the `BlockSolverConfig` read from the files
-BSPar1.txt and BSPar2.txt, respectively. Also, an `UpdateSolver` is manually
-registered to the first `CapacitatedFacilityLocationBlock` so that any
+then creates one or more other `Block` via the R3Block mechanism; each can be
+either another `CapacitatedFacilityLocationBlock` or a `MCFBlock`
+representing the continuous relaxation of CFL (as a Min-Cost Flow problem).
+What they are is the list of variants given with `-F`, a
+`SimpleConfiguration< std::vector< Configuration * > >`: its first element is
+the pair `BlockConfig` + `BlockSolverConfig` of the original `Block`, each of
+the others the vector of three `Configuration` of an R3Block, the one it is
+made with [see `get_R3_Block()`], its `BlockConfig` and its
+`BlockSolverConfig`. Also, an `UpdateSolver` is manually registered to the
+original `CapacitatedFacilityLocationBlock` for each R3Block, so that any
 change on it is automatically map\_forward-ed to the other `Block` (but not
 vice-versa).
 
-According to the value of the `niter` parameter, this is all: the `Solver`
-are supposed to be exact (but it may well be that they are both exactly
-solving the continuous relaxation, and the optimal values are compared.
+According to the value of the `-s` parameter, the Slope Scaling iterations,
+this is all: the `Solver` are supposed to be exact (but it may well be that
+they are all exactly solving the continuous relaxation), and the lower
+bounds of all of them, those of the original `Block` and those of every
+R3Block, are compared with each other.
 
-Otherwise, the `Solver` attached to the R3Block is supposed to be solving
+Otherwise, the first `Solver` attached to each R3Block is supposed to be solving
 some kind of continuous relaxation and a certain number of rounds of a
 simple slope scaling heuristic are ran on that `Block`: the continuous
 solution is map\_back-ed to the original `CapacitatedFacilityLocationBlock`,
@@ -65,16 +69,16 @@ four significantly different implementations for the R3Block and its
   `intRelaxIntVars == 2`), it reproduces the natural-formulation LP bound.
 
 This shows how these completely different arrangements can be obtained with
-exactly the same executable by just changing the configuration files. The
-default config files (BPar1.txt, BPar2.txt, BSPar1.txt, BSPar2.txt,
-R3BCfg.txt) live in this directory; each alternative arrangement keeps its
-own copy of the five files in a dedicated folder: [MCF](MCF) (flow
-relaxation), [cuts](cuts) (LP + user cuts), [LD](LD) and
-[LDVScuts](LDVScuts) (Lagrangian dual of the knapsack relaxation), and
-[Ben](Ben) (the Benders formulation). All the batch scripts live in
-[batches](batches); each one `cd`-s into the folder holding the config set
-it needs before running, so the same script works both via `ctest` and when
-launched by hand (no per-folder executable symlink is needed).
+exactly the same executable by just changing the configuration files. Each
+arrangement is one list of variants, all in this directory: `CFLBVar.txt`
+(natural-formulation LP vs flow relaxation), `CFLBVar-mcf.txt` (the same with
+the LEMON solvers first), `CFLBVar-cuts.txt` (LP + user cuts),
+`CFLBVar-ld.txt` and `CFLBVar-ldvscuts.txt` (Lagrangian dual of the knapsack
+relaxation) and `CFLBVar-ben.txt` (the Benders formulation), which name the
+`CFLBCfg-*.txt` and `MCFBCfg.txt` `BlockConfig`, the `CFLBSCfg-*.txt` and
+`MCFBSCfg*.txt` `BlockSolverConfig` and the `R3BCfg-copy.txt` and
+`R3BCfg-MCF.txt` R3Block `Configuration`. All the batch scripts live in
+[batches](batches); each one runs from this directory and gives its list.
 
 All this is possibly repeated a number of times in a loop where data of the
 CFLproblem (fixed and transportation costs, demands, capacities, facilities
@@ -99,10 +103,12 @@ are modified at random. Note that:
 
 The usage of the executable is the following:
 
-      ./CFL_test name [typ niter seed wchg #rounds #chng %chng]
+      ./CFL_test name -F variants [-t typ] [-s niter] [-e seed] [-k wchg]
+                 [-n #rounds] [-m #chng] [-q %chng] [-T cmptol]
       typ = [C], F, L, ignored if name ends in .nc4
       niter: how many Slope Scaling iterations [0]
-      wchg: what to change, coded bit-wise 
+      seed: seed of the random generator [1]
+      wchg: what to change, coded bit-wise [31]
             0 = facility cost, 1 = transportation cost
             2 = capacities, 3 = demands
             4 = close, 5 = re-open, 6 = fix-open fac.
@@ -112,6 +118,7 @@ The usage of the executable is the following:
       #rounds: number of changing rounds [40]
       #chng: average number of elements to change [10]
       %chng: probability of any single change [0.5]
+      cmptol: relative tolerance of the comparison of the bounds [1e-5]
 
 The [batches](batches) folder collects all the batch scripts; each runs the
 test on a set of CFL instances taken from the `data/` folder of the

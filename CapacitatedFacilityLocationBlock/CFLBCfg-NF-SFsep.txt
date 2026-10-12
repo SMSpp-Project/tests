@@ -1,0 +1,55 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -CFLBCfg-NF-SFsep.txt - - - - - - - - - - - - - -
+#
+# The BlockConfig of a CapacitatedFacilityLocationBlock in the natural
+# formulation with the group of the strong forcing constraints x_{ij} <= y_i
+# (static_constraints = 7), separated at most 375 at a time with violation
+# 1e-4 (dynamic_constraints); the original Block of CFLBVar-cuts.txt and
+# CFLBVar-ldvscuts.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the ComputeConfig object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static_constraints
+SimpleConfiguration<int>
+7    # bit 0 = demand, bit 1 = capacity, bit 2 = strong
+
+# dynamic_constraints
+SimpleConfiguration<std::pair<int,double>>
+375
+1e-4
+
+# static_variables
+SimpleConfiguration<int>
+0    # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -END CFLBCfg-NF-SFsep.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

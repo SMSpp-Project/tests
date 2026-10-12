@@ -5,15 +5,22 @@
  * Main for testing CapacitatedFacilityLocationBlock
  *
  * A CapacitatedFacilityLocationBlock instance is loaded from a text file,
- * then a R3Block (possibly, but not necessarily, a copy) is created.
+ * then one or more R3Block of it (possibly, but not necessarily, copies) are
+ * created. Which they are is the list of -F [see read_BlockConfig_variants()]:
+ * its first element is the pair BlockConfig + BlockSolverConfig of the
+ * original Block, each of the others the vector of the Configuration that
+ * makes an R3Block, its BlockConfig and its BlockSolverConfig. An
+ * UpdateSolver forwards the changes of the original Block to each R3Block.
  *
- * Two Solver are registered to the two Block and computed().
+ * The Solver of the BlockSolverConfig are registered to the Block and
+ * computed().
  *
  * According to the value of one parameter, this is all: the Solver are
- * supposed to be exact and the optimal values are compared.
+ * supposed to be exact and the lower bounds of all of them, of the original
+ * Block and of every R3Block, are compared.
  *
- * Otherwise, the Solver attached to the R3Block is supposed to be solving
- * some kind of continuous relaxation and a certain number of rounds of a
+ * Otherwise, the first Solver attached to each R3Block is supposed to be
+ * solving some kind of continuous relaxation and a certain number of rounds of a
  * simple slope scaling heuristic are ran on that Block, then the results
  * (both lower and upper bound) are compared with the optimal value of the
  * other Solver (not expecting they be equal).
@@ -174,12 +181,21 @@ static constexpr FunctionValue INF = Inf< FunctionValue >();
 /*--------------------------------------------------------------------------*/
 
 CapacitatedFacilityLocationBlock * B1;  // the original Block
-Block * B2;                             // the R3Block
+Block * B2;                             // the R3Block being solved
+
+// the R3Block of the original Block, one per variant after the first in the
+// list of -F, each with the Configuration it is made with, the
+// BlockSolverConfig of its Solver and the UpdateSolver that forwards it the
+// changes of the original Block
+std::vector< Block * > R3B;
+std::vector< Configuration * > R3BC;
+std::vector< BlockSolverConfig * > R3BSC;
+std::vector< UpdateSolver * > R3US;
 
 Index m;  // number of facilities
 Index n;  // number of customers
 
-Configuration * r3bc;  // the R3Block Configuration
+Configuration * r3bc;  // the Configuration of the R3Block being solved
 
 Index niter = 0;  // how many iterations of Slope Scaling have to be done
 
@@ -188,6 +204,13 @@ double cmp_tol = 1e-5;  // relative tolerance used to compare the two bounds;
                         // (last command-line argument) when the two Solver
                         // legitimately compute *different* bounds (e.g. a
                         // Lagrangian dual vs a cut-strengthened LP)
+
+char filetype = 'C';    // type of the input file
+long int seed = 1;      // seed of the random generator
+unsigned int wchg = 31; // what to change, coded bit-wise
+double p_change = 0.5;  // probability of any single change
+Index n_change = 10;    // average number of elements to change
+Index n_repeat = 40;    // number of changing rounds
 
 std::mt19937 rg;               // base random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
@@ -343,206 +366,240 @@ static inline bool has_solution( int rtrn )
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void )
+// runs the Slope Scaling on the R3Block B2, made with r3bc, whose first
+// Solver is solved and whose lower bound is the first one that is valid;
+// Slvr1 is the Solver of the original Block, which returned rtrn1st
+
+static bool SlopeScaling( Solver * Slvr1 , int rtrn1st )
 {
- try {
-  // solve with the 1st Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  auto Slvr1 = B1->get_registered_solvers().front();
-  #if DETACH_1ST
-   B1->unregister_Solver( Slvr1 );
-   B1->register_Solver( Slvr1 , true );  // push it to the front
-  #endif
+ auto Slvr2 = B2->get_registered_solvers().front();
+ #if DETACH_2ND
+  B2->unregister_Solver( Slvr2 );
+  B2->register_Solver( Slvr2 );  // push it to the back
+ #endif
 
-  #if( LOG_LEVEL >= 1 )
-   auto start = std::chrono::system_clock::now();
-  #endif
+ #if( LOG_LEVEL >= 1 )
+  auto start = std::chrono::system_clock::now();
+ #endif
 
-  int rtrn1st = Slvr1->compute( false );
-  double fo1st = Slvr1->get_lb();  // only compare lower bounds
+ int rtrn2nd = Slvr2->compute( false );
 
-  #if( LOG_LEVEL >= 1 )
-   auto end = std::chrono::system_clock::now();
-   std::chrono::duration< double > elapsed = end - start;
-   cout.setf( ios::scientific, ios::floatfield );
-   cout << setprecision( 2 ) << elapsed.count();
-  #endif
+ // the only way in which a CFL can be infeasible is if the sum of the
+ // demands is larger than the sum of the capacities; we assume that this
+ // also makes the R3B infeasible right away (anyway, it's either
+ // infeasible now or never since the Slope Scaling only changes the
+ // objective)
+ if( ( rtrn1st == Solver::kInfeasible ) &&
+     ( rtrn2nd == Solver::kInfeasible ) ) {
+  LOG1( " - OK(e)" << endl );
+  return( true );
+  }
 
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  auto Slvr2 = B2->get_registered_solvers().front();
-  #if DETACH_2ND
-   B2->unregister_Solver( Slvr2 );
-   B2->register_Solver( Slvr2 );  // push it to the back
-  #endif
+ // inhibit Modification in the first Solver, since they will all be
+ // undone at the end
+ Slvr1->inhibit_Modification();
 
-  #if( LOG_LEVEL >= 1 )
-   start = std::chrono::system_clock::now();
-  #endif
+ // the final return value
+ bool OK = true;
 
-  int rtrn2nd = Slvr2->compute( false );
+ // only at the first iteration the lower bound is valid
+ auto LB = Slvr2->get_lb();
+ vector< FunctionValue > oldFO( niter );  // previous o.f. values
+ auto UB = INF;   // best UB value found
+ CapacitatedFacilityLocationBlock::CVector F = B1->get_Fixed_Costs();
 
-  if( ! niter ) {  // solve once and compare lower bounds - - - - - - - - - -
-
-   double fo2nd = Slvr2->get_lb();  // only compare lower bounds
-
-   // both bounds are exact lower bounds that must agree (cmp_tol); defer the
-   // verdict and the uniform per-instance line to common_utils
-   std::vector< SolverReading > rd( 2 );
-   std::vector< bool > hs{ has_solution( rtrn1st ) , has_solution( rtrn2nd ) };
-   std::vector< int > status{ rtrn1st , rtrn2nd };
-   if( hs[ 0 ] ) rd[ 0 ] = SolverReading::exact( fo1st , eps_of( 0 , Slvr1 ) );
-   if( hs[ 1 ] ) rd[ 1 ] = SolverReading::exact( fo2nd , eps_of( 1 , Slvr2 ) );
-
-   auto tok = []( bool h , int rtrn , const SolverReading & r ) -> std::string {
-    if( h )                              return( reading_token( r ) );
-    if( rtrn == Solver::kInfeasible )    return( "Unfeas" );
-    if( rtrn == Solver::kUnbounded )     return( "Unbounded" );
-    return( "Error!" );
-    };
-   std::string verdict;
-   double diff;
-   bool ok = cross_check( rd , hs , status ,
-                          std::numeric_limits< double >::quiet_NaN() ,
-                          cmp_tol , verdict , diff );
-   print_instance_line(
-    { 0.0 , 0.0 } ,
-    { tok( hs[ 0 ] , rtrn1st , rd[ 0 ] ) ,
-      tok( hs[ 1 ] , rtrn2nd , rd[ 1 ] ) } ,
-    std::numeric_limits< double >::quiet_NaN() , verdict );
-   return( ok );
+ for( Index h = 0 ; ; ) {            // Slope Scaling loop
+  if( rtrn2nd >= Solver::kError ) {  // error in the Solver
+   #if( LOG_LEVEL >= 1 )
+    cout << " - Error in B2" << endl;
+   #endif
+   OK = false;
+   break;
    }
-  else {  // run the Slope Scaling- - - - - - - - - - - - - - - - - - - - - -
 
-   // the only way in which a CFL can be infeasible is if the sum of the
-   // demands is larger than the sum of the capacities; we assume that this
-   // also makes the R3B infeasible right away (anyway, it's either
-   // infeasible now or never since the Slope Scaling only changes the
-   // objective)
-   if( ( rtrn1st == Solver::kInfeasible ) &&
-       ( rtrn2nd == Solver::kInfeasible ) ) {
-    LOG1( " - OK(e)" << endl );
-    return( true );
+  Slvr2->get_var_solution();           // get the full solution in B2
+
+  B1->map_back_solution( B2 , r3bc );  // map it all back in B1
+
+  CapacitatedFacilityLocationBlock::CntSolution y( m );  // read y
+  B1->get_facility_solution( y.begin() );
+
+  // do slope scaling. The idea is simple: because one expects that
+  //
+  //    y[ i ] = total warehouse utilization / Q[ i ]
+  //
+  // can be << 1 in the continuous solution, one can pay a lot less than
+  // the true cost of F[ i ] to have flow using warehouse i; this makes for
+  // a crappy bound and a huge gap with the rounded integer solution. Then,
+  // one takes all the used warehouses (those for which y[ i ] > 0 in the
+  // continuous solution, hence y[ i ] = 1 in the rounded one) and modifies
+  // their cost so that *that level of warehouse utilization corresponds to
+  // paying the full price F[ i ]*. This is simply obtained by setting the
+  // cost to F[ i ] / y[ i ]. Because y[ i ] <= 1, this is >= than the
+  // "standard" cost F[ i ] / Q[ i ]: hence, warehouses that are "open but
+  // little used" are heavily penalized (relatively speaking) w.r.t. those
+  // that are "open but used a lot" or "not open at all". Hopefully, this
+  // will convince the continuous solution at the next round to avoid the
+  // former and more fully using the ones that are used a lot.
+  std::vector< bool > yb( m , false );  // meanwhile, round-up y
+  auto NF = F;
+  for( Index i = 0 ; i < m ; ++i )
+   if( y[ i ] > 1e-6 ) {  // open warehouse
+    NF[ i ] = F[ i ] / y[ i ];
+    yb[ i ] = true;
     }
 
-   // inhibit Modification in the first Solver, since they will all be
-   // undone at the end
-   Slvr1->inhibit_Modification();
+  // set the rounded y solution in B1 to compute the objective
+  B1->set_facility_solution( yb.begin() );
 
-   // the final return value
-   bool OK = true;
+  // at all iterations save the first one, restore the original costs.
+  // for all iterations save the last one this is "temporary", just in
+  // order to be able to compute the right objective value, so use eNoMod
+  // to avoid that the Solver are informed of this. however, for the last
+  // iteration this is permanent, and therefore use the standard eNoBlck
+  if( h ) {
+   auto iM = h < niter - 1 ? eNoMod : eNoBlck;
+   B1->chg_facility_costs( F.begin() , Block::INFRange , iM , iM );
+   }
 
-   // only at the first iteration the lower bound is valid
-   auto LB = Slvr2->get_lb();
-   vector< FunctionValue > oldFO( niter );  // previous o.f. values
-   auto UB = INF;   // best UB value found
-   CapacitatedFacilityLocationBlock::CVector F = B1->get_Fixed_Costs();
+  // now compute the value of the new feasible solution
+  if( auto NUB = B1->get_objective_value() ; NUB < UB )
+   UB = NUB;
 
-   for( Index h = 0 ; ; ) {            // Slope Scaling loop
-    if( rtrn2nd >= Solver::kError ) {  // error in the Solver
-     #if( LOG_LEVEL >= 1 )
-      cout << " - Error in B2" << endl;
-     #endif
-     OK = false;
-     break;
-     }
+  auto fo2nd = Slvr2->get_var_value();  // get objective value
 
-    Slvr2->get_var_solution();           // get the full solution in B2
-
-    B1->map_back_solution( B2 , r3bc );  // map it all back in B1
-
-    CapacitatedFacilityLocationBlock::CntSolution y( m );  // read y
-    B1->get_facility_solution( y.begin() );
-
-    // do slope scaling. The idea is simple: because one expects that
-    //
-    //    y[ i ] = total warehouse utilization / Q[ i ]
-    //
-    // can be << 1 in the continuous solution, one can pay a lot less than
-    // the true cost of F[ i ] to have flow using warehouse i; this makes for
-    // a crappy bound and a huge gap with the rounded integer solution. Then,
-    // one takes all the used warehouses (those for which y[ i ] > 0 in the
-    // continuous solution, hence y[ i ] = 1 in the rounded one) and modifies
-    // their cost so that *that level of warehouse utilization corresponds to
-    // paying the full price F[ i ]*. This is simply obtained by setting the
-    // cost to F[ i ] / y[ i ]. Because y[ i ] <= 1, this is >= than the
-    // "standard" cost F[ i ] / Q[ i ]: hence, warehouses that are "open but
-    // little used" are heavily penalized (relatively speaking) w.r.t. those
-    // that are "open but used a lot" or "not open at all". Hopefully, this
-    // will convince the continuous solution at the next round to avoid the
-    // former and more fully using the ones that are used a lot.
-    std::vector< bool > yb( m , false );  // meanwhile, round-up y
-    auto NF = F;
-    for( Index i = 0 ; i < m ; ++i )
-     if( y[ i ] > 1e-6 ) {  // open warehouse
-      NF[ i ] = F[ i ] / y[ i ];
-      yb[ i ] = true;
-      }
-
-    // set the rounded y solution in B1 to compute the objective
-    B1->set_facility_solution( yb.begin() );
-
-    // at all iterations save the first one, restore the original costs.
-    // for all iterations save the last one this is "temporary", just in
-    // order to be able to compute the right objective value, so use eNoMod
-    // to avoid that the Solver are informed of this. however, for the last
-    // iteration this is permanent, and therefore use the standard eNoBlck
-    if( h ) {
-     auto iM = h < niter - 1 ? eNoMod : eNoBlck;
-     B1->chg_facility_costs( F.begin() , Block::INFRange , iM , iM );
-     }
-
-    // now compute the value of the new feasible solution
-    if( auto NUB = B1->get_objective_value() ; NUB < UB )
-     UB = NUB;
-
-    auto fo2nd = Slvr2->get_var_value();  // get objective value
-
-    #if( LOG_LEVEL >= 1 )
-     // a few printouts
-     cout << endl << h << ": relaxation = " << setprecision( 8 )
+  #if( LOG_LEVEL >= 1 )
+   // a few printouts
+   cout << endl << h << ": relaxation = " << setprecision( 8 )
 	  << fo2nd << ", heuristic = " << setprecision( 8 ) << UB
 	  << ", gap = " << setprecision( 2 ) << ( UB - LB ) / LB;
-    #endif
+  #endif
 
-    // look back: if you find the same value of the relaxation the
-    // algorithm is likely cycling, so force a stop
-    if( any_of( oldFO.begin() , oldFO.begin() + h ,
+  // look back: if you find the same value of the relaxation the
+  // algorithm is likely cycling, so force a stop
+  if( any_of( oldFO.begin() , oldFO.begin() + h ,
 		[ fo2nd ]( auto old ) {
 		 return( abs( fo2nd - old ) <=
 			 1e-6 * max( fo2nd , double( 1 ) ) );
 		 } ) )
-     break;
+   break;
 
-    oldFO[ h ] = fo2nd;  // record back value for later
+  oldFO[ h ] = fo2nd;  // record back value for later
 
-    if( ++h >= niter )  // all attempts expended
-     break;             // done
+  if( ++h >= niter )  // all attempts expended
+   break;             // done
 
-    // change the facility costs in B1: thanks to the UpdateSolver (whose
-    // Modification are *not* inhibited) this is immediately forwarded to B2
-    B1->chg_facility_costs( NF.begin() );
+  // change the facility costs in B1: thanks to the UpdateSolver (whose
+  // Modification are *not* inhibited) this is immediately forwarded to B2
+  B1->chg_facility_costs( NF.begin() );
 
-    #if DETACH_2ND
-     B2->unregister_Solver( Slvr2 );
-     B2->register_Solver( Slvr2 );  // push it to the back
-    #endif
-    rtrn2nd = Slvr2->compute( false );  // solve again and iterate
+  #if DETACH_2ND
+   B2->unregister_Solver( Slvr2 );
+   B2->register_Solver( Slvr2 );  // push it to the back
+  #endif
+  rtrn2nd = Slvr2->compute( false );  // solve again and iterate
  
-    }  // end( Slope Scaling loop )
+  }  // end( Slope Scaling loop )
 
-   // deinhibit Modification in the first Solver
-   Slvr1->inhibit_Modification( false );
+ // deinhibit Modification in the first Solver
+ Slvr1->inhibit_Modification( false );
 
-   #if( LOG_LEVEL >= 1 )
-    end = std::chrono::system_clock::now();
-    elapsed = end - start;
-    cout.setf( ios::scientific, ios::floatfield );
-    cout << setprecision( 2 ) << " - " << elapsed.count() << endl;
-   #endif
+ #if( LOG_LEVEL >= 1 )
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration< double > elapsed = end - start;
+  cout.setf( ios::scientific, ios::floatfield );
+  cout << setprecision( 2 ) << " - " << elapsed.count() << endl;
+ #endif
 
+ return( OK );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// the Solver of the original Block, i.e., all those registered to it but the
+// UpdateSolver that forward its changes to the R3Block
+
+static std::vector< Solver * > original_Solvers( void )
+{
+ std::vector< Solver * > S;
+ for( auto slv : B1->get_registered_solvers() )
+  if( ! dynamic_cast< UpdateSolver * >( slv ) )
+   S.push_back( slv );
+ return( S );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// solves the original Block and each of its R3Block with all their Solver:
+// with no Slope Scaling, the lower bounds that all of them give are bounds
+// on the same optimum and are compared with each other, otherwise the Slope
+// Scaling is run on each R3Block in turn
+
+static bool SolveBoth( void )
+{
+ try {
+  // the Solver, in the order of the comparison: those of the original Block,
+  // then those of each R3Block
+  std::vector< Solver * > S = original_Solvers();
+  const std::size_t n1 = S.size();
+  #if DETACH_1ST
+   B1->unregister_Solver( S.front() );
+   B1->register_Solver( S.front() , true );  // push it to the front
+  #endif
+
+  if( niter ) {  // the Slope Scaling- - - - - - - - - - - - - - - - - - - -
+   int rtrn1st = Solver::kError;
+   for( std::size_t k = 0 ; k < n1 ; ++k ) {
+    const int r = S[ k ]->compute( false );
+    if( ! k )
+     rtrn1st = r;
+    }
+
+   bool OK = true;
+   for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
+    B2 = R3B[ j ];
+    r3bc = R3BC[ j ];
+    OK &= SlopeScaling( S.front() , rtrn1st );
+    }
    return( OK );
    }
+
+  // solve once and compare lower bounds- - - - - - - - - - - - - - - - - - -
+
+  for( auto b : R3B ) {
+   const auto & r = b->get_registered_solvers();
+   S.insert( S.end() , r.begin() , r.end() );
+   }
+
+  // each bound is an exact lower bound that must agree with the others
+  // (cmp_tol); the verdict and the uniform per-instance line are those of
+  // common_utils
+  const std::size_t M = S.size();
+  std::vector< SolverReading > rd( M );
+  std::vector< bool > hs( M );
+  std::vector< int > status( M );
+  std::vector< std::string > tok( M );
+  for( std::size_t k = 0 ; k < M ; ++k ) {
+   status[ k ] = S[ k ]->compute( false );
+   hs[ k ] = has_solution( status[ k ] );
+   if( hs[ k ] ) {
+    rd[ k ] = SolverReading::exact( S[ k ]->get_lb() , eps_of( k , S[ k ] ) );
+    tok[ k ] = reading_token( rd[ k ] );
+    }
+   else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
+   else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
+   else                                           tok[ k ] = "Error!";
+   }
+
+  std::string verdict;
+  double diff;
+  bool ok = cross_check( rd , hs , status ,
+                         std::numeric_limits< double >::quiet_NaN() ,
+                         cmp_tol , verdict , diff );
+  print_instance_line( std::vector< double >( M , 0.0 ) , tok ,
+                       std::numeric_limits< double >::quiet_NaN() ,
+                       verdict );
+  return( ok );
   }
  catch( exception &e ) {
   cerr << e.what() << endl;
@@ -551,6 +608,26 @@ static bool SolveBoth( void )
  catch(...) {
   cerr << "Error: unknown exception thrown" << endl;
   exit( 1 );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// test-specific command-line knobs, set by process_specific_arg(); the
+// variants (-F) are those of common_utils
+
+static bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 't' ): filetype = optarg[ 0 ];           return( true );
+  case( 's' ): Str2Sthg( optarg , niter );       return( true );
+  case( 'e' ): Str2Sthg( optarg , seed );        return( true );
+  case( 'k' ): Str2Sthg( optarg , wchg );        return( true );
+  case( 'n' ): Str2Sthg( optarg , n_repeat );    return( true );
+  case( 'm' ): Str2Sthg( optarg , n_change );    return( true );
+  case( 'q' ): Str2Sthg( optarg , p_change );    return( true );
+  case( 'T' ): Str2Sthg( optarg , cmp_tol );     return( true );
+  default:                                       return( false );
   }
  }
 
@@ -566,62 +643,88 @@ int main( int argc , char **argv )
 
  assert( SKIP_BEAT >= 0 );
 
- char filetype = 'C';  // type of the input file;
- long int seed = 1;
- unsigned int wchg = 31;
- double p_change = 0.5;
- Index n_change = 10;
- Index n_repeat = 40;
+ docopt_desc = "SMS++ CapacitatedFacilityLocationBlock test.\n";
+ short_opts += "t:s:e:k:n:m:q:T:";
+ const std::vector< option > my_opts = {
+   { "type"     , required_argument , nullptr , 't' } ,
+   { "slope"    , required_argument , nullptr , 's' } ,
+   { "seed"     , required_argument , nullptr , 'e' } ,
+   { "wchg"     , required_argument , nullptr , 'k' } ,
+   { "rounds"   , required_argument , nullptr , 'n' } ,
+   { "nchng"    , required_argument , nullptr , 'm' } ,
+   { "pchng"    , required_argument , nullptr , 'q' } ,
+   { "cmptol"   , required_argument , nullptr , 'T' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -t, --type <c>                  type of the instance file, C, F\n"
+         "                                  or L, ignored for a .nc4 [C]\n"
+         "  -s, --slope <n>                 Slope Scaling iterations [0]\n"
+         "  -e, --seed <n>                  seed of the random generator [1]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [31]:\n"
+         "                                    0 facility cost, 1 transport\n"
+         "                                    cost, 2 capacities, 3 demands,\n"
+         "                                    4 close, 5 re-open, 6 fix-open\n"
+         "                                    facilities, 7 split/unsplit,\n"
+         "                                    8 (+256) abstract\n"
+         "                                    representation, 9 (+512) set\n"
+         "                                    eps & no negative design\n"
+         "  -n, --rounds <n>                number of changing rounds [40]\n"
+         "  -m, --nchng <n>                 average number of elements to\n"
+         "                                  change [10]\n"
+         "  -q, --pchng <p>                 probability of any single change\n"
+         "                                  [0.5]\n"
+         "  -T, --cmptol <x>                relative tolerance of the\n"
+         "                                  comparison of the bounds [1e-5]\n"
+         "\n"
+         "The variants (-F) are the original Block, a pair of its BlockConfig\n"
+         "and BlockSolverConfig, then each R3Block of it, a vector of the\n"
+         "Configuration it is made with, its BlockConfig and its\n"
+         "BlockSolverConfig.\n";
 
- switch( argc ) {
-  case( 10 ): Str2Sthg( argv[ 9 ] , cmp_tol );
-  case( 9 ): Str2Sthg( argv[ 8 ] , p_change );
-  case( 8 ): Str2Sthg( argv[ 7 ] , n_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_repeat );
-  case( 6 ): Str2Sthg( argv[ 5 ] , wchg );
-  case( 5 ): Str2Sthg( argv[ 4 ] , seed );
-  case( 4 ): Str2Sthg( argv[ 3 ] , niter );
-  case( 3 ): filetype = argv[ 2 ][ 0 ];
-  case( 2 ): break;
-  default:   cerr << "Usage: " << argv[ 0 ]
-		  << " name [typ niter seed wchg #rounds #chng %chng cmptol]"
-		  << endl
-		  << "      typ = [C], F, L, ignored if name ends in .nc4"
-		  << endl 
-		  << "      niter: how many Slope Scaling iterations [0]"
-		  << endl 
-		  << "      seed: seed for the random number generator [1]"
-		  << endl 
-		  << "      wchg: what to change, coded bit-wise "
-		  << endl
-		  << "            0 = facility cost, 1 = transportation cost"
- 		  << endl
-		  << "            2 = capacities, 3 = demands"
- 		  << endl
-		  << "            4 = close, 5 = re-open, 6 = fix-open fac."
-		  << endl
-		  << "            7 = change problem type (split/unsplit)"
-		  << endl
-		  << "            8 (+256) = change abstract representation"
-		  << endl
-		  << "            9 (+512) = set eps & no negative design"
-		  << endl
-		  << "      #rounds: number of changing rounds [40]"
-		  << endl
-		  << "      #chng: average number of elements to change [10]"
-		  << endl
-		  << "      %chng: probability of any single change [0.5]"
-		  << endl;
-             return( 1 );
+ process_args( argc , argv , process_specific_arg );
+
+ if( vconf_file.empty() ) {
+  cerr << "Error: the variants must be given (did you forget -F?)" << endl;
+  exit( 1 );
   }
 
- rg.seed( seed );  // seed the pseudo-random number generator     
+ rg.seed( seed );  // seed the pseudo-random number generator
+
+ // the variants: the original Block, then its R3Block - - - - - - - - - - -
+ // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the list is kept until the end, as each R3BlockConfiguration is needed by
+ // the UpdateSolver and to map the solutions back
+
+ auto vl = read_BlockConfig_variants( vconf_file );
+ auto & V = vl->f_value;
+ auto b1p = dynamic_cast< SimpleConfiguration< std::pair< Configuration * ,
+                                       Configuration * > > * >( V.front() );
+ if( ( V.size() < 2 ) || ( ! b1p ) || ( ! b1p->f_value.second ) ) {
+  cerr << "Error: " << vconf_file << " must list the original Block, a pair "
+       << "BlockConfig + BlockSolverConfig, and at least one R3Block"
+       << endl;
+  exit( 1 );
+  }
+
+ std::vector< SimpleConfiguration< std::vector< Configuration * > > * > r3v;
+ for( std::size_t j = 1 ; j < V.size() ; ++j ) {
+  auto r = dynamic_cast< SimpleConfiguration< std::vector< Configuration * >
+                                              > * >( V[ j ] );
+  if( ( ! r ) || ( r->f_value.size() != 3 ) || ( ! r->f_value[ 1 ] ) ||
+      ( ! r->f_value[ 2 ] ) ) {
+   cerr << "Error: variant " << j << " of " << vconf_file << " is not the "
+        << "vector of the Configuration of an R3Block, its BlockConfig and "
+        << "its BlockSolverConfig" << endl;
+   exit( 1 );
+   }
+  r3v.push_back( r );
+  }
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- string fn( argv[ 1 ] );
- if( fn.substr( fn.size() - 4 , 4 ) == ".nc4" ) {
+ string fn( filename );
+ if( ( fn.size() >= 4 ) && ( fn.substr( fn.size() - 4 , 4 ) == ".nc4" ) ) {
   B1 = dynamic_cast< CapacitatedFacilityLocationBlock * >(
 					         Block::deserialize( fn ) );
   if( ! B1 ) {
@@ -638,19 +741,13 @@ int main( int argc , char **argv )
  m = B1->get_NFacilities();  // record number of facilities
  n = B1->get_NCustomers();   // record number of customers
 
- // read the R3Block Configuration
- r3bc = Configuration::deserialize( "R3BCfg.txt" );
-
- // make the R3Block
- B2 = B1->get_R3_Block( r3bc );
-
- auto cfg = Configuration::deserialize( "BPar1.txt" );
- if( BlockConfig * bc = dynamic_cast< BlockConfig * >( cfg ) )
-  bc->apply( B1 );
- else {
-  cerr << "Error: BPar1.txt does not contain a BlockConfig" << endl;
-  exit( 1 );
+ // make the R3Block, each with its Configuration
+ for( auto r : r3v ) {
+  R3BC.push_back( r->f_value[ 0 ] );
+  R3B.push_back( B1->get_R3_Block( r->f_value[ 0 ] ) );
   }
+
+ b_config_Block( B1 , b1p->f_value.first , vconf_file );
 
  // ensure that B1 already has all its sub-Block ready when the Solver
  // is registered, for sub-Block "appearing" during the call to
@@ -659,70 +756,59 @@ int main( int argc , char **argv )
  // probably a Block::set_configuration() would be better
  B1->generate_abstract_variables();
 
- cfg = Configuration::deserialize( "BPar2.txt" );
- if( BlockConfig * bc = dynamic_cast< BlockConfig * >( cfg ) )
-  bc->apply( B2 );
- else {
-  cerr << "Error: BPar2.txt does not contain a BlockConfig" << endl;
-  exit( 1 );
+ for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
+  b_config_Block( R3B[ j ] , r3v[ j ]->f_value[ 1 ] , vconf_file );
+
+  // see above fow why this is needed
+  R3B[ j ]->generate_abstract_variables();
   }
-
- // see above fow why this is needed
- B2->generate_abstract_variables();
-
- delete( cfg );
 
  // attach the Solver to the Blocks - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // do this by reading appropriate BlockSolverConfig from file and
- // apply() them to B1 and B2; note that the BlockSolverConfig are
- // clear()-ed and kept to do the cleanup at the end
+ // do this by applying a clone() of the BlockSolverConfig of each variant;
+ // note that the BlockSolverConfig are clear()-ed and kept to do the cleanup
+ // at the end
 
- BlockSolverConfig * bsc1;
- {
-  auto c = Configuration::deserialize( "BSPar1.txt" );
-  bsc1 = dynamic_cast< BlockSolverConfig * >( c );
-  
-  if( ! bsc1 ) {
-   cerr << "Error: BSPar1.txt does not contain a BlockSolverConfig" << endl;
-   delete( c );
+ auto as_bsc = []( Configuration * c ) {
+  auto bsc = dynamic_cast< BlockSolverConfig * >( c->clone() );
+  if( ! bsc ) {
+   cerr << "Error: " << vconf_file << " has a BlockSolverConfig that is not"
+        << endl;
    exit( 1 );
    }
+  return( bsc );
+  };
+
+ BlockSolverConfig * bsc1 = as_bsc( b1p->f_value.second );
+
+ // the Solver this build does not have are left out, with a warning
+ s_config_Block( B1 , bsc1 , vconf_file );
+
+ if( B1->get_registered_solvers().empty() ) {
+  cout << endl << "no Solver registered to B1!" << endl;
+  exit( 1 );
+  }
+
+ for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
+  // separately register an UpdateSolver that forwards to the R3Block
+  R3US.push_back( new UpdateSolver( R3B[ j ] , R3BC[ j ] ) );
+  B1->register_Solver( R3US.back() );
+
+  R3BSC.push_back( as_bsc( r3v[ j ]->f_value[ 2 ] ) );
 
   // the Solver this build does not have are left out, with a warning
-  s_config_Block( B1 , bsc1 , "BSPar1.txt" );
+  s_config_Block( R3B[ j ] , R3BSC.back() , vconf_file );
 
-  if( B1->get_registered_solvers().empty() ) {
-   cout << endl << "no Solver registered to B1!" << endl;
+  if( R3B[ j ]->get_registered_solvers().empty() ) {
+   cout << endl << "no Solver registered to R3Block " << j << "!" << endl;
    exit( 1 );
    }
   }
 
- // separately register an UpdateSolver that forwards to B2
- auto US = new UpdateSolver( B2 , r3bc );
- B1->register_Solver( US );
+ B2 = R3B.front();
+ r3bc = R3BC.front();
 
- BlockSolverConfig * bsc2;
- {
-  auto c = Configuration::deserialize( "BSPar2.txt" );
-  bsc2 = dynamic_cast< BlockSolverConfig * >( c );
-
-  if( ! bsc2 ) {
-   cerr << "Error: BSPar2.txt does not contain a BlockSolverConfig" << endl;
-   delete( c );
-   exit( 1 );
-   }
-
-  // the Solver this build does not have are left out, with a warning
-  s_config_Block( B2 , bsc2 , "BSPar2.txt" );
-
-  if( B2->get_registered_solvers().empty() ) {
-   cout << endl << "no Solver registered to B2!" << endl;
-   exit( 1 );
-   }
-  }
-
- // compute and set numerical tolerances in the B2 (MCF)Solver - - - - - - -
+ // compute and set numerical tolerances in the Solver of the R3Block - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  if( wchg & 512 ) {
@@ -745,14 +831,16 @@ int main( int argc , char **argv )
     c_abs = fi / ci;
    }
 
-  auto B2S = B2->get_registered_solvers().front();
-
   static constexpr double BA = 1e-12;  // base accuracy
 
-  B2S->set_par( Solver::dblAbsAcc ,
-		BA * std::max( d_abs , double( 1 ) ) );
-  B2S->set_par( CDASolver::dblAAccDSol ,
-		BA * std::max( c_abs , double( 1 ) ) ); 
+  // every Solver of every R3Block, all of them being compared
+  for( auto b : R3B )
+   for( auto B2S : b->get_registered_solvers() ) {
+    B2S->set_par( Solver::dblAbsAcc ,
+		  BA * std::max( d_abs , double( 1 ) ) );
+    B2S->set_par( CDASolver::dblAAccDSol ,
+		  BA * std::max( c_abs , double( 1 ) ) );
+    }
   }
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
@@ -828,9 +916,11 @@ int main( int argc , char **argv )
    std::ofstream f( "CFL1.txt" );
    B1->print( f , 'C' );
    f.close();
-   f.open( "CFL2.txt" );
-   B2->print( f , 'C' );
-   f.close();
+   for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
+    f.open( "CFL" + std::to_string( j + 2 ) + ".txt" );
+    R3B[ j ]->print( f , 'C' );
+    f.close();
+    }
    break;
    }
 
@@ -1302,22 +1392,27 @@ int main( int argc , char **argv )
  
  // destroy the Blocks- - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // for B1 the UpdateSolver was manually registered, so it has to be manually
- // un-registered
- B1->unregister_Solver( US );
- delete( US );
+ // for B1 the UpdateSolver were manually registered, so they have to be
+ // manually un-registered
+ for( auto us : R3US ) {
+  B1->unregister_Solver( us );
+  delete( us );
+  }
 
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver
- bsc2->apply( B2 );
+ // apply() the clear()-ed BlockSolverConfig to cleanup Solver, then delete
+ // them and the Block
+ for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
+  R3BSC[ j ]->apply( R3B[ j ] );
+  delete( R3BSC[ j ] );
+  delete( R3B[ j ] );
+  }
+
  bsc1->apply( B1 );
-
- // then delete the BlockSolverConfig
- delete( bsc2 );
  delete( bsc1 );
-
- // finally the Block can be deleted
- delete( B2 );
  delete( B1 );
+
+ // and the variants, the Configuration of the R3Block among them
+ delete( vl );
 
  // terminate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -11,15 +11,16 @@
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
-# run from the test root (one level up) so CFL_test reads the default config
-# files (BPar*, BSPar*, R3BCfg) there
+# run from the test root (one level up), where the config files are
 cd "$(dirname "$0")/.." || exit 1
-
 
 DATADIR=../../CapacitatedFacilityLocationBlock/data
 
 CFL_test=${1:-./CFL_test}
 mlf=${2:-}
+
+# the original Block and its R3Block, each with its configuration
+vars=CFLBVar.txt
 
 niter=0
 # wchg = 831 = all data changes + abstract representation (+256) + the +512
@@ -36,7 +37,7 @@ for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
 
     what=${DATADIR}/txt/ORLib/cap${f}.txt
 
-    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
+    run_test "$CFL_test" "$what" -F "$vars" -t c -s "$niter" -e "$seed" -k "$wchg" -n "$rounds"
 
   done
 done

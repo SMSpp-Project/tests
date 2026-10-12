@@ -1,0 +1,51 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - CFLBCfg-NF.txt- - - - - - - - - - - - - - - -
+#
+# The BlockConfig of a CapacitatedFacilityLocationBlock in the natural
+# formulation (static_variables = 0) with its default constraints, i.e., the
+# demand and the capacity rows; the original Block of CFLBVar.txt,
+# CFLBVar-mcf.txt and CFLBVar-ben.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the ComputeConfig object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static_constraints
+*    # [none]
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+SimpleConfiguration<int>
+0    # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END CFLBCfg-NF.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

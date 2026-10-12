@@ -1,0 +1,39 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - CFLBVar-mcf.txt - - - - - - - - - - - - - - -
+#
+# The variants that batch-mcf compares: the natural formulation, whose
+# continuous relaxation is solved by a :MILPSolver, against its flow
+# relaxation, an MCFBlock solved by every :MCFSolver, the LEMON ones first.
+#
+# The first variant is the original Block, a pair of its BlockConfig and
+# its BlockSolverConfig; each of the others is an R3Block of it, a vector
+# of the Configuration that makes it [see get_R3_Block()], its BlockConfig
+# and its BlockSolverConfig, which an UpdateSolver keeps up to date with the
+# changes of the original Block; each R3Block is compared with the original
+# Block [see -F of CFL_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of variants: the Block, then its R3Block
+
+# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the original Block
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+*CFLBCfg-NF.txt         # its BlockConfig
+*CFLBSCfg-mcf.txt       # its BlockSolverConfig
+
+# the 1st R3Block
+SimpleConfiguration<std::vector<Configuration*>>
+3  # the Configuration that makes it, its BlockConfig, its BlockSolverConfig
+*R3BCfg-MCF.txt         # how it is made
+*MCFBCfg.txt            # its BlockConfig
+*MCFBSCfg-mcf.txt       # its BlockSolverConfig
+
+# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END CFLBVar-mcf.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

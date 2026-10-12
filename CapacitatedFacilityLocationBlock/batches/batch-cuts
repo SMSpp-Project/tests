@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # usage: batch-cuts < exe file > < log file >
-#        < exe file > = path of the executable file, default ../CFL_test
+#        < exe file > = path of the executable file, default ./CFL_test
 #        < log file > = name of the log file, default no log (stdout)
 #
 # user-cuts arrangement: B2 is a copy CapacitatedFacilityLocationBlock solved
@@ -11,15 +11,16 @@
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
-# run from the cuts config directory so CFL_test reads its config files
-# (BPar*, BSPar*, R3BCfg) there
-cd "$(dirname "$0")/../cuts" || exit 1
+# run from the test root (one level up), where the config files are
+cd "$(dirname "$0")/.." || exit 1
 
+DATADIR=../../CapacitatedFacilityLocationBlock/data
 
-DATADIR=../../../CapacitatedFacilityLocationBlock/data
-
-CFL_test=${1:-../CFL_test}
+CFL_test=${1:-./CFL_test}
 mlf=${2:-}
+
+# the original Block and its R3Block, each with its configuration
+vars=CFLBVar-cuts.txt
 
 niter=0
 # wchg = 831 = all data changes + abstract representation (+256) + the +512
@@ -34,7 +35,7 @@ for what in ${DATADIR}/txt/ORLib/*.txt; do
 
   for (( seed = 0 ; seed <= maxseed ; seed++ )); do
 
-    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
+    run_test "$CFL_test" "$what" -F "$vars" -t c -s "$niter" -e "$seed" -k "$wchg" -n "$rounds"
 
   done
 done
@@ -54,7 +55,7 @@ for i in 30-200 60-200 60-300 80-400; do
 
       what=${DATADIR}/txt/Yang/${i}/${i}-${h}.txt
 
-      run_test "$CFL_test" "$what" l "$niter" "$seed" "$wchg" "$rounds"
+      run_test "$CFL_test" "$what" -F "$vars" -t l -s "$niter" -e "$seed" -k "$wchg" -n "$rounds"
 
     done
   done
@@ -68,7 +69,7 @@ for i in 300; do
 
       what=${DATADIR}/txt/TBED/${i}/i${i}_${h}.txt
 
-      run_test "$CFL_test" "$what" f "$niter" "$seed" "$wchg" "$rounds"
+      run_test "$CFL_test" "$what" -F "$vars" -t f -s "$niter" -e "$seed" -k "$wchg" -n "$rounds"
 
     done
   done

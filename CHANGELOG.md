@@ -60,6 +60,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the tester of `CapacitatedFacilityLocationBlock` takes its configuration
+  from the list of `-F`, one per battery (`CFLBVar*.txt`): the pair
+  `BlockConfig` + `BlockSolverConfig` of the original `Block`, then one or
+  more R3Block, each the vector of the `Configuration` it is made with, its
+  `BlockConfig` and its `BlockSolverConfig`, with its own `UpdateSolver`;
+  the lower bounds of all their `Solver` are compared, not only those of
+  the first one, so that the flow relaxation is solved by every
+  `:MCFSolver` its `BlockSolverConfig` lists; its positional arguments are
+  options (`-t`, `-s`, `-e`, `-k`, `-n`, `-m`, `-q`, `-T`); the sub-folders
+  `cuts`, `MCF`, `LD`, `LDVScuts` and `Ben` with their copies of
+  `BPar1.txt`, `BPar2.txt`, `BSPar1.txt`, `BSPar2.txt` and `R3BCfg.txt` are
+  gone, the configurations being flat files named after what they configure
+  (`CFLBCfg-*.txt`, `CFLBSCfg-*.txt`, `MCFBCfg.txt`, `MCFBSCfg*.txt`,
+  `R3BCfg-copy.txt`, `R3BCfg-MCF.txt`), the identical ones merged
+
 - `compare_formulations` is a thin wrapper of `SolveVariants()`: it takes
   `-F` and the variants of `MetaVar.txt`, each a pair `BlockConfig` +
   `BlockSolverConfig`, instead of `-X`/`-Y`; its CMake target links
