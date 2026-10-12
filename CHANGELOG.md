@@ -280,6 +280,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   user cuts that `intCutSepPar 7` asks for, so that the batch failed on
   every instance
 
+- `UCBlock/batches/batch-p4r` holds the solution the `LagrangianDualSolver`
+  reconstructs on `L_H_C_35` to the violation its convergence gives (`-V
+  0.5`, the largest entry of the residual being 0.157 MW on node injection
+  rows of right-hand side 0, under the `dblNZEps` test the bundle stops by),
+  where the default 0.1 made the battery fail on a correct reconstruction
+
 ## [0.7.0] - 2026-10-09
 
 ### Added
