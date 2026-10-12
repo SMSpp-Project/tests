@@ -99,6 +99,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `IB_test` takes -F, the list of the BlockConfig to compare, like the
+  other testers: `InvestmentBlock/batches/batch-pypsa` and `batch-stochastic`
+  solve each instance with a network with the three formulations of it
+  (`InnerBVar-DCN.txt`, `InnerBVar-DCN-CI.txt` in CI), and the modular
+  ones with the inner Block solved as a linear program and by the recursive
+  Lagrangian dual in one run (`InnerBVar-LD.txt`), the copies being compared
+  with each other
+
 - `UCBlock/batches/batch-ec` solves each instance with the three
   formulations of the network (`InnerBVar-DCN.txt`, `InnerBVar-DCN-CI.txt`
   in CI) and compares them with each other

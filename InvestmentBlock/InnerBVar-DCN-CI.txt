@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - InnerBVar-DCN-CI.txt  - - - - - - - - - - - - - -
+#
+# The variants of InnerBVar-DCN.txt that the batteries of this suite compare
+# in CI, where their time is short: the PTDF and the KIRCHHOFF formulations
+# of the DCNetworkBlock.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of variants of the BlockConfig
+
+# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*InnerBCfg-PTDF.txt     # 1st variant: PTDF
+*InnerBCfg.txt          # 2nd variant: KIRCHHOFF
+
+# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBVar-DCN-CI.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

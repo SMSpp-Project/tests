@@ -42,6 +42,11 @@ parse_batch_args "$@"
 bpar=$par
 spar=$slv
 
+# the formulations of the network, compared with each other on every
+# instance with more than one node [see InnerBVar-DCN.txt]; in CI only two
+# of them
+if [ -n "$CI" ]; then vars=InnerBVar-DCN-CI.txt; else vars=InnerBVar-DCN.txt; fi
+
 # the BlockConfig of the second run, the inner Block solved by the recursive
 # Lagrangian dual; empty where the LagrangianDualSolver is not in the build
 ld_bcfg="${IB_LD_BCFG-InnerBCfg-LD.txt}"
@@ -96,12 +101,20 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
     fi
 
     point=${POINT[$base]}
-    run_test "$exe" -B "$bpar" -S "$spar" ${point:+-x "$point"} -o "$ref" "$what"
-    # the modular networks again, the inner Block being solved by the
-    # recursive Lagrangian dual instead of a linear program: the nested form
-    # of an ad hoc Benders decomposition with a Lagrangian dual inside
+    # the modular networks with the inner Block solved as a linear program
+    # and by the recursive Lagrangian dual, the nested form of an ad hoc
+    # Benders decomposition with a Lagrangian dual inside, in one run and
+    # compared with each other; the others with the formulations of their
+    # network
     if [ -n "${ld_bcfg}" ] && [ -n "${LD_INNER[$base]}" ]; then
-      run_test "$exe" -B "${ld_bcfg}" -S "$spar" -o "$ref" "$what"
+      run_test "$exe" -F InnerBVar-LD.txt -S "$spar" ${point:+-x "$point"} \
+               -o "$ref" "$what"
+    elif [ "$bpar" = InnerBCfg.txt ]; then
+      run_test "$exe" -F "$vars" -S "$spar" ${point:+-x "$point"} \
+               -o "$ref" "$what"
+    else
+      run_test "$exe" -B "$bpar" -S "$spar" ${point:+-x "$point"} \
+               -o "$ref" "$what"
     fi
 
 done

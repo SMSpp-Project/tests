@@ -1,0 +1,26 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - InnerBCfg-PTDF.txt - - - - - - - - - - - - - - -
+#
+# The "meta"-BlockConfig of InnerBCfg.txt with the PTDF formulation of the
+# DCNetworkBlock [see DCNBCfg-PTDF.txt], for the batteries that solve every
+# instance with a network with each formulation of it [see
+# InnerBVar-DCN.txt]. It is InnerBCfg.txt but for the line of the
+# DCNetworkBlock.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+5 # the number of elements in the map
+InvestmentBlock         *IBOCfg.txt
+
+ThermalUnitBlock        *TUBCfg.txt
+DCNetworkBlock          *DCNBCfg-PTDF.txt
+ACNetworkBlock          *ACBCfg.txt
+PolyhedralFunctionBlock *PFBCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBCfg-PTDF.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,28 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBVar-DCN.txt - - - - - - - - - - - - - - -
+#
+# The variants of the "meta"-BlockConfig of an InvestmentBlock and of its
+# inner Block that the batteries of this suite compare on the instances with
+# a network: the formulations of the DCNetworkBlock, i.e., PTDF, CYCLE and
+# the KIRCHHOFF one of InnerBCfg.txt, all the rest being that of
+# InnerBCfg.txt. The instance is read once per variant, each copy is solved
+# by the same BlockSolverConfig and the Solver of all the copies are compared
+# with each other, being the same problem [see -F of IB_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+3  # number of variants of the BlockConfig
+
+# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*InnerBCfg-PTDF.txt     # 1st variant: PTDF
+*InnerBCfg-CYCLE.txt    # 2nd variant: CYCLE
+*InnerBCfg.txt          # 3rd variant: KIRCHHOFF
+
+# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBVar-DCN.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

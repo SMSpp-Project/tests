@@ -300,7 +300,12 @@ static double get_solver_objective_value( Solver * solver ) {
  return( solver->get_lb() );
 }
 
-static bool test_investment_solvers( InvestmentBlock * investment_block ) {
+// solves the InvestmentBlock with all its Solver and cross-checks them, and
+// with the reference objective value; if @p record is given, it receives
+// what each Solver gave, for the comparison of the copies of the Block
+
+static bool test_investment_solvers( InvestmentBlock * investment_block ,
+                                     SolveRecord * record = nullptr ) {
  try {
   auto investment_function = static_cast< InvestmentFunction * >(
    investment_block->get_function() );
@@ -397,6 +402,13 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ) {
                             verdict , diff );
   print_instance_line( times , toks , RefObjective , verdict , diff );
   (void) it1;
+
+  if( record ) {
+   std::vector< std::string > names( M );
+   for( std::size_t k = 0 ; k < M ; ++k )
+    names[ k ] = S[ k ]->classname();
+   *record = { rd , hsv , statusv , times , toks , names };
+   }
 
 #if( LOG_LEVEL >= 0 )
   if( all_passed )
@@ -940,109 +952,129 @@ void process_block_file( const netCDF::NcFile & file ) {
  auto blocks = file.getGroups();
 
  // the BlockConfig: an OBlockConfig for the InvestmentBlock, or a
- // "meta"-BlockConfig with one [see InnerBCfg.txt]
- if( bconf_file.empty() ) {
+ // "meta"-BlockConfig with one [see InnerBCfg.txt], or the list of them
+ // (-F), each InvestmentBlock being then solved once per variant and the
+ // copies compared with each other
+ if( bconf_file.empty() && vconf_file.empty() ) {
   std::cerr << "error: a BlockConfig for the InvestmentBlock must be given "
             << "(see InnerBCfg.txt)" << std::endl;
   exit( 1 );
  }
- auto given_block_config = Configuration::deserialize( bconf_file );
- if( ! given_block_config ) {
-  std::cerr << "error: cannot load BlockConfig " << bconf_file << std::endl;
-  exit( 1 );
- }
-
- // Load BlockSolverConfig from file
- Configuration * solver_config = Configuration::deserialize( sconf_file );
- if( ! solver_config ) {
-  std::cerr << "error: cannot load BlockSolverConfig " << sconf_file
-            << std::endl;
-  exit( 1 );
- }
+ auto bv = get_BlockConfig_variants();
 
  // For each Block descriptor
  for( auto block_description : blocks ) {
-  // Deserialize the Block
-  auto block_type_att = block_description.second.getAtt( "type" );
-  if( block_type_att.isNull() ) {
-   std::cerr << "The netCDF attribute 'type' was not found in the netCDF "
-             << "group " << block_description.second.getName() << std::endl;
-   exit( 1 );
-  }
-
-  std::string block_type;
-  block_type_att.getValues( block_type );
-
-  if( block_type != "InvestmentBlock" ) {
-   std::cerr << "The Block in the netCDF file " << block_type << " is "
-             << block_type << ", but it must be an InvestmentBlock"
-             << std::endl;
-   exit( 1 );
-  }
-
-  auto investment_block = dynamic_cast< InvestmentBlock * >(
-   Block::new_Block( block_description.second , nullptr ) );
-
-  // deserialize gives up, having said why, when a type it needs is not in the
-  // Block factory, which is what happens when that type is not linked in
-  if( ! investment_block ) {
-   std::cerr << "error: cannot build the InvestmentBlock of " << filename
-             << std::endl;
-   exit( 1 );
+  SolveRecord all;
+  bool passed = true;
+  for( std::size_t v = 0 ; v < bv.configs.size() ; ++v ) {
+   auto given_block_config = bv.configs[ v ];
+   if( bv.configs.size() > 1 )
+    std::cout << "variant " << bv.names[ v ] << ":" << std::endl;
+   Configuration * solver_config = solver_config_of( bv , v );
+   // Deserialize the Block
+   auto block_type_att = block_description.second.getAtt( "type" );
+   if( block_type_att.isNull() ) {
+    std::cerr << "The netCDF attribute 'type' was not found in the netCDF "
+              << "group " << block_description.second.getName() << std::endl;
+    exit( 1 );
    }
 
-  auto investment_function = static_cast< InvestmentFunction * >(
-   investment_block->get_function() );
+   std::string block_type;
+   block_type_att.getValues( block_type );
 
-  // Configure the inner Block, then the InvestmentBlock, whose (O)BlockConfig
-  // gives the InvestmentFunction the Solver of the inner Block: a plain
-  // BlockConfig only concerns the InvestmentBlock, while a "meta"-BlockConfig
-  // is also dispatched inside the InvestmentFunction, since the nested-Block
-  // BFS cannot cross the Function boundary
-  if( ! dynamic_cast< BlockConfig * >( given_block_config ) )
-   configure_inner_Blocks( investment_function , given_block_config ,
-                           bconf_file );
-  // the OBlockConfig gives its ComputeConfig to the Objective, which has to
-  // be there already; the constraints wait for the BlockConfig, which says
-  // whether the bounds are reformulated
-  investment_block->generate_abstract_variables();
-  investment_block->generate_objective();
-  b_config_Block( investment_block , given_block_config , bconf_file );
+   if( block_type != "InvestmentBlock" ) {
+    std::cerr << "The Block in the netCDF file " << block_type << " is "
+              << block_type << ", but it must be an InvestmentBlock"
+              << std::endl;
+    exit( 1 );
+   }
 
-  check_inner_Solvers( investment_function );
+   auto investment_block = dynamic_cast< InvestmentBlock * >(
+    Block::new_Block( block_description.second , nullptr ) );
 
-  // Possibly set the initial point
-  set_initial_point( investment_block );
+   // deserialize gives up, having said why, when a type it needs is not in the
+   // Block factory, which is what happens when that type is not linked in
+   if( ! investment_block ) {
+    std::cerr << "error: cannot build the InvestmentBlock of " << filename
+              << std::endl;
+    exit( 1 );
+    }
 
-  // Finally, apply the Solver configuration
-  s_config_Block( investment_block , solver_config , sconf_file );
+   auto investment_function = static_cast< InvestmentFunction * >(
+    investment_block->get_function() );
 
-  if( investment_block->get_registered_solvers().empty() ) {
-   std::cerr << "Error: no Solver registered to InvestmentBlock"
-             << std::endl;
-   exit( 1 );
-  }
+   // Configure the inner Block, then the InvestmentBlock, whose (O)BlockConfig
+   // gives the InvestmentFunction the Solver of the inner Block: a plain
+   // BlockConfig only concerns the InvestmentBlock, while a "meta"-BlockConfig
+   // is also dispatched inside the InvestmentFunction, since the nested-Block
+   // BFS cannot cross the Function boundary
+   if( ! dynamic_cast< BlockConfig * >( given_block_config ) )
+    configure_inner_Blocks( investment_function , given_block_config ,
+                            bconf_file );
+   // the OBlockConfig gives its ComputeConfig to the Objective, which has to
+   // be there already; the constraints wait for the BlockConfig, which says
+   // whether the bounds are reformulated
+   investment_block->generate_abstract_variables();
+   investment_block->generate_objective();
+   b_config_Block( investment_block , given_block_config , bconf_file );
 
-  // Set the output stream for the log of the inner Solvers
-  for( auto block : investment_function->get_nested_Blocks() )
-   if( auto sddp_block = dynamic_cast< SDDPBlock * >( block ) )
-    set_log( sddp_block , &std::cout );
-   else
-    for( auto solver : block->get_registered_solvers() )
-     if( solver )
-      solver->set_log( &std::cout );
+   check_inner_Solvers( investment_function );
 
-  // Solve
-  AllPassed &= test_investment_solvers( investment_block );
+   // Possibly set the initial point
+   set_initial_point( investment_block );
 
-  // Cleanup solver attachments/configurations
-  s_config_Block( investment_block , solver_config );
+   // Finally, apply the Solver configuration
+   s_config_Block( investment_block , solver_config , sconf_file );
 
-  delete investment_block;
+   if( investment_block->get_registered_solvers().empty() ) {
+    std::cerr << "Error: no Solver registered to InvestmentBlock"
+              << std::endl;
+    exit( 1 );
+   }
+
+   // Set the output stream for the log of the inner Solvers
+   for( auto block : investment_function->get_nested_Blocks() )
+    if( auto sddp_block = dynamic_cast< SDDPBlock * >( block ) )
+     set_log( sddp_block , &std::cout );
+    else
+     for( auto solver : block->get_registered_solvers() )
+      if( solver )
+       solver->set_log( &std::cout );
+
+   // Solve
+   SolveRecord rec;
+   passed &= test_investment_solvers( investment_block , & rec );
+   for( std::size_t k = 0 ; k < rec.rd.size() ; ++k ) {
+    all.rd.push_back( rec.rd[ k ] );
+    all.hs.push_back( rec.hs[ k ] );
+    all.status.push_back( rec.status[ k ] );
+    all.times.push_back( rec.times[ k ] );
+    all.tok.push_back( rec.tok[ k ] );
+    all.names.push_back( bv.names[ v ] + " " + rec.names[ k ] );
+    }
+
+   // Cleanup solver attachments/configurations
+   s_config_Block( investment_block , solver_config );
+
+   delete investment_block;
+   delete solver_config;
+  }  // end( for( v ) )
+
+  // the Solver of all the copies against each other, the copies being the
+  // same problem
+  if( bv.configs.size() > 1 ) {
+   std::string verdict;
+   double diff;
+   passed &= cross_check( all.rd , all.hs , all.status , RefObjective ,
+                          1e-5 , verdict , diff );
+   std::cout << "variants against each other:";
+   print_instance_line( all.times , all.tok , RefObjective , verdict , diff ,
+                        true , all.names );
+   }
+  AllPassed &= passed;
  }
 
- delete given_block_config;
- delete solver_config;
+ delete bv.owner;
 }
 
 /*--------------------------------------------------------------------------*/
