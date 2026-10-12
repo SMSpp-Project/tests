@@ -77,6 +77,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the batteries of `MMCFBlock_test` share `batches/mmcf_battery.sh`, the
+  Canad instances with a list of `BlockSolverConfig` and the Mnetgen ones,
+  the runs being those they made before (the commented-out instances of 256
+  nodes are gone)
+
 - the six batteries of `MILPSolver/QuadFunction` share
   `batches/qf_battery.sh`, each only naming its family of instances and its
   type, the runs being those they made before
