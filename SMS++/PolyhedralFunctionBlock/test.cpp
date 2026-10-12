@@ -921,83 +921,76 @@ int main( int argc , char **argv )
 
  assert( SKIP_BEAT >= 0 );
 
- long int seed = 0;
- Index wchg = 63;
+ round_opts.wchg = 63;
  #if DYNAMIC_VARS > 0
-  wchg |= 128;
+  round_opts.wchg |= 128;
  #endif
  #if DYNAMIC_VAR_REMOVALS > 0
-  wchg |= 256;
+  round_opts.wchg |= 256;
  #endif
- double dens = 3;
- Index n_repeat = 40;
- Index n_change = 10;
- double p_change = 0.5;
+ static double dens = 3;
 
- switch( argc ) {
-  case( 11 ): Str2Sthg( argv[ 10 ] , DetachNDO );
-  case( 10 ): Str2Sthg( argv[ 9 ] , p_vert );
-  case( 9 ): Str2Sthg( argv[ 8 ] , p_change );
-  case( 8 ): Str2Sthg( argv[ 7 ] , n_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_repeat );
-  case( 6 ): Str2Sthg( argv[ 5 ] , nf );
-  case( 5 ): Str2Sthg( argv[ 4 ] , dens );
-  case( 4 ): Str2Sthg( argv[ 3 ] , nvar );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar dens #nf #rounds #chng %chng %vert detach]"
- 		<< endl <<
-           "       wchg: what to change, coded bit-wise [" << wchg << "]"
-		<< endl <<
-           "             1 = add rows, 2 = delete rows"
-		<< endl <<
-           "             4 = modify rows, 8 = modify constants"
-		<< endl <<
-           "             16 = change local lower/upper bound"
-		<< endl <<
-           "             32 = change linear objective"
-		<< endl <<
-           "             64 = change global lower/upper bound"
+ docopt_desc = "SMS++ PolyhedralFunctionBlock test.\n";
+ add_round_options(
+  "                                    1 add rows, 2 delete rows,\n"
+  "                                    4 modify rows, 8 modify constants,\n"
+  "                                    16 change local lower/upper bound,\n"
+  "                                    32 change linear objective,\n"
+  "                                    64 change global lower/upper bound,\n"
+ #if DYNAMIC_VARS > 0
+  "                                    128 add variables,\n"
+ #endif
+ #if DYNAMIC_VAR_REMOVALS > 0
+  "                                    256 delete variables,\n"
+ #endif
+  "                                    512 do \"abstract\" changes,\n"
+  "                                    1024 use the dual (Fenchel)\n"
+  "                                    representation for the LPBlock,\n"
+  "                                    2048 scale each PFB row locally,\n"
+  "                                    4096 apply one global PFB\n"
+  "                                    epigraph scale\n"
+  );
+ short_opts += "N:d:f:V:X:";
+ const std::vector< option > my_opts = {
+   { "nvar" , required_argument , nullptr , 'N' } ,
+   { "dens" , required_argument , nullptr , 'd' } ,
+   { "nf" , required_argument , nullptr , 'f' } ,
+   { "pvert" , required_argument , nullptr , 'V' } ,
+   { "detach" , required_argument , nullptr , 'X' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help +=
+  "  -N, --nvar <n>                  number of variables [10]\n"
+  "  -d, --dens <x>                  rows / variables [3]\n"
+  "  -f, --nf <n>                    number of PolyhedralFunction in\n"
+  "                                  the sub-Block [0]\n"
+  "  -V, --pvert <p>                 probability that a generated row\n"
+  "                                  is vertical [0]\n"
+  "  -X, --detach <0|1>              if the Solver of NDOBlock is\n"
+  "                                  detached and re-attached [0]\n"
+;
 
-  #if DYNAMIC_VARS > 0
-		<< endl <<
-           "             128 = add variables"
-  #endif
-  #if DYNAMIC_VAR_REMOVALS > 0
-		<< endl <<
-           "             256 = delete variables"
-  #endif
-		<< endl <<
-           "             512 = do \"abstract\" changes"
-		<< endl <<
-           "             1024 = use the *dual* (Fenchel) "
-                                          "representation for the LPBlock"
-	        << endl <<
-           "             11 (+2048) = scale each PFB row locally"
-	        << endl <<
-           "             12 (+4096) = apply one global PFB epigraph scale"
-	        << endl <<
-           "       nvar: number of variables [10]"
-	        << endl <<
-           "       dens: rows / variables [3]"
-	        << endl <<
-           "       #nf: number of PolyhedralFunction in the sub-Block [0]"
-	        << endl <<
-           "       #rounds: how many iterations [40]"
-	        << endl <<
-           "       #chng: number of changes [10]"
-	        << endl <<
-           "       %chng: probability of changing [0.5]"
-	        << endl <<
-           "       %vert: probability that a generated row is vertical [0]"
-	        << endl <<
-           "       detach: if the Solver of NDOBlock is detached and "
-                                              "re-attached [0]"
-	        << endl;
-	   return( 1 );
-  }
+ // the instance is generated, so no input file is needed
+ filename_optional = true;
+
+ process_args( argc , argv , []( int opt ) {
+   if( process_round_option( opt ) )
+    return( true );
+   switch( opt ) {
+    case( 'N' ): Str2Sthg( optarg , nvar ); return( true );
+    case( 'd' ): Str2Sthg( optarg , dens ); return( true );
+    case( 'f' ): Str2Sthg( optarg , nf ); return( true );
+    case( 'V' ): Str2Sthg( optarg , p_vert ); return( true );
+    case( 'X' ): Str2Sthg( optarg , DetachNDO ); return( true );
+    default: return( false );
+    }
+   } );
+
+ long int seed = round_opts.seed;
+ Index wchg = round_opts.wchg;
+ Index n_repeat = round_opts.n_repeat;
+ Index n_change = round_opts.n_change;
+ double p_change = round_opts.p_change;
 
  if( nvar < 1 ) {
   cout << "error: nvar too small";

@@ -25,7 +25,7 @@ qf_run() {
       *" $(basename "$what") "*) [ -n "$CI" ] && continue ;;
     esac
 
-    run_test "$MILPSolver_QuadFunction_test" "$what" "$2"
+    run_test "$MILPSolver_QuadFunction_test" -t "$2" "$what"
 
   done
 }

@@ -31,13 +31,14 @@ library:
 
 You can also download and run any specific instance you would like, as long as the 
 correct path to the instance is specified. Additionally, you can provide the 
-known optimal value for the instance being tested as a third argument.
+known optimal value for the instance being tested with -r.
 
 The usage of the executable is the following:
 
-       ./MILPSolver_QuadFunction_test LP-file [type opt]
-       type: wheter solving the integer or relaxed version [I]
-       opt: optimal solution of the model [0]
+       ./MILPSolver_QuadFunction_test [-t I|C] [-r opt] LP-file
+       -t, --type <I|C>    solve the integer or the relaxed version [I]
+       -r, --ref <value>   optimal value of the model [the one in
+                           available_instances.txt, if any]
 
 In the batches folder, different batch files are provided to run all the available
 instances with a specific degree of complexity. All these passing is a good sign 

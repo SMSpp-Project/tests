@@ -85,10 +85,12 @@ for dual in $duals; do
           for vert in $verts; do
             for (( seed = 0 ; seed < seeds ; seed++ )); do
 
-              printf "[$seed $scaled_what $size $dens $nf $cur_iter $nchg $pchg $vert]: "
+              printf "[-e $seed -k $scaled_what -N $size -d $dens -f $nf "
+              printf "%s]: " "-n $cur_iter -m $nchg -q $pchg -V $vert"
 
-              "$PolyhedralFunctionBlock_test" $seed $scaled_what $size $dens $nf \
-                  $cur_iter $nchg $pchg $vert
+              "$PolyhedralFunctionBlock_test" -e $seed -k $scaled_what \
+                  -N $size -d $dens -f $nf -n $cur_iter -m $nchg \
+                  -q $pchg -V $vert
 
               retVal=$?
               cases=$(( cases + 1 ))

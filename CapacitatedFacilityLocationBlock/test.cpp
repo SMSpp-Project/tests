@@ -195,11 +195,12 @@ double cmp_tol = 1e-5;  // relative tolerance used to compare the two bounds;
                         // Lagrangian dual vs a cut-strengthened LP)
 
 char filetype = 'C';    // type of the input file
-long int seed = 1;      // seed of the random generator
-unsigned int wchg = 31; // what to change, coded bit-wise
-double p_change = 0.5;  // probability of any single change
-Index n_change = 10;    // average number of elements to change
-Index n_repeat = 40;    // number of changing rounds
+long int & seed = round_opts.seed;        // seed of the random generator
+Index & wchg = round_opts.wchg;           // what to change, coded bit-wise
+double & p_change = round_opts.p_change;  // probability of any single change
+Index & n_change = round_opts.n_change;   // average number of elements to
+                                          // change
+Index & n_repeat = round_opts.n_repeat;   // number of changing rounds
 
 std::mt19937 rg;               // base random generator
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
@@ -607,14 +608,11 @@ static bool SolveBoth( void )
 
 static bool process_specific_arg( int opt )
 {
+ if( process_round_option( opt ) )
+  return( true );
  switch( opt ) {
   case( 't' ): filetype = optarg[ 0 ];           return( true );
   case( 's' ): Str2Sthg( optarg , niter );       return( true );
-  case( 'e' ): Str2Sthg( optarg , seed );        return( true );
-  case( 'k' ): Str2Sthg( optarg , wchg );        return( true );
-  case( 'n' ): Str2Sthg( optarg , n_repeat );    return( true );
-  case( 'm' ): Str2Sthg( optarg , n_change );    return( true );
-  case( 'q' ): Str2Sthg( optarg , p_change );    return( true );
   case( 'T' ): Str2Sthg( optarg , cmp_tol );     return( true );
   default:                                       return( false );
   }
@@ -633,35 +631,25 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ CapacitatedFacilityLocationBlock test.\n";
- short_opts += "t:s:e:k:n:m:q:T:";
+ round_opts = { 1 , 31 , 40 , 10 , 0.5 };
+ add_round_options(
+  "                                    0 facility cost, 1 transport\n"
+  "                                    cost, 2 capacities, 3 demands,\n"
+  "                                    4 close, 5 re-open, 6 fix-open\n"
+  "                                    facilities, 7 split/unsplit,\n"
+  "                                    8 (+256) abstract\n"
+  "                                    representation, 9 (+512) set\n"
+  "                                    eps & no negative design\n" );
+ short_opts += "t:s:T:";
  const std::vector< option > my_opts = {
-   { "type"     , required_argument , nullptr , 't' } ,
-   { "slope"    , required_argument , nullptr , 's' } ,
-   { "seed"     , required_argument , nullptr , 'e' } ,
-   { "wchg"     , required_argument , nullptr , 'k' } ,
-   { "rounds"   , required_argument , nullptr , 'n' } ,
-   { "nchng"    , required_argument , nullptr , 'm' } ,
-   { "pchng"    , required_argument , nullptr , 'q' } ,
-   { "cmptol"   , required_argument , nullptr , 'T' } };
+   { "type"   , required_argument , nullptr , 't' } ,
+   { "slope"  , required_argument , nullptr , 's' } ,
+   { "cmptol" , required_argument , nullptr , 'T' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -t, --type <c>                  type of the instance file, C, F\n"
          "                                  or L, ignored for a .nc4 [C]\n"
          "  -s, --slope <n>                 Slope Scaling iterations [0]\n"
-         "  -e, --seed <n>                  seed of the random generator [1]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [31]:\n"
-         "                                    0 facility cost, 1 transport\n"
-         "                                    cost, 2 capacities, 3 demands,\n"
-         "                                    4 close, 5 re-open, 6 fix-open\n"
-         "                                    facilities, 7 split/unsplit,\n"
-         "                                    8 (+256) abstract\n"
-         "                                    representation, 9 (+512) set\n"
-         "                                    eps & no negative design\n"
-         "  -n, --rounds <n>                number of changing rounds [40]\n"
-         "  -m, --nchng <n>                 average number of elements to\n"
-         "                                  change [10]\n"
-         "  -q, --pchng <p>                 probability of any single change\n"
-         "                                  [0.5]\n"
          "  -T, --cmptol <x>                relative tolerance of the\n"
          "                                  comparison of the bounds [1e-5]\n"
          "\n"

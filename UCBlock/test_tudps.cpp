@@ -608,13 +608,13 @@ static bool SolveBoth( const std::vector< std::string > & names ,
 // prefixes) are handled centrally by common_utils. The same tester can thus
 // drive different solver configurations (e.g. ThermalUnitExtDPSolver vs the
 // nuclear NuclearUnitExtDPSolver) just by passing a different -S file.
-long int seed = 0;
-Index wchg = 135;
+long int & seed = round_opts.seed;
+Index & wchg = round_opts.wchg;
 int wf = 1;          // the formulation of the unit TUBlock, read back from
                       // its BlockConfig
-double p_change = 0.6;
-Index n_change = 10;
-Index n_repeat = 100;
+double & p_change = round_opts.p_change;
+Index & n_change = round_opts.n_change;
+Index & n_repeat = round_opts.n_repeat;
 double sd_cost = 0;   // the shut-down cost given to the unit, if any
 bool must_run = false;   // the unit is on at every instant of the horizon
 
@@ -661,12 +661,9 @@ static std::string formulation_name( int f )
 
 static bool process_specific_arg( int opt )
 {
+ if( process_round_option( opt ) )
+  return( true );
  switch( opt ) {
-  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
-  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
-  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
-  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
-  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
   case( 'd' ): Str2Sthg( optarg , sd_cost );   return( true );
   case( 'u' ): must_run = true;                return( true );
   default:                                     return( false );
@@ -1159,28 +1156,20 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ ThermalUnitBlock Solver test.\n";
- short_opts += "e:k:n:m:q:d:u";
+ round_opts = { 0 , 135 , 100 , 10 , 0.6 };
+ add_round_options(
+  "                                    1 fixed costs, 2 quadratic\n"
+  "                                    coefficients, 4 linear\n"
+  "                                    coefficients,\n"
+  "                                    128 also via abstract\n"
+  "                                    representation\n" );
+ short_opts += "d:u";
  const std::vector< option > my_opts = {
-   { "seed"   , required_argument , nullptr , 'e' } ,
-   { "wchg"   , required_argument , nullptr , 'k' } ,
-   { "rounds" , required_argument , nullptr , 'n' } ,
-   { "nchng"  , required_argument , nullptr , 'm' } ,
-   { "pchng"  , required_argument , nullptr , 'q' } ,
-   { "sdcost" , required_argument , nullptr , 'd' } ,
+   { "sdcost"  , required_argument , nullptr , 'd' } ,
    { "mustrun" , no_argument , nullptr , 'u' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
- help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [135]:\n"
-         "                                    1 fixed costs, 2 quadratic\n"
-         "                                    coefficients, 4 linear\n"
-         "                                    coefficients,\n"
-         "                                    128 also via abstract\n"
-         "                                    representation\n"
-         "  -n, --rounds <n>                how many iterations [100]\n"
-         "  -m, --nchng <n>                 number of changes [10]\n"
-         "  -q, --pchng <p>                 probability of changing [0.6]\n"
-         "  -d, --sdcost <v>                shut-down cost of the unit at\n"
+ help += "  -d, --sdcost <v>                shut-down cost of the unit at\n"
          "                                  each instant, the instance\n"
          "                                  having none [0]\n"
          "  -u, --mustrun                   the unit is on at every instant,\n"

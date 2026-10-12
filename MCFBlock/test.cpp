@@ -351,28 +351,14 @@ static void restore_capacities( const MCFBlock::Vec_FNumber & orig )
 
 /*--------------------------------------------------------------------------*/
 
-// test-specific command-line knobs, set by process_specific_arg(); the
+// the options of the rounds of random changes [see RoundOptions]; the
 // standard parameters (instance positional, -S BlockSolverConfig, -c/-p
 // prefixes) are handled centrally by common_utils
-long int seed = 1;
-unsigned int wchg = 255;
-double p_change = 0.5;
-Index n_change = 10;
-Index n_repeat = 40;
-
-/*--------------------------------------------------------------------------*/
-
-static bool process_specific_arg( int opt )
-{
- switch( opt ) {
-  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
-  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
-  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
-  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
-  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
-  default:                                     return( false );
-  }
- }
+long int & seed = round_opts.seed;
+Index & wchg = round_opts.wchg;
+double & p_change = round_opts.p_change;
+Index & n_change = round_opts.n_change;
+Index & n_repeat = round_opts.n_repeat;
 
 /*--------------------------------------------------------------------------*/
 
@@ -387,29 +373,15 @@ int main( int argc , char **argv )
  // the test only appends its own knobs
 
  docopt_desc = "SMS++ MCFBlock-vs-MILP test.\n";
- short_opts += "e:k:n:m:q:";
- const std::vector< option > my_opts = {
-   { "seed"    , required_argument , nullptr , 'e' } ,
-   { "wchg"    , required_argument , nullptr , 'k' } ,
-   { "rounds"  , required_argument , nullptr , 'n' } ,
-   { "nchng"   , required_argument , nullptr , 'm' } ,
-   { "pchng"   , required_argument , nullptr , 'q' } };
- long_opts.insert( std::prev( long_opts.end() ) ,
-                   my_opts.begin() , my_opts.end() );
- help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [255]:\n"
-         "                                    1 costs, 2 capacities, "
-         "4 deficits, 8 close arcs,\n"
-         "                                    16 re-open arcs, 32 delete arcs, "
-         "64 create arcs,\n"
-         "                                    128 use abstract representation\n"
-         "  -n, --rounds <n>                number of changing rounds [40]\n"
-         "  -m, --nchng <n>                 avg number of elements to change "
-         "[10]\n"
-         "  -q, --pchng <p>                 probability of any single change "
-         "[0.5]\n";
+ round_opts = { 1 , 255 , 40 , 10 , 0.5 };
+ add_round_options(
+  "                                    1 costs, 2 capacities, "
+  "4 deficits, 8 close arcs,\n"
+  "                                    16 re-open arcs, 32 delete arcs, "
+  "64 create arcs,\n"
+  "                                    128 use abstract representation\n" );
 
- process_args( argc , argv , process_specific_arg );
+ process_args( argc , argv , process_round_option );
 
  // the BlockSolverConfig (-S) must be provided explicitly: the test never
  // falls back to a hardcoded default Configuration

@@ -45,19 +45,28 @@ of the two `Solver` are compared.
 
 The usage of the executable is the following:
 
-      ./PolyhedralFunctionBlock_test seed [wchg nvar dens #nf #rounds #chng %chng]
-       wchg: what to change, coded bit-wise [319]
-             0 = add rows, 1 = delete rows 
-             2 = modify rows, 3 = modify constants
-             4 = change global lower/upper bound
-             5 = change linear objective
-             8 (+256) = do "abstract" changes
-       nvar: number of variables [10]
-       dens: rows / variables [3]
-       #nf: number of PolyhedralFunction in the sub-Block [0]
-       #rounds: how many iterations [40]
-       #chng: number of changes [10]
-       %chng: probability of changing [0.5]
+       ./PolyhedralFunctionBlock_test [options]
+       -e, --seed <n>      seed of the random generator [0]
+       -k, --wchg <bits>   what to change, coded bit-wise [63]
+                           1 = add rows, 2 = delete rows
+                           4 = modify rows, 8 = modify constants
+                           16 = change local lower/upper bound
+                           32 = change linear objective
+                           64 = change global lower/upper bound
+                           512 = do "abstract" changes
+                           1024 = use the dual (Fenchel) representation
+                                  for the LPBlock
+                           2048 = scale each PFB row locally
+                           4096 = apply one global PFB epigraph scale
+       -n, --rounds <n>    how many iterations [40]
+       -m, --nchng <n>     number of changes [10]
+       -q, --pchng <p>     probability of changing [0.5]
+       -N, --nvar <n>      number of variables [10]
+       -d, --dens <x>      rows / variables [3]
+       -f, --nf <n>        number of PolyhedralFunction in the sub-Block [0]
+       -V, --pvert <p>     probability that a generated row is vertical [0]
+       -X, --detach <0|1>  if the Solver of NDOBlock is detached and
+                           re-attached [0]
 
 A batch file is provided that runs a not-so-large buy yet comprehensive set
 of tests with different sizes and seeds of the random generator; all these

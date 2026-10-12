@@ -786,6 +786,32 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
                     const std::vector< std::vector< bool > > & relax = {} );
 
 /*--------------------------------------------------------------------------*/
+/// the options of the rounds of random changes of a tester
+/** The testers that change their Block at random and re-solve it share five
+ *  options: -e the seed of the random generator, -k what is changed (a
+ *  bit-wise code whose meaning is the tester's), -n the number of rounds,
+ *  -m the number of changes and -q the probability of a change. A tester
+ *  binds its names to the fields of round_opts, sets its defaults there,
+ *  calls add_round_options() before process_args() and
+ *  process_round_option() first in its own handler of the options. */
+
+struct RoundOptions {
+ long int seed = 0;            ///< seed of the random generator (-e)
+ Block::Index wchg = 0;        ///< what is changed, bit-wise (-k)
+ Block::Index n_repeat = 40;   ///< number of rounds (-n)
+ Block::Index n_change = 10;   ///< number of changes (-m)
+ double p_change = 0.5;        ///< probability of a change (-q)
+ };
+
+extern RoundOptions round_opts;  ///< the options of the rounds of changes
+
+/// adds -e, -k, -n, -m and -q, the help of -k being @p wchg_help
+void add_round_options( const std::string & wchg_help );
+
+/// handles one of -e, -k, -n, -m and -q, false if @p opt is none of them
+bool process_round_option( int opt );
+
+/*--------------------------------------------------------------------------*/
 /// the main of a tester that loads a Block out of a file and cross-checks
 /// its Solver
 /** The Block is a new @p classname, or the one -b names if @p any_class,

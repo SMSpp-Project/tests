@@ -1202,6 +1202,52 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
  }
 
 /*--------------------------------------------------------------------------*/
+// the options of the rounds of random changes
+
+RoundOptions round_opts;
+
+void add_round_options( const std::string & wchg_help )
+{
+ const auto & r = round_opts;
+ short_opts += "e:k:n:m:q:";
+ const std::vector< option > my_opts = {
+   { "seed"   , required_argument , nullptr , 'e' } ,
+   { "wchg"   , required_argument , nullptr , 'k' } ,
+   { "rounds" , required_argument , nullptr , 'n' } ,
+   { "nchng"  , required_argument , nullptr , 'm' } ,
+   { "pchng"  , required_argument , nullptr , 'q' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ std::ostringstream p;
+ p << r.p_change;
+ help += "  -e, --seed <n>                  seed of the random generator [" +
+         std::to_string( r.seed ) + "]\n"
+         "  -k, --wchg <bits>               what to change, bit-wise [" +
+         std::to_string( r.wchg ) + "]:\n" + wchg_help +
+         "  -n, --rounds <n>                number of rounds of changes [" +
+         std::to_string( r.n_repeat ) + "]\n"
+         "  -m, --nchng <n>                 number of changes [" +
+         std::to_string( r.n_change ) + "]\n"
+         "  -q, --pchng <p>                 probability of a change [" +
+         p.str() + "]\n";
+ }
+
+/*--------------------------------------------------------------------------*/
+
+bool process_round_option( int opt )
+{
+ auto & r = round_opts;
+ switch( opt ) {
+  case( 'e' ): Str2Sthg( optarg , r.seed );     return( true );
+  case( 'k' ): Str2Sthg( optarg , r.wchg );     return( true );
+  case( 'n' ): Str2Sthg( optarg , r.n_repeat ); return( true );
+  case( 'm' ): Str2Sthg( optarg , r.n_change ); return( true );
+  case( 'q' ): Str2Sthg( optarg , r.p_change ); return( true );
+  default:                                      return( false );
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
 // the main of a tester that loads a Block out of a file and cross-checks
 // its Solver
 

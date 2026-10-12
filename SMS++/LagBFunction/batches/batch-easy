@@ -61,9 +61,12 @@ for group in static updates sized sparse all-easy; do
                 # nf=0 means there are no hard components. Exercise this
                 # separately while the all-easy stabilization path is audited.
                 for nt in -1 -3; do
-                    run_test "$LagBFunction_test" "$seed" 0 "$size" 0 "$nt" 3 0 5 0.75
+                    run_test "$LagBFunction_test" -e "$seed" -k 0 -N "$size" \
+                        -f 0 -t "$nt" -d 3 -n 0 -m 5 -q 0.75
                     for mask in 32 64 128 224; do
-                        run_test "$LagBFunction_test" "$seed" "$mask" "$size" 0 "$nt" 3 "$rounds" 5 0.75 "$(ndopar $mask)"
+                        run_test "$LagBFunction_test" -e "$seed" -k "$mask" \
+                            -N "$size" -f 0 -t "$nt" -d 3 -n "$rounds" -m 5 \
+                            -q 0.75 -S "$(ndopar $mask)"
                     done
                 done
                 continue
@@ -75,7 +78,9 @@ for group in static updates sized sparse all-easy; do
                 case "$group" in
                     static)
                         for density in 1.1 3; do
-                            run_test "$LagBFunction_test" "$seed" 0 "$size" "$nf" "$nt" "$density" 0 5 0.75
+                            run_test "$LagBFunction_test" -e "$seed" -k 0 \
+                                -N "$size" -f "$nf" -t "$nt" -d "$density" \
+                                -n 0 -m 5 -q 0.75
                         done
                         ;;
                     updates)
@@ -83,11 +88,16 @@ for group in static updates sized sparse all-easy; do
                         # then combine them (224), also changing hard rows,
                         # constants and bounds (255). Assumes DYNAMIC_VARS=0.
                         for mask in 32 64 128 224 255; do
-                            run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$(ndopar $mask)"
+                            run_test "$LagBFunction_test" -e "$seed" \
+                                -k "$mask" -N "$size" -f "$nf" -t "$nt" -d 3 \
+                                -n "$rounds" -m 5 -q 0.75 \
+                                -S "$(ndopar $mask)"
                         done
                         # all of them again, with the Solver unregistered
                         # and registered again before each compute()
-                        run_test "$LagBFunction_test" "$seed" 255 "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$(ndopar 255)" 0 1
+                        run_test "$LagBFunction_test" -e "$seed" -k 255 \
+                            -N "$size" -f "$nf" -t "$nt" -d 3 -n "$rounds" \
+                            -m 5 -q 0.75 -S "$(ndopar 255)" -z 0 -X 1
                         ;;
                     sized)
                         # The easy components scaled by a sized copy of the
@@ -114,9 +124,16 @@ for group in static updates sized sparse all-easy; do
                                 par=$base
                                 [[ "$base" == NDOPar && "$sz" != 1 ]] &&
                                     par=NDOPar-Mirror
-                                run_test "$LagBFunction_test" "$seed" 0 "$size" "$nf" "$nt" 3 0 5 0.75 "$par.txt" "$sz"
+                                run_test "$LagBFunction_test" -e "$seed" -k 0 \
+                                    -N "$size" -f "$nf" -t "$nt" -d 3 -n 0 \
+                                    -m 5 -q 0.75 -S "$par.txt" \
+                                    -z "$sz"
                                 for mask in 240 4320; do
-                                    run_test "$LagBFunction_test" "$seed" "$mask" "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$(ndopar $mask $par)" "$sz"
+                                    run_test "$LagBFunction_test" -e "$seed" \
+                                        -k "$mask" -N "$size" -f "$nf" \
+                                        -t "$nt" -d 3 -n "$rounds" -m 5 \
+                                        -q 0.75 -S "$(ndopar $mask $par)" \
+                                        -z "$sz"
                                 done
                             done
                         done
@@ -124,8 +141,12 @@ for group in static updates sized sparse all-easy; do
                     sparse)
                         # Bit 9 selects partial coupling to the outer variables.
                         # 736 = 512 + 224: sparse coupling plus inner updates.
-                        run_test "$LagBFunction_test" "$seed" 512 "$size" "$nf" "$nt" 3 0 5 0.75
-                        run_test "$LagBFunction_test" "$seed" 736 "$size" "$nf" "$nt" 3 "$rounds" 5 0.75 "$(ndopar 736)"
+                        run_test "$LagBFunction_test" -e "$seed" -k 512 \
+                            -N "$size" -f "$nf" -t "$nt" -d 3 -n 0 -m 5 \
+                            -q 0.75
+                        run_test "$LagBFunction_test" -e "$seed" -k 736 \
+                            -N "$size" -f "$nf" -t "$nt" -d 3 -n "$rounds" \
+                            -m 5 -q 0.75 -S "$(ndopar 736)"
                         ;;
                 esac
             done

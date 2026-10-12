@@ -211,33 +211,38 @@ int main( int argc , char **argv )
  cout.setf( ios::scientific, ios::floatfield );
  cout << setprecision( 10 );
 
- std::string file_name;
- double opt_value = 0;
- char type = 'I';
- bool is_opt_found = false;
+ static double opt_value = 0;
+ static char type = 'I';
+ static bool is_opt_found = false;
 
- // construction and loading of the objects - - - - - - - - - - - - - - - - -
- // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- switch( argc ) {
-  case( 4 ): Str2Sthg( argv[ 3 ] , opt_value );
-    is_opt_found = true;
-  case( 3 ): Str2Sthg( argv[ 2 ] , type );
-  case( 2 ): Str2Sthg( argv[ 1 ] , file_name );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ] <<
-	   " file_name : name of the lp file to be loaded"
-    << std::endl <<
-	   "       type: solve the Integer version or the Continuous Relaxation [I]"
-    << std::endl <<
-     "       opt_value: optimal known value of the model [0]"
-	        << std::endl;
-	   return( 1 );
-  }
+ docopt_desc = "SMS++ MILPSolver test on the quadratic Functions of an LP\n"
+               "file.\n";
+ short_opts += "t:r:";
+ const std::vector< option > my_opts = {
+   { "type" , required_argument , nullptr , 't' } ,
+   { "ref"  , required_argument , nullptr , 'r' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -t, --type <I|C>                solve the Integer version or the\n"
+         "                                  Continuous relaxation [I]\n"
+         "  -r, --ref <value>               optimal value of the model\n"
+         "                                  [from available_instances.txt]\n";
 
- if( argc < 4 ) {
-  // We have to retrieve optimal value, if available
+ process_args( argc , argv , []( int opt ) {
+   switch( opt ) {
+    case( 't' ): Str2Sthg( optarg , type ); return( true );
+    case( 'r' ): Str2Sthg( optarg , opt_value );
+                 is_opt_found = true;
+                 return( true );
+    default:     return( false );
+    }
+   } );
+
+ const std::string & file_name = filename;
+
+ // without -r the optimal value is looked for among the known ones
+ if( ! is_opt_found )
   is_opt_found = search_opt( file_name , &opt_value , type );
- }
 
  // construct the LP problem by reading the mps file specified  - - - - - - - 
  {

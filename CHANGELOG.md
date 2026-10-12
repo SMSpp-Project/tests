@@ -99,6 +99,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the five options of the rounds of random changes (-e seed, -k what to
+  change, -n rounds, -m changes, -q probability) are written once in
+  `common_utils` [see `RoundOptions` and `add_round_options()`] and used
+  by the nine testers that change their Block at random: those of
+  `SMS++/BoxSolver`, `AbstractBlock` (box), `MCFBlock`,
+  `CapacitatedFacilityLocationBlock` and `UCBlock` (TUDPS), which had a
+  copy each, and those of `SMS++/PolyhedralFunction`,
+  `PolyhedralFunctionBlock`, `LagBFunction` and `AbstractBlock`
+  (readwrite), which took positional arguments; the NDOBlock configuration
+  of `LagBFunction_test` is the standard -S, and `MILPSolver/QuadFunction`
+  takes -t and -r in place of its positional arguments
+
 - `IB_test` takes -F, the list of the BlockConfig to compare, like the
   other testers: `InvestmentBlock/batches/batch-pypsa` and `batch-stochastic`
   solve each instance with a network with the three formulations of it
