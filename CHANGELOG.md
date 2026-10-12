@@ -84,6 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `MCFBlock/batches/batch` and `batch-dense` share `batches/mcf_battery.sh`,
+  the sweep of the changes over the instances being the values of its
+  parameters [see `sweep`], each battery naming only its sizes; the runs are
+  those they made before
+
 - the batteries of `MMCFBlock_test` share `batches/mmcf_battery.sh`, the
   Canad instances with a list of `BlockSolverConfig` and the Mnetgen ones,
   the runs being those they made before (the commented-out instances of 256
