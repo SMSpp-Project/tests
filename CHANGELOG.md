@@ -106,6 +106,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `extract_sat_wcnf`, and `extract_mmcf_Canad`, whose archive MMCFBlock
   downloads as the modules do
 
+### Fixed
+
+- `compare_formulations/BSCfg1.txt` and `BSCfg2.txt` attach a
+  `GRBMILPSolver` rather than a `HiGHSMILPSolver`, which cannot separate the
+  user cuts that `intCutSepPar 7` asks for, so that the batch failed on
+  every instance
+
 ## [0.7.0] - 2026-10-09
 
 ### Added
