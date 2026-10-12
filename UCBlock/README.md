@@ -94,7 +94,10 @@ Since the "DP formulation" is rather large, the batch file
 batches/batch-acad-s is provided for the first case that only
 solves the set of "academic" UC instances that are appropriately
 small. Instead, batches/batch-acad is meant for the second case
-and solves them all. 
+and solves them all. It also solves the two bus instances of
+constant/ in the data of UCBlock, whose UCBlock has a constant term
+of the network in its own Objective, positive in one and negative in
+the other.
 
 Both batches automatically copy the right TUBCfg\*.txt and
 TUBSCfg\*.txt for the intended tests to succeed.

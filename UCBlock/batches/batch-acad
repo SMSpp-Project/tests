@@ -66,4 +66,34 @@ for size in $sizes; do
   done
 done
 
+# a bus UCBlock with a constant in its own Objective - - - - - - - - - - - -
+# Two thermal units over 4 instants and the constant term of the network,
+# which with a single node is kept in the Objective of the UCBlock [see
+# "NetworkConstantTerms" in UCBlock.h], +1000 in bus_const_pos.nc4 and -1000
+# in bus_const_neg.nc4, with their optimum by hand [see data/gen_constant.py
+# of UCBlock, whose output this table is]. Every Solver has to count the
+# constant in the value of its solutions and in its bounds alike: a value
+# without it is either below the Lagrangian bound, which has it, and the
+# solution is thrown away, or not the value of the solution it writes. The
+# instances are in the data from version 2026-10-13, and they are skipped
+# with older data
+
+DATADIR=../../UCBlock/data/nc4/constant
+
+declare -A CONST_OBJ
+
+CONST_OBJ[bus_const_pos.nc4]=10070
+CONST_OBJ[bus_const_neg.nc4]=8070
+
+for what in ${DATADIR}/bus_const_*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" -B InnerBCfg.txt \
+             -r "${CONST_OBJ[$(basename "$what")]}"
+done
+
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

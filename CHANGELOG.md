@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   values, and their run once in `batches/bkb_battery.sh`; the runs are
   those they made before
 
+- `UCBlock/batches/batch-acad` also solves the two bus `UCBlock` of
+  `constant/` in the data of UCBlock (version 2026-10-13), whose own
+  `Objective` has the constant term of the network (+1000 and -1000),
+  against their optimum by hand, skipping them when they are not in the
+  data: the value a Solver reports of its solution and its bounds must both
+  count it
+
 - `SolveVariants()` of `common_utils`: given copies of a `Block`, each
   configured by one variant of its `BlockConfig`, it cross-checks the
   `Solver` of each copy as `SolveAll()` does and then the `Solver` of all
