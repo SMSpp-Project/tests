@@ -84,6 +84,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the batteries of `MultiStageStochasticBlock` and `batch-ec` of
+  `TwoStageStochasticBlock` solve each instance with the three formulations
+  of the network of its inner Block (`InnerBVar-DCN.txt`, PTDF and
+  KIRCHHOFF only in CI), comparing them with each other; the copies are
+  read as with one copy, by the lower bound of their Solver
+
 - `SatellitesBlock_test` and `MultiKnapsackAssignBlock_test` are a call of
   `load_solve_test()` of `common_utils`, which loads the Block out of the
   file, once per variant of `-F`, and cross-checks its Solver with

@@ -40,6 +40,10 @@ DEFAULT_PAR=BSPar-MS.txt
 DEFAULT_SLV=0
 parse_batch_args "$@"
 
+# the formulations of the network of the inner Block, compared with each
+# other on every instance [see InnerBVar-DCN.txt]; in CI only two of them
+if [ -n "$CI" ]; then vars=InnerBVar-DCN-CI.txt; else vars=InnerBVar-DCN.txt; fi
+
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ file name ] = PyPsa objective value of the equivalent flat
 # network, solved by Gurobi; c<n>_d<m> is the size of the tree, n climate
@@ -74,7 +78,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/mssb/smspp_*.nc; do
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+    run_test "$exe" "$what" -S "$par" -F "$vars" -w "$slv" -r "$ref"
 
 done
 

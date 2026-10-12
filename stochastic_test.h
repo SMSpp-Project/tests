@@ -15,7 +15,8 @@
  * of -r, every Solver being read by its lower bound unless -R declares the
  * Solver that solve a relaxation, in which case all of them are read as the
  * interval of their bounds [see SolveAll()]; with several copies, as
- * SolveVariants() does, the copies being the same problem.
+ * SolveVariants() does, the copies being the same problem, each Solver read
+ * in the same way.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -57,7 +58,7 @@ namespace SMSpp_di_unipi_it {
  * and a check of each copy after the Solver have run. */
 
 struct StochasticTester {
- std::string classname;                        ///< e.g. "TwoStageStochasticBlock"
+ std::string classname;                   ///< e.g. TwoStageStochasticBlock
  std::function< bool( Block * ) > is_one;      ///< the Block read is one
  std::string short_opts;                       ///< its own options
  std::vector< option > long_opts;              ///< and their long form

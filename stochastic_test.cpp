@@ -224,9 +224,23 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
   AllPassed = solve_one( blocks.front() );
   solver_relaxation = global;
   }
- else
-  AllPassed = SolveVariants( blocks , bv.names , read_bounds , RefObjective ,
+ else {
+  // each Solver read as with one copy: by its lower bound, the second by
+  // its upper bound with -w 1, or by the interval of its bounds with -R
+  SolverClassifier classify = []( Solver * s , std::size_t k ) {
+   if( ProxHeur && ( k == 1 ) )
+    return( SolverReading::upper_bound( s->get_ub() , eps_of( k , s ) ) );
+   return( SolverReading::exact( s->get_lb() , eps_of( k , s ) ) );
+   };
+  bool any_relax = false;
+  for( const auto & r : relax )
+   for( auto b : r )
+    any_relax |= b;
+  if( any_relax || ( ! solver_relaxation.empty() ) )
+   classify = read_bounds;
+  AllPassed = SolveVariants( blocks , bv.names , classify , RefObjective ,
                              RefTolerance , {} , relax );
+  }
 
  if( t.check )
   for( auto b : blocks )
