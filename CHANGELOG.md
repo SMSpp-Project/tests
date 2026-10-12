@@ -26,6 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   variants of the direction of `FWBSCfg.txt` cross-checked against a
   `:MILPSolver` by their bounds
 
+- `sweep` of `batch_common.sh`, which runs a command for every combination
+  of the values of some parameters, the batteries of
+  `BinaryKnapsackBlock_test` that sweep the parameters of a generated
+  instance (`batch`, `batch-mixed`, `batch-negative`) writing only the
+  values, and their run once in `batches/bkb_battery.sh`; the runs are
+  those they made before
+
 - `SolveVariants()` of `common_utils`: given copies of a `Block`, each
   configured by one variant of its `BlockConfig`, it cross-checks the
   `Solver` of each copy as `SolveAll()` does and then the `Solver` of all

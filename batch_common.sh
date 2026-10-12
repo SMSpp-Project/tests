@@ -122,6 +122,31 @@ fw_run() {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the runs of every combination of some parameters
+#
+#   sweep < name > "< values >" [ < name > "< values >" ... ] -- < command >
+#
+# Runs the command once for each combination of the values, the variable of
+# each name set to its value, the first name varying the slowest: a battery
+# that sweeps the parameters of a generated instance writes the list of the
+# values of each and the command that uses them, rather than the nest of
+# loops.
+
+sweep() {
+    if [ "$1" = "--" ]; then
+        shift
+        "$@"
+        return
+    fi
+    local __sweep_name=$1 __sweep_values=$2 __sweep_value
+    shift 2
+    for __sweep_value in ${__sweep_values}; do
+        printf -v "${__sweep_name}" '%s' "${__sweep_value}"
+        sweep "$@"
+    done
+}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # A run that exits with 77 had nothing to do rather than failing: the tester
 # answers that when the configuration it is given names only Solver that this

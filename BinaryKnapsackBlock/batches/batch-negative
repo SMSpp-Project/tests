@@ -23,6 +23,7 @@ cd "$here/.." || exit 1
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$here/../../batch_common.sh"
+source "$here/bkb_battery.sh"
 
 DEFAULT_EXE=./BinaryKnapsackBlock_test
 DEFAULT_PAR=BSPar.txt
@@ -43,22 +44,7 @@ nI=1
 
 # sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for N in 10 30; do
-
-  for delta in 0.005 0.1 1; do
-
-    for nW in 0.5 0.7; do
-
-      for nP in 0.5 0.7; do
-
-        for nM in 0 0.2; do
-
-          run_test "$exe" -S "$par" -E "$EPS" -e "$seed" -k "$wchg" -N "$N" -n "$n_repeat" -d "$delta" -W "$nW" -P "$nP" -i "$nI" -M "$nM"
-
-        done
-      done
-    done
-  done
-done
+sweep N "10 30" delta "0.005 0.1 1" nW "0.5 0.7" nP "0.5 0.7" \
+      nM "0 0.2" -- bkb_run
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
