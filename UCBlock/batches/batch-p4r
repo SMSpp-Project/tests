@@ -83,6 +83,21 @@ declare -A VIOL
 
 VIOL[L_H_C_35.nc4]=0.5
 
+# the BlockSolverConfig of each instance - - - - - - - - - - - - - - - - - -
+# The pHydro instances have the master problems of the bundles solved by the
+# barrier [see BSPar-DPb.txt and MPBCfg-barrier.txt]: with the dual simplex
+# the Lagrangian Dual does not converge in the time it is given, and on
+# pHydro_18 the master fails numerically. A BlockSolverConfig given on the
+# command line is used for all the instances.
+
+par_of() {
+    if [ "$par" = "$DEFAULT_PAR" ] && [[ "$1" == */pHydro/* ]]; then
+        echo BSPar-DPb.txt
+    else
+        echo "$par"
+    fi
+}
+
 # each plan4res solve takes minutes under LagrangianDualSolver + BundleSolver
 # with a MILP reference, so the full set (54 instances) runs for hours and blows
 # the 3h GitLab.com shared-runner cap. In CI run a small smoke sample covering
@@ -96,7 +111,8 @@ if [ -n "$CI" ]; then
                pHydro/20090907_pHydro_4_none.nc4"
     for rel in $instances; do
         eps=${EPS[$(basename "$rel")]}
-        run_test "$exe" "${DATADIR}/${rel}" -S "$par" -R "$REL" \
+        what=${DATADIR}/${rel}
+        run_test "$exe" "$what" -S "$(par_of "$what")" -R "$REL" \
                  -E "${eps:-$EPS4}" -B InnerBCfg.txt
     done
 else
@@ -107,8 +123,8 @@ else
         eps=${EPS[$(basename "$what")]}
         viol=${VIOL[$(basename "$what")]}
 
-        run_test "$exe" "$what" -S "$par" -R "$REL" -E "${eps:-$EPS4}" \
-                 ${viol:+-V "$viol"} -B InnerBCfg.txt
+        run_test "$exe" "$what" -S "$(par_of "$what")" -R "$REL" \
+                 -E "${eps:-$EPS4}" ${viol:+-V "$viol"} -B InnerBCfg.txt
 
     done
 fi

@@ -1,0 +1,74 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - MPBCfg-barrier.txt  - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the :MILPSolver of the MasterProblemBlock of the
+# BundleSolver on the pHydro instances of plan4res [see BSPar-DPb.txt]: that
+# of MPBCfg.txt, with the barrier instead of the dual simplex. On these
+# masters, with a cascade of reservoirs, the dual simplex is slow and it
+# fails numerically (GUROBI's "Numeric error" on pHydro_18), so that the
+# Lagrangian Dual does not converge in the 300 seconds of the battery on
+# four of the five; with the barrier it converges on all of them in less
+# than half of that, the residual of its reconstruction is below 1e-11, and
+# the heuristic closes its gap on three of them. Elsewhere MPBCfg.txt keeps
+# the dual simplex [see the comment to Method in MILPCfg-MPB.txt].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of Solver
+
+1 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# that of MILPCfg-MPB.txt, with the barrier
+
+*MILPCfg-MPB.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+Method        2   # 0 = primal, 1 = dual simplex, 2 = barrier
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END MPBCfg-barrier.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

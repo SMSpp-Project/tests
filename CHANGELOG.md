@@ -136,6 +136,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Lagrangian dual in one run (`InnerBVar-LD.txt`), the copies being compared
   with each other
 
+- `UCBlock/batches/batch-p4r` solves the pHydro instances with
+  `BSPar-DPb.txt`, whose `LagrangianDualSolver`, `PrimalProximalHeur` and
+  `LagrangianDualRelaxationSolver` have the master problem of the bundle
+  solved by GUROBI's barrier (`MPBCfg-barrier.txt`, from the `ComputeConfig`
+  of the master now in `MILPCfg-MPB.txt`, which `MPBCfg.txt` includes): with
+  the dual simplex the Lagrangian Dual stopped at the 300 seconds of the
+  battery on four of the five, and on `pHydro_18` its master failed
+  numerically, while with the barrier it converges on all of them in less
+  than half of that time; a `BlockSolverConfig` given on the command line is
+  still used for every instance
+
 - `UCBlock/batches/batch-ec` solves each instance with the three
   formulations of the network (`InnerBVar-DCN.txt`, `InnerBVar-DCN-CI.txt`
   in CI) and compares them with each other
