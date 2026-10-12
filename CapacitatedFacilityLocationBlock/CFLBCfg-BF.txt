@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - CFLBCfg-BF.txt  - - - - - - - - - - - - - - - -
 #
 # The BlockConfig of the copy of a CapacitatedFacilityLocationBlock in
-# CFLBVar-ben.txt: the Benders friendly formulation with feasibility cuts
+# CFLBForm-ben.txt: the Benders friendly formulation with feasibility cuts
 # (static_variables = 3), with the Configuration of its hidden
 # BendersBFunction and of the MCFBlock inside it in the extra field.
 #

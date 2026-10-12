@@ -142,9 +142,9 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
 
  // the BlockSolverConfig (-S) is mandatory, the BlockConfig (-B, the inner
  // formulation) or the list of them (-F) is optional
- auto bv = get_BlockConfig_variants( true );
+ auto forms = get_formulations( true );
 
- // read the Block once per variant, and attach the Solver to it- - - - - -
+ // read the Block once per formulation, and attach the Solver to it- - - - - -
 
  std::vector< Block * > blocks;
  std::vector< Configuration * > bscs;
@@ -154,11 +154,11 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
    delete bscs[ k ];
    delete blocks[ k ];
    }
-  delete bv.owner;
+  delete forms.owner;
   exit( 1 );
   };
 
- for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
   auto block = Block::deserialize( filename );
   if( ! block ) {
    std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
@@ -177,8 +177,8 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
   // whose ThermalUnitBlock (and DCNetworkBlock) sit arbitrarily deep, and
   // b_config_Block reaches them all. The inner Solvers are NOT attached
   // here: they descend from the BlockSolverConfig below
-  if( bv.configs[ k ] )
-   b_config_Block( block , bv.configs[ k ] , bv.file );
+  if( forms.configs[ k ] )
+   b_config_Block( block , forms.configs[ k ] , forms.file );
 
   // the Block the Solver are attached to, if not the one read
   if( t.transform ) {
@@ -192,10 +192,10 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
 
   // BSC may be a plain BlockSolverConfig or a meta-config; s_config_Block()
   // dispatches on the runtime type and clears the config(s) for cleanup
-  auto bsc = solver_config_of( bv , k );
+  auto bsc = solver_config_of( forms , k );
   blocks.push_back( block );
   bscs.push_back( bsc );
-  relax.push_back( attach_variant_Solvers( block , bsc , bv , k ) );
+  relax.push_back( attach_formulation_Solvers( block , bsc , forms , k ) );
 
   if( block->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!"
@@ -209,7 +209,7 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
   #endif
   }
 
- delete bv.owner;
+ delete forms.owner;
 
  // solve - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -238,8 +238,8 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
     any_relax |= b;
   if( any_relax || ( ! solver_relaxation.empty() ) )
    classify = read_bounds;
-  AllPassed = SolveVariants( blocks , bv.names , classify , RefObjective ,
-                             RefTolerance , {} , relax );
+  AllPassed = SolveFormulations( blocks , forms.names , classify ,
+                                 RefObjective , RefTolerance , {} , relax );
   }
 
  if( t.check )

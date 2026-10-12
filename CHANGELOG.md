@@ -99,6 +99,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- what the testers compare with -F is called a formulation everywhere, and
+  no longer a variant: the lists are `*Form*.txt` (`TUBForm*.txt`,
+  `NUBForm*.txt`, `InnerBForm-DCN*.txt`, `InnerBForm-LD.txt`,
+  `CFLBForm*.txt`, `SATBForm.txt`, `DCRForm.txt`, `NDForm.txt`,
+  `MetaForm.txt`, formerly `*Var*.txt`), the long option is
+  `--formulations`, the functions of `common_utils` are `read_formulations()`,
+  `get_formulations()`, `SolveFormulations()` and
+  `attach_formulation_Solvers()`, and the output says `formulation Fk:` and
+  `formulations against each other:`
+
 - the five options of the rounds of random changes (-e seed, -k what to
   change, -n rounds, -m changes, -q probability) are written once in
   `common_utils` [see `RoundOptions` and `add_round_options()`] and used

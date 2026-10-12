@@ -622,25 +622,25 @@ const char * qcost_env = nullptr;  // the TUDPS_QCOST environment variable
 
 /*--------------------------------------------------------------------------*/
 
-// one copy of the unit per variant of its BlockConfig: each copy is read
+// one copy of the unit per formulation of its BlockConfig: each copy is read
 // from the same file, given its own BlockConfig and the same
 // BlockSolverConfig, and receives the same changes, so that the formulations
 // are compared with each other as the Solver of each of them are
 
-struct Variant {
+struct Formulation {
  ThermalUnitBlock * tub;   // the copy of the unit
  Configuration * bsc;      // its BlockSolverConfig, kept for the cleanup
  int wf;                   // its formulation, read back from its BlockConfig
  std::string name;         // what it is called in the report
  };
 
-std::vector< Variant > variants;
+std::vector< Formulation > formulations;
 
 /*--------------------------------------------------------------------------*/
 
 // makes @p v the unit that the functions above work on
 
-static void use_variant( const Variant & v )
+static void use_formulation( const Formulation & v )
 {
  TUBlock = v.tub;
  wf = v.wf;
@@ -1107,7 +1107,7 @@ static bool CrossCheck( const std::vector< Reading > & rd )
  for( std::size_t k = 0 ; k < rd.size() ; ++k ) {
   times.push_back( rd[ k ].time );
   tokens.push_back( token( rd[ k ].hs , rd[ k ].rtrn , rd[ k ].fo ) );
-  names.push_back( variants[ k ].name );
+  names.push_back( formulations[ k ].name );
   }
  print_instance_line( times , tokens ,
 		      std::numeric_limits< double >::quiet_NaN() , verdict ,
@@ -1124,13 +1124,13 @@ static bool CrossCheck( const std::vector< Reading > & rd )
 static bool SolveCopies( void )
 {
  bool ok = true;
- std::vector< Reading > rd( variants.size() );
- for( std::size_t k = 0 ; k < variants.size() ; ++k ) {
-  use_variant( variants[ k ] );
+ std::vector< Reading > rd( formulations.size() );
+ for( std::size_t k = 0 ; k < formulations.size() ; ++k ) {
+  use_formulation( formulations[ k ] );
   // with one copy the report stays the one of the two Solver
   std::vector< std::string > names;
-  if( variants.size() > 1 )
-   names = { variants[ k ].name + " S0" , variants[ k ].name + " S1" };
+  if( formulations.size() > 1 )
+   names = { formulations[ k ].name + " S0" , formulations[ k ].name + " S1" };
   if( ! SolveBoth( names , rd[ k ] ) )
    ok = false;
   }
@@ -1181,22 +1181,22 @@ int main( int argc , char **argv )
  // the BlockSolverConfig (-S) and the BlockConfig (-B), which gives the
  // formulation of the unit (e.g., TUBCfg-T.txt), or the list of them (-F),
  // must be provided explicitly: the test never falls back to a hardcoded
- // default Configuration [see get_BlockConfig_variants()]
+ // default Configuration [see get_formulations()]
 
  rg.seed( seed );  // seed the pseudo-random number generator
 
  qcost_env = std::getenv( "TUDPS_QCOST" );
 
- // read the Block, once per variant - - - - - - - - - - - - - - - - - - - -
+ // read the Block, once per formulation - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // the formulation of each copy comes from its BlockConfig, and it is read
  // back, as the changes below depend on it: 0 3bin, 1 T, 2 pt, 3 DP, 4 SU,
  // 5 SD, 6 SUSD, +8 also Perspective Cuts
 
- auto bv = get_BlockConfig_variants();
+ auto forms = get_formulations();
 
- for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
-  auto tub = read_unit( bv.configs[ k ] , bv.file );
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
+  auto tub = read_unit( forms.configs[ k ] , forms.file );
 
   int f = 1;  // the T formulation, the one of a unit given no BlockConfig
   if( auto bc = tub->get_BlockConfig() )
@@ -1204,14 +1204,14 @@ int main( int argc , char **argv )
 					bc->f_static_variables_Configuration ) )
     f = sc->f_value;
 
-  variants.push_back( { tub , nullptr , f ,
+  formulations.push_back( { tub , nullptr , f ,
 			std::to_string( k ) + ":" + formulation_name( f ) } );
   }
 
  // save some original data of the ThermalUnitBlock - - - - - - - - - - - - -
  // they are the same in every copy
 
- use_variant( variants.front() );
+ use_formulation( formulations.front() );
  time_horizon = TUBlock->get_time_horizon();
  a.resize( time_horizon );
  b.resize( time_horizon );
@@ -1236,8 +1236,8 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- for( auto & v : variants ) {
-  v.bsc = solver_config_of( bv , &v - variants.data() );
+ for( auto & v : formulations ) {
+  v.bsc = solver_config_of( forms , &v - formulations.data() );
   s_config_Block( v.tub , v.bsc , sconf_file );
 
   if( v.tub->get_registered_solvers().size() < 2 ) {
@@ -1247,7 +1247,7 @@ int main( int argc , char **argv )
    }
   }
 
- delete bv.owner;
+ delete forms.owner;
 
  // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1281,8 +1281,8 @@ int main( int argc , char **argv )
                                   Index( dis( rg ) * n_change ) ) ) {
     LOG1( "changed " << tochange << " fixed costs" );
     const auto chg = draw_change( tochange , fixed_cost );
-    for( const auto & v : variants ) {
-     use_variant( v );
+    for( const auto & v : formulations ) {
+     use_formulation( v );
      change_fixed_costs( chg );
      }
     }
@@ -1293,8 +1293,8 @@ int main( int argc , char **argv )
                                   Index( dis( rg ) * n_change ) ) ) {
     LOG1( "changed " << tochange << " quadratic coeffs" );
     const auto chg = draw_change( tochange , quadratic_cost );
-    for( const auto & v : variants ) {
-     use_variant( v );
+    for( const auto & v : formulations ) {
+     use_formulation( v );
      change_quadratic_costs( chg );
      }
     }
@@ -1306,10 +1306,10 @@ int main( int argc , char **argv )
    if( Index tochange = std::min( time_horizon ,
                                   Index( dis( rg ) * n_change ) ) ) {
     LOG1( "changed " << tochange << " linear coeffs" );
-    use_variant( variants.front() );
+    use_formulation( formulations.front() );
     const auto chg = draw_change( tochange , linear_cost );
-    for( const auto & v : variants ) {
-     use_variant( v );
+    for( const auto & v : formulations ) {
+     use_formulation( v );
      change_linear_costs( chg );
      }
     }
@@ -1332,9 +1332,9 @@ int main( int argc , char **argv )
 
  // with several copies, which formulations have been compared, and how many
  // times
- if( AllPassed && ( variants.size() > 1 ) ) {
+ if( AllPassed && ( formulations.size() > 1 ) ) {
   std::cout << "formulations";
-  for( const auto & v : variants )
+  for( const auto & v : formulations )
    std::cout << " " << v.name;
   std::cout << " agree in " << n_solved << " solves" << std::endl;
   }
@@ -1347,7 +1347,7 @@ int main( int argc , char **argv )
  // destroy objects and vectors - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- for( auto & v : variants ) {
+ for( auto & v : formulations ) {
   // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup
   // Solver, then delete it and the copy of the unit
   s_config_Block( v.tub , v.bsc );

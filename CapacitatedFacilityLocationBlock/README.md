@@ -15,7 +15,7 @@ file formats, reads the instance in a `CapacitatedFacilityLocationBlock`. It
 then creates one or more other `Block` via the R3Block mechanism; each can be
 either another `CapacitatedFacilityLocationBlock` or a `MCFBlock`
 representing the continuous relaxation of CFL (as a Min-Cost Flow problem).
-What they are is the list of variants given with `-F`, a
+What they are is the list of formulations given with `-F`, a
 `SimpleConfiguration< std::vector< Configuration * > >`: its first element is
 the pair `BlockConfig` + `BlockSolverConfig` of the original `Block`, each of
 the others the vector of three `Configuration` of an R3Block, the one it is
@@ -70,11 +70,11 @@ four significantly different implementations for the R3Block and its
 
 This shows how these completely different arrangements can be obtained with
 exactly the same executable by just changing the configuration files. Each
-arrangement is one list of variants, all in this directory: `CFLBVar.txt`
-(natural-formulation LP vs flow relaxation), `CFLBVar-mcf.txt` (the same with
-the LEMON solvers first), `CFLBVar-cuts.txt` (LP + user cuts),
-`CFLBVar-ld.txt` and `CFLBVar-ldvscuts.txt` (Lagrangian dual of the knapsack
-relaxation) and `CFLBVar-ben.txt` (the Benders formulation), which name the
+arrangement is one list of formulations, all in this directory: `CFLBForm.txt`
+(natural-formulation LP vs flow relaxation), `CFLBForm-mcf.txt` (the same with
+the LEMON solvers first), `CFLBForm-cuts.txt` (LP + user cuts),
+`CFLBForm-ld.txt` and `CFLBForm-ldvscuts.txt` (Lagrangian dual of the knapsack
+relaxation) and `CFLBForm-ben.txt` (the Benders formulation), which name the
 `CFLBCfg-*.txt` and `MCFBCfg.txt` `BlockConfig`, the `CFLBSCfg-*.txt` and
 `MCFBSCfg*.txt` `BlockSolverConfig` and the `R3BCfg-copy.txt` and
 `R3BCfg-MCF.txt` R3Block `Configuration`. All the batch scripts live in
@@ -103,7 +103,7 @@ are modified at random. Note that:
 
 The usage of the executable is the following:
 
-      ./CFL_test name -F variants [-t typ] [-s niter] [-e seed] [-k wchg]
+      ./CFL_test name -F formulations [-t typ] [-s niter] [-e seed] [-k wchg]
                  [-n #rounds] [-m #chng] [-q %chng] [-T cmptol]
       typ = [C], F, L, ignored if name ends in .nc4
       niter: how many Slope Scaling iterations [0]

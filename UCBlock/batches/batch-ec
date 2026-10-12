@@ -22,8 +22,9 @@ EPS="${EPS:-,,,inf}"
 parse_batch_args "$@"
 
 # the formulations of the network, compared with each other on every
-# instance [see InnerBVar-DCN.txt]; in CI only two of them
-if [ -n "$CI" ]; then vars=InnerBVar-DCN-CI.txt; else vars=InnerBVar-DCN.txt; fi
+# instance [see InnerBForm-DCN.txt]; in CI only two of them
+forms=InnerBForm-DCN.txt
+[ -n "$CI" ] && forms=InnerBForm-DCN-CI.txt
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = | EnergyCommunity.jl objective value |
@@ -77,7 +78,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/ucblock/EC_CO_*.nc4 \
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" -F "$vars" \
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" -F "$forms" \
              -r "$ref"
 done
 

@@ -13,7 +13,7 @@
 source "$(dirname "$0")/cfl_battery.sh" "$@"
 
 # the original Block and its R3Block, each with its configuration
-vars=CFLBVar-ben.txt
+forms=CFLBForm-ben.txt
 
 # wchg = 287 = change facility/transportation costs, capacities, demands,
 # close facilities (bits 0..4) and the abstract representation (+256).

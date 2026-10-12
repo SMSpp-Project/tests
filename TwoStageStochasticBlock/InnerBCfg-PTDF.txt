@@ -3,7 +3,7 @@
 #
 # The "meta"-BlockConfig of InnerBCfg.txt with the PTDF formulation of the
 # DCNetworkBlock [see DCNBCfg-PTDF.txt], for the batteries that solve every
-# instance with each formulation of the network [see InnerBVar-DCN.txt]. It
+# instance with each formulation of the network [see InnerBForm-DCN.txt]. It
 # is InnerBCfg.txt but for the line of the DCNetworkBlock.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

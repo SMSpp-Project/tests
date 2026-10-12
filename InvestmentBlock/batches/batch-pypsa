@@ -25,9 +25,10 @@ bpar=$par
 spar=$slv
 
 # the formulations of the network, compared with each other on every
-# instance with more than one node [see InnerBVar-DCN.txt]; in CI only two
+# instance with more than one node [see InnerBForm-DCN.txt]; in CI only two
 # of them
-if [ -n "$CI" ]; then vars=InnerBVar-DCN-CI.txt; else vars=InnerBVar-DCN.txt; fi
+forms=InnerBForm-DCN.txt
+[ -n "$CI" ] && forms=InnerBForm-DCN-CI.txt
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = PyPsa objective value
@@ -88,9 +89,9 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/smspp_*.nc; do
     # formulations of the network on an instance with one; the BlockConfig
     # given alone otherwise
     if [ -n "${ld_bcfg}" ] && [ -n "${LD_INNER[$base]}" ]; then
-      run_test "$exe" -F InnerBVar-LD.txt -S "$spar" -o "$ref" "$what"
+      run_test "$exe" -F InnerBForm-LD.txt -S "$spar" -o "$ref" "$what"
     elif [ "$bpar" = InnerBCfg.txt ] && [[ "$base" != *_1n_* ]]; then
-      run_test "$exe" -F "$vars" -S "$spar" -o "$ref" "$what"
+      run_test "$exe" -F "$forms" -S "$spar" -o "$ref" "$what"
     else
       run_test "$exe" -B "$bpar" -S "$spar" -o "$ref" "$what"
     fi

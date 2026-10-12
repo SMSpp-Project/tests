@@ -1,12 +1,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - NDVar.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - NDForm.txt  - - - - - - - - - - - - - - - - -
 #
-# The variants of a MMCFNetworkDesignBlock that batch-nd compares: the
+# The formulations of a MMCFNetworkDesignBlock that batch-nd compares: the
 # monolithic formulation of BPar-ND.txt, solved by the Solver of
 # BSPar-ND.txt, and the Benders one of BPar-ND-Ben.txt, solved by those of
 # BSPar-ND-Ben.txt, each a pair of its BlockConfig and its BlockSolverConfig.
-# The instance is read once per variant, and besides their optimal values the
-# Benders cuts are checked against the cost of the flow at random designs
+# The instance is read once per formulation, and besides their optimal values
+# the Benders cuts are checked against the cost of the flow at random designs
 # [see MMCFND_test].
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,21 +14,21 @@
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-2  # number of variants of the BlockConfig
+2  # number of formulations
 
-# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# 1st variant: the monolithic formulation
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# 1st formulation: the monolithic formulation
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
 *BPar-ND.txt            # its BlockConfig
 *BSPar-ND.txt           # its BlockSolverConfig
 
-# 2nd variant: the Benders formulation
+# 2nd formulation: the Benders formulation
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
 *BPar-ND-Ben.txt        # its BlockConfig
 *BSPar-ND-Ben.txt       # its BlockSolverConfig
 
-# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END NDVar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END NDForm.txt  - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

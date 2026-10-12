@@ -23,8 +23,9 @@ DEFAULT_SLV=0
 parse_batch_args "$@"
 
 # the formulations of the network of the inner Block, compared with each
-# other on every instance [see InnerBVar-DCN.txt]; in CI only two of them
-if [ -n "$CI" ]; then vars=InnerBVar-DCN-CI.txt; else vars=InnerBVar-DCN.txt; fi
+# other on every instance [see InnerBForm-DCN.txt]; in CI only two of them
+forms=InnerBForm-DCN.txt
+[ -n "$CI" ] && forms=InnerBForm-DCN-CI.txt
 
 # reference objective values dictionary (keyed by the BAKED filename, since the
 # shared-tree extensive form coincides with it) - - - - - - - - - - - - - - -
@@ -67,7 +68,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/mssb/MSSB_EC_CO_*_2S_tree.nc4 \
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -F "$vars" -w "$slv" -r "$ref"
+    run_test "$exe" "$what" -S "$par" -F "$forms" -w "$slv" -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

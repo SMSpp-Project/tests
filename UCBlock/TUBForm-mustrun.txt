@@ -1,0 +1,29 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - TUBForm-mustrun.txt - - - - - - - - - - - - - - -
+#
+# The formulations of the BlockConfig of a ThermalUnitBlock that
+# batch-mustrun compares on a unit that is on at every instant: the 3bin, T,
+# pt and DP formulations, and T with Perspective Cuts. The unit is read once
+# per formulation, each copy is solved by the same BlockSolverConfig and the
+# copies are compared with each other, being the same unit [see -F of
+# TUDPS_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+5  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*TUBCfg-3bin.txt        # 1st formulation: 3bin
+*TUBCfg-T.txt           # 2nd formulation: T
+*TUBCfg-pt.txt          # 3rd formulation: pt
+*TUBCfg-DP.txt          # 4th formulation: DP
+*TUBCfg-T-PC.txt        # 5th formulation: T-PC
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END TUBForm-mustrun.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

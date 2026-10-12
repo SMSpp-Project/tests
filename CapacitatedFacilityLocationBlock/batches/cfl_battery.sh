@@ -3,7 +3,7 @@
 # cfl_battery.sh: what the batteries of CFL_test have in common, sourced by
 # each of them with its arguments, < exe file > < log file >; the battery
 # then sets
-#   vars     the list of its variants [see CFLBVar*.txt]
+#   forms    the list of its formulations [see CFLBForm*.txt]
 #   wchg     what is changed at each round [see CFL_test --help]
 #   maxseed  the last seed of the changes, from 0
 # and calls the functions below on its instances. Every run is CFL_test with
@@ -29,7 +29,7 @@ cfl_run() {
   local what=$1 type=$2 seed
   shift 2
   for (( seed = 0 ; seed <= maxseed ; seed++ )); do
-    run_test "$CFL_test" "$what" -F "$vars" -t "$type" -s "$niter" \
+    run_test "$CFL_test" "$what" -F "$forms" -t "$type" -s "$niter" \
              -e "$seed" -k "$wchg" -n "$rounds" "$@"
   done
 }

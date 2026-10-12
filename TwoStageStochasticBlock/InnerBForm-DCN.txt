@@ -1,11 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - InnerBVar-DCN.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - InnerBForm-DCN.txt  - - - - - - - - - - - - - - -
 #
-# The variants of the "meta"-BlockConfig of the inner Block that the
+# The formulations of the "meta"-BlockConfig of the inner Block that the
 # batteries of this suite compare on the instances with a network: the
 # formulations of the DCNetworkBlock, i.e., PTDF, CYCLE and the KIRCHHOFF
 # one of InnerBCfg.txt, all the rest being that of InnerBCfg.txt. The
-# instance is read once per variant, each copy is solved by the same
+# instance is read once per formulation, each copy is solved by the same
 # BlockSolverConfig and the Solver of all the copies are compared with each
 # other, being the same problem [see -F of the tester].
 #
@@ -14,15 +14,15 @@
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-3  # number of variants of the BlockConfig
+3  # number of formulations
 
-# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*InnerBCfg-PTDF.txt     # 1st variant: PTDF
-*InnerBCfg-CYCLE.txt    # 2nd variant: CYCLE
-*InnerBCfg.txt          # 3rd variant: KIRCHHOFF
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*InnerBCfg-PTDF.txt     # 1st formulation: PTDF
+*InnerBCfg-CYCLE.txt    # 2nd formulation: CYCLE
+*InnerBCfg.txt          # 3rd formulation: KIRCHHOFF
 
-# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END InnerBVar-DCN.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBForm-DCN.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

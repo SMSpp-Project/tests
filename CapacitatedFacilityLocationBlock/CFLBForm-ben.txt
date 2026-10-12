@@ -1,12 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - CFLBVar-cuts.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBForm-ben.txt  - - - - - - - - - - - - - - -
 #
-# The variants that batch-cuts compares: the natural formulation with the
-# strong forcing constraints, whose continuous relaxation is solved by a
-# :MILPSolver, against a copy in the natural formulation whose relaxation
-# separates them.
+# The formulations that batch-ben compares: the natural formulation, whose
+# continuous relaxation is solved by a :MILPSolver, against a copy in the
+# Benders formulation whose relaxation separates the Benders cuts.
 #
-# The first variant is the original Block, a pair of its BlockConfig and
+# The first formulation is the original Block, a pair of its BlockConfig and
 # its BlockSolverConfig; each of the others is an R3Block of it, a vector
 # of the Configuration that makes it [see get_R3_Block()], its BlockConfig
 # and its BlockSolverConfig, which an UpdateSolver keeps up to date with the
@@ -18,23 +17,23 @@
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-2  # number of variants: the Block, then its R3Block
+2  # number of formulations: the Block, then its R3Block
 
-# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 # the original Block
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
-*CFLBCfg-NF-SFsep.txt   # its BlockConfig
-*CFLBSCfg-cuts.txt      # its BlockSolverConfig
+*CFLBCfg-NF.txt         # its BlockConfig
+*CFLBSCfg-ben.txt       # its BlockSolverConfig
 
 # the 1st R3Block
 SimpleConfiguration<std::vector<Configuration*>>
 3  # the Configuration that makes it, its BlockConfig, its BlockSolverConfig
 *R3BCfg-copy.txt        # how it is made
-*CFLBCfg-NF-noSF.txt    # its BlockConfig
-*CFLBSCfg-cuts-R3.txt   # its BlockSolverConfig
+*CFLBCfg-BF.txt         # its BlockConfig
+*BenBSCfg.txt           # its BlockSolverConfig
 
-# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END CFLBVar-cuts.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBForm-ben.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

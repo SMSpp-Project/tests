@@ -4,7 +4,7 @@
 # The BlockSolverConfig of a CapacitatedFacilityLocationBlock in the Benders
 # friendly formulation: a GRBMILPSolver that solves its continuous relaxation
 # with the separation loop of the Benders cuts (intRelaxIntVars 2), for
-# CFL_BDS_test and the R3Block of CFLBVar-ben.txt.
+# CFL_BDS_test and the R3Block of CFLBForm-ben.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

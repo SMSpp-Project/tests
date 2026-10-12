@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - CFLBCfg-NF-noSF.txt - - - - - - - - - - - - - -
 #
 # The BlockConfig of the copy of a CapacitatedFacilityLocationBlock in
-# CFLBVar-cuts.txt: the natural formulation with the demand and the capacity
+# CFLBForm-cuts.txt: the natural formulation with the demand and the capacity
 # rows alone (static_constraints = 3). The BlockConfig being differential,
 # this takes away the group of the strong forcing constraints that the copy
 # would otherwise inherit from the original Block [see CFLBCfg-NF-SFsep.txt].

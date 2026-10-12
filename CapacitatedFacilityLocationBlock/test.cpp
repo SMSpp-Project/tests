@@ -6,7 +6,7 @@
  *
  * A CapacitatedFacilityLocationBlock instance is loaded from a text file,
  * then one or more R3Block of it (possibly, but not necessarily, copies) are
- * created. Which they are is the list of -F [see read_BlockConfig_variants()]:
+ * created. Which they are is the list of -F [see read_formulations()]:
  * its first element is the pair BlockConfig + BlockSolverConfig of the
  * original Block, each of the others the vector of the Configuration that
  * makes an R3Block, its BlockConfig and its BlockSolverConfig. An
@@ -172,8 +172,8 @@ static constexpr FunctionValue INF = Inf< FunctionValue >();
 CapacitatedFacilityLocationBlock * B1;  // the original Block
 Block * B2;                             // the R3Block being solved
 
-// the R3Block of the original Block, one per variant after the first in the
-// list of -F, each with the Configuration it is made with, the
+// the R3Block of the original Block, one per formulation after the first in
+// the list of -F, each with the Configuration it is made with, the
 // BlockSolverConfig of its Solver and the UpdateSolver that forwards it the
 // changes of the original Block
 std::vector< Block * > R3B;
@@ -604,7 +604,7 @@ static bool SolveBoth( void )
 /*--------------------------------------------------------------------------*/
 
 // test-specific command-line knobs, set by process_specific_arg(); the
-// variants (-F) are those of common_utils
+// formulations (-F) are those of common_utils
 
 static bool process_specific_arg( int opt )
 {
@@ -653,31 +653,31 @@ int main( int argc , char **argv )
          "  -T, --cmptol <x>                relative tolerance of the\n"
          "                                  comparison of the bounds [1e-5]\n"
          "\n"
-         "The variants (-F) are the original Block, a pair of its BlockConfig\n"
-         "and BlockSolverConfig, then each R3Block of it, a vector of the\n"
-         "Configuration it is made with, its BlockConfig and its\n"
-         "BlockSolverConfig.\n";
+         "The formulations (-F) are the original Block, a pair of its\n"
+         "BlockConfig and BlockSolverConfig, then each R3Block of it, a\n"
+         "vector of the Configuration it is made with, its BlockConfig and\n"
+         "its BlockSolverConfig.\n";
 
  process_args( argc , argv , process_specific_arg );
 
- if( vconf_file.empty() ) {
-  cerr << "Error: the variants must be given (did you forget -F?)" << endl;
+ if( fconf_file.empty() ) {
+  cerr << "Error: the formulations must be given (did you forget -F?)" << endl;
   exit( 1 );
   }
 
  rg.seed( seed );  // seed the pseudo-random number generator
 
- // the variants: the original Block, then its R3Block - - - - - - - - - - -
+ // the formulations: the original Block, then its R3Block - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // the list is kept until the end, as each R3BlockConfiguration is needed by
  // the UpdateSolver and to map the solutions back
 
- auto vl = read_BlockConfig_variants( vconf_file );
+ auto vl = read_formulations( fconf_file );
  auto & V = vl->f_value;
  auto b1p = dynamic_cast< SimpleConfiguration< std::pair< Configuration * ,
                                        Configuration * > > * >( V.front() );
  if( ( V.size() < 2 ) || ( ! b1p ) || ( ! b1p->f_value.second ) ) {
-  cerr << "Error: " << vconf_file << " must list the original Block, a pair "
+  cerr << "Error: " << fconf_file << " must list the original Block, a pair "
        << "BlockConfig + BlockSolverConfig, and at least one R3Block"
        << endl;
   exit( 1 );
@@ -689,7 +689,7 @@ int main( int argc , char **argv )
                                               > * >( V[ j ] );
   if( ( ! r ) || ( r->f_value.size() != 3 ) || ( ! r->f_value[ 1 ] ) ||
       ( ! r->f_value[ 2 ] ) ) {
-   cerr << "Error: variant " << j << " of " << vconf_file << " is not the "
+   cerr << "Error: formulation " << j << " of " << fconf_file << " is not the "
         << "vector of the Configuration of an R3Block, its BlockConfig and "
         << "its BlockSolverConfig" << endl;
    exit( 1 );
@@ -724,7 +724,7 @@ int main( int argc , char **argv )
   R3B.push_back( B1->get_R3_Block( r->f_value[ 0 ] ) );
   }
 
- b_config_Block( B1 , b1p->f_value.first , vconf_file );
+ b_config_Block( B1 , b1p->f_value.first , fconf_file );
 
  // ensure that B1 already has all its sub-Block ready when the Solver
  // is registered, for sub-Block "appearing" during the call to
@@ -734,7 +734,7 @@ int main( int argc , char **argv )
  B1->generate_abstract_variables();
 
  for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
-  b_config_Block( R3B[ j ] , r3v[ j ]->f_value[ 1 ] , vconf_file );
+  b_config_Block( R3B[ j ] , r3v[ j ]->f_value[ 1 ] , fconf_file );
 
   // see above fow why this is needed
   R3B[ j ]->generate_abstract_variables();
@@ -742,14 +742,14 @@ int main( int argc , char **argv )
 
  // attach the Solver to the Blocks - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // do this by applying a clone() of the BlockSolverConfig of each variant;
+ // do this by applying a clone() of the BlockSolverConfig of each formulation;
  // note that the BlockSolverConfig are clear()-ed and kept to do the cleanup
  // at the end
 
  auto as_bsc = []( Configuration * c ) {
   auto bsc = dynamic_cast< BlockSolverConfig * >( c->clone() );
   if( ! bsc ) {
-   cerr << "Error: " << vconf_file << " has a BlockSolverConfig that is not"
+   cerr << "Error: " << fconf_file << " has a BlockSolverConfig that is not"
         << endl;
    exit( 1 );
    }
@@ -759,7 +759,7 @@ int main( int argc , char **argv )
  BlockSolverConfig * bsc1 = as_bsc( b1p->f_value.second );
 
  // the Solver this build does not have are left out, with a warning
- s_config_Block( B1 , bsc1 , vconf_file );
+ s_config_Block( B1 , bsc1 , fconf_file );
 
  if( B1->get_registered_solvers().empty() ) {
   cout << endl << "no Solver registered to B1!" << endl;
@@ -774,7 +774,7 @@ int main( int argc , char **argv )
   R3BSC.push_back( as_bsc( r3v[ j ]->f_value[ 2 ] ) );
 
   // the Solver this build does not have are left out, with a warning
-  s_config_Block( R3B[ j ] , R3BSC.back() , vconf_file );
+  s_config_Block( R3B[ j ] , R3BSC.back() , fconf_file );
 
   if( R3B[ j ]->get_registered_solvers().empty() ) {
    cout << endl << "no Solver registered to R3Block " << j << "!" << endl;
@@ -1388,7 +1388,7 @@ int main( int argc , char **argv )
  delete( bsc1 );
  delete( B1 );
 
- // and the variants, the Configuration of the R3Block among them
+ // and the formulations, the Configuration of the R3Block among them
  delete( vl );
 
  // terminate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

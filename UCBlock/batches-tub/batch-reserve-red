@@ -29,20 +29,21 @@ pchg=0.6
 PER_FAMILY=5
 
 # the formulations of the unit are compared on each instance: it is read once
-# per BlockConfig TUBCfg-<form>.txt that TUBVar-PC.txt lists, i.e., every
+# per BlockConfig TUBCfg-<form>.txt that TUBForm-PC.txt lists, i.e., every
 # formulation (3bin/T/pt/DP/SU/SD/SUSD) with the perspective cuts, each copy is
 # solved by the same Solver, and the copies must agree with each other as the
 # two Solver of each copy do. On the large-horizon families (L_B_C_26 /
 # L_B_C_31, TimeHorizon 216) the interval-based formulations (pt/DP/SU/SD/SUSD)
-# are too expensive, so there the list is TUBVar-PC-3bin-T.txt, which keeps
+# are too expensive, so there the list is TUBForm-PC-3bin-T.txt, which keeps
 # only 3bin/T.
 for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
   case "$fam" in
-    L_B_C_26|L_B_C_31) vars=TUBVar-PC-3bin-T.txt ;;
-    *)                 vars=TUBVar-PC.txt ;;
+    L_B_C_26|L_B_C_31) forms=TUBForm-PC-3bin-T.txt ;;
+    *)                 forms=TUBForm-PC.txt ;;
   esac
   for f in $( ls "${DATADIR}"/${fam}_*.nc4 | head -n "${PER_FAMILY}" ); do
-    run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -F "$vars" -n "$rounds" -m "$nchg" -q "$pchg"
+    run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" \
+        -F "$forms" -n "$rounds" -m "$nchg" -q "$pchg"
   done
 done
 
@@ -53,7 +54,8 @@ for f in $( ls "${DATADIR}"/L_B_C_32_*.nc4 | head -n "${PER_FAMILY}" ) \
          $( ls "${DATADIR}"/L_H_C_34_*.nc4 | head -n "${PER_FAMILY}" ) \
          "${DATADIR}"/L_H_C_34_94.nc4; do
   TUDPS_RESCOST=-2 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -F TUBVar-PC-3bin-T.txt -n "$rounds" -m "$nchg" -q "$pchg"
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" \
+       -F TUBForm-PC-3bin-T.txt -n "$rounds" -m "$nchg" -q "$pchg"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

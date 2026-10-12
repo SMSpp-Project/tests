@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - InnerBVar-LD.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBForm-LD.txt - - - - - - - - - - - - - - -
 #
-# The variants of the "meta"-BlockConfig of an InvestmentBlock that the
+# The formulations of the "meta"-BlockConfig of an InvestmentBlock that the
 # batteries of this suite compare on the instances whose inner Block can
 # also be solved by the recursive Lagrangian dual: the inner Block solved as
 # a linear program (InnerBCfg.txt) and by that Lagrangian dual
@@ -12,14 +12,14 @@
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-2  # number of variants of the BlockConfig
+2  # number of formulations
 
-# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*InnerBCfg.txt          # 1st variant: linear program
-*InnerBCfg-LD.txt       # 2nd variant: Lagrangian dual
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*InnerBCfg.txt          # 1st formulation: linear program
+*InnerBCfg-LD.txt       # 2nd formulation: Lagrangian dual
 
-# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END InnerBVar-LD.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBForm-LD.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

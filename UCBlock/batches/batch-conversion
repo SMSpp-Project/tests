@@ -104,7 +104,7 @@ REL_OF[chpy_3n_3g_1clmod_build_on.nc4]=,r,r,r
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # each instance with each formulation of the network: PTDF, CYCLE and the
-# KIRCHHOFF of InnerBCfg.txt, the list of InnerBVar-DCN.txt; the instance is
+# KIRCHHOFF of InnerBCfg.txt, the list of InnerBForm-DCN.txt; the instance is
 # read once per formulation, and the Solver of all the copies are compared
 # with each other as well as with the reference
 for what in ../../UCBlock/data/nc4/multi-energy/me_*.nc4 \
@@ -126,7 +126,7 @@ for what in ../../UCBlock/data/nc4/multi-energy/me_*.nc4 \
     rel=${REL_OF[$base]}
 
     run_test "$exe" "$what" -S "$par" -R "${rel:-$REL}" -E "$EPS" \
-             -F InnerBVar-DCN.txt -r "$ref"
+             -F InnerBForm-DCN.txt -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

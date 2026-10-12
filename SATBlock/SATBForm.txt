@@ -1,10 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - SATBVar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - SATBForm.txt  - - - - - - - - - - - - - - - -
 #
-# The variants of the BlockConfig of a SATBlock that batch-structure
+# The formulations of the BlockConfig of a SATBlock that batch-structure
 # compares: the two structures given out of the groups of its variables,
 # the relaxation of BPar-R.txt and the decomposition of BPar-D.txt [see
-# SATBlock::set_structure()]. The instance is read once per variant, each
+# SATBlock::set_structure()]. The instance is read once per formulation, each
 # copy is solved by the same BlockSolverConfig and the Solver of all the
 # copies are compared with each other, being the same problem [see -F of
 # SATBlock_test].
@@ -14,14 +14,14 @@
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-2  # number of variants of the BlockConfig
+2  # number of formulations
 
-# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*BPar-R.txt             # 1st variant: the relaxation
-*BPar-D.txt             # 2nd variant: the decomposition
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*BPar-R.txt             # 1st formulation: the relaxation
+*BPar-D.txt             # 2nd formulation: the decomposition
 
-# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END SATBVar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END SATBForm.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -12,7 +12,7 @@
 source "$(dirname "$0")/cfl_battery.sh" "$@"
 
 # the original Block and its R3Block, each with its configuration
-vars=CFLBVar-cuts.txt
+forms=CFLBForm-cuts.txt
 
 # wchg = 831 = all data changes + abstract representation (+256) + the +512
 # ("set eps & no negative design") bit

@@ -1,11 +1,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - CFLBVar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBForm-ld.txt - - - - - - - - - - - - - - - -
 #
-# The variants that batch and batch-s compare: the natural formulation, whose
-# continuous relaxation is solved by a :MILPSolver, against its flow
-# relaxation, an MCFBlock solved by every :MCFSolver.
+# The formulations that batch-ld compares: the natural formulation with the
+# strong forcing constraints, solved by a :MILPSolver, against a copy in the
+# knapsack formulation whose Lagrangian dual is solved by a
+# LagrangianDualSolver.
 #
-# The first variant is the original Block, a pair of its BlockConfig and
+# The first formulation is the original Block, a pair of its BlockConfig and
 # its BlockSolverConfig; each of the others is an R3Block of it, a vector
 # of the Configuration that makes it [see get_R3_Block()], its BlockConfig
 # and its BlockSolverConfig, which an UpdateSolver keeps up to date with the
@@ -17,23 +18,23 @@
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-2  # number of variants: the Block, then its R3Block
+2  # number of formulations: the Block, then its R3Block
 
-# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 # the original Block
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
-*CFLBCfg-NF.txt         # its BlockConfig
-*CFLBSCfg-LP.txt        # its BlockSolverConfig
+*CFLBCfg-NF-SF.txt      # its BlockConfig
+*CFLBSCfg-ld.txt        # its BlockSolverConfig
 
 # the 1st R3Block
 SimpleConfiguration<std::vector<Configuration*>>
 3  # the Configuration that makes it, its BlockConfig, its BlockSolverConfig
-*R3BCfg-MCF.txt         # how it is made
-*MCFBCfg.txt            # its BlockConfig
-*MCFBSCfg.txt           # its BlockSolverConfig
+*R3BCfg-copy.txt        # how it is made
+*CFLBCfg-KF-LD.txt      # its BlockConfig
+*CFLBSCfg-ld-LDS.txt    # its BlockSolverConfig
 
-# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - END CFLBVar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBForm-ld.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

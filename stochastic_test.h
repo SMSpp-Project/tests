@@ -6,8 +6,8 @@
  * Block and MultiStageStochasticBlock, which differ only in the class of the
  * Block they read and in what they do to it or check of it on top.
  *
- * An instance is loaded from a netCDF file once per variant of its
- * BlockConfig [see get_BlockConfig_variants()], i.e., once if -B or no
+ * An instance is loaded from a netCDF file once per formulation of its
+ * BlockConfig [see get_formulations()], i.e., once if -B or no
  * BlockConfig is given; the (meta-)BlockConfig is applied by classname over
  * the whole tree, a BlockSolverConfig registers one or more Solver to the
  * copy and they are solved and compared: with one copy, between the two
@@ -15,8 +15,8 @@
  * of -r, every Solver being read by its lower bound unless -R declares the
  * Solver that solve a relaxation, in which case all of them are read as the
  * interval of their bounds [see SolveAll()]; with several copies, as
- * SolveVariants() does, the copies being the same problem, each Solver read
- * in the same way.
+ * SolveFormulations() does, the copies being the same problem, each Solver
+ * read in the same way.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n

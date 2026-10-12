@@ -1,0 +1,31 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - TUBForm-PC.txt  - - - - - - - - - - - - - - - -
+#
+# The formulations of the BlockConfig of a ThermalUnitBlock that a battery
+# compares: every formulation with Perspective Cuts, i.e., 3bin, T, pt, DP,
+# SU, SD and SUSD [see TUBCfg-<formulation>-PC.txt].
+# The unit is read once per formulation, each copy is solved by the same
+# BlockSolverConfig and the copies are compared with each other, being
+# the same unit [see -F of TUDPS_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+7  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*TUBCfg-3bin-PC.txt     # 1st formulation: 3bin-PC
+*TUBCfg-T-PC.txt        # 2nd formulation: T-PC
+*TUBCfg-pt-PC.txt       # 3rd formulation: pt-PC
+*TUBCfg-DP-PC.txt       # 4th formulation: DP-PC
+*TUBCfg-SU-PC.txt       # 5th formulation: SU-PC
+*TUBCfg-SD-PC.txt       # 6th formulation: SD-PC
+*TUBCfg-SUSD-PC.txt     # 7th formulation: SUSD-PC
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END TUBForm-PC.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

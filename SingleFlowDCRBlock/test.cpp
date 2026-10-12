@@ -337,17 +337,17 @@ int main( int argc , char ** argv )
   exit( 1 );
   }
 
- // the variants of the BlockConfig: the list of -F, the one of -B, or none
- // [see get_BlockConfig_variants()]
- auto bv = get_BlockConfig_variants( true );
+ // the formulations of the BlockConfig: the list of -F, the one of -B, or none
+ // [see get_formulations()]
+ auto forms = get_formulations( true );
 
- // the Block, once per variant: either the given netCDF file or a random
+ // the Block, once per formulation: either the given netCDF file or a random
  // instance, the same for all of them - - - - - - - - - - - - - - - - - - -
 
  std::vector< Block * > blocks;
  std::vector< Configuration * > sconfs;
  std::vector< std::vector< bool > > relax;
- for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
   SingleFlowDCRBlock * block;
   if( ! filename.empty() ) {
    block = dynamic_cast< SingleFlowDCRBlock * >(
@@ -367,23 +367,23 @@ int main( int argc , char ** argv )
 
   // configure it - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  if( bv.configs[ k ] )
-   b_config_Block( block , bv.configs[ k ] , bv.file );
+  if( forms.configs[ k ] )
+   b_config_Block( block , forms.configs[ k ] , forms.file );
 
-  auto sconf = solver_config_of( bv , k );
-  relax.push_back( attach_variant_Solvers( block , sconf , bv , k ) );
+  auto sconf = solver_config_of( forms , k );
+  relax.push_back( attach_formulation_Solvers( block , sconf , forms , k ) );
 
   blocks.push_back( block );
   sconfs.push_back( sconf );
   }
 
- delete( bv.owner );
+ delete( forms.owner );
 
  // solve them and cross-check what the Solver say- - - - - - - - - - - - -
 
  c_double tol = 1e-5;
- bool ok = SolveVariants( blocks , bv.names , read_bounds , RefObjective ,
-                          tol , {} , relax );
+ bool ok = SolveFormulations( blocks , forms.names , read_bounds ,
+                              RefObjective , tol , {} , relax );
 
  // then check the Solution they produce - - - - - - - - - - - - - - - - - -
 

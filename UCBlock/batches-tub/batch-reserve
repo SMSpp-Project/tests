@@ -35,12 +35,12 @@ nchg=10
 pchg=0.6
 
 # the formulations of the unit are compared on each instance: it is read once
-# per BlockConfig TUBCfg-<form>.txt that TUBVar-PC.txt lists, i.e., every
+# per BlockConfig TUBCfg-<form>.txt that TUBForm-PC.txt lists, i.e., every
 # formulation (3bin/T/pt/DP/SU/SD/SUSD) with the perspective cuts, each copy is
 # solved by the same Solver, and the copies must agree with each other as the
 # two Solver of each copy do. On the large-horizon families (L_B_C_26 /
 # L_B_C_31, TimeHorizon 216) the interval-based formulations (pt/DP/SU/SD/SUSD)
-# are too expensive, so there the list is TUBVar-PC-3bin-T.txt, which keeps
+# are too expensive, so there the list is TUBForm-PC-3bin-T.txt, which keeps
 # only 3bin/T.
 # in CI one instance in 10 of each family is run: the whole of it takes more
 # than an hour there, and the instances of a family are the same unit on
@@ -49,13 +49,14 @@ if [ -n "$CI" ]; then every=10; else every=1; fi
 
 for fam in L_B_C_26 L_B_C_31 L_B_C_32 L_H_C_34; do
   case "$fam" in
-    L_B_C_26|L_B_C_31) vars=TUBVar-PC-3bin-T.txt ;;
-    *)                 vars=TUBVar-PC.txt ;;
+    L_B_C_26|L_B_C_31) forms=TUBForm-PC-3bin-T.txt ;;
+    *)                 forms=TUBForm-PC.txt ;;
   esac
   k=0
   for f in "${DATADIR}"/${fam}_*.nc4; do
     (( k++ % every )) && continue
-    run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -F "$vars" -n "$rounds" -m "$nchg" -q "$pchg"
+    run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" \
+        -F "$forms" -n "$rounds" -m "$nchg" -q "$pchg"
   done
 done
 

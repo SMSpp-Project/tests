@@ -26,15 +26,16 @@ par=BSCfg.txt
 # ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
 
 # the formulations of the unit are compared on each instance: it is read once
-# per BlockConfig TUBCfg-<form>.txt that TUBVar-PC.txt lists, i.e., every
+# per BlockConfig TUBCfg-<form>.txt that TUBForm-PC.txt lists, i.e., every
 # formulation (3bin/T/pt/DP/SU/SD/SUSD) with the perspective cuts, each copy is
 # solved by the same Solver, and the copies must agree with each other as the
 # two Solver of each copy do. The interval-based formulations (pt/DP/SU/SD/SUSD)
 # are too expensive on large-horizon instances, so there the list is
-# TUBVar-PC-3bin-T.txt, which keeps only 3bin/T.
+# TUBForm-PC-3bin-T.txt, which keeps only 3bin/T.
 for i in 24 96; do
   # only the cheap formulations on large instances
-  if [ $i -eq 96 ]; then vars=TUBVar-PC-3bin-T.txt; else vars=TUBVar-PC.txt; fi
+  forms=TUBForm-PC.txt
+  [ $i -eq 96 ] && forms=TUBForm-PC-3bin-T.txt
   for j in 1 12 16 23; do
     # in CI only 5 of the 100 ramp profiles are run (they are variations of
     # the same shape); the local sweep stays exhaustive
@@ -45,7 +46,8 @@ for i in 24 96; do
 
         what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-        run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" -F "$vars" -n "$iter"
+        run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
+            -F "$forms" -n "$iter"
 
       #done
     done

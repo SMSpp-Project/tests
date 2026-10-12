@@ -43,9 +43,10 @@ bpar=$par
 spar=$slv
 
 # the formulations of the network, compared with each other on every
-# instance with more than one node [see InnerBVar-DCN.txt]; in CI only two
+# instance with more than one node [see InnerBForm-DCN.txt]; in CI only two
 # of them
-if [ -n "$CI" ]; then vars=InnerBVar-DCN-CI.txt; else vars=InnerBVar-DCN.txt; fi
+forms=InnerBForm-DCN.txt
+[ -n "$CI" ] && forms=InnerBForm-DCN-CI.txt
 
 # the BlockConfig of the second run, the inner Block solved by the recursive
 # Lagrangian dual; empty where the LagrangianDualSolver is not in the build
@@ -107,10 +108,10 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
     # compared with each other; the others with the formulations of their
     # network
     if [ -n "${ld_bcfg}" ] && [ -n "${LD_INNER[$base]}" ]; then
-      run_test "$exe" -F InnerBVar-LD.txt -S "$spar" ${point:+-x "$point"} \
+      run_test "$exe" -F InnerBForm-LD.txt -S "$spar" ${point:+-x "$point"} \
                -o "$ref" "$what"
     elif [ "$bpar" = InnerBCfg.txt ]; then
-      run_test "$exe" -F "$vars" -S "$spar" ${point:+-x "$point"} \
+      run_test "$exe" -F "$forms" -S "$spar" ${point:+-x "$point"} \
                -o "$ref" "$what"
     else
       run_test "$exe" -B "$bpar" -S "$spar" ${point:+-x "$point"} \

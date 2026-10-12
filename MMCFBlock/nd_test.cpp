@@ -15,11 +15,11 @@
  *
  * Usage:
  *
- *   MMCFND_test -F variants [-t frmt] [-r samples] [-e seed] [-g gap]
+ *   MMCFND_test -F formulations [-t frmt] [-r samples] [-e seed] [-g gap]
  *               < instance >
  *
- * variants is the list of the two formulations [see
- * read_BlockConfig_variants()], each a pair of its BlockConfig and its
+ * formulations is the list of the two formulations [see
+ * read_formulations()], each a pair of its BlockConfig and its
  * BlockSolverConfig, in any order, frmt is the format of MMCFBlock::load()
  * ('s' for the Canad instances, the default), gap the relative tolerance of
  * the comparisons (1e-5 by default).
@@ -75,7 +75,7 @@ MMCFNetworkDesignBlock * build( const std::string & inst , char frmt ,
   throw( std::invalid_argument( "cannot open " + inst ) );
  blk->load( f , frmt );
 
- b_config_Block( blk , bc , vconf_file );
+ b_config_Block( blk , bc , fconf_file );
 
  blk->generate_abstract_variables();
  blk->generate_abstract_constraints();
@@ -83,7 +83,7 @@ MMCFNetworkDesignBlock * build( const std::string & inst , char frmt ,
 
  auto bsc = dynamic_cast< BlockSolverConfig * >( sc );
  if( ! bsc )
-  throw( std::invalid_argument( vconf_file + " has a BlockSolverConfig that "
+  throw( std::invalid_argument( fconf_file + " has a BlockSolverConfig that "
                                 "is not" ) );
  bsc->apply( blk );
  delete bsc;
@@ -146,14 +146,14 @@ int main( int argc , char ** argv )
          "  -e, --seed <n>                  seed of the y [0]\n"
          "  -g, --gap <x>                   relative tolerance [1e-5]\n"
          "\n"
-         "The variants (-F) are the two formulations, each a pair of its\n"
+         "The formulations (-F) are the two formulations, each a pair of its\n"
          "BlockConfig and its BlockSolverConfig.\n";
  process_args( argc , argv , process_specific_arg );
  const std::string inst( filename );
 
- auto bv = get_BlockConfig_variants();
- if( bv.configs.size() != 2 ) {
-  std::cerr << argv[ 0 ] << ": the variants are the two formulations"
+ auto forms = get_formulations();
+ if( forms.configs.size() != 2 ) {
+  std::cerr << argv[ 0 ] << ": the formulations are the two formulations"
             << std::endl;
   return( 1 );
   }
@@ -162,9 +162,11 @@ int main( int argc , char ** argv )
  bool ok = true;
 
  // the two formulations, the monolithic one and the Benders one - - - - - -
- auto f0 = build( inst , frmt , bv.configs[ 0 ] , solver_config_of( bv , 0 ) );
- auto f1 = build( inst , frmt , bv.configs[ 1 ] , solver_config_of( bv , 1 ) );
- delete bv.owner;
+ auto f0 = build( inst , frmt , forms.configs[ 0 ] ,
+                  solver_config_of( forms , 0 ) );
+ auto f1 = build( inst , frmt , forms.configs[ 1 ] ,
+                  solver_config_of( forms , 1 ) );
+ delete forms.owner;
  const bool first_mono =
   f0->get_formulation() == MMCFNetworkDesignBlock::kMonolithic;
  auto mono = first_mono ? f0 : f1;

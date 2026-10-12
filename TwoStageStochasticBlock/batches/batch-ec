@@ -30,8 +30,9 @@ DEFAULT_SLV=0
 parse_batch_args "$@"
 
 # the formulations of the network of the inner Block, compared with each
-# other on every instance [see InnerBVar-DCN.txt]; in CI only two of them
-if [ -n "$CI" ]; then vars=InnerBVar-DCN-CI.txt; else vars=InnerBVar-DCN.txt; fi
+# other on every instance [see InnerBForm-DCN.txt]; in CI only two of them
+forms=InnerBForm-DCN.txt
+[ -n "$CI" ] && forms=InnerBForm-DCN-CI.txt
 
 benders=
 grep -q "^ *BendersDecompositionSolver" "$par" 2>/dev/null && benders=1
@@ -95,7 +96,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/tssb/TSSB_EC_CO_*.nc4 \
       continue
     fi
 
-    run_test "$exe" "$what" -S "$par" -F "$vars" -w "$slv" -r "$ref"
+    run_test "$exe" "$what" -S "$par" -F "$forms" -w "$slv" -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

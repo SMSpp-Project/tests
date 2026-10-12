@@ -10,7 +10,8 @@
 # exact, and the "P/C" one, whose cuts only outer-approximate the cones, so
 # that the :MILPSolver solves a relaxation of the DCR problem, which -R
 # declares to the cross-check; where both are run, it is in one run with
-# the variants of DCRVar.txt, the two copies being compared with each other
+# the formulations of DCRForm.txt, the two copies being compared with each
+# other
 #
 # the SingleFlowDCRBendersSolver stops on its own criterion and does not
 # declare how much of a gap it leaves, so "-E ,inf" holds it to the base
@@ -50,7 +51,7 @@ for what in "$DATADIR"/*/*.nc4; do
   case " $(echo $socp_unstable $socp_too_long) " in
     *" ${inst%.nc4} "*) ;;
     *) if [ "$socp" = 1 ]; then
-         run_test "$exe" "$what" -F DCRVar.txt -E ,inf
+         run_test "$exe" "$what" -F DCRForm.txt -E ,inf
          continue
        fi ;;
   esac

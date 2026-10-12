@@ -112,7 +112,7 @@ extern std::string exe;             ///< name of the executable file
 extern std::string filename;        ///< input filename (last positional argv)
 extern std::string bconf_file;      ///< BlockConfig filename (-B)
 extern std::string sconf_file;      ///< BlockSolverConfig filename (-S)
-extern std::string vconf_file;      ///< list of BlockConfig variants (-F)
+extern std::string fconf_file;      ///< list of BlockConfig formulations (-F)
 extern std::string block_prefix;    ///< prefix for all Block filenames (-p)
 extern std::string conf_prefix;     ///< prefix for all Configuration filenames (-c)
 
@@ -321,9 +321,9 @@ void b_config_Block( Block * block , Configuration * b_config ,
 
 /*--------------------------------------------------------------------------*/
 /// read the list of the (meta-)BlockConfig a battery tries on one instance
-/** A battery that compares formulations reads the instance once per variant
- *  and gives each copy its own (meta-)BlockConfig, which b_config_Block()
- *  applies; the variants are the elements of a
+/** A battery that compares formulations reads the instance once per
+ *  formulation and gives each copy its own (meta-)BlockConfig, which
+ *  b_config_Block() applies; the formulations are the elements of a
  *
  *    SimpleConfiguration< std::vector< Configuration * > >
  *
@@ -333,19 +333,26 @@ void b_config_Block( Block * block , Configuration * b_config ,
  *    SimpleConfiguration< std::pair< Configuration * , Configuration * > >
  *
  *  whose first element is that (meta-)BlockConfig and whose second is the
- *  (meta-)BlockSolverConfig of that variant, for the formulations that are
+ *  (meta-)BlockSolverConfig of that formulation, for the formulations that are
  *  solved by Solver of their own [see solver_config_of()], or else a
  *
  *    SimpleConfiguration< std::vector< Configuration * > >
  *
  *  of the same two and of a third, a SimpleConfiguration< std::vector< int
- *  > > saying which of the Solver of that variant solve a relaxation of the
- *  problem (1) and which do not (0), in their order, i.e., the -R of that
- *  variant alone [see attach_variant_Solvers()]. The list is the business of
- *  the battery and not of the Block: a BlockConfig applies to one Block, and
- *  what a battery wants is the same Block several times, each time
+ *  > > saying which of the Solver of that formulation solve a relaxation of
+ *  the problem (1) and which do not (0), in their order, i.e., the -R of that
+ *  formulation alone [see attach_formulation_Solvers()]. The list is the
+ *  business of the battery and not of the Block: a BlockConfig applies to one
+ *  Block, and what a battery wants is the same Block several times, each time
  *  configured differently and solved by the same Solver, so that two
  *  formulations that do not give the same optimum are seen.
+ *
+ *  The elements of the list are called formulations even where they are
+ *  not formulations in the strict sense, e.g., the structures of a SAT
+ *  instance or the R3Block of a CapacitatedFacilityLocationBlock with
+ *  their own BlockSolverConfig: each of them, together with its Solver, is
+ *  a way of writing and solving the same problem, which is all that the
+ *  comparison needs.
  *
  *  Returns the list, which the caller deletes once the copies have been
  *  configured; a file that cannot be read, that holds anything else, or
@@ -353,7 +360,7 @@ void b_config_Block( Block * block , Configuration * b_config ,
  *  and the run stops with exit(1). */
 
 SimpleConfiguration< std::vector< Configuration * > > *
- read_BlockConfig_variants( const std::string & fn );
+ read_formulations( const std::string & fn );
 
 /*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockSolverConfig to a Block, optionally clear() for cleanup
@@ -689,8 +696,8 @@ void print_solver_parameters( Block * block );
 /// what SolveAll() read of each Solver, for a comparison across Block
 /** One entry per Solver, in the order of the comparison: its reading, if it
  *  has a solution, its status, its time, the token printed for it and its
- *  name. SolveAll() fills it if given one, and SolveVariants() compares the
- *  records of the copies of a Block with each other. */
+ *  name. SolveAll() fills it if given one, and SolveFormulations() compares
+ *  the records of the copies of a Block with each other. */
 
 struct SolveRecord {
  std::vector< SolverReading > rd;      ///< the reading of each Solver
@@ -758,32 +765,34 @@ bool SolveAll( Block * block ,
 
 /*--------------------------------------------------------------------------*/
 /// SolveAll() of each copy of a Block, then the copies against each other
-/** @p blocks are copies of the same Block, each configured by one variant of
- *  its (meta-)BlockConfig [see read_BlockConfig_variants()] and with its
- *  Solver attached, @p names what the variants are called in the report.
- *  Each copy is solved by SolveAll() as if it were alone, with its line
- *  headed by "variant <name>:", and then the readings of all the Solver of
- *  all the copies go through one cross_check(), since they are bounds on the
- *  same optimum whatever the formulation: a formulation that solves another
- *  problem makes the exact Solver of its copy contradict those of the
- *  others. That joint check is printed as one more block, each Solver named
- *  "<variant> <classname>", and the result is the conjunction of all.
+/** @p blocks are copies of the same Block, each configured by one formulation
+ *  of its (meta-)BlockConfig [see read_formulations()] and with its Solver
+ *  attached, @p names what the formulations are called in the report. Each
+ *  copy is solved by SolveAll() as if it were alone, with its line headed by
+ *  "formulation <name>:", and then the readings of all the Solver of all the
+ *  copies go through one cross_check(), since they are bounds on the same
+ *  optimum whatever the formulation: a formulation that solves another problem
+ *  makes the exact Solver of its copy contradict those of the others. That
+ *  joint check is printed as one more block, each Solver named "<formulation>
+ *  <classname>", and the result is the conjunction of all.
  *
  *  With one copy this is SolveAll() and nothing else, so that a tester given
  *  one BlockConfig prints what it always printed. @p bscs, if not empty,
  *  gives the BlockSolverConfig of each copy, which restricts its comparison
  *  to the Solver that it registered [see SolveAll()]; @p relax, if not empty,
  *  gives for each copy which of its Solver solve a relaxation, in place of
- *  -R [see attach_variant_Solvers()]; @p classify, @p ref and @p tol are
+ *  -R [see attach_formulation_Solvers()]; @p classify, @p ref and @p tol are
  *  those of SolveAll(). */
 
-bool SolveVariants( const std::vector< Block * > & blocks ,
-                    const std::vector< std::string > & names ,
-                    const SolverClassifier & classify ,
-                    double ref = std::numeric_limits< double >::quiet_NaN() ,
-                    double tol = 1e-5 ,
-                    const std::vector< BlockSolverConfig * > & bscs = {} ,
-                    const std::vector< std::vector< bool > > & relax = {} );
+bool SolveFormulations( const std::vector< Block * > & blocks ,
+                        const std::vector< std::string > & names ,
+                        const SolverClassifier & classify ,
+                        double ref =
+                         std::numeric_limits< double >::quiet_NaN() ,
+                        double tol = 1e-5 ,
+                        const std::vector< BlockSolverConfig * > & bscs = {} ,
+                        const std::vector< std::vector< bool > > &
+                         relax = {} );
 
 /*--------------------------------------------------------------------------*/
 /// the options of the rounds of random changes of a tester
@@ -815,10 +824,10 @@ bool process_round_option( int opt );
 /// the main of a tester that loads a Block out of a file and cross-checks
 /// its Solver
 /** The Block is a new @p classname, or the one -b names if @p any_class,
- *  loaded out of the instance file [see Block::load()] once per variant of
- *  its BlockConfig [see get_BlockConfig_variants()], each copy with the
+ *  loaded out of the instance file [see Block::load()] once per formulation of
+ *  its BlockConfig [see get_formulations()], each copy with the
  *  Solver of its BlockSolverConfig, and the Solver are compared with
- *  SolveVariants() within the tolerance @p tol, and with the reference
+ *  SolveFormulations() within the tolerance @p tol, and with the reference
  *  objective value of -r. A run whose BlockSolverConfig names no Solver of
  *  this build has nothing to do and returns 77. @p desc is the description
  *  of the tester in its help. Returns the exit code of the tester. */
@@ -829,19 +838,19 @@ int load_solve_test( int argc , char ** argv , const std::string & desc ,
 
 /*--------------------------------------------------------------------------*/
 /// the (meta-)BlockConfig of a run: the list of -F, or the one of -B
-/** A tester that compares formulations gets its variants from -F, a file
- *  read by read_BlockConfig_variants(), and a tester run with -B gets the
+/** A tester that compares formulations gets its formulations from -F, a file
+ *  read by read_formulations(), and a tester run with -B gets the
  *  single BlockConfig of that file as a list of one; exactly one of the two
  *  must be given, otherwise the run stops with exit(1), unless @p optional,
- *  in which case a run given neither has one variant with no BlockConfig
- *  (a nullptr), the Block being left as it is read. The variants are
- *  named F0, F1, ... in the order of the list; with -B the one variant is
- *  named after the file. A variant that is a pair also carries its own
+ *  in which case a run given neither has one formulation with no BlockConfig
+ *  (a nullptr), the Block being left as it is read. The formulations are
+ *  named F0, F1, ... in the order of the list; with -B the one formulation is
+ *  named after the file. A formulation that is a pair also carries its own
  *  (meta-)BlockSolverConfig, nullptr otherwise. The caller deletes the
  *  returned owner once the copies are configured and their Solver
  *  attached. */
 
-struct BlockConfigVariants {
+struct Formulations {
  Configuration * owner = nullptr;          ///< what holds them, to delete
  std::vector< Configuration * > configs;   ///< the (meta-)BlockConfig
  std::vector< Configuration * > solvers;   ///< their BlockSolverConfig
@@ -850,32 +859,32 @@ struct BlockConfigVariants {
  std::string file;                         ///< the file they come from
  };
 
-BlockConfigVariants get_BlockConfig_variants( bool optional = false );
+Formulations get_formulations( bool optional = false );
 
 /*--------------------------------------------------------------------------*/
-/// the (meta-)BlockSolverConfig of the variant @p k of @p v
-/** A clone() of the one of its pair, if the variant is one, else the one of
- *  -S read anew, so that each copy has its own to apply(), clear() and keep
- *  for the cleanup; the caller deletes it. A variant with no
+/// the (meta-)BlockSolverConfig of the formulation @p k of @p v
+/** A clone() of the one of its pair, if the formulation is one, else the one
+ *  of -S read anew, so that each copy has its own to apply(), clear() and keep
+ *  for the cleanup; the caller deletes it. A formulation with no
  *  BlockSolverConfig of its own and no -S stops the run with exit(1). */
 
-Configuration * solver_config_of( const BlockConfigVariants & v ,
+Configuration * solver_config_of( const Formulations & v ,
                                   std::size_t k );
 
 /*--------------------------------------------------------------------------*/
-/// s_config_Block() of the BlockSolverConfig @p bsc of the variant @p k
+/// s_config_Block() of the BlockSolverConfig @p bsc of the formulation @p k
 /** Applies @p bsc to @p block as s_config_Block() does (@p clear_after is
  *  its), and returns which of the Solver it attached solve a relaxation:
- *  those that the variant says, if it says anything, else those of -R, in
+ *  those that the formulation says, if it says anything, else those of -R, in
  *  either case without the Solver that this build does not have [see
- *  s_config_Block()]. What is returned is what SolveVariants() wants for
+ *  s_config_Block()]. What is returned is what SolveFormulations() wants for
  *  that copy; -R itself is left as it was. */
 
-std::vector< bool > attach_variant_Solvers( Block * block ,
-                                            Configuration * bsc ,
-                                            const BlockConfigVariants & v ,
-                                            std::size_t k ,
-                                            bool clear_after = true );
+std::vector< bool > attach_formulation_Solvers( Block * block ,
+                                                Configuration * bsc ,
+                                                const Formulations & v ,
+                                                std::size_t k ,
+                                                bool clear_after = true );
 
 /*--------------------------------------------------------------------------*/
 /// SolveAll() of the one or two Solver registered to @p block

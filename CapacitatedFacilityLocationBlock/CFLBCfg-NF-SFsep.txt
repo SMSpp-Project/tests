@@ -4,8 +4,8 @@
 # The BlockConfig of a CapacitatedFacilityLocationBlock in the natural
 # formulation with the group of the strong forcing constraints x_{ij} <= y_i
 # (static_constraints = 7), separated at most 375 at a time with violation
-# 1e-4 (dynamic_constraints); the original Block of CFLBVar-cuts.txt and
-# CFLBVar-ldvscuts.txt.
+# 1e-4 (dynamic_constraints); the original Block of CFLBForm-cuts.txt and
+# CFLBForm-ldvscuts.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

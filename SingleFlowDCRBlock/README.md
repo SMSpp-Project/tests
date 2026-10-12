@@ -59,7 +59,7 @@ of that netCDF file instead of being generated.
 
 Three batch files are provided: `batch`, sweeping a range of network sizes,
 tightnesses and seeds of the random instances, each in both formulations in
-one run with `-F DCRVar.txt`, whose variants carry their own
+one run with `-F DCRForm.txt`, whose formulations carry their own
 `BlockSolverConfig` and say which of their `Solver` solve a relaxation, so
 that the copies are compared with each other as well; `batch-instances`,
 which runs both formulations in the same way on the instances of the

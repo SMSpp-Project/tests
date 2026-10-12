@@ -33,13 +33,13 @@ for i in 24; do
       what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
       # the formulations are those whose BlockConfig TUBCfg-<form>.txt
-      # TUBVar-mustrun.txt lists, the unit being read once per formulation and
+      # TUBForm-mustrun.txt lists, the unit being read once per formulation and
       # the copies compared with each other [see batch]
       run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
-               -F TUBVar-mustrun.txt -n "$rounds" -m "$nchg" -q "$pchg" -u
+               -F TUBForm-mustrun.txt -n "$rounds" -m "$nchg" -q "$pchg" -u
 
       run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
-               -F TUBVar-mustrun.txt -n "$rounds" -m "$nchg" -q "$pchg" -u -d 5000
+               -F TUBForm-mustrun.txt -n "$rounds" -m "$nchg" -q "$pchg" -u -d 5000
 
     done
   done

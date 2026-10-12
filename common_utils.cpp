@@ -250,10 +250,10 @@ void b_config_Block( Block * block , Configuration * b_config ,
  }  // end( b_config_Block )
 
 /*--------------------------------------------------------------------------*/
-// the list of the (meta-)BlockConfig of the variants of a battery
+// the list of the (meta-)BlockConfig of the formulations of a battery
 
 SimpleConfiguration< std::vector< Configuration * > > *
- read_BlockConfig_variants( const std::string & fn )
+ read_formulations( const std::string & fn )
 {
  auto c = Configuration::deserialize( fn );
  auto vc = dynamic_cast< SimpleConfiguration<
@@ -267,7 +267,7 @@ SimpleConfiguration< std::vector< Configuration * > > *
   }
 
  if( vc->f_value.empty() ) {
-  std::cerr << "Error: " << fn << " lists no variant" << std::endl;
+  std::cerr << "Error: " << fn << " lists no formulation" << std::endl;
   exit( 1 );
   }
 
@@ -281,7 +281,7 @@ SimpleConfiguration< std::vector< Configuration * > > *
                                          Configuration * > > * >( e ) )
     e = q->f_value.empty() ? nullptr : q->f_value.front();
   if( ! e ) {
-   std::cerr << "Error: variant " << k << " of " << fn << " is empty"
+   std::cerr << "Error: formulation " << k << " of " << fn << " is empty"
              << std::endl;
    exit( 1 );
    }
@@ -1146,12 +1146,12 @@ bool SolveAll( Block * block ,
 /*--------------------------------------------------------------------------*/
 // SolveAll() of each copy of a Block, then the copies against each other
 
-bool SolveVariants( const std::vector< Block * > & blocks ,
-                    const std::vector< std::string > & names ,
-                    const SolverClassifier & classify ,
-                    double ref , double tol ,
-                    const std::vector< BlockSolverConfig * > & bscs ,
-                    const std::vector< std::vector< bool > > & relax )
+bool SolveFormulations( const std::vector< Block * > & blocks ,
+                        const std::vector< std::string > & names ,
+                        const SolverClassifier & classify ,
+                        double ref , double tol ,
+                        const std::vector< BlockSolverConfig * > & bscs ,
+                        const std::vector< std::vector< bool > > & relax )
 {
  auto bsc_of = [ & bscs ]( std::size_t k ) {
   return( k < bscs.size() ? bscs[ k ] : nullptr );
@@ -1175,7 +1175,7 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
  bool ok = true;
  SolveRecord all;
  for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
-  std::cout << "variant " << names[ k ] << ":";
+  std::cout << "formulation " << names[ k ] << ":";
   SolveRecord rec;
   ok &= solve( k , & rec );
   all.rd.insert( all.rd.end() , rec.rd.begin() , rec.rd.end() );
@@ -1194,7 +1194,7 @@ bool SolveVariants( const std::vector< Block * > & blocks ,
  double diff;
  const bool cross = cross_check( all.rd , all.hs , all.status , ref , tol ,
                                  verdict , diff );
- std::cout << "variants against each other:";
+ std::cout << "formulations against each other:";
  print_instance_line( all.times , all.tok , ref , verdict , diff , true ,
                       all.names );
 
@@ -1288,7 +1288,7 @@ int load_solve_test( int argc , char ** argv , const std::string & desc ,
     }
    } );
 
- auto bv = get_BlockConfig_variants( true );
+ auto forms = get_formulations( true );
 
  std::vector< Block * > blocks;
  std::vector< Configuration * > bscs;
@@ -1302,10 +1302,10 @@ int load_solve_test( int argc , char ** argv , const std::string & desc ,
    delete bscs[ k ];
    delete blocks[ k ];
    }
-  delete bv.owner;
+  delete forms.owner;
   };
 
- for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
   auto block = Block::new_Block( block_class );
   if( ! block ) {
    std::cerr << "Error: " << block_class << " not present in Block factory"
@@ -1315,11 +1315,12 @@ int load_solve_test( int argc , char ** argv , const std::string & desc ,
 
   block->load( filename );
 
-  if( bv.configs[ k ] )
-   b_config_Block( block , bv.configs[ k ] , bv.file );
+  if( forms.configs[ k ] )
+   b_config_Block( block , forms.configs[ k ] , forms.file );
 
-  auto bsc = solver_config_of( bv , k );
-  relax.push_back( attach_variant_Solvers( block , bsc , bv , k , false ) );
+  auto bsc = solver_config_of( forms , k );
+  relax.push_back( attach_formulation_Solvers( block , bsc , forms , k ,
+                                               false ) );
   blocks.push_back( block );
   bscs.push_back( bsc );
   bsolvers.push_back( dynamic_cast< BlockSolverConfig * >( bsc ) );
@@ -1330,8 +1331,8 @@ int load_solve_test( int argc , char ** argv , const std::string & desc ,
    }
   }
 
- const bool ok = SolveVariants( blocks , bv.names , read_bounds ,
-                                RefObjective , tol , bsolvers , relax );
+ const bool ok = SolveFormulations( blocks , forms.names , read_bounds ,
+                                    RefObjective , tol , bsolvers , relax );
  clean();
  return( ok ? 0 : 1 );
  }
@@ -1339,25 +1340,25 @@ int load_solve_test( int argc , char ** argv , const std::string & desc ,
 /*--------------------------------------------------------------------------*/
 // the (meta-)BlockConfig of a run: the list of -F, or the one of -B
 
-BlockConfigVariants get_BlockConfig_variants( bool optional )
+Formulations get_formulations( bool optional )
 {
- BlockConfigVariants v;
+ Formulations v;
 
- if( optional && vconf_file.empty() && bconf_file.empty() ) {
+ if( optional && fconf_file.empty() && bconf_file.empty() ) {
   v.configs = { nullptr };
   v.solvers = { nullptr };
   v.names = { "" };
   return( v );
   }
 
- if( vconf_file.empty() == bconf_file.empty() ) {
+ if( fconf_file.empty() == bconf_file.empty() ) {
   std::cerr << "Error: give either a BlockConfig (-B) or a list of them (-F)"
             << std::endl;
   exit( 1 );
   }
 
- if( ! vconf_file.empty() ) {
-  auto vc = read_BlockConfig_variants( vconf_file );
+ if( ! fconf_file.empty() ) {
+  auto vc = read_formulations( fconf_file );
   v.owner = vc;
   for( std::size_t k = 0 ; k < vc->f_value.size() ; ++k ) {
    auto e = vc->f_value[ k ];
@@ -1376,7 +1377,7 @@ BlockConfigVariants get_BlockConfig_variants( bool optional )
                                   std::vector< int > > * >( w[ 2 ] ) : nullptr;
      if( ( w.size() < 2 ) || ( w.size() > 3 ) ||
          ( ( w.size() == 3 ) && ( ! r ) ) ) {
-      std::cerr << "Error: variant " << k << " of " << vconf_file
+      std::cerr << "Error: formulation " << k << " of " << fconf_file
                 << " is not a BlockConfig, a BlockSolverConfig and the"
                 << " SimpleConfiguration< std::vector< int > > of its -R"
                 << std::endl;
@@ -1395,7 +1396,7 @@ BlockConfigVariants get_BlockConfig_variants( bool optional )
      }
    v.names.push_back( "F" + std::to_string( k ) );
    }
-  v.file = vconf_file;
+  v.file = fconf_file;
   return( v );
   }
 
@@ -1413,15 +1414,15 @@ BlockConfigVariants get_BlockConfig_variants( bool optional )
  }
 
 /*--------------------------------------------------------------------------*/
-// the BlockSolverConfig of a variant applied, with its -R
+// the BlockSolverConfig of a formulation applied, with its -R
 
-std::vector< bool > attach_variant_Solvers( Block * block ,
-                                            Configuration * bsc ,
-                                            const BlockConfigVariants & v ,
-                                            std::size_t k ,
-                                            bool clear_after )
+std::vector< bool > attach_formulation_Solvers( Block * block ,
+                                                Configuration * bsc ,
+                                                const Formulations & v ,
+                                                std::size_t k ,
+                                                bool clear_after )
 {
- // the -R of the variant goes through s_config_Block(), which takes out of
+ // the -R of the formulation goes through s_config_Block(), which takes out of
  // it the Solver that are not there, as it does of -R
  const auto global = solver_relaxation;
  const bool own = ( k < v.relax.size() ) && ( ! v.relax[ k ].empty() );
@@ -1434,16 +1435,16 @@ std::vector< bool > attach_variant_Solvers( Block * block ,
  }
 
 /*--------------------------------------------------------------------------*/
-// the (meta-)BlockSolverConfig of a variant
+// the (meta-)BlockSolverConfig of a formulation
 
-Configuration * solver_config_of( const BlockConfigVariants & v ,
+Configuration * solver_config_of( const Formulations & v ,
                                   std::size_t k )
 {
  if( ( k < v.solvers.size() ) && v.solvers[ k ] )
   return( v.solvers[ k ]->clone() );
 
  if( sconf_file.empty() ) {
-  std::cerr << "Error: variant " << v.names[ k ] << " of " << v.file
+  std::cerr << "Error: formulation " << v.names[ k ] << " of " << v.file
             << " has no BlockSolverConfig and none is given with -S"
             << std::endl;
   exit( 1 );
@@ -1708,7 +1709,7 @@ std::string exe;
 std::string filename;
 std::string bconf_file;
 std::string sconf_file;
-std::string vconf_file;
+std::string fconf_file;
 std::string block_prefix;
 std::string conf_prefix;
 
@@ -1731,7 +1732,7 @@ std::string short_opts = "B:F:S:p:c:E:R:Dv::h";
 std::vector< option > long_opts = {
  { "help"            , no_argument       , nullptr , 'h' } ,
  { "blockcfg"        , required_argument , nullptr , 'B' } ,
- { "variants"        , required_argument , nullptr , 'F' } ,
+ { "formulations"    , required_argument , nullptr , 'F' } ,
  { "solvercfg"       , required_argument , nullptr , 'S' } ,
  { "prefix"          , required_argument , nullptr , 'p' } ,
  { "configdir"       , required_argument , nullptr , 'c' } ,
@@ -1745,7 +1746,7 @@ std::vector< option > long_opts = {
 std::string help =
  "  -h, --help                      print this help\n"
  "  -B, --blockcfg <file>           Block Configuration\n"
- "  -F, --variants <file>           list of Block Configurations, in place\n"
+ "  -F, --formulations <file>       list of Block Configurations, in place\n"
  "                                  of -B: the Block is read once per\n"
  "                                  element, the copies are solved by the\n"
  "                                  same Solver and compared to each other\n"
@@ -1941,7 +1942,7 @@ bool process_standard_arg( int opt )
 {
  switch( opt ) {
   case 'B': bconf_file = std::string( optarg ); break;
-  case 'F': vconf_file = std::string( optarg ); break;
+  case 'F': fconf_file = std::string( optarg ); break;
   case 'S': sconf_file = std::string( optarg ); break;
   case 'p': {
    block_prefix = normalize_prefix( std::string( optarg ) );

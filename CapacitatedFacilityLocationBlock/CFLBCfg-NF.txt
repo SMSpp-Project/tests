@@ -3,8 +3,8 @@
 #
 # The BlockConfig of a CapacitatedFacilityLocationBlock in the natural
 # formulation (static_variables = 0) with its default constraints, i.e., the
-# demand and the capacity rows; the original Block of CFLBVar.txt,
-# CFLBVar-mcf.txt and CFLBVar-ben.txt.
+# demand and the capacity rows; the original Block of CFLBForm.txt,
+# CFLBForm-mcf.txt and CFLBForm-ben.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

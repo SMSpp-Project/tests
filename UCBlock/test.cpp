@@ -1313,10 +1313,10 @@ static int test( void )
 
  // the seven formulations of the thermal unit, without and with the
  // perspective cuts, each of which lays the Objective out its own way: they
- // are the BlockConfig that TUBVar.txt and TUBVar-PC.txt list, read from the
+ // are the BlockConfig that TUBForm.txt and TUBForm-PC.txt list, read from the
  // directory the test is run in
- auto plain = read_BlockConfig_variants( "TUBVar.txt" );
- auto cuts = read_BlockConfig_variants( "TUBVar-PC.txt" );
+ auto plain = read_formulations( "TUBForm.txt" );
+ auto cuts = read_formulations( "TUBForm-PC.txt" );
  for( auto vl : { plain , cuts } )
   for( auto bc : vl->f_value )
    check_model( thermal , bc , "thermal, " + formulation( bc ) );
@@ -1438,17 +1438,17 @@ int main( int argc , char ** argv )
  // both the BlockConfig (-B, the inner formulation), or the list of them
  // (-F), and the BlockSolverConfig (-S) must be provided explicitly: the
  // test never falls back to a hardcoded default Configuration
- auto bv = get_BlockConfig_variants();
+ auto forms = get_formulations();
 
- // read the Block, once per variant, and attach the Solver(s) to it- - - - -
+ // read the Block, once per formulation, and attach the Solver(s) to it - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // the (meta-)BlockConfig of each variant drives the *formulation* of the
+ // the (meta-)BlockConfig of each formulation drives the *formulation* of the
  // sub-Blocks: a SimpleConfiguration< map< classname, Configuration* >>
  // mapping a Block classname to the BlockConfig to apply to every sub-Block of
  // that class, dispatched by b_config_Block over the whole tree, the
  // PolyhedralFunctionBlock inside a HydroSystemUnitBlock included: e.g.,
  // InnerBCfg.txt -> ThermalUnitBlock formulation (TUBCfg.txt) and
- // DCNetworkBlock formulation (DCNBCfg.txt, or the variants that
+ // DCNetworkBlock formulation (DCNBCfg.txt, or the formulations that
  // InnerBCfg-PTDF.txt and InnerBCfg-CYCLE.txt point at). How the sub-Blocks
  // are *solved* inside the Lagrangian Dual is NOT set here: it descends
  // entirely from the BlockSolverConfig, whose LagrangianDualSolver gives the
@@ -1460,15 +1460,15 @@ int main( int argc , char ** argv )
  std::vector< Block * > blocks;
  std::vector< BlockSolverConfig * > bscs;
  std::vector< std::vector< bool > > relax;
- for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
-  auto ibc = bv.configs[ k ];
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
+  auto ibc = forms.configs[ k ];
   auto b = Block::deserialize( filename );
   if( ! b ) {
    std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
    exit( 1 );
    }
 
-  auto c = solver_config_of( bv , k );
+  auto c = solver_config_of( forms , k );
   auto bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
    std::cerr << "Error: configuration file not a BlockSolverConfig"
@@ -1477,11 +1477,11 @@ int main( int argc , char ** argv )
    exit( 1 );
    }
 
-  b_config_Block( b , ibc , bv.file );
+  b_config_Block( b , ibc , forms.file );
 
   // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
   // dispatches on the runtime type, applies, and clear()s for cleanup
-  relax.push_back( attach_variant_Solvers( b , bsc , bv , k ) );
+  relax.push_back( attach_formulation_Solvers( b , bsc , forms , k ) );
 
   if( b->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!" << std::endl;
@@ -1494,7 +1494,7 @@ int main( int argc , char ** argv )
 
  // cleanup the (meta-)BlockConfig (their destructor deletes the contained
  // per-classname BlockConfig)
- delete( bv.owner );
+ delete( forms.owner );
 
  TestBlock = blocks.front();
 
@@ -1530,11 +1530,12 @@ int main( int argc , char ** argv )
  // PrimalProximalHeur, whose dblRelAcc is what the inner Solver is asked
  // and not what its primal solution is worth
  //
- // with several variants of the BlockConfig, each copy is cross-checked so,
- // and then the Solver of all the copies against each other, since whatever
- // the formulation they bound the same optimum [see SolveVariants()]
- bool AllPassed = SolveVariants( blocks , bv.names , read_bounds ,
-                                 RefObjective , 1e-5 , {} , relax );
+ // with several formulations of the BlockConfig, each copy is cross-checked
+ // so, and then the Solver of all the copies against each other, since
+ // whatever the formulation they bound the same optimum [see
+ // SolveFormulations()]
+ bool AllPassed = SolveFormulations( blocks , forms.names , read_bounds ,
+                                     RefObjective , 1e-5 , {} , relax );
 
  // each Solver that has a solution must have one that is worth what the
  // Solver says: the cross-check compares the values the Solver report with

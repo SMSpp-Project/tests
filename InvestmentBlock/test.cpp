@@ -953,24 +953,24 @@ void process_block_file( const netCDF::NcFile & file ) {
 
  // the BlockConfig: an OBlockConfig for the InvestmentBlock, or a
  // "meta"-BlockConfig with one [see InnerBCfg.txt], or the list of them
- // (-F), each InvestmentBlock being then solved once per variant and the
+ // (-F), each InvestmentBlock being then solved once per formulation and the
  // copies compared with each other
- if( bconf_file.empty() && vconf_file.empty() ) {
+ if( bconf_file.empty() && fconf_file.empty() ) {
   std::cerr << "error: a BlockConfig for the InvestmentBlock must be given "
             << "(see InnerBCfg.txt)" << std::endl;
   exit( 1 );
  }
- auto bv = get_BlockConfig_variants();
+ auto forms = get_formulations();
 
  // For each Block descriptor
  for( auto block_description : blocks ) {
   SolveRecord all;
   bool passed = true;
-  for( std::size_t v = 0 ; v < bv.configs.size() ; ++v ) {
-   auto given_block_config = bv.configs[ v ];
-   if( bv.configs.size() > 1 )
-    std::cout << "variant " << bv.names[ v ] << ":" << std::endl;
-   Configuration * solver_config = solver_config_of( bv , v );
+  for( std::size_t v = 0 ; v < forms.configs.size() ; ++v ) {
+   auto given_block_config = forms.configs[ v ];
+   if( forms.configs.size() > 1 )
+    std::cout << "formulation " << forms.names[ v ] << ":" << std::endl;
+   Configuration * solver_config = solver_config_of( forms , v );
    // Deserialize the Block
    auto block_type_att = block_description.second.getAtt( "type" );
    if( block_type_att.isNull() ) {
@@ -1050,7 +1050,7 @@ void process_block_file( const netCDF::NcFile & file ) {
     all.status.push_back( rec.status[ k ] );
     all.times.push_back( rec.times[ k ] );
     all.tok.push_back( rec.tok[ k ] );
-    all.names.push_back( bv.names[ v ] + " " + rec.names[ k ] );
+    all.names.push_back( forms.names[ v ] + " " + rec.names[ k ] );
     }
 
    // Cleanup solver attachments/configurations
@@ -1062,19 +1062,19 @@ void process_block_file( const netCDF::NcFile & file ) {
 
   // the Solver of all the copies against each other, the copies being the
   // same problem
-  if( bv.configs.size() > 1 ) {
+  if( forms.configs.size() > 1 ) {
    std::string verdict;
    double diff;
    passed &= cross_check( all.rd , all.hs , all.status , RefObjective ,
                           1e-5 , verdict , diff );
-   std::cout << "variants against each other:";
+   std::cout << "formulations against each other:";
    print_instance_line( all.times , all.tok , RefObjective , verdict , diff ,
                         true , all.names );
    }
   AllPassed &= passed;
  }
 
- delete bv.owner;
+ delete forms.owner;
 }
 
 /*--------------------------------------------------------------------------*/

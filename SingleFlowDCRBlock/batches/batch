@@ -11,7 +11,7 @@
 # while at 4 the deadline is loose and the problem is essentially a
 # min-cost path
 #
-# each instance in both formulations, the variants of DCRVar.txt: the SOCP
+# each instance in both formulations, the formulations of DCRForm.txt: the SOCP
 # one, which is exact, and the "P/C" one, in which the two cone constraints
 # are only outer-approximated by the linear cuts that have been separated so
 # far, so that its :MILPSolver solves a relaxation of the DCR problem, which
@@ -34,7 +34,7 @@ for n in 10 20 40; do
   for t in 1.05 1.5 4; do
     for (( seed = 0 ; seed < 5 ; seed++ )); do
 
-      run_test "$exe" -F DCRVar.txt -E ,inf -n "$n" -m "$m" \
+      run_test "$exe" -F DCRForm.txt -E ,inf -n "$n" -m "$m" \
                -t "$t" -e "$seed"
 
     done # seed

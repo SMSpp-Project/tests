@@ -7,7 +7,7 @@
 # and 5 commodities (data-nd), in the monolithic formulation (BPar-ND.txt,
 # BSPar-ND.txt) against the Benders one (BPar-ND-Ben.txt,
 # BSPar-ND-Ben.txt), whose cuts come from a LagrangianDualSolver of the
-# MMCFBlock (LDBSCfg-ND.txt), the two variants of NDVar.txt, and the cuts
+# MMCFBlock (LDBSCfg-ND.txt), the two formulations of NDForm.txt, and the cuts
 # at random y against the cost of the flow there
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -19,7 +19,7 @@ MMCFND_test=${1:-./MMCFND_test}
 
 for k in 3 5; do
 
-  run_test "$MMCFND_test" "${DATADIR}/p33-k$k.dat" -F NDVar.txt -t s -r 5 \
+  run_test "$MMCFND_test" "${DATADIR}/p33-k$k.dat" -F NDForm.txt -t s -r 5 \
            -e $k
 
 done

@@ -71,9 +71,9 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
 
     # Add a test for each batch file. All batch scripts live in batches/; each
     # one runs from this directory, where the config files are, and gives the
-    # list of its variants (CFLBVar*.txt), so the same scripts work both via
-    # ctest and when launched by hand. Only the scenarios that currently pass
-    # are registered.
+    # list of its formulations (CFLBForm*.txt), so the same scripts work both
+    # via ctest and when launched by hand. Only the scenarios that currently
+    # pass are registered.
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-s"
                           # default arrangement (natural-LP vs MCF flow), small instances
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"

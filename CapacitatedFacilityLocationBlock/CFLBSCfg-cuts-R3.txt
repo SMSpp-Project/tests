@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - CFLBSCfg-cuts-R3.txt  - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of the copy of a CapacitatedFacilityLocationBlock in
-# CFLBVar-cuts.txt: its continuous relaxation solved by a :MILPSolver with
+# CFLBForm-cuts.txt: its continuous relaxation solved by a :MILPSolver with
 # the separation of the strong forcing constraints.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

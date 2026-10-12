@@ -3,7 +3,7 @@
 #
 # The BlockSolverConfig of a CapacitatedFacilityLocationBlock whose
 # continuous relaxation is solved by a :MILPSolver; the original Block of
-# CFLBVar.txt.
+# CFLBForm.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

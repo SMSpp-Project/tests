@@ -27,12 +27,12 @@
  * soft, and the clauses added are on the variables of one group.
  *
  * With -F rather than -B the SATBlock is read once per BlockConfig of the
- * list [see read_BlockConfig_variants()], e.g., once with each structure,
+ * list [see read_formulations()], e.g., once with each structure,
  * each copy gets the Solver of the BlockSolverConfig and every round makes
  * the same change to all of them, a linking clause staying hard or soft if
  * any copy has the kRelaxation structure; the Solver of each copy are
  * cross-checked, and then those of all the copies against each other, as
- * the copies are the same problem [see SolveVariants()].
+ * the copies are the same problem [see SolveFormulations()].
  *
  * With -n the instance is then changed n times, each time by a Modification
  * drawn at random (with the seed of -e) and followed by the cross-check
@@ -139,25 +139,26 @@ int main( int argc , char ** argv )
 	 "  -e, --seed <n>                  seed of the Modification [1]\n";
  process_args( argc , argv , process_specific_arg );
 
- // the instance once per variant of its BlockConfig (-F), or once with the
- // one of -B or with none [see get_BlockConfig_variants()]
- auto bv = get_BlockConfig_variants( true );
+ // the instance once per formulation of its BlockConfig (-F), or once with the
+ // one of -B or with none [see get_formulations()]
+ auto forms = get_formulations( true );
 
  std::vector< SATBlock * > sats;
  std::vector< Configuration * > bscs;
  std::vector< std::vector< bool > > relax;
- for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
   auto sat = read_SATBlock();
-  if( bv.configs[ k ] )
-   b_config_Block( sat , bv.configs[ k ] , bv.file );
+  if( forms.configs[ k ] )
+   b_config_Block( sat , forms.configs[ k ] , forms.file );
 
   // the Solver of the abstract representation need it, the others ignore it
   sat->generate_abstract_variables();
   sat->generate_abstract_constraints();
   sat->generate_objective();
 
-  auto bsc = solver_config_of( bv , k );
-  relax.push_back( attach_variant_Solvers( sat , bsc , bv , k , false ) );
+  auto bsc = solver_config_of( forms , k );
+  relax.push_back( attach_formulation_Solvers( sat , bsc , forms , k ,
+                                               false ) );
   sats.push_back( sat );
   bscs.push_back( bsc );
   if( sat->get_registered_solvers().empty() ) {
@@ -166,12 +167,12 @@ int main( int argc , char ** argv )
     delete bscs[ h ];
     delete sats[ h ];
     }
-   delete bv.owner;
+   delete forms.owner;
    return( 77 );
    }
   }
 
- delete bv.owner;
+ delete forms.owner;
 
  std::vector< Block * > blocks( sats.begin() , sats.end() );
  std::vector< BlockSolverConfig * > bsolvers;
@@ -204,8 +205,8 @@ int main( int argc , char ** argv )
   return( reading );
   };
 
- bool ok = SolveVariants( blocks , bv.names , classify , RefObjective , tol ,
-                          bsolvers , relax );
+ bool ok = SolveFormulations( blocks , forms.names , classify ,
+                              RefObjective , tol , bsolvers , relax );
  ok = ok && solutions_ok;
 
  // the rounds of Modification: the steps of the costs and the new weights
@@ -303,8 +304,8 @@ int main( int argc , char ** argv )
 	      << std::endl;
     }
 
-  const bool rok = SolveVariants( blocks , bv.names , classify ,
-                                  RefObjective , tol , bsolvers , relax );
+  const bool rok = SolveFormulations( blocks , forms.names , classify ,
+                                      RefObjective , tol , bsolvers , relax );
   ok = ok && rok && solutions_ok;
   }
 

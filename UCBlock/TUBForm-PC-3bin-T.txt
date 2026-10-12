@@ -1,11 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - TUBVar-PC-3bin-T.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - TUBForm-PC-3bin-T.txt - - - - - - - - - - - - - -
 #
-# The variants of the BlockConfig of a ThermalUnitBlock that a battery
+# The formulations of the BlockConfig of a ThermalUnitBlock that a battery
 # compares on the long horizons: the 3bin and T formulations with
 # Perspective Cuts, the interval-based ones (pt, DP, SU, SD, SUSD) being
-# too expensive there [see TUBVar-PC.txt].
-# The unit is read once per variant, each copy is solved by the same
+# too expensive there [see TUBForm-PC.txt].
+# The unit is read once per formulation, each copy is solved by the same
 # BlockSolverConfig and the copies are compared with each other, being
 # the same unit [see -F of TUDPS_test].
 #
@@ -14,14 +14,14 @@
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-2  # number of variants of the BlockConfig
+2  # number of formulations
 
-# now all the variants - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*TUBCfg-3bin-PC.txt     # 1st variant: 3bin-PC
-*TUBCfg-T-PC.txt        # 2nd variant: T-PC
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*TUBCfg-3bin-PC.txt     # 1st formulation: 3bin-PC
+*TUBCfg-T-PC.txt        # 2nd formulation: T-PC
 
-# end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - END TUBVar-PC-3bin-T.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - END TUBForm-PC-3bin-T.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

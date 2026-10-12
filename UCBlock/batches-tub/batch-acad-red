@@ -20,7 +20,7 @@ par=BSCfg.txt
 # ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
 
 # the formulations of the unit are compared on each instance: it is read once
-# per BlockConfig TUBCfg-<form>.txt that TUBVar-PC.txt lists, i.e., every
+# per BlockConfig TUBCfg-<form>.txt that TUBForm-PC.txt lists, i.e., every
 # formulation (3bin/T/pt/DP/SU/SD/SUSD) with the perspective cuts, each copy is
 # solved by the same Solver, and the copies must agree with each other as the
 # two Solver of each copy do. Only the short horizon is run here, hence the list
@@ -37,7 +37,8 @@ for h in $hlist; do
 
     what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-    run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" -F TUBVar-PC.txt -n "$iter"
+    run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
+        -F TUBForm-PC.txt -n "$iter"
 
   done
 done

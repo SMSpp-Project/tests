@@ -4,13 +4,13 @@
 /** @file
  * Main for testing different formulations of some problem.
  *
- * This main loads a Block once per variant of its BlockConfig, given as the
- * list of -F [see read_BlockConfig_variants()], and BlockConfig-ures each
- * copy with its own, assumed to produce a formulation of the same problem.
- * Then it attaches to each copy the Solver of the BlockSolverConfig of its
- * variant, or of -S if the variant has none, solves all of them and compares
- * the results [see SolveVariants()]. Given -B rather than -F, there is one
- * copy and its Solver are compared with each other.
+ * This main loads a Block once per formulation of its BlockConfig, given as
+ * the list of -F [see read_formulations()], and BlockConfig-ures each copy
+ * with its own, assumed to produce a formulation of the same problem. Then it
+ * attaches to each copy the Solver of the BlockSolverConfig of its
+ * formulation, or of -S if the formulation has none, solves all of them and
+ * compares the results [see SolveFormulations()]. Given -B rather than -F,
+ * there is one copy and its Solver are compared with each other.
  *
  * Both the BlockConfig and the BlockSolverConfig can be "meta", i.e., a
  *
@@ -46,7 +46,7 @@
 /*--------------------------------------------------------------------------*/
 
 // test-specific command-line knobs, set by process_specific_arg(); the
-// variants (-F or -B) and the BlockSolverConfig (-S) are those of
+// formulations (-F or -B) and the BlockSolverConfig (-S) are those of
 // common_utils
 
 static bool process_specific_arg( int opt )
@@ -77,27 +77,27 @@ int main( int argc , char **argv )
 
  process_args( argc , argv , process_specific_arg );
 
- // the variants of the BlockConfig, with their BlockSolverConfig - - - - - -
+ // the formulations of the BlockConfig, with their BlockSolverConfig - - - -
 
- auto bv = get_BlockConfig_variants();
+ auto forms = get_formulations();
 
  std::vector< Block * > blocks;
  std::vector< Configuration * > bscs;
  std::vector< std::vector< bool > > relax;
- for( std::size_t k = 0 ; k < bv.configs.size() ; ++k ) {
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
   auto b = Block::deserialize( filename );
   if( ! b ) {
    std::cerr << "error: cannot load Block from " << filename << std::endl;
    return( 1 );
    }
 
-  b_config_Block( b , bv.configs[ k ] , bv.file );
+  b_config_Block( b , forms.configs[ k ] , forms.file );
 
-  auto bsc = solver_config_of( bv , k );
-  relax.push_back( attach_variant_Solvers( b , bsc , bv , k ) );
+  auto bsc = solver_config_of( forms , k );
+  relax.push_back( attach_formulation_Solvers( b , bsc , forms , k ) );
   if( b->get_registered_solvers().empty() ) {
-   std::cerr << "Error: no Solver registered to variant " << bv.names[ k ]
-             << std::endl;
+   std::cerr << "Error: no Solver registered to formulation "
+             << forms.names[ k ] << std::endl;
    exit( 1 );
    }
 
@@ -105,13 +105,13 @@ int main( int argc , char **argv )
   bscs.push_back( bsc );
   }
 
- delete( bv.owner );
+ delete( forms.owner );
 
  // solve, each Solver claiming an optimum, which must agree (2e-7) - - - - -
 
- bool ok = SolveVariants( blocks , bv.names ,
-                          exact_getter( ObjGetter::VarValue ) ,
-                          RefObjective , 2e-7 , {} , relax );
+ bool ok = SolveFormulations( blocks , forms.names ,
+                              exact_getter( ObjGetter::VarValue ) ,
+                              RefObjective , 2e-7 , {} , relax );
 
  if( ok )
   std::cout << GREEN( Test passed!! ) << std::endl;
