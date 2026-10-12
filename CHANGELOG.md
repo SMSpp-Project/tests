@@ -60,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `MMCFND_test` takes the two formulations of `MMCFNetworkDesignBlock`
+  with `-F NDVar.txt` (pairs `BlockConfig` + `BlockSolverConfig`) instead
+  of `-m`/`-M`/`-b`/`-B`, its options being parsed by `common_utils`
+
 - `SingleFlowDCRBlock/batches/batch` runs each instance in both
   formulations, the SOCP and the P/C one, with `-F DCRVar.txt`, whose
   variants carry their `BlockSolverConfig` and their `-R`, and compares
