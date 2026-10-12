@@ -245,6 +245,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the meta `BlockSolverConfig` of the `LagBFunction` of `UCBlock` give the
+  `NuclearUnitBlock` its own entry, which fell on `*` since the match is on
+  the exact `classname()`: `NUBSCfg-DP.txt` (`NuclearUnitExtDPSolver`) in
+  `InnerBSCfg-DP.txt`, as `ThermalUnitBlock` has its dynamic programming,
+  and `TUBSCfg-CLP.txt` / `TUBSCfg-QCP.txt` in `InnerBSCfg.txt` /
+  `InnerBSCfg-AC.txt`, as `ThermalUnitBlock`
+
 - `MMCFBlock_test` passes only if every round of the online training of
   its Solver passes, not only the last one
 

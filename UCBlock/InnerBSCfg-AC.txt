@@ -10,6 +10,7 @@
 # LPBSCfg-QCP.txt instead of the HiGHS TUBSCfg-CLP.txt / LPBSCfg.txt.
 #
 #   ThermalUnitBlock  -> TUBSCfg-QCP.txt (GUROBI, QCP-capable)
+#   NuclearUnitBlock  -> TUBSCfg-QCP.txt (the same, for the nuclear unit)
 #   *  (catch-all)    -> LPBSCfg-QCP.txt (GUROBI, QCP-capable)
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -18,9 +19,10 @@
 # a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
-2 # the number of elements in the map
+3 # the number of elements in the map
 
 ThermalUnitBlock        *TUBSCfg-QCP.txt
+NuclearUnitBlock        *TUBSCfg-QCP.txt
 *                       *LPBSCfg-QCP.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

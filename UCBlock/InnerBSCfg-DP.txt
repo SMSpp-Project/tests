@@ -10,15 +10,19 @@
 #
 #   ThermalUnitBlock     -> TUBSCfg-DP.txt  (the unit solved exactly by
 #                                            dynamic programming)
+#   NuclearUnitBlock     -> NUBSCfg-DP.txt  (the same, by the dynamic
+#                                            programming of its rules)
 #   ConversionUnitBlock  -> CUBSCfg-MIP.txt (the unit solved with its
 #                                            integer commitment)
 #   *  (catch-all)       -> LPBSCfg.txt     (every other "hard" inner Block)
 #
 # The "*" entry is the default applied to any inner Block whose classname()
-# is not listed explicitly. The units are solved with their integer
-# commitment, so that the bound of the Lagrangian Dual is the Lagrangian one
-# of the integer problem and the binary variables are binary for the
-# proximal penalty of the PrimalProximalHeur [see BSPar-DP.txt].
+# is not listed explicitly; the match is on the exact classname(), hence a
+# NuclearUnitBlock, although a ThermalUnitBlock, is listed by its own name.
+# The units are solved with their integer commitment, so that the bound of
+# the Lagrangian Dual is the Lagrangian one of the integer problem and the
+# binary variables are binary for the proximal penalty of the
+# PrimalProximalHeur [see BSPar-DP.txt].
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -26,9 +30,10 @@
 # a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
-3 # the number of elements in the map
+4 # the number of elements in the map
 
 ThermalUnitBlock        *TUBSCfg-DP.txt
+NuclearUnitBlock        *NUBSCfg-DP.txt
 ConversionUnitBlock     *CUBSCfg-MIP.txt
 *                       *LPBSCfg.txt
 
