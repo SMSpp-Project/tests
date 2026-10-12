@@ -77,6 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the six batteries of `MILPSolver/QuadFunction` share
+  `batches/qf_battery.sh`, each only naming its family of instances and its
+  type, the runs being those they made before
+
 - the batteries of `CapacitatedFacilityLocationBlock` share
   `batches/cfl_battery.sh`, the arguments, the runs of an instance for
   every seed and the ORLib, Yang and TBED instances: each of them only says
