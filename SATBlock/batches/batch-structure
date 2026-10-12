@@ -34,7 +34,7 @@ satgen="${4:-smspp_satgen}"
 
 # the instances are written in a directory of their own, removed at the end
 dir="$(mktemp -d)"
-trap 'rm -rf "${dir}"' EXIT
+trap 'rm -rf "${dir}"; report_skipped' EXIT
 
 # sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

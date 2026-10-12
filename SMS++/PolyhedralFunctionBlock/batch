@@ -111,4 +111,5 @@ printf "\nTotal elapsed time: %02d:%02d:%02d\n" \
   $((SECONDS%60))
 printf "Completed cases: %d; failures: %d\n" "$cases" "$failures"
 
-exit "$failures"
+# the number of failures may exceed 255, which an exit status cannot hold
+exit $(( failures > 0 ))

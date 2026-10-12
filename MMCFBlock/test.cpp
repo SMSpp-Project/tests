@@ -451,10 +451,10 @@ int main( int argc , char **argv )
     n_rounds = inner->get_int_par( idx );
    }
 
- bool AllPassed = false;
+ bool AllPassed = true;
  for( int r = 0 ; r < n_rounds ; ++r ) {
   CLOG1( n_rounds > 1 , "[round " << r << "] " );
-  AllPassed = SolveBoth();
+  AllPassed &= SolveBoth();
   }
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

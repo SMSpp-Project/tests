@@ -131,6 +131,18 @@ fw_run() {
 # it, while any other nonzero status does.
 
 SKIPPED_RUNS=0
+SKIPPED_NAMES=()
+
+# Usage: report_skipped
+# Says how many runs were skipped and which, if any; it is the EXIT trap of
+# every battery, and a battery that sets an EXIT trap of its own calls it
+# there
+report_skipped() {
+    [ "${SKIPPED_RUNS}" -gt 0 ] || return 0
+    echo "${SKIPPED_RUNS} run(s) skipped, the build not having their Solver:"
+    printf "  [%s]\n" "${SKIPPED_NAMES[@]}"
+}
+trap report_skipped EXIT
 
 run_test() {
     local _exe=$1
@@ -144,6 +156,7 @@ run_test() {
     local _rv=$?
     if [ ${_rv} -eq 77 ]; then
         SKIPPED_RUNS=$(( SKIPPED_RUNS + 1 ))
+        SKIPPED_NAMES+=( "$*" )
         return 0
     fi
     if [ ${_rv} -ne 0 ]; then

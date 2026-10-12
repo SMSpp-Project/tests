@@ -157,6 +157,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `MMCFBlock_test` passes only if every round of the online training of
+  its Solver passes, not only the last one
+
+- `SMS++/PolyhedralFunctionBlock/batch` exits with 1 on any failure: the
+  number of failures, which it returned, is 0 again from 256
+
+- the batteries say at their end which runs they skipped, i.e., exited with
+  77 since the build has none of their Solver [see `report_skipped` of
+  `batch_common.sh`], as the comment there said they did
+
 - `CapacitatedFacilityLocationBlock/CFLBSCfg-ldvscuts.txt` gives its
   `GRBMILPSolver` the parameters of GUROBI (it gave those of CPLEX, which
   stopped every run of `batch-ldvscuts`), the root node being solved with
