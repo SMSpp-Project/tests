@@ -38,7 +38,8 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
                   # disable presolve for reproducibility
-#CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme numerical caution
+# 0 = off (default), 1 = extreme numerical caution
+#CPXPARAM_Emphasis_Numerical      1
 
 # All specific GUROBI parameter (uncomment based on Solver)
 #Method        1   # 0 = primal, 1 = dual simplex (matches CPLEX default)
@@ -61,7 +62,8 @@ dual_feasibility_tolerance    1e-7
 # All specific HiGHS parameter (uncomment based on Solver)
 presolve  off    # disable presolve for reproducibility
 solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
-                 # (ipm = interior point: converges to analytic center, unique x*)
+                 # (ipm = interior point: converges to analytic center,
+                 # unique x*)
 
 #strOutputFile  uc1.lp
 

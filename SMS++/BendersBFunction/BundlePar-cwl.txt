@@ -28,26 +28,37 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 intMaxIter   100000 # MaxIter, max number of iterations for each call
 intLogVerb        3 # LogVerb, log verbosity of main Bundle algorithm
-intBPar1         20 # discard items when they have been useless for <this> iterations
+# discard items when they have been useless for <this> iterations
+intBPar1         20
 intBPar2        400 # max bundle size per component
 intBPar3          1 # max n. of items to fetch from Fi() at each iteration
 intBPar4          1 # min n. of items to fetch from Fi() at each iteration
-intBPar6          0 # second parameter for dynamic max n. of items per iteration
+# second parameter for dynamic max n. of items per iteration
+intBPar6          0
 intBPar7         11 # how to deal with the global pools
-intMnSSC          0 # min number of consecutive SS with the same t for a t increase
-intMnNSC          1 # min number of consecutive NS with the same t for a t decrease
-inttSPar1         0 # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
-intMaxNrEvls      2 # maximum number of function evaluations at each iteration
+# min number of consecutive SS with the same t for a t increase
+intMnSSC          0
+# min number of consecutive NS with the same t for a t decrease
+intMnNSC          1
+# long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
+inttSPar1         0
+# maximum number of function evaluations at each iteration
+intMaxNrEvls      2
 
 15 # number of double parameters
 
 # now all the double parameters
 dblRelAcc     1e-9 # relative accuracy required to solution
-dblNZEps      1e-8 # stopping parameter: threshold to declare 0 the || residual ||
-dbltStar      1e+4 # stopping parameter: multiplied to || residual || to estimate gap
-dblBPar5         4 # first parameter for dynamic max n. of items per iteration
-dblm1        -0.01 # a NS is possible if (~) Fi( Lambda1 ) >= Fi( Lambda ) + | m1 | v*
-dblm2         0.99 # a SS is possible if Fi( Lambda1 ) <= Fi( Lambda ) + ( 1 - m2 ) v*
+# stopping parameter: threshold to declare 0 the || residual ||
+dblNZEps      1e-8
+# stopping parameter: multiplied to || residual || to estimate gap
+dbltStar      1e+4
+# first parameter for dynamic max n. of items per iteration
+dblBPar5         4
+# a NS is possible if (~) Fi( Lambda1 ) >= Fi( Lambda ) + | m1 | v*
+dblm1        -0.01
+# a SS is possible if Fi( Lambda1 ) <= Fi( Lambda ) + ( 1 - m2 ) v*
+dblm2         0.99
 dblm3         0.99 # a NR is computed if \sigma^* < - t * m3 * || z* ||
 dblmxIncr       10 # max increase of t
 dblmnIncr      1.5 # min increase of t (each time it is increased)
@@ -61,7 +72,8 @@ dbltSPar2    0.001 # parameter for the long-term t-strategy
 1 # number of string parameters
 
 # now all the string parameters
-strMPBSolverCfg  MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
+# BlockSolverConfig for the MasterProblemBlock's Solver
+strMPBSolverCfg  MPBCfg.txt
 
 0 # number of vector-of-int parameters
 

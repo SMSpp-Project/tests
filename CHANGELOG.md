@@ -60,6 +60,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the header and END boxes of the configuration files that lacked them or
+  had them with another name or the name glued to the dashes, the author
+  lines and the lines over 77 columns, the comments being rewrapped and
+  nothing else of the files changing
+
 - `TSSB_test` and `MSSB_test` are one main, `stochastic_test.{cpp,h}`, the
   two `test.cpp` only saying which class they read and what they add (the
   Benders form of `-b`, the round trip of the `Solution`); both take `-F`,

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - CFLBCfg-NF.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBCfg-NF.txt - - - - - - - - - - - - - - - -
 #
 # The BlockConfig of a CapacitatedFacilityLocationBlock in the natural
 # formulation (static_variables = 0) with its default constraints, i.e., the
@@ -47,5 +47,5 @@ SimpleConfiguration<int>
 *    # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END CFLBCfg-NF.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBCfg-NF.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

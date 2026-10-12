@@ -56,7 +56,8 @@ Method        1   # 0 = primal, 1 = dual simplex, 2 = barrier: the
                   # columns for a fraction of the iterations
 #Presolve      0   # 0 = off, 1 = conservative, 2 = aggressive (default -1):
                   # off, the master of a design over several extendable lines
-                  # ends in "Bundle::FormD: unrecoverable MP failure", so it is
+                  # ends in "Bundle::FormD: unrecoverable MP failure", so it
+                  # is
                   # left at its default here
 NumericFocus  1   # 0 = auto, 1..3 = increasing precision focus: the master
                   # is small and re-solved thousands of times, so whatever

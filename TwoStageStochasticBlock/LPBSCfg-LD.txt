@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - LPBSCfg-LD.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LPBSCfg-LD.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a sub-Block of the TSSBlock
 # to be solved by a LagrangianDualSolver using a BundleSolver as the inner
 # Solver
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -73,5 +71,5 @@ str_LagBF_BSCfg InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END LPBSCfg-LD.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END LPBSCfg-LD.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

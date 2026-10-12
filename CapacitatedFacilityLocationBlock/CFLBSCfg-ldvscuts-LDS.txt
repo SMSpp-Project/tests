@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -CFLBSCfg-ldvscuts-LDS.txt- - - - - - - - - - - - -
+# - - - - - - - - - - - - CFLBSCfg-ldvscuts-LDS.txt - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
 # CapacitatedFacilityLocationBlock to be solved by a LagrangianDualSolver
@@ -124,5 +124,5 @@ str_LagBF_BSCfg      LPBSCfg-K-DP.txt
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - -END CFLBSCfg-ldvscuts-LDS.txt- - - - - - - - - - - -
+# - - - - - - - - - - - END CFLBSCfg-ldvscuts-LDS.txt - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

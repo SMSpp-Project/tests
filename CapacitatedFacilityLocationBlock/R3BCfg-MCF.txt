@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - R3BCfg-MCF.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - R3BCfg-MCF.txt - - - - - - - - - - - - - - - -
 #
 # The Configuration of the R3Block of a CapacitatedFacilityLocationBlock that
 # makes it the MCFBlock of its flow relaxation (1).
@@ -11,5 +11,5 @@ SimpleConfiguration<int> # exact type of the Configuration object
 1  # 0 = copy, 1 or 2 = MCFBlock
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END R3BCfg-MCF.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END R3BCfg-MCF.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -TUBVar-PC-3bin-T.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - TUBVar-PC-3bin-T.txt - - - - - - - - - - - - - -
 #
 # The variants of the BlockConfig of a ThermalUnitBlock that a battery
 # compares on the long horizons: the 3bin and T formulations with

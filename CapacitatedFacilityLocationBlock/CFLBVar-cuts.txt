@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -CFLBVar-cuts.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBVar-cuts.txt - - - - - - - - - - - - - - -
 #
 # The variants that batch-cuts compares: the natural formulation with the
 # strong forcing constraints, whose continuous relaxation is solved by a

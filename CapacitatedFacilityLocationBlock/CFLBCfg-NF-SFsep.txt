@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -CFLBCfg-NF-SFsep.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - CFLBCfg-NF-SFsep.txt - - - - - - - - - - - - - -
 #
 # The BlockConfig of a CapacitatedFacilityLocationBlock in the natural
 # formulation with the group of the strong forcing constraints x_{ij} <= y_i

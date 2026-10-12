@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -MCFBSCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MCFBSCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the flow relaxation of a
 # CapacitatedFacilityLocationBlock, a MCFBlock, to be solved by every

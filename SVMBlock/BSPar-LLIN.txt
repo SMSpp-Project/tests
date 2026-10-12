@@ -10,7 +10,8 @@
 # LIBLINEAR only trains the problems it can express, i.e., the linear kernel
 # with the bias regularised, and it refuses the others rather than
 # approximating them: this is why it has a BlockSolverConfig, and a batch, of
-# its own rather than being one more Solver in BSPar.txt. Which problems those
+# its own rather than being one more Solver in BSPar.txt. Which problems
+# those
 # are is the complement of what LIBSVM has, both losses being fine here and
 # only the linear kernel being so.
 #

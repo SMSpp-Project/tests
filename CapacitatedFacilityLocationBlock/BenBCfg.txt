@@ -1,3 +1,14 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BenBCfg.txt - - - - - - - - - - - - - - - - -
+#
+# The BlockConfig of a CapacitatedFacilityLocationBlock in the Benders
+# friendly formulation, with the Configuration of its hidden BendersBFunction
+# and of the MCFBlock inside it in the extra field, for CFL_BDS_test [see
+# test_bds.cpp].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 # BlockConfig for B2 (the R3-copy CFLB): "Benders friendly" formulation
 # (wf has the BenFormBit, i.e. wf == 8).
 #
@@ -112,3 +123,7 @@ dblRelAcc 1e-9
 0  # vector<double> params
 0  # vector<string> params
 *  # extra
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BenBCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

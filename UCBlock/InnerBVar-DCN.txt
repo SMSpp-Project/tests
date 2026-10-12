@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -InnerBVar-DCN.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBVar-DCN.txt - - - - - - - - - - - - - - -
 #
 # The variants of the "meta"-BlockConfig of a UCBlock that batch-pypsa
 # compares: the formulations of the DCNetworkBlock, i.e., PTDF, CYCLE and
@@ -23,5 +23,5 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -END InnerBVar-DCN.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBVar-DCN.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -10,8 +10,6 @@
 # which the re-seeded frontier is re-explored (the parallel depth-first
 # exploration, which retains nothing, is deliberately not here).
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -23,13 +21,16 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 BranchAndXSolver                      # 2nd: BX best-first, reoptimization on
-BranchAndXSolver                      # 3rd: BX best-first with dives, reopt on
+# 3rd: BX best-first with dives, reopt on
+BranchAndXSolver
 BranchAndXSolver                      # 4th: BX depth-first serial, reopt on
-BranchAndXSolver                      # 5th: BX breadth-first, reoptimization on
+# 5th: BX breadth-first, reoptimization on
+BranchAndXSolver
 
 5  # number of ComputeConfig in this BlockSolverConfig
 
@@ -174,4 +175,8 @@ intSolveMethod 1
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - End BSPar-reopt.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-reopt.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

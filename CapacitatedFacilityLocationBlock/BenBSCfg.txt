@@ -1,3 +1,14 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BenBSCfg.txt - - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of a CapacitatedFacilityLocationBlock in the Benders
+# friendly formulation: a GRBMILPSolver that solves its continuous relaxation
+# with the separation loop of the Benders cuts (intRelaxIntVars 2), for
+# CFL_BDS_test and the R3Block of CFLBVar-ben.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 # BlockSolverConfig for B2 (BenForm CFLB): GRBMILPSolver with the new
 # intRelaxIntVars == 2 mode: pure-LP solve with an explicit user-cut
 # separation loop driven by MILPSolver around each guts_of_compute().
@@ -35,3 +46,7 @@ dblRelAcc 1e-7
 0  # vstr
 
 *  # extra
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BenBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

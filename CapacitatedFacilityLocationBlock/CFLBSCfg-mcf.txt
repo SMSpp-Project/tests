@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -CFLBSCfg-mcf.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBSCfg-mcf.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
 # CapacitatedFacilityLocationBlock to be solved by a :MILPSolver

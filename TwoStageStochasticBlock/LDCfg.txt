@@ -4,8 +4,6 @@
 # A txt description of a ComputeConfig for the LagrangianDualSolver wrapping
 # a BundleSolver as the inner Solver
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -22,27 +20,41 @@ intDoEasy              0 # do easy components for (some) LagBFunction
 intMaxIter         10000 # max number of iterations for each call
 intMaxThread           1 # MaxThread, max number of new tasks to spawn
 intLogVerb             4 # log verbosity of main Bundle algorithm
-intWZNorm              2 # which norm to use in the norm-based stopping condition
-intBPar1              20 # discard items when they have been useless for <this> iterations
+# which norm to use in the norm-based stopping condition
+intWZNorm              2
+# discard items when they have been useless for <this> iterations
+intBPar1              20
 intBPar2             100 # max bundle size per component
-intBPar3               1 # max n. of items to fetch from Fi() at each iteration
-intBPar4               1 # min n. of items to fetch from Fi() at each iteration
-intBPar6               0 # second parameter for dynamic max n. of items per iteration
+# max n. of items to fetch from Fi() at each iteration
+intBPar3               1
+# min n. of items to fetch from Fi() at each iteration
+intBPar4               1
+# second parameter for dynamic max n. of items per iteration
+intBPar6               0
 intBPar7              11 # how to deal with the global pools
-intMnSSC               0 # min number of consecutive SS with the same t for a t increase
-intMnNSC               1 # min number of consecutive NS with the same t for a t decrease
-inttSPar1             12 # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
-intMaxNrEvls           2 # maximum number of function evaluations at each iteration
+# min number of consecutive SS with the same t for a t increase
+intMnSSC               0
+# min number of consecutive NS with the same t for a t decrease
+intMnNSC               1
+# long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
+inttSPar1             12
+# maximum number of function evaluations at each iteration
+intMaxNrEvls           2
 
 15 # number of double parameters
 
 # now all the double parameters
 dblRelAcc           1e-6 # relative accuracy required to solution
-dblNZEps            1e-6 # stopping parameter: threshold to declare 0 the || residual ||
-dbltStar           -1e+3 # stopping parameter: multiplied to || residual || to estimate gap
-dblBPar5               4 # first parameter for dynamic max n. of items per iteration
-dblm1              -0.30 # a NS is possible if (~) Fi( Lambda1 ) >= Fi( Lambda ) + | m1 | v*
-dblm2               0.90 # a SS is possible if Fi( Lambda1 ) <= Fi( Lambda ) + ( 1 - m2 ) v*
+# stopping parameter: threshold to declare 0 the || residual ||
+dblNZEps            1e-6
+# stopping parameter: multiplied to || residual || to estimate gap
+dbltStar           -1e+3
+# first parameter for dynamic max n. of items per iteration
+dblBPar5               4
+# a NS is possible if (~) Fi( Lambda1 ) >= Fi( Lambda ) + | m1 | v*
+dblm1              -0.30
+# a SS is possible if Fi( Lambda1 ) <= Fi( Lambda ) + ( 1 - m2 ) v*
+dblm2               0.90
 dblm3               0.99 # a NR is computed if \sigma^* < - t * m3 * || z* ||
 dblmxIncr             10 # max increase of t
 dblmnIncr            1.5 # min increase of t (each time it is increased)
@@ -56,9 +68,12 @@ dbltSPar2           1e-2 # parameter for the long-term t-strategy
 3 # number of string parameters
 
 # now all the string parameters
-str_LDSlv_ISName   BundleSolver # the inner Solver used by LagrangianDualSolver
-str_LagBF_BSCfg                 BSCfg2.txt # BlockSolverConfig for the LagBFunctions
-strMPBSolverCfg                 MPBCfg.txt # BlockSolverConfig for the MasterProblemBlock's Solver
+# the inner Solver used by LagrangianDualSolver
+str_LDSlv_ISName   BundleSolver
+# BlockSolverConfig for the LagBFunctions
+str_LagBF_BSCfg                 BSCfg2.txt
+# BlockSolverConfig for the MasterProblemBlock's Solver
+strMPBSolverCfg                 MPBCfg.txt
 
 0 # number of vector-of-int parameters
 

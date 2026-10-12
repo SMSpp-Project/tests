@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -CFLBSCfg-ben.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBSCfg-ben.txt - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig for B1: GRBMILPSolver on the LP relaxation.
 # Plain LP (intRelaxIntVars = 1), no user cuts (the natural formulation

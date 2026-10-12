@@ -1,3 +1,14 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBCfg-BF.txt - - - - - - - - - - - - - - - -
+#
+# The BlockConfig of the copy of a CapacitatedFacilityLocationBlock in
+# CFLBVar-ben.txt: the Benders friendly formulation with feasibility cuts
+# (static_variables = 3), with the Configuration of its hidden
+# BendersBFunction and of the MCFBlock inside it in the extra field.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 # BlockConfig for B2 (the R3-copy CFLB): "Benders friendly" formulation
 # (wf has the BenFormBit, i.e. wf == 8).
 #
@@ -112,3 +123,7 @@ dblRelAcc 1e-9
 0  # vector<double> params
 0  # vector<string> params
 *  # extra
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBCfg-BF.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

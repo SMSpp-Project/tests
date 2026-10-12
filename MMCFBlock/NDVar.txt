@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - -NDVar.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - NDVar.txt - - - - - - - - - - - - - - - - -
 #
 # The variants of a MMCFNetworkDesignBlock that batch-nd compares: the
 # monolithic formulation of BPar-ND.txt, solved by the Solver of
@@ -30,5 +30,5 @@ SimpleConfiguration<std::pair<Configuration*,Configuration*>>
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -END NDVar.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END NDVar.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

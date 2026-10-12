@@ -2,7 +2,8 @@
 # - - - - - - - - - - - - - - - - LPPar_C.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a Block containing the QP
-# reprsentation of the problem solved by the tester of the quadratic functions;
+# reprsentation of the problem solved by the tester of the quadratic
+# functions;
 # this being a QP (with no sub-Block), a :MILPSolver (say, a CPXMILPSolver ,
 # SCIPMILPSolver, GRBMILPSolver or a HiGHSMILPSolver) is perfectly adequate.
 # This BlockSolverConfig is thought to be used for a continuous relaxation

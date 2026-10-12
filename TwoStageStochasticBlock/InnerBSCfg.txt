@@ -2,16 +2,19 @@
 # - - - - - - - - - - - - - - -  InnerBSCfg.txt - - - - - - - - - - - - - - -
 #
 # A "meta"-BlockSolverConfig: a map from a Block classname() to the
-# BlockSolverConfig to attach to every sub-Block of that class. s_config_Block()
+# BlockSolverConfig to attach to every sub-Block of that class.
+# s_config_Block()
 # dispatches it by classname over the WHOLE Block tree, so it reaches the
-# ThermalUnitBlock that sit deep inside each scenario's UCBlock and attaches the
+# ThermalUnitBlock that sit deep inside each scenario's UCBlock and attaches
+# the
 # efficient ThermalUnitExtDPSolver to them:
 #
 #   ThermalUnitBlock  -> TUBSCfg-DP.txt (ThermalUnitExtDPSolver, integer)
 #   BinaryKnapsackBlock -> BKBSCfg-DP.txt (dynamic programming, integer)
 #   *  (catch-all)    -> BSCfg1.txt     (every other "hard" inner unit)
 #
-# The "*" entry is the default applied to any inner Block whose classname() is
+# The "*" entry is the default applied to any inner Block whose classname()
+# is
 # not listed explicitly (BatteryUnitBlock, IntermittentUnitBlock, ...).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

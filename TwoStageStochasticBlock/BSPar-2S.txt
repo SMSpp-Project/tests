@@ -44,15 +44,20 @@ LagrangianDualSolver  # name of 2nd Solver
 int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
 intLogVerb        0 # log verbosity of main Bundle algorithm
 intTrgtMng       31 # bit-wise encoding targets and accuracies management:
-                    # bit 0: if lower/upper target is set to each convex/concave component
-                    # bit 1: if upper/lower target is set to each convex/concave component
-                    # bit 2-3: if accuracy is set (2 = upper - lower, 3 = using EpsU)
-                    # bit 4: if Lipschitz constant is used to compute the upper model
+                    # bit 0: if lower/upper target is set to each
+                    # convex/concave component
+                    # bit 1: if upper/lower target is set to each
+                    # convex/concave component
+                    # bit 2-3: if accuracy is set (2 = upper - lower, 3 =
+                    # using EpsU)
+                    # bit 4: if Lipschitz constant is used to compute the
+                    # upper model
 
 2 # number of double parameters
 
 # now all the double parameters
-dbltStar         -1e+0 # stopping parameter: multiplied to || residual || to estimate gap
+# stopping parameter: multiplied to || residual || to estimate gap
+dbltStar         -1e+0
 dbltInit          1e-3 # initial value for t
 
 1 # number of string parameters

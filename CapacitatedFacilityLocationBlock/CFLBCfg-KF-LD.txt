@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -CFLBCfg-KF-LD.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBCfg-KF-LD.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockConfig for CapacitatedFacilityLocationBlock
 #
@@ -53,5 +53,5 @@ SimpleConfiguration<int>
 *    # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -END CFLBCfg-KF-LD.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBCfg-KF-LD.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

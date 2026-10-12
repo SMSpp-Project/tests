@@ -5,10 +5,12 @@
 # InvestmentFunction, i.e., the whole TwoStageStochasticBlock with the design
 # fixed at the current point.
 #
-# The linearization the InvestmentFunction hands to the bundle is built out of
+# The linearization the InvestmentFunction hands to the bundle is built out
+# of
 # the duals of the Constraint in which the design appears, one term per
 # scenario: any optimal duals give a valid one, and the presolve is switched
-# off and the dual simplex asked for by name only so that the linearization is
+# off and the dual simplex asked for by name only so that the linearization
+# is
 # the same from one run to the next.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -34,3 +36,7 @@ OptimalityTol   1e-9
 0 # number of vector-of-double parameters
 0 # number of vector-of-string parameters
 * # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END InvBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

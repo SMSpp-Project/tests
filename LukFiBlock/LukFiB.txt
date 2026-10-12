@@ -74,14 +74,19 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 intMaxIter   1000 # MaxIter, max number of iterations for each call
 intLogVerb      2 # LogVerb, log verbosity of main Bundle algorithm
-intBPar1       20 # discard items when they have been useless for <this> iterations
+# discard items when they have been useless for <this> iterations
+intBPar1       20
 intBPar2      400 # max bundle size per component
 intBPar3        1 # max n. of items to fetch from Fi() at each iteration
 intBPar4        1 # min n. of items to fetch from Fi() at each iteration
-intBPar6        0 # second parameter for dynamic max n. of items per iteration
-intMnSSC        0 # min number of consecutive SS with the same t for a t increase
-intMnNSC        3 # min number of consecutive NS with the same t for a t decrease
-inttSPar1      12 # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
+# second parameter for dynamic max n. of items per iteration
+intBPar6        0
+# min number of consecutive SS with the same t for a t increase
+intMnSSC        0
+# min number of consecutive NS with the same t for a t decrease
+intMnNSC        3
+# long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
+inttSPar1      12
 intMaxNrEvls    2 # maximum number of function evaluations at each iteration
 intRstAlg      30 # parameter to handle the reset of the algorithm
 
@@ -93,9 +98,12 @@ dblRelMPAcc   1e-9 # precision required to the MP Solver (optimality)
 dblRMPAccSol  1e-9 # precision required to the MP Solver (feasibility)
 
 dbltStar      1e+4 # stopping parameter related to norm of residual
-dblBPar5         4 # first parameter for dynamic max n. of items per iteration
-dblm1        -0.01 # a NS is possible if (~) Fi( Lambda1 ) >= Fi( Lambda ) + | m1 | v*
-dblm2         0.99 # a SS is possible if Fi( Lambda1 ) <= Fi( Lambda ) + ( 1 - m2 ) v*
+# first parameter for dynamic max n. of items per iteration
+dblBPar5         4
+# a NS is possible if (~) Fi( Lambda1 ) >= Fi( Lambda ) + | m1 | v*
+dblm1        -0.01
+# a SS is possible if Fi( Lambda1 ) <= Fi( Lambda ) + ( 1 - m2 ) v*
+dblm2         0.99
 dblm3         0.99 # a NR is computed if \sigma^* < - t * m3 * || z* ||
 dblmxIncr       10 # max increase of t
 dblmnIncr      1.5 # min increase of t (each time it is increased)

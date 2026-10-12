@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - TUBCfg-DP-PC.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - TUBCfg-DP-PC.txt - - - - - - - - - - - - - - -
 #
 # The BlockConfig of a ThermalUnitBlock that selects the DP formulation with
 # Perspective Cuts (static_variables = 11).
@@ -52,5 +52,5 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END TUBCfg-DP-PC.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END TUBCfg-DP-PC.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

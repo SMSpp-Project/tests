@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - BSPar-BDS-Pareto.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - BSPar-BDS-Pareto.txt - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of a Block with a single BendersDecompositionSolver
 # in the MILP regime with the Pareto-optimal cuts [see BDSCfg-Pareto.txt].
@@ -22,5 +22,5 @@ BendersDecompositionSolver  # name of 1st Solver
 *BDSCfg-Pareto.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - END BSPar-BDS-Pareto.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - END BSPar-BDS-Pareto.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

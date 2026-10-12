@@ -1,9 +1,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - BSPar-bx-dive.txt - - - - - - - - - - - - - -
 #
-# Single-exact-solver BlockSolverConfig: the greedy relaxation (which brackets
-# the optimum) plus the BranchAndXSolver exploring best-first with depth-first
-# dives (intSolveMethod = BestFSDive), the robust hedge that recovers a feasible
+# Single-exact-solver BlockSolverConfig: the greedy relaxation (which
+# brackets
+# the optimum) plus the BranchAndXSolver exploring best-first with
+# depth-first
+# dives (intSolveMethod = BestFSDive), the robust hedge that recovers a
+# feasible
 # incumbent early. It is the "BX-dive" entry of the hard-instance lineups
 # (batch-jooken and batch-pisinger-large). The inner relaxation (the greedy
 # leaf) is set by the shared BX-baseCfg.txt; only the exploration mode is

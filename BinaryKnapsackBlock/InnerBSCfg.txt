@@ -1,7 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  InnerBSCfg.txt - - - - - - - - - - - - - - -
 #
-# Single-Solver BlockSolverConfig: the inner GreedyRelaxationBinaryKnapsackSolver
+# Single-Solver BlockSolverConfig: the inner
+# GreedyRelaxationBinaryKnapsackSolver
 # (continuous knapsack relaxation + branching) that BranchAndXSolver
 # applies to the Block (see strNameOfBlockSolverConfigurationFile in
 # BSPar-BX.txt).

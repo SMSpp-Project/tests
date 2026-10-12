@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -LPBSCfg-K-CX.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LPBSCfg-K-CX.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a BinaryKnapsackBlock solved
 # by a :MILPSolver

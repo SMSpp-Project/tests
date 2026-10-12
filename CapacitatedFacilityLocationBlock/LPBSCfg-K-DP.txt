@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -LPBSCfg-K-DP.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LPBSCfg-K-DP.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a BinaryKnapsackBlock solved
 # by a CoreCoreDPBinaryKnapsackSolver

@@ -42,7 +42,8 @@ intBPar1        20 # discard items when they have been useless for <this>
 intBPar2      1000 # max bundle size per component
 intBPar3         1 # max n. of items to fetch from Fi() at each iteration
 intBPar4         1 # min n. of items to fetch from Fi() at each iteration
-intBPar6         0 # second parameter for dynamic max n. of items per iteration
+# second parameter for dynamic max n. of items per iteration
+intBPar6         0
 intBPar7        15 # how to deal with the global pools
 intMnSSC         0 # min number of consecutive SS with the same t for a t
                    # increase
@@ -62,7 +63,8 @@ dblNZEps      1e-4 # stopping parameter: threshold to declare 0 the
                    # || residual ||
 dbltStar      -100 # stopping parameter: multiplied to || residual || to
                    # estimate gap
-dblBPar5         4 # first parameter for dynamic max n. of items per iteration
+# first parameter for dynamic max n. of items per iteration
+dblBPar5         4
 dblm1        -0.30 # a NS is possible if (~) Fi( Lambda1 ) >= Fi( Lambda )
                    # + | m1 | v*
 dblm2         0.90 # a SS is possible if Fi( Lambda1 ) <= Fi( Lambda )

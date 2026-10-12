@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -CFLBSCfg-ldvscuts.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - CFLBSCfg-ldvscuts.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
 # CapacitatedFacilityLocationBlock to be solved by a :MILPSolver (either to
@@ -93,5 +93,5 @@ MIPGap       1e-12
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -END CFLBSCfg-ldvscuts.txt- - - - - - - - - - - - -
+# - - - - - - - - - - - - END CFLBSCfg-ldvscuts.txt - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

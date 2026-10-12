@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar-incr.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-times.txt - - - - - - - - - - - - - - - -
 #
 # Cross-check BlockSolverConfig for the incremental greedy relaxation: it
 # attaches the exact reference optimum (:MILPSolver) and the BranchAndXSolver
@@ -8,8 +8,6 @@
 # incremental variant reaches the same optimum as the reference.
 #
 # Give us log and also use greedy solver
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -23,7 +21,8 @@ BlockSolverConfig     # exact type of the Configuration object
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 DPBinaryKnapsackSolver                # 1st: the exact reference optimum
 BranchAndXSolver                      # 2nd: BX best-first, incremental inner
-BranchAndXSolver                      # 3rd: BX depth-first, incremental inner
+# 3rd: BX depth-first, incremental inner
+BranchAndXSolver
 BranchAndXSolver                      # 4rd: BX best-first, greedy one
 BranchAndXSolver                      # 5rd: BX depth-first, greedy one
 
@@ -182,5 +181,9 @@ strLogFileName GreedyDFS
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End BSPar-incr.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-times.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-times.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - TUBCfg-SUSD-PC.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - TUBCfg-SUSD-PC.txt - - - - - - - - - - - - - - -
 #
 # The BlockConfig of a ThermalUnitBlock that selects the SUSD formulation
 # with Perspective Cuts (static_variables = 14).
@@ -46,5 +46,5 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END TUBCfg-SUSD-PC.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - END TUBCfg-SUSD-PC.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -2,7 +2,8 @@
 # - - - - - - - - - - - - - - -  BSPar-lazy.txt - - - - - - - - - - - - - - -
 #
 # Cross-check BlockSolverConfig exercising the LAZY bounding protocol of the
-# BranchAndXSolver (intBoundingProtocol = 1, which evaluates a node when it is
+# BranchAndXSolver (intBoundingProtocol = 1, which evaluates a node when it
+# is
 # extracted from the open set rather than when it is created): the exact MILP
 # reference plus the BX in each of its serial exploration strategies, all of
 # which must reach the same optimum as with the (default) eager protocol,
@@ -19,7 +20,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 BranchAndXSolver                      # 2nd: BX best-first, lazy bounding

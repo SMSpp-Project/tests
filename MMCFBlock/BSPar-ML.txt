@@ -54,9 +54,11 @@ int_LDSlv_iBCopy    0 # 1 if sub-Block must be R3B-copied
 intPushCostToOwner  0 # the value of intPushCostToOwner for the LagBF
 intMnSSC            0 # ML: t may change after every SS (network-driven)
 intMnNSC            0 # ML: t may change after every NS (network-driven)
-inttSPar1           3 # ML: bit 0 on => the network drives t, no long-term strategy
+# ML: bit 0 on => the network drives t, no long-term strategy
+inttSPar1           3
 intMLTrainOnline    1 # train the network online at the end of each compute()
-intMLSeed           0 # seed Torch RNG and re-init the net for reproducibility
+# seed Torch RNG and re-init the net for reproducibility
+intMLSeed           0
 intNTrainRounds     3 # times the instance is re-solved for online training
 
 2 # number of double parameters

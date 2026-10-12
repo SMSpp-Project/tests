@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - -TUBVar-PC.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - TUBVar-PC.txt - - - - - - - - - - - - - - - -
 #
 # The variants of the BlockConfig of a ThermalUnitBlock that a battery
 # compares: every formulation with Perspective Cuts, i.e., 3bin, T, pt, DP,
@@ -27,5 +27,5 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -END TUBVar-PC.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END TUBVar-PC.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

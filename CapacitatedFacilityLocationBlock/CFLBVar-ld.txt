@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - CFLBVar-ld.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBVar-ld.txt - - - - - - - - - - - - - - - -
 #
 # The variants that batch-ld compares: the natural formulation with the
 # strong forcing constraints, solved by a :MILPSolver, against a copy in the
@@ -36,5 +36,5 @@ SimpleConfiguration<std::vector<Configuration*>>
 # end of the variants - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END CFLBVar-ld.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBVar-ld.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

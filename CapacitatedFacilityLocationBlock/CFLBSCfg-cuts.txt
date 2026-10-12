@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -CFLBSCfg-cuts.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBSCfg-cuts.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a
 # CapacitatedFacilityLocationBlock to be solved by a :MILPSolver
@@ -94,5 +94,5 @@ dblMaxTime      120 # max time: 1 minute
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -END CFLBSCfg-cuts.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBSCfg-cuts.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
