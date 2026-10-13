@@ -106,6 +106,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the batteries `batch`, `batch-mcf` and `batch-cuts` of
+  `CapacitatedFacilityLocationBlock` run the Yang and TBED instances in CI
+  too, the first instance of each Yang size and the first TBED one with
+  seed 0 only, and all of them locally as before (`cfl_yang` takes the
+  numbers of the instances); they were skipped in CI as running for hours,
+  which was `MCFSimplex` pivoting for ever on an infeasible round of the MCF
+  R3Block (`batch-cuts`, which has none, had only copied the skip), and with
+  it fixed the 40 rounds take seconds
+
 - what the testers compare with -F is called a formulation everywhere, and
   no longer a variant: the lists are `*Form*.txt` (`TUBForm*.txt`,
   `NUBForm*.txt`, `InnerBForm-DCN*.txt`, `InnerBForm-LD.txt`,

@@ -51,11 +51,13 @@ cfl_orlib_small=( 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121
                   132 44 64 81 93 111 122 134 51 71 82 94 112 123 41 61 72
                   84 )
 
-# cfl_yang: the Yang instances, 5 of each size
+# cfl_yang [ h ... ]: the Yang instances of each size with the numbers
+# given, or all the 5 of them
 cfl_yang() {
-  local i h
+  local i h hs=( "$@" )
+  [ ${#hs[@]} -eq 0 ] && hs=( 1 2 3 4 5 )
   for i in 30-200 60-200 60-300 80-400; do
-    for (( h = 1 ; h <= 5 ; h++ )); do
+    for h in "${hs[@]}"; do
       cfl_run "${DATADIR}/txt/Yang/${i}/${i}-${h}.txt" l
     done
   done
