@@ -1,8 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -  InnerBSCfg-BX-LD.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  InnerBSCfg-BX.txt  - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of the relaxation of the BranchAndXSolver of
-# BXSFDCRP.
+# BXCfg.txt: the SFDCRBRelaxationSolver, which gives the bounds of the
+# nodes and the branching Changes, with its default parameters.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,17 +15,15 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-SFDCRBRelaxationSolver  # 1st: the 
+SFDCRBRelaxationSolver  # 1st: the relaxation of the nodes
 
 0  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# ComputeConfig of the SingleFlowDCRBendersSolver
-* # [none]
+# [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - -  END InnerBSCfg-BX-LD.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END InnerBSCfg-BX.txt  - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# usage: batch-instances-bx < exe file >
+#        < exe file > = path of the executable file, default
+#                       ./SingleFlowDCRBlock_test
+#
+# runs SingleFlowDCRBlock_test on the instances of the module (see
+# batch-instances) with the Solver of BSPar-BX.txt, i.e., the :MILPSolver,
+# the SingleFlowDCRBendersSolver and the BranchAndXSolver whose nodes are
+# solved by the SFDCRBRelaxationSolver, all in one run and compared with
+# each other, in the SOCP formulation, which is exact, so that the value of
+# the :MILPSolver is the optimum the other two are held to
+#
+# the SingleFlowDCRBendersSolver stops on its own criterion and does not
+# declare how much of a gap it leaves, and so does the BranchAndXSolver,
+# whose nodes are solved by it, so "-E ,inf,inf" holds both to the base
+# Solver contract alone, i.e. to the interval [ get_lb() , get_ub() ]
+# containing the optimum
+
+# the SOCP formulation is only run where Gurobi solves it whatever its
+# numerical focus, the 101 instances where it does not being listed, with
+# the reason, in socp-unstable.txt
+socp_unstable=$(grep -v '^#' "$(dirname "$0")/../socp-unstable.txt")
+
+# the SOCP formulation is not run either where Gurobi takes minutes on it
+socp_too_long="waxman/w1_800_08_7 waxman/w1_800_04_0"
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+exe=${1:-./SingleFlowDCRBlock_test}
+DATADIR=../../SingleFlowDCRBlock/data/nc4/single
+
+# in CI the SOCP formulation is not run, and the P/C one on one instance in
+# 10, as in batch-instances: there the :MILPSolver solves a relaxation,
+# which -R declares, and what is checked is that the bounds are in order
+# and that the Solution of the BranchAndXSolver is feasible
+if [ -n "$CI" ]; then socp=0; every=10; else socp=1; every=1; fi
+
+ran=0
+k=0
+for what in "$DATADIR"/*/*.nc4; do
+  [ -f "$what" ] || continue
+  (( k++ % every )) && continue
+  inst=${what#"$DATADIR"/}
+  if [ "$socp" = 1 ]; then
+    case " $(echo $socp_unstable $socp_too_long) " in
+      *" ${inst%.nc4} "*) continue ;;
+    esac
+    ran=1
+    run_test "$exe" "$what" -B DCRCfg-socp.txt -S BSPar-BX.txt -E ,inf,inf
+  else
+    ran=1
+    run_test "$exe" "$what" -B DCRCfg-pc.txt -S BSPar-BX.txt -R r,, \
+             -E ,inf,inf
+  fi
+done
+
+# a batch that has found no instance at all has tested nothing, and saying so
+# is the only way to tell it apart from one where everything went well
+if [ "$ran" -eq 0 ]; then
+  echo "No instance found in $DATADIR"
+  exit 1
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

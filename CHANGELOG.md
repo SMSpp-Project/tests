@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `batch-instances-bx` of `SingleFlowDCRBlock`: a `BranchAndXSolver` whose
+  nodes are solved by the `SFDCRBRelaxationSolver` next to the `Solver` of
+  `BSPar.txt` (`BSPar-BX.txt`, `BXCfg.txt`, `InnerBSCfg-BX.txt`), on the
+  SOCP formulation with its `BlockConfig`, hence with its feasibility
+  tolerance (on the P/C one in CI, as `batch-instances`); the build adds it
+  only when it has the `BranchAndXSolver` and the `SingleFlowDCRBlock` in it
+  has the `SFDCRBRelaxationSolver`
 - the `LagrangianDualRelaxationSolver` next to the `PrimalProximalHeur` in
   the cross-checks of `UCBlock` (`BSPar.txt`, `BSPar-DP.txt`, `BSPar-AC.txt`,
   `BSPar-AC-24h.txt`, `BSPar-PYPSA.txt`, `BSPar-par.txt`,

@@ -8,6 +8,7 @@ if (NOT hasParent)
     find_package(MILPSolver)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
+    find_package(BranchAndXSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -23,6 +24,24 @@ if (TARGET SMS++::SingleFlowDCRBlock)
 
     if (TARGET SMS++::MILPSolver)
         target_link_libraries(SingleFlowDCRBlock_test PRIVATE SMS++::MILPSolver)
+    endif ()
+
+    # the BranchAndXSolver of batch-instances-bx, whose nodes are solved by
+    # the SFDCRBRelaxationSolver: the battery is only there when the build
+    # has the former and the SingleFlowDCRBlock in it has the latter
+    set(DCR_HAS_BX FALSE)
+    if (TARGET SMS++::BranchAndXSolver)
+        target_link_libraries(SingleFlowDCRBlock_test
+                              PRIVATE SMS++::BranchAndXSolver)
+        get_target_property(DCR_INC SMS++::SingleFlowDCRBlock
+                            INTERFACE_INCLUDE_DIRECTORIES)
+        foreach (DIR ${DCR_INC})
+            string(REGEX REPLACE "^\\$<BUILD_INTERFACE:(.*)>$" "\\1" DIR
+                   "${DIR}")
+            if (EXISTS "${DIR}/SFDCRBRelaxationSolver.h")
+                set(DCR_HAS_BX TRUE)
+            endif ()
+        endforeach ()
     endif ()
 
     smspp_install(SingleFlowDCRBlock_test)
@@ -50,6 +69,10 @@ if (TARGET SMS++::SingleFlowDCRBlock)
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
         if (BATCH_NAME STREQUAL "batches/batch-instances-cplex"
                 AND NOT (CPLEX_FOUND AND TARGET SMS++::MILPSolver))
+            continue ()
+        endif ()
+        if (BATCH_NAME STREQUAL "batches/batch-instances-bx"
+                AND NOT DCR_HAS_BX)
             continue ()
         endif ()
         if (UNIX)

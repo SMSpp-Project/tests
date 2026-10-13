@@ -1,7 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BXSFDCRCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - -  BXCfg.txt  - - - - - - - - - - - - - - -
 #
-# ComputeConfig of the BranchAndXSolver whose nodes are solved for SFDCRP: depth-first, one thread.
+# The ComputeConfig of the BranchAndXSolver of BSPar-BX.txt: it visits the
+# tree depth-first with one thread, the nodes being solved by the
+# SFDCRBRelaxationSolver of InnerBSCfg-BX.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,17 +16,17 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 intSolveMethod 0  # depth-first [see SolveMethod]
-intMaxThread 1    # one thread
+intMaxThread   1  # one thread
 
 0  # number of double parameters
 
 # now all the double parameters
-#dblMaxTime 120  # seconds
+# [none]
 
 1  # number of string parameters
 
 # now all the string parameters
-strNameOfBlockSolverConfigurationFile InnerBSCfg-BX-SFDCR.txt
+strNameOfBlockSolverConfigurationFile InnerBSCfg-BX.txt
 
 0  # number of vector-of-int parameters
 
@@ -47,5 +49,5 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-BX-SFDCR.txt
 # end of ComputeConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BX_SFDCRCfg.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  END BXCfg.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

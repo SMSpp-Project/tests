@@ -57,7 +57,7 @@ plus the options that every SMS++ tester understands (`--help` lists them
 all). If a `<file>` is given, the `SingleFlowDCRBlock` is de-serialized out
 of that netCDF file instead of being generated.
 
-Three batch files are provided: `batch`, sweeping a range of network sizes,
+Four batch files are provided: `batch`, sweeping a range of network sizes,
 tightnesses and seeds of the random instances, each in both formulations in
 one run with `-F DCRForm.txt`, whose formulations carry their own
 `BlockSolverConfig` and say which of their `Solver` solve a relaxation, so
@@ -71,7 +71,12 @@ numerical focus settings (0, 2 and 3), listed with the reason in
 `socp-unstable.txt`, and on the one where it takes longer than ten minutes;
 and `batch-instances-cplex`, which solves the SOCP formulation of those 101
 with CPLEX (`BSPar-cpx.txt`), and which the build adds only when CPLEX is
-available. All of them passing is a good sign that no regression has been
+available; and `batch-instances-bx`, which compares the `Solver` of
+`BSPar.txt` with a `BranchAndXSolver` whose nodes are solved by the
+`SFDCRBRelaxationSolver` (`BSPar-BX.txt`, `BXCfg.txt` and
+`InnerBSCfg-BX.txt`) on the SOCP formulation of the same instances, and
+which the build adds only when it has the `BranchAndXSolver` and the
+`SingleFlowDCRBlock` in it has the `SFDCRBRelaxationSolver`. All of them passing is a good sign that no regression has been
 made in the tested modules.
 
 ## MultiFlowDCRBlock_test
