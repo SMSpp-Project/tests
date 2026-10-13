@@ -36,13 +36,17 @@ include $(SFDCRBkSDR)/makefile-c
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-s
 
+# BranchAndXSolver
+BAXSLVSDR = ../../BranchAndXSolver
+include $(BAXSLVSDR)/makefile-s
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(CMMNUOBJ) $(SFDCRBkOBJ) $(MILPSOBJ)
+MOBJ =  $(CMMNUOBJ) $(SFDCRBkOBJ) $(MILPSOBJ) $(BAXSLVOBJ)
 
 # libraries
-MLIB =  $(SFDCRBkLIB) $(MILPSLIB)
+MLIB =  $(SFDCRBkLIB) $(MILPSLIB) $(BAXSLVLIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $(DIR)/test.o $(MOBJ) $(MLIB) $(SW)
@@ -50,10 +54,10 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SFDCRBkINC) $(MILPSINC) $(CMMNUINC)
+MINC =  $(SFDCRBkINC) $(MILPSINC) $(BAXSLVINC) $(CMMNUINC)
 
 # includes
-MH =    $(SFDCRBkH) $(MILPSH) $(CMMNUH)
+MH =    $(SFDCRBkH) $(MILPSH) $(BAXSLVH) $(CMMNUH)
 
 # compile command
 
