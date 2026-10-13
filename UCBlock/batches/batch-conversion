@@ -27,8 +27,11 @@
 #                 with a hyperarc, next to an extendable boiler or a solar
 #                 generator (chp_*), and with a heat pump whose COP changes
 #                 over time, a delayed output, modules, the modules built and
-#                 a continuous design (chpx_); the reference is the optimum of
-#                 PyPSA [see data/gen_conversion.py of UCBlock]
+#                 a continuous design (chpx_), and a continuous design with
+#                 ramps and start-up and shut-down limits, off and on before
+#                 the horizon, and modules built with one on before it
+#                 (chpy_); the reference is the optimum of PyPSA [see
+#                 data/gen_conversion.py of UCBlock]
 #
 # They take milliseconds, hence they all run in CI too.
 
@@ -77,8 +80,12 @@ REF_OBJ[chpx_3n_3g_1cl_delay.nc4]=7.513684211e+04
 REF_OBJ[chpx_3n_3g_1clext.nc4]=3.993068182e+04
 REF_OBJ[chpx_3n_3g_1clmod.nc4]=2.673068182e+04
 REF_OBJ[chpx_3n_3g_1clmod_build.nc4]=3.593068182e+04
+REF_OBJ[chpx_3n_3g_1clmodext.nc4]=3.593068182e+04
 REF_OBJ[chpx_3n_3g_2cl_cop.nc4]=2.838289474e+04
 REF_OBJ[chpx_3n_3g_2cl_cop_delay.nc4]=2.826390625e+04
+REF_OBJ[chpy_3n_3g_1clext_ramp.nc4]=4.676000000e+04
+REF_OBJ[chpy_3n_3g_1clext_ramp_on.nc4]=4.480000000e+04
+REF_OBJ[chpy_3n_3g_1clmod_build_on.nc4]=3.573068182e+04
 
 # what the Solver solve, per instance - - - - - - - - - - - - - - - - - - - -
 # The units of several modules have an integer commitment, 0 to the number of
@@ -91,6 +98,8 @@ declare -A REL_OF
 
 REL_OF[chpx_3n_3g_1clmod.nc4]=,r,r,r
 REL_OF[chpx_3n_3g_1clmod_build.nc4]=,r,r,r
+REL_OF[chpx_3n_3g_1clmodext.nc4]=,r,r,r
+REL_OF[chpy_3n_3g_1clmod_build_on.nc4]=,r,r,r
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

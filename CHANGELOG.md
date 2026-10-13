@@ -86,8 +86,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and power plant as a `ConversionUnitBlock` and as a `ThermalUnitBlock`
   with hyperarcs, a meshed network with a heat node) against their known
   optimum, and those that pypsa2smspp makes of the committable links of its
-  test networks (`nc4/conversion`, data version 2026-10-14: time-varying
-  efficiency, delays, modules, design) against the optimum of PyPSA, each
+  test networks (`nc4/conversion`, data version 2026-10-15: time-varying
+  efficiency, delays, modules, design, also with ramps and on before the
+  horizon) against the optimum of PyPSA, each
   with the three formulations of the network (`InnerBVar-DCN.txt`), skipping
   them when they are not in the data; the `ConversionUnitBlock` inner to the
   `LagrangianDualSolver` is solved with its integer commitment [see
