@@ -136,6 +136,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Lagrangian dual in one run (`InnerBVar-LD.txt`), the copies being compared
   with each other
 
+- `BSPar-2S.txt` of `TwoStageStochasticBlock`, the default of `batch-pypsa`
+  and `batch-ec`, has the master problem of the bundle of its
+  `LagrangianDualSolver` solved by GUROBI's barrier
+  (`MPBCfg-barrier.txt`, from the `ComputeConfig` of the master now in
+  `MILPCfg-MPB.txt`, which `MPBCfg.txt` includes, as in `UCBlock`): with the
+  dual simplex the master of the maxpower instance of `batch-pypsa` failed
+  numerically at every call after a few dozen iterations, and the
+  Lagrangian Dual ended in error, while with the barrier no master fails
+
 - `UCBlock/batches/batch-p4r` solves the pHydro instances with
   `BSPar-DPb.txt`, whose `LagrangianDualSolver`, `PrimalProximalHeur` and
   `LagrangianDualRelaxationSolver` have the master problem of the bundle
