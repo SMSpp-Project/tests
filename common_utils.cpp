@@ -291,6 +291,22 @@ SimpleConfiguration< std::vector< Configuration * > > *
  }
 
 /*--------------------------------------------------------------------------*/
+// the Solver that an option of a tester names by its position, as given and
+// where it is now [see name_Solver()]
+
+namespace {
+
+struct NamedSolver {
+ std::string option;
+ std::size_t given;
+ std::size_t at;
+ };
+
+std::vector< NamedSolver > named_solvers;
+
+}  // end( anonymous namespace )
+
+/*--------------------------------------------------------------------------*/
 /* Takes out of a BlockSolverConfig the Solver that this build does not have.
  * A configuration names every Solver that makes sense on the instances of a
  * battery, so that a run solves with all of them and compares; but which
@@ -298,14 +314,17 @@ SimpleConfiguration< std::vector< Configuration * > > *
  * libraries each of them has found, and asking the factory for one that is
  * not there throws [see Solver::new_Solver()], which would kill the whole
  * run rather than that one comparison. What is left out is said, name by
- * name, so that the log of a run tells what it has actually solved with. */
+ * name, so that the log of a run tells what it has actually solved with; it
+ * is returned, last first, with its index in the configuration. */
 
-static void drop_missing_Solvers( BlockSolverConfig * bsc ,
-				  const std::string & fn ,
-				  bool positional = true )
+using Dropped = std::vector< std::pair< Block::Index , std::string > >;
+
+static Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
+				     const std::string & fn )
 {
+ Dropped dropped;
  if( ! bsc )
-  return;
+  return( dropped );
 
  const auto asked = bsc->num_ComputeConfig();
 
@@ -313,7 +332,7 @@ static void drop_missing_Solvers( BlockSolverConfig * bsc ,
   * detached rather than a configuration that cannot be applied: there is
   * nothing to look for in the factory and nothing to skip. */
  if( ! asked )
-  return;
+  return( dropped );
 
  for( Block::Index i = asked ; i-- ; ) {
   const auto & name = bsc->get_SolverName( i );
@@ -323,23 +342,7 @@ static void drop_missing_Solvers( BlockSolverConfig * bsc ,
   std::cerr << ANSI_YELLOW << "[WARNING] " << name << " is not in this build"
 	    << ", so " << fn << " solves without it" << ANSI_RESET << std::endl;
 
-  /* What -E and -R declare is positional on the order of the
-   * BlockSolverConfig, hence the entry of the Solver that goes has to go with
-   * it: what is left would otherwise be read off the Solver that takes its
-   * place, i.e. a tolerance or a "this one solves a relaxation" landing on
-   * another Solver. A single value applies to every Solver and stays as it
-   * is [see solver_eps and solver_relaxation]. Only the Solver of the Block
-   * the configuration is applied to are positional, not those that a meta
-   * one gives its sub-Block. */
-  if( positional ) {
-   if( solver_eps.size() > 1 )
-    if( i < solver_eps.size() )
-     solver_eps.erase( solver_eps.begin() + i );
-   if( solver_relaxation.size() > 1 )
-    if( i < solver_relaxation.size() )
-     solver_relaxation.erase( solver_relaxation.begin() + i );
-   }
-
+  dropped.emplace_back( i , name );
   bsc->remove_ComputeConfig( i );
   }
 
@@ -365,6 +368,76 @@ static void drop_missing_Solvers( BlockSolverConfig * bsc ,
 	    << ": there is no Solver to cross-check it against, and what this "
 	       "run says is what that one Solver says" << ANSI_RESET
 	    << std::endl;
+
+ return( dropped );
+ }
+
+/*--------------------------------------------------------------------------*/
+/* What -E, -R and the options that name a Solver declare is positional on the
+ * order in which the Solver are registered to the Block, hence the entry of
+ * a Solver that is not there has to go with it: what is left would otherwise
+ * be read off the Solver that takes its place, i.e. a tolerance, a "this one
+ * solves a relaxation" or a role landing on another Solver. A single value
+ * of -E or -R applies to every Solver and stays as it is [see solver_eps and
+ * solver_relaxation], and an option that names a Solver that is not there
+ * names none, which is said. The Solver of @p bsc sit from @p first on,
+ * @p dropped is what drop_missing_Solvers() returned, last first. */
+
+static void drop_positions( const Dropped & dropped , std::size_t first ,
+			    const std::string & fn )
+{
+ for( const auto & [ i , name ] : dropped ) {
+  const auto p = first + i;
+  if( solver_eps.size() > 1 )
+   if( p < solver_eps.size() )
+    solver_eps.erase( solver_eps.begin() + p );
+  if( solver_relaxation.size() > 1 )
+   if( p < solver_relaxation.size() )
+    solver_relaxation.erase( solver_relaxation.begin() + p );
+
+  for( auto & n : named_solvers ) {
+   if( ( n.at == std::string::npos ) || ( n.at < p ) )
+    continue;
+   if( n.at > p ) {
+    --n.at;
+    continue;
+    }
+   std::cerr << ANSI_YELLOW << "[WARNING] " << n.option << " names " << name
+	     << ", which is not in this build, so " << fn << " solves as "
+	        "without " << n.option << ANSI_RESET << std::endl;
+   n.at = std::string::npos;
+   }
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+/* Where the Solver of a BlockSolverConfig sit among those of the Block once
+ * it is apply()-ed: after the @p before ones already there if it adds to them,
+ * from the first otherwise, since it replaces them in their order. Its mode
+ * is not public, but adding is the only one that leaves @p before + @p kept
+ * Solver when neither is zero: setting leaves @p kept, and the differential
+ * one the largest of the two. */
+
+static std::size_t first_position( std::size_t before , std::size_t kept ,
+				   std::size_t after )
+{
+ return( ( before && kept && ( after == before + kept ) ) ? before : 0 );
+ }
+
+/*--------------------------------------------------------------------------*/
+// apply() @p bsc to @p block, taking out first the Solver that are not there
+
+static void apply_present( BlockSolverConfig * bsc , Block * block ,
+			   const std::string & fn , bool positional )
+{
+ const auto dropped = drop_missing_Solvers( bsc , fn );
+ const auto before = block->get_registered_solvers().size();
+ bsc->apply( block );
+ if( positional && ( ! dropped.empty() ) )
+  drop_positions( dropped , first_position( before ,
+                                            bsc->num_ComputeConfig() ,
+                                            block->get_registered_solvers()
+                                            .size() ) , fn );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -392,8 +465,9 @@ void s_config_Block( Block * block , Configuration * s_config ,
 				     << std::endl;
 			   exit( 1 );
 			   }
-			  drop_missing_Solvers( bsc , fn , b == block );
-			  bsc->apply( b );
+			  // only the Solver of the Block itself are
+			  // positional, not those of its sub-Block
+			  apply_present( bsc , b , fn , b == block );
 			  } );
 
   // finally, clear() all the BlockSolverConfig for final cleanup
@@ -404,8 +478,7 @@ void s_config_Block( Block * block , Configuration * s_config ,
   }
 
  if( auto * bsc = dynamic_cast< BlockSolverConfig * >( s_config ) ) {
-  drop_missing_Solvers( bsc , fn );
-  bsc->apply( block );          // just apply() it
+  apply_present( bsc , block , fn , true );  // just apply() it
   if( clear_after )
    bsc->clear();                // clear() it for final cleanup
   return;                       // all done
@@ -1419,6 +1492,22 @@ Formulations get_formulations( bool optional )
  }
 
 /*--------------------------------------------------------------------------*/
+
+std::size_t name_Solver( const std::string & option , std::size_t k )
+{
+ named_solvers.push_back( { option , k , k } );
+ return( named_solvers.size() - 1 );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+std::size_t named_Solver( std::size_t h )
+{
+ return( h < named_solvers.size() ? named_solvers[ h ].at
+                                  : std::string::npos );
+ }
+
+/*--------------------------------------------------------------------------*/
 // -E as given, which each copy of a Block filters anew
 
 static std::vector< double > solver_eps_given;
@@ -1433,14 +1522,17 @@ std::vector< bool > attach_formulation_Solvers( Block * block ,
                                                 bool clear_after )
 {
  // the -R of the formulation goes through s_config_Block(), which takes out of
- // it the Solver that are not there, as it does of -R; -E is filtered anew
- // from what was given, the previous copy having filtered it already, and
- // left so for the solve, every copy having the same Solver
+ // it the Solver that are not there, as it does of -R; -E and the Solver
+ // named by an option are filtered anew from what was given, the previous
+ // copy having filtered them already, and left so for the solve, every copy
+ // having the same Solver
  const auto global = solver_relaxation;
  const bool own = ( k < v.relax.size() ) && ( ! v.relax[ k ].empty() );
  if( own )
   solver_relaxation.assign( v.relax[ k ].begin() , v.relax[ k ].end() );
  solver_eps = solver_eps_given;
+ for( auto & n : named_solvers )
+  n.at = n.given;
  const bool mine_bsc = ( k < v.solvers.size() ) && v.solvers[ k ];
  s_config_Block( block , bsc , mine_bsc ? v.file : sconf_file ,
                  clear_after );

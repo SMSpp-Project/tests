@@ -316,6 +316,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the Solver that an option names by its position, i.e., the heuristic that
+  -w of the stochastic testers reads by its upper bound, follows the Solver
+  that the build does not have as -E and -R do [see `name_Solver()`]: it
+  moves down past one before it, rather than landing on another Solver, and
+  if it is itself not there the warning says so and the run goes on as
+  without the option; and a `BlockSolverConfig` that adds its Solver to
+  those already registered to the Block (as the reference one of
+  `fw_test`) takes out of -E and -R the entries of its Solver after them,
+  not of the first ones. `BSPar-2S-IP-missing.txt` names the missing
+  Solver before the `PrimalProximalHeur`, and `batch-pypsa` of
+  `TwoStageStochasticBlock` runs it also with -w
+
 - with -F and a `BlockSolverConfig` naming a Solver that the build does not
   have, the entry of that Solver in -E was taken out once per copy of the
   Block rather than once, so that the tolerances of the Solver after it

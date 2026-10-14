@@ -48,6 +48,8 @@ StochasticTester * tester = nullptr;  ///< the tester being run
 
 bool ProxHeur = false;  ///< the second Solver read by its upper bound
 
+std::size_t heur_name = std::string::npos;  ///< its handle [see name_Solver()]
+
 const double RefTolerance = 1e-5;  ///< of the comparisons
 
 /*--------------------------------------------------------------------------*/
@@ -64,15 +66,34 @@ bool process_specific_arg( int opt )
  }
 
 /*--------------------------------------------------------------------------*/
+// where the heuristic of -w is, std::string::npos if nowhere
+
+std::size_t heuristic( void )
+{
+ return( ProxHeur ? named_Solver( heur_name ) : std::string::npos );
+ }
+
+/*--------------------------------------------------------------------------*/
+// each Solver read by its lower bound, the heuristic of -w by its upper one
+
+SolverReading read_lb( Solver * s , std::size_t k )
+{
+ if( k == heuristic() )
+  return( SolverReading::upper_bound( s->get_ub() , eps_of( k , s ) ) );
+ return( SolverReading::exact( s->get_lb() , eps_of( k , s ) ) );
+ }
+
+/*--------------------------------------------------------------------------*/
 // the Solver of the one copy, as the testers of a stochastic Block have
 // always compared them
 
 bool solve_one( Block * block )
 {
  // the second Solver, if any, read by its lower bound, or by its upper
- // bound if it is a PrimalProximalHeur
+ // bound if it is the heuristic of -w
+ const bool heur2 = ( heuristic() == 1 );
  const auto getter1 = ObjGetter::LowerBound;
- const auto getter2 = ProxHeur ? ObjGetter::UpperBound : ObjGetter::LowerBound;
+ const auto getter2 = heur2 ? ObjGetter::UpperBound : ObjGetter::LowerBound;
 
  if( ! solver_relaxation.empty() )
   /* -R says which Solver solve a relaxation, e.g., a Lagrangian dual of a
@@ -83,12 +104,17 @@ bool solve_one( Block * block )
    * there may be any number of them. */
   return( SolveAll( block , RefObjective , RefTolerance ) );
 
+ // the heuristic is not the second Solver, one before it not being in this
+ // build: each is read as with more copies
+ if( ProxHeur && ( ! heur2 ) && ( heuristic() != std::string::npos ) )
+  return( SolveAll( block , read_lb , RefObjective , RefTolerance ) );
+
  if( block->get_registered_solvers().size() > 1 ) {
   double fo1st = - Inf< double >();
   bool hs1st = false;
   double time1 = 0.0;
   long it1 = 0;
-  bool ok = SolveBoth( block , getter1 , getter2 , ProxHeur , RefTolerance ,
+  bool ok = SolveBoth( block , getter1 , getter2 , heur2 , RefTolerance ,
                        & fo1st , & hs1st , & time1 , & it1 );
 
   // optional additional check against reference objective
@@ -139,6 +165,10 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
          "against [none]\n";
 
  process_args( argc , argv , process_specific_arg );
+
+ // the heuristic of -w is the second Solver of the BlockSolverConfig
+ if( ProxHeur )
+  heur_name = name_Solver( "-w" , 1 );
 
  // the BlockSolverConfig (-S) is mandatory, the BlockConfig (-B, the inner
  // formulation) or the list of them (-F) is optional
@@ -225,13 +255,9 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
   solver_relaxation = global;
   }
  else {
-  // each Solver read as with one copy: by its lower bound, the second by
-  // its upper bound with -w 1, or by the interval of its bounds with -R
-  SolverClassifier classify = []( Solver * s , std::size_t k ) {
-   if( ProxHeur && ( k == 1 ) )
-    return( SolverReading::upper_bound( s->get_ub() , eps_of( k , s ) ) );
-   return( SolverReading::exact( s->get_lb() , eps_of( k , s ) ) );
-   };
+  // each Solver read as with one copy: by its lower bound, the heuristic
+  // of -w by its upper bound, or by the interval of its bounds with -R
+  SolverClassifier classify = read_lb;
   bool any_relax = false;
   for( const auto & r : relax )
    for( auto b : r )

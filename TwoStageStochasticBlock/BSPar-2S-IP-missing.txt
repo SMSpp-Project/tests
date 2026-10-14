@@ -2,13 +2,15 @@
 # - - - - - - - - - - - - BSPar-2S-IP-missing.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a TwoStageStochasticBlock
-# whose scenarios are unit commitments, naming between a :MILPSolver on the
-# deterministic equivalent as an integer problem and the PrimalProximalHeur
-# a Solver that no build has: the tester drops it, and with it its entry of
-# the positional -E, on every copy of the instance the battery reads [-F].
-# The heuristic is declared no tolerance (-E ,inf,inf), so that it is only
-# required to bound the optimum, which it does if and only if its entry is
-# still its own after all the copies are configured.
+# whose scenarios are unit commitments, naming before the PrimalProximalHeur
+# and a :MILPSolver on the deterministic equivalent as an integer problem a
+# Solver that no build has: the tester drops it, and with it its entry of
+# the positional -E and of the options that name a Solver by position, on
+# every copy of the instance the battery reads [-F]. The heuristic, second
+# in the configuration and first in the run, is declared no tolerance
+# (-E inf,inf,) or read by its upper bound (-w 1), so that it is only
+# required to bound the optimum, which it does if and only if what is
+# declared for it still lands on it after all the copies are configured.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -20,27 +22,27 @@ BlockSolverConfig     # exact type of the Configuration object
 3 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-GRBMILPSolver         # name of 1st Solver
-NoSuchSolver          # name of 2nd Solver
-PrimalProximalHeur    # name of 3rd Solver
+NoSuchSolver          # name of 1st Solver
+PrimalProximalHeur    # name of 2nd Solver
+GRBMILPSolver         # name of 3rd Solver
 
 3 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the :MILPSolver, on the integer problem
-
-*MILPCfg-IP.txt
-
-# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the Solver that is not there, never read
 
 *PPHCfg.txt
 
-# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the PrimalProximalHeur, which gives a feasible solution
 
 *PPHCfg.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver, on the integer problem
+
+*MILPCfg-IP.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

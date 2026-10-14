@@ -161,6 +161,24 @@ extern std::vector< bool > solver_relaxation;
 
 bool is_relaxation( std::size_t k );
 
+/*--------------------------------------------------------------------------*/
+/// declare that @p option of a tester names the Solver in position @p k
+/** Positional on the order of the BlockSolverConfig, exactly like
+ *  @ref solver_eps, e.g. the heuristic that -w of the stochastic testers
+ *  reads by its upper bound: the Solver that this build does not have are
+ *  taken out of it as they are of -E and -R [see s_config_Block()]. What is
+ *  returned is the handle that named_Solver() takes. */
+
+std::size_t name_Solver( const std::string & option , std::size_t k );
+
+/// where the Solver named by @p h is now
+/** Its position among the Solver registered to the Block, which is the one
+ *  given less those that are not in this build before it, or
+ *  std::string::npos if the Solver itself is not in this build, in which case
+ *  the tester has to go on as without the option. */
+
+std::size_t named_Solver( std::size_t h );
+
 /// the status the last SolveAll() got from Solver @p k
 /** What compute() returned to the last SolveAll() for its Solver @p k, or
  *  Solver::kUnEval if it has not solved it. */
