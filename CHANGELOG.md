@@ -115,6 +115,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   R3Block (`batch-cuts`, which has none, had only copied the skip), and with
   it fixed the 40 rounds take seconds
 
+- the LMO of the `MCFBlock` suite (`MCFBlock/MCFBSCfg.txt`) runs `MCFSimplex`
+  with the tolerances of `MCFClass`, no longer at 1e-9: they had been set
+  because `goto10_8_1` pivoted for ever, which does not happen any more
+
 - what the testers compare with -F is called a formulation everywhere, and
   no longer a variant: the lists are `*Form*.txt` (`TUBForm*.txt`,
   `NUBForm*.txt`, `InnerBForm-DCN*.txt`, `InnerBForm-LD.txt`,

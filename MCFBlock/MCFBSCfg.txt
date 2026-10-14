@@ -4,11 +4,8 @@
 # A BlockSolverConfig registering the LMO :Solver to each MCFBlock sub-Block.
 # The LMO minimizes the (modified) linear objective over the min-cost-flow
 # polytope; a network-simplex MCFSolver does it with no external dependency.
-# The tolerances of MCFClass are absolute, and by default 100 times the
-# machine epsilon: on the fractional costs the LMO is given, i.e., the
-# gradient of the father, MCFSimplex then pivots for ever (e.g., on
-# goto10_8_1), hence they are set here. batches/fw_lmo_solvers copies this
-# file with the name of RelaxIV in place of that of MCFSimplex
+# batches/fw_lmo_solvers copies this file with the name of RelaxIV in place
+# of that of MCFSimplex
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -42,11 +39,10 @@ kReopt         1  # reoptimize: the default of MCFSolver never reaches
                   # the :MCFClass, and MCFSimplex is built with it off
 # [none]
 
-2 # number of double parameters
+0 # number of double parameters
 
 # now all the double parameters
-dblAbsAcc    1e-9  # tolerance of the flows
-dblAAccDSol  1e-9  # tolerance of the reduced costs
+# [none]
 
 0 # number of string parameters
 
