@@ -301,7 +301,8 @@ SimpleConfiguration< std::vector< Configuration * > > *
  * name, so that the log of a run tells what it has actually solved with. */
 
 static void drop_missing_Solvers( BlockSolverConfig * bsc ,
-				  const std::string & fn )
+				  const std::string & fn ,
+				  bool positional = true )
 {
  if( ! bsc )
   return;
@@ -327,13 +328,17 @@ static void drop_missing_Solvers( BlockSolverConfig * bsc ,
    * it: what is left would otherwise be read off the Solver that takes its
    * place, i.e. a tolerance or a "this one solves a relaxation" landing on
    * another Solver. A single value applies to every Solver and stays as it
-   * is [see solver_eps and solver_relaxation]. */
-  if( solver_eps.size() > 1 )
-   if( i < solver_eps.size() )
-    solver_eps.erase( solver_eps.begin() + i );
-  if( solver_relaxation.size() > 1 )
-   if( i < solver_relaxation.size() )
-    solver_relaxation.erase( solver_relaxation.begin() + i );
+   * is [see solver_eps and solver_relaxation]. Only the Solver of the Block
+   * the configuration is applied to are positional, not those that a meta
+   * one gives its sub-Block. */
+  if( positional ) {
+   if( solver_eps.size() > 1 )
+    if( i < solver_eps.size() )
+     solver_eps.erase( solver_eps.begin() + i );
+   if( solver_relaxation.size() > 1 )
+    if( i < solver_relaxation.size() )
+     solver_relaxation.erase( solver_relaxation.begin() + i );
+   }
 
   bsc->remove_ComputeConfig( i );
   }
@@ -387,7 +392,7 @@ void s_config_Block( Block * block , Configuration * s_config ,
 				     << std::endl;
 			   exit( 1 );
 			   }
-			  drop_missing_Solvers( bsc , fn );
+			  drop_missing_Solvers( bsc , fn , b == block );
 			  bsc->apply( b );
 			  } );
 
@@ -1414,6 +1419,11 @@ Formulations get_formulations( bool optional )
  }
 
 /*--------------------------------------------------------------------------*/
+// -E as given, which each copy of a Block filters anew
+
+static std::vector< double > solver_eps_given;
+
+/*--------------------------------------------------------------------------*/
 // the BlockSolverConfig of a formulation applied, with its -R
 
 std::vector< bool > attach_formulation_Solvers( Block * block ,
@@ -1423,12 +1433,17 @@ std::vector< bool > attach_formulation_Solvers( Block * block ,
                                                 bool clear_after )
 {
  // the -R of the formulation goes through s_config_Block(), which takes out of
- // it the Solver that are not there, as it does of -R
+ // it the Solver that are not there, as it does of -R; -E is filtered anew
+ // from what was given, the previous copy having filtered it already, and
+ // left so for the solve, every copy having the same Solver
  const auto global = solver_relaxation;
  const bool own = ( k < v.relax.size() ) && ( ! v.relax[ k ].empty() );
  if( own )
   solver_relaxation.assign( v.relax[ k ].begin() , v.relax[ k ].end() );
- s_config_Block( block , bsc , v.file , clear_after );
+ solver_eps = solver_eps_given;
+ const bool mine_bsc = ( k < v.solvers.size() ) && v.solvers[ k ];
+ s_config_Block( block , bsc , mine_bsc ? v.file : sconf_file ,
+                 clear_after );
  auto mine = solver_relaxation;
  solver_relaxation = global;
  return( mine );
@@ -1859,6 +1874,8 @@ static void parse_eps_list( const std::string & arg )
    exit( 1 );
    }
   }
+
+ solver_eps_given = solver_eps;
  }
 
 /*--------------------------------------------------------------------------*/

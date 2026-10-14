@@ -123,6 +123,11 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
 
     run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -F "$forms" \
              -R ",,r,r" -E ",inf,,inf" -r "$ref"
+    # the same with a Solver that no build has named among them, which the
+    # tester drops on every copy with its entry of -E: the tolerance of the
+    # heuristic has to stay its own [see BSPar-2S-IP-missing.txt]
+    run_test "$exe" "$what" -S BSPar-2S-IP-missing.txt -F "$forms" \
+             -R ",," -E ",inf,inf" -r "$ref"
     # the Benders form, whose subproblems (a unit commitment per scenario)
     # are solved by the recursive Lagrangian dual: BDS gives the bound of the
     # dual below and, recovering a feasible solution at the design of its

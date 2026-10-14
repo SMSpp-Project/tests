@@ -878,7 +878,8 @@ Configuration * solver_config_of( const Formulations & v ,
  *  those that the formulation says, if it says anything, else those of -R, in
  *  either case without the Solver that this build does not have [see
  *  s_config_Block()]. What is returned is what SolveFormulations() wants for
- *  that copy; -R itself is left as it was. */
+ *  that copy; -R itself is left as it was, while -E is filtered anew out of
+ *  what was given and left as it is for this copy. */
 
 std::vector< bool > attach_formulation_Solvers( Block * block ,
                                                 Configuration * bsc ,

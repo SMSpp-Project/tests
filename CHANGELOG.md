@@ -316,6 +316,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- with -F and a `BlockSolverConfig` naming a Solver that the build does not
+  have, the entry of that Solver in -E was taken out once per copy of the
+  Block rather than once, so that the tolerances of the Solver after it
+  landed on others (a single entry left applied to all of them): each copy
+  now filters -E anew out of what was given [see
+  `attach_formulation_Solvers()`]; the Solver of the sub-Block of a meta
+  `BlockSolverConfig` that are not in the build no longer take out entries
+  of -E and -R, which are positional on the Solver of the root alone, and
+  the warning names the `BlockSolverConfig` rather than the formulations.
+  `TwoStageStochasticBlock/batches/batch-pypsa` checks it on the thermal
+  instance (`BSPar-2S-IP-missing.txt`, with a Solver that no build has)
+
 - the meta `BlockSolverConfig` of the `LagBFunction` of `UCBlock` give the
   `NuclearUnitBlock` its own entry, which fell on `*` since the match is on
   the exact `classname()`: `NUBSCfg-DP.txt` (`NuclearUnitExtDPSolver`) in
