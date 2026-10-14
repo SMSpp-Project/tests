@@ -172,6 +172,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   KIRCHHOFF only in CI), comparing them with each other; the copies are
   read as with one copy, by the lower bound of their Solver
 
+- `batch-pypsa` of `TwoStageStochasticBlock` solves each instance with the
+  three formulations of the network of its inner Block
+  (`InnerBForm-DCN.txt`, `InnerBForm-DCN-CI.txt` in CI), comparing them
+  with each other and with the reference, as `batch-ec` does; the runs on
+  the Benders form keep the one formulation of `InnerBCfg.txt`
+
 - `SatellitesBlock_test` and `MultiKnapsackAssignBlock_test` are a call of
   `load_solve_test()` of `common_utils`, which loads the Block out of the
   file, once per variant of `-F`, and cross-checks its Solver with

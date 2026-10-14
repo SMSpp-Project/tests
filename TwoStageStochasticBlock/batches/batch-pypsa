@@ -16,7 +16,12 @@
 # :MILPSolver, which reads the assembled Block whole and is therefore still
 # solving the extensive form, is cross-checked against
 # BendersDecompositionSolver. The second run is skipped where that Solver is
-# not in the build, its configuration naming it.
+# not in the build, its configuration naming it. On the stochastic Block as
+# the file gives it the instance is read once per formulation of the network
+# of its inner Block (InnerBForm-DCN.txt, InnerBForm-DCN-CI.txt in CI), each
+# copy solved by the same Solver and all of them compared with each other
+# and with the reference [-F]; the Benders form is assembled from the one
+# copy in the formulation of InnerBCfg.txt [-B].
 #
 # the instances of the thermal family of pypsa2smspp (gen_thermal_tssb.py,
 # units x periods x scenarios in the name) are unit commitments in every
@@ -48,6 +53,11 @@ DEFAULT_PAR=BSPar-2S.txt
 bds_par="${TSSB_BDS_PAR-BSPar-BDS-2S.txt}"
 DEFAULT_SLV=0
 parse_batch_args "$@"
+
+# the formulations of the network, compared with each other on every
+# instance [see InnerBForm-DCN.txt]; in CI only two of them
+forms=InnerBForm-DCN.txt
+[ -n "$CI" ] && forms=InnerBForm-DCN-CI.txt
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ file name ] = PyPsa objective value
@@ -86,7 +96,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb/smspp_*.nc; do
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+    run_test "$exe" "$what" -S "$par" -F "$forms" -w "$slv" -r "$ref"
 
     # the Benders form of the same instance, where the Solver that keeps the
     # design in a master of its own can stand beside a :MILPSolver
@@ -111,7 +121,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
       exit 1
     fi
 
-    run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -B InnerBCfg.txt \
+    run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -F "$forms" \
              -R ",,r,r" -E ",inf,,inf" -r "$ref"
     # the Benders form, whose subproblems (a unit commitment per scenario)
     # are solved by the recursive Lagrangian dual: BDS gives the bound of the
