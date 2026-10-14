@@ -56,7 +56,9 @@ intMaxNrEvls        2
 15 # number of double parameters
 
 # now all the double parameters
-dblRelAcc        1e-4 # relative accuracy required to solution
+# relative accuracy required to solution, the 1e-5 within which IB_test
+# compares the value with the others and with the reference
+dblRelAcc        1e-5
 # stopping parameter: threshold to declare 0 the || residual ||
 dblNZEps         1e-4
 # stopping parameter: multiplied to || residual || to estimate gap

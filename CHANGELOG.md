@@ -316,6 +316,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the `BundleSolver` of `BSPar.txt` of `InvestmentBlock` asks 1e-5 of
+  relative accuracy, not 1e-4: `IB_test` reads its value as the optimum
+  and compares it with the reference within 1e-5, and the `BundleSolver`,
+  which now stops on the bound of the box of the variables, stops where
+  1e-4 asks, 1.7e-5 above the reference on `smspp_2n_2c_1g_1lext.nc` of
+  `batch-pypsa`
+
 - the Solver that an option names by its position, i.e., the heuristic that
   -w of the stochastic testers reads by its upper bound, follows the Solver
   that the build does not have as -E and -R do [see `name_Solver()`]: it
