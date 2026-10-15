@@ -882,8 +882,9 @@ static double LBF_value_by_copy( LagBFunction * lbf )
 static double NDO_value( void )
 {
  double value = 0;
- if( auto obj = dynamic_cast< FRealObjective * >(
-                                            NDOBlock->get_objective() ) ) {
+ // The root objective is optional; the typed getter throws if it is absent.
+ if( NDOBlock->get_objective() ) {
+  auto obj = NDOBlock->get_objective< FRealObjective >();
   obj->compute();
   value += obj->value();
   }
