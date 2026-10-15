@@ -316,6 +316,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the `BundleSolver` of `BSPar-Inv.txt` of `TwoStageStochasticBlock` asks
+  1e-6 of relative accuracy, the tolerance within which `TSSB_BDS_test`
+  compares the ad hoc Benders form with the extensive optimum, not 1e-4,
+  where it could stop on the bound of the box of the variables above that
+  tolerance
+
 - the `BundleSolver` of `BSPar.txt` of `InvestmentBlock` asks 1e-5 of
   relative accuracy, not 1e-4: `IB_test` reads its value as the optimum
   and compares it with the reference within 1e-5, and the `BundleSolver`,

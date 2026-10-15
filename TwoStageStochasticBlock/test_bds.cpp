@@ -64,7 +64,7 @@ using namespace netCDF;
 
 // the relative gap at which two of these solves are the same number: the ad
 // hoc form reads its objective back through a bundle whose required relative
-// accuracy is 1e-4, hence nothing tighter can be asked of the comparison
+// accuracy, in BSPar-Inv.txt, is the same 1e-6
 static constexpr double tolerance = 1e-6;
 
 /* The instance, the one in the repository unless another is named on the

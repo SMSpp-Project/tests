@@ -58,7 +58,8 @@ intRstAlg        2 # parameter to handle the reset of the algorithm
 15 # number of double parameters
 
 # now all the double parameters
-dblRelAcc     1e-4 # relative accuracy required to solution
+dblRelAcc     1e-6 # relative accuracy required to solution, the 1e-6
+                   # within which test_bds compares the value
 dblNZEps      1e-4 # stopping parameter: threshold to declare 0 the
                    # || residual ||
 dbltStar      -100 # stopping parameter: multiplied to || residual || to
