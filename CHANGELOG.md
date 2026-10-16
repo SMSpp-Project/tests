@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the first-stage rows of `AbstractBlock_BDS_test`: an instance whose
+  first-stage `Variable` have `Constraint` of their own, a ramp between
+  consecutive ones and a minimum on their sum that the starting point
+  violates, solved in the MILP regime and in the convex one with the primal
+  (`BSPar-BDS-Primal.txt`, `BDSMCfg-Primal.txt`) and the dual master
+  problem in the `BundleSolver` against the monolithic model; the
+  `ComputeConfig` of the `BundleSolver` of the master is now the fragment
+  `BDSMCCfg.txt`, which `BDSMCfg.txt` includes and `BDSMCfg-Primal.txt`
+  overrides
+
 - `batch-instances-bx` of `SingleFlowDCRBlock`: a `BranchAndXSolver` whose
   nodes are solved by the `SFDCRBRelaxationSolver` next to the `Solver` of
   `BSPar.txt` (`BSPar-BX.txt`, `BXCfg.txt`, `InnerBSCfg-BX.txt`), on the

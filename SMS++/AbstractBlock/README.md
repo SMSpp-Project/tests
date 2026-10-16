@@ -165,16 +165,24 @@ back as at the end of a `compute()`. The instances that make each of them
 matter are built on purpose, i.e., with the subproblems feasible everywhere
 for the optimality cuts and infeasible at some first-stage point for the
 feasibility ones, and in the nested shape a subproblem has when it is a model
-of its own rather than a bare set of rows.
+of its own rather than a bare set of rows. One more instance has `Constraint`
+on the first-stage `Variable` alone, a ramp between consecutive ones and a
+minimum on their sum that the starting point violates: the master of the
+MILP regime reads them out of the master `Block`, and the `BundleSolver` of
+the convex one has them in its master problem, as rows in the primal form and
+as multipliers in the dual one.
 
 The configurations are the `BSPar-BDS*.txt` files, one per way of writing a
 cut (`BSPar-BDS.txt` the convex regime, whose master is a `BundleSolver`,
-`BSPar-BDS-MILP.txt` the MILP regime, whose master is a `:MILPSolver`, and
-the others each a variant of the latter named after what it changes); the
-master is configured by `BDSMCfg.txt` in the convex regime (with `MPBCfg.txt`
-for the master problem of the bundle) and by `BDSMCfg-MILP.txt` in the MILP
-one, and the subproblems by `BDSSCfg.txt`, which also gives the reference
-optimum of the monolithic model. The tester takes no argument:
+`BSPar-BDS-Primal.txt` the same with the primal master problem in the
+`BundleSolver`, `BSPar-BDS-MILP.txt` the MILP regime, whose master is a
+`:MILPSolver`, and the others each a variant of the latter named after what
+it changes); the master is configured by `BDSMCfg.txt` in the convex regime
+(the `BundleSolver` by `BDSMCCfg.txt`, and `MPBCfg.txt` for the master
+problem of the bundle), by `BDSMCfg-Primal.txt` with the primal master
+problem and by `BDSMCfg-MILP.txt` in the MILP one, and the subproblems by
+`BDSSCfg.txt`, which also gives the reference optimum of the monolithic
+model. The tester takes no argument:
 
     ./AbstractBlock_BDS_test
 
