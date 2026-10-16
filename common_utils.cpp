@@ -335,8 +335,20 @@ static Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
   return( dropped );
 
  for( Block::Index i = asked ; i-- ; ) {
-  const auto & name = bsc->get_SolverName( i );
-  if( Solver::has_Solver( name ) )
+  auto name = bsc->get_SolverName( i );
+  bool there = Solver::has_Solver( name );
+
+  // a LagrangianDualSolver is only there if its inner Solver is
+  if( there )
+   if( auto cc = bsc->get_SolverConfig( i ) )
+    for( const auto & pair : cc->str_pars )
+     if( ( pair.first == "str_LDSlv_ISName" ) &&
+	 ( ! Solver::has_Solver( pair.second ) ) ) {
+      name += " with " + pair.second;
+      there = false;
+      }
+
+  if( there )
    continue;
 
   std::cerr << ANSI_YELLOW << "[WARNING] " << name << " is not in this build"

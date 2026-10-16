@@ -12,6 +12,7 @@ if (NOT hasParent)
     find_package(MILPSolver)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
+    find_package(SubGradSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -27,6 +28,13 @@ if (TARGET SMS++::MultiKnapsackAssignBlock)
                                   SMS++::MILPSolver
                                   SMS++::LagrangianDualSolver
                                   SMS++::BundleSolver)
+
+    # the third Solver of BSPar.txt, which the tester leaves out of the
+    # cross-check when the build does not have it
+    if (TARGET SMS++::SubGradSolver)
+        target_link_libraries(MultiKnapsackAssignBlock_test
+                              PRIVATE SMS++::SubGradSolver)
+    endif ()
 
     smspp_install(MultiKnapsackAssignBlock_test)
 
