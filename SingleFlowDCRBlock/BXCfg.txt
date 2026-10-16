@@ -18,7 +18,10 @@ ComputeConfig # exact type of the ComputeConfig object
 intSolveMethod 0  # depth-first [see SolveMethod]
 intMaxThread   1  # one thread
 
-0  # number of double parameters
+2  # number of double parameters
+
+dblAbsAcc 1e-6
+dblRelAcc 1e-6
 
 # now all the double parameters
 # [none]

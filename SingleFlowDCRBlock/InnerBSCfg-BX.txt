@@ -30,7 +30,10 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0  # number of double parameters
+2  # number of double parameters
+
+dblAbsAcc 1e-6
+dblRelAcc 1e-6
 
 # now all the double parameters
 # [none]
