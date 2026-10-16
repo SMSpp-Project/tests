@@ -186,11 +186,9 @@ struct SolveResult {
  double obj = 0.0;
  std::vector< double > first_stage;
  };
-// forward declaration: the UC first-stage extractor,
-// which collects only the generated design variables. Preferred over the
-// library get_first_stage_variables(), whose StaticAbstractPath may contain
-// entries that resolve to null in instances where some units are not in design
-// mode (example: the larger s_5 network)
+// forward declaration: the UC first-stage extractor, which collects the
+// generated design variables from the UCBlock itself rather than from the
+// StaticAbstractPath of the file
 static std::vector< ColVariable * >
 uc_first_stage_vars( TwoStageStochasticBlock * tssb );
 

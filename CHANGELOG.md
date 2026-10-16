@@ -344,6 +344,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the here-and-now `AbstractPath` of the network design `Variable` of the
+  two `s_5` instances of `TwoStageStochasticBlock/data-scenred` give the
+  position of each design line, not its line index: past the 11 lines out of
+  design they pointed to the wrong `Variable`, and the last 11 past the end
+  of the group, on which `TSSB_reduction_test` crashed
+
+- `batches-scenred/batch` of `TwoStageStochasticBlock` fails when the
+  tester fails on some instance, rather than always passing
+
 - the Benders form `benders_form.cpp` builds for `TSSB_test` and the check
   of `TSSB_reduction_test` for here-and-now `Variable` shared by the
   scenarios take the elements of a here-and-now `AbstractPath` selecting an
