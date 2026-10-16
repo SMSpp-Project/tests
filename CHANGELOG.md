@@ -339,6 +339,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the Benders form `benders_form.cpp` builds for `TSSB_test` and the check
+  of `TSSB_reduction_test` for here-and-now `Variable` shared by the
+  scenarios take the elements of a here-and-now `AbstractPath` selecting an
+  explicit, non-contiguous subset of a group, rather than the ones following
+  the first element
+
 - the `BundleSolver` of `BSPar-Inv.txt` of `TwoStageStochasticBlock` asks
   1e-6 of relative accuracy, the tolerance within which `TSSB_BDS_test`
   compares the ad hoc Benders form with the extensive optimum, not 1e-4,
