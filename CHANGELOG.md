@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `intDoEasy` in the configurations follows the new bits of BundleSolver
+  (e.g., 13 is now 7, 45 is now 23), as do the comments that name them
+
 ### Added
 
 - the first-stage rows of `AbstractBlock_BDS_test`: an instance whose

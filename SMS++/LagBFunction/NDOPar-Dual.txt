@@ -5,7 +5,7 @@
 # "linear objective" and multiple sub-Block having a "C05 objective", some
 # of which being LagBFunction, solved by the tester for LagBFunction: the
 # two BundleSolver of NDOPar.txt, the proximal and the trust region one,
-# which also keep all the dual values of the easy components (bits 2 and 3
+# which also keep all the dual values of the easy components (bits 1 and 2
 # of intDoEasy), as the runs that change their demands (bit 6 of wchg) have
 # them do
 #
@@ -35,7 +35,7 @@ BundleSolver          # name of 2nd Solver
 1 # number of integer parameters
 
 # now all the integer parameters
-intDoEasy        13 # easy components, all their dual values
+intDoEasy        7  # easy components, all their dual values
 
 0 # number of double parameters
 
@@ -76,7 +76,7 @@ intDoEasy        13 # easy components, all their dual values
 
 # now all the integer parameters
 intMPStbl         4 # trust region
-intDoEasy        13 # easy components, all their dual values
+intDoEasy        7  # easy components, all their dual values
 
 0 # number of double parameters
 

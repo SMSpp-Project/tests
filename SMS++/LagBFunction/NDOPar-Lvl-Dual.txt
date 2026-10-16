@@ -5,7 +5,7 @@
 # "linear objective" and multiple sub-Block having a "C05 objective", some
 # of which being LagBFunction, solved by the tester for LagBFunction in the
 # battery batch-easy: the BundleSolver of NDOPar-Lvl.txt, which also keeps
-# all the dual values of the easy components (bits 2 and 3 of intDoEasy), as
+# all the dual values of the easy components (bits 1 and 2 of intDoEasy), as
 # the runs that change their demands (bit 6 of wchg) have it do
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -34,7 +34,7 @@ BundleSolver          # name of Solver
 
 # now all the integer parameters
 intMPStbl         1 # level
-intDoEasy        45 # copies if need be, all dual values
+intDoEasy        23 # copies if need be, all dual values
 
 0 # number of double parameters
 

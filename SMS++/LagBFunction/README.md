@@ -227,8 +227,8 @@ Whether the `BundleSolver` treat the `LagBFunction` as easy components,
 and which of their dual values they keep, is `intDoEasy` in the
 BlockSolverConfig given by -S, which must agree with the sign of nt: `NDOPar.txt` treats them as easy without keeping any dual
 value, `NDOPar-Hard.txt` as hard, `NDOPar-Dual.txt` as easy keeping all
-their dual values (bits 2 and 3 of `intDoEasy`) and `NDOPar-RC.txt` as
-easy keeping their reduced costs (bit 3), each of the others having a
+their dual values (bits 1 and 2 of `intDoEasy`) and `NDOPar-RC.txt` as
+easy keeping their reduced costs (bit 1), each of the others having a
 `-Dual.txt` version as well. With detach 1 each `Solver` is unregistered
 from NDOBlock and registered again before each `compute()`, so that it
 builds its data structures anew out of the changed Block. With size 1 or 2 the balances and
@@ -241,9 +241,9 @@ the inner `Block`, declared with `Block::set_owned_size_variable()`, with 2
 the inner `Block` is given a Variable of the master by
 `Block::set_size_variable()`. With 0 the inner `Block` is a plain
 `AbstractBlock`, which takes no size Variable: the master leaves it
-unscaled, unless bit 5 (+32) of `intDoEasy` in the configuration has it
+unscaled, unless bit 4 (+16) of `intDoEasy` in the configuration has it
 scale a copy of it that it has in its place, following the changes of the
-inner `Block`. Bit 4 (+16) has the master leave all the easy components
+inner `Block`. Bit 3 (+8) has the master leave all the easy components
 unscaled.
 
 A batch file `batches/batch` is provided that runs a largish (but
