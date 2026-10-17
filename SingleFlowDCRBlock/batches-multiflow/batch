@@ -34,8 +34,12 @@ topo/Oteglobe_2 topo/Padi_2 topo/Sanren_2 topo/Telecomserbia_2
 # the instances where Gurobi does not solve the formulation that holds all
 # the flows: it declares optimal a solution whose value is far from its own
 # bound (sndlib/sun_2, topo/Dfn_2), the latter agreeing with the
-# LagrangianDualSolver, or stops on numerical difficulties (topo/Renater1999_2)
-gurobi_fails="sndlib/sun_2 topo/Dfn_2 topo/Renater1999_2"
+# LagrangianDualSolver, or stops on numerical difficulties
+# (topo/Renater1999_2); on garr/Garr200909_4 it does the former only on some
+# machines (the runners of the CI, where it stops at 3.2555502e+04 with its
+# bound at 3.1904853e+04, the optimum it finds elsewhere whatever the threads
+# and the seed)
+gurobi_fails="sndlib/sun_2 topo/Dfn_2 topo/Renater1999_2 garr/Garr200909_4"
 
 # the instances where Gurobi, solving a flow inside the LagrangianDualSolver
 # of BSPar-multi-milp.txt, stops on numerical difficulties or returns a flow
