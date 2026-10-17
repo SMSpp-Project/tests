@@ -208,16 +208,23 @@ static double cost_of( SingleFlowDCRBlock * block , DCRSolution * sol )
  * declares. The Variable of the Block are scrambled first: a Solver that
  * fills its Solution by writing there and reading it back rather than out
  * of its own data structures produces garbage, and this is what catches
- * it. */
+ * it. @p relax says which of the Solver solve a relaxation, as the
+ * formulation of @p block declares it [see attach_formulation_Solvers()],
+ * and @p form is the name of the formulation, to be written before that of
+ * the Solver when there is more than one. */
 
-static bool check_solutions( SingleFlowDCRBlock * block , double tol )
+static bool check_solutions( SingleFlowDCRBlock * block , double tol ,
+                             const std::vector< bool > & relax_of ,
+                             const std::string & form )
 {
  bool ok = true;
  std::size_t k = 0;
 
  for( auto slvr : block->get_registered_solvers() ) {
-  const std::string me = "S" + std::to_string( k );
-  const bool relax = is_relaxation( k++ );
+  const std::string me = ( form.empty() ? "" : form + " " ) + "S" +
+                         std::to_string( k );
+  const bool relax = ( k < relax_of.size() ) && relax_of[ k ];
+  ++k;
 
   if( ! slvr->has_var_solution() )
    continue;
@@ -387,9 +394,10 @@ int main( int argc , char ** argv )
 
  // then check the Solution they produce - - - - - - - - - - - - - - - - - -
 
- for( auto block : blocks )
-  ok &= check_solutions( static_cast< SingleFlowDCRBlock * >( block ) ,
-                         1e-4 );
+ for( std::size_t k = 0 ; k < blocks.size() ; ++k )
+  ok &= check_solutions( static_cast< SingleFlowDCRBlock * >( blocks[ k ] ) ,
+                         1e-4 , relax[ k ] ,
+                         blocks.size() > 1 ? forms.names[ k ] : "" );
 
  // clean up- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- `intDoEasy` in the configurations follows the new bits of BundleSolver
-  (e.g., 13 is now 7, 45 is now 23), as do the comments that name them
-
 ### Added
 
 - the first-stage rows of `AbstractBlock_BDS_test`: an instance whose
@@ -120,6 +115,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   relaxation
 
 ### Changed
+
+- `intDoEasy` in the configurations follows the new bits of BundleSolver
+  (e.g., 13 is now 7, 45 is now 23), as do the comments that name them
 
 - the batteries `batch`, `batch-mcf` and `batch-cuts` of
   `CapacitatedFacilityLocationBlock` run the Yang and TBED instances in CI
@@ -343,6 +341,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   twice
 
 ### Fixed
+
+- the SingleFlowDCRBlock tester checks the Solution of a Solver against
+  the problem only if the formulation of its copy does not declare it a
+  relaxation: with -F it read the -R of the command line, which is empty,
+  so the point of the P/C relaxation of `DCRForm.txt` was found to violate
+  the delay, and `batches/batch-instances` stopped at its first instance;
+  each check now also names the formulation of the Solver
 
 - the here-and-now `AbstractPath` of the network design `Variable` of the
   two `s_5` instances of `TwoStageStochasticBlock/data-scenred` give the
