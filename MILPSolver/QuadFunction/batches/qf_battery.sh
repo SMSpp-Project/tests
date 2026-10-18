@@ -29,3 +29,17 @@ qf_run() {
 
   done
 }
+
+# runs the tester over the models given by name, of the type given first and
+# with the BlockSolverConfig given second (-S of the tester), skipping in CI
+# the ones in CI_OOM_SKIP as qf_run does
+qf_run_list() {
+  local type=$1 cfg=$2 what
+  shift 2
+  for what in "$@"; do
+    case " $CI_OOM_SKIP " in
+      *" $(basename "$what") "*) [ -n "$CI" ] && continue ;;
+    esac
+    run_test "$MILPSolver_QuadFunction_test" -t "$type" -S "$cfg" "$what"
+  done
+}

@@ -1,0 +1,39 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - LPPar_CL_C-dense.txt  - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for the Block of a model of the
+# class CL (a convex objective and linear constraints) solved by the tester
+# of the quadratic functions in its continuous relaxation by the dense
+# :MILPSolver for convex QPs, DAQPMILPSolver and QPOASESMILPSolver, which
+# load the whole Hessian and do not scale to the largest models of the
+# class: batchCL_C_dense gives it to the tester with -S on the smaller
+# ones, which the tester checks against the known optimal value.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+DAQPMILPSolver     # name of 1st Solver
+QPOASESMILPSolver  # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*QPCfg-C.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*QPCfg-C.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END LPPar_CL_C-dense.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
