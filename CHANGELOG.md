@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SingleFlowDCRBlock/batches-multiflow/batch` also runs the
+  `LagrangianDualSolver` whose flows are solved by the
+  `SingleFlowDCRBendersSolver` with `intReuseCuts` 1
+  (`BSPar-multi-reuse.txt`, `DCRBSCfg-reuse.txt`) and with `intWarmLambda` 1
+  (`BSPar-multi-warm.txt`, `DCRBSCfg-warm.txt`), which no test turned on
+
+- `SingleFlowDCRBlock/batches-multiflow/batch` runs the instances with 1
+  flow too, and none is left out any more: with the multi-flow instances of
+  the data version 2026-10-18 of SingleFlowDCRBlock, whose mutual capacity
+  is the sum of the individual ones, the 18 instances of topo that were
+  infeasible are not, and Gurobi solves the 6 it did not
+
 - the first-stage rows of `AbstractBlock_BDS_test`: an instance whose
   first-stage `Variable` have `Constraint` of their own, a ramp between
   consecutive ones and a minimum on their sum that the starting point

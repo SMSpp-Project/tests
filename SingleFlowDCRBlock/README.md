@@ -93,26 +93,25 @@ it, cross-checked as above:
 - the `LagrangianDualSolver`, which relaxes the mutual capacity constraints
   and solves each flow on its own (`LDCfg.txt`), by the
   `SingleFlowDCRBendersSolver` (`BSPar-multi.txt`, with
-  `DCRBSCfg-benders.txt` for the flows) or by a `:MILPSolver`
+  `DCRBSCfg-benders.txt` for the flows), by the same with its cuts reused
+  across the calls (`BSPar-multi-reuse.txt`, with `DCRBSCfg-reuse.txt`) or
+  with the warm start of its multiplier (`BSPar-multi-warm.txt`, with
+  `DCRBSCfg-warm.txt`), or by a `:MILPSolver`
   (`BSPar-multi-milp.txt`, with `DCRBSCfg-milp.txt`). The Lagrangian dual is
   not tight in general, and the bound is lower with the
   `SingleFlowDCRBendersSolver`, which stops on its own criterion, hence the
   batch declares the `LagrangianDualSolver` a relaxation (`-R ,r`).
 
-The two `LagrangianDualSolver` are two configurations rather than two rows
-of one: without copies of the flows the `Solver` of one would reach the
-other, and a `SingleFlowDCRBlock` cannot be copied yet. The batch file in
-`batches-multiflow` runs both on the instances of the module with the first
-2 to 5 flows of each network of garr, sndlib and waxman and with the first 2
-of each network of topo: with 1 flow the mutual capacity of an arc is 0.8
-times its own, too small for the flow on most networks, and on an
-infeasible instance the `LagrangianDualSolver` stops without saying so;
-the waxman networks of 400 nodes and more are left out, an instance taking
-longer than ten minutes there, and so are the 18 instances of topo whose 2
-flows do not fit the mutual capacity and the few where Gurobi does not solve
-the formulation, listed in the batch with the reason.
-The tester and its batch are built only if the `LagrangianDualSolver` and
-the `BundleSolver` are.
+The `LagrangianDualSolver` are separate configurations rather than rows of
+one: without copies of the flows the `Solver` of one would reach the other,
+and a `SingleFlowDCRBlock` cannot be copied yet. The batch file in
+`batches-multiflow` runs all of them on the instances of the module with
+the first 1 to 5 flows of each network of garr, sndlib and waxman and with
+the first 1 and 2 of each network of topo (with 1 flow the mutual capacity
+of an arc is its own, so that the dual is the flow itself); the waxman
+networks of 400 nodes and more are left out, an instance taking longer than
+ten minutes there. The tester and its batch are built only if the
+`LagrangianDualSolver` and the `BundleSolver` are.
 
 The `ComputeConfig` of a `:MILPSolver` is `MILPCfg.txt`, and Gurobi reads
 it through `GRBCfg.txt`, which adds a numerical focus of 2: without it the
