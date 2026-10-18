@@ -59,6 +59,9 @@ lineup=(
   "CPLEX    :BSPar-milp.txt"
   "BX-parDFS:BSPar-bx-pardfs.txt"
   "BX-dive  :BSPar-bx-dive.txt"
+  "BX-A*-shared:BSPar-bx-astar-shared.txt"
+  "BX-A*-dist  :BSPar-bx-astar-dist.txt"
+  "BX-A*-dive  :BSPar-bx-astar-dive.txt"
 )
 
 declare -A solved
