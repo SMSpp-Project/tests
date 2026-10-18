@@ -27,6 +27,9 @@
 #   - BranchAndXSolver in reoptimization mode (intReoptimize), which retains
 #     the tree and re-seeds from its fenced frontier at each re-solve: same
 #     optimum after every runtime Modification.
+#   - BranchAndXSolver with the tree explored by the branch-and-bound of
+#     AStarSearch (intTreeExplorer): best-first sequential, best-first on 4
+#     workers sharing one queue, depth-first on 4 workers with a queue each.
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments (the
 # MILP/DP/GR ones are shared with BSPar-mixed.txt, the core DP and RECORD
@@ -42,7 +45,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-14  # number of (the names of) Solver in this BlockSolverConfig
+17  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -67,8 +70,13 @@ BranchAndXSolver
 # 13th: BX best-first, reoptimization on
 BranchAndXSolver
 RECORDBinaryKnapsackSolver            # 14th: RECORD, same as the 3rd
+BranchAndXSolver                      # 15th: BX best-first, AStarSearch
+# 16th: BX best-first, AStarSearch, 4 workers, one queue
+BranchAndXSolver
+# 17th: BX depth-first, AStarSearch, 4 workers, a queue each
+BranchAndXSolver
 
-14  # number of ComputeConfig in this BlockSolverConfig
+17  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -358,6 +366,105 @@ intReoptimize 1
 
 # 14th: RECORD under the same reoptimization of the 3rd
 *CDPCfg-reopt3.txt
+
+# 15: BranchAndXSolver, best-first, the tree explored by AStarSearch
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 16: BranchAndXSolver, best-first, AStarSearch on 4 workers, one queue
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    4
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 17: BranchAndXSolver, depth-first, AStarSearch on 4 workers, a queue each
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+3  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod  0
+intTreeExplorer 2
+intMaxThread    4
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
