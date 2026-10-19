@@ -189,7 +189,14 @@ the `test` directory of the module itself.
   configured `:Solver`; `batch-stochastic` and `batch-pypsa` also solve the
   inner Block of the modular instances by the recursive
   `LagrangianDualSolver` (`InnerBCfg-LD.txt`), i.e., an ad hoc Benders
-  decomposition with a Lagrangian dual inside.
+  decomposition with a Lagrangian dual inside. The same suite holds the
+  battery `batches-sddp/batch`, which runs no tester of its own but the tools
+  `investmentblock_solver` and `sddp_solver`: at a fixed design it compares
+  the value of an `InvestmentFunction` over an `SDDPBlock`, i.e., the mean of
+  the simulations after the training, with the simulations of the same
+  `SDDPBlock` by `sddp_solver`, stage by stage, on the toy instances that
+  `gen_sddp_initud.py` writes, where a thermal unit with a minimum up time
+  is started up at the end of a stage.
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`

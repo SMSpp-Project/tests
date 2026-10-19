@@ -1,0 +1,27 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  InnerBCfg-sddp.txt - - - - - - - - - - - - - - -
+#
+# A "meta"-BlockConfig for the InvestmentBlock over an SDDPBlock of
+# batches-sddp/batch, given to investmentblock_solver and to sddp_solver
+# alike, so that the two tools solve the UCBlock of every stage in the
+# same formulation:
+#
+#   InvestmentBlock         -> its bounds and the Solver of the inner Block
+#                              (IBOCfg-sddp.txt)
+#   ThermalUnitBlock        -> its formulation (TUBCfg.txt)
+#   PolyhedralFunctionBlock -> its "linearized" representation (PFBCfg.txt)
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+3 # the number of elements in the map
+InvestmentBlock         *IBOCfg-sddp.txt
+ThermalUnitBlock        *TUBCfg.txt
+PolyhedralFunctionBlock *PFBCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END InnerBCfg-sddp.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

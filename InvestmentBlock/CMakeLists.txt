@@ -92,6 +92,24 @@ if (TARGET SMS++::InvestmentBlock)
                                  PROPERTIES ENVIRONMENT "IB_LD_BCFG=")
         endif ()
     endforeach ()
+
+    # the simulation that the InvestmentFunction runs over an SDDPBlock at a
+    # fixed design, against the simulation of the same SDDPBlock by
+    # sddp_solver [see batches-sddp/batch]: the two tools are built in
+    # tools/, and the instances are written at run time by
+    # gen_sddp_initud.py through ncgen, hence the battery is there only
+    # where all of them are
+    find_package(Python3 COMPONENTS Interpreter)
+    find_program(NCGEN ncgen)
+    if (UNIX AND TARGET investmentblock_solver AND TARGET sddp_solver AND
+        Python3_Interpreter_FOUND AND NCGEN)
+        add_test(NAME investmentblock_solver/batches-sddp/batch
+                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches-sddp/batch
+                         $<TARGET_FILE:investmentblock_solver>
+                         $<TARGET_FILE:sddp_solver>
+                         ${Python3_EXECUTABLE}
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    endif ()
 endif ()
 
 # Tag this directory's tests with their per-module CI labels

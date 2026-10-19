@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - SDDPCfg-sddp.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the ParallelSDDPSolver that trains the cuts, inside
+# the InvestmentFunction and in sddp_solver [see SDDPSCfg-sddp.txt], with
+# the Solver of UCBSCfg-sddp.txt in both passes, over the two scenarios.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+8  # number of integer parameters
+
+# now all the integer parameters
+intMaxIter             10 # maximum number of iterations
+intLogVerb              1 # log verbosity
+intNStepConv            1 # frequency at which convergence is checked
+intPrintTime            0 # whether computational time is displayed
+intNbSimulCheckForConv  2 # simulations when checking convergence
+intNbSimulForward       2 # simulations in the forward pass
+intNbSimulBackward      2 # simulations in the backward pass
+intOutputFrequency      1
+
+1  # number of double parameters
+
+# now all the double parameters
+dblAccuracy  1e-6  # relative accuracy for declaring a solution optimal
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+# pointer to the "extra" Configuration: no BlockConfig, the
+# BlockSolverConfig of the UCBlock of each stage, and what of its Solution
+# is read
+SimpleConfiguration<std::vector<Configuration*>>
+3                  # the number of elements in the vector
+*                  # no BlockConfig
+*UCBSCfg-sddp.txt  # the BlockSolverConfig of the UCBlock of each stage
+SimpleConfiguration<std::map<std::string,Configuration*>>
+2                     # the number of elements in the map
+HydroSystemUnitBlock  *  # all of its solution
+ThermalUnitBlock      *  # all of its solution
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END SDDPCfg-sddp.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

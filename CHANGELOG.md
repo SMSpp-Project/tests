@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InvestmentBlock/batches-sddp/batch` compares, at a fixed design, the
+  simulation that the `InvestmentFunction` runs over an `SDDPBlock` with the
+  simulation of the same `SDDPBlock` by `sddp_solver`, and the latter with
+  the value by hand, on three toy instances written by
+  `InvestmentBlock/gen_sddp_initud.py` whose thermal unit is started up at
+  the last instant of the first stage with `MinUpTime` 3 or 1, or is off
+  there; it runs where `investmentblock_solver`, `sddp_solver`, Python and
+  `ncgen` are, with the configurations `InvestmentBlock/*-sddp*.txt`
 - `BinaryKnapsackBlock/BSPar.txt` also runs the BranchAndXSolver whose tree
   is explored best-first by the branch-and-bound of PBeFS on 4 workers by
   synchronous rounds and by the SelfSplit; the rows of PBeFS, and the
