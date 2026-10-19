@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `UCBlock/BSPar-DP-BX.txt` also runs the BranchAndXSolver that explores
+  the tree best-estimate by the pseudocosts of the
+  `LagrangianDualRelaxationSolver` (`BXLDCfg-DP-est.txt`,
+  `InnerBSCfg-BX-LD-DP-est.txt`, `LDRSCfg-DP-est.txt`)
 - `SingleFlowDCRBlock/batches-multiflow/batch` also runs the
   `LagrangianDualSolver` whose flows are solved by the
   `SingleFlowDCRBendersSolver` with `intReuseCuts` 1
