@@ -5,8 +5,8 @@ the Constraint: a tester which provides very comprehensive tests for any
 `CDASolver` able to handle Quadratic Programs (such as `MILPSolver` and its
 derived classes `CPXMILPSolver`, `SCIPMILPSolver`, `GRBMILPSolver`,
 `HiGHSMILPSolver`, `MOSEKMILPSolver`, `DAQPMILPSolver`, `QPOASESMILPSolver`,
-`ClarabelMILPSolver`, `ProxQPMILPSolver`, `PIQPMILPSolver`, `OSQPMILPSolver`
-and `QPMADMILPSolver`).
+`ClarabelMILPSolver`, `ProxQPMILPSolver`, `PIQPMILPSolver`, `OSQPMILPSolver`,
+`QPMADMILPSolver` and `QuadProgMILPSolver`).
 
 This executable, given the filename of a LP file containing a quadratic model,
 read the corresponding problem using the function `AbstractBlock::read_lp` and 
@@ -27,14 +27,16 @@ quadratic constraints of `LC` and the nonconvex objective of `QL`:
 `MOSEKMILPSolver`, `ClarabelMILPSolver`, `PIQPMILPSolver` (with its sparse
 backend, `PIQPCfg-C.txt`) and `OSQPMILPSolver` on the continuous relaxation,
 `MOSEKMILPSolver` on the integer version. The dense ones, `DAQPMILPSolver`,
-`QPOASESMILPSolver`, `ProxQPMILPSolver` and `QPMADMILPSolver`, load the whole
+`QPOASESMILPSolver`, `ProxQPMILPSolver`, `QPMADMILPSolver` and
+`QuadProgMILPSolver`, load the whole
 Hessian and do not scale to the largest models of `CL` (up to 15000
 variables), where `ProxQPMILPSolver`, which has no time limit, does not end
 even with its sparse backend: `batchCL_C_dense` gives them
 `LPPar_CL_C-dense.txt` with `-S` on the models with up to about 2000, but
-`QPLib_8845`, on which the active set of DAQP cycles. `QPMADMILPSolver` needs
-a positive definite Hessian, and that of these models is singular, hence it
-has it regularized by 1e-6 (`QPMADCfg-C.txt`). A Solver that the build has
+`QPLib_8845`, on which the active set of DAQP cycles. `QPMADMILPSolver` and
+`QuadProgMILPSolver` need a positive definite Hessian, and that of these
+models is singular, hence they have it regularized by 1e-6 (`QPMADCfg-C.txt`
+and `QuadProgCfg-C.txt`). A Solver that the build has
 not is left out, and said.
 
 A list of all the available QP instances can be found in the file 
