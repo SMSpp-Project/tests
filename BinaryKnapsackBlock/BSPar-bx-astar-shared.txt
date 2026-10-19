@@ -3,7 +3,7 @@
 #
 # Single-exact-solver BlockSolverConfig: the greedy relaxation (which
 # brackets the optimum) plus the BranchAndXSolver whose tree is explored by
-# the branch-and-bound of AStarSearch (intTreeExplorer), best-first on 4
+# the branch-and-bound of PBeFS (intTreeExplorer), best-first on 4
 # workers sharing one queue. It is the "BX-A*-shared" entry of the hard-
 # instance lineups (batch-jooken and batch-pisinger-large). The inner
 # relaxation (the greedy leaf) is set by the shared BX-baseCfg.txt; only the
@@ -20,7 +20,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GreedyRelaxationBinaryKnapsackSolver  # 1st: relaxation, brackets the optimum
-BranchAndXSolver                      # 2nd: BX, AStarSearch
+BranchAndXSolver                      # 2nd: BX, PBeFS
 
 2  # number of ComputeConfig in this BlockSolverConfig
 
@@ -38,7 +38,7 @@ BranchAndXSolver                      # 2nd: BX, AStarSearch
 2  # number of integer parameters
 
 # now all the integer parameters
-intTreeExplorer 1  # the branch-and-bound of AStarSearch, one queue
+intTreeExplorer 1  # the branch-and-bound of PBeFS, one queue
 intMaxThread    4  # 4 parallel workers
 
 0  # number of double parameters

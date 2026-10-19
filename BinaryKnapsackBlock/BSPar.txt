@@ -28,8 +28,9 @@
 #     the tree and re-seeds from its fenced frontier at each re-solve: same
 #     optimum after every runtime Modification.
 #   - BranchAndXSolver with the tree explored by the branch-and-bound of
-#     AStarSearch (intTreeExplorer): best-first sequential, best-first on 4
-#     workers sharing one queue, depth-first on 4 workers with a queue each.
+#     PBeFS (intTreeExplorer): best-first sequential, best-first on 4
+#     workers sharing one queue, depth-first on 4 workers with a queue each,
+#     best-first on 4 workers by synchronous rounds.
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments (the
 # MILP/DP/GR ones are shared with BSPar-mixed.txt, the core DP and RECORD
@@ -45,7 +46,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-17  # number of (the names of) Solver in this BlockSolverConfig
+18  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -70,13 +71,15 @@ BranchAndXSolver
 # 13th: BX best-first, reoptimization on
 BranchAndXSolver
 RECORDBinaryKnapsackSolver            # 14th: RECORD, same as the 3rd
-BranchAndXSolver                      # 15th: BX best-first, AStarSearch
-# 16th: BX best-first, AStarSearch, 4 workers, one queue
+BranchAndXSolver                      # 15th: BX best-first, PBeFS
+# 16th: BX best-first, PBeFS, 4 workers, one queue
 BranchAndXSolver
-# 17th: BX depth-first, AStarSearch, 4 workers, a queue each
+# 17th: BX depth-first, PBeFS, 4 workers, a queue each
+BranchAndXSolver
+# 18th: BX best-first, PBeFS, 4 workers, synchronous rounds
 BranchAndXSolver
 
-17  # number of ComputeConfig in this BlockSolverConfig
+18  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -367,7 +370,7 @@ intReoptimize 1
 # 14th: RECORD under the same reoptimization of the 3rd
 *CDPCfg-reopt3.txt
 
-# 15: BranchAndXSolver, best-first, the tree explored by AStarSearch
+# 15: BranchAndXSolver, best-first, the tree explored by PBeFS
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -399,7 +402,7 @@ intTreeExplorer 1
 # pointer to the "extra" Configuration
 * # [none]
 
-# 16: BranchAndXSolver, best-first, AStarSearch on 4 workers, one queue
+# 16: BranchAndXSolver, best-first, PBeFS on 4 workers, one queue
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -432,7 +435,7 @@ intMaxThread    4
 # pointer to the "extra" Configuration
 * # [none]
 
-# 17: BranchAndXSolver, depth-first, AStarSearch on 4 workers, a queue each
+# 17: BranchAndXSolver, depth-first, PBeFS on 4 workers, a queue each
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -442,6 +445,39 @@ intMaxThread    4
 # now all the integer parameters
 intSolveMethod  0
 intTreeExplorer 2
+intMaxThread    4
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 18: BranchAndXSolver, best-first, PBeFS on 4 workers by synchronous rounds
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 3
 intMaxThread    4
 
 0  # number of double parameters
