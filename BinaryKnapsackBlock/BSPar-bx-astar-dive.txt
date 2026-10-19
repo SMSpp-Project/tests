@@ -44,7 +44,10 @@ intTreeExplorer 1  # the branch-and-bound of PBeFS
 
 0  # number of double parameters
 
-0  # number of string parameters
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme sequential  # one worker
 
 0  # number of vector-of-int parameters
 

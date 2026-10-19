@@ -40,12 +40,15 @@ BranchAndXSolver                      # 2nd: BX, PBeFS
 
 # now all the integer parameters
 intSolveMethod  0  # depth-first [see SolveMethod]
-intTreeExplorer 2  # PBeFS, a queue per worker
+intTreeExplorer 1  # the branch-and-bound of PBeFS
 intMaxThread    4  # 4 parallel workers
 
 0  # number of double parameters
 
-0  # number of string parameters
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme distributed  # a queue per worker
 
 0  # number of vector-of-int parameters
 
