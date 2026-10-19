@@ -1,0 +1,58 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - SCIPCfg-C.txt - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the SCIPMILPSolver of the tester of the quadratic
+# functions on the continuous relaxation of a model (intRelaxIntVars),
+# with the time limit of SCIP; LPPar_C.txt and LPPar_CL_C.txt include it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+2 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0      # LogVerb, log verbosity of the MILPSolver
+intRelaxIntVars 1      # Relax Integer variables
+
+# Specific Gurobi parameters
+#NonConvex    2       # Specific Gurobi parameter to solve nonconvex
+                      # instances
+                  # When solving Q instances with GRBMILPSolver, this
+                  # parameter should be set to 2
+
+1 # number of double parameters
+
+# now all the double parameters
+limits/time     30     # time limit of SCIP
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END SCIPCfg-C.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

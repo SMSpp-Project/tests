@@ -125,80 +125,45 @@ static bool search_opt( std::string file_name , double* opt_value , char type )
 
 /*--------------------------------------------------------------------------*/
 
+// solve the model with every Solver of the BlockSolverConfig and check each
+// of them against the others and against the known optimal value, if any
+// [see SolveAll() in common_utils]: a Solver stopped by its time limit is
+// held to the interval [ get_lb() , get_ub() ] it returns
+
 static bool SolveModel( bool is_found , double opt_value )
 {
- try {
-  // solve the LPBlock- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * slvrLP = ( LPBlock->get_registered_solvers() ).front();
-  auto start = std::chrono::system_clock::now();
-  int rtrnLP = slvrLP->compute( false );
-  auto end = std::chrono::system_clock::now();
-  double t = std::chrono::duration< double >( end - start ).count();
-  bool hsLP = ( ( rtrnLP >= Solver::kOK ) && ( rtrnLP < Solver::kError ) )
-              || ( rtrnLP == Solver::kLowPrecision );
-  double foLP = hsLP ? ( slvrLP->get_ub() ) : ( INF );
+ if( is_found )
+  LOG1( "The known optimal solution of the model is : " << opt_value << endl );
+ else
+  LOG1( "No known optimal solution available" << endl );
 
-  if( is_found )
-    LOG1( "The known optimal solution of the model is : " << opt_value << endl );
-  else
-    LOG1( "No known optimal solution available" << endl );
-
-  // determine the value token, the pass/fail verdict and (for the uniform
-  // per-instance line) the reference, keeping the original semantics
-  bool ok;
-  std::string tok;
-  double ref = is_found ? opt_value
-             : std::numeric_limits< double >::quiet_NaN();
-
-  if( rtrnLP == Solver::kStopTime ) {
-    double boundLP = hsLP ? ( slvrLP->get_lb() ) : ( INF );
-    LOG1( "Optimization stopped due to time limit." << endl );
-    tok = fmt_obj( foLP );
-    if( opt_value == 0 && abs(foLP) <= 1e-4 ) {
-      LOG1( "The best solution found is " << foLP << endl );
-      ok = true;
-    }
-    else {
-      LOG1( "The best solution found is " << foLP << " and the best bound is "
-        << boundLP << endl );
-      ok = ( ( opt_value <= foLP + abs(foLP)*1e-4 && opt_value >= boundLP ) ||
-             ( opt_value >= foLP - abs(foLP)*1e-4 && opt_value <= boundLP ) );
-    }
-  }
-  else if( hsLP ) {
-   LOG1( "The returned value of the solution found is : " << foLP << endl );
-   tok = fmt_obj( foLP );
-   ok = ! ( is_found && abs( foLP - opt_value ) >= 1e-3 * std::max( double( 1 ) ,
-            std::max( abs( foLP ) , abs( opt_value ) ) ) );
-  }
-  else if( rtrnLP == Solver::kInfeasible ) {
-    LOG1( "The model hs been proven to be infeasible" << endl );
-    tok = "Unfeas";
-    ok = ! is_found;
-  }
-  else if( rtrnLP == Solver::kUnbounded ) {
-   LOG1( "The model hs been proven to be unbounded" << endl );
-   tok = "Unbounded";
-   ok = ! is_found;
-  }
-  else {
-   tok = "Error!";
-   ok = false;
-  }
-
-  print_instance_line( { t } , { tok } , ref , ok ? "OK" : "KO" );
-  return( ok );
-  }
- catch( exception &e ) {
-  cerr << e.what() << endl;
-  exit( 1 );
-  }
- catch(...) {
-  cerr << "Error: unknown exception thrown" << endl;
-  exit( 1 );
-  }
+ return( SolveAll( LPBlock , is_found ? opt_value
+                   : std::numeric_limits< double >::quiet_NaN() , 1e-4 ) );
  }
 
+/*--------------------------------------------------------------------------*/
+
+// the name of the BlockSolverConfig for a model: LPPar_<class>_<type>.txt if
+// there is one for the class of the model, given by the directory it is in
+// (ObjC_ConsL is the class CL: a convex objective and linear constraints),
+// LPPar_<type>.txt otherwise; a class has its own when Solver that handle
+// only it, as the QP ones that refuse quadratic constraints, are added
+
+static std::string config_of( const std::string & file_name , char type )
+{
+ const auto dir = std::filesystem::path( file_name ).parent_path()
+                                                    .filename().string();
+ if( ( dir.size() == 10 ) && ( dir.compare( 0 , 3 , "Obj" ) == 0 ) &&
+     ( dir.compare( 4 , 5 , "_Cons" ) == 0 ) ) {
+  const std::string fn = std::string( "LPPar_" ) + dir[ 3 ] + dir[ 9 ] + "_" +
+                         type + ".txt";
+  if( std::filesystem::exists( fn ) )
+   return( fn );
+  }
+ return( std::string( "LPPar_" ) + type + ".txt" );
+ }
+
+/*--------------------------------------------------------------------------*/
 
 int main( int argc , char **argv )
 {
@@ -263,8 +228,12 @@ int main( int argc , char **argv )
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- // the continuous relaxation (C) is asked by LPPar_C.txt (intRelaxIntVars)
- std::string lpbsc_fn = ( type == 'C' ) ? "LPPar_C.txt" : "LPPar_I.txt";
+ // the continuous relaxation (C) is asked by intRelaxIntVars in the
+ // configurations of type C [see config_of()]
+ // -S gives the BlockSolverConfig, as a battery does that solves with only
+ // some Solver a subset of the models of a class [see batchCL_C_dense]
+ std::string lpbsc_fn = sconf_file.empty() ? config_of( file_name , type )
+                                           : sconf_file;
  Configuration * lpbsc = Configuration::deserialize( lpbsc_fn );
  if( ! lpbsc ) {
   cerr << "Error: cannot load BSC from " << lpbsc_fn << endl;
