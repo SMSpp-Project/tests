@@ -5,12 +5,13 @@
 # class CL (a convex objective and linear constraints) solved by the tester
 # of the quadratic functions in its continuous relaxation: next to the
 # SCIPMILPSolver of LPPar_C.txt, the sparse :MILPSolver for convex QPs
-# (MOSEKMILPSolver, ClarabelMILPSolver), which refuse the quadratic
-# constraints of the class LC and the nonconvex objective of the class QL,
-# hence this configuration of the class alone; the dense ones, which do
-# not scale to its largest models, are in LPPar_CL_C-dense.txt;
-# the tester checks each of them against the others and against the known
-# optimal value, a Solver that this build has not being left out.
+# (MOSEKMILPSolver, ClarabelMILPSolver, PIQPMILPSolver with its sparse
+# backend, OSQPMILPSolver), which refuse the quadratic constraints of the
+# class LC and the nonconvex objective of the class QL, hence this
+# configuration of the class alone; the dense ones, which do not scale to its
+# largest models, are in LPPar_CL_C-dense.txt; the tester checks each of them
+# against the others and against the known optimal value, a Solver that this
+# build has not being left out.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -19,13 +20,15 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3  # number of (the names of) Solver in this BlockSolverConfig
+5  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 SCIPMILPSolver     # name of 1st Solver
 MOSEKMILPSolver    # name of 2nd Solver
 ClarabelMILPSolver # name of 3rd Solver
+PIQPMILPSolver     # name of 4th Solver
+OSQPMILPSolver     # name of 5th Solver
 
-3  # number of ComputeConfig in this BlockSolverConfig
+5  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -37,6 +40,14 @@ ClarabelMILPSolver # name of 3rd Solver
 *QPCfg-C.txt
 
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*QPCfg-C.txt
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*PIQPCfg-C.txt
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 *QPCfg-C.txt
 

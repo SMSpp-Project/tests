@@ -133,11 +133,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   against the known optimal value (`SolveAll()`), where the tester used the
   first one alone; the models of the class CL (a convex objective and linear
   constraints) have configurations of their own, `LPPar_CL_C.txt` with
-  `MOSEKMILPSolver` and `ClarabelMILPSolver` next to `SCIPMILPSolver`, and
-  `LPPar_CL_I.txt` with `MOSEKMILPSolver`, the ComputeConfig of each Solver
-  being a fragment; `batchCL_C_dense` runs the dense `DAQPMILPSolver` and
-  `QPOASESMILPSolver` of `LPPar_CL_C-dense.txt`, which the tester takes from
-  `-S`, on the models of the class with up to about 2000 variables
+  `MOSEKMILPSolver`, `ClarabelMILPSolver`, `PIQPMILPSolver` (sparse) and
+  `OSQPMILPSolver` next to `SCIPMILPSolver`, and `LPPar_CL_I.txt` with
+  `MOSEKMILPSolver`, the ComputeConfig of each Solver being a fragment;
+  `batchCL_C_dense` runs the dense `DAQPMILPSolver`, `QPOASESMILPSolver`,
+  `ProxQPMILPSolver` and `QPMADMILPSolver` (with its Hessian regularized) of
+  `LPPar_CL_C-dense.txt`, which the tester takes from `-S`, on the models of
+  the class with up to about 2000 variables
 
 - `intDoEasy` in the configurations follows the new bits of BundleSolver
   (e.g., 13 is now 7, 45 is now 23), as do the comments that name them

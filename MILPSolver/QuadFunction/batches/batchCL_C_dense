@@ -4,11 +4,12 @@
 #        < exe file > = path of the executable file, default ./MILPSolver_QuadFunction_test
 #
 # runs MILPSolver_QuadFunction_test with the dense QP :MILPSolver of
-# LPPar_CL_C-dense.txt (DAQPMILPSolver, QPOASESMILPSolver) over the models of
-# the CL_C set they scale to, i.e. those with up to about 2000 variables: the
-# others have up to 15000, whose whole Hessian takes hours to factorize;
-# QPLib_8845 is left out too, since the active set of DAQP cycles on it
-# (DAQP_EXIT_CYCLE, or the iteration limit with a larger cycle tolerance)
+# LPPar_CL_C-dense.txt (DAQPMILPSolver, QPOASESMILPSolver, ProxQPMILPSolver,
+# QPMADMILPSolver) over the models of the CL_C set they scale to, i.e. those
+# with up to about 2000 variables: the others have up to 15000, whose whole
+# Hessian takes hours to factorize; QPLib_8845 is left out too, since the
+# active set of DAQP cycles on it (DAQP_EXIT_CYCLE, or the iteration limit
+# with a larger cycle tolerance)
 
 # the common part, which reads the argument [see qf_battery.sh]
 source "$(dirname "$0")/qf_battery.sh" "$@"
