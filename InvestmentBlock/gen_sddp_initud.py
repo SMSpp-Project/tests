@@ -14,8 +14,8 @@ thermal unit (0 to 100, 10 per MWh, 50 per instant on, 100 per start-up,
 start-up and shut-down limits and ramps as wide as the maximum power, off
 since 10 instants before the horizon of every stage) and a slack unit at
 20 per MWh. The demand is 0 everywhere except at one instant of the first
-stage, where it is 100 in the first scenario and 130 in the second, so
-that the thermal unit is fully on there also in the continuous relaxation
+stage (and, in shutlast, of the second), where it is 100 in the first
+scenario and 130 in the second, so that the thermal unit is fully on there also in the continuous relaxation
 (which the backward pass of the training solves) and the training converges
 with the relaxation and the exact problem giving the same value; the design
 is the thermal unit, fixed at its installed quantity 1, at no cost, hence
@@ -39,6 +39,17 @@ simulations.
             stage as the data of the second stage say; the mean is
             (1200 + 1800) / 2 = 1500
 
+  shutlast  the peak is at the instant 2 of the first stage and at the
+            instant 2 of the second, and the unit has MinUpTime 1 and
+            MinDownTime 3: it shuts down at the last instant of the first
+            stage, so it has been off for 1 instant before the second
+            (InitUpDownTime -1) and may start up again at its instant 2,
+            which costs there what it costs in the first stage; the mean is
+            (1150 + 1150 + 1750 + 1750) / 2 = 2900, while InitUpDownTime 0
+            (a unit that shuts down at the beginning of the instant 0) would
+            keep it off until the instant 3, and the slack unit would serve
+            the peak of the second stage
+
 usage: gen_sddp_initud.py <output directory>
 
 The instances are written by ncgen from their CDL, and the reference values
@@ -53,11 +64,11 @@ from pathlib import Path
 STAGES = 3
 T = 4
 PEAK = [100, 130]
-REF = {"minup3": 1550, "minup1": 1450, "noswitch": 1500}
-# per variant: the instant of the peak in the first stage, MinUpTime and
-# MinDownTime of the thermal unit
-VARIANT = {"minup3": (T - 1, 3, 2), "minup1": (T - 1, 1, 1),
-           "noswitch": (0, 2, 2)}
+REF = {"minup3": 1550, "minup1": 1450, "noswitch": 1500, "shutlast": 2900}
+# per variant: the instant of the peak in each stage that has one, MinUpTime
+# and MinDownTime of the thermal unit
+VARIANT = {"minup3": ({0: T - 1}, 3, 2), "minup1": ({0: T - 1}, 1, 1),
+           "noswitch": ({0: 0}, 2, 2), "shutlast": ({0: 2, 1: 2}, 1, 3)}
 
 
 def vals(v):
@@ -66,8 +77,8 @@ def vals(v):
 
 def demand(variant, scenario, stage):
     d = [0] * T
-    if stage == 0:
-        d[VARIANT[variant][0]] = PEAK[scenario]
+    if stage in VARIANT[variant][0]:
+        d[VARIANT[variant][0][stage]] = PEAK[scenario]
     return d
 
 
@@ -170,10 +181,7 @@ def sddpblock(variant):
     for k in range(len(PEAK)):
         row = []
         for s in range(STAGES):
-            d = [0] * T
-            if s == 0:
-                d[VARIANT[variant][0]] = PEAK[k]
-            row += d + [0] * T
+            row += demand(variant, k, s) + [0] * T
         scen.append(vals(row))
     o = ["dimensions:", " NumPolyhedralFunctionsPerStage = 1 ;",
          " TimeHorizon = %d ;" % STAGES, " NumberScenarios = %d ;" % len(PEAK),

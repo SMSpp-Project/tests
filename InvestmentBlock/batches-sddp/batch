@@ -11,7 +11,7 @@
 # Block is an SDDPBlock, i.e., the mean of the costs of the simulations that
 # its SDDPGreedySolver runs after the training, with the simulations of the
 # same SDDPBlock by sddp_solver -s, one per scenario, after the training by
-# sddp_solver, and the latter with the value by hand. Both tools pass the
+# sddp_solver, and both with the value by hand. Both tools pass the
 # state of a thermal unit from a stage to the next (the time it has been on
 # or off, and its power); sddp_solver builds a new SDDPBlock
 # for each simulation and gives the UCBlock of a stage its Solver only after
@@ -21,8 +21,10 @@
 # The instances are written by gen_sddp_initud.py, which also gives the value
 # by hand of each: a thermal unit that starts up at the last instant of the
 # first stage with MinUpTime 3 (minup3), the same with MinUpTime 1 (minup1),
-# and one that is off at the end of the first stage as the data of the second
-# say (noswitch). The design is fixed at its installed quantity, at no cost,
+# one that is off at the end of the first stage as the data of the second
+# say (noswitch), and one that shuts down at the last instant of the first
+# stage with MinDownTime 3 and starts up again 2 instants into the second
+# (shutlast). The design is fixed at its installed quantity, at no cost,
 # and the volume of the reservoir, the state, cannot change, so that the
 # decisions of a simulation do not depend on the cuts. They take seconds,
 # hence they all run in CI too.
@@ -114,7 +116,7 @@ agree() {
 cfg=( -c "${suite}/" -B InnerBCfg-sddp.txt )
 failed=0
 
-for v in minup3 minup1 noswitch; do
+for v in minup3 minup1 noswitch shutlast; do
 
     print_header "${v} ${REF_OBJ[$v]}"
 
@@ -150,13 +152,17 @@ for v in minup3 minup1 noswitch; do
             "$( stage_costs "sim_${v}_${i}.log" ${i} )"
     done
 
+    # each tool against the value by hand
+    wrong=""
+    if [ -z "${ib}" ] || ! agree "${ib}" "${REF_OBJ[$v]}"; then
+        wrong="the InvestmentFunction"
+    fi
+    if ! agree "${sddp}" "${REF_OBJ[$v]}"; then
+        wrong="${wrong:+${wrong} and }sddp_solver"
+    fi
     verdict="${GREEN}OK${NC}"
-    if [ -z "${ib}" ] || ! agree "${ib}" "${sddp}"; then
-        verdict="${RED}KO: the InvestmentFunction differs from"
-        verdict+=" sddp_solver${NC}"
-        failed=1
-    elif ! agree "${sddp}" "${REF_OBJ[$v]}"; then
-        verdict="${RED}KO: sddp_solver differs from the reference${NC}"
+    if [ -n "${wrong}" ]; then
+        verdict="${RED}KO: ${wrong} differ(s) from the reference${NC}"
         failed=1
     fi
     say "  InvestmentFunction ${ib:-none}  sddp_solver ${sddp}  Ref" \

@@ -196,7 +196,8 @@ the `test` directory of the module itself.
   the simulations after the training, with the simulations of the same
   `SDDPBlock` by `sddp_solver`, stage by stage, on the toy instances that
   `gen_sddp_initud.py` writes, where a thermal unit with a minimum up time
-  is started up at the end of a stage.
+  is started up at the end of a stage, or one with a minimum down time is
+  shut down there.
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
