@@ -741,7 +741,7 @@ static bool SolveBoth( void )
   Solver * slvrNDO = ( NDOBlock->get_registered_solvers() ).front();
   if( DetachNDO ) {
    NDOBlock->unregister_Solver( slvrNDO );
-   NDOBlock->register_Solver( slvrNDO );
+   NDOBlock->register_Solver( slvrNDO , true );  // push it to the front
    }
   auto startNDO = std::chrono::system_clock::now();
   int rtrnNDO = slvrNDO->compute( false );
@@ -886,17 +886,59 @@ static bool SolveBoth( void )
    ok = true; verdict = "OK(d-duality)"; decided = true;
    }
 
-  // uniform per-instance line (S0 = LPBlock, S1 = NDOBlock) - - - - - - - - -
   auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
    if( hs )                              return( fmt_obj( fo ) );
    if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
    if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
    return( "Error!" );
    };
-  print_instance_line(
-   { tLP , tNDO } ,
-   { tok( hsLP , rtrnLP , foLP ) , tok( hsNDO , rtrnNDO , foNDO ) } ,
-   std::numeric_limits< double >::quiet_NaN() , verdict );
+
+  std::vector< double > times = { tLP , tNDO };
+  std::vector< std::string > tokens = { tok( hsLP , rtrnLP , foLP ) ,
+                                        tok( hsNDO , rtrnNDO , foNDO ) };
+
+  // the other Solver of the NDOBlock, e.g., a :MILPSolver, which writes the
+  // natural representation as the epigraph of the PolyhedralFunction, i.e.,
+  // the problem of the LPBlock but for the side of its "globalbound" wrapper
+  // at 10 * bound, which only the LPBlock has: they must give the same
+  // answer, or the LPBlock be infeasible where the optimum lies past that
+  // side or there is none, or (in dual mode, where an infeasible dual says
+  // that the primal is either infeasible or unbounded) the two be swapped
+  const auto & slvrs = NDOBlock->get_registered_solvers();
+  for( auto it = std::next( slvrs.begin() ) ; it != slvrs.end() ; ++it ) {
+   auto startX = std::chrono::system_clock::now();
+   int rtrnX = ( *it )->compute( false );
+   auto endX = std::chrono::system_clock::now();
+   bool hsX = ( ( rtrnX >= Solver::kOK ) && ( rtrnX < Solver::kError ) )
+              || ( rtrnX == Solver::kLowPrecision );
+   double foX = hsX ? ( convex ? ( *it )->get_ub() : ( *it )->get_lb() )
+                    : ( convex ? INF : -INF );
+
+   bool same = ( hsLP && hsX && ( abs( foLP - foX ) <= 1e-6 *
+                 max( double( 1 ) , abs( foLP ) ) ) ) ||
+               ( ( ! hsLP ) && ( ! hsX ) && ( rtrnLP == rtrnX ) &&
+                 ( ( rtrnX == Solver::kInfeasible ) ||
+                   ( rtrnX == Solver::kUnbounded ) ) );
+   if( ( ! same ) && ( rtrnLP == Solver::kInfeasible ) )
+    same = ( rtrnX == Solver::kUnbounded ) ||
+           ( hsX && ( convex ? ( foX >=   10 * bound * ( 1 - 1e-9 ) )
+                             : ( foX <= - 10 * bound * ( 1 - 1e-9 ) ) ) );
+   if( ( ! same ) && dual_mode && ( rtrnLP == Solver::kUnbounded ) )
+    same = ( rtrnX == Solver::kInfeasible );
+
+   times.push_back( std::chrono::duration< double >( endX - startX ).count()
+                    );
+   tokens.push_back( tok( hsX , rtrnX , foX ) );
+   if( ! same ) {
+    ok = false;
+    verdict = "KO(S" + std::to_string( tokens.size() - 1 ) + ")";
+    }
+   }
+
+  // uniform per-instance line (S0 = LPBlock, S1 = NDOBlock, then the other
+  // Solver of the NDOBlock) - - - - - - - - - - - - - - - - - - - - - - - - -
+  print_instance_line( times , tokens ,
+                       std::numeric_limits< double >::quiet_NaN() , verdict );
   return( ok );
   }
  catch( exception &e ) {
