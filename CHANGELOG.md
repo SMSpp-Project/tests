@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SMS++/PolyhedralFunctionBlock` also solves the natural representation
+  with a `HiGHSMILPSolver`, the second Solver of `NDOPar.txt`, which writes
+  the epigraph of each `PolyhedralFunction` and is held to the answer of the
+  LPBlock at every round; the ComputeConfig of the `:MILPSolver` of both
+  Blocks is `MILPCfg.txt`
 - `SingleFlowDCRBlock/batches-multiflow/batch` also runs the
   `LagrangianDualSolver` whose flows are solved by the
   `SingleFlowDCRBendersSolver` with `intReuseCuts` 1
