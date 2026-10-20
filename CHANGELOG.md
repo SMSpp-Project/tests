@@ -378,6 +378,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `MILPSolver/QuadFunction/MOSEKCfg-I.txt` asks MOSEK for the outer
+  approximation of the conic relaxations: with the nonlinear ones and the
+  few threads of a CI runner, MOSEK 11.0 declared optimal -33.7755 on
+  QPLib_10056, whose optimum is -33.8568, and `batchCL_I` failed
+
 - the SingleFlowDCRBlock tester checks the Solution of a Solver against
   the problem only if the formulation of its copy does not declare it a
   relaxation: with -F it read the -R of the command line, which is empty,

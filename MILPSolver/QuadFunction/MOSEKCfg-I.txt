@@ -4,7 +4,10 @@
 # The ComputeConfig of the MOSEKMILPSolver of the tester of the quadratic
 # functions on the integer version of a model, with a time limit lower
 # than that of SCIP, so that adding MOSEK keeps the integer batteries
-# within the time of a CI job; LPPar_CL_I.txt includes it.
+# within the time of a CI job, and with the outer approximation of the
+# conic relaxations: with the nonlinear ones and few threads, MOSEK 11.0
+# declares optimal a worse solution of QPLib_10056; LPPar_CL_I.txt
+# includes it.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,10 +17,11 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-1 # number of integer parameters
+2 # number of integer parameters
 
 # now all the integer parameters
-intLogVerb      0      # LogVerb, log verbosity of the MILPSolver
+intLogVerb                             0  # log verbosity of the MILPSolver
+MSK_IPAR_MIO_CONIC_OUTER_APPROXIMATION 1  # outer approximation of cones
 
 1 # number of double parameters
 
