@@ -197,7 +197,8 @@ the `test` directory of the module itself.
   `SDDPBlock` by `sddp_solver`, stage by stage, on the toy instances that
   `gen_sddp_initud.py` writes, where a thermal unit with a minimum up time
   is started up at the end of a stage, or one with a minimum down time is
-  shut down there.
+  shut down there; where the `InvestmentFunction` cannot pass the state, a
+  known defect, its value is printed and not held to the reference.
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`

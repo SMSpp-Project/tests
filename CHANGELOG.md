@@ -15,7 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   value by hand, on four toy instances written by
   `InvestmentBlock/gen_sddp_initud.py` whose thermal unit is started up at
   the last instant of the first stage with `MinUpTime` 3 or 1, is off
-  there, or shuts down there with `MinDownTime` 3; it runs where `investmentblock_solver`, `sddp_solver`, Python and
+  there, or shuts down there with `MinDownTime` 3, the first being a known
+  defect of the `InvestmentFunction` that is printed and does not fail the
+  battery; it runs where `investmentblock_solver`, `sddp_solver`, Python and
   `ncgen` are, with the configurations `InvestmentBlock/*-sddp*.txt`
 - `SingleFlowDCRBlock/batches-multiflow/batch` also runs the
   `LagrangianDualSolver` whose flows are solved by the
