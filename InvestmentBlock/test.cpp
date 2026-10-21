@@ -831,8 +831,9 @@ void check_inner_Solvers( InvestmentFunction * investment_function ) {
     if( auto greedy = dynamic_cast< SDDPGreedySolver * >( solver ) ) {
      const auto sub_block_index = Index( greedy->get_int_par(
                                      SDDPGreedySolver::intSubBlockIndex ) );
-     greedy->set_callback( [ sddp_block , sub_block_index ]( Index stage ) {
-                            callback( sddp_block , stage , sub_block_index );
+     greedy->set_callback( [ sub_block_index ]( SDDPBlock * b ,
+                                                Index stage ) {
+                            callback( b , stage , sub_block_index );
                             } );
      }
   }

@@ -1,10 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - -  GreedyCfg-sddp.txt - - - - - - - - - - - - - - -
 #
-# The ComputeConfig of the SDDPGreedySolver inside the InvestmentFunction:
-# it simulates on the Solver that the ParallelSDDPSolver has registered on
-# the UCBlock of every stage [see SDDPCfg-sddp.txt], and logs the cost of
-# every stage.
+# The ComputeConfig of the SDDPGreedySolver inside the InvestmentFunction,
+# which simulates each scenario on a copy of the SDDPBlock: it registers to
+# the UCBlock of each stage of the copy the Solver of UCBSCfg-sddp.txt when
+# it gets there, after the state of the previous stage has been passed, and
+# logs the cost of every stage.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,7 +18,7 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 intLogVerb          1 # log verbosity
-intUnregisterSolver 0 # keep the Solver of the trainer registered
+intUnregisterSolver 0 # keep the Solver of the stages until it leaves
 
 0  # number of double parameters
 
@@ -30,7 +31,10 @@ intUnregisterSolver 0 # keep the Solver of the trainer registered
 0  # number of vector-of-string parameters
 
 # pointer to the "extra" Configuration
-*  # [none]
+SimpleConfiguration<std::vector<Configuration*>>
+2                  # the number of elements in the vector
+*                  # no BlockConfig of the UCBlock of each stage
+*UCBSCfg-sddp.txt  # the BlockSolverConfig of the UCBlock of each stage
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - -  END GreedyCfg-sddp.txt - - - - - - - - - - - - - -

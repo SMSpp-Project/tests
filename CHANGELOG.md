@@ -143,6 +143,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `InvestmentBlock/batches-sddp/batch` holds the `InvestmentFunction` to the
+  value by hand on minup3 too, now that it simulates on a copy of the
+  `SDDPBlock`; `GreedyCfg-sddp.txt` gives the `SDDPGreedySolver` the
+  BlockSolverConfig of the stages (`UCBSCfg-sddp.txt`)
 - the batteries of `MILPSolver/QuadFunction` solve each model with every
   Solver of their BlockSolverConfig and check them against each other and
   against the known optimal value (`SolveAll()`), where the tester used the
