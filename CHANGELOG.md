@@ -149,6 +149,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PrimalProximalHeur` only bounds the optimum and is declared a
   relaxation
 
+- `UCBlock/batches/batch-conversion` also runs the multi-energy cases with
+  the electricity and the heat as two carriers, the plant being a
+  `ThermalUnitBlock` with two outputs (`me_*_carrier`) or the
+  `ConversionUnitBlock` whose generators have each its output on its
+  carrier (`me_*_unitcarrier`), the PyPSA networks with the electricity,
+  the hydrogen, the gas and the heat as carriers (`carriers_*`) and the
+  cases of the committable links of pypsa2smspp with the gas, the electric
+  and the heat buses as three carriers (`conversion/*_carriers.nc4`),
+  against the optimum by hand and of PyPSA, and per instance the tolerances
+  of its Solver (`EPS_OF`)
+
+- the carrier form of the PyPSA instances, where the buses of each carrier
+  of the network are the nodes of a carrier of the `UCBlock` and the links
+  between two carriers are units with outputs (`*_carriers.nc`, written by
+  the generators of pypsa-eur-instances with `--carriers`), held to the
+  same reference as the network form: the networks with the hydrogen in
+  `UCBlock/batches/batch-pypsa` and `InvestmentBlock/batches/batch-pypsa`,
+  the trees of the PyPSA-Eur network with ten carriers, whose CO2 pipeline
+  is a line with a design in the network of its carrier, in
+  `MultiStageStochasticBlock/batches/batch-pypsa` and, with the investment
+  outside, in `InvestmentBlock/batches/batch-stochastic` (from
+  `initial_investment_stochastic_carriers.txt`, the point of the other
+  form in the order of the assets of this one), and the flat two-stage
+  equivalent of one tree, in both forms, in
+  `TwoStageStochasticBlock/batches/batch-pypsa`
+
 ### Changed
 
 - the tester of `UCBlock` is built without the `LagrangianDualSolverML`

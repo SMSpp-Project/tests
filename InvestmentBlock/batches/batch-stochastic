@@ -59,6 +59,12 @@ declare -A POINT
 POINT[smspp_stoch_tssb_c3_d3_renewables.nc]=initial_investment_stochastic.txt
 POINT[smspp_stoch_tssb_c3_d3_both.nc]=initial_investment_stochastic.txt
 POINT[smspp_stoch_mssb_c3_d3_both.nc]=initial_investment_stochastic.txt
+# the same point in the order of the assets of the carrier form, where the
+# links between two carriers are units and come before the other links
+point_carriers=initial_investment_stochastic_carriers.txt
+POINT[smspp_stoch_tssb_c3_d3_renewables_carriers.nc]=$point_carriers
+POINT[smspp_stoch_tssb_c3_d3_both_carriers.nc]=$point_carriers
+POINT[smspp_stoch_mssb_c3_d3_both_carriers.nc]=$point_carriers
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = PyPsa objective value of the equivalent flat
@@ -70,6 +76,11 @@ declare -A REF_OBJ
 REF_OBJ[smspp_stoch_tssb_c3_d3_renewables.nc]=3.488357705e+09
 REF_OBJ[smspp_stoch_tssb_c3_d3_both.nc]=3.488357705e+09
 REF_OBJ[smspp_stoch_mssb_c3_d3_both.nc]=3.488357705e+09
+# the same with the buses of each carrier of the network in a carrier of the
+# UCBlock (tree_instance_generator.py --carriers)
+REF_OBJ[smspp_stoch_tssb_c3_d3_renewables_carriers.nc]=3.488357705e+09
+REF_OBJ[smspp_stoch_tssb_c3_d3_both_carriers.nc]=3.488357705e+09
+REF_OBJ[smspp_stoch_mssb_c3_d3_both_carriers.nc]=3.488357705e+09
 
 # a modular network of gen_modular_tssb.py with the modules turned off, once
 # as a TSSB and once as an MSSB over two outer realizations, whose

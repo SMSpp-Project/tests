@@ -73,6 +73,14 @@ REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_maxpower.nc]=3.812776176e
 REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_hydroinflow.nc]=3.742200254e+09
 REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_complete.nc]=4.920921646e+09
 
+# the tree c3_d3_both of MultiStageStochasticBlock/batches/batch-pypsa as its
+# flat two-stage equivalent, the nine leaves being the scenarios, once with
+# one network and once with the buses of each of the ten carriers of the
+# network in a carrier of the UCBlock (tree_instance_generator.py --tssb
+# --carriers); the reference is the optimum of the flat network
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_both_flat.nc]=3.488357705e+09
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_both_flat_carriers.nc]=3.488357705e+09
+
 # the thermal family: the optimum of PyPSA and Gurobi on the deterministic
 # equivalent that extensive_thermal_tssb.py writes, which the :MILPSolver
 # of SMS++ matches to the digits it prints
