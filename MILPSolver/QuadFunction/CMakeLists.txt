@@ -28,6 +28,10 @@ file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchCL_C"
                       "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchCL_I"
                       "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchLC_C"
                       "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchLC_I"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchMM_C"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchMM_C_dense"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchMPC_C"
+                      "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchMPC_C_dense"
                       "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchQL_C"
                       "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchQL_I")
 foreach (BATCH_FILE ${BATCH_FILES})

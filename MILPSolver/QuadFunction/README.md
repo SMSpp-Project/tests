@@ -49,6 +49,24 @@ library:
  - C represents quadratic convex functions;
  - Q represents quadratic non-convex functions.
 
+Two more families of convex QPs come from the test sets of qpbenchmark
+(https://github.com/qpsolvers), under the Apache License 2.0, Copyright
+2022 Stéphane Caron, 2023-2024 Inria, 2026 CNRS: `MPC` holds the 64
+problems of model predictive control in robotics of `mpc_qpbenchmark`,
+and `MarosMeszaros` 61 of the 62 of the dense subset of the Maros-Meszaros
+test set of `maros_meszaros_qpbenchmark` (at most 1000 variables and 1000
+constraints), `VALUES` being left out since its Hessian is not positive
+semidefinite; the other 76 are up to some tens of MB each as LP files.
+`qpb2lp.py` writes them as LP files from the .npz and .mat of those
+repositories, and writes the others too, given their files. Their values
+in `available_instances.txt` (of the continuous problem only) are those on
+which `GRBMILPSolver` and `MOSEKMILPSolver` agree, or that of
+`GRBMILPSolver` where `MOSEKMILPSolver` fails or is farther from the value
+of the Maros-Meszaros report, and that of the report for `HS268` and
+`S268`. `batchMPC_C` and `batchMM_C` solve them with `LPPar_CL_C.txt`,
+`batchMPC_C_dense` and `batchMM_C_dense` with `LPPar_CL_C-dense.txt`, both
+given with `-S`, since these folders are not named after a class.
+
 You can also download and run any specific instance you would like, as long as the 
 correct path to the instance is specified. Additionally, you can provide the 
 known optimal value for the instance being tested with -r.

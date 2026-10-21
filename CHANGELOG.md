@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `MILPSolver/QuadFunction` also has the convex QPs of two test sets of
+  qpbenchmark (Apache License 2.0): the 64 of model predictive control in
+  robotics of `mpc_qpbenchmark` in `MPC`, and 61 of the dense subset of
+  the Maros-Meszaros test set in `MarosMeszaros`, written as LP files by
+  `qpb2lp.py`, with their optimal values in `available_instances.txt`;
+  `batchMPC_C`, `batchMM_C` (with `LPPar_CL_C.txt`) and
+  `batchMPC_C_dense`, `batchMM_C_dense` (with `LPPar_CL_C-dense.txt`)
+  solve them
+
 - `import_modules`, built when `SMSpp_BUILD_MODULE` is `ON`, imports the
   C++20 module of each SMS++ module in the build, names their main classes
   and gets a `Block` or a `Solver` of each one from the factory
