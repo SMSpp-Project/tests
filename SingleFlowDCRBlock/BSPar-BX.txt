@@ -3,8 +3,11 @@
 #
 # The Solver of BSPar.txt, i.e., a :MILPSolver that copes with the conic
 # constraints and the SingleFlowDCRBendersSolver, plus a BranchAndXSolver
-# whose nodes are solved by the SFDCRBRelaxationSolver [see BXCfg.txt], so
-# that the three are compared with each other on the same instance.
+# whose nodes are solved by the SFDCRBRelaxationSolver [see BXCfg.txt], and
+# the same whose tree is explored by the branch-and-bound of PBeFS on 4
+# workers, with one queue shared by the workers and by work stealing [see
+# BXCfg-pbefs.txt], so that all of them are compared with each other on the
+# same instance.
 # Note that not every :MILPSolver does: CPLEX and Gurobi solve the
 # mixed-integer conic program, HiGHS and SCIP are left commented out.
 #
@@ -15,7 +18,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3  # number of (the names of) Solver in this BlockSolverConfig
+5  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver                   # name of 1st Solver
 #CPXMILPSolver                  # name of 1st Solver
@@ -23,8 +26,10 @@ GRBMILPSolver                   # name of 1st Solver
 #SCIPMILPSolver                 # no mixed-integer conic constraints
 SingleFlowDCRBendersSolver      # name of 2nd Solver
 BranchAndXSolver                # name of 3rd Solver
+BranchAndXSolver                # name of 4th Solver
+BranchAndXSolver                # name of 5th Solver
 
-3  # number of ComputeConfig in this BlockSolverConfig
+5  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -44,6 +49,37 @@ BranchAndXSolver                # name of 3rd Solver
 *BXCfg.txt
 
 # end of 3rd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the BranchAndXSolver explored by PBeFS, one shared queue
+*BXCfg-pbefs.txt
+
+# end of 4th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the BranchAndXSolver explored by PBeFS, work stealing
+*BXCfg-pbefs.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stealing  # work stealing [see PBeFS]
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+* # [none]
+
+# end of 5th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END BSPar-BX.txt - - - - - - - - - - - - - -

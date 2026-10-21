@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BXCfg-pbefs.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the BranchAndXSolver of BXCfg.txt whose tree is
+# explored depth-first by the branch-and-bound of PBeFS on 4 workers, by the
+# scheme that strPBeFSScheme names (shared by default), each worker having
+# its own SFDCRBRelaxationSolver, which keeps the arcs closed by the
+# branchings to itself; BSPar-BX.txt names the scheme of each of its rows.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*BXCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1  # the branch-and-bound of PBeFS [see TreeExplorer]
+intMaxThread    4  # on 4 workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BXCfg-pbefs.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

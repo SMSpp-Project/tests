@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   synchronous rounds, by the SelfSplit and by work stealing; the rows of
   PBeFS, and the `BSPar-bx-astar-*.txt`, name its scheme by
   `strPBeFSScheme`
+- `SingleFlowDCRBlock/BSPar-BX.txt` also runs the BranchAndXSolver whose
+  tree is explored by the branch-and-bound of PBeFS on 4 workers, with one
+  shared queue and by work stealing (`BXCfg-pbefs.txt`), held by
+  `batches/batch-instances-bx` to the same contract as the other one
 - `UCBlock/BSPar-DP-BX.txt` also runs the BranchAndXSolver that explores
   the tree best-estimate by the pseudocosts of the
   `LagrangianDualRelaxationSolver` (`BXLDCfg-DP-est.txt`,
