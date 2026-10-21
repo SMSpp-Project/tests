@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `BinaryKnapsackBlock/BSPar.txt` also runs the BranchAndXSolver whose tree
   is explored best-first by the branch-and-bound of PBeFS on 4 workers by
-  synchronous rounds and by the SelfSplit; the rows of PBeFS, and the
-  `BSPar-bx-astar-*.txt`, name its scheme by `strPBeFSScheme`
+  synchronous rounds, by the SelfSplit and by work stealing; the rows of
+  PBeFS, and the `BSPar-bx-astar-*.txt`, name its scheme by
+  `strPBeFSScheme`
 - `UCBlock/BSPar-DP-BX.txt` also runs the BranchAndXSolver that explores
   the tree best-estimate by the pseudocosts of the
   `LagrangianDualRelaxationSolver` (`BXLDCfg-DP-est.txt`,
