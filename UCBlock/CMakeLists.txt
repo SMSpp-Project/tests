@@ -18,37 +18,46 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::UCBlock)
 
-    add_executable(UCBlock_test test.cpp ../common_utils.cpp)
-    target_include_directories(UCBlock_test PRIVATE ..)
-    target_link_libraries(UCBlock_test PRIVATE SMS++::UCBlock)
+    # the tester, compiled once and linked twice [see UCBlock_ML_test below]
+    add_library(UCBlock_test_objs OBJECT test.cpp ../common_utils.cpp)
+    target_include_directories(UCBlock_test_objs PRIVATE ..)
+    target_link_libraries(UCBlock_test_objs PUBLIC SMS++::UCBlock)
 
     if (TARGET SMS++::LagrangianDualSolver)
-        target_link_libraries(UCBlock_test PRIVATE SMS++::LagrangianDualSolver)
+        target_link_libraries(UCBlock_test_objs PUBLIC
+                              SMS++::LagrangianDualSolver)
     endif ()
 
     if (TARGET SMS++::BundleSolver)
-        target_link_libraries(UCBlock_test PRIVATE SMS++::BundleSolver)
+        target_link_libraries(UCBlock_test_objs PUBLIC SMS++::BundleSolver)
     endif ()
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(UCBlock_test PRIVATE SMS++::MILPSolver)
+        target_link_libraries(UCBlock_test_objs PUBLIC SMS++::MILPSolver)
     endif ()
 
     # the Branch-and-X of BSPar-BX.txt and BSPar-DP-BX.txt, whose relaxation
     # is the LagrangianDualRelaxationSolver
     if (TARGET SMS++::BranchAndXSolver)
-        target_link_libraries(UCBlock_test PRIVATE SMS++::BranchAndXSolver)
+        target_link_libraries(UCBlock_test_objs PUBLIC
+                              SMS++::BranchAndXSolver)
     endif ()
+
+    add_executable(UCBlock_test)
+    target_link_libraries(UCBlock_test PRIVATE UCBlock_test_objs)
+    smspp_install(UCBlock_test)
 
     # the 5th Solver of BSPar-DP-BX.txt asks for the
     # LagrangianDualRelaxationSolverML by name, and the class is in the
-    # library of its own that only a build with Torch has
+    # library of its own that only a build with Torch has; loading Torch
+    # costs more than many of the instances, so only this tester has it, and
+    # a battery runs it if its DEFAULT_EXE names it
     if (TARGET SMS++::LagrangianDualSolverML)
-        target_link_libraries(UCBlock_test PRIVATE
+        add_executable(UCBlock_ML_test)
+        target_link_libraries(UCBlock_ML_test PRIVATE UCBlock_test_objs
                               SMS++::LagrangianDualSolverML)
+        smspp_install(UCBlock_ML_test)
     endif ()
-
-    smspp_install(UCBlock_test)
 
     # the pollutant budget constraints, on instances the tester writes itself;
     # it is run here for the ComputeConfig of the LagrangianDualSolver it
@@ -85,15 +94,22 @@ if (TARGET SMS++::UCBlock)
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        # the tester the battery names, if this build has it
+        set(BATCH_EXE UCBlock_test)
+        file(STRINGS ${BATCH_FILE} BATCH_DEFAULT_EXE
+             REGEX "^DEFAULT_EXE=./UCBlock_ML_test")
+        if (BATCH_DEFAULT_EXE AND TARGET UCBlock_ML_test)
+            set(BATCH_EXE UCBlock_ML_test)
+        endif ()
         if (UNIX)
             add_test(NAME UCBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/UCBlock_test
+                     COMMAND bash ${BATCH_FILE} $<TARGET_FILE:${BATCH_EXE}>
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME UCBlock_test/${BATCH_NAME}
                      # using Git for Windows that includes Git Bash
                      COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:UCBlock_test>"
+                             "${BATCH_FILE}" "$<TARGET_FILE:${BATCH_EXE}>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
         # Make each batch test require the uc_nc4_extracted fixture

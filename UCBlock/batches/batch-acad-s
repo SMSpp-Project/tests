@@ -16,8 +16,12 @@
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
-DEFAULT_EXE=./UCBlock_test
+DEFAULT_EXE=./UCBlock_ML_test
 DEFAULT_PAR=BSPar-DP-BX.txt
+# the 5th Solver of BSPar-DP-BX.txt is in the library that only the tester
+# with Torch has [see the README.md of the suite]; in a build without it the
+# other tester is run, which drops that Solver
+[ -x "$DEFAULT_EXE" ] || DEFAULT_EXE=./UCBlock_test
 # the Lagrangian Dual of these instances is solved over sub-Block that the
 # dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
 # the PrimalProximalHeur needs and what makes its inner Solver converge, and

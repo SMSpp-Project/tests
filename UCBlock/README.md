@@ -32,6 +32,12 @@ The usage of the executable is the following:
        ./UCBlock_test UC-file [BSC-file]
        BSC-file: BlockSolverConfig description [BSPar.txt]
 
+`UCBlock_ML_test` is the same tester with the `LagrangianDualSolverML`
+library linked in, which only a build with Torch has: a `BlockSolverConfig`
+that asks for one of its `Solver` (as `BSPar-DP-BX.txt` does) is run with it,
+and the batteries that use one name it as their default executable, while
+the other tester does not pay for loading Torch at every start.
+
 The test are supposed to be run on the pure-thermal "academic" UC
 instances available at
 

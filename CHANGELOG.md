@@ -142,6 +142,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the tester of `UCBlock` is built without the `LagrangianDualSolverML`
+  library, whose loading of Torch cost more than many of the instances, and
+  `UCBlock_ML_test` is the same tester with it; `batch-acad-s`, whose
+  `BSPar-DP-BX.txt` asks for a `Solver` of that library, names it as its
+  default executable and is run with it when the build has it
+
+- every test and every battery runs with `OPENBLAS_NUM_THREADS=1`, unless
+  the caller sets it, OpenBLAS starting one idle thread per core as soon as
+  it is loaded
+
 - `InvestmentBlock/batches-sddp/batch` holds the `InvestmentFunction` to the
   value by hand on minup3 too, now that it simulates on a copy of the
   `SDDPBlock`; `GreedyCfg-sddp.txt` gives the `SDDPGreedySolver` the
