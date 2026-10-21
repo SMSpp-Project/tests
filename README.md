@@ -253,6 +253,13 @@ the `test` directory of the module itself.
   `BlockConfig`-uring in two different ways two copies of the same `:Block`
   and solving them with two copies of the same `:Solver`.
 
+- [`import_modules`](import_modules), built when `SMSpp_BUILD_MODULE` is
+  `ON`: a program that imports the C++20 module of each SMS++ module in the
+  build (`import smspp.ucblock;` and so on), names their main classes and
+  gets a `Block` or a `Solver` of each one from the factory, so that a name
+  that a module does not export stops the build and a factory registration
+  lost through the import stops the run.
+
 The tests run as traditional command line executables. Most of the tests
 can also run as a
 [CTest](https://cmake.org/cmake/help/latest/manual/ctest.1.html) suite.

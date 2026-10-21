@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `import_modules`, built when `SMSpp_BUILD_MODULE` is `ON`, imports the
+  C++20 module of each SMS++ module in the build, names their main classes
+  and gets a `Block` or a `Solver` of each one from the factory
+
 - `InvestmentBlock/batches-sddp/batch` compares, at a fixed design, the
   simulation that the `InvestmentFunction` runs over an `SDDPBlock` with the
   simulation of the same `SDDPBlock` by `sddp_solver`, and both with the

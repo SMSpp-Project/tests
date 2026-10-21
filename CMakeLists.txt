@@ -146,6 +146,12 @@ add_subdirectory(SATBlock)
 add_subdirectory(SatellitesBlock)
 add_subdirectory(MultiKnapsackAssignBlock)
 
+# the program that imports the C++20 module of every SMS++ module in the
+# build, which are there when SMSpp_BUILD_MODULE is ON [see SMS++]
+if (SMSpp_BUILD_MODULE)
+    add_subdirectory(import_modules)
+endif ()
+
 # the one tester that is posed on no Block in particular: it reads whichever
 # two the configurations name and compares the two formulations
 add_subdirectory(compare_formulations)
