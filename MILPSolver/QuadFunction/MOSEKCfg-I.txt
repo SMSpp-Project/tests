@@ -5,9 +5,10 @@
 # functions on the integer version of a model, with a time limit lower
 # than that of SCIP, so that adding MOSEK keeps the integer batteries
 # within the time of a CI job, and with the outer approximation of the
-# conic relaxations: with the nonlinear ones and few threads, MOSEK 11.0
-# declares optimal a worse solution of QPLib_10056; LPPar_CL_I.txt
-# includes it.
+# conic relaxations: with the nonlinear ones and few threads, MOSEK 11 and
+# 12 declare optimal a worse solution of QPLib_10056, which the dual form
+# of the interior point avoids in MOSEK 11 but not in MOSEK 12;
+# LPPar_CL_I.txt includes it.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
