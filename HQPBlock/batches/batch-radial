@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# usage: batch-radial < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default HQPBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# Every HQPSolver of the BlockSolverConfig on the instances that HQPBlock
+# distributes in data/nc4, some steps of a centralized Model Predictive
+# Control of 8 robots crossing in the middle of a circle, against the
+# solution of each level written in the file and against the null-space
+# reference; a step that follows the previous one in the run is also
+# reached by Modification of the HQPBlock of the previous step (-P).
+
+# run from the test directory so HQPBlock_test reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./HQPBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+data=../../HQPBlock/data/nc4
+
+# the steps in their order, each with the previous one if it is the step
+# before it - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+prev=""
+prev_step=-2
+for f in "${data}"/radial8_s*.nc4; do
+  [ -e "${f}" ] || { echo "no instance in ${data}"; exit 1; }
+  step=$(( 10#$(basename "${f}" .nc4 | sed 's/.*_s//') ))
+  if [ $(( prev_step + 1 )) -eq "${step}" ]; then
+    run_test "$exe" -S "$par" -P "${prev}" "${f}"
+  else
+    run_test "$exe" -S "$par" "${f}"
+  fi
+  prev="${f}"
+  prev_step=${step}
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

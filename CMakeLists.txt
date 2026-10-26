@@ -145,6 +145,7 @@ add_subdirectory(SingleFlowDCRBlock)
 add_subdirectory(SATBlock)
 add_subdirectory(SatellitesBlock)
 add_subdirectory(MultiKnapsackAssignBlock)
+add_subdirectory(HQPBlock)
 
 # the program that imports the C++20 module of every SMS++ module in the
 # build, which are there when SMSpp_BUILD_MODULE is ON [see SMS++]

@@ -246,6 +246,16 @@ the `test` directory of the module itself.
   two formulations of the problem and the `SingleFlowDCRBendersSolver`,
   cross-checking what they answer and the `Solution` each of them produces.
 
+- [`HQPBlock`](HQPBlock), a tester of the `HQPBlock` of hierarchical
+  (lexicographic) Quadratic Programs and of the `HQPSolver` that solves its
+  levels one after the other with an inner `:MILPSolver`: one `HQPSolver`
+  for each inner Solver (DAQP, qpOASES, MOSEK, Clarabel) and setting, all in
+  the same `BlockSolverConfig`, is compared level by level with an
+  independent implementation of the null-space approach, hence with all the
+  others, on random and degenerate hierarchies built by the tester, on a
+  step of Model Predictive Control that changes the data of the same Block,
+  and on the instances that `HQPBlock` distributes.
+
 ### Posed on no Block in particular
 
 - [`compare_formulations`](compare_formulations),  very simple tester for

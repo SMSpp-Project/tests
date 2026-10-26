@@ -1,0 +1,30 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - InnerBSCfg-clarabel.txt - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the inner Solver of an HQPSolver: Clarabel, the
+# sparse interior-point method for conic programs, convex QPs included.
+# A build without it leaves the HQPSolver with no inner Solver, which the
+# tester reports and leaves out.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+ClarabelMILPSolver  # name of 1st Solver
+
+0  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - END InnerBSCfg-clarabel.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

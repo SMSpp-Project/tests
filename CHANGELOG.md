@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `HQPBlock`, the suite of `HQPBlock` and `HQPSolver`: `HQPBlock_test`
+  compares level by level every `HQPSolver` of `BSPar.txt` (DAQP, qpOASES,
+  MOSEK and Clarabel as inner Solver, each with the rows of the lower levels
+  relaxed or in the model and with the center of the regularization at the
+  previous solution or at 0) with an independent null-space implementation;
+  `batch-generated` on random and degenerate hierarchies and on a step of
+  Model Predictive Control, `batch-radial` on the instances in `data/nc4` of
+  the module, each step also reached by Modification of the previous one,
+  with the label `HQPBlock;MILPSolver`
+
 - `MILPSolver/QuadFunction/LPPar_CL_C-dense.txt` also attaches
   `HPIPMMILPSolver`, with `QPCfg-C.txt`, so that `batchCL_C_dense`,
   `batchMPC_C_dense` and `batchMM_C_dense` run it next to the other dense
