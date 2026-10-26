@@ -8,8 +8,8 @@
 # ProxQPMILPSolver with its dense backend, which has no time limit and stalls
 # on the largest models of the class even in its sparse backend,
 # QPMADMILPSolver and QuadProgMILPSolver with the regularized Hessian of
-# QPMADCfg-C.txt and QuadProgCfg-C.txt, which load the whole Hessian and do
-# not scale to the largest models of the class:
+# QPMADCfg-C.txt and QuadProgCfg-C.txt, and HPIPMMILPSolver, which load the
+# whole Hessian and do not scale to the largest models of the class:
 # batchCL_C_dense gives it to the tester with -S on the smaller ones, which
 # the tester checks against the known optimal value.
 #
@@ -20,15 +20,16 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-5  # number of (the names of) Solver in this BlockSolverConfig
+6  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 DAQPMILPSolver      # name of 1st Solver
 QPOASESMILPSolver   # name of 2nd Solver
 ProxQPMILPSolver    # name of 3rd Solver
 QPMADMILPSolver     # name of 4th Solver
 QuadProgMILPSolver  # name of 5th Solver
+HPIPMMILPSolver     # name of 6th Solver
 
-5  # number of ComputeConfig in this BlockSolverConfig
+6  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -50,6 +51,10 @@ QuadProgMILPSolver  # name of 5th Solver
 # 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 *QuadProgCfg-C.txt
+
+# 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*QPCfg-C.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

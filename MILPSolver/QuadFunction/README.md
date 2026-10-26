@@ -6,7 +6,7 @@ the Constraint: a tester which provides very comprehensive tests for any
 derived classes `CPXMILPSolver`, `SCIPMILPSolver`, `GRBMILPSolver`,
 `HiGHSMILPSolver`, `MOSEKMILPSolver`, `DAQPMILPSolver`, `QPOASESMILPSolver`,
 `ClarabelMILPSolver`, `ProxQPMILPSolver`, `PIQPMILPSolver`, `OSQPMILPSolver`,
-`QPMADMILPSolver` and `QuadProgMILPSolver`).
+`QPMADMILPSolver`, `QuadProgMILPSolver` and `HPIPMMILPSolver`).
 
 This executable, given the filename of a LP file containing a quadratic model,
 read the corresponding problem using the function `AbstractBlock::read_lp` and 
@@ -27,8 +27,8 @@ quadratic constraints of `LC` and the nonconvex objective of `QL`:
 `MOSEKMILPSolver`, `ClarabelMILPSolver`, `PIQPMILPSolver` (with its sparse
 backend, `PIQPCfg-C.txt`) and `OSQPMILPSolver` on the continuous relaxation,
 `MOSEKMILPSolver` on the integer version. The dense ones, `DAQPMILPSolver`,
-`QPOASESMILPSolver`, `ProxQPMILPSolver`, `QPMADMILPSolver` and
-`QuadProgMILPSolver`, load the whole
+`QPOASESMILPSolver`, `ProxQPMILPSolver`, `QPMADMILPSolver`,
+`QuadProgMILPSolver` and `HPIPMMILPSolver`, load the whole
 Hessian and do not scale to the largest models of `CL` (up to 15000
 variables), where `ProxQPMILPSolver`, which has no time limit, does not end
 even with its sparse backend: `batchCL_C_dense` gives them

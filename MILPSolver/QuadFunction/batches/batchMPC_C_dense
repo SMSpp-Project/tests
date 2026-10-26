@@ -5,12 +5,12 @@
 #
 # runs MILPSolver_QuadFunction_test with the dense QP :MILPSolver of
 # LPPar_CL_C-dense.txt (DAQPMILPSolver, QPOASESMILPSolver, ProxQPMILPSolver,
-# QPMADMILPSolver, QuadProgMILPSolver) over the problems of model predictive
-# control in robotics of mpc_qpbenchmark, written as LP files by qpb2lp.py;
-# QUADCMPC1 and QUADCMPC2 are left out: QPOASESMILPSolver reaches its time
-# limit on the first, and on both QPMADMILPSolver and QuadProgMILPSolver, on
-# the Hessian regularized by 1e-6, end up to 5% away from the optimum or
-# declare them infeasible
+# QPMADMILPSolver, QuadProgMILPSolver, HPIPMMILPSolver) over the problems of
+# model predictive control in robotics of mpc_qpbenchmark, written as LP files
+# by qpb2lp.py; QUADCMPC1 and QUADCMPC2 are left out: QPOASESMILPSolver reaches
+# its time limit on the first, and on both QPMADMILPSolver and
+# QuadProgMILPSolver, on the Hessian regularized by 1e-6, end up to 5% away
+# from the optimum or declare them infeasible
 
 # the common part, which reads the argument [see qf_battery.sh]
 source "$(dirname "$0")/qf_battery.sh" "$@"

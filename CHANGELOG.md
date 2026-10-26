@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `MILPSolver/QuadFunction/LPPar_CL_C-dense.txt` also attaches
+  `HPIPMMILPSolver`, with `QPCfg-C.txt`, so that `batchCL_C_dense`,
+  `batchMPC_C_dense` and `batchMM_C_dense` run it next to the other dense
+  QP :MILPSolver
+
 - `MILPSolver/QuadFunction` also has the convex QPs of two test sets of
   qpbenchmark (Apache License 2.0): the 64 of model predictive control in
   robotics of `mpc_qpbenchmark` in `MPC`, and 61 of the dense subset of
