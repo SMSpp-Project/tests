@@ -13,11 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   compares level by level every `HQPSolver` of `BSPar.txt` (DAQP, qpOASES,
   MOSEK and Clarabel as inner Solver, each with the rows of the lower levels
   relaxed or in the model and with the center of the regularization at the
-  previous solution or at 0) with an independent null-space implementation;
-  `batch-generated` on random and degenerate hierarchies and on a step of
-  Model Predictive Control, `batch-radial` on the instances in `data/nc4` of
-  the module, each step also reached by Modification of the previous one,
-  with the label `HQPBlock;MILPSolver`
+  previous solution or at 0, and DAQP and qpOASES solving each level from
+  scratch) with an independent null-space implementation; `batch-generated`
+  on random and degenerate hierarchies, on a step of Model Predictive
+  Control and on a run of 10 small ones, where DAQP and qpOASES starting
+  from the previous solve of each level must take fewer iterations than
+  from scratch (`-I`), `batch-radial` on the instances in `data/nc4` of the
+  module, each step also reached by Modification of the previous one, with
+  the label `HQPBlock;MILPSolver`
 
 - `MILPSolver/QuadFunction/LPPar_CL_C-dense.txt` also attaches
   `HPIPMMILPSolver`, with `QPCfg-C.txt`, so that `batchCL_C_dense`,

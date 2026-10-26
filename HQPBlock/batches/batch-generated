@@ -9,8 +9,12 @@
 # hence against each other, on the hierarchies that the tester builds: the
 # random ones, those with degenerate levels (no equalities, no inequalities,
 # nothing), an inequality task that cannot be satisfied at its level and
-# one already satisfied, dependent rows, weights, and a step of Model
-# Predictive Control that changes all the data of the same HQPBlock.
+# one already satisfied, dependent rows, weights, a step of Model Predictive
+# Control that changes all the data of the same HQPBlock, and a run of 10
+# small such steps, where DAQP and qpOASES starting from the previous solve
+# of each level (the 1st and the 4th HQPSolver of BSPar.txt) must take fewer
+# iterations than the same ones solving from scratch (the 13th and the 14th,
+# -I).
 #
 # The interior-point inner Solvers of BSPar.txt (MOSEK, Clarabel: the 7th to
 # the 12th HQPSolver) are held to 1e-5 on the values of the levels rather
@@ -30,6 +34,7 @@ DEFAULT_EXE=./HQPBlock_test
 DEFAULT_PAR=BSPar.txt
 parse_batch_args "$@"
 
-run_test "$exe" -S "$par" -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5
+run_test "$exe" -S "$par" -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5 \
+  -I 1:13,4:14
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

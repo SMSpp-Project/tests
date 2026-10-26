@@ -2,11 +2,11 @@
 # - - - - - - - - - - - - - - - HQPCfg.txt  - - - - - - - - - - - - - - - - -
 #
 # The base ComputeConfig of the HQPSolver of BSPar.txt: the center of the
-# regularization follows the solution of the previous level (int_HQP_Prox
+# regularization follows the solution of the previous level (intProxCenter
 # 1), so that each level is the problem that the reference of the tester
-# solves in the null space of the higher levels, the rows of the lower
-# levels are relaxed and their slacks fixed to 0 (int_HQP_RelaxLower 1, the
-# default), and the inner Solver is DAQP (InnerBSCfg-daqp.txt). The variants
+# solves in the null space of the higher levels, the rows of the lower levels
+# are relaxed and their slacks fixed to 0 (intRelaxLower 1, the default), and
+# the inner Solver is DAQP (InnerBSCfg-daqp.txt). The variants
 # HQPCfg-free.txt and HQPCfg-prox0.txt change one of these, and BSPar.txt
 # changes the inner Solver of each of them.
 #
@@ -20,8 +20,8 @@ ComputeConfig # exact type of the ComputeConfig object
 2  # number of integer parameters
 
 # now all the integer parameters
-int_HQP_Prox        1  # center at the solution of the previous level
-int_HQP_RelaxLower  1  # rows of the lower levels relaxed
+intProxCenter  1  # center at the solution of the previous level
+intRelaxLower  1  # rows of the lower levels relaxed
 
 0  # number of double parameters
 
@@ -31,7 +31,7 @@ int_HQP_RelaxLower  1  # rows of the lower levels relaxed
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-daqp.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-daqp.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 

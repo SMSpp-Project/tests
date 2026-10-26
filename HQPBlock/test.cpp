@@ -27,9 +27,12 @@
  * - a change of b, d, A (also out of the pattern) and C of the same
  *   HQPBlock between two compute(), as a step of a Model Predictive Control
  *   scheme, checked against the reference and against a new HQPBlock with
- *   the new data solved from scratch.
+ *   the new data solved from scratch;
  *
- * The HQPSolver with int_HQP_Prox == 1 solve exactly the problem of the
+ * - a run of 10 steps of Model Predictive Control on the same HQPBlock,
+ *   each changing b, d, A and C a little, checked against the reference.
+ *
+ * The HQPSolver with intProxCenter == 1 solve exactly the problem of the
  * reference, hence also x is compared; for the others only the values of
  * the levels, which are unique, are.
  *
@@ -45,6 +48,16 @@
  * the HQPBlock of the previous step is solved, changed into this one by
  * set_b(), set_d(), set_A() and set_C(), and solved again, as the Model
  * Predictive Control does.
+ *
+ * The iterations of the inner Solvers of each HQPSolver [see
+ * HQPSolver::get_elapsed_iterations()] are summed over the solves of the
+ * steps reached by Modification (those of the run of Model Predictive
+ * Control of the hierarchies built here, the step from the file of -P),
+ * and -I lists pairs i:j of positions of HQPSolver in the BlockSolverConfig
+ * (from 1) such that i must take fewer of them than j: e.g., an inner
+ * Solver that starts from the previous solve of its level against the same
+ * one that starts each solve from scratch, whose values are compared with
+ * the same reference.
  *
  * The values of the levels are compared with relative tolerance (absolute
  * below 1) 1e-6 on the hierarchies built here, 1e-5 for the HQPSolver that
@@ -84,6 +97,24 @@ static int usable = 0;         // the most HQPSolver with an inner Solver
 // the position of each HQPSolver in the BlockSolverConfig
 static std::map< const HQPSolver * , std::size_t > position;
 
+// the pairs of -I: the HQPSolver at the first position (from 0) must take
+// fewer iterations than that at the second one
+static std::vector< std::pair< std::size_t , std::size_t > > fewer;
+
+// the iterations of the inner Solvers of each HQPSolver, by position, in the
+// solves of the steps reached by Modification, and whether there are any
+static std::map< std::size_t , long > step_iter;
+static bool stepped = false;
+
+/*--------------------------------------------------------------------------*/
+// adds the iterations of the last compute() of s to those of the steps
+
+static void count_step( const HQPSolver * s )
+{
+ step_iter[ position.at( s ) ] += s->get_elapsed_iterations();
+ stepped = true;
+ }
+
 /*--------------------------------------------------------------------------*/
 // the tolerance on the values of the levels that -E declares for s, in the
 // order of the BlockSolverConfig (one value for all of them), dflt if none
@@ -113,9 +144,9 @@ static double vtol_of( const HQPSolver * s , double dflt )
 static int check( const std::string & what , HQPSolver * s ,
                   const RefSolution & ref , const RefSolution & ref0 )
 {
- const bool lower = ! s->get_int_par( HQPSolver::int_HQP_RelaxLower );
+ const bool lower = ! s->get_int_par( HQPSolver::intRelaxLower );
  return( compare( what , s ,
-                  s->get_int_par( HQPSolver::int_HQP_Prox ) ? ref : ref0 ,
+                  s->get_int_par( HQPSolver::intProxCenter ) ? ref : ref0 ,
                   vtol_of( s , lower ? 1e-5 : 1e-6 ) ,
                   lower ? 1e-2 : 1e-3 ) );
  }
@@ -301,7 +332,7 @@ static std::vector< HQPSolver * > working( const std::vector< HQPSolver * > &
   else
    if( report )
     std::cout << "[" << label( s ) << "]: no inner Solver of "
-              << s->get_str_par( HQPSolver::str_HQP_BSCfg )
+              << s->get_str_par( HQPSolver::strInnerBSC )
               << " in this build, skipped" << std::endl;
  usable = std::max( usable , int( res.size() ) );
  return( res );
@@ -436,6 +467,59 @@ static int mpc_step( void )
  }
 
 /*--------------------------------------------------------------------------*/
+// a run of Model Predictive Control on the same HQPBlock: each step moves b
+// and d a little, as a reference moving along a trajectory, and A and C, as
+// a model linearized at a moving point; each step is compared with the
+// reference, and its iterations are those that -I compares
+
+static int mpc_run( void )
+{
+ Instance in = random_instance( 31 );
+ HQPBlock block;
+ load( block , in );
+ const auto slvrs = working( attach( block , sconf_file ) , false );
+ for( auto s : slvrs )
+  s->compute();
+
+ std::mt19937 g( 32 );
+ int errors = 0;
+ for( int k = 1 ; k <= 10 ; ++k ) {
+  in.name = "MPC run, step " + std::to_string( k );
+  for( int p = 0 ; p < in.levels() ; ++p ) {
+   in.b[ p ] += 0.02 * random_vector( g , in.b[ p ].size() );
+   in.d[ p ] += 0.02 * random_vector( g , in.d[ p ].size() );
+   for( auto * M : { & in.A[ p ] , & in.C[ p ] } )
+    for( int i = 0 ; i < M->rows() ; ++i )
+     for( int j = 0 ; j < M->cols() ; ++j )
+      if( ( *M )( i , j ) != 0 )
+       ( *M )( i , j ) *= 1 + 0.01 * random_vector( g , 1 )( 0 );
+   block.set_b( p , std::vector< double >( in.b[ p ].data() , in.b[ p ].data()
+                                           + in.b[ p ].size() ) );
+   block.set_d( p , std::vector< double >( in.d[ p ].data() , in.d[ p ].data()
+                                           + in.d[ p ].size() ) );
+   block.set_A( p , in.A[ p ].sparseView() );
+   block.set_C( p , in.C[ p ].sparseView() );
+   }
+
+  const RefSolution ref = reference( in ) , ref0 = reference( in , false );
+  for( auto s : slvrs ) {
+   const int st = s->compute();
+   count_step( s );
+   if( st != Solver::kOK ) {
+    std::cout << in.name << " [" << label( s ) << "]: status " << st
+              << " -> KO" << std::endl;
+    ++errors;
+    continue;
+    }
+   errors += check( in.name , s , ref , ref0 );
+   }
+  }
+
+ block.unregister_Solvers( true );
+ return( errors );
+ }
+
+/*--------------------------------------------------------------------------*/
 // all the hierarchies built here
 
 static int generated( void )
@@ -456,8 +540,10 @@ static int generated( void )
   first = false;
   }
 
- if( usable )
+ if( usable ) {
   errors += mpc_step();
+  errors += mpc_run();
+  }
 
  return( errors );
  }
@@ -525,11 +611,14 @@ static RefSolution file_solution( const std::string & file ,
 
 static int check_file( const std::string & what ,
                        const std::vector< HQPSolver * > & sl ,
-                       const RefSolution & fsol , const RefSolution & ref )
+                       const RefSolution & fsol , const RefSolution & ref ,
+                       bool step = false )
 {
  int errors = 0;
  for( auto s : sl ) {
   const int st = s->compute();
+  if( step )
+   count_step( s );
   if( st != Solver::kOK ) {
    std::cout << what << " [" << label( s ) << "]: status " << st
              << " -> KO" << std::endl;
@@ -604,7 +693,7 @@ static int from_file( void )
     prev->set_A( p , block->get_A( p ) );
     prev->set_C( p , block->get_C( p ) );
     }
-   errors += check_file( nm + " after the step" , psl , fsol , ref );
+   errors += check_file( nm + " after the step" , psl , fsol , ref , true );
    prev->unregister_Solvers( true );
    delete prev;
    }
@@ -616,17 +705,92 @@ static int from_file( void )
  }
 
 /*--------------------------------------------------------------------------*/
+/*---------------------------- THE ITERATIONS ------------------------------*/
+/*--------------------------------------------------------------------------*/
+// prints the iterations of each HQPSolver in the steps reached by
+// Modification and checks the pairs of -I; returns the number of errors
+
+static int check_iterations( void )
+{
+ if( ! stepped ) {
+  if( ! fewer.empty() )
+   std::cout << "no step reached by Modification: the iterations are not "
+             << "compared" << std::endl;
+  return( 0 );
+  }
+
+ for( const auto & [ k , it ] : step_iter )
+  std::cout << "iterations of the HQPSolver " << k + 1 << " in the steps "
+            << "reached by Modification: " << it << std::endl;
+
+ int errors = 0;
+ for( const auto & [ i , j ] : fewer ) {
+  const auto a = step_iter.find( i ) , b = step_iter.find( j );
+  if( ( a == step_iter.end() ) || ( b == step_iter.end() ) ) {
+   std::cout << "HQPSolver " << i + 1 << " and " << j + 1 << ": not both "
+             << "with an inner Solver, iterations not compared" << std::endl;
+   continue;
+   }
+  const bool ok = a->second < b->second;
+  std::cout << "iterations in the steps: HQPSolver " << i + 1 << " "
+            << a->second << ( ok ? " < " : " >= " ) << "HQPSolver " << j + 1
+            << " " << b->second << ( ok ? " -> OK" : " -> KO" ) << std::endl;
+  if( ! ok )
+   ++errors;
+  }
+ return( errors );
+ }
+
+/*--------------------------------------------------------------------------*/
 /*--------------------------------- MAIN -----------------------------------*/
 /*--------------------------------------------------------------------------*/
-// the option of this tester: -P, the file of the previous step
+// the pairs i:j of -I, separated by commas, positions from 1
+
+static void parse_fewer( const std::string & arg )
+{
+ fewer.clear();
+ std::size_t pos = 0;
+ while( pos < arg.size() ) {
+  std::size_t next = arg.find( ',' , pos );
+  if( next == std::string::npos )
+   next = arg.size();
+  const std::string pair = arg.substr( pos , next - pos );
+  const auto colon = pair.find( ':' );
+  std::size_t i = 0 , j = 0 , ri = 0 , rj = 0;
+  try {
+   if( colon != std::string::npos ) {
+    i = std::stoul( pair.substr( 0 , colon ) , & ri );
+    j = std::stoul( pair.substr( colon + 1 ) , & rj );
+    }
+   }
+  catch( ... ) {
+   i = 0;
+   }
+  if( ( colon == std::string::npos ) || ( ri != colon ) ||
+      ( rj != pair.size() - colon - 1 ) || ( i == 0 ) || ( j == 0 ) )
+   throw( std::invalid_argument( "-I: " + pair + " is not a pair i:j of "
+                                 "positions from 1" ) );
+  fewer.emplace_back( i - 1 , j - 1 );
+  pos = next + 1;
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+// the options of this tester: -P, the file of the previous step, and -I,
+// the pairs whose iterations are compared
 
 static bool process_specific_arg( int opt )
 {
- if( opt == 'P' ) {
-  previous = optarg;
-  return( true );
+ switch( opt ) {
+  case( 'P' ):
+   previous = optarg;
+   return( true );
+  case( 'I' ):
+   parse_fewer( optarg );
+   return( true );
+  default:
+   return( false );
   }
- return( false );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -636,18 +800,26 @@ int main( int argc , char ** argv )
  docopt_desc = "SMS++ HQPBlock test: the HQPSolver of the BlockSolverConfig "
                "against the\nnull-space reference, on the hierarchies built "
                "here or on the instance file.\n";
- short_opts += "P:";
+ short_opts += "P:I:";
  long_opts.insert( std::prev( long_opts.end() ) ,
                    { "previous" , required_argument , nullptr , 'P' } );
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   { "fewer" , required_argument , nullptr , 'I' } );
  help += "  -P, --previous <file>           the instance of the previous "
          "step, also\n"
          "                                  changed into this one by "
-         "Modification\n";
+         "Modification\n"
+         "  -I, --fewer <i>:<j>[,...]       the HQPSolver at position i "
+         "(from 1) takes\n"
+         "                                  fewer iterations than that at "
+         "j in the steps\n"
+         "                                  reached by Modification\n";
  filename_optional = true;
  process_args( argc , argv , process_specific_arg );
  require_solver_config();
 
- const int errors = filename.empty() ? generated() : from_file();
+ int errors = filename.empty() ? generated() : from_file();
+ errors += check_iterations();
 
  if( ( ! errors ) && ( ! usable ) ) {
   std::cout << "no HQPSolver with an inner Solver: nothing to do"

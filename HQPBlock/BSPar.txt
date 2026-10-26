@@ -16,7 +16,11 @@
 #   - the center of the regularization at 0 (HQPCfg-prox0.txt).
 #
 # Each ComputeConfig is one of these three with the inner Solver changed;
-# an HQPSolver whose inner Solver is not in the build is left out.
+# an HQPSolver whose inner Solver is not in the build is left out. The last
+# two are DAQP and qpOASES in the first setting with each solve from scratch
+# (InnerBSCfg-daqp-cold.txt, InnerBSCfg-qpoases-cold.txt), rather than from
+# the previous solve of the same level, against which the batteries compare
+# the iterations of the first and of the fourth.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -25,7 +29,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-12  # number of (the names of) Solver in this BlockSolverConfig
+14  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HQPSolver  # 1st: DAQP, the base
@@ -40,8 +44,10 @@ HQPSolver  # 9th: MOSEK, center at 0
 HQPSolver  # 10th: Clarabel, the base
 HQPSolver  # 11th: Clarabel, lower levels in the model
 HQPSolver  # 12th: Clarabel, center at 0
+HQPSolver  # 13th: DAQP, the base, each solve from scratch
+HQPSolver  # 14th: qpOASES, the base, each solve from scratch
 
-12  # number of ComputeConfig in this BlockSolverConfig
+14  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -72,7 +78,7 @@ HQPSolver  # 12th: Clarabel, center at 0
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-qpoases.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-qpoases.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -110,7 +116,7 @@ str_HQP_BSCfg  InnerBSCfg-qpoases.txt  # the inner Solver
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-qpoases.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-qpoases.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -148,7 +154,7 @@ str_HQP_BSCfg  InnerBSCfg-qpoases.txt  # the inner Solver
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-qpoases.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-qpoases.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -186,7 +192,7 @@ str_HQP_BSCfg  InnerBSCfg-qpoases.txt  # the inner Solver
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-mosek.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-mosek.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -224,7 +230,7 @@ str_HQP_BSCfg  InnerBSCfg-mosek.txt  # the inner Solver
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-mosek.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-mosek.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -262,7 +268,7 @@ str_HQP_BSCfg  InnerBSCfg-mosek.txt  # the inner Solver
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-mosek.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-mosek.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -300,7 +306,7 @@ str_HQP_BSCfg  InnerBSCfg-mosek.txt  # the inner Solver
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-clarabel.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-clarabel.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -338,7 +344,7 @@ str_HQP_BSCfg  InnerBSCfg-clarabel.txt  # the inner Solver
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-clarabel.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-clarabel.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -376,7 +382,83 @@ str_HQP_BSCfg  InnerBSCfg-clarabel.txt  # the inner Solver
 1  # number of string parameters
 
 # now all the string parameters
-str_HQP_BSCfg  InnerBSCfg-clarabel.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-clarabel.txt  # the inner Solver
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 13: DAQP, the base, each solve from scratch
+*HQPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strInnerBSC  InnerBSCfg-daqp-cold.txt  # the inner Solver
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 14: qpOASES, the base, each solve from scratch
+*HQPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strInnerBSC  InnerBSCfg-qpoases-cold.txt  # the inner Solver
 
 0  # number of vector-of-int parameters
 

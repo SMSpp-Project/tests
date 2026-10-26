@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - HQPCfg-free.txt - - - - - - - - - - - - - - - -
 #
 # The ComputeConfig of the HQPSolver of BSPar.txt that keep the rows of the
-# lower levels in the model with their slacks free (int_HQP_RelaxLower 0):
+# lower levels in the model with their slacks free (intRelaxLower 0):
 # that of HQPCfg.txt but for this. The Hessian of each level is then
 # singular, which the inner Solver deal with less accurately.
 #
@@ -16,7 +16,7 @@
 1  # number of integer parameters
 
 # now all the integer parameters
-int_HQP_RelaxLower  0  # rows of the lower levels enforced
+intRelaxLower  0  # rows of the lower levels enforced
 
 0  # number of double parameters
 

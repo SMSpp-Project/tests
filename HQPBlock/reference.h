@@ -28,8 +28,8 @@
  * \f$ \| y \|^2 \f$, i.e., the regularization centered at 0); \f$ \rho =
  * \varepsilon \f$ gives the problem of the implementation of the robotics
  * literature this approach comes from, \f$ \rho = 0 \f$ exactly the
- * problem that an HQPSolver with int_HQP_Prox == 1 solves on an HQPBlock
- * with regularization \f$ \varepsilon \f$ (with int_HQP_Prox == 0 for the
+ * problem that an HQPSolver with intProxCenter == 1 solves on an HQPBlock
+ * with regularization \f$ \varepsilon \f$ (with intProxCenter == 0 for the
  * center at 0).
  *
  * \author Donato Meoli \n
@@ -278,16 +278,18 @@ inline double rel( double a , double b , double floor = 1 )
  }
 
 /*--------------------------------------------------------------------------*/
-/// the name of the inner Solver of an HQPSolver, with its parameters
+/// the name of the inner Solver of an HQPSolver, with its
+/// BlockSolverConfig and the parameters of the HQPSolver
 
 inline std::string label( HQPSolver * s )
 {
  return( ( s->get_inner_Solver() ? s->get_inner_Solver()->classname()
                                  : std::string( "none" ) ) +
+         " (" + s->get_str_par( HQPSolver::strInnerBSC ) + ")" +
          " prox " + std::to_string( s->get_int_par(
-                                      HQPSolver::int_HQP_Prox ) ) +
+                                      HQPSolver::intProxCenter ) ) +
          " relax " + std::to_string( s->get_int_par(
-                                      HQPSolver::int_HQP_RelaxLower ) ) );
+                                      HQPSolver::intRelaxLower ) ) );
  }
 
 /*--------------------------------------------------------------------------*/
