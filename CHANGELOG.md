@@ -192,6 +192,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `SVMBlock/BSPar.txt` adds to `GRBMILPSolver` and `SMOSolver` one
+  `:MILPSolver` for each other kind of algorithm for a convex quadratic
+  program: the active-set `QPOASESMILPSolver`, the interior-point
+  `MOSEKMILPSolver` and the first-order `OSQPMILPSolver`, so that the
+  batteries of the SVM dual and primal also check how they take the changes
+  of the training problem
+
 - the makefiles that include LagrangianDualSolver no longer include
   BranchAndXSolver, which it no longer needs, save those of the tests whose
   configurations use it (UCBlock)
