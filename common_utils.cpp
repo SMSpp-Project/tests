@@ -1150,8 +1150,18 @@ bool SolveAll( Block * block ,
    // the same starting point for every Solver, if one is given
    if( start )
     start->write( block );
+   // a Solver that throws has failed on this instance, and is reported as
+   // such in the line of the others rather than ending them all
+   bool thrown = false;
    auto t_start = std::chrono::system_clock::now();
-   status[ k ] = S[ k ]->compute( false );
+   try {
+    status[ k ] = S[ k ]->compute( false );
+    }
+   catch( std::exception & e ) {
+    std::cerr << S[ k ]->classname() << ": " << e.what() << std::endl;
+    status[ k ] = Solver::kError;
+    thrown = true;
+    }
    auto t_end = std::chrono::system_clock::now();
    times[ k ] = std::chrono::duration< double >( t_end - t_start ).count();
    iters[ k ] = S[ k ]->get_elapsed_iterations();
@@ -1179,6 +1189,7 @@ bool SolveAll( Block * block ,
     }
    else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
    else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
+   else if( thrown )                              tok[ k ] = "Error! (throw)";
    else                                           tok[ k ] = error_token(
 							      status[ k ] );
    }

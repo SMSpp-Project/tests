@@ -182,6 +182,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `SolveAll()` reports a `Solver` whose `compute()` throws as an error in
+  the line of the instance, with `Error! (throw)` and the message of the
+  exception on the standard error, and goes on with the other `Solver`,
+  rather than ending the tester: the exception of one `Solver` (e.g., the
+  active set of `HiGHSMILPSolver` that does not solve a QP) left the others
+  without a value
+
 - the tester of `UCBlock` is built without the `LagrangianDualSolverML`
   library, whose loading of Torch cost more than many of the instances, and
   `UCBlock_ML_test` is the same tester with it; `batch-acad-s`, whose
