@@ -57,8 +57,14 @@ MOBJ =  $(MMCFOBJ) $(MILPSOBJ) $(libMMCFOBJ) $(SMS++OBJ)
 # libraries
 MLIB =  $(SMS++LIB) $(MILPSLIB) $(MMCFLIB) $(libMMCFLIB)
 
+# MMCF_test needs CPLEX, its reference solver being MMCFCplex, as with CMake
+ifneq ($(MMXOBJ),)
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test_reference.o
 	$(CC) -o $(DIR)/$(NAME) $(DIR)/test_reference.o $(MOBJ) $(MLIB) $(SW)
+else
+$(DIR)/$(NAME):
+	@echo "$(NAME) not built: it needs CPLEX [see MMCFClass/MMCFCplex]"
+endif
 
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 

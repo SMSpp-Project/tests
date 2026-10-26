@@ -61,7 +61,8 @@ include $(FWSlvSDR)/makefile-s
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(BAXSLVOBJ) $(UCBckOBJ) $(SMS++OBJ) $(CMMNUOBJ)
+MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(BAXSLVOBJ) $(UCBckOBJ) $(SMS++OBJ) \
+        $(CMMNUOBJ)
 
 # libraries
 MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LgDSLVLIB) $(BAXSLVLIB) $(UCBckLIB)
@@ -72,7 +73,8 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(BAXSLVINC) $(UCBckINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(BAXSLVINC) $(UCBckINC) \
+        $(CMMNUINC)
 
 # includes
 MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(BAXSLVH) $(UCBckH) $(CMMNUH)
@@ -110,7 +112,8 @@ $(DIR)/UCScenarioGenerator: $(MOBJ) $(StcBlkOBJ) $(DIR)/UCScenarioGenerator.o
 	      $(StcBlkLIB) $(SW)
 
 $(DIR)/UCScenarioGenerator.o: $(DIR)/UCScenarioGenerator.cpp $(MH) $(StcBlkH)
-	$(CC) -c $(DIR)/UCScenarioGenerator.cpp -o $@ $(MINC) $(StcBlkINC) $(SW)
+	$(CC) -c $(DIR)/UCScenarioGenerator.cpp -o $@ $(MINC) $(StcBlkINC) \
+	      $(SW)
 
 .PHONY: scenarios
 

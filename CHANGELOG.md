@@ -431,6 +431,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the makefiles of the tests and of the tools build also with g++: they
+  take the option that stops at the first error and the one of the
+  debugging information, which clang++ and g++ spell differently
+  (`-ferror-limit=1` and `-glldb` against `-fmax-errors=1` and `-ggdb`),
+  from `SMSppSWERR` and `SMSppSWDBG` of `lib/makefile-OS` of SMS++
+
+- the makefiles that include the one of LagrangianDualSolver include also
+  the one of BranchAndXSolver, whose branching rules LagrangianDualSolver
+  uses, and so build again
+
+- `BinaryKnapsackBlock/makefile` links CPLEX only through MILPSolver, which
+  adds it when it is there, and so builds without it
+
+- `MMCFBlock/MMCFClass` compiles MMCFCplex only if CPLEX is there
+  (`CPLEX_PRESENT` of `extlib`), and
+  `MMCFBlock/makefile` then leaves out `MMCF_test`, whose reference solver
+  is MMCFCplex, as CMake does
+
 - `MILPSolver/QuadFunction/MOSEKCfg-I.txt` asks MOSEK for the outer
   approximation of the conic relaxations: with the nonlinear ones and the
   few threads of a CI runner, MOSEK 11.0 declared optimal -33.7755 on

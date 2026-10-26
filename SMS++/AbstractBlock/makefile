@@ -48,6 +48,10 @@ include $(BNDSLVSDR)/makefile-s
 LgDSLVSDR = ../../../LagrangianDualSolver
 include $(LgDSLVSDR)/makefile
 
+# BranchAndXSolver, which LagrangianDualSolver needs
+BAXSLVSDR = $(LgDSLVSDR)/../BranchAndXSolver
+include $(BAXSLVSDR)/makefile
+
 # BinaryKnapsackBlock, one of the two Block the copy is made of, for the
 # tester of AbstractBlock::mirror() alone
 BKBckSDR = ../../../BinaryKnapsackBlock
@@ -61,7 +65,7 @@ include $(BnDSLVSDR)/makefile
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(SMS++OBJ) $(CMMNUOBJ)
+MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(BAXSLVOBJ) $(SMS++OBJ) $(CMMNUOBJ)
 
 # libraries
 # note the --force_link, that is used to ensure that BoxSolver (which is
@@ -81,7 +85,7 @@ MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(SMS++OBJ) $(CMMNUOBJ)
 # error, so a bit of experiment may be required. If this is too complicated
 # or does not work, uncomment SMSpp_ensure_load() and be sure that
 # BoxSolver.h is #include-d in test.cpp
-MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(SMS++LIB) \
+MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(BAXSLVLIB) $(SMS++LIB) \
 	--force-link=__ZTVN17SMSpp_di_unipi_it9BoxSolverE
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test_box.o
@@ -90,10 +94,10 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test_box.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(BAXSLVINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CMMNUH)
+MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(BAXSLVH) $(CMMNUH)
 
 # compile command
 
@@ -134,7 +138,8 @@ $(DIR)/test_bds.o: $(DIR)/test_bds.cpp $(MH) $(BnDSLVH)
 .PHONY: mirror readwrite bds
 
 clean::
-	rm -f $(DIR)/AbstractBlock_mirror_test $(DIR)/AbstractBlock_readwrite_test \
+	rm -f $(DIR)/AbstractBlock_mirror_test \
+	      $(DIR)/AbstractBlock_readwrite_test \
 	      $(DIR)/AbstractBlock_BDS_test
 
 ############################ End of makefile #################################
