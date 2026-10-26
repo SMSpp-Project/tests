@@ -40,10 +40,6 @@ include $(BNDSLVSDR)/makefile-s
 LgDSLVSDR = ../../LagrangianDualSolver
 include $(LgDSLVSDR)/makefile
 
-# BranchAndXSolver, which LagrangianDualSolver needs
-BAXSLVSDR = $(LgDSLVSDR)/../BranchAndXSolver
-include $(BAXSLVSDR)/makefile
-
 # not necessary, BundleSolver does that already
 # MILPSolver
 #MILPSSDR = ../../MILPSolver
@@ -64,12 +60,11 @@ include $(TSSBkSDR)/makefile
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(CMMNUOBJ) $(STCHTOBJ) $(BNDSLVOBJ) $(LgDSLVOBJ) $(BAXSLVOBJ) \
-	$(TSSBkOBJ) $(StcBlkOBJ) $(UCBckOBJ) $(SMS++OBJ)
+MOBJ =  $(CMMNUOBJ) $(STCHTOBJ) $(BNDSLVOBJ) $(LgDSLVOBJ) $(TSSBkOBJ) \
+	$(StcBlkOBJ) $(UCBckOBJ) $(SMS++OBJ)
 
 # libraries
-MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LgDSLVLIB) $(BAXSLVLIB) $(UCBckLIB) \
-	$(StcBlkLIB)
+MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LgDSLVLIB) $(UCBckLIB) $(StcBlkLIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o $(DIR)/benders_form.o
 	$(CC) -o $(DIR)/$(NAME) $+ $(MLIB) $(SW)
@@ -77,12 +72,12 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o $(DIR)/benders_form.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(BAXSLVINC) $(UCBckINC) \
-	$(StcBlkINC) $(TSSBkINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(UCBckINC) $(StcBlkINC) \
+	$(TSSBkINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(BAXSLVH) $(UCBckH) $(StcBlkH) \
-	$(TSSBkH) $(CMMNUH) $(STCHTH)
+MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(UCBckH) $(StcBlkH) $(TSSBkH) \
+	$(CMMNUH) $(STCHTH)
 
 # compile command
 

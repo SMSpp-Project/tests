@@ -192,6 +192,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the makefiles that include LagrangianDualSolver no longer include
+  BranchAndXSolver, which it no longer needs, save those of the tests whose
+  configurations use it (UCBlock)
+
 - `MILPSolver/QuadFunction/LPPar_CL_C.txt` gives `MOSEKMILPSolver` two
   threads, with `MOSEKCfg-C.txt`, since its interior point fails on `QGROW7`
   of `batchMM_C` with 4 threads or more and on `QPCSTAIR` with one, and
