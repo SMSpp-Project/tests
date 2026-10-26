@@ -37,7 +37,7 @@ OSQPMILPSolver     # name of 5th Solver
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-*QPCfg-C.txt
+*MOSEKCfg-C.txt
 
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

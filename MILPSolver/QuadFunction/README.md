@@ -24,8 +24,10 @@ is one for the class of the model, given by the folder of its file
 `CL` has its own, since next to the `SCIPMILPSolver` of `LPPar_C.txt` and
 `LPPar_I.txt` it attaches the `:MILPSolver` for convex QPs, which refuse the
 quadratic constraints of `LC` and the nonconvex objective of `QL`:
-`MOSEKMILPSolver`, `ClarabelMILPSolver`, `PIQPMILPSolver` (with its sparse
-backend, `PIQPCfg-C.txt`) and `OSQPMILPSolver` on the continuous relaxation,
+`MOSEKMILPSolver` (with two threads, `MOSEKCfg-C.txt`, since its interior
+point fails on `QGROW7` with 4 threads or more and on `QPCSTAIR` with one),
+`ClarabelMILPSolver`, `PIQPMILPSolver` (with its sparse backend,
+`PIQPCfg-C.txt`) and `OSQPMILPSolver` on the continuous relaxation,
 `MOSEKMILPSolver` on the integer version. The dense ones, `DAQPMILPSolver`,
 `QPOASESMILPSolver`, `ProxQPMILPSolver`, `QPMADMILPSolver`,
 `QuadProgMILPSolver` and `HPIPMMILPSolver`, load the whole

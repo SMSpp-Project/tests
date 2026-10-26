@@ -182,6 +182,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `MILPSolver/QuadFunction/LPPar_CL_C.txt` gives `MOSEKMILPSolver` two
+  threads, with `MOSEKCfg-C.txt`, since its interior point fails on `QGROW7`
+  of `batchMM_C` with 4 threads or more and on `QPCSTAIR` with one, and
+  solves both with two, so that the outcome of the battery does not depend
+  on the cores of the machine
+
 - `SolveAll()` reports a `Solver` whose `compute()` throws as an error in
   the line of the instance, with `Error! (throw)` and the message of the
   exception on the standard error, and goes on with the other `Solver`,
