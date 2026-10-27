@@ -36,6 +36,15 @@
  * reference, hence also x is compared; for the others only the values of
  * the levels, which are unique, are.
  *
+ * The configuration given with -S is either a BlockSolverConfig, applied to
+ * the HQPBlock, or a map from the classname of a Block to its
+ * BlockSolverConfig [see attach()]: with an entry for HQPDistBlock, each of
+ * the hierarchies built here is also loaded into an HQPDistBlock, split
+ * among 3 owners [see load()], and solved (and changed, in the steps of
+ * Model Predictive Control) by the HQPSolver of that entry, which are
+ * compared with the same reference; they follow those of the HQPBlock in
+ * the positions of -E and -I.
+ *
  * With an instance file, written by tools/npz2nc4.py of HQPBlock, the
  * HQPBlock in it is solved, and the values of its levels (\f$ \| v_p \|^2 /
  * 2 + \| w_p \|^2 / 2 \f$) are compared with those at the solution of each
@@ -94,8 +103,13 @@ static std::string previous;   // the file of the previous step (-P)
 
 static int usable = 0;         // the most HQPSolver with an inner Solver
 
-// the position of each HQPSolver in the BlockSolverConfig
+// the position of each HQPSolver in the BlockSolverConfig, those of an
+// HQPDistBlock after those of the HQPBlock
 static std::map< const HQPSolver * , std::size_t > position;
+
+// the number of HQPSolver of the HQPBlock, i.e., the first position of
+// those of an HQPDistBlock
+static std::size_t first_dist = 0;
 
 // the pairs of -I: the HQPSolver at the first position (from 0) must take
 // fewer iterations than that at the second one
@@ -318,14 +332,22 @@ static Instance weighted_instance( void )
 
 /*--------------------------------------------------------------------------*/
 // the HQPSolver of the BlockSolverConfig that have an inner Solver; those
-// that have none are reported, once
+// that have none are reported, once; their positions are counted from that
+// of the first HQPSolver of the kind of Block
+
+static std::size_t first_of( const HQPBlock & ) { return( 0 ); }
+
+static std::size_t first_of( const HQPDistBlock & ) { return( first_dist ); }
 
 static std::vector< HQPSolver * > working( const std::vector< HQPSolver * > &
-                                           sl , bool report )
+                                           sl , bool report ,
+                                           std::size_t first = 0 )
 {
  std::vector< HQPSolver * > res;
+ if( ! first )
+  first_dist = std::max( first_dist , sl.size() );
  for( std::size_t k = 0 ; k < sl.size() ; ++k )
-  position[ sl[ k ] ] = k;
+  position[ sl[ k ] ] = first + k;
  for( auto s : sl )
   if( s->get_inner_Solver() )
    res.push_back( s );
@@ -339,9 +361,10 @@ static std::vector< HQPSolver * > working( const std::vector< HQPSolver * > &
  }
 
 /*--------------------------------------------------------------------------*/
-// solves in with the HQPSolver of the config, compares them with the
-// reference, and returns the number of errors
+// solves in, loaded into a B, with the HQPSolver of the config for B,
+// compares them with the reference, and returns the number of errors
 
+template< class B >
 static int solve_and_check( const Instance & in , bool report )
 {
  const RefSolution ref = reference( in ) , ref0 = reference( in , false );
@@ -350,10 +373,11 @@ static int solve_and_check( const Instance & in , bool report )
   return( 1 );
   }
 
- HQPBlock block;
+ B block;
  load( block , in );
  int errors = 0;
- for( auto s : working( attach( block , sconf_file ) , report ) ) {
+ for( auto s : working( attach( block , sconf_file ) , report ,
+                        first_of( block ) ) ) {
   const int st = s->compute();
   if( st != Solver::kOK ) {
    std::cout << in.name << " [" << label( s ) << "]: status " << st
@@ -392,16 +416,18 @@ static int check_slack_values( void )
  }
 
 /*--------------------------------------------------------------------------*/
-// a step of Model Predictive Control: new b, d, A and C on the same
-// HQPBlock, compared with the reference and with a new HQPBlock
+// a step of Model Predictive Control: new b, d, A and C on the same B,
+// compared with the reference and with a new B
 
+template< class B >
 static int mpc_step( void )
 {
  Instance in = random_instance( 21 );
  in.name = "MPC step";
- HQPBlock block;
+ B block;
  load( block , in );
- const auto slvrs = working( attach( block , sconf_file ) , false );
+ const auto slvrs = working( attach( block , sconf_file ) , false ,
+                             first_of( block ) );
  int errors = 0;
  for( auto s : slvrs )
   s->compute();
@@ -443,9 +469,10 @@ static int mpc_step( void )
   }
 
  const RefSolution ref = reference( nw ) , ref0 = reference( nw , false );
- HQPBlock fresh;
+ B fresh;
  load( fresh , nw );
- const auto fslvrs = working( attach( fresh , sconf_file ) , false );
+ const auto fslvrs = working( attach( fresh , sconf_file ) , false ,
+                              first_of( fresh ) );
 
  for( std::size_t i = 0 ; i < slvrs.size() ; ++i ) {
   auto s = slvrs[ i ];
@@ -467,17 +494,19 @@ static int mpc_step( void )
  }
 
 /*--------------------------------------------------------------------------*/
-// a run of Model Predictive Control on the same HQPBlock: each step moves b
-// and d a little, as a reference moving along a trajectory, and A and C, as
-// a model linearized at a moving point; each step is compared with the
+// a run of Model Predictive Control on the same B: each step moves b and d
+// a little, as a reference moving along a trajectory, and A and C, as a
+// model linearized at a moving point; each step is compared with the
 // reference, and its iterations are those that -I compares
 
+template< class B >
 static int mpc_run( void )
 {
  Instance in = random_instance( 31 );
- HQPBlock block;
+ B block;
  load( block , in );
- const auto slvrs = working( attach( block , sconf_file ) , false );
+ const auto slvrs = working( attach( block , sconf_file ) , false ,
+                             first_of( block ) );
  for( auto s : slvrs )
   s->compute();
 
@@ -520,7 +549,28 @@ static int mpc_run( void )
  }
 
 /*--------------------------------------------------------------------------*/
-// all the hierarchies built here
+// all the hierarchies built here, loaded into a B
+
+template< class B >
+static int generated_in( const std::vector< Instance > & cases )
+{
+ int errors = 0;
+ bool first = true;
+ for( const auto & in : cases ) {
+  errors += solve_and_check< B >( in , first );
+  first = false;
+  }
+
+ if( usable ) {
+  errors += mpc_step< B >();
+  errors += mpc_run< B >();
+  }
+
+ return( errors );
+ }
+
+/*--------------------------------------------------------------------------*/
+// all the hierarchies built here, in an HQPBlock and in an HQPDistBlock
 
 static int generated( void )
 {
@@ -534,16 +584,15 @@ static int generated( void )
  cases.push_back( dependent_instance() );
  cases.push_back( weighted_instance() );
 
- bool first = true;
- for( const auto & in : cases ) {
-  errors += solve_and_check( in , first );
-  first = false;
-  }
+ errors += generated_in< HQPBlock >( cases );
 
- if( usable ) {
-  errors += mpc_step();
-  errors += mpc_run();
-  }
+ // the HQPDistBlock only if the config has HQPSolver for it
+ HQPDistBlock probe;
+ load( probe , cases.front() );
+ const bool dist = ! attach( probe , sconf_file ).empty();
+ probe.unregister_Solvers( true );
+ if( dist )
+  errors += generated_in< HQPDistBlock >( cases );
 
  return( errors );
  }

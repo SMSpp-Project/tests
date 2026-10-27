@@ -1,8 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - HQPCfg-free.txt - - - - - - - - - - - - - - - -
 #
-# The ComputeConfig of the HQPSolver of BSPar.txt that keep the rows of the
-# lower levels in the model with their slacks free (intRelaxLower 0):
+# The ComputeConfig of the HQPSolver of HQPBSCfg.txt that keep the rows of
+# the lower levels in the model with their slacks free (intRelaxLower 0):
 # that of HQPCfg.txt but for this. The Hessian of each level is then
 # singular, which the inner Solver deal with less accurately.
 #

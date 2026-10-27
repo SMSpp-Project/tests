@@ -3,8 +3,8 @@
 /*--------------------------------------------------------------------------*/
 /** @file
  * What the tester of HQPBlock and HQPSolver needs besides the HQPSolver: the
- * dense description of a hierarchical QP, its loading into an HQPBlock, the
- * independent reference solution computed level by level in the null space
+ * dense description of a hierarchical QP, its loading into an HQPBlock and
+ * into an HQPDistBlock, the independent reference solution computed level by level in the null space
  * of the equality tasks of the higher levels (with a small dense primal
  * active-set method for the QP of each level), and the comparison of the
  * levels solved by an HQPSolver of a BlockSolverConfig with it.
@@ -45,8 +45,10 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -55,6 +57,8 @@
 #include "BlockSolverConfig.h"
 
 #include "HQPBlock.h"
+
+#include "HQPDistBlock.h"
 
 #include "HQPSolver.h"
 
@@ -113,6 +117,23 @@ inline void load( HQPBlock & block , const Instance & in )
  }
 
 /*--------------------------------------------------------------------------*/
+/// loads the Instance into the HQPDistBlock, split among (up to) 3 owners
+/** The columns are split among \f$ R = \min\{ 3 , n \} \f$ owners in
+ * consecutive blocks of about \f$ n / R \f$, column j to \f$ \lfloor j R / n
+ * \rfloor \f$, the owners of the rows being chosen by the HQPDistBlock. */
+
+inline void load( HQPDistBlock & block , const Instance & in )
+{
+ HQPBlock central;
+ load( central , in );
+ const Block::Index R = std::min( 3 , in.n );
+ HQPDistBlock::Vec_Index owner( in.n );
+ for( int j = 0 ; j < in.n ; ++j )
+  owner[ j ] = ( Block::Index( j ) * R ) / in.n;
+ block.load( central , R , std::move( owner ) );
+ }
+
+/*--------------------------------------------------------------------------*/
 /// orthonormal basis of the null space of M (the columns of the result)
 
 inline Mat null_space( const Mat & M )
@@ -141,6 +162,8 @@ inline bool active_set_qp( const Mat & H , const Vec & g , const Mat & G ,
                            const Vec & h , Vec & z )
 {
  const int nz = z.size();
+ if( ! nz )  // nothing to choose, e.g., a null space reduced to 0
+  return( true );
  std::vector< int > W;
  std::vector< char > inW( G.rows() , 0 );
  for( int it = 0 ; it < 100000 ; ++it ) {
@@ -283,7 +306,9 @@ inline double rel( double a , double b , double floor = 1 )
 
 inline std::string label( HQPSolver * s )
 {
- return( ( s->get_inner_Solver() ? s->get_inner_Solver()->classname()
+ return( ( s->get_Block() ? s->get_Block()->classname() + ", " :
+                            std::string() ) +
+         ( s->get_inner_Solver() ? s->get_inner_Solver()->classname()
                                  : std::string( "none" ) ) +
          " (" + s->get_str_par( HQPSolver::strInnerBSC ) + ")" +
          " prox " + std::to_string( s->get_int_par(
@@ -294,19 +319,44 @@ inline std::string label( HQPSolver * s )
 
 /*--------------------------------------------------------------------------*/
 /// applies the BlockSolverConfig in file to block, returns its HQPSolver
+/** The file holds either a BlockSolverConfig or a
+ *
+ *   SimpleConfiguration< std::map< std::string , Configuration * > >
+ *
+ * from the classname of a Block to its BlockSolverConfig, of which that of
+ * the classname of block is applied to block alone, not to its sub-Blocks
+ * (whose HQPSolver would be those of a different hierarchy, e.g., of an
+ * owner of an HQPDistBlock); with no entry for it, no HQPSolver. */
 
 inline std::vector< HQPSolver * > attach( Block & block ,
                                           const std::string & file )
 {
+ using Meta = SimpleConfiguration< std::map< std::string ,
+                                             Configuration * > >;
  auto c = Configuration::deserialize( file );
- auto bsc = dynamic_cast< BlockSolverConfig * >( c );
- if( ! bsc ) {
-  delete c;
-  throw( std::invalid_argument( "attach: " + file + " is not a "
-                                "BlockSolverConfig" ) );
+ BlockSolverConfig * bsc = dynamic_cast< BlockSolverConfig * >( c );
+ if( auto m = dynamic_cast< Meta * >( c ) ) {
+  const auto it = m->f_value.find( block.classname() );
+  bsc = nullptr;
+  if( it != m->f_value.end() ) {
+   bsc = dynamic_cast< BlockSolverConfig * >( it->second );
+   if( ! bsc ) {
+    delete c;
+    throw( std::invalid_argument( "attach: the entry of " +
+                                  block.classname() + " in " + file +
+                                  " is not a BlockSolverConfig" ) );
+    }
+   }
   }
- bsc->apply( & block );
- delete bsc;
+ else
+  if( ! bsc ) {
+   delete c;
+   throw( std::invalid_argument( "attach: " + file + " is neither a "
+                                 "BlockSolverConfig nor a map of them" ) );
+   }
+ if( bsc )
+  bsc->apply( & block );
+ delete c;
 
  std::vector< HQPSolver * > res;
  for( auto s : block.get_registered_solvers() )

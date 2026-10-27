@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - HQPCfg-prox0.txt  - - - - - - - - - - - - - - -
 #
-# The ComputeConfig of the HQPSolver of BSPar.txt that leave the center of
+# The ComputeConfig of the HQPSolver of HQPBSCfg.txt that leave the center of
 # the regularization at 0 at all the levels (intProxCenter 0): that of
 # HQPCfg.txt but for this. The tester compares them with the reference with
 # the same center.

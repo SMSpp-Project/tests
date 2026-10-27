@@ -10,21 +10,24 @@ Solver taken from the factory, a `:MILPSolver` for convex QPs here, which is
 why the tester lives here rather than in the `test` of the module: the unit
 test of the module checks the `HQPBlock` alone, with the core library only.
 
-Every `HQPSolver` that the `BlockSolverConfig` given with `-S` registers to
-the `HQPBlock` solves the same hierarchy in the same run, and each of them is
+Every `HQPSolver` that the configuration given with `-S` registers to the
+`HQPBlock` solves the same hierarchy in the same run, and each of them is
 compared level by level with an independent implementation of the classical
 approach, which solves each level in the null space of the equality tasks of
 the higher ones with a small dense active-set method (`reference.h`): the
 values of the levels, which are unique, always, and the solution `x` after
 each level when the `HQPSolver` solves exactly the problem of the reference
 (`intProxCenter 1`). Since all of them are compared with the same reference,
-they are compared with each other as well. `BSPar.txt` attaches one
-`HQPSolver` for each inner Solver and setting:
+they are compared with each other as well. `BSPar.txt` is a map from the
+classname of a Block to its `BlockSolverConfig`, of which the tester applies
+to each Block that of its classname, to the Block alone and not to its
+sub-Blocks: `HQPBSCfg.txt` attaches to the `HQPBlock` one `HQPSolver` for
+each inner Solver and setting,
 
 - the inner Solvers are DAQP and qpOASES (dense, active set) and MOSEK and
   Clarabel (sparse, interior point), each one in a `BlockSolverConfig` of
-  its own (`InnerBSCfg-<solver>.txt`, MOSEK with the tolerances of
-  `MOSEKCfg.txt`);
+  its own (`InnerBSCfg-<solver>.txt`, MOSEK with the tolerances and the
+  presolve of `MOSEKCfg.txt`);
 
 - the settings are three `ComputeConfig`: `HQPCfg.txt`, with the rows of the
   lower levels relaxed and their slacks fixed and the center of the
@@ -37,7 +40,15 @@ they are compared with each other as well. `BSPar.txt` attaches one
   from scratch (`InnerBSCfg-daqp-cold.txt`, `InnerBSCfg-qpoases-cold.txt`,
   with `intDAQPWarmStart 0` and `intQPOASESHotStart 0`) rather than from the
   previous solve of the same level, which the inner Solver of each level of
-  an `HQPSolver` re-optimizes from step to step.
+  an `HQPSolver` re-optimizes from step to step;
+
+and `HQPDistBSCfg.txt` attaches to the `HQPDistBlock`, where each hierarchy
+built by the tester is split among 3 owners of consecutive blocks of
+columns, an `HQPSolver` for each inner Solver and setting that solves the
+whole tree, i.e., the centralized hierarchy written with copies and
+consensus rows: DAQP in the three settings and qpOASES in the first one.
+The `HQPSolver` of the `HQPDistBlock` follow those of the `HQPBlock` in the
+positions of `-E` and `-I`.
 
 An `HQPSolver` whose inner Solver is not in the build is reported and left
 out, and if none of them has one the tester has nothing to do and says so
@@ -54,16 +65,19 @@ The usage of the executable is the following:
                               steps reached by Modification
 
 plus the options that every SMS++ tester understands (`--help` lists them
-all), among which `-S`, the `BlockSolverConfig`, and `-E`, the tolerance on
-the values of the levels of each `HQPSolver` in the order of the
-`BlockSolverConfig`. Without a file, the hierarchies are built by the tester:
+all), among which `-S`, the configuration, and `-E`, the tolerance on the
+values of the levels of each `HQPSolver` in the order of the
+`BlockSolverConfig` (those of the `HQPDistBlock` after those of the
+`HQPBlock`). Without a file, the hierarchies are built by the tester:
 random ones, one with a level of equalities only, one of inequalities only
 and an empty one, an inequality task that cannot be satisfied at its level
 and one already satisfied (whose values are known), dependent rows, weights
 different from 1, a step of Model Predictive Control that changes `b`, `d`,
 `A` (also out of the pattern of a row) and `C` of the same `HQPBlock`
 between two solves, checked also against a new `HQPBlock` solved from
-scratch, and a run of 10 small such steps. A file is an instance in the
+scratch, and a run of 10 small such steps; with an `HQPDistBlock` in the
+configuration, each of them also as an `HQPDistBlock`, the step out of the
+pattern building its sub-Blocks anew. A file is an instance in the
 netCDF format of `HQPBlock`, which carries with the `HQPBlock` the solution
 of each level of the code that generated it, against which the values are
 also compared. The iterations

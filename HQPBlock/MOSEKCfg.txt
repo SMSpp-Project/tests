@@ -2,9 +2,14 @@
 # - - - - - - - - - - - - - - - MOSEKCfg.txt  - - - - - - - - - - - - - - - -
 #
 # The ComputeConfig of MOSEKMILPSolver as the inner Solver of an HQPSolver
-# (InnerBSCfg-mosek.txt): one thread, and the tolerances of its interior
-# point tightened, since the levels after the first one are compared with
-# the values of the higher levels kept to the accuracy of each solve.
+# (InnerBSCfg-mosek.txt): one thread, the tolerances of its interior point
+# tightened, since the levels after the first one are compared with the
+# values of the higher levels kept to the accuracy of each solve, and no
+# eliminator in the presolve, which on the levels with many slacks fixed
+# (two equal bounds) lets the interior point stall with no solution,
+# depending on the rounding of the data (e.g., with the objects of clang++
+# but not with those of g++); with no presolve at all, the larger levels of
+# the instances of HQPBlock stall instead.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,10 +18,11 @@ ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> all non-provided parameters are not changed
 
-1  # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
-intMaxThread  1  # one thread
+intMaxThread                                1  # one thread
+MSK_IPAR_PRESOLVE_ELIMINATOR_MAX_NUM_TRIES  0  # no eliminator
 
 3  # number of double parameters
 
