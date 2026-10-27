@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  FatherBSPar-fast-lemon.txt - - - - - - - - - - - -
+#
+# The meta-BlockSolverConfig of the Frank-Wolfe test with the reduced lineup
+# [see FatherBSCfg-fast.txt] and the network simplex of LEMON as the Linear
+# Minimization Oracle of each sub-Block [see FatherBSPar-lemon.txt]: what the
+# large instances run, where the whole lineup takes hours.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig, i.e., a map classname --> its
+# BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+2 # the number of elements in the map
+
+AbstractBlock  *FatherBSCfg-fast.txt
+MCFBlock       *MCFBSCfg-lemon.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - -  END FatherBSPar-fast-lemon.txt - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -71,7 +71,7 @@ if [ -n "${fwexe}" ] && [ -z "$CI" ]; then
   fw_run ${DATADIR}/nc4/goto10_8_1.nc4
 
   # the same, with the network simplex of LEMON as the LMO of each sub-Block
-  fwpar=FatherBSPar-lemon.txt
+  fwpar=FatherBSPar-fast-lemon.txt
   fwargs="-o 0 -k 2 -e 1"
   fw_run ${DATADIR}/nc4/goto10_8_1.nc4
 

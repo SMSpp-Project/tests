@@ -473,6 +473,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the Frank-Wolfe decomposition with the network simplex of LEMON in
+  `batch` and `batch-dense` of MCFBlock runs the reduced lineup, as the one
+  with the network simplex of MCFClass does, through the new
+  `FatherBSPar-fast-lemon.txt`: `FatherBSPar-lemon.txt` gives the whole
+  lineup, whose Away-step and Blended Pairwise variants with an unbounded
+  active set did not end in hours on those instances
+
 - the makefiles of the tests and of the tools build also with g++: they
   take the option that stops at the first error and the one of the
   debugging information, which clang++ and g++ spell differently
