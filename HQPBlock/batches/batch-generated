@@ -34,7 +34,7 @@ DEFAULT_EXE=./HQPBlock_test
 DEFAULT_PAR=BSPar.txt
 parse_batch_args "$@"
 
-run_test "$exe" -S "$par" -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5 \
-  -I 1:13,4:14
+run_test "$exe" -S "$par" -F HQPDistForms.txt \
+  -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5 -I 1:13,4:14
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

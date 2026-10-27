@@ -4,9 +4,10 @@
 # The meta-BlockSolverConfig of the tester of HQPBlock: a map classname -->
 # BlockSolverConfig, of which the tester applies to each Block that of its
 # classname, to the Block alone and not to its sub-Blocks [see attach() in
-# reference.h]. The HQPBlock gets the HQPSolver of HQPBSCfg.txt, and the
-# HQPDistBlock, where the same hierarchies are split among 3 owners, those of
-# HQPDistBSCfg.txt, which follow the former in the positions of -E and -I.
+# reference.h]. The HQPBlock gets the HQPSolver of HQPBSCfg.txt; the
+# HQPDistBlock, where the same hierarchies are split among 3 owners, gets
+# those of the formulations of HQPDistForms.txt, given with -F, which follow
+# them in the positions of -E and -I.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -15,10 +16,9 @@
 # BlockSolverConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
-2  # the number of elements in the map
+1  # the number of elements in the map
 
-HQPBlock      *HQPBSCfg.txt
-HQPDistBlock  *HQPDistBSCfg.txt
+HQPBlock  *HQPBSCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -

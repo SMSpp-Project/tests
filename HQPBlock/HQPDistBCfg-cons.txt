@@ -1,0 +1,51 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - HQPDistBCfg-cons.txt  - - - - - - - - - - - - - -
+#
+# The BlockConfig of the HQPDistBlock of the formulation F0 of
+# HQPDistForms.txt: the structure kConsensus, with the copies of the
+# variables of the other owners in each sub-Block and the consensus rows in
+# the root [see HQPDistBlock::set_structure()].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+SimpleConfiguration<int>
+0    # 0 = kConsensus, 1 = kBenders
+
+# static_constraints
+*    # [none]
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+*    # [none]
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END HQPDistBCfg-cons.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

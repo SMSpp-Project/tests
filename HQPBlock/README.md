@@ -42,13 +42,23 @@ each inner Solver and setting,
   previous solve of the same level, which the inner Solver of each level of
   an `HQPSolver` re-optimizes from step to step;
 
-and `HQPDistBSCfg.txt` attaches to the `HQPDistBlock`, where each hierarchy
-built by the tester is split among 3 owners of consecutive blocks of
-columns, an `HQPSolver` for each inner Solver and setting that solves the
-whole tree, i.e., the centralized hierarchy written with copies and
-consensus rows: DAQP in the three settings and qpOASES in the first one.
-The `HQPSolver` of the `HQPDistBlock` follow those of the `HQPBlock` in the
-positions of `-E` and `-I`.
+while the `HQPDistBlock`, where each hierarchy built by the tester is split
+among 3 owners of consecutive blocks of columns, is solved once for each
+formulation of `HQPDistForms.txt`, given with `-F`, a pair of a
+`BlockConfig`, which gives the structure, and a `BlockSolverConfig`:
+
+- F0, the structure `kConsensus` (`HQPDistBCfg-cons.txt`), with copies in
+  the sub-Blocks and consensus rows in the root, and the `HQPSolver` of
+  `HQPDistBSCfg.txt`, each one solving the whole tree, i.e., the
+  centralized hierarchy written that way: DAQP in the three settings and
+  qpOASES in the first one;
+
+- F1, the structure `kBenders` (`HQPDistBCfg-bds.txt`), with the coupling
+  rows in the root and their parts in the sub-Blocks, and that of
+  `HQPDistBSCfg-bds.txt`, DAQP on the whole tree in the first setting.
+
+The `HQPSolver` of each formulation follow those of the `HQPBlock`, and
+those of the previous formulation, in the positions of `-E` and `-I`.
 
 An `HQPSolver` whose inner Solver is not in the build is reported and left
 out, and if none of them has one the tester has nothing to do and says so
@@ -65,19 +75,20 @@ The usage of the executable is the following:
                               steps reached by Modification
 
 plus the options that every SMS++ tester understands (`--help` lists them
-all), among which `-S`, the configuration, and `-E`, the tolerance on the
-values of the levels of each `HQPSolver` in the order of the
-`BlockSolverConfig` (those of the `HQPDistBlock` after those of the
-`HQPBlock`). Without a file, the hierarchies are built by the tester:
-random ones, one with a level of equalities only, one of inequalities only
+all), among which `-S`, the configuration, `-F`, the formulations of the
+`HQPDistBlock`, and `-E`, the tolerance on the values of the levels of each
+`HQPSolver` in the order of the `BlockSolverConfig` (those of the
+`HQPDistBlock` after those of the `HQPBlock`). Without a file, the
+hierarchies are built by the tester: random ones, one with a level of
+equalities only, one of inequalities only
 and an empty one, an inequality task that cannot be satisfied at its level
 and one already satisfied (whose values are known), dependent rows, weights
 different from 1, a step of Model Predictive Control that changes `b`, `d`,
 `A` (also out of the pattern of a row) and `C` of the same `HQPBlock`
 between two solves, checked also against a new `HQPBlock` solved from
-scratch, and a run of 10 small such steps; with an `HQPDistBlock` in the
-configuration, each of them also as an `HQPDistBlock`, the step out of the
-pattern building its sub-Blocks anew. A file is an instance in the
+scratch, and a run of 10 small such steps; with `-F`, each of them also as
+an `HQPDistBlock` in each formulation, the step out of the pattern
+building its sub-Blocks anew. A file is an instance in the
 netCDF format of `HQPBlock`, which carries with the `HQPBlock` the solution
 of each level of the code that generated it, against which the values are
 also compared. The iterations

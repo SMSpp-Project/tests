@@ -43,7 +43,12 @@
  * among 3 owners [see load()], and solved (and changed, in the steps of
  * Model Predictive Control) by the HQPSolver of that entry, which are
  * compared with the same reference; they follow those of the HQPBlock in
- * the positions of -E and -I.
+ * the positions of -E and -I. With -F, a list of formulations [see
+ * get_formulations()], each hierarchy is instead loaded into an
+ * HQPDistBlock once for each formulation, which its BlockConfig gives its
+ * structure [see HQPDistBlock::set_structure()] and its BlockSolverConfig
+ * its HQPSolver; those of each formulation follow those of the previous one
+ * in the positions.
  *
  * With an instance file, written by tools/npz2nc4.py of HQPBlock, the
  * HQPBlock in it is solved, and the values of its levels (\f$ \| v_p \|^2 /
@@ -110,6 +115,15 @@ static std::map< const HQPSolver * , std::size_t > position;
 // the number of HQPSolver of the HQPBlock, i.e., the first position of
 // those of an HQPDistBlock
 static std::size_t first_dist = 0;
+
+// the formulation of the HQPDistBlock being solved (with -F), its
+// BlockConfig and BlockSolverConfig, and the number of HQPSolver of each
+// formulation, those of the next one following them in the positions
+static std::size_t form = 0;
+static Configuration * form_bcfg = nullptr;
+static Configuration * form_bsc = nullptr;
+static std::vector< std::size_t > form_count;
+static std::string form_name;       // with a space after, if any
 
 // the pairs of -I: the HQPSolver at the first position (from 0) must take
 // fewer iterations than that at the second one
@@ -337,7 +351,37 @@ static Instance weighted_instance( void )
 
 static std::size_t first_of( const HQPBlock & ) { return( 0 ); }
 
-static std::size_t first_of( const HQPDistBlock & ) { return( first_dist ); }
+static std::size_t first_of( const HQPDistBlock & )
+{
+ std::size_t first = first_dist;
+ for( std::size_t f = 0 ; f < form ; ++f )
+  first += form_count[ f ];
+ return( first );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the BlockConfig of the formulation, if any, and the HQPSolver of the
+// configuration of the Block
+
+static void configure( HQPBlock & ) {}
+
+static void configure( HQPDistBlock & block )
+{
+ if( form_bcfg )
+  b_config_Block( & block , form_bcfg , fconf_file );
+ }
+
+static std::vector< HQPSolver * > attach_to( HQPBlock & block )
+{
+ return( attach( block , sconf_file ) );
+ }
+
+static std::vector< HQPSolver * > attach_to( HQPDistBlock & block )
+{
+ if( form_bsc )
+  return( attach( block , form_bsc , fconf_file ) );
+ return( attach( block , sconf_file ) );
+ }
 
 static std::vector< HQPSolver * > working( const std::vector< HQPSolver * > &
                                            sl , bool report ,
@@ -346,6 +390,11 @@ static std::vector< HQPSolver * > working( const std::vector< HQPSolver * > &
  std::vector< HQPSolver * > res;
  if( ! first )
   first_dist = std::max( first_dist , sl.size() );
+ else
+  if( form_bsc ) {
+   form_count.resize( std::max( form_count.size() , form + 1 ) , 0 );
+   form_count[ form ] = std::max( form_count[ form ] , sl.size() );
+   }
  for( std::size_t k = 0 ; k < sl.size() ; ++k )
   position[ sl[ k ] ] = first + k;
  for( auto s : sl )
@@ -375,9 +424,9 @@ static int solve_and_check( const Instance & in , bool report )
 
  B block;
  load( block , in );
+ configure( block );
  int errors = 0;
- for( auto s : working( attach( block , sconf_file ) , report ,
-                        first_of( block ) ) ) {
+ for( auto s : working( attach_to( block ) , report , first_of( block ) ) ) {
   const int st = s->compute();
   if( st != Solver::kOK ) {
    std::cout << in.name << " [" << label( s ) << "]: status " << st
@@ -423,10 +472,11 @@ template< class B >
 static int mpc_step( void )
 {
  Instance in = random_instance( 21 );
- in.name = "MPC step";
+ in.name = form_name + "MPC step";
  B block;
  load( block , in );
- const auto slvrs = working( attach( block , sconf_file ) , false ,
+ configure( block );
+ const auto slvrs = working( attach_to( block ) , false ,
                              first_of( block ) );
  int errors = 0;
  for( auto s : slvrs )
@@ -436,7 +486,7 @@ static int mpc_step( void )
  // pattern of a row added and one of the pattern zeroed
  std::mt19937 g( 22 );
  Instance nw = in;
- nw.name = "MPC step, after the change";
+ nw.name = form_name + "MPC step, after the change";
  for( int p = 0 ; p < in.levels() ; ++p ) {
   nw.b[ p ] += 0.2 * random_vector( g , nw.b[ p ].size() );
   nw.d[ p ] += 0.2 * random_vector( g , nw.d[ p ].size() );
@@ -471,7 +521,8 @@ static int mpc_step( void )
  const RefSolution ref = reference( nw ) , ref0 = reference( nw , false );
  B fresh;
  load( fresh , nw );
- const auto fslvrs = working( attach( fresh , sconf_file ) , false ,
+ configure( fresh );
+ const auto fslvrs = working( attach_to( fresh ) , false ,
                               first_of( fresh ) );
 
  for( std::size_t i = 0 ; i < slvrs.size() ; ++i ) {
@@ -505,7 +556,8 @@ static int mpc_run( void )
  Instance in = random_instance( 31 );
  B block;
  load( block , in );
- const auto slvrs = working( attach( block , sconf_file ) , false ,
+ configure( block );
+ const auto slvrs = working( attach_to( block ) , false ,
                              first_of( block ) );
  for( auto s : slvrs )
   s->compute();
@@ -513,7 +565,7 @@ static int mpc_run( void )
  std::mt19937 g( 32 );
  int errors = 0;
  for( int k = 1 ; k <= 10 ; ++k ) {
-  in.name = "MPC run, step " + std::to_string( k );
+  in.name = form_name + "MPC run, step " + std::to_string( k );
   for( int p = 0 ; p < in.levels() ; ++p ) {
    in.b[ p ] += 0.02 * random_vector( g , in.b[ p ].size() );
    in.d[ p ] += 0.02 * random_vector( g , in.d[ p ].size() );
@@ -586,7 +638,26 @@ static int generated( void )
 
  errors += generated_in< HQPBlock >( cases );
 
- // the HQPDistBlock only if the config has HQPSolver for it
+ // the HQPDistBlock once for each formulation of -F, otherwise only if
+ // the config has HQPSolver for it
+ if( ! fconf_file.empty() ) {
+  auto fv = get_formulations();
+  for( form = 0 ; form < fv.configs.size() ; ++form ) {
+   form_bcfg = fv.configs[ form ];
+   form_bsc = solver_config_of( fv , form );
+   form_name = fv.names[ form ] + " ";
+   std::vector< Instance > named = cases;
+   for( auto & in : named )
+    in.name = fv.names[ form ] + " " + in.name;
+   errors += generated_in< HQPDistBlock >( named );
+   delete form_bsc;
+   }
+  form_bcfg = form_bsc = nullptr;
+  form_name.clear();
+  delete fv.owner;
+  return( errors );
+  }
+
  HQPDistBlock probe;
  load( probe , cases.front() );
  const bool dist = ! attach( probe , sconf_file ).empty();

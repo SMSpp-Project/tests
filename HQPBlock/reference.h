@@ -318,8 +318,8 @@ inline std::string label( HQPSolver * s )
  }
 
 /*--------------------------------------------------------------------------*/
-/// applies the BlockSolverConfig in file to block, returns its HQPSolver
-/** The file holds either a BlockSolverConfig or a
+/// applies the configuration c (read from file) to block, returns HQPSolver
+/** The configuration is either a BlockSolverConfig or a
  *
  *   SimpleConfiguration< std::map< std::string , Configuration * > >
  *
@@ -329,11 +329,11 @@ inline std::string label( HQPSolver * s )
  * owner of an HQPDistBlock); with no entry for it, no HQPSolver. */
 
 inline std::vector< HQPSolver * > attach( Block & block ,
+                                          Configuration * c ,
                                           const std::string & file )
 {
  using Meta = SimpleConfiguration< std::map< std::string ,
                                              Configuration * > >;
- auto c = Configuration::deserialize( file );
  BlockSolverConfig * bsc = dynamic_cast< BlockSolverConfig * >( c );
  if( auto m = dynamic_cast< Meta * >( c ) ) {
   const auto it = m->f_value.find( block.classname() );
@@ -341,7 +341,6 @@ inline std::vector< HQPSolver * > attach( Block & block ,
   if( it != m->f_value.end() ) {
    bsc = dynamic_cast< BlockSolverConfig * >( it->second );
    if( ! bsc ) {
-    delete c;
     throw( std::invalid_argument( "attach: the entry of " +
                                   block.classname() + " in " + file +
                                   " is not a BlockSolverConfig" ) );
@@ -349,20 +348,35 @@ inline std::vector< HQPSolver * > attach( Block & block ,
    }
   }
  else
-  if( ! bsc ) {
-   delete c;
+  if( ! bsc )
    throw( std::invalid_argument( "attach: " + file + " is neither a "
                                  "BlockSolverConfig nor a map of them" ) );
-   }
  if( bsc )
   bsc->apply( & block );
- delete c;
 
  std::vector< HQPSolver * > res;
  for( auto s : block.get_registered_solvers() )
   if( auto h = dynamic_cast< HQPSolver * >( s ) )
    res.push_back( h );
  return( res );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// attach() of the configuration in file, read here and deleted after
+
+inline std::vector< HQPSolver * > attach( Block & block ,
+                                          const std::string & file )
+{
+ auto c = Configuration::deserialize( file );
+ try {
+  auto res = attach( block , c , file );
+  delete c;
+  return( res );
+  }
+ catch( ... ) {
+  delete c;
+  throw;
+  }
  }
 
 /*--------------------------------------------------------------------------*/

@@ -1,0 +1,36 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - HQPDistForms.txt  - - - - - - - - - - - - - - -
+#
+# The formulations of the HQPDistBlock that batch-generated compares, each
+# with its BlockConfig, which gives the structure, and its BlockSolverConfig,
+# whose HQPSolver follow those of HQPBSCfg.txt and those of the previous
+# formulation in the positions of -E and -I:
+#
+#   - F0, the structure kConsensus (HQPDistBCfg-cons.txt), with the
+#     HQPSolver of HQPDistBSCfg.txt;
+#   - F1, the structure kBenders (HQPDistBCfg-bds.txt), with those of
+#     HQPDistBSCfg-bds.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# F0: kConsensus
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+*HQPDistBCfg-cons.txt   # its BlockConfig
+*HQPDistBSCfg.txt       # its BlockSolverConfig
+
+# F1: kBenders
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+*HQPDistBCfg-bds.txt    # its BlockConfig
+*HQPDistBSCfg-bds.txt   # its BlockSolverConfig
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END HQPDistForms.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

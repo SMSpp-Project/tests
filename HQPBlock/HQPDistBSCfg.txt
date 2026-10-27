@@ -2,10 +2,11 @@
 # - - - - - - - - - - - - - - HQPDistBSCfg.txt  - - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of the HQPDistBlock in the tester of HQPBlock [see
-# BSPar.txt]: one HQPSolver for each inner Solver and setting, each solving
-# the whole tree, the consensus rows in the model, i.e., the problem of the
-# centralized hierarchy, so that the tester compares each of them with the
-# reference, hence with the HQPSolver of the HQPBlock and with each other:
+# HQPDistForms.txt]: one HQPSolver for each inner Solver and setting, each
+# solving the whole tree, the consensus rows in the model, i.e., the problem
+# of the centralized hierarchy, so that the tester compares each of them with
+# the reference, hence with the HQPSolver of the HQPBlock and with each
+# other:
 #
 #   - DAQP in the three settings of HQPBSCfg.txt (HQPCfg.txt,
 #     HQPCfg-free.txt and HQPCfg-prox0.txt);
