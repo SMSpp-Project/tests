@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SMS++/AbstractBlock`: `AbstractBlock_BDS_test` also runs the phase one
+  on four scenarios with the subproblems solved by DAQP, which gives no
+  Farkas certificate (`BSPar-BDS-Phase1-DAQP.txt`), the `ComputeConfig` of
+  the phase one being the fragment `BDSCfg-Phase1.txt`
+
 - `HQPBlock`, the suite of `HQPBlock`, `HQPDistBlock` and `HQPSolver`:
   `HQPBlock_test` compares level by level every `HQPSolver` of `BSPar.txt`,
   a map from the classname of the Block to its `BlockSolverConfig` (on the

@@ -697,6 +697,32 @@ int main( void )
   ok_ns = ok_ns && ( rel( ref4 , v_f4 ) <= tol ) &&
                    ( rel( ref4 , v_14 ) <= tol );
 
+  /* And with subproblems solved by DAQP, which gives no certificate: the
+   * phase one does without it, as long as its cut cuts the incumbent, and
+   * the run is not to stop on the certificate it does not need. */
+
+  {
+   auto root_d4 = build_structured( false , 4 );
+   int st_d4;
+   long ct_d4 = 0;
+   bool ok_d4 = false;
+   double v_d4 = 0;
+   try {
+    v_d4 = solve_from_config( root_d4 , "BSPar-BDS-Phase1-DAQP.txt" ,
+                              st_d4 , nullptr , & ct_d4 );
+    ok_d4 = ( rel( ref4 , v_d4 ) <= tol );
+    }
+   catch( const std::exception & e ) {
+    std::cout << "4-scenario, phase one with no certificate: " << e.what()
+              << std::endl;
+    }
+   std::cout << "4-scenario, phase one with no certificate: " << v_d4
+             << " ( " << ct_d4 << " cuts )   ref = " << ref4
+             << ( ok_d4 ? "   -> OK" : "   -> FAIL" ) << std::endl;
+   ok_ns = ok_ns && ok_d4;
+   delete root_d4;
+   }
+
   /* The same with the subproblems evaluated by threads, where some of them
    * are infeasible and their certificates are read inside the threads: the
    * run has to be the sequential one, round by round. */
