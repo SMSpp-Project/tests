@@ -8,8 +8,9 @@
 # ProxQPMILPSolver with its dense backend, which has no time limit and stalls
 # on the largest models of the class even in its sparse backend,
 # QPMADMILPSolver and QuadProgMILPSolver with the regularized Hessian of
-# QPMADCfg-C.txt and QuadProgCfg-C.txt, and HPIPMMILPSolver, which load the
-# whole Hessian and do not scale to the largest models of the class:
+# QPMADCfg-C.txt and QuadProgCfg-C.txt, and HPIPMMILPSolver with the limit
+# on its iterations of HPIPMCfg-C.txt, which load the whole Hessian and do
+# not scale to the largest models of the class:
 # batchCL_C_dense gives it to the tester with -S on the smaller ones, which
 # the tester checks against the known optimal value.
 #
@@ -54,7 +55,7 @@ HPIPMMILPSolver     # name of 6th Solver
 
 # 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-*QPCfg-C.txt
+*HPIPMCfg-C.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

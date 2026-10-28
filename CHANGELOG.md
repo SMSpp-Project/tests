@@ -209,6 +209,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `MILPSolver/QuadFunction`: `HPIPMMILPSolver` has in `LPPar_CL_C-dense.txt`
+  the `ComputeConfig` `HPIPMCfg-C.txt`, that of `QPCfg-C.txt` with a limit
+  of 1000 iterations instead of the 100 of the default mode of HPIPM, with
+  which it stopped with no solution, an interval that the tester accepts,
+  on `QCAPRI`, `QSCAGR7` and `QSCAGR25` of `batchMM_C_dense`; with the 1000
+  it solves the last two, and returns an error on `QCAPRI`, which
+  `batchMM_C_dense` leaves out as it does the other models some of its
+  Solver do not solve
+
 - `SVMBlock/BSPar.txt` adds to `GRBMILPSolver` and `SMOSolver` one
   `:MILPSolver` for each other kind of algorithm for a convex quadratic
   program: the active-set `QPOASESMILPSolver`, the interior-point

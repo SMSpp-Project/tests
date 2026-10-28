@@ -9,13 +9,13 @@
 # the dense subset of the Maros-Meszaros test set of maros_meszaros_qpbenchmark
 # (at most 1000 variables and 1000 constraints), written as LP files by
 # qpb2lp.py; PRIMALC8, QADLITTL, QAFIRO, QBANDM, QBEACONF, QBORE3D, QBRANDY,
-# QE226, QFORPLAN, QGROW15, QGROW7, QISRAEL, QPCBOEI1, QPCBOEI2, QRECIPE,
-# QSCFXM1, QSCORPIO and QSHARE1B are left out: on these models, nearly LPs, the
-# Hessian regularized by 1e-6 moves the optimum of QPMADMILPSolver and
-# QuadProgMILPSolver by up to 3%, or their dual method declares them infeasible
-# or fails; ProxQPMILPSolver declares QFORPLAN infeasible, DAQPMILPSolver
-# does not end QSCFXM1, and HPIPMMILPSolver returns an error on QRECIPE and
-# QSCFXM1
+# QCAPRI, QE226, QFORPLAN, QGROW15, QGROW7, QISRAEL, QPCBOEI1, QPCBOEI2,
+# QRECIPE, QSCFXM1, QSCORPIO and QSHARE1B are left out: on these models,
+# nearly LPs, the Hessian regularized by 1e-6 moves the optimum of
+# QPMADMILPSolver and QuadProgMILPSolver by up to 3%, or their dual method
+# declares them infeasible or fails; ProxQPMILPSolver declares QFORPLAN
+# infeasible, DAQPMILPSolver does not end QSCFXM1, and HPIPMMILPSolver
+# returns an error on QCAPRI, QRECIPE and QSCFXM1
 
 # the common part, which reads the argument [see qf_battery.sh]
 source "$(dirname "$0")/qf_battery.sh" "$@"
@@ -33,9 +33,9 @@ qf_run_list C LPPar_CL_C-dense.txt \
   ./MarosMeszaros/LOTSCHD.lp ./MarosMeszaros/PRIMAL1.lp \
   ./MarosMeszaros/PRIMAL2.lp ./MarosMeszaros/PRIMAL3.lp \
   ./MarosMeszaros/PRIMALC1.lp ./MarosMeszaros/PRIMALC2.lp \
-  ./MarosMeszaros/PRIMALC5.lp ./MarosMeszaros/QCAPRI.lp \
-  ./MarosMeszaros/QPCBLEND.lp ./MarosMeszaros/QPCSTAIR.lp \
-  ./MarosMeszaros/QPTEST.lp ./MarosMeszaros/QSC205.lp \
+  ./MarosMeszaros/PRIMALC5.lp ./MarosMeszaros/QPCBLEND.lp \
+  ./MarosMeszaros/QPCSTAIR.lp ./MarosMeszaros/QPTEST.lp \
+  ./MarosMeszaros/QSC205.lp \
   ./MarosMeszaros/QSCAGR25.lp ./MarosMeszaros/QSCAGR7.lp \
   ./MarosMeszaros/QSCSD1.lp ./MarosMeszaros/QSCTAP1.lp \
   ./MarosMeszaros/QSHARE2B.lp ./MarosMeszaros/QSTAIR.lp \

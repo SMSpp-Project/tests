@@ -38,11 +38,13 @@ even with its sparse backend: `batchCL_C_dense` gives them
 `QPLib_8845`, on which the active set of DAQP cycles. `QPMADMILPSolver` and
 `QuadProgMILPSolver` need a positive definite Hessian, and that of these
 models is singular, hence they have it regularized by 1e-6 (`QPMADCfg-C.txt`
-and `QuadProgCfg-C.txt`). A Solver that the build has
-not is left out, and said.
+and `QuadProgCfg-C.txt`). `HPIPMMILPSolver` has a limit of 1000 iterations
+(`HPIPMCfg-C.txt`) instead of the 100 of the default mode of HPIPM, with
+which it stops with no solution on some of the dense Maros-Meszaros models.
+A Solver that the build has not is left out, and said.
 
 A list of all the available QP instances can be found in the file 
-`available_instance.txt`, along with their optimal values for both the continuous
+`available_instances.txt`, along with their optimal values for both the continuous
 and integer versions. All instances are sourced from the `QPLIB` library 
 (https://qplib.zib.de/) and are categorized by objective and constraint complexity 
 into different folders. The notation used aligns with the documentation of the online 
