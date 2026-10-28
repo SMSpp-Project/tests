@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SVMBlock`: `FWBSCfg.txt` also registers `FrankWolfeSolver` with the
+  primal-dual bundle direction (`intFWDirection` `eDirPrimalDual`), on the
+  balls and on the box of the dual alike
+
 - `SMS++/AbstractBlock`: `AbstractBlock_BDS_test` also runs the phase one
   on four scenarios with the subproblems solved by DAQP, which gives no
   Farkas certificate (`BSPar-BDS-Phase1-DAQP.txt`), the `ComputeConfig` of

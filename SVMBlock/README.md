@@ -180,7 +180,7 @@ The usage of the executable is
 
 where `-S` is the `BlockSolverConfig` of the father,
 [FWBSCfg.txt](FWBSCfg.txt), which registers a `:MILPSolver` as the reference
-and `FrankWolfeSolver` in five variants of its direction, and `-L` that of
+and `FrankWolfeSolver` in six variants of its direction, and `-L` that of
 each sub-`Block`, [BallBSCfg.txt](BallBSCfg.txt) or
 [BoxBSCfg.txt](BoxBSCfg.txt). `FrankWolfeSolver` is read by its
 [ `get_lb()` , `get_ub()` ], the reference by its value: a run that stops at

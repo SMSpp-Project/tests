@@ -23,7 +23,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-6 # number of (the names of) Solver in this BlockSolverConfig
+7 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # 1: the monolithic reference, a QCP with
@@ -34,8 +34,9 @@ FrankWolfeSolver      # 3: Blended Pairwise
 FrankWolfeSolver      # 4: the aggregate of two pieces
 FrankWolfeSolver      # 5: the master of 10 pieces
 FrankWolfeSolver      # 6: the same, out of a pool of 30
+FrankWolfeSolver      # 7: the primal-dual bundle method
 
-6 # number of ComputeConfig in this BlockSolverConfig
+7 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 
@@ -187,6 +188,45 @@ dblFWAccept     0.5 # the fraction of the bound to keep
 
 # now all the string parameters
 strFWMPBCfg     MPBCfg-FW.txt # the Solver of the master
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+* # [none] the extra Configuration slot
+
+# 7: the primal-dual bundle method, whose master bounds the gap out of
+#    how the ball or the box curves, a refused step not being taken
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intFWDirection  4 # eDirPrimalDual
+
+1 # number of double parameters
+
+# now all the double parameters
+dblFWAccept     0.5 # the fraction of the bound to keep
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0 # number of vector-of-int parameters
 

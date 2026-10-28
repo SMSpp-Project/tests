@@ -52,7 +52,7 @@ for set in ${sets}; do
 
   for K in 0 2; do     # the linear kernel and the Gaussian one
     run_test "$exe" -S "$par" -L BoxBSCfg.txt -P 1 -K "$K" -C 1 \
-             -E ",inf,inf,inf,inf,inf" "${DATA}/${set}"
+             -E ",inf,inf,inf,inf,inf,inf" "${DATA}/${set}"
   done
 done
 
