@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `TwoStageStochasticBlock`: the cross-check of `BSPar-BDS-2S.txt` also
+  has the `BendersDecompositionSolver` with HiGHS in the master and in the
+  subproblems (`BDSCfg-2S-HiGHS.txt`, `BDSMCfg-MILP-HiGHS.txt`,
+  `BDSSCfg-HiGHS.txt`), i.e., the Benders decomposition where there is no
+  licence of GUROBI, next to the one with GUROBI, whose `ComputeConfig` is
+  now the fragment `BDSCfg-2S.txt` that both include
+
 - `SVMBlock`: `FWBSCfg.txt` also registers `FrankWolfeSolver` with the
   primal-dual bundle direction (`intFWDirection` `eDirPrimalDual`), on the
   balls and on the box of the dual alike
