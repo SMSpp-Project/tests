@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# usage: batchMM_C < exe file >
+#        < exe file > = path of the executable file, default ./MILPSolver_QuadFunction_test
+#
+# runs MILPSolver_QuadFunction_test with the :MILPSolver for convex QPs of
+# LPPar_CL_C.txt (SCIPMILPSolver, MOSEKMILPSolver, ClarabelMILPSolver,
+# PIQPMILPSolver, OSQPMILPSolver) over the problems of the dense subset of the
+# Maros-Meszaros test set of maros_meszaros_qpbenchmark (at most 1000 variables
+# and 1000 constraints), written as LP files by qpb2lp.py; DUALC1, HS268, S268,
+# QBORE3D, QCAPRI, QFORPLAN, QSCAGR25, QSCFXM1 and QSTAIR are left out:
+# SCIPMILPSolver stops on numerical troubles of its LP (QFORPLAN, QSCAGR25,
+# QSCFXM1), MOSEKMILPSolver stalls (QCAPRI, QSTAIR), declares QFORPLAN
+# infeasible, or ends some 3e-4 away from the optimum, and so does
+# OSQPMILPSolver
+
+# the common part, which reads the argument [see qf_battery.sh]
+source "$(dirname "$0")/qf_battery.sh" "$@"
+
+qf_run_list C LPPar_CL_C.txt \
+  ./MarosMeszaros/CVXQP1_S.lp ./MarosMeszaros/CVXQP2_S.lp \
+  ./MarosMeszaros/CVXQP3_S.lp ./MarosMeszaros/DPKLO1.lp \
+  ./MarosMeszaros/DUAL1.lp ./MarosMeszaros/DUAL2.lp ./MarosMeszaros/DUAL3.lp \
+  ./MarosMeszaros/DUAL4.lp ./MarosMeszaros/DUALC2.lp \
+  ./MarosMeszaros/DUALC5.lp ./MarosMeszaros/DUALC8.lp \
+  ./MarosMeszaros/GENHS28.lp ./MarosMeszaros/HS118.lp \
+  ./MarosMeszaros/HS21.lp ./MarosMeszaros/HS35.lp ./MarosMeszaros/HS35MOD.lp \
+  ./MarosMeszaros/HS51.lp ./MarosMeszaros/HS52.lp ./MarosMeszaros/HS53.lp \
+  ./MarosMeszaros/HS76.lp ./MarosMeszaros/LOTSCHD.lp \
+  ./MarosMeszaros/PRIMAL1.lp ./MarosMeszaros/PRIMAL2.lp \
+  ./MarosMeszaros/PRIMAL3.lp ./MarosMeszaros/PRIMALC1.lp \
+  ./MarosMeszaros/PRIMALC2.lp ./MarosMeszaros/PRIMALC5.lp \
+  ./MarosMeszaros/PRIMALC8.lp ./MarosMeszaros/QADLITTL.lp \
+  ./MarosMeszaros/QAFIRO.lp ./MarosMeszaros/QBANDM.lp \
+  ./MarosMeszaros/QBEACONF.lp ./MarosMeszaros/QBRANDY.lp \
+  ./MarosMeszaros/QE226.lp ./MarosMeszaros/QGROW15.lp \
+  ./MarosMeszaros/QGROW7.lp ./MarosMeszaros/QISRAEL.lp \
+  ./MarosMeszaros/QPCBLEND.lp ./MarosMeszaros/QPCBOEI1.lp \
+  ./MarosMeszaros/QPCBOEI2.lp ./MarosMeszaros/QPCSTAIR.lp \
+  ./MarosMeszaros/QPTEST.lp ./MarosMeszaros/QRECIPE.lp \
+  ./MarosMeszaros/QSC205.lp ./MarosMeszaros/QSCAGR7.lp \
+  ./MarosMeszaros/QSCORPIO.lp ./MarosMeszaros/QSCSD1.lp \
+  ./MarosMeszaros/QSCTAP1.lp ./MarosMeszaros/QSHARE1B.lp \
+  ./MarosMeszaros/QSHARE2B.lp ./MarosMeszaros/TAME.lp \
+  ./MarosMeszaros/ZECEVIC2.lp
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

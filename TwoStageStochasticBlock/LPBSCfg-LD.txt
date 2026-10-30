@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - LPBSCfg-LD.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LPBSCfg-LD.txt  - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a sub-Block of the TSSBlock
 # to be solved by a LagrangianDualSolver using a BundleSolver as the inner
 # Solver
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -33,7 +31,7 @@ LagrangianDualSolver  # name of Solver
 3 # number of integer parameters
 
 # now all the integer parameters
-intDoEasy         3 # do easy components for (some) LagBFunction
+intDoEasy         1 # do easy components for (some) LagBFunction
                     # (bit 0 + bit 1 = enable easy + ChgCosts)
 intMaxIter     1000 # max number of iterations for each call: the cap
                     # is not binding, the inner dual stops on its own
@@ -73,5 +71,5 @@ str_LagBF_BSCfg InnerBSCfg.txt # BlockSolverConfig for the LagBFunctions
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END LPBSCfg-LD.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END LPBSCfg-LD.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

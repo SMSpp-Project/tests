@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  InnerBCfg-SOCP.txt - - - - - - - - - - - - - - -
+#
+# The "meta"-BlockConfig of InnerBCfg.txt with the SOCP relaxation of the
+# ACNetworkBlock [see ACBCfg-SOCP.txt], for the AC instances over 24 hours
+# of batch-ac.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+4 # the number of elements in the map
+
+ThermalUnitBlock        *TUBCfg.txt
+DCNetworkBlock          *DCNBCfg.txt
+ACNetworkBlock          *ACBCfg-SOCP.txt
+PolyhedralFunctionBlock *PFBCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END InnerBCfg-SOCP.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

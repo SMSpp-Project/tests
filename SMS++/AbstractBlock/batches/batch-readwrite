@@ -22,7 +22,8 @@ for size in 2 10 50; do
 
       # run_test prints the "[<args>]:" header and exits on failure; an empty
       # $iter simply collapses, matching the previous label
-      run_test "$AbstractBlock_readwrite_test" $seed $what $size $dens $iter
+      run_test "$AbstractBlock_readwrite_test" -e $seed -k $what -N $size \
+          -d $dens ${iter:+-n "$iter"}
 
     done
   done

@@ -2,7 +2,8 @@
 # - - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
 #
 # Cross-check BlockSolverConfig for a PURE-BINARY BinaryKnapsackBlock: it
-# attaches EVERY solver / formulation that must give the SAME integer optimum,
+# attaches EVERY solver / formulation that must give the SAME integer
+# optimum,
 # so that a single sweep cross-checks them all (see batch):
 #
 #   - :MILPSolver                         exact MIP (the reference optimum)
@@ -13,9 +14,12 @@
 #   - RECORDBinaryKnapsackSolver, which hands the core to RECORD under the
 #     same reoptimization; a build without RECORD leaves it out of the run,
 #     which says so [see Solver::has_Solver()]
-#   - GreedyRelaxationBinaryKnapsackSolver  relaxation: must BRACKET the optimum
-#   - BranchAndXSolver, once per exploration mode (best-/depth-/breadth-first,
-#     parallel depth-first, per-node parallel solvers): all are exact and must
+#   - GreedyRelaxationBinaryKnapsackSolver  relaxation: must BRACKET the
+#   optimum
+#   - BranchAndXSolver, once per exploration mode
+#   (best-/depth-/breadth-first,
+#     parallel depth-first, per-node parallel solvers): all are exact and
+#     must
 #     hit the same optimum (the reduced-cost fixing each does internally is a
 #     detail of the relaxation, not a separate mode).
 #   - BranchAndXSolver again, on a few of those modes but driven by the
@@ -42,7 +46,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 DPBinaryKnapsackSolver                # 2nd: exact full-table DP
@@ -53,10 +58,14 @@ BranchAndXSolver                      # 6th: BX depth-first (serial)
 BranchAndXSolver                      # 7th: BX breadth-first
 BranchAndXSolver                      # 8th: BX depth-first parallel
 BranchAndXSolver                      # 9th: BX per-node parallel solvers
-BranchAndXSolver                      # 10th: BX best-first, incremental inner
-BranchAndXSolver                      # 11th: BX depth-first, incremental inner
-BranchAndXSolver                      # 12th: BX depth-first parallel, incremental
-BranchAndXSolver                      # 13th: BX best-first, reoptimization on
+# 10th: BX best-first, incremental inner
+BranchAndXSolver
+# 11th: BX depth-first, incremental inner
+BranchAndXSolver
+# 12th: BX depth-first parallel, incremental
+BranchAndXSolver
+# 13th: BX best-first, reoptimization on
+BranchAndXSolver
 RECORDBinaryKnapsackSolver            # 14th: RECORD, same as the 3rd
 
 14  # number of ComputeConfig in this BlockSolverConfig

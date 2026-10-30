@@ -1,0 +1,52 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - DAQPCfg-cold.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of DAQPMILPSolver as the cold inner Solver of an
+# HQPSolver (InnerBSCfg-daqp-cold.txt): each solve starts from the empty
+# working set rather than from that of the previous solve of the same level,
+# so that the tester compares the iterations of DAQP with and without its
+# warm start, on the same problems.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intDAQPWarmStart  0  # each solve from the empty working set
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END DAQPCfg-cold.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

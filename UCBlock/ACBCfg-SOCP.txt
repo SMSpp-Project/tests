@@ -1,0 +1,55 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  ACBCfg-SOCP.txt  - - - - - - - - - - - - - - -
+#
+# The BlockConfig of ACBCfg.txt with the SOCP relaxation of the AC model,
+# without the variables and the static rows of its strengthening, which
+# InnerBCfg-SOCP.txt gives to every ACNetworkBlock. In a continuous solve,
+# where the McCormick inequalities of the strengthening are not separated,
+# the two relaxations have the same value [see ACNetworkBlock], and this one
+# has some 30% fewer rows. The scaling constants are not given, i.e., they
+# are the defaults, which are the values of ACBCfg.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig     # exact type of the Configuration object
+
+1   # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static constraints Configuration
+*  # [none]
+
+# dynamic constraints Configuration
+*  # [none]
+
+# static variables Configuration
+# a SimpleConfiguration< int > selecting the relaxation
+SimpleConfiguration<int>
+0  # 0 = SOCP relaxation, 1 = strengthened
+
+# dynamic variables Configuration
+*  # [none]
+
+# objective Configuration
+*  # [none]
+
+# is_feasible Configuration
+*  # [none]
+
+# is_optimal Configuration
+*  # [none]
+
+# solution Configuration
+*  # [none]
+
+# extra Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END ACBCfg-SOCP.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

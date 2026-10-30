@@ -208,16 +208,23 @@ static double cost_of( SingleFlowDCRBlock * block , DCRSolution * sol )
  * declares. The Variable of the Block are scrambled first: a Solver that
  * fills its Solution by writing there and reading it back rather than out
  * of its own data structures produces garbage, and this is what catches
- * it. */
+ * it. @p relax says which of the Solver solve a relaxation, as the
+ * formulation of @p block declares it [see attach_formulation_Solvers()],
+ * and @p form is the name of the formulation, to be written before that of
+ * the Solver when there is more than one. */
 
-static bool check_solutions( SingleFlowDCRBlock * block , double tol )
+static bool check_solutions( SingleFlowDCRBlock * block , double tol ,
+                             const std::vector< bool > & relax_of ,
+                             const std::string & form )
 {
  bool ok = true;
  std::size_t k = 0;
 
  for( auto slvr : block->get_registered_solvers() ) {
-  const std::string me = "S" + std::to_string( k );
-  const bool relax = is_relaxation( k++ );
+  const std::string me = ( form.empty() ? "" : form + " " ) + "S" +
+                         std::to_string( k );
+  const bool relax = ( k < relax_of.size() ) && relax_of[ k ];
+  ++k;
 
   if( ! slvr->has_var_solution() )
    continue;
@@ -331,55 +338,74 @@ int main( int argc , char ** argv )
  filename_optional = true;
 
  process_args( argc , argv , process_specific_arg );
- require_solver_config();
 
  if( n_nodes < 2 ) {
   std::cerr << "Error: at least two nodes are needed" << std::endl;
   exit( 1 );
   }
 
- // the Block: either the given netCDF file or a random instance - - - - - -
+ // the formulations of the BlockConfig: the list of -F, the one of -B, or none
+ // [see get_formulations()]
+ auto forms = get_formulations( true );
 
- SingleFlowDCRBlock * block;
- if( ! filename.empty() ) {
-  block = dynamic_cast< SingleFlowDCRBlock * >(
-                                       Block::deserialize( filename ) );
-  if( ! block ) {
-   std::cerr << "Error: " << filename
-             << " does not contain a SingleFlowDCRBlock" << std::endl;
-   exit( 1 );
+ // the Block, once per formulation: either the given netCDF file or a random
+ // instance, the same for all of them - - - - - - - - - - - - - - - - - - -
+
+ std::vector< Block * > blocks;
+ std::vector< Configuration * > sconfs;
+ std::vector< std::vector< bool > > relax;
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
+  SingleFlowDCRBlock * block;
+  if( ! filename.empty() ) {
+   block = dynamic_cast< SingleFlowDCRBlock * >(
+                                        Block::deserialize( filename ) );
+   if( ! block ) {
+    std::cerr << "Error: " << filename
+              << " does not contain a SingleFlowDCRBlock" << std::endl;
+    exit( 1 );
+    }
    }
+  else {
+   rg.seed( seed );
+   block = dynamic_cast< SingleFlowDCRBlock * >(
+                        Block::new_Block( "SingleFlowDCRBlock" ) );
+   build_random_instance( block );
+   }
+
+  // configure it - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  if( forms.configs[ k ] )
+   b_config_Block( block , forms.configs[ k ] , forms.file );
+
+  auto sconf = solver_config_of( forms , k );
+  relax.push_back( attach_formulation_Solvers( block , sconf , forms , k ) );
+
+  blocks.push_back( block );
+  sconfs.push_back( sconf );
   }
- else {
-  rg.seed( seed );
-  block = dynamic_cast< SingleFlowDCRBlock * >(
-                       Block::new_Block( "SingleFlowDCRBlock" ) );
-  build_random_instance( block );
-  }
 
- // configure it- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ delete( forms.owner );
 
- if( ! bconf_file.empty() )
-  b_config_Block( block , Configuration::deserialize( bconf_file ) ,
-                  bconf_file );
-
- auto sconf = Configuration::deserialize( sconf_file );
- s_config_Block( block , sconf , sconf_file );
-
- // solve it and cross-check what the Solver say - - - - - - - - - - - - - -
+ // solve them and cross-check what the Solver say- - - - - - - - - - - - -
 
  c_double tol = 1e-5;
- bool ok = SolveAll( block , RefObjective , tol );
+ bool ok = SolveFormulations( blocks , forms.names , read_bounds ,
+                              RefObjective , tol , {} , relax );
 
  // then check the Solution they produce - - - - - - - - - - - - - - - - - -
 
- ok &= check_solutions( block , 1e-4 );
+ for( std::size_t k = 0 ; k < blocks.size() ; ++k )
+  ok &= check_solutions( static_cast< SingleFlowDCRBlock * >( blocks[ k ] ) ,
+                         1e-4 , relax[ k ] ,
+                         blocks.size() > 1 ? forms.names[ k ] : "" );
 
  // clean up- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- s_config_Block( block , sconf );  // sconf has been clear()-ed before
- delete( sconf );
- delete( block );
+ for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
+  s_config_Block( blocks[ k ] , sconfs[ k ] );  // clear()-ed before
+  delete( sconfs[ k ] );
+  delete( blocks[ k ] );
+  }
 
  return( ok ? 0 : 1 );
 

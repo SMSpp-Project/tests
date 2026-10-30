@@ -48,7 +48,8 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::TwoStageStochasticBlock)
 
-    add_executable(TSSB_test test.cpp benders_form.cpp ../common_utils.cpp)
+    add_executable(TSSB_test test.cpp benders_form.cpp ../stochastic_test.cpp
+                             ../common_utils.cpp)
     target_include_directories(TSSB_test PRIVATE ..)
     target_link_libraries(TSSB_test PRIVATE SMS++::TwoStageStochasticBlock)
 

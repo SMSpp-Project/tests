@@ -2,7 +2,8 @@
 # - - - - - - - - - - - - - - - - DCNBCfg.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockConfig for all the DCNetworkBlock of a UCBlock,
-# selecting the network formulation (read by DCNetworkBlock::generate_abstract_
+# selecting the network formulation (read by
+# DCNetworkBlock::generate_abstract_
 # variables). A no-op on instances without a DCNetworkBlock.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

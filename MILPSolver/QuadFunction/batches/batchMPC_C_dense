@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# usage: batchMPC_C_dense < exe file >
+#        < exe file > = path of the executable file, default ./MILPSolver_QuadFunction_test
+#
+# runs MILPSolver_QuadFunction_test with the dense QP :MILPSolver of
+# LPPar_CL_C-dense.txt (DAQPMILPSolver, QPOASESMILPSolver, ProxQPMILPSolver,
+# QPMADMILPSolver, QuadProgMILPSolver, HPIPMMILPSolver) over the problems of
+# model predictive control in robotics of mpc_qpbenchmark, written as LP files
+# by qpb2lp.py; QUADCMPC1 and QUADCMPC2 are left out: QPOASESMILPSolver reaches
+# its time limit on the first, and on both QPMADMILPSolver and
+# QuadProgMILPSolver, on the Hessian regularized by 1e-6, end up to 5% away
+# from the optimum or declare them infeasible
+
+# the common part, which reads the argument [see qf_battery.sh]
+source "$(dirname "$0")/qf_battery.sh" "$@"
+
+qf_run_list C LPPar_CL_C-dense.txt \
+  ./MPC/LIPMWALK0.lp ./MPC/LIPMWALK1.lp ./MPC/LIPMWALK10.lp \
+  ./MPC/LIPMWALK11.lp ./MPC/LIPMWALK12.lp ./MPC/LIPMWALK13.lp \
+  ./MPC/LIPMWALK14.lp ./MPC/LIPMWALK15.lp ./MPC/LIPMWALK16.lp \
+  ./MPC/LIPMWALK17.lp ./MPC/LIPMWALK18.lp ./MPC/LIPMWALK19.lp \
+  ./MPC/LIPMWALK2.lp ./MPC/LIPMWALK20.lp ./MPC/LIPMWALK21.lp \
+  ./MPC/LIPMWALK22.lp ./MPC/LIPMWALK23.lp ./MPC/LIPMWALK24.lp \
+  ./MPC/LIPMWALK25.lp ./MPC/LIPMWALK26.lp ./MPC/LIPMWALK27.lp \
+  ./MPC/LIPMWALK28.lp ./MPC/LIPMWALK29.lp ./MPC/LIPMWALK3.lp \
+  ./MPC/LIPMWALK4.lp ./MPC/LIPMWALK5.lp ./MPC/LIPMWALK6.lp \
+  ./MPC/LIPMWALK7.lp ./MPC/LIPMWALK8.lp ./MPC/LIPMWALK9.lp \
+  ./MPC/QUADCMPC3.lp ./MPC/QUADCMPC4.lp ./MPC/WHLIPBAL0.lp \
+  ./MPC/WHLIPBAL1.lp ./MPC/WHLIPBAL10.lp ./MPC/WHLIPBAL11.lp \
+  ./MPC/WHLIPBAL12.lp ./MPC/WHLIPBAL13.lp ./MPC/WHLIPBAL14.lp \
+  ./MPC/WHLIPBAL15.lp ./MPC/WHLIPBAL16.lp ./MPC/WHLIPBAL17.lp \
+  ./MPC/WHLIPBAL18.lp ./MPC/WHLIPBAL19.lp ./MPC/WHLIPBAL2.lp \
+  ./MPC/WHLIPBAL20.lp ./MPC/WHLIPBAL21.lp ./MPC/WHLIPBAL22.lp \
+  ./MPC/WHLIPBAL23.lp ./MPC/WHLIPBAL24.lp ./MPC/WHLIPBAL25.lp \
+  ./MPC/WHLIPBAL26.lp ./MPC/WHLIPBAL27.lp ./MPC/WHLIPBAL28.lp \
+  ./MPC/WHLIPBAL29.lp ./MPC/WHLIPBAL3.lp ./MPC/WHLIPBAL4.lp \
+  ./MPC/WHLIPBAL5.lp ./MPC/WHLIPBAL6.lp ./MPC/WHLIPBAL7.lp \
+  ./MPC/WHLIPBAL8.lp ./MPC/WHLIPBAL9.lp
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

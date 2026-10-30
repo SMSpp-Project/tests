@@ -4,9 +4,9 @@
 # A txt description of a ComputeConfig that changes nothing, i.e., that
 # leaves every parameter of the Solver it configures at its default: every
 # Solver of the flow relaxation of this suite runs as it comes, hence every
-# ComputeConfig of BSPar2.txt and of MCF/BSPar2.txt is this one, and a Solver
-# that wanted something of its own would name it as the differential override
-# of this file
+# ComputeConfig of MCFBSCfg.txt and of MCFBSCfg-mcf.txt is this one, and a
+# Solver that wanted something of its own would name it as the differential
+# override of this file
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

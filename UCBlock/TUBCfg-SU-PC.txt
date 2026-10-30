@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - TUBCfg-SU-PC.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - TUBCfg-SU-PC.txt  - - - - - - - - - - - - - - -
 #
 # The BlockConfig of a ThermalUnitBlock that selects the SU formulation with
 # Perspective Cuts (static_variables = 12).
@@ -46,5 +46,5 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END TUBCfg-SU-PC.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END TUBCfg-SU-PC.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

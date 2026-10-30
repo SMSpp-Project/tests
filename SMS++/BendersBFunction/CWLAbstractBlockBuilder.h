@@ -1,5 +1,5 @@
 /*--------------------------------------------------------------------------*/
-/*---------------------- File CWLAbstractBlockBuilder -------------------*/
+/*---------------------- File CWLAbstractBlockBuilder ----------------------*/
 /*--------------------------------------------------------------------------*/
 /** @file
  * Reads an instance of the Capacitated Warehouse Location problem and

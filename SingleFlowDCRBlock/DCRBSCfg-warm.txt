@@ -1,0 +1,65 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - DCRBSCfg-warm.txt - - - - - - - - - - - - - - -
+#
+# A txt description of the BlockSolverConfig of a SingleFlowDCRBlock that is
+# a flow of a MultiFlowDCRBlock, solved by the SingleFlowDCRBendersSolver
+# inside the LagrangianDualSolver of BSPar-multi-warm.txt, as in
+# DCRBSCfg-benders.txt but with intWarmLambda 1: the search for the
+# multiplier starts from the critical pairs of the points solved earlier,
+# instead of from 1
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+SingleFlowDCRBendersSolver      # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# ComputeConfig of the SingleFlowDCRBendersSolver - - - - - - - - - - - - - -
+ComputeConfig         # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intWarmLambda    1 # start the multiplier from the past critical pairs
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END DCRBSCfg-warm.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

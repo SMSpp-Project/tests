@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - -  BSPar-MMCF-LDLD.txt - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - BSPar-MMCF-LDLD.txt - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a TwoStageStochasticBlock
 # whose scenarios are MMCFBlock of a network design problem, comparing the
@@ -83,5 +83,5 @@ str_LagBF_BSCfg LPBSCfg-LD.txt # BlockSolverConfig of the LagBF
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - -  END BSPar-MMCF-LDLD.txt - - - - - - - - - - - - - 
+# - - - - - - - - - - - - END BSPar-MMCF-LDLD.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

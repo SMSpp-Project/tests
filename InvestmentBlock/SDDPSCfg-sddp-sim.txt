@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - SDDPSCfg-sddp-sim.txt - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig with which sddp_solver -s simulates a scenario of
+# the SDDPBlock of batches-sddp/batch: the SDDPGreedySolver of the
+# InvestmentFunction [see GreedyCfg-sddp.txt], which here registers itself
+# the Solver of the UCBlock of a stage [see UCBSCfg-sddp.txt], after the
+# state of the previous stage has been passed to it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+SDDPGreedySolver      # name of 1st Solver (the simulator)
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+*GreedyCfg-sddp.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+# pointer to the "extra" Configuration: no BlockConfig, the
+# BlockSolverConfig of the UCBlock of each stage, and what of its Solution
+# is read
+SimpleConfiguration<std::vector<Configuration*>>
+3                  # the number of elements in the vector
+*                  # no BlockConfig
+*UCBSCfg-sddp.txt  # the BlockSolverConfig of the UCBlock of each stage
+SimpleConfiguration<std::map<std::string,Configuration*>>
+2                     # the number of elements in the map
+HydroSystemUnitBlock  *  # all of its solution
+ThermalUnitBlock      *  # all of its solution
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END SDDPSCfg-sddp-sim.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

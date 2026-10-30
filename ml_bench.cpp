@@ -743,28 +743,31 @@ static int compare( const Args & args ,
   const std::string path = join( args.data_dir , name );
 
   std::cout << "[" << ++done << "/" << names.size() << "] " << name
-            << std::flush;
+            << std::endl;
 
   InstanceResult r;
   r.name   = name;
   r.family = family_of( name );
 
-  // A is the baseline and never gets the weights
-  r.a = run_one( path , block_cfg , cfg_a , "" , args.filetype );
-  r.b = run_one( path , block_cfg , cfg_b , args.weights , args.filetype );
+  // each side says when it starts and how it ended, so that a side that
+  // never ends is seen as such while it runs
+  const auto side = [ & ]( const char * which , const std::string & cfg ,
+                           const std::string & weights ) {
+   std::cout << "   " << which << " ... " << std::flush;
+   auto res = run_one( path , block_cfg , cfg , weights , args.filetype );
+   if( res.solved )
+    std::cout << std::fixed << std::setprecision( 3 ) << res.seconds
+              << "s, " << res.iters << " it" << std::endl;
+   else
+    std::cout << "failed: " << ( res.error.empty()
+                                  ? "status " + std::to_string( res.status )
+                                  : res.error ) << std::endl;
+   return( res );
+   };
 
-  if( r.a.solved && r.b.solved )
-   std::cout << "   " << std::fixed << std::setprecision( 3 )
-             << r.a.seconds << "s / " << r.b.seconds << "s"
-             << "   " << r.a.iters << " / " << r.b.iters << " it"
-             << std::endl;
-  else {
-   std::cout << "   failed" << std::endl;
-   if( ! r.a.error.empty() )
-    std::cout << "      A: " << r.a.error << std::endl;
-   if( ! r.b.error.empty() )
-    std::cout << "      B: " << r.b.error << std::endl;
-   }
+  // A is the baseline and never gets the weights
+  r.a = side( "A" , cfg_a , "" );
+  r.b = side( "B" , cfg_b , args.weights );
 
   results.push_back( r );
   }

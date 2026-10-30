@@ -155,30 +155,6 @@
 #define USE_BundleSolver 1
 
 /*--------------------------------------------------------------------------*/
-// if nonzero, the 1st Solver attached to the UCBlock is detached
-// and re-attached to it at all iterations
-
-#define DETACH_1ST 0
-
-// if nonzero, the 2nd Solver attached to the UCBlock is detached and
-// re-attached to it at all iterations
-
-#define DETACH_2ND 0
-
-/*--------------------------------------------------------------------------*/
-// if nonzero, the two Block are not solved at every round of changes, but
-// only every SKIP_BEAT + 1 rounds. this allows changes to accumulate, and
-// therefore puts more pressure on the Modification handling of the Solver
-// (in case this tries to do "smart" things rather than dumbly processing
-// each one in turn)
-//
-// note that the number of rounds of changes is them multiplied by
-// SKIP_BEAT + 1, so that the input parameter still dictates the number of
-// Block solutions
-
-#define SKIP_BEAT 0
-
-/*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -241,9 +217,6 @@ const FunctionValue INF = SMSpp_di_unipi_it::Inf< FunctionValue >();
 
 Block * TestBlock;         // the [UC]Block that is solved
 
-std::mt19937 rg;           // base random generator
-std::uniform_real_distribution<> dis( 0.0 , 1.0 );
-
 // if not-NaN, the objective value of the (only) Solver attached to the Block
 // is compared against a reference value passed on the command line
 
@@ -251,16 +224,6 @@ std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-static double rndfctr( void )
-{
- // return a random number between 0.5 and 2, with 50% probability of being
- // < 1
- double fctr = dis( rg ) - 0.5;
- return( fctr < 0 ? - fctr : fctr * 4 );
- }
-
 /*--------------------------------------------------------------------------*/
 
 // test-specific command-line knobs, set by process_specific_arg(); the
@@ -1121,19 +1084,30 @@ static UCBlock * load( const std::string & path )
  }
 
 /*--------------------------------------------------------------------------*/
-/// gives the unit the formulation wf and builds the abstract representation
-/** A negative \p wf leaves the formulation of the unit alone. */
+/// gives the unit the BlockConfig bc and builds the abstract representation
+/** A null \p bc leaves the formulation of the unit alone. */
 
-static void generate( UCBlock * uc , int wf )
+static void generate( UCBlock * uc , Configuration * bc )
 {
- if( wf >= 0 ) {
-  BlockConfig bc;
-  bc.f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
-  bc.apply( uc->get_unit_block( 0 ) );
-  }
+ if( bc )
+  b_config_Block( uc->get_unit_block( 0 ) , bc , "" );
  uc->generate_abstract_variables();
  uc->generate_abstract_constraints();
  uc->generate_objective();
+ }
+
+/*--------------------------------------------------------------------------*/
+/// what the checks call the formulation that the BlockConfig bc gives
+
+static std::string formulation( Configuration * bc )
+{
+ int wf = 1;  // the T formulation, the one of a unit given no formulation
+ if( auto b = dynamic_cast< BlockConfig * >( bc ) )
+  if( auto sc = dynamic_cast< SimpleConfiguration< int > * >(
+				       b->f_static_variables_Configuration ) )
+   wf = sc->f_value;
+ return( "formulation " + std::to_string( wf & 7 ) +
+         ( ( wf & 8 ) ? " with P/C" : "" ) );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -1226,11 +1200,11 @@ static double solve( Block * b , Index i = 0 )
  * give, and its optimum is the same. Scaling must leave the data of the unit,
  * which are those of one copy, where they are. */
 
-static void check_model( const std::string & inst , int wf ,
+static void check_model( const std::string & inst , Configuration * bc ,
                          const std::string & what )
 {
  auto A = load( inst );
- generate( A , wf );
+ generate( A , bc );
  // the Solver is attached before the unit is scaled, as it is when an
  // InvestmentBlock scales it: what the scaling writes into the Objective
  // then comes back to the unit, which must not take it for a change of the
@@ -1247,13 +1221,10 @@ static void check_model( const std::string & inst , int wf ,
         what + ": the start-up cost of one copy is left alone" );
 
  auto B = load( inst );
- if( wf >= 0 ) {
-  BlockConfig bc;
-  bc.f_static_variables_Configuration = new SimpleConfiguration< int >( wf );
-  bc.apply( B->get_unit_block( 0 ) );
-  }
+ if( bc )
+  b_config_Block( B->get_unit_block( 0 ) , bc , "" );
  B->get_unit_block( 0 )->scale( Kappa , eNoMod , eNoMod );
- generate( B , -1 );
+ generate( B , nullptr );
 
  check( snapshot( A ) == snapshot( B ) ,
         what + ": scaled after == scaled before" );
@@ -1286,7 +1257,7 @@ static void check_dp( const std::string & inst , const std::string & dp ,
   return;
 
  auto uc = load( inst );
- generate( uc , -1 );
+ generate( uc , nullptr );
  auto tu = static_cast< ThermalUnitBlock * >( uc->get_unit_block( 0 ) );
  attach( tu , { dp , solver_name } );
 
@@ -1340,34 +1311,36 @@ static int test( void )
  const auto thermal = write( "thermal" , false );
  const auto nuclear = write( "nuclear" , true );
 
- // the seven formulations of the thermal unit, with and without the
- // perspective cuts, each of which lays the Objective out its own way
- for( int form = 0 ; form <= 6 ; ++form )
-  for( int pc = 0 ; pc <= 1 ; ++pc ) {
-   const int wf = form + 8 * pc;
-   check_model( thermal , wf ,
-                "thermal, formulation " + std::to_string( form ) +
-                ( pc ? " with P/C" : "" ) );
-   }
+ // the seven formulations of the thermal unit, without and with the
+ // perspective cuts, each of which lays the Objective out its own way: they
+ // are the BlockConfig that TUBForm.txt and TUBForm-PC.txt list, read from the
+ // directory the test is run in
+ auto plain = read_formulations( "TUBForm.txt" );
+ auto cuts = read_formulations( "TUBForm-PC.txt" );
+ for( auto vl : { plain , cuts } )
+  for( auto bc : vl->f_value )
+   check_model( thermal , bc , "thermal, " + formulation( bc ) );
 
- check_model( nuclear , -1 , "nuclear" );
+ check_model( nuclear , nullptr , "nuclear" );
 
  // a thermal unit asked to follow a reference schedule: the deviation from
  // it is weighed with the scale factor as every other term, the schedule
  // being that of one unit [see ThermalUnitBlock::generate_objective()]. The
  // DP Solvers know nothing of it, hence they are not asked about it
  const auto with_schedule = write( "schedule" , false , true );
- for( int form = 0 ; form <= 6 ; ++form )
-  check_model( with_schedule , form ,
-               "thermal with a schedule, formulation " +
-               std::to_string( form ) );
+ for( auto bc : plain->f_value )
+  check_model( with_schedule , bc ,
+               "thermal with a schedule, " + formulation( bc ) );
+
+ delete plain;
+ delete cuts;
 
  // the DP Solvers have no term for the deviation from a reference schedule,
  // hence they refuse a unit that has one instead of answering for a unit
  // that pays nothing to depart from its schedule
  if( ! solver_name.empty() ) {
   auto uc = load( with_schedule );
-  generate( uc , -1 );
+  generate( uc , nullptr );
   auto tu = uc->get_unit_block( 0 );
   for( const auto & dp : { "ThermalUnitDPSolver" , "ThermalUnitExtDPSolver" } ) {
    bool refused = false;
@@ -1390,7 +1363,7 @@ static int test( void )
  // put back
  {
   auto uc = load( thermal );
-  generate( uc , -1 );
+  generate( uc , nullptr );
   const auto before = snapshot( uc );
   const auto & d = uc->get_active_power_demand();
   const Index N = d.shape()[ 0 ];
@@ -1448,8 +1421,6 @@ int main( int argc , char ** argv )
  // standard params (instance positional + -B + -S) are parsed by
  // common_utils; the test only appends its own knobs
 
- assert( SKIP_BEAT >= 0 );
-
  docopt_desc = "SMS++ LagrangianDualSolver-on-UCBlock test.\n";
  short_opts += "r:V:";
  const std::vector< option > my_opts = {
@@ -1464,31 +1435,41 @@ int main( int argc , char ** argv )
 
  process_args( argc , argv , process_specific_arg );
 
- // both the BlockConfig (-B, the inner formulation) and the
- // BlockSolverConfig (-S) must be provided explicitly: the test never falls
- // back to a hardcoded default Configuration
- require_block_config();
- require_solver_config();
+ // both the BlockConfig (-B, the inner formulation), or the list of them
+ // (-F), and the BlockSolverConfig (-S) must be provided explicitly: the
+ // test never falls back to a hardcoded default Configuration
+ auto forms = get_formulations();
 
- // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ // read the Block, once per formulation, and attach the Solver(s) to it - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
- TestBlock = Block::deserialize( filename );
- if( ! TestBlock ) {
-  std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
-  exit( 1 );
-  }
-
- // attach the Solver(s) to the Block - - - - - - - - - - - - - - - - - - - -
- // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // do this by reading an appropriate BlockSolverConfig from file and
- // apply() it to the TestBlock; note that the BlockSolverConfig is
+ // the (meta-)BlockConfig of each formulation drives the *formulation* of the
+ // sub-Blocks: a SimpleConfiguration< map< classname, Configuration* >>
+ // mapping a Block classname to the BlockConfig to apply to every sub-Block of
+ // that class, dispatched by b_config_Block over the whole tree, the
+ // PolyhedralFunctionBlock inside a HydroSystemUnitBlock included: e.g.,
+ // InnerBCfg.txt -> ThermalUnitBlock formulation (TUBCfg.txt) and
+ // DCNetworkBlock formulation (DCNBCfg.txt, or the formulations that
+ // InnerBCfg-PTDF.txt and InnerBCfg-CYCLE.txt point at). How the sub-Blocks
+ // are *solved* inside the Lagrangian Dual is NOT set here: it descends
+ // entirely from the BlockSolverConfig, whose LagrangianDualSolver gives the
+ // inner Solver of the LagBFunctions by str_LagBF_BSCfg, and whose inner
+ // BundleSolver is told the components that are never "easy" by vstrNoEasy
+ // (see BSPar.txt). Each copy reads its own BlockSolverConfig, which is
  // clear()-ed and kept to do the cleanup at the end
 
- BlockSolverConfig * bsc;
- {
-  auto c = Configuration::deserialize( sconf_file );
-  bsc = dynamic_cast< BlockSolverConfig * >( c );
+ std::vector< Block * > blocks;
+ std::vector< BlockSolverConfig * > bscs;
+ std::vector< std::vector< bool > > relax;
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
+  auto ibc = forms.configs[ k ];
+  auto b = Block::deserialize( filename );
+  if( ! b ) {
+   std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
+   exit( 1 );
+   }
+
+  auto c = solver_config_of( forms , k );
+  auto bsc = dynamic_cast< BlockSolverConfig * >( c );
   if( ! bsc ) {
    std::cerr << "Error: configuration file not a BlockSolverConfig"
              << std::endl;
@@ -1496,42 +1477,26 @@ int main( int argc , char ** argv )
    exit( 1 );
    }
 
-  // load the inner (meta-)BlockConfig that drives the *formulation* of the
-  // sub-Blocks: a SimpleConfiguration< map< classname, Configuration* >>
-  // mapping a Block classname to the BlockConfig to apply to every sub-Block of
-  // that class, dispatched by b_config_Block over the whole tree, the
-  // PolyhedralFunctionBlock inside a HydroSystemUnitBlock included (see
-  // tests/compare_formulations): e.g., InnerBCfg.txt -> ThermalUnitBlock
-  // formulation (TUBCfg.txt) and DCNetworkBlock formulation (DCNBCfg.txt, or
-  // the variants that InnerBCfg-PTDF.txt and InnerBCfg-CYCLE.txt point at).
-  // How the sub-Blocks are *solved* inside the Lagrangian Dual is NOT set
-  // here: it descends entirely from the BlockSolverConfig, whose
-  // LagrangianDualSolver gives the inner Solver of the LagBFunctions by
-  // str_LagBF_BSCfg, and whose inner BundleSolver is told the components
-  // that are never "easy" by vstrNoEasy (see BSPar.txt)
-  auto ibc = Configuration::deserialize( bconf_file );
-  if( ! ibc ) {
-   std::cerr << "Error: cannot load BlockConfig from " << bconf_file
-             << std::endl;
-   delete( c );
-   exit( 1 );
-   }
-
-  b_config_Block( TestBlock , ibc , bconf_file );
-
-  // cleanup the inner (meta-)BlockConfig (its destructor deletes the contained
-  // per-classname BlockConfig)
-  delete( ibc );
+  b_config_Block( b , ibc , forms.file );
 
   // bsc may be a plain BlockSolverConfig or a meta-config; s_config_Block
   // dispatches on the runtime type, applies, and clear()s for cleanup
-  s_config_Block( TestBlock , bsc , sconf_file );
+  relax.push_back( attach_formulation_Solvers( b , bsc , forms , k ) );
 
-  if( TestBlock->get_registered_solvers().empty() ) {
+  if( b->get_registered_solvers().empty() ) {
    std::cout << std::endl << "no Solver registered to the Block!" << std::endl;
    exit( 1 );
    }
+
+  blocks.push_back( b );
+  bscs.push_back( bsc );
   }
+
+ // cleanup the (meta-)BlockConfig (their destructor deletes the contained
+ // per-classname BlockConfig)
+ delete( forms.owner );
+
+ TestBlock = blocks.front();
 
  // open log-file- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1564,7 +1529,13 @@ int main( int argc , char ** argv )
  // of its ComputeConfig unless -E overrides it: the batches do so for the
  // PrimalProximalHeur, whose dblRelAcc is what the inner Solver is asked
  // and not what its primal solution is worth
- bool AllPassed = SolveAll( TestBlock , RefObjective , 1e-5 );
+ //
+ // with several formulations of the BlockConfig, each copy is cross-checked
+ // so, and then the Solver of all the copies against each other, since
+ // whatever the formulation they bound the same optimum [see
+ // SolveFormulations()]
+ bool AllPassed = SolveFormulations( blocks , forms.names , read_bounds ,
+                                     RefObjective , 1e-5 , {} , relax );
 
  // each Solver that has a solution must have one that is worth what the
  // Solver says: the cross-check compares the values the Solver report with
@@ -1572,80 +1543,16 @@ int main( int argc , char ** argv )
  // It is the only place where the solution the LagrangianDualSolver
  // RECONSTRUCTS is read back, that being written from the convex
  // combination the important linearization of each LagBFunction describes
- AllPassed &= check_var_solutions( TestBlock );
+ for( auto b : blocks )
+  AllPassed &= check_var_solutions( b );
 
  // a Solver that solves a relaxation is not covered by the check above, the
  // value it reports not being that of what it writes: what its reconstructed
  // solution can be held to is the rows this Block couples, i.e. the ones the
  // relaxation has dualised, which it satisfies where the relaxation is exact
- AllPassed &= check_relaxation_solutions( TestBlock , RelaxationViol ,
-                                          RefObjective );
-
- // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // now, for n_repeat times:
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- //
- // then the TestBlock is re-solved with both Solver
-
- /*!!
- for( Index rep = 0 ; rep < n_repeat * ( SKIP_BEAT + 1 ) ; ) {
-  LOG1( rep << ": ");
-
-  // do stuff 1 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  if( ( wchg & 1 ) && ( dis( rg ) <= p_change ) )
-   if( Index tochange = Index( dis( rg ) * n_change ) ) {
-    LOG1( "... " << tochange << " ... - " );
-
-    }
-
-  // do stuff 2 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  if( ( wchg & 2 ) && ( dis( rg ) <= p_change ) )
-   if( Index tochange = min( m - 1 , Index( dis( rg ) * n_change ) ) ) {
-    LOG1( "... " << tochange << " ..." );
-
-    
-    if( dis( rg ) <= 0.5 ) {  // in 50% of the cases do a ranged change
-     LOG1( "(r) - " );
-
-     }
-    else {  // in the other 50% of the cases, do a sparse change
-     LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange , rg ) );
-
-     }
-
-    }
-
-  // ...
-
-
-  // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -
-
-  #if( LOG_LEVEL >= 3 )
-   ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
-		                     MILPSolver::strOutputFile , "LPBlock-" +
-		                     std::to_string( rep ) + ".lp" );
-  #endif
-
-  // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -
-  // ... every SKIP_BEAT + 1 rounds
-
-  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) )
-   AllPassed &= SolveBoth();
-  #if( LOG_LEVEL >= 1 )
-  else
-   std::cout << std::endl;
-  #endif
-
-  }  // end( main loop )- - - - - - - - - - - - - - - - - - - - - - - - - - -
-     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-     !!*/
+ for( auto b : blocks )
+  AllPassed &= check_relaxation_solutions( b , RelaxationViol ,
+                                           RefObjective );
 
  #if( LOG_LEVEL >= 0 )
   if( ! std::isnan( RefObjective ) ||
@@ -1665,18 +1572,20 @@ int main( int argc , char ** argv )
  // apply() the clear()-ed BlockSolverConfig to cleanup Solver
  //!bsc->apply( TestBlock );
 
- // then delete the BlockSolverConfig
- delete( bsc );
+ for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
+  // then delete the BlockSolverConfig
+  delete( bscs[ k ] );
 
- #if USE_BundleSolver
-  // since some Solver have been attached "by hand" to some sub-Block,
-  // unregister "by hand" any remaining Solver attached to them
-  for( auto sb : TestBlock->get_nested_Blocks() )
-   sb->unregister_Solvers();
- #endif
+  #if USE_BundleSolver
+   // since some Solver have been attached "by hand" to some sub-Block,
+   // unregister "by hand" any remaining Solver attached to them
+   for( auto sb : blocks[ k ]->get_nested_Blocks() )
+    sb->unregister_Solvers();
+  #endif
 
- // finally the AbstractBlock can be deleted
- delete( TestBlock );
+  // finally the AbstractBlock can be deleted
+  delete( blocks[ k ] );
+  }
 
  // terminate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

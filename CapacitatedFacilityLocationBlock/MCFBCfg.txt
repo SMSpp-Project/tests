@@ -1,0 +1,49 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - MCFBCfg.txt - - - - - - - - - - - - - - - -
+#
+# The BlockConfig of the MCFBlock that a CapacitatedFacilityLocationBlock
+# gives as its R3Block, the flow relaxation [see R3BCfg-MCF.txt]: it changes
+# nothing.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the ComputeConfig object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static_constraints
+*    # [none]
+
+# dynamic_constraints
+*    # [none]
+
+# static_variables
+*    # [none]
+
+# dynamic_variables
+*    # [none]
+
+# objective
+*    # [none]
+
+# is_feasible
+*    # [none]
+
+# is_optimal
+*    # [none]
+
+# solution
+*    # [none]
+
+# extra
+*    # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END MCFBCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

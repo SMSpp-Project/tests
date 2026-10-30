@@ -1,11 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - NUBCfg-T-F2-SS.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - NUBCfg-T-F2-SS.txt  - - - - - - - - - - - - - - -
 #
 # The BlockConfig of a NuclearUnitBlock that selects the T formulation of the
 # thermal part, without Perspective Cuts, and the formulation F2 of the
 # operating rules, with the stability after a start-up by rows of single
-# instants (StartUpStabSingle) (static_variables = 2561), for the
-# BlockCopySolver of BSCfg-nuc-forms.txt and BSCfg-nuc-graph.txt.
+# instants (StartUpStabSingle) (static_variables = 2561), one of the
+# formulations of NUBForm-rules.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -34,7 +34,8 @@ BlockConfig # exact type of the Configuration object
 # +8192 the rows of the reach of the output from a start-up and towards
 # a shut-down, +16384 the caps of the runs of the network formulations by
 # the reach of the rules, +32768 the rows of F2 on the private outputs of
-# the network formulations, +65536 the perspective cuts on the bands
+# the network formulations, +65536 the perspective cuts on the bands,
+# +131072 the bands by configurations (F3b, with F2)
 SimpleConfiguration<int>
 2561
 
@@ -57,5 +58,5 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END NUBCfg-T-F2-SS.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - END NUBCfg-T-F2-SS.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

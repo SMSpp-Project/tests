@@ -1,14 +1,16 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BSCfg-nuc-lp.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  BSCfg-nuc-lp.txt - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig that attaches, to a (single-TUB) NuclearUnitBlock, a
 # :MILPSolver as the 1st (reference) Solver and the EXT DP solver
 # (NuclearUnitExtDPSolver) as the 2nd Solver, as BSCfg-nuc.txt does, with the
-# :MILPSolver solving the continuous relaxation (intRelaxIntVars 1): what the
-# two Solver report is then the gap of the formulation, the DP returning the
-# integer optimum and the MILP the bound its rows give.
-#
-#   Antonio Frangioni, Donato Meoli
+# :MILPSolver solving the continuous relaxation by its separation loop
+# (intRelaxIntVars 2), which adds the Perspective Cuts and the separated rows
+# of the operating rules until none is violated: what the two Solver report
+# is then the gap of the formulation, the DP returning the integer optimum
+# and the MILP the bound its rows give. With intRelaxIntVars 1 no row would
+# be separated, and the bound would be that of the formulation without the
+# Perspective Cuts, a much weaker one.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -40,7 +42,7 @@ ComputeConfig # exact type of the ComputeConfig object
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+intRelaxIntVars 2 # the continuous relaxation, with the separated rows
 intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
 
 0 # number of double parameters
@@ -119,5 +121,5 @@ ComputeConfig # exact type of the ComputeConfig object
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BSCfg-nuc-lp.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END BSCfg-nuc-lp.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -53,6 +53,7 @@ set(SMSPP_TEST_LABELS_SingleFlowDCRBlock        "SingleFlowDCRBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SATBlock                  "SATBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SatellitesBlock           "BundleSolver;LagrangianDualSolver;SatellitesBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_MultiKnapsackAssignBlock  "BundleSolver;LagrangianDualSolver;MultiKnapsackAssignBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_HQPBlock                  "HQPBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test
 # it registered, dynamic batch-file test names included, and tell ctest that
@@ -60,7 +61,10 @@ set(SMSPP_TEST_LABELS_MultiKnapsackAssignBlock  "BundleSolver;LagrangianDualSolv
 # failed: a tester exits with it when the configuration it is given names only
 # Solver that this build does not have, which is the case of a configuration
 # asking for a Solver of an external library that is not there
-# [see drop_missing_Solvers() of common_utils.cpp].
+# [see drop_missing_Solvers() of common_utils.cpp]. Every test runs with
+# OpenBLAS on one thread, as the batteries do [see batch_common.sh]: the
+# library starts one thread per core when it is loaded, and nothing here
+# uses them.
 function(smspp_label_tests)
     get_filename_component(_dir "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
     get_property(_tests DIRECTORY PROPERTY TESTS)
@@ -68,6 +72,8 @@ function(smspp_label_tests)
         return()
     endif ()
     set_tests_properties(${_tests} PROPERTIES SKIP_RETURN_CODE 77)
+    set_property(TEST ${_tests} APPEND PROPERTY
+                 ENVIRONMENT "OPENBLAS_NUM_THREADS=1")
     if (DEFINED SMSPP_TEST_LABELS_${_dir})
         set_tests_properties(${_tests} PROPERTIES
                              LABELS "${SMSPP_TEST_LABELS_${_dir}}")

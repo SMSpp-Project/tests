@@ -1,0 +1,25 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBForm-LD.txt - - - - - - - - - - - - - - -
+#
+# The formulations of the "meta"-BlockConfig of an InvestmentBlock that the
+# batteries of this suite compare on the instances whose inner Block can
+# also be solved by the recursive Lagrangian dual: the inner Block solved as
+# a linear program (InnerBCfg.txt) and by that Lagrangian dual
+# (InnerBCfg-LD.txt), the two being the same problem [see -F of IB_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*InnerBCfg.txt          # 1st formulation: linear program
+*InnerBCfg-LD.txt       # 2nd formulation: Lagrangian dual
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBForm-LD.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

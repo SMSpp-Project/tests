@@ -1,12 +1,16 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - BSPar-bx-pardfs.txt - - - - - - - - - - - - - -
 #
-# Single-exact-solver BlockSolverConfig: the greedy relaxation (which brackets
-# the optimum) plus the BranchAndXSolver exploring the tree depth-first across
-# 4 threads (intSolveMethod = DFS, intMaxThread = 4), the parallel relaxation-
+# Single-exact-solver BlockSolverConfig: the greedy relaxation (which
+# brackets
+# the optimum) plus the BranchAndXSolver exploring the tree depth-first
+# across
+# 4 threads (intSolveMethod = DFS, intMaxThread = 4), the parallel
+# relaxation-
 # agnostic B&B. It is the "BX-parDFS" entry of the hard-instance lineups
 # (batch-jooken and batch-pisinger-large). The inner relaxation (the greedy
-# leaf) is set by the shared BX-baseCfg.txt; only the exploration mode and the
+# leaf) is set by the shared BX-baseCfg.txt; only the exploration mode and
+# the
 # thread count are overridden here via the '*BX-baseCfg.txt +' cascade.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -30,7 +34,8 @@ BranchAndXSolver                      # 2nd: BX, parallel depth-first
 *GRCfg.txt
 
 # 2: BranchAndXSolver (the base config + the exploration-mode override): the
-# inner greedy leaf comes from BX-baseCfg.txt, only the exploration is changed
+# inner greedy leaf comes from BX-baseCfg.txt, only the exploration is
+# changed
 *BX-baseCfg.txt +
 
 1  # f_diff == 1 ==> only the entries below are changed

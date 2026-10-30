@@ -23,7 +23,12 @@ DEFAULT_PAR=BSPar-DP.txt
 # which has a duality gap: it is declared as such, so that it is held to
 # solving its own problem exactly while of this one it only bounds the side
 # a relaxation bounds [see BSPar-DP.txt]
-REL="${REL:-,r}"
+REL="${REL:-,r,,r}"
+# the LagrangianDualRelaxationSolver of the BlockSolverConfig (the 4th
+# Solver) is a relaxation: its upper bound is the other side of the
+# relaxation, not of this problem, so it is declared one in REL, and only
+# its lower bound is held, to correctness alone [see BSPar-DP.txt]
+EPS="${EPS:-,,,inf}"
 
 parse_batch_args "$@"
 
@@ -39,7 +44,7 @@ for size in $sizes; do
 
     what=${DATADIR}/${size}_0_${seed}_w.nc4
 
-    run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" -B InnerBCfg.txt
 
   done
 done
@@ -56,9 +61,39 @@ for size in $sizes; do
 
     what=${DATADIR}/${size}_${seed}_w.nc4
 
-    run_test "$exe" "$what" -S "$par" -R "$REL" -B InnerBCfg.txt
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" -B InnerBCfg.txt
 
   done
+done
+
+# a bus UCBlock with a constant in its own Objective - - - - - - - - - - - -
+# Two thermal units over 4 instants and the constant term of the network,
+# which with a single node is kept in the Objective of the UCBlock [see
+# "NetworkConstantTerms" in UCBlock.h], +1000 in bus_const_pos.nc4 and -1000
+# in bus_const_neg.nc4, with their optimum by hand [see data/gen_constant.py
+# of UCBlock, whose output this table is]. Every Solver has to count the
+# constant in the value of its solutions and in its bounds alike: a value
+# without it is either below the Lagrangian bound, which has it, and the
+# solution is thrown away, or not the value of the solution it writes. The
+# instances are in the data from version 2026-10-13, and they are skipped
+# with older data
+
+DATADIR=../../UCBlock/data/nc4/constant
+
+declare -A CONST_OBJ
+
+CONST_OBJ[bus_const_pos.nc4]=10070
+CONST_OBJ[bus_const_neg.nc4]=8070
+
+for what in ${DATADIR}/bus_const_*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" -B InnerBCfg.txt \
+             -r "${CONST_OBJ[$(basename "$what")]}"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

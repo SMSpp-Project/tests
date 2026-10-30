@@ -1,0 +1,50 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  PIQPCfg-C.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of PIQPMILPSolver in LPPar_CL_C.txt: that of
+# QPCfg-C.txt, with the sparse backend of PIQP, since the models of the
+# class have up to 15000 variables.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*QPCfg-C.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intPIQPBackend  1  # the sparse backend of PIQP
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END PIQPCfg-C.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

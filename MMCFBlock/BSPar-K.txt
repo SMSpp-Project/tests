@@ -1,11 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-K.txt - - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
 # two different Solver: a :MILPSolver and a LagrangianDualSolver using a
 # BundleSolver as the inner Solver
-#
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -73,5 +71,5 @@ GetInnerVarSolConfig.txt
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-K.txt - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

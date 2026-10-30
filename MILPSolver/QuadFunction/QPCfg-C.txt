@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - QPCfg-C.txt - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of a QP :MILPSolver of the tester of the quadratic
+# functions on the continuous relaxation of a model (intRelaxIntVars), with
+# the time limit of the base class: LPPar_CL_C.txt and LPPar_CL_C-dense.txt
+# include it for DAQPMILPSolver, QPOASESMILPSolver, ClarabelMILPSolver,
+# OSQPMILPSolver, ProxQPMILPSolver and HPIPMMILPSolver, and through
+# MOSEKCfg-C.txt, PIQPCfg-C.txt and QPMADCfg-C.txt for MOSEKMILPSolver,
+# PIQPMILPSolver and QPMADMILPSolver.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+2 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb      0      # LogVerb, log verbosity of the MILPSolver
+intRelaxIntVars 1      # Relax Integer variables
+
+1 # number of double parameters
+
+# now all the double parameters
+dblMaxTime      30     # time limit of the solve
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END QPCfg-C.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

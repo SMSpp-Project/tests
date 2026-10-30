@@ -186,11 +186,9 @@ struct SolveResult {
  double obj = 0.0;
  std::vector< double > first_stage;
  };
-// forward declaration: the UC first-stage extractor,
-// which collects only the generated design variables. Preferred over the
-// library get_first_stage_variables(), whose StaticAbstractPath may contain
-// entries that resolve to null in instances where some units are not in design
-// mode (example: the larger s_5 network)
+// forward declaration: the UC first-stage extractor, which collects the
+// generated design variables from the UCBlock itself rather than from the
+// StaticAbstractPath of the file
 static std::vector< ColVariable * >
 uc_first_stage_vars( TwoStageStochasticBlock * tssb );
 
@@ -346,10 +344,9 @@ static bool first_stage_shared( const std::string & file )
  Block * b1 = tssb->get_first_stage_block( 1 );
  for( const auto & p : tssb->get_paths_to_static_here_and_now_vars() ) {
   const auto n = p->get_number_elements< ColVariable >( b0 );
-  auto * e0 = p->get_element< ColVariable >( b0 );
-  auto * e1 = p->get_element< ColVariable >( b1 );
-  for( Index j = 0 ; j < n ; ++j )
-   if( e0 + j == e1 + j )           // same instance across scenarios -> shared
+  for( Index j = 0 ; j < n ; ++j )  // same instance across scenarios: shared
+   if( p->get_element< ColVariable >( b0 , j ) ==
+       p->get_element< ColVariable >( b1 , j ) )
     return true;
  }
  return false;

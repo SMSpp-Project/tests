@@ -1,0 +1,28 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - NUBForm-graph.txt - - - - - - - - - - - - - - -
+#
+# The formulations of the BlockConfig of a NuclearUnitBlock that
+# batch-nuclear compares outside CI, since they are far slower than those of
+# NUBForm.txt: the T formulation of the thermal unit with Perspective Cuts,
+# as the reference, and the flows on the label graph of the operating rules
+# on the T formulation without Perspective Cuts, without and with the
+# counters of the day [see NUBCfg-T-F5.txt and NUBCfg-T-F6.txt]. They all
+# describe the same set of schedules [see -F of TUDPS_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+3  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*TUBCfg-T-PC.txt        # 1st formulation: T-PC
+*NUBCfg-T-F5.txt        # 2nd formulation: F5
+*NUBCfg-T-F6.txt        # 3rd formulation: F6
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END NUBForm-graph.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,35 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  IFCfg-sddp.txt - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the InvestmentFunction over an SDDPBlock: that of
+# IFCfg.txt, with the BlockSolverConfig of the SDDPBlock in the extra
+# Configuration [see SDDPBSCfg-sddp.txt].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*IFCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+# pointer to the "extra" Configuration: the BlockSolverConfig of the
+# SDDPBlock
+SimpleConfiguration<std::map<std::string,Configuration*>>
+1                  # the number of elements in the map
+BlockSolverConfig  *SDDPBSCfg-sddp.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END IFCfg-sddp.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

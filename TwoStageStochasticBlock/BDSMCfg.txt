@@ -49,7 +49,8 @@ inttSPar1        12 # long-term t-strategy (0 = none, 4 = soft, 8 = hard,
                     # 12 = balancing): the master knows nothing of the scale
                     # of the design Variable, and letting it balance the
                     # stabilization against the model is what finds it
-intMaxNrEvls      2 # maximum number of function evaluations at each iteration
+# maximum number of function evaluations at each iteration
+intMaxNrEvls      2
 
 15 # number of double parameters
 
@@ -74,7 +75,8 @@ dblmxDecr       0.1 # max decrease of t
 dblmnDecr      0.66 # min decrease of t (each time it is decreased)
 dbltMaior      1e+6 # maximum value for t
 dbltMinor      1e-4 # minimum value for t
-dbltInit       1e+5 # initial value for t: a Variable that lives on 1e5 is not
+# initial value for t: a Variable that lives on 1e5 is not
+dbltInit       1e+5
                     # moved by steps of order one
 dbltSPar2     0.001 # parameter for the long-term t-strategy
 

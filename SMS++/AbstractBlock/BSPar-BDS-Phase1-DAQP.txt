@@ -1,0 +1,66 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - BSPar-BDS-Phase1-DAQP.txt - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a Block having a single
+# BendersDecompositionSolver attached, that of BSPar-BDS-Phase1.txt with the
+# subproblems solved by DAQP (BDSSCfg-DAQP.txt), which gives no Farkas
+# certificate: an infeasible subproblem is cut away by the phase one alone,
+# which needs the certificate only if its cut does not cut the incumbent.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+0  # the BlockSolverConfig is not a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+BendersDecompositionSolver # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+*BDSCfg-Phase1.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+str_Bsub_BSCfg  BDSSCfg-DAQP.txt  # BlockSolverConfig of the subproblems
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - END BSPar-BDS-Phase1-DAQP.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

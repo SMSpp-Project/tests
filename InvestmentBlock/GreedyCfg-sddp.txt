@@ -1,0 +1,41 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  GreedyCfg-sddp.txt - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the SDDPGreedySolver inside the InvestmentFunction,
+# which simulates each scenario on a copy of the SDDPBlock: it registers to
+# the UCBlock of each stage of the copy the Solver of UCBSCfg-sddp.txt when
+# it gets there, after the state of the previous stage has been passed, and
+# logs the cost of every stage.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intLogVerb          1 # log verbosity
+intUnregisterSolver 0 # keep the Solver of the stages until it leaves
+
+0  # number of double parameters
+
+0  # number of string parameters
+
+0  # number of vector-of-int parameters
+
+0  # number of vector-of-double parameters
+
+0  # number of vector-of-string parameters
+
+# pointer to the "extra" Configuration
+SimpleConfiguration<std::vector<Configuration*>>
+2                  # the number of elements in the vector
+*                  # no BlockConfig of the UCBlock of each stage
+*UCBSCfg-sddp.txt  # the BlockSolverConfig of the UCBlock of each stage
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END GreedyCfg-sddp.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

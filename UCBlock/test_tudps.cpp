@@ -7,12 +7,16 @@
  * A ThermalUnitBlock instance is loaded from netCDF file, two different
  * Solver are registered to the ThermalUnitBlock, the second of which is
  * assumed to be a ThermalUnitDPSolver, the ThermalUnitBlock is solved by
- * the Solver and the results are compared. Any further Solver registered
- * between the first and the last one (e.g., a BlockCopySolver that solves a
- * copy of the unit in another formulation, see BlockCopySolver.h) is
- * compared with the first one as well. The ThermalUnitBlock is then
+ * the Solver and the results are compared. The ThermalUnitBlock is then
  * repeatedly randomly modified and re-solved several times, the results are
  * compared.
+ *
+ * Given a list of BlockConfig (-F) rather than one (-B), the instance is read
+ * once per element of the list, each copy is given its own BlockConfig, i.e.,
+ * typically its own formulation, and the same BlockSolverConfig, each random
+ * change is made to all the copies, and besides the two Solver of each copy
+ * the copies are compared with each other: they are the same unit, hence
+ * whatever their formulation they must have the same optimum.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -71,17 +75,6 @@
 // Block solutions
 
 #define SKIP_BEAT 0
-
-/*--------------------------------------------------------------------------*/
-
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
 
 /*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
@@ -388,7 +381,36 @@ static bool CheckGetSolution( Solver * slvr , const char * name )
 
 /*--------------------------------------------------------------------------*/
 
-static bool SolveBoth( void )
+// what the 1st Solver, the reference, gives on one copy of the unit: the
+// copies are compared on it [see CrossCheck()]
+
+struct Reading {
+ double time = 0;                 // how long it took
+ int rtrn = Solver::kError;       // what compute() returned
+ bool hs = false;                 // whether it has a solution
+ double fo = 0;                   // the value of the solution, if any
+ };
+
+/*--------------------------------------------------------------------------*/
+
+// the token that stands for a result in the report
+
+static std::string token( bool hs , int rtrn , double fo )
+{
+ if( hs )                              return( fmt_obj( fo ) );
+ if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
+ if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
+ return( "Error!" );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// solves the unit TUBlock with both its Solver and compares them; @p names
+// are what the two are called in the report, the default numbering if empty,
+// and @p rd receives what the 1st one gave
+
+static bool SolveBoth( const std::vector< std::string > & names ,
+		       Reading & rd )
 {
  #if( CHECK_SOLUTIONS & 4 )
   std::vector< double > p1( time_horizon );
@@ -418,6 +440,7 @@ static bool SolveBoth( void )
                    && ( rtrn1st != Solver::kInfeasible ) )
                  || ( rtrn1st == Solver::kLowPrecision ) );
   double fo1st = Slvr1->get_var_value();
+  rd = { t1 , rtrn1st , hs1st , fo1st };
   #if( ( LOG_LEVEL > 1 ) || ( CHECK_SOLUTIONS > 0 ) )
    if( hs1st ) {
     if( ! Slvr1->has_var_solution() ) {
@@ -561,52 +584,11 @@ static bool SolveBoth( void )
    ok = true; verdict = "OK(u)"; decided = true;
    }
 
-  // the Solver between the first and the last one (e.g., a BlockCopySolver
-  // for each formulation of the unit, see BlockCopySolver.h), each against
-  // the first one as the last one is, its Solution included
-  {
-   const auto & slvs = TUBlock->get_registered_solvers();
-   auto it = std::next( slvs.begin() );
-   for( Index k = 2 ; k < slvs.size() ; ++k , ++it ) {
-    const int rtrn = ( *it )->compute( false );
-    const bool hs = ( ( ( rtrn >= Solver::kOK ) && ( rtrn < Solver::kError )
-                        && ( rtrn != Solver::kUnbounded )
-                        && ( rtrn != Solver::kInfeasible ) )
-                      || ( rtrn == Solver::kLowPrecision ) );
-    const double fo = hs ? ( *it )->get_var_value() : -INF;
-    bool same = hs ? ( hs1st && ( abs( fo1st - fo ) <= 1e-4 *
-                                  std::max( double( 1 ) ,
-                                            std::max( abs( fo1st ) ,
-                                                      abs( fo ) ) ) ) )
-                   : ( ( ! hs1st ) && ( rtrn == rtrn1st ) );
-    #if CHECK_GET_SOLUTION
-     const std::string nm = "Solver" + std::to_string( k );
-     if( same && hs && ( *it )->has_var_solution() )
-      same = CheckGetSolution( *it , nm.c_str() );
-    #endif
-    if( ! same ) {
-     std::cerr.setf( std::ios::scientific , std::ios::floatfield );
-     std::cerr << std::setprecision( 9 );
-     std::cerr << "Error: Solver " << k << " reports " << fo << " (status "
-               << rtrn << ") instead of " << fo1st << std::endl;
-     ok = false;
-     verdict = "KO(" + std::to_string( k ) + ")";
-     }
-    }
-   }
-
-  {
-   auto tok = []( bool hs , int rtrn , double fo ) -> std::string {
-    if( hs )                              return( fmt_obj( fo ) );
-    if( rtrn == Solver::kInfeasible )     return( "Unfeas" );
-    if( rtrn == Solver::kUnbounded )      return( "Unbounded" );
-    return( "Error!" );
-    };
-   print_instance_line(
-    { t1 , t2 } ,
-    { tok( hs1st , rtrn1st , fo1st ) , tok( hs2nd , rtrn2nd , fo2nd ) } ,
-    std::numeric_limits< double >::quiet_NaN() , verdict );
-   }
+  print_instance_line(
+   { t1 , t2 } ,
+   { token( hs1st , rtrn1st , fo1st ) , token( hs2nd , rtrn2nd , fo2nd ) } ,
+   std::numeric_limits< double >::quiet_NaN() , verdict ,
+   std::numeric_limits< double >::quiet_NaN() , false , names );
   return( ok );
   }
  catch( std::exception &e ) {
@@ -626,30 +608,537 @@ static bool SolveBoth( void )
 // prefixes) are handled centrally by common_utils. The same tester can thus
 // drive different solver configurations (e.g. ThermalUnitExtDPSolver vs the
 // nuclear NuclearUnitExtDPSolver) just by passing a different -S file.
-long int seed = 0;
-Index wchg = 135;
-int wf = 1;          // the formulation of the unit, read back from the
-                      // BlockConfig given with -B
-double p_change = 0.6;
-Index n_change = 10;
-Index n_repeat = 100;
+long int & seed = round_opts.seed;
+Index & wchg = round_opts.wchg;
+int wf = 1;          // the formulation of the unit TUBlock, read back from
+                      // its BlockConfig
+double & p_change = round_opts.p_change;
+Index & n_change = round_opts.n_change;
+Index & n_repeat = round_opts.n_repeat;
 double sd_cost = 0;   // the shut-down cost given to the unit, if any
 bool must_run = false;   // the unit is on at every instant of the horizon
+
+const char * qcost_env = nullptr;  // the TUDPS_QCOST environment variable
+
+/*--------------------------------------------------------------------------*/
+
+// one copy of the unit per formulation of its BlockConfig: each copy is read
+// from the same file, given its own BlockConfig and the same
+// BlockSolverConfig, and receives the same changes, so that the formulations
+// are compared with each other as the Solver of each of them are
+
+struct Formulation {
+ ThermalUnitBlock * tub;   // the copy of the unit
+ Configuration * bsc;      // its BlockSolverConfig, kept for the cleanup
+ int wf;                   // its formulation, read back from its BlockConfig
+ std::string name;         // what it is called in the report
+ };
+
+std::vector< Formulation > formulations;
+
+/*--------------------------------------------------------------------------*/
+
+// makes @p v the unit that the functions above work on
+
+static void use_formulation( const Formulation & v )
+{
+ TUBlock = v.tub;
+ wf = v.wf;
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// the name of the formulation @p f, as in the TUBCfg-<name>.txt that give it
+
+static std::string formulation_name( int f )
+{
+ static const char * const nm[] = { "3bin" , "T" , "pt" , "DP" , "SU" , "SD" ,
+				     "SUSD" , "?" };
+ return( std::string( nm[ f & 7 ] ) + ( ( f & 8 ) ? "-PC" : "" ) );
+ }
 
 /*--------------------------------------------------------------------------*/
 
 static bool process_specific_arg( int opt )
 {
+ if( process_round_option( opt ) )
+  return( true );
  switch( opt ) {
-  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
-  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
-  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
-  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
-  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
   case( 'd' ): Str2Sthg( optarg , sd_cost );   return( true );
   case( 'u' ): must_run = true;                return( true );
   default:                                     return( false );
   }
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// reads a copy of the unit, applies to it the (meta-)BlockConfig @p bconf
+// read from @p fn and gives it what the command line and the environment ask
+// for, building its abstract representation
+
+static ThermalUnitBlock * read_unit( Configuration * bconf ,
+				     const std::string & fn )
+{
+ auto block = Block::deserialize( filename );
+ if( ! block ) {
+  std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
+  exit( 1 );
+  }
+
+ auto tub = dynamic_cast< ThermalUnitBlock * >( block );
+ if( ! tub ) {
+  std::cout << std::endl << "The deserialized Block is not a ThermalUnitBlock"
+            << std::endl;
+  exit( 1 );
+  }
+
+ // the formulation of the unit comes from the BlockConfig
+ b_config_Block( tub , bconf , fn );
+
+ // enable primary + secondary spinning-reserve variables: when the unit is
+ // solved standalone there is no UCBlock parent to do it, so the reserve
+ // variables/constraints would otherwise never be generated. This is a
+ // no-op for instances with no PrimaryRho/SecondaryRho data.
+ tub->set_reserve_vars( 3 );
+
+ // env-gated validation of commitment-gated reactive power: with TUDPS_QCOST
+ // set, enable q[t] (the standalone unit has no UCBlock parent to do it) and,
+ // below, price it with a constant dualized reactive term, so the DP-vs-MILP
+ // check exercises the box q in [Qmin_off+Qmin_on u, Qmax_off+Qmax_on u].
+ if( qcost_env )
+  tub->set_reactive_power( true );
+
+ // a unit that is on before the horizon and whose minimum up time is longer
+ // than it never switches within it, which is how a generator that PyPSA
+ // does not commit is written; the minimum times decide the structure of the
+ // model, hence they are set before the Variable are generated
+ if( must_run ) {
+  const std::vector< int > on( 1 , 1 );
+  tub->set_init_updown_time( on.begin() , Range( 0 , 1 ) );
+  tub->set_min_up_down_time( tub->get_time_horizon() + 1 , 1 );
+  }
+
+ // the shut-down cost, if any, is given to the unit before the Objective is
+ // generated: the shut-down variables enter it only if the unit pays
+ // anything to shut down
+ if( sd_cost != 0 ) {
+  // the first instants in which the commitment is fixed, and therefore have
+  // no shut-down variable, are those the initial state imposes
+  const int tau0 = tub->get_init_up_down_time();
+  const Index init_t =
+   tau0 > 0 ? ( Index( tau0 ) >= tub->get_min_up_time()
+                ? 0 : tub->get_min_up_time() - Index( tau0 ) )
+            : ( Index( - tau0 ) >= tub->get_min_down_time()
+                ? 0 : tub->get_min_down_time() - Index( - tau0 ) );
+  std::vector< double > sdc( tub->get_time_horizon() - init_t , sd_cost );
+  tub->set_shutdown_costs( sdc.begin() ,
+                           Range( init_t , tub->get_time_horizon() ) );
+  }
+
+ // env-gated: price the spinning reserves with a constant (negative) cost, so
+ // the reserve-rewarded multi-piece per-period cost path of the DP solvers is
+ // exercised (for profiling the reserve overhead of the base solver). The
+ // cost is given before the Objective is generated: a reserve whose cost is
+ // zero then is not in it [see ThermalUnitBlock::generate_objective()],
+ // and after the Variable are, which the cost needs
+ tub->generate_abstract_variables();
+ if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
+  std::vector< double > rcv( tub->get_time_horizon() , std::atof( rc ) );
+  tub->set_primary_spinning_reserve_cost( rcv.begin() ,
+                                          Range( 0 , rcv.size() ) );
+  tub->set_secondary_spinning_reserve_cost( rcv.begin() ,
+                                            Range( 0 , rcv.size() ) );
+  }
+
+ tub->generate_objective( nullptr );
+
+ // env-gated check of the fixed Variable of the operating rules: with
+ // TUDPS_FIXMOD = k set, one modulation Variable out of k is fixed to 0 and
+ // the one at the middle of the horizon to 1, which any instance can do (a
+ // unit is never forced to modulate, and a modulation may move the output
+ // by nothing), so that the DP and the MILP solve the same restricted
+ // problem and must still agree
+ if( const char * fixmod_env = std::getenv( "TUDPS_FIXMOD" ) )
+  if( auto NUBlock = dynamic_cast< NuclearUnitBlock * >( tub ) )
+   if( auto m = NUBlock->get_modulation() ) {
+    const Index hor = NUBlock->get_time_horizon();
+    const Index k = std::max( 1 , std::atoi( fixmod_env ) );
+    for( Index t = 0 ; t < hor ; t += k )
+     if( ! m[ t ].is_fixed() ) {
+      m[ t ].set_value( 0 );
+      m[ t ].is_fixed( true , eNoMod );
+      }
+    if( ! m[ hor / 2 ].is_fixed() ) {
+     m[ hor / 2 ].set_value( 1 );
+     m[ hor / 2 ].is_fixed( true , eNoMod );
+     }
+    }
+
+ if( qcost_env ) {
+  std::vector< double > qcost( tub->get_time_horizon() ,
+                               std::atof( qcost_env ) );
+  tub->set_reactive_linear_term( qcost.begin() ,
+                                 Range( 0 , tub->get_time_horizon() ) );
+  }
+
+ return( tub );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// the Objective of the unit TUBlock
+
+static DQuadFunction * objective_function( void )
+{
+ auto obj = TUBlock->get_objective();
+ assert( obj );
+ auto fro = dynamic_cast< FRealObjective * >( obj );
+ assert( fro );
+ auto of = dynamic_cast< DQuadFunction * >( fro->get_function() );
+ assert( of );
+ return( of );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// one random change of the costs, drawn once and made to every copy of the
+// unit: either the range [ strt , strt + newcsts.size() ) or the subset nms
+// of the instants, and whether it is made via the abstract representation
+
+struct Change {
+ std::vector< double > newcsts;
+ bool ranged = false;
+ Index strt = 0;
+ Subset nms;
+ bool abstr = false;
+ };
+
+/*--------------------------------------------------------------------------*/
+
+// draws a change of @p tochange costs, each computed by @p cost; in 50% of
+// the cases it is a ranged change, in the others a sparse change
+
+static Change draw_change( Index tochange , double ( *cost )( Index ) )
+{
+ Change chg;
+ chg.newcsts.resize( tochange );
+ chg.ranged = ( dis( rg ) <= 0.5 );
+ if( chg.ranged ) {
+  chg.strt = dis( rg ) * ( time_horizon - tochange );
+  for( Index i = 0 ; i < tochange ; ++i )
+   chg.newcsts[ i ] = cost( chg.strt + i );
+  }
+ else {
+  chg.nms = GenerateRand( time_horizon , tochange , rg );
+  for( Index i = 0 ; i < tochange ; ++i )
+   chg.newcsts[ i ] = cost( chg.nms[ i ] );
+  }
+ chg.abstr = ( wchg & 128 ) && ( dis( rg ) < 0.5 );
+ return( chg );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// makes the change @p chg of the fixed costs to the unit TUBlock
+
+static void change_fixed_costs( Change chg )
+{
+ auto of = objective_function();
+ const Index tochange = chg.newcsts.size();
+
+ if( chg.ranged ) {
+  if( chg.abstr ) {
+   // change via abstract representation
+   // note that while this is a range of fixed costs, but the
+   // corresponding variables may "scattered around" the objective and
+   // therefore it becomes a Subset; yet, we check that if Subset
+   // actually is a Range and in case convert it
+   LOG1( "(r,a) - " );
+
+   Subset nms( tochange );
+   for( Index i = 0 ; i < tochange ; ++i )
+    nms[ i ] = of->is_active( TUBlock->get_commitment( 0 ) +
+			      ( chg.strt + i ) );
+
+   std::sort( nms.begin() , nms.end() );
+   if( nms.back() - nms.front() + 1 == nms.size() )
+    of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				    Range( nms.front() , nms.back() + 1 ) );
+   else
+    of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				    std::move( nms ) );
+   }
+  else {  // change via call to set_* method
+   LOG1( "(r) - " );
+   TUBlock->set_const_term( chg.newcsts.begin() ,
+			    Range( chg.strt , chg.strt + tochange ) );
+   }
+  }
+ else {
+  if( chg.abstr ) {
+   // change via abstract representation
+   LOG1( "(s,a) - " );
+
+   for( Index i = 0 ; i < tochange ; ++i )
+    chg.nms[ i ] = of->is_active( TUBlock->get_commitment( 0 ) +
+				  chg.nms[ i ] );
+
+   of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				   std::move( chg.nms ) , false );
+   }
+  else {  // change via call to set_* method
+   LOG1( "(s) - " );
+   TUBlock->set_const_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+			    true );
+   }
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// makes the change @p chg of the quadratic coefficients to the unit TUBlock
+
+static void change_quadratic_costs( Change chg )
+{
+ auto of = objective_function();
+ const Index tochange = chg.newcsts.size();
+
+ if( chg.ranged ) {
+  if( chg.abstr ) {
+   // change via abstract representation
+   // note that while this is a range of fixed costs, but the
+   // corresponding variables may "scattered around" the objective and
+   // therefore it becomes a Subset; yet, we check that if Subset
+   // actually is a Range and in case convert it
+   LOG1( "(r,a) - " );
+
+   if( wf & 8 ) {
+    // with perspective cuts the quadratic term is the *linear*
+    // coefficient of the cut variables; only the tbin/T/pt formulations
+    // have them time-indexed and active in the Objective, for the others
+    // (DP/SU/SD/SUSD) fall back to the physical setter
+    if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
+     Subset nms( tochange );
+     for( Index i = 0 ; i < tochange ; ++i )
+      nms[ i ] = of->is_active( cut + ( chg.strt + i ) );
+
+     std::sort( nms.begin() , nms.end() );
+     if( nms.back() - nms.front() + 1 == nms.size() )
+      of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				      Range( nms.front() ,
+					     nms.back() + 1 ) );
+     else
+      of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				      std::move( nms ) );
+     }
+    else
+     TUBlock->set_quad_term( chg.newcsts.begin() ,
+			     Range( chg.strt , chg.strt + tochange ) );
+    }
+   else {
+    std::vector< double > lincsts( tochange );
+    for( Index i = 0 ; i < tochange ; ++i )
+     lincsts[ i ] = TUBlock->get_linear_term( chg.strt + i );
+
+    Subset nms( tochange );
+    for( Index i = 0 ; i < tochange ; ++i )
+     nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
+			       + ( chg.strt + i ) );
+
+    std::sort( nms.begin() , nms.end() );
+    if( nms.back() - nms.front() + 1 == nms.size() )
+     of->modify_terms( chg.newcsts.begin() , lincsts.begin() ,
+		       Range( nms.front() , nms.back() + 1 ) );
+    else
+     of->modify_terms( chg.newcsts.begin() , lincsts.begin() ,
+		       std::move( nms ) );
+    }
+   }
+  else {  // change via call to set_* method
+   LOG1( "(r) - " );
+   TUBlock->set_quad_term( chg.newcsts.begin() ,
+			   Range( chg.strt , chg.strt + tochange ) );
+   }
+  }
+ else {
+  if( chg.abstr ) {
+   // change via abstract representation
+   LOG1( "(s,a) - " );
+
+   if( wf & 8 ) {
+    // with perspective cuts the quadratic term is the *linear*
+    // coefficient of the cut variables; only the tbin/T/pt formulations
+    // have them time-indexed and active in the Objective, for the others
+    // (DP/SU/SD/SUSD) fall back to the physical setter
+    if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
+     for( Index i = 0 ; i < tochange ; ++i )
+      chg.nms[ i ] = of->is_active( cut + chg.nms[ i ] );
+
+     of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				     std::move( chg.nms ) , false );
+     }
+    else
+     TUBlock->set_quad_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+			     false );
+    }
+   else {
+    std::vector< double > lincsts( tochange );
+    for( Index i = 0 ; i < tochange ; ++i )
+     lincsts[ i ] = TUBlock->get_linear_term( chg.nms[ i ] );
+
+    for( Index i = 0 ; i < tochange ; ++i )
+     chg.nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) +
+				   chg.nms[ i ] );
+
+    of->modify_terms( chg.newcsts.begin() , lincsts.begin() ,
+		      std::move( chg.nms ) , false );
+    }
+   }
+  else {  // change via call to set_* method
+   LOG1( "(s) - " );
+   TUBlock->set_quad_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+			   false );
+   }
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// makes the change @p chg of the linear coefficients to the unit TUBlock
+
+static void change_linear_costs( Change chg )
+{
+ auto of = objective_function();
+ const Index tochange = chg.newcsts.size();
+
+ if( chg.ranged ) {
+  if( chg.abstr ) {
+   // change via abstract representation
+   // note that while this is a range of fixed costs, but the
+   // corresponding variables may "scattered around" the objective and
+   // therefore it becomes a Subset; yet, we check that if Subset
+   // actually is a Range and in case convert it
+   LOG1( "(r,a) - " );
+
+   Subset nms( tochange );
+   for( Index i = 0 ; i < tochange ; ++i )
+    nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
+			      + ( chg.strt + i ) );
+
+   std::sort( nms.begin() , nms.end() );
+   if( nms.back() - nms.front() + 1 == nms.size() )
+    of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				    Range( nms.front() , nms.back() + 1 ) );
+   else
+    of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				    std::move( nms ) );
+   }
+  else {  // change via call to set_* method
+   LOG1( "(r) - " );
+   TUBlock->set_linear_term( chg.newcsts.begin() ,
+			     Range( chg.strt , chg.strt + tochange ) );
+   }
+  }
+ else {
+  if( chg.abstr ) {
+   // change via abstract representation
+   LOG1( "(s,a) - " );
+
+   for( Index i = 0 ; i < tochange ; ++i )
+    chg.nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) +
+				  chg.nms[ i ] );
+
+   of->modify_linear_coefficients( std::move( chg.newcsts ) ,
+				   std::move( chg.nms ) , false );
+   }
+  else {  // change via call to set_* method
+   LOG1( "(s) - " );
+   TUBlock->set_linear_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+			     false );
+   }
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// compares what the 1st Solver gave on each copy of the unit, i.e., the
+// formulations with each other: they are the same unit, hence they must have
+// the same optimum, up to the tolerance with which the two Solver of each
+// copy are compared [see SolveBoth()], or be all infeasible or all unbounded
+
+static bool CrossCheck( const std::vector< Reading > & rd )
+{
+ if( rd.size() < 2 )
+  return( true );
+
+ bool all_hs = true;
+ bool all_inf = true;
+ bool all_unb = true;
+ for( const auto & r : rd ) {
+  all_hs &= r.hs;
+  all_inf &= ( r.rtrn == Solver::kInfeasible );
+  all_unb &= ( r.rtrn == Solver::kUnbounded );
+  }
+
+ bool ok = false;
+ std::string verdict = "KO";
+ if( all_hs ) {
+  ok = true;
+  for( const auto & r : rd )
+   if( std::abs( r.fo - rd.front().fo ) > 1e-4 *
+       std::max( double( 1 ) , std::max( std::abs( r.fo ) ,
+					 std::abs( rd.front().fo ) ) ) )
+    ok = false;
+  if( ok )
+   verdict = "OK(f)";
+  }
+ else
+  if( all_inf ) {
+   ok = true; verdict = "OK(e)";
+   }
+  else
+   if( all_unb ) {
+    ok = true; verdict = "OK(u)";
+    }
+
+ std::vector< double > times;
+ std::vector< std::string > tokens;
+ std::vector< std::string > names;
+ for( std::size_t k = 0 ; k < rd.size() ; ++k ) {
+  times.push_back( rd[ k ].time );
+  tokens.push_back( token( rd[ k ].hs , rd[ k ].rtrn , rd[ k ].fo ) );
+  names.push_back( formulations[ k ].name );
+  }
+ print_instance_line( times , tokens ,
+		      std::numeric_limits< double >::quiet_NaN() , verdict ,
+		      std::numeric_limits< double >::quiet_NaN() , false ,
+		      names );
+ return( ok );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// solves every copy of the unit with its two Solver, then compares the
+// copies with each other
+
+static bool SolveCopies( void )
+{
+ bool ok = true;
+ std::vector< Reading > rd( formulations.size() );
+ for( std::size_t k = 0 ; k < formulations.size() ; ++k ) {
+  use_formulation( formulations[ k ] );
+  // with one copy the report stays the one of the two Solver
+  std::vector< std::string > names;
+  if( formulations.size() > 1 )
+   names = { formulations[ k ].name + " S0" , formulations[ k ].name + " S1" };
+  if( ! SolveBoth( names , rd[ k ] ) )
+   ok = false;
+  }
+
+ if( ! CrossCheck( rd ) )
+  ok = false;
+
+ return( ok );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -667,28 +1156,20 @@ int main( int argc , char **argv )
  assert( SKIP_BEAT >= 0 );
 
  docopt_desc = "SMS++ ThermalUnitBlock Solver test.\n";
- short_opts += "e:k:n:m:q:d:u";
+ round_opts = { 0 , 135 , 100 , 10 , 0.6 };
+ add_round_options(
+  "                                    1 fixed costs, 2 quadratic\n"
+  "                                    coefficients, 4 linear\n"
+  "                                    coefficients,\n"
+  "                                    128 also via abstract\n"
+  "                                    representation\n" );
+ short_opts += "d:u";
  const std::vector< option > my_opts = {
-   { "seed"   , required_argument , nullptr , 'e' } ,
-   { "wchg"   , required_argument , nullptr , 'k' } ,
-   { "rounds" , required_argument , nullptr , 'n' } ,
-   { "nchng"  , required_argument , nullptr , 'm' } ,
-   { "pchng"  , required_argument , nullptr , 'q' } ,
-   { "sdcost" , required_argument , nullptr , 'd' } ,
+   { "sdcost"  , required_argument , nullptr , 'd' } ,
    { "mustrun" , no_argument , nullptr , 'u' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
- help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [135]:\n"
-         "                                    1 fixed costs, 2 quadratic\n"
-         "                                    coefficients, 4 linear\n"
-         "                                    coefficients,\n"
-         "                                    128 also via abstract\n"
-         "                                    representation\n"
-         "  -n, --rounds <n>                how many iterations [100]\n"
-         "  -m, --nchng <n>                 number of changes [10]\n"
-         "  -q, --pchng <p>                 probability of changing [0.6]\n"
-         "  -d, --sdcost <v>                shut-down cost of the unit at\n"
+ help += "  -d, --sdcost <v>                shut-down cost of the unit at\n"
          "                                  each instant, the instance\n"
          "                                  having none [0]\n"
          "  -u, --mustrun                   the unit is on at every instant,\n"
@@ -698,126 +1179,39 @@ int main( int argc , char **argv )
  process_args( argc , argv , process_specific_arg );
 
  // the BlockSolverConfig (-S) and the BlockConfig (-B), which gives the
- // formulation of the unit (e.g., TUBCfg-T.txt), must be provided
- // explicitly: the test never falls back to a hardcoded default
- // Configuration
- require_solver_config();
- require_block_config();
+ // formulation of the unit (e.g., TUBCfg-T.txt), or the list of them (-F),
+ // must be provided explicitly: the test never falls back to a hardcoded
+ // default Configuration [see get_formulations()]
 
  rg.seed( seed );  // seed the pseudo-random number generator
 
- // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ qcost_env = std::getenv( "TUDPS_QCOST" );
+
+ // read the Block, once per formulation - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
- auto block = Block::deserialize( filename );
- if( ! block ) {
-  std::cout << std::endl << "Block::deserialize() failed!" << std::endl;
-  exit( 1 );
-  }
-
- TUBlock = dynamic_cast< ThermalUnitBlock * >( block );
- if( ! TUBlock ) {
-  std::cout << std::endl << "The deserialized Block is not a ThermalUnitBlock"
-            << std::endl;
-  exit( 1 );
-  }
-
- // the formulation of the unit comes from the BlockConfig, and it is read
+ // the formulation of each copy comes from its BlockConfig, and it is read
  // back, as the changes below depend on it: 0 3bin, 1 T, 2 pt, 3 DP, 4 SU,
  // 5 SD, 6 SUSD, +8 also Perspective Cuts
- auto bconf = Configuration::deserialize( bconf_file );
- b_config_Block( TUBlock , bconf , bconf_file );
- delete bconf;
 
- wf = 1;  // the T formulation, the one of a unit given no BlockConfig
- if( auto bc = TUBlock->get_BlockConfig() )
-  if( auto sc = dynamic_cast< SimpleConfiguration< int > * >(
-				       bc->f_static_variables_Configuration ) )
-   wf = sc->f_value;
+ auto forms = get_formulations();
 
- // enable primary + secondary spinning-reserve variables: when the unit is
- // solved standalone there is no UCBlock parent to do it, so the reserve
- // variables/constraints would otherwise never be generated. This is a
- // no-op for instances with no PrimaryRho/SecondaryRho data.
- TUBlock->set_reserve_vars( 3 );
+ for( std::size_t k = 0 ; k < forms.configs.size() ; ++k ) {
+  auto tub = read_unit( forms.configs[ k ] , forms.file );
 
- // env-gated validation of commitment-gated reactive power: with TUDPS_QCOST
- // set, enable q[t] (the standalone unit has no UCBlock parent to do it) and,
- // below, price it with a constant dualized reactive term, so the DP-vs-MILP
- // check exercises the box q in [Qmin_off+Qmin_on u, Qmax_off+Qmax_on u].
- const char * qcost_env = std::getenv( "TUDPS_QCOST" );
- if( qcost_env )
-  TUBlock->set_reactive_power( true );
+  int f = 1;  // the T formulation, the one of a unit given no BlockConfig
+  if( auto bc = tub->get_BlockConfig() )
+   if( auto sc = dynamic_cast< SimpleConfiguration< int > * >(
+					bc->f_static_variables_Configuration ) )
+    f = sc->f_value;
 
- // a unit that is on before the horizon and whose minimum up time is longer
- // than it never switches within it, which is how a generator that PyPSA
- // does not commit is written; the minimum times decide the structure of the
- // model, hence they are set before the Variable are generated
- if( must_run ) {
-  const std::vector< int > on( 1 , 1 );
-  TUBlock->set_init_updown_time( on.begin() , Range( 0 , 1 ) );
-  TUBlock->set_min_up_down_time( TUBlock->get_time_horizon() + 1 , 1 );
+  formulations.push_back( { tub , nullptr , f ,
+			std::to_string( k ) + ":" + formulation_name( f ) } );
   }
-
- // the shut-down cost, if any, is given to the unit before the Objective is
- // generated: the shut-down variables enter it only if the unit pays
- // anything to shut down
- if( sd_cost != 0 ) {
-  // the first instants in which the commitment is fixed, and therefore have
-  // no shut-down variable, are those the initial state imposes
-  const int tau0 = TUBlock->get_init_up_down_time();
-  const Index init_t =
-   tau0 > 0 ? ( Index( tau0 ) >= TUBlock->get_min_up_time()
-                ? 0 : TUBlock->get_min_up_time() - Index( tau0 ) )
-            : ( Index( - tau0 ) >= TUBlock->get_min_down_time()
-                ? 0 : TUBlock->get_min_down_time() - Index( - tau0 ) );
-  std::vector< double > sdc( TUBlock->get_time_horizon() - init_t , sd_cost );
-  TUBlock->set_shutdown_costs( sdc.begin() ,
-                               Range( init_t ,
-                                      TUBlock->get_time_horizon() ) );
-  }
-
- // env-gated: price the spinning reserves with a constant (negative) cost, so
- // the reserve-rewarded multi-piece per-period cost path of the DP solvers is
- // exercised (for profiling the reserve overhead of the base solver). The
- // cost is given before the Objective is generated: a reserve whose cost is
- // zero then is not in it [see ThermalUnitBlock::generate_objective()],
- // and after the Variable are, which the cost needs
- TUBlock->generate_abstract_variables();
- if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
-  std::vector< double > rcv( TUBlock->get_time_horizon() , std::atof( rc ) );
-  TUBlock->set_primary_spinning_reserve_cost( rcv.begin() ,
-                                              Range( 0 , rcv.size() ) );
-  TUBlock->set_secondary_spinning_reserve_cost( rcv.begin() ,
-                                                Range( 0 , rcv.size() ) );
-  }
-
- TUBlock->generate_objective( nullptr );
-
- // env-gated check of the fixed Variable of the operating rules: with
- // TUDPS_FIXMOD = k set, one modulation Variable out of k is fixed to 0 and
- // the one at the middle of the horizon to 1, which any instance can do (a
- // unit is never forced to modulate, and a modulation may move the output
- // by nothing), so that the DP and the MILP solve the same restricted
- // problem and must still agree
- if( const char * fixmod_env = std::getenv( "TUDPS_FIXMOD" ) )
-  if( auto NUBlock = dynamic_cast< NuclearUnitBlock * >( TUBlock ) )
-   if( auto m = NUBlock->get_modulation() ) {
-    const Index hor = NUBlock->get_time_horizon();
-    const Index k = std::max( 1 , std::atoi( fixmod_env ) );
-    for( Index t = 0 ; t < hor ; t += k )
-     if( ! m[ t ].is_fixed() ) {
-      m[ t ].set_value( 0 );
-      m[ t ].is_fixed( true , eNoMod );
-      }
-    if( ! m[ hor / 2 ].is_fixed() ) {
-     m[ hor / 2 ].set_value( 1 );
-     m[ hor / 2 ].is_fixed( true , eNoMod );
-     }
-    }
 
  // save some original data of the ThermalUnitBlock - - - - - - - - - - - - -
+ // they are the same in every copy
 
+ use_formulation( formulations.front() );
  time_horizon = TUBlock->get_time_horizon();
  a.resize( time_horizon );
  b.resize( time_horizon );
@@ -832,41 +1226,36 @@ int main( int argc , char **argv )
   u[ i ] = TUBlock->get_operational_max_power( i );
   }
 
- if( qcost_env ) {
-  std::vector< double > qcost( time_horizon , std::atof( qcost_env ) );
-  TUBlock->set_reactive_linear_term( qcost.begin() ,
-                                     Range( 0 , time_horizon ) );
-  }
-
- // attach the Solver(s) to the ThermalUnitBlock- - - - - - - - - - - - - - -
+ // attach the Solver(s) to each copy of the ThermalUnitBlock - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // do this by reading an appropriate BlockSolverConfig from file and
- // apply() it to the BoxBlock; note that the BlockSolverConfig is
- // clear()-ed and kept to do the cleanup at the end.
+ // apply() it to the copy; note that the BlockSolverConfig is clear()-ed
+ // and kept to do the cleanup at the end, hence each copy reads its own.
  // BSC may be a plain BlockSolverConfig or a meta-config
  // SimpleConfiguration< std::map< std::string , Configuration * > >;
  // s_config_Block() dispatches on the runtime type and clears the config(s)
  // for final cleanup.
 
- Configuration * bsc = Configuration::deserialize( sconf_file );
- if( ! bsc ) {
-  std::cerr << "Error: cannot load BSC from " << sconf_file << std::endl;
-  exit( 1 );
-  }
- s_config_Block( TUBlock , bsc , sconf_file );
+ for( auto & v : formulations ) {
+  v.bsc = solver_config_of( forms , &v - formulations.data() );
+  s_config_Block( v.tub , v.bsc , sconf_file );
 
- if( TUBlock->get_registered_solvers().size() < 2 ) {
-  std::cout << std::endl << "too few Solver registered to the Block"
-            << std::endl;
-  exit( 1 );
+  if( v.tub->get_registered_solvers().size() < 2 ) {
+   std::cout << std::endl << "too few Solver registered to the Block"
+             << std::endl;
+   exit( 1 );
+   }
   }
+
+ delete forms.owner;
 
  // first solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
  LOG1( "First call: " );
 
- bool AllPassed = SolveBoth();
+ bool AllPassed = SolveCopies();
+ Index n_solved = 1;
 
  // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -875,7 +1264,10 @@ int main( int argc , char **argv )
  // - up to n_change linear terms are changed
  // - up to n_change quadratic terms are changed
  //
- // then the two Solver are called to re-solve the BoxBlock
+ // then the two Solver are called to re-solve each copy of the unit. Each
+ // change is drawn once and made to every copy, so that the pseudo-random
+ // sequence, and therefore what each copy is asked, is that of a run with
+ // that copy alone
 
  for( Index rep = 0 ; rep < n_repeat * ( SKIP_BEAT + 1 ) ; ) {
   if( ! AllPassed )
@@ -883,77 +1275,15 @@ int main( int argc , char **argv )
 
   LOG1( rep << ": ");
 
-  DQuadFunction * of;
-  {
-   auto obj = TUBlock->get_objective();
-   assert( obj );
-   auto fro = dynamic_cast< FRealObjective * >( obj );
-   assert( fro );
-   of = dynamic_cast< DQuadFunction * >( fro->get_function() );
-   assert( of );
-   }
-
   // change fixed costs - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if( ( wchg & 1 ) && ( dis( rg ) <= p_change ) )
    if( Index tochange = std::min( time_horizon ,
                                   Index( dis( rg ) * n_change ) ) ) {
     LOG1( "changed " << tochange << " fixed costs" );
-
-    std::vector< double >newcsts( tochange );
-
-    // in 50% of the cases do a ranged change, in the others a sparse change
-    if( dis( rg ) <= 0.5 ) {
-     Index strt = dis( rg ) * ( time_horizon - tochange );
-     Index stp = strt + tochange;
-
-     for( Index i = 0 ; i < tochange ; ++i )
-      newcsts[ i ] = fixed_cost( strt + i );
-
-     if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
-      // change via abstract representation
-      // note that while this is a range of fixed costs, but the
-      // corresponding variables may "scattered around" the objective and
-      // therefore it becomes a Subset; yet, we check that if Subset
-      // actually is a Range and in case convert it
-      LOG1( "(r,a) - " );
-
-      Subset nms( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_commitment( 0 ) + ( strt + i ) );
-
-      std::sort( nms.begin() , nms.end() );
-      if( nms.back() - nms.front() + 1 == nms.size() )
-       of->modify_linear_coefficients( std::move( newcsts ) ,
-				       Range( nms.front() , nms.back() + 1 ) );
-      else
-       of->modify_linear_coefficients( std::move( newcsts ) ,
-				       std::move( nms ) );
-      }
-     else {  // change via call to set_* method
-      LOG1( "(r) - " );
-      TUBlock->set_const_term( newcsts.begin() , Range( strt , stp ) );
-      }
-     }
-    else {
-     Subset nms( GenerateRand( time_horizon , tochange , rg ) );
-
-     for( Index i = 0 ; i < tochange ; ++i )
-      newcsts[ i ] = fixed_cost( nms[ i ] );
-
-     if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
-      // change via abstract representation
-      LOG1( "(s,a) - " );
-
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_commitment( 0 ) + nms[ i ] );
-
-      of->modify_linear_coefficients( std::move( newcsts ) ,
-				      std::move( nms ) , false );
-      }
-     else {  // change via call to set_* method
-      LOG1( "(s) - " );
-      TUBlock->set_const_term( newcsts.begin() , std::move( nms ) , true );
-      }
+    const auto chg = draw_change( tochange , fixed_cost );
+    for( const auto & v : formulations ) {
+     use_formulation( v );
+     change_fixed_costs( chg );
      }
     }
 
@@ -962,177 +1292,25 @@ int main( int argc , char **argv )
    if( Index tochange = std::min( time_horizon ,
                                   Index( dis( rg ) * n_change ) ) ) {
     LOG1( "changed " << tochange << " quadratic coeffs" );
-
-    std::vector< double > newcsts( tochange );
-
-    // in 50% of the cases do a ranged change, in the others a sparse change
-    if( dis( rg ) <= 0.5 ) {
-     Index strt = dis( rg ) * ( time_horizon - tochange );
-     Index stp = strt + tochange;
-
-     for( Index i = 0 ; i < tochange ; ++i )
-      newcsts[ i ] = quadratic_cost( strt + i );
-
-     if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
-      // change via abstract representation
-      // note that while this is a range of fixed costs, but the
-      // corresponding variables may "scattered around" the objective and
-      // therefore it becomes a Subset; yet, we check that if Subset
-      // actually is a Range and in case convert it
-      LOG1( "(r,a) - " );
-
-      if( wf & 8 ) {
-       // with perspective cuts the quadratic term is the *linear*
-       // coefficient of the cut variables; only the tbin/T/pt formulations
-       // have them time-indexed and active in the Objective, for the others
-       // (DP/SU/SD/SUSD) fall back to the physical setter
-       if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
-	Subset nms( tochange );
-	for( Index i = 0 ; i < tochange ; ++i )
-	 nms[ i ] = of->is_active( cut + ( strt + i ) );
-
-	std::sort( nms.begin() , nms.end() );
-	if( nms.back() - nms.front() + 1 == nms.size() )
-	 of->modify_linear_coefficients( std::move( newcsts ) ,
-					 Range( nms.front() ,
-						nms.back() + 1 ) );
-	else
-	 of->modify_linear_coefficients( std::move( newcsts ) ,
-					 std::move( nms ) );
-        }
-       else
-	TUBlock->set_quad_term( newcsts.begin() , Range( strt , stp ) );
-       }
-      else {
-       std::vector< double > lincsts( tochange );
-       for( Index i = 0 ; i < tochange ; ++i )
-	lincsts[ i ] = TUBlock->get_linear_term( strt + i );
-
-       Subset nms( tochange );
-       for( Index i = 0 ; i < tochange ; ++i )
-	nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
-				  + ( strt + i ) );
-
-       std::sort( nms.begin() , nms.end() );
-       if( nms.back() - nms.front() + 1 == nms.size() )
-	of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			  Range( nms.front() , nms.back() + 1 ) );
-       else
-	of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			  std::move( nms ) );
-       }
-      }
-     else {  // change via call to set_* method
-      LOG1( "(r) - " );
-      TUBlock->set_quad_term( newcsts.begin() , Range( strt , stp ) );
-      }
-     }
-    else {
-     Subset nms( GenerateRand( time_horizon , tochange , rg ) );
-
-     for( Index i = 0 ; i < tochange ; ++i )
-      newcsts[ i ] = quadratic_cost( nms[ i ] );
-
-     if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
-      // change via abstract representation
-      LOG1( "(s,a) - " );
-
-      if( wf & 8 ) {
-       // with perspective cuts the quadratic term is the *linear*
-       // coefficient of the cut variables; only the tbin/T/pt formulations
-       // have them time-indexed and active in the Objective, for the others
-       // (DP/SU/SD/SUSD) fall back to the physical setter
-       if( auto cut = ( wf & 7 ) <= 2 ? TUBlock->get_cut() : nullptr ) {
-	for( Index i = 0 ; i < tochange ; ++i )
-	 nms[ i ] = of->is_active( cut + nms[ i ] );
-
-	of->modify_linear_coefficients( std::move( newcsts ) ,
-					std::move( nms ) , false );
-        }
-       else
-	TUBlock->set_quad_term( newcsts.begin() , std::move( nms ) , false );
-       }
-      else {
-       std::vector< double > lincsts( tochange );
-       for( Index i = 0 ; i < tochange ; ++i )
-	lincsts[ i ] = TUBlock->get_linear_term( nms[ i ] );
-
-       for( Index i = 0 ; i < tochange ; ++i )
-	nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) + nms[ i ] );
-
-       of->modify_terms( newcsts.begin() , lincsts.begin() ,
-			 std::move( nms ) , false );
-       }
-      }
-     else {  // change via call to set_* method
-      LOG1( "(s) - " );
-      TUBlock->set_quad_term( newcsts.begin() , std::move( nms ) , false );
-      }
+    const auto chg = draw_change( tochange , quadratic_cost );
+    for( const auto & v : formulations ) {
+     use_formulation( v );
+     change_quadratic_costs( chg );
      }
     }
 
   // change linear coefficients - - - - - - - - - - - - - - - - - - - - - - -
+  // linear_cost() reads the current quadratic coefficients, which are the
+  // same in every copy, from the first one
   if( ( wchg & 4 ) && ( dis( rg ) <= p_change ) )
    if( Index tochange = std::min( time_horizon ,
                                   Index( dis( rg ) * n_change ) ) ) {
     LOG1( "changed " << tochange << " linear coeffs" );
-
-    std::vector< double > newcsts( tochange );
-
-    // in 50% of the cases do a ranged change, in the others a sparse change
-    if( dis( rg ) <= 0.5 ) {
-     Index strt = dis( rg ) * ( time_horizon - tochange );
-     Index stp = strt + tochange;
-
-     for( Index i = 0 ; i < tochange ; ++i )
-      newcsts[ i ] = linear_cost( strt + i );
-
-     if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
-      // change via abstract representation
-      // note that while this is a range of fixed costs, but the
-      // corresponding variables may "scattered around" the objective and
-      // therefore it becomes a Subset; yet, we check that if Subset
-      // actually is a Range and in case convert it
-      LOG1( "(r,a) - " );
-
-      Subset nms( tochange );
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_active_power( 0 )
-				 + ( strt + i ) );
-
-      std::sort( nms.begin() , nms.end() );
-      if( nms.back() - nms.front() + 1 == nms.size() )
-       of->modify_linear_coefficients( std::move( newcsts ) ,
-				       Range( nms.front() , nms.back() + 1 ) );
-      else
-       of->modify_linear_coefficients( std::move( newcsts ) ,
-				       std::move( nms ) );
-      }
-     else {  // change via call to set_* method
-      LOG1( "(r) - " );
-      TUBlock->set_linear_term( newcsts.begin() , Range( strt , stp ) );
-      }
-     }
-    else {
-     Subset nms( GenerateRand( time_horizon , tochange , rg ) );
-
-     for( Index i = 0 ; i < tochange ; ++i )
-      newcsts[ i ] = linear_cost( nms[ i ] );
-
-     if( ( wchg & 128 ) && ( dis( rg ) < 0.5 ) ) {
-      // change via abstract representation
-      LOG1( "(s,a) - " );
-
-      for( Index i = 0 ; i < tochange ; ++i )
-       nms[ i ] = of->is_active( TUBlock->get_active_power( 0 ) + nms[ i ] );
-
-      of->modify_linear_coefficients( std::move( newcsts ) ,
-				      std::move( nms ) , false );
-      }
-     else {  // change via call to set_* method
-      LOG1( "(s) - " );
-      TUBlock->set_linear_term( newcsts.begin() , std::move( nms ) , false );
-      }
+    use_formulation( formulations.front() );
+    const auto chg = draw_change( tochange , linear_cost );
+    for( const auto & v : formulations ) {
+     use_formulation( v );
+     change_linear_costs( chg );
      }
     }
 
@@ -1140,8 +1318,9 @@ int main( int argc , char **argv )
   // ... every SKIP_BEAT + 1 rounds
 
   if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) ) {
-   if( ! SolveBoth() )
+   if( ! SolveCopies() )
     AllPassed = false;
+   ++n_solved;
    }
   #if( LOG_LEVEL >= 1 )
   else
@@ -1151,6 +1330,15 @@ int main( int argc , char **argv )
   }  // end( main loop )- - - - - - - - - - - - - - - - - - - - - - - - - - -
      // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+ // with several copies, which formulations have been compared, and how many
+ // times
+ if( AllPassed && ( formulations.size() > 1 ) ) {
+  std::cout << "formulations";
+  for( const auto & v : formulations )
+   std::cout << " " << v.name;
+  std::cout << " agree in " << n_solved << " solves" << std::endl;
+  }
+
  if( AllPassed )
   std::cout << GREEN( All tests passed!! ) << std::endl;
  else
@@ -1159,14 +1347,13 @@ int main( int argc , char **argv )
  // destroy objects and vectors - - - - - - - - - - - - - - - - - - - - - - - 
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup Solver
- s_config_Block( TUBlock , bsc );
-
- // then delete the BlockSolverConfig
- delete( bsc );
-
- // delete the Block
- delete( TUBlock );
+ for( auto & v : formulations ) {
+  // apply() the clear()-ed BlockSolverConfig (or meta-config) to cleanup
+  // Solver, then delete it and the copy of the unit
+  s_config_Block( v.tub , v.bsc );
+  delete( v.bsc );
+  delete( v.tub );
+  }
 
  // terminate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

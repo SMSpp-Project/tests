@@ -1,0 +1,30 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - NUBForm.txt - - - - - - - - - - - - - - - - -
+#
+# The formulations of the BlockConfig of a NuclearUnitBlock that
+# batch-nuclear compares: the T formulation of the thermal unit with
+# Perspective Cuts, and the same with the tight forms of the operating rules
+# [see NUBCfg-T-PC-*.txt]. They all describe the same set of schedules, hence
+# the unit is read once per formulation, each copy is solved by the same
+# BlockSolverConfig and the copies are compared with each other [see -F of
+# TUDPS_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+5  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*TUBCfg-T-PC.txt        # 1st formulation: T-PC
+*NUBCfg-T-PC-R.txt      # 2nd formulation: T-PC, tight rows
+*NUBCfg-T-PC-M.txt      # 3rd formulation: T-PC, tight big-M
+*NUBCfg-T-PC-RM.txt     # 4th formulation: T-PC, both
+*NUBCfg-T-PC-RC.txt     # 5th formulation: T-PC, separated tight rows
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END NUBForm.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

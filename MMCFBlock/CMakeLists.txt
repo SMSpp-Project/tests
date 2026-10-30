@@ -291,7 +291,8 @@ if (TARGET SMS++::MMCFBlock AND
     TARGET SMS++::MILPSolver AND
     TARGET SMS++::MCFClassSolver)
 
-    add_executable(MMCFND_test nd_test.cpp)
+    add_executable(MMCFND_test nd_test.cpp ../common_utils.cpp)
+    target_include_directories(MMCFND_test PRIVATE ..)
     target_link_libraries(MMCFND_test PRIVATE
                           SMS++::MMCFBlock
                           SMS++::LagrangianDualSolver

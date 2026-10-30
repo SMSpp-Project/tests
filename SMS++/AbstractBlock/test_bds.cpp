@@ -152,16 +152,52 @@ static std::vector< ColVariable > * make_y( bool set_start ,
 
 /*--------------------------------------------------------------------------*/
 
+/* The Constraint of the first stage alone, the kind that ties the design of
+ * consecutive periods: a ramp between consecutive y, and a minimum on their
+ * sum that the starting point of make_y() violates, so that the method has
+ * to leave it. Both are binding at the optimum. */
+
+static const double ramp = 0.2;
+static const double min_total = 1.6;
+
+static void add_first_stage_rows( AbstractBlock * block ,
+				  std::vector< ColVariable > * y )
+{
+ auto rows = new std::vector< FRowConstraint >( M );
+ for( int i = 1 ; i < M ; ++i ) {
+  auto f = new LinearFunction();
+  f->add_variable( & ( * y )[ i ] , 1 );
+  f->add_variable( & ( * y )[ i - 1 ] , -1 );
+  ( * rows )[ i - 1 ].set_function( f );
+  ( * rows )[ i - 1 ].set_lhs( - ramp );
+  ( * rows )[ i - 1 ].set_rhs( ramp );
+  }
+
+ auto f = new LinearFunction();
+ for( int i = 0 ; i < M ; ++i )
+  f->add_variable( & ( * y )[ i ] , 1 );
+ rows->back().set_function( f );
+ rows->back().set_lhs( min_total );
+ rows->back().set_rhs( Inf< double >() );
+
+ block->add_static_constraint( * rows , "first_stage" );
+ }
+
+/*--------------------------------------------------------------------------*/
+
 // the monolithic LP: y and all scenarios' x in a single Block (the reference
 // model). With with_slack == false the demand can only be served through x, so
 // the problem becomes infeasible for small y (used to exercise feasibility cuts)
 
 static AbstractBlock * build_monolithic( bool with_slack = true , int nsub = 1 ,
-					 bool integer = false )
+					 bool integer = false ,
+					 bool first_stage = false )
 {
  auto block = new AbstractBlock();
  auto y = make_y( false , integer );
  block->add_static_variable( * y , "y" );
+ if( first_stage )
+  add_first_stage_rows( block , y );
 
  auto f = new LinearFunction();
  for( int i = 0 ; i < M ; ++i )
@@ -183,11 +219,14 @@ static AbstractBlock * build_monolithic( bool with_slack = true , int nsub = 1 ,
 // expects, with nsub subproblems)
 
 static AbstractBlock * build_structured( bool with_slack = true , int nsub = 1 ,
-					 bool integer = false )
+					 bool integer = false ,
+					 bool first_stage = false )
 {
  auto root = new AbstractBlock();
  auto y = make_y( true , integer );
  root->add_static_variable( * y , "y" );
+ if( first_stage )
+  add_first_stage_rows( root , y );
 
  auto df = new LinearFunction();
  for( int i = 0 ; i < M ; ++i )
@@ -658,6 +697,32 @@ int main( void )
   ok_ns = ok_ns && ( rel( ref4 , v_f4 ) <= tol ) &&
                    ( rel( ref4 , v_14 ) <= tol );
 
+  /* And with subproblems solved by DAQP, which gives no certificate: the
+   * phase one does without it, as long as its cut cuts the incumbent, and
+   * the run is not to stop on the certificate it does not need. */
+
+  {
+   auto root_d4 = build_structured( false , 4 );
+   int st_d4;
+   long ct_d4 = 0;
+   bool ok_d4 = false;
+   double v_d4 = 0;
+   try {
+    v_d4 = solve_from_config( root_d4 , "BSPar-BDS-Phase1-DAQP.txt" ,
+                              st_d4 , nullptr , & ct_d4 );
+    ok_d4 = ( rel( ref4 , v_d4 ) <= tol );
+    }
+   catch( const std::exception & e ) {
+    std::cout << "4-scenario, phase one with no certificate: " << e.what()
+              << std::endl;
+    }
+   std::cout << "4-scenario, phase one with no certificate: " << v_d4
+             << " ( " << ct_d4 << " cuts )   ref = " << ref4
+             << ( ok_d4 ? "   -> OK" : "   -> FAIL" ) << std::endl;
+   ok_ns = ok_ns && ok_d4;
+   delete root_d4;
+   }
+
   /* The same with the subproblems evaluated by threads, where some of them
    * are infeasible and their certificates are read inside the threads: the
    * run has to be the sequential one, round by round. */
@@ -941,6 +1006,48 @@ int main( void )
              << ref2 << ( ok_x ? "   -> OK" : "   -> FAIL" ) << std::endl;
    }
 
+ /* ----- Constraint of the first stage ----------------------------------- #
+  *
+  * The rows of add_first_stage_rows() on y: in the MILP regime the master
+  * Solver reads them out of (B), in the convex one the BundleSolver hands
+  * them to its master problem, which has them as rows in the primal form
+  * and as multipliers in the dual one. The optimum has to be the one of the
+  * monolithic model, which the rows change. */
+
+ bool ok_lc;
+ { auto mono_lc = build_monolithic( true , 2 , false , true );
+   int st_lc;
+   const double ref_lc = solve_from_config( mono_lc , "BDSSCfg.txt" , st_lc );
+
+   auto root_p = build_structured( true , 2 , false , true );
+   long it_p = 0;
+   const double v_p = solve_from_config( root_p , "BSPar-BDS-Primal.txt" ,
+					 st_lc , & it_p );
+
+   auto root_m = build_structured( true , 2 , false , true );
+   const double v_m = solve_from_config( root_m , "BSPar-BDS-MILP.txt" ,
+					 st_lc );
+
+   auto root_d = build_structured( true , 2 , false , true );
+   long it_d = 0;
+   const double v_d = solve_from_config( root_d , "BSPar-BDS.txt" , st_lc ,
+					 & it_d );
+
+   ok_lc = ( rel( ref_lc , v_p ) <= tol ) && ( rel( ref_lc , v_m ) <= tol ) &&
+           ( rel( ref_lc , v_d ) <= tol ) && ( rel( ref_lc , ref2 ) > tol );
+
+   std::cout << "first-stage rows: ref = " << ref_lc << " ( " << ref2
+             << " without )   convex-primal = " << v_p << " ( " << it_p
+             << " iterations )   convex-dual = " << v_d << " ( " << it_d
+             << " iterations )   MILP-multi = " << v_m
+             << ( ok_lc ? "   -> OK" : "   -> FAIL" ) << std::endl;
+
+   delete root_d;
+   delete root_m;
+   delete root_p;
+   delete mono_lc;
+   }
+
  // ----- compare ( optimality-cut cases, the supported ones ) ------------- #
  const double err = rel( ref , ben );
  const double err2 = rel( ref , ben2 );
@@ -958,7 +1065,7 @@ int main( void )
  std::cout << "2-scenario: " << ( ok2 ? "-> OK" : "-> FAIL" ) << std::endl;
 
  const bool ok = ok1 && ok2 && ok_ns && ok_ng && ok_k && ok_u && ok_r &&
-                ok_t;
+                ok_t && ok_lc;
 
  delete root_s2;
  delete root_m2;

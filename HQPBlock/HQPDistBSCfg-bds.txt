@@ -1,0 +1,34 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - HQPDistBSCfg-bds.txt  - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the HQPDistBlock with the structure kBenders in
+# the tester of HQPBlock [see HQPDistForms.txt]: DAQP on the whole tree,
+# i.e., the centralized hierarchy written with the t and the link rows, in
+# the setting of HQPCfg.txt.
+#
+# An HQPSolver whose inner Solver is not in the build is left out.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+HQPSolver  # 1st: DAQP on the whole tree
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: DAQP on the whole tree
+*HQPCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END HQPDistBSCfg-bds.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

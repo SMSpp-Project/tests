@@ -1,0 +1,24 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - NUBForm-CI.txt  - - - - - - - - - - - - - - - -
+#
+# The formulations of the BlockConfig of a NuclearUnitBlock that
+# batch-nuclear compares in CI, where its time is short: the T formulation of
+# the thermal unit with Perspective Cuts, and the same with both tight forms
+# of the operating rules [see NUBForm.txt].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*TUBCfg-T-PC.txt        # 1st formulation: T-PC
+*NUBCfg-T-PC-RM.txt     # 2nd formulation: T-PC, both
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END NUBForm-CI.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

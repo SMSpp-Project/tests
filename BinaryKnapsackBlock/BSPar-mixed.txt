@@ -4,7 +4,8 @@
 # Cross-check BlockSolverConfig for a MIXED-binary BinaryKnapsackBlock (some
 # continuous variables): attaches every solver that handles continuous
 # variables and must give the SAME optimal value: the :MILPSolver (the exact
-# reference), the two exact dynamic programs (full-table DPBinaryKnapsackSolver
+# reference), the two exact dynamic programs (full-table
+# DPBinaryKnapsackSolver
 # and core CoreDPBinaryKnapsackSolver), and the greedy relaxation in both its
 # from-scratch and incremental flavours, whose true bounds must BRACKET that
 # optimum (see SolveAll() in test.cpp). The BranchAndXSolver is NOT here: it
@@ -12,7 +13,8 @@
 # (see BSPar.txt); the incremental greedy is attached as a standalone
 # relaxation, the same role its from-scratch sibling plays here.
 #
-# The per-solver ComputeConfig are factored into the *Cfg.txt fragments shared
+# The per-solver ComputeConfig are factored into the *Cfg.txt fragments
+# shared
 # with BSPar.txt (included via '*'), so there is no duplicated configuration.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -26,7 +28,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 DPBinaryKnapsackSolver                         # 2nd: exact full-table DP

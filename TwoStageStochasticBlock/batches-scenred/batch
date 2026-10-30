@@ -157,6 +157,7 @@ echo "Results: $RESULTS_DIR"
 echo "Instances: ${#INSTANCES[@]}"
 echo
 
+fail=0
 for F in "${INSTANCES[@]}"; do
   name="$(basename "$F" .nc)"
   out="$RESULTS_DIR/$name.out"
@@ -179,6 +180,7 @@ for F in "${INSTANCES[@]}"; do
 
   if [[ $status -ne 0 ]]; then
     echo "  [FAILED] exit=$status  (see $out)"
+    fail=1
     grep -vE "Unexpected netCDF Vars" "$out" | grep -iE "error" | tail -3
   else
     echo "  [OK]"
@@ -191,3 +193,4 @@ echo "=============================================================="
 echo "All instances completed."
 echo "Results in: $RESULTS_DIR"
 echo "=============================================================="
+exit $fail

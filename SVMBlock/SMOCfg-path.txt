@@ -21,7 +21,8 @@
 1  # number of integer parameters
 
 # now all the integer parameters
-intSMOPath  1  # the samples added are learnt by walking the exact solution path
+# the samples added are learnt by walking the exact solution path
+intSMOPath  1
 
 1  # number of double parameters
 

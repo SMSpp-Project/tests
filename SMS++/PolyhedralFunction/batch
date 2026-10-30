@@ -47,8 +47,8 @@ for size in $sizes; do
     for vert in $verts; do
       for (( seed = 0 ; seed < 20 ; seed++ )); do
 
-        run_test "$PolyhedralFunction_test" "$seed" "$what" "$size" "$dens" \
-            $iter $nchg $pchg $vert
+        run_test "$PolyhedralFunction_test" -e "$seed" -k "$what" -N "$size" \
+            -d "$dens" -n $iter -m $nchg -q $pchg -V $vert
 
       done
     done

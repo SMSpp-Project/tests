@@ -1,0 +1,57 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MOSEKCfg-I.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the MOSEKMILPSolver of the tester of the quadratic
+# functions on the integer version of a model, with a time limit lower
+# than that of SCIP, so that adding MOSEK keeps the integer batteries
+# within the time of a CI job, and with the outer approximation of the
+# conic relaxations: with the nonlinear ones and few threads, MOSEK 11 and
+# 12 declare optimal a worse solution of QPLib_10056, which the dual form
+# of the interior point avoids in MOSEK 11 but not in MOSEK 12;
+# LPPar_CL_I.txt includes it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+2 # number of integer parameters
+
+# now all the integer parameters
+intLogVerb                             0  # log verbosity of the MILPSolver
+MSK_IPAR_MIO_CONIC_OUTER_APPROXIMATION 1  # outer approximation of cones
+
+1 # number of double parameters
+
+# now all the double parameters
+dblMaxTime      60     # time limit of the solve
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MOSEKCfg-I.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

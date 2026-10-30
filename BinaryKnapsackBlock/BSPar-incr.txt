@@ -7,8 +7,6 @@
 # best-first and serial depth-first modes, so that the sweep verifies the
 # incremental variant reaches the same optimum as the reference.
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -20,11 +18,13 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 BranchAndXSolver                      # 2nd: BX best-first, incremental inner
-BranchAndXSolver                      # 3rd: BX depth-first, incremental inner
+# 3rd: BX depth-first, incremental inner
+BranchAndXSolver
 
 3  # number of ComputeConfig in this BlockSolverConfig
 
@@ -104,5 +104,5 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End BSPar-incr.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-incr.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

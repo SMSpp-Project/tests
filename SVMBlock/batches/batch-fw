@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# usage: batch-fw < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_FW_test
+#        < log file > = output log file (no log if absent)
+#
+# FrankWolfeSolver on two problems built out of the data sets of the LIBSVM
+# repository, against a :MILPSolver solving each as a whole:
+#
+# - the least-squares fit in Euclidean balls, one ball or four, a feasible
+#   region that is not a polytope, where the oracle (BallSolver) is in
+#   closed form and the radius is half the norm of the unconstrained fit, so
+#   that the balls are active;
+#
+# - the Wolfe dual of the SVM on a box, with the linear and the Gaussian
+#   kernel, where the oracle is BoxSolver.
+#
+# Every variant of FWBSCfg.txt is run on each, from the same point. On the
+# balls they all reach the accuracy they are asked for; on the box they do
+# not in the iterations they are given, and there they are held to their
+# bounds only (-E inf), i.e. the reference has to lie between get_lb() and
+# get_ub(), which is what the certificate of a bundle direction is about.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_FW_test
+DEFAULT_PAR=FWBSCfg.txt
+parse_batch_args "$@"
+
+DATA="$(dirname "$0")/../../../SVMBlock/data/libsvm"
+
+if [ ! -d "$DATA" ]; then
+  echo "the data sets are not there: build the extract_svm_libsvm target"
+  exit 0
+fi
+
+# in CI only the smallest, where the point is that the batch runs at all
+if [ -n "$CI" ]; then
+  sets="heart_scale"
+else
+  sets="heart_scale sonar_scale ionosphere_scale"
+fi
+
+for set in ${sets}; do
+  [ -f "${DATA}/${set}" ] || continue
+
+  for k in 1 4; do     # one ball, and four
+    run_test "$exe" -S "$par" -L BallBSCfg.txt -P 0 -k "$k" -r -0.5 \
+             "${DATA}/${set}"
+  done
+
+  for K in 0 2; do     # the linear kernel and the Gaussian one
+    run_test "$exe" -S "$par" -L BoxBSCfg.txt -P 1 -K "$K" -C 1 \
+             -E ",inf,inf,inf,inf,inf,inf" "${DATA}/${set}"
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

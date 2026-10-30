@@ -95,15 +95,6 @@
 
 #define PANIC( x ) if( ! ( x ) ) PANICMSG
 
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 #define DYNAMIC_VARS 1
@@ -941,66 +932,62 @@ int main( int argc , char **argv )
 
  assert( SKIP_BEAT >= 0 );
 
- long int seed = 0;
- Index wchg = 31;
+ round_opts.wchg = 31;
  #if DYNAMIC_VARS > 0
-  wchg |= 32;
+  round_opts.wchg |= 32;
  #endif
  #if DYNAMIC_VAR_REMOVALS > 0
-  wchg |= 64;
+  round_opts.wchg |= 64;
  #endif
- double dens = 4;  
- double p_change = 0.5;
- Index n_change = 10;
- Index n_repeat = 40;
+ static double dens = 4;
 
- switch( argc ) {
-  case( 10 ): Str2Sthg( argv[ 9 ] , DetachNDO );
-  case( 9 ): Str2Sthg( argv[ 8 ] , p_vert );
-  case( 8 ): Str2Sthg( argv[ 7 ] , p_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_repeat );
-  case( 5 ): Str2Sthg( argv[ 4 ] , dens );
-  case( 4 ): Str2Sthg( argv[ 3 ] , nvar );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar dens #rounds #chng %chng %vert detach]"
- 		<< endl <<
-           "       wchg: what to change, coded bit-wise [" << wchg << "]"
-		<< endl <<
-           "             1 = add rows, 2 = delete rows"
-		<< endl <<
-           "             4 = modify rows, 8 = modify constants"
-		<< endl <<
-           "             16 = change global lower/upper bound"
-          #if DYNAMIC_VARS > 0
-		<< endl <<
-           "             32 = add variables"
-	  #endif
-          #if DYNAMIC_VAR_REMOVALS > 0
-		<< endl <<
-           "             64 = delete variables"
-	  #endif
-	        << endl <<
-           "       nvar: number of variables [10]"
-	        << endl <<
-           "       dens: rows / variables [4]"
-	        << endl <<
-           "       #rounds: how many iterations [40]"
-	        << endl <<
-           "       #chng: number changes [10]"
-	        << endl <<
-           "       %chng: probability of changing [0.5]"
-	        << endl <<
-           "       %vert: probability that a generated row is vertical [0]"
-	        << endl <<
-           "       detach: if the Solver of NDOBlock are detached and "
-                                              "re-attached [0]"
-	        << endl;
-	   return( 1 );
-  }
+ docopt_desc = "SMS++ PolyhedralFunction test.\n";
+ add_round_options(
+  "                                    1 add rows, 2 delete rows,\n"
+  "                                    4 modify rows, 8 modify constants,\n"
+  "                                    16 change global lower/upper bound\n"
+ #if DYNAMIC_VARS > 0
+  "                                    32 add variables\n"
+ #endif
+ #if DYNAMIC_VAR_REMOVALS > 0
+  "                                    64 delete variables\n"
+ #endif
+  );
+ short_opts += "N:d:V:X:";
+ const std::vector< option > my_opts = {
+   { "nvar"   , required_argument , nullptr , 'N' } ,
+   { "dens"   , required_argument , nullptr , 'd' } ,
+   { "pvert"  , required_argument , nullptr , 'V' } ,
+   { "detach" , required_argument , nullptr , 'X' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -N, --nvar <n>                  number of variables [10]\n"
+         "  -d, --dens <x>                  rows / variables [4]\n"
+         "  -V, --pvert <p>                 probability that a generated row\n"
+         "                                  is vertical [0]\n"
+         "  -X, --detach <0|1>              if the Solver of NDOBlock are\n"
+         "                                  detached and re-attached [0]\n";
+
+ // the instance is generated, so no input file is needed
+ filename_optional = true;
+
+ process_args( argc , argv , []( int opt ) {
+   if( process_round_option( opt ) )
+    return( true );
+   switch( opt ) {
+    case( 'N' ): Str2Sthg( optarg , nvar );      return( true );
+    case( 'd' ): Str2Sthg( optarg , dens );      return( true );
+    case( 'V' ): Str2Sthg( optarg , p_vert );    return( true );
+    case( 'X' ): Str2Sthg( optarg , DetachNDO ); return( true );
+    default:                                     return( false );
+    }
+   } );
+
+ long int seed = round_opts.seed;
+ Index wchg = round_opts.wchg;
+ double p_change = round_opts.p_change;
+ Index n_change = round_opts.n_change;
+ Index n_repeat = round_opts.n_repeat;
 
  if( p_vert < 0 || p_vert > 1 ) {
   cout << "error: p_vert out of [0, 1]";

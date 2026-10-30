@@ -3,9 +3,12 @@
 #
 # Two-Solver BlockSolverConfig: TWO GreedyRelaxationBinaryKnapsackSolver as
 # the inner relaxations of a BranchAndXSolver, used only to exercise the
-# per-node parallel evaluation of the relaxations (intThreadForDifferentSolvers
-# > 1; see computeRelaxationsParallel()). The two relaxations are identical, so
-# the result must match the single-relaxation one: this validates the parallel
+# per-node parallel evaluation of the relaxations
+# (intThreadForDifferentSolvers
+# > 1; see computeRelaxationsParallel()). The two relaxations are identical,
+# so
+# the result must match the single-relaxation one: this validates the
+# parallel
 # reduction, NOT a speedup (the knapsack has one cheap relaxation).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

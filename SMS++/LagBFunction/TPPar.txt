@@ -6,8 +6,6 @@
 # LagBFunction; this being a simple one-level LP (without inner Block), a
 # :MILPSolver
 #
-#   Enrico Gorgone, Antonio Frangioni
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

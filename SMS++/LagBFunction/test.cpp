@@ -236,17 +236,6 @@
 
 #define SKIP_BEAT 3
 
-/*--------------------------------------------------------------------------*/
-
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 // if 1, the w variables are dynamic
 
@@ -893,8 +882,9 @@ static double LBF_value_by_copy( LagBFunction * lbf )
 static double NDO_value( void )
 {
  double value = 0;
- if( auto obj = dynamic_cast< FRealObjective * >(
-                                            NDOBlock->get_objective() ) ) {
+ // The root objective is optional; the typed getter throws if it is absent.
+ if( NDOBlock->get_objective() ) {
+  auto obj = NDOBlock->get_objective< FRealObjective >();
   obj->compute();
   value += obj->value();
   }
@@ -1141,97 +1131,80 @@ int main( int argc , char **argv )
 
  assert( SKIP_BEAT >= 0 );
 
- long int seed = 0;
- Index wchg = 511;
- int nf = 1;
- int nt = 1;
- double dens = 3;
- Index n_repeat = 40;
- Index n_change = 10;
- double p_change = 0.5;
- std::string ndo_par;
+ round_opts.wchg = 511;
+ static int nf = 1;
+ static int nt = 1;
+ static double dens = 3;
 
- switch( argc ) {
-  case( 13 ): Str2Sthg( argv[ 12 ] , DetachNDO );
-  case( 12 ): Str2Sthg( argv[ 11 ] , SizeEasy );
-  case( 11 ): if( *argv[ 10 ] )
-               ndo_par = argv[ 10 ];
-  case( 10 ): Str2Sthg( argv[ 9 ] , p_change );
-  case( 9 ): Str2Sthg( argv[ 8 ] , n_change );
-  case( 8 ): Str2Sthg( argv[ 7 ] , n_repeat );
-  case( 7 ): Str2Sthg( argv[ 6 ] , dens );
-  case( 6 ): Str2Sthg( argv[ 5 ] , nt );
-  case( 5 ): Str2Sthg( argv[ 4 ] , nf );
-  case( 4 ): Str2Sthg( argv[ 3 ] , nvar );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar #nf #nt dens #rounds #chng %chng ndopar size"
-           " detach]"
- 		<< endl <<
-           "       wchg: what to change, coded bit-wise [511]"
-		<< endl <<
-           "             0 = add rows, 1 = delete rows "
-		<< endl <<
-           "             2 = modify rows, 3 = modify constants"
-		<< endl <<
-           "             4 = change global lower/upper bound"
-		<< endl <<
-           "             5 = modify costs, 6 = modify demands"
-		<< endl <<
-           "             7 = modify flow bounds"
-		<< endl <<
-           "             8 = change linear objective"
-		<< endl <<
-           "             9 = each LagBFunction dualises a random subset "
-                                              "(exercises sparse Lambda)"
-		<< endl <<
-           "            10 = remove one dual_pair from a single LagBFunction "
-                                              "(naked, not GroupMod;"
-		<< endl <<
-           "                 exercises dense->sparse auto-promotion + "
-                                              "per-Function Mod dispatch)"
-		<< endl <<
-           "            11 = add one dual_pair to a single LagBFunction "
-                                              "(naked; on a new"
-		<< endl <<
-           "                 coordinate of the master or on one it "
-                                              "already has)"
-		<< endl <<
-           "            12 = the inner Block of an easy LagBFunction "
-                                              "issues an NBModification"
-  #if DYNAMIC_VARS > 0
-		<< endl <<
-           "             (with DYNAMIC_VARS, bit 7 = add variables, "
-                                              "bit 8 = delete variables)"
-  #endif
-	        << endl <<
-           "       nvar: number of variables [10]"
-	        << endl <<
-           "       |#nf|: number of PolyFunction (< 0: linear function) [1]"
-	        << endl <<
-           "       |#nt|: number of transportation (< 0: easy comp.) [1]"
-	        << endl <<
-           "       dens: rows / variables [3]"
-	        << endl <<
-           "       #rounds: how many iterations [40]"
-	        << endl <<
-           "       #chng: number of changes [10]"
-	        << endl <<
-           "       %chng: probability of changing [0.5]"
-	        << endl <<
-           "       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt, "
-                                    "NDOPar-Hard.txt if #nt > 0]"
-	        << endl <<
-           "       size: size Variable of easy comp. (0 none, 1 owned, "
-                                              "2 given) [0]"
-	        << endl <<
-           "       detach: if the Solver of NDOBlock are detached and "
-                                              "re-attached [0]"
-	        << endl;
-	   return( 1 );
-  }
+ docopt_desc = "SMS++ LagBFunction test; -S gives the BlockSolverConfig of\n"
+               "the NDOBlock [NDOPar.txt, NDOPar-Hard.txt if nt > 0].\n";
+ add_round_options(
+  "                                    bit 0 add rows, bit 1 delete rows,\n"
+  "                                    bit 2 modify rows, bit 3 modify\n"
+  "                                    constants, bit 4 change global\n"
+  "                                    lower/upper bound, bit 5 modify\n"
+  "                                    costs, bit 6 modify demands,\n"
+  "                                    bit 7 modify flow bounds, bit 8\n"
+  "                                    change linear objective, bit 9\n"
+  "                                    each LagBFunction dualises a\n"
+  "                                    random subset, bit 10 remove one\n"
+  "                                    dual_pair from a LagBFunction,\n"
+  "                                    bit 11 add one dual_pair to a\n"
+  "                                    LagBFunction, bit 12 the inner\n"
+  "                                    Block of an easy LagBFunction\n"
+  "                                    issues an NBModification\n"
+ #if DYNAMIC_VARS > 0
+  "                                    (with DYNAMIC_VARS, bit 7 add\n"
+  "                                    variables, bit 8 delete variables)\n"
+ #endif
+  );
+ short_opts += "N:f:t:d:z:X:";
+ const std::vector< option > my_opts = {
+   { "nvar" , required_argument , nullptr , 'N' } ,
+   { "nf" , required_argument , nullptr , 'f' } ,
+   { "nt" , required_argument , nullptr , 't' } ,
+   { "dens" , required_argument , nullptr , 'd' } ,
+   { "size" , required_argument , nullptr , 'z' } ,
+   { "detach" , required_argument , nullptr , 'X' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help +=
+  "  -N, --nvar <n>                  number of variables [10]\n"
+  "  -f, --nf <n>                    |nf| PolyhedralFunction (< 0:\n"
+  "                                  linear function) [1]\n"
+  "  -t, --nt <n>                    |nt| transportation problems\n"
+  "                                  (< 0: easy components) [1]\n"
+  "  -d, --dens <x>                  rows / variables [3]\n"
+  "  -z, --size <0|1|2>              size Variable of the easy\n"
+  "                                  components: 0 none, 1 owned,\n"
+  "                                  2 given [0]\n"
+  "  -X, --detach <0|1>              if the Solver of NDOBlock are\n"
+  "                                  detached and re-attached [0]\n"
+;
+
+ // the instance is generated, so no input file is needed
+ filename_optional = true;
+
+ process_args( argc , argv , []( int opt ) {
+   if( process_round_option( opt ) )
+    return( true );
+   switch( opt ) {
+    case( 'N' ): Str2Sthg( optarg , nvar ); return( true );
+    case( 'f' ): Str2Sthg( optarg , nf ); return( true );
+    case( 't' ): Str2Sthg( optarg , nt ); return( true );
+    case( 'd' ): Str2Sthg( optarg , dens ); return( true );
+    case( 'z' ): Str2Sthg( optarg , SizeEasy ); return( true );
+    case( 'X' ): Str2Sthg( optarg , DetachNDO ); return( true );
+    default: return( false );
+    }
+   } );
+
+ long int seed = round_opts.seed;
+ Index wchg = round_opts.wchg;
+ Index n_repeat = round_opts.n_repeat;
+ Index n_change = round_opts.n_change;
+ double p_change = round_opts.p_change;
+ std::string ndo_par = sconf_file;
 
  if( nvar < 1 ) {
   cout << "error: nvar too small";

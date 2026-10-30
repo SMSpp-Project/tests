@@ -32,14 +32,12 @@ for sdc in 100 50000; do
 
         what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-        # the formulation is the BlockConfig TUBCfg-<form>.txt, -PC adding
-        # the perspective cuts
-        for form in 3bin T pt DP SU SD SUSD 3bin-PC T-PC; do
+        # the formulations are those whose BlockConfig TUBCfg-<form>.txt
+        # TUBForm-shutdown.txt lists, the unit being read once per formulation
+        # and the copies compared with each other [see batch]
+        run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
+                 -F TUBForm-shutdown.txt -n "$rounds" -m "$nchg" -q "$pchg" -d "$sdc"
 
-          run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
-                   -B "TUBCfg-$form.txt" -n "$rounds" -m "$nchg" -q "$pchg" -d "$sdc"
-
-        done
       done
     done
   done

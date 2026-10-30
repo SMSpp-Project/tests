@@ -134,7 +134,8 @@ $(DIR)/test_bds.o: $(DIR)/test_bds.cpp $(MH) $(BnDSLVH)
 .PHONY: mirror readwrite bds
 
 clean::
-	rm -f $(DIR)/AbstractBlock_mirror_test $(DIR)/AbstractBlock_readwrite_test \
+	rm -f $(DIR)/AbstractBlock_mirror_test \
+	      $(DIR)/AbstractBlock_readwrite_test \
 	      $(DIR)/AbstractBlock_BDS_test
 
 ############################ End of makefile #################################

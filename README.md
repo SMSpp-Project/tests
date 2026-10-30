@@ -1,5 +1,10 @@
 # SMS++ System Tests
 
+[![Release](https://gitlab.com/smspp/tests/-/badges/release.svg)](https://gitlab.com/smspp/tests/-/releases)
+[![Documentation](https://img.shields.io/badge/docs-Doxygen-blue)](https://smspp.gitlab.io/smspp-project/)
+[![C++ Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+
 A set of system tests for the SMS++ core library and several other
 modules.
 
@@ -157,11 +162,16 @@ the `test` directory of the module itself.
   `BundleSolver`), any `CDASolver` able to handle Linear Programs (such as
   `CPXMILPSolver` and `SCIPMILPSolver`), the `UCBlock` set of `Block` for
   Unit-Commitment problems (including the pollutant budget constraints, both
-  against PyPSA and on small instances with known optima), as well as for
+  against PyPSA and on small instances with known optima, and the units that
+  convert energy among carriers, `ConversionUnitBlock`, in
+  `batch-conversion`, against PyPSA and against the known optima of
+  multi-energy instances), as well as for
   quite a lot of the mechanics of the SMS++ core library. The same suite runs
   `TUDPS_test`, which compares the `ThermalUnitExtDPSolver` specialised
   Dynamic Programming `:Solver` with a `:MILPSolver` on some of the (many)
-  different formulations `ThermalUnitBlock` supports; its batches are in
+  different formulations `ThermalUnitBlock` supports, and the formulations
+  with each other, the unit being read once per `BlockConfig` of the list
+  that the battery gives with `-F`; its batches are in
   `batches-tub`, the batteries that walk the instances carrying one unit
   alone, thermal or nuclear. Each of them runs that family with every
   `:Solver` that applies to it: besides the dynamic programme against the
@@ -179,7 +189,16 @@ the `test` directory of the module itself.
   configured `:Solver`; `batch-stochastic` and `batch-pypsa` also solve the
   inner Block of the modular instances by the recursive
   `LagrangianDualSolver` (`InnerBCfg-LD.txt`), i.e., an ad hoc Benders
-  decomposition with a Lagrangian dual inside.
+  decomposition with a Lagrangian dual inside. The same suite holds the
+  battery `batches-sddp/batch`, which runs no tester of its own but the tools
+  `investmentblock_solver` and `sddp_solver`: at a fixed design it compares
+  the value of an `InvestmentFunction` over an `SDDPBlock`, i.e., the mean of
+  the simulations after the training, with the simulations of the same
+  `SDDPBlock` by `sddp_solver`, stage by stage, on the toy instances that
+  `gen_sddp_initud.py` writes, where a thermal unit with a minimum up time
+  is started up at the end of a stage, or one with a minimum down time is
+  shut down there; where the `InvestmentFunction` cannot pass the state, a
+  known defect, its value is printed and not held to the reference.
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
@@ -227,12 +246,29 @@ the `test` directory of the module itself.
   two formulations of the problem and the `SingleFlowDCRBendersSolver`,
   cross-checking what they answer and the `Solution` each of them produces.
 
+- [`HQPBlock`](HQPBlock), a tester of the `HQPBlock` of hierarchical
+  (lexicographic) Quadratic Programs and of the `HQPSolver` that solves its
+  levels one after the other with an inner `:MILPSolver`: one `HQPSolver`
+  for each inner Solver (DAQP, qpOASES, MOSEK, Clarabel) and setting, all in
+  the same `BlockSolverConfig`, is compared level by level with an
+  independent implementation of the null-space approach, hence with all the
+  others, on random and degenerate hierarchies built by the tester, on a
+  step of Model Predictive Control that changes the data of the same Block,
+  and on the instances that `HQPBlock` distributes.
+
 ### Posed on no Block in particular
 
 - [`compare_formulations`](compare_formulations),  very simple tester for
   testing different formulations of some problem obtained by
   `BlockConfig`-uring in two different ways two copies of the same `:Block`
   and solving them with two copies of the same `:Solver`.
+
+- [`import_modules`](import_modules), built when `SMSpp_BUILD_MODULE` is
+  `ON`: a program that imports the C++20 module of each SMS++ module in the
+  build (`import smspp.ucblock;` and so on), names their main classes and
+  gets a `Block` or a `Solver` of each one from the factory, so that a name
+  that a module does not export stops the build and a factory registration
+  lost through the import stops the run.
 
 The tests run as traditional command line executables. Most of the tests
 can also run as a

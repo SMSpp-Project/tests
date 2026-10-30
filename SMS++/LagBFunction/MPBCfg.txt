@@ -1,10 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - MPBCfg.txt - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MPBCfg.txt  - - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for the inner :MILPSolver of
 # the MasterProblemBlock used by the BundleSolver
-#
-#   Donato Meoli, Antonio Frangioni
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -46,12 +44,16 @@ intMaxThread    1 # single-threaded for deterministic master reproducibility
 #CPXPARAM_Preprocessing_Presolve  0   # disable presolve
 
 # suggested Gurobi parameters (uncomment for Gurobi)
-Method        1   # 0 = primal, 1 = dual simplex, 2 = barrier: the multipliers
-                  # of the master ARE the algorithm, and an interior point has
+# 0 = primal, 1 = dual simplex, 2 = barrier: the multipliers
+Method        1
+                  # of the master ARE the algorithm, and an interior point
+                  # has
                   # them only to about 1e-7 relative, which the stopping test
                   # of the bundle cannot survive; besides, the barrier cannot
-                  # restart from the previous basis, so it re-solves the master
-                  # from scratch at every call, while the simplex re-optimises
+                  # restart from the previous basis, so it re-solves the
+                  # master
+                  # from scratch at every call, while the simplex
+                  # re-optimises
                   # after the new columns for a fraction of the iterations
 Presolve      0   # 0 = off, 1 = conservative, 2 = aggressive (default -1)
 #NumericFocus  3   # 0 = auto (default), 1..3 = increasing precision focus
@@ -115,5 +117,5 @@ OptimalityTol   1e-09 # how much a reduced cost of the master may be off
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END MPBCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MPBCfg.txt  - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

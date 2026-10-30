@@ -1,0 +1,31 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - InnerBSCfg-daqp-cold.txt  - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the cold inner Solver of an HQPSolver: DAQP, as
+# in InnerBSCfg-daqp.txt, with each solve from the empty working set
+# (DAQPCfg-cold.txt).
+# A build without it leaves the HQPSolver with no inner Solver, which the
+# tester reports and leaves out.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+DAQPMILPSolver  # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*DAQPCfg-cold.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - END InnerBSCfg-daqp-cold.txt  - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

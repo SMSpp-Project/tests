@@ -1,0 +1,36 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - NUBForm-rules.txt - - - - - - - - - - - - - - -
+#
+# The formulations of the BlockConfig of a NuclearUnitBlock that
+# batch-nuclear compares outside CI on the units with the operating rules,
+# once per unit: the T formulation of the thermal unit with Perspective
+# Cuts, as the reference, and the compact formulations of the rules on the
+# T formulation without Perspective Cuts [see NUBCfg-T-F*.txt], with F2
+# also on the SUSD formulation with the caps of the runs by the reach of the
+# rules. They all describe the same set of schedules [see -F of TUDPS_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+11  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*TUBCfg-T-PC.txt        # 1st formulation: T-PC
+*NUBCfg-T-F1T.txt       # 2nd formulation: F1T
+*NUBCfg-T-F0.txt        # 3rd formulation: F0
+*NUBCfg-T-F2.txt        # 4th formulation: F2
+*NUBCfg-T-F2-SS.txt     # 5th formulation: F2, start-up stability by instant
+*NUBCfg-T-F2-DF1.txt    # 6th formulation: F2, deep decreases of F1
+*NUBCfg-T-F2-RR.txt     # 7th formulation: F2, reach of the output
+*NUBCfg-T-F3a.txt       # 8th formulation: F3a
+*NUBCfg-T-F3b.txt       # 9th formulation: F3b
+*NUBCfg-T-F4.txt        # 10th formulation: F4
+*NUBCfg-SUSD-F2-RC.txt  # 11th formulation: F2 on SUSD, caps of the runs
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END NUBForm-rules.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

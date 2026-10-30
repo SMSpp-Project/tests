@@ -14,9 +14,12 @@ SimpleConfiguration<std::map<std::string,Configuration*>>
 
 3 # the number of elements in the map
 
-DCNetworkBlock          *DCNBConfig1.txt    # the BlockConfig for DCNetworkBlock
-PolyhedralFunctionBlock *PFBConfig.txt      # the BlockConfig for PolyhedralFunctionBlock
-ThermalUnitBlock        *TUBCfg.txt         # the BlockConfig for ThermalUnitBlock
+# the BlockConfig for DCNetworkBlock
+DCNetworkBlock          *DCNBConfig1.txt
+# the BlockConfig for PolyhedralFunctionBlock
+PolyhedralFunctionBlock *PFBConfig.txt
+# the BlockConfig for ThermalUnitBlock
+ThermalUnitBlock        *TUBCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END MetaConfig1.txt - - - - - - - - - - - - - -

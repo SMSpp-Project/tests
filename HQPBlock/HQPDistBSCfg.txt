@@ -1,0 +1,87 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - HQPDistBSCfg.txt  - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the HQPDistBlock in the tester of HQPBlock [see
+# HQPDistForms.txt]: one HQPSolver for each inner Solver and setting, each
+# solving the whole tree, the consensus rows in the model, i.e., the problem
+# of the centralized hierarchy, so that the tester compares each of them with
+# the reference, hence with the HQPSolver of the HQPBlock and with each
+# other:
+#
+#   - DAQP in the three settings of HQPBSCfg.txt (HQPCfg.txt,
+#     HQPCfg-free.txt and HQPCfg-prox0.txt);
+#   - qpOASES in the first one.
+#
+# An HQPSolver whose inner Solver is not in the build is left out.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+4  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+HQPSolver  # 1st: DAQP on the whole tree, the base
+HQPSolver  # 2nd: DAQP on the whole tree, lower levels in the model
+HQPSolver  # 3rd: DAQP on the whole tree, center at 0
+HQPSolver  # 4th: qpOASES on the whole tree, the base
+
+4  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: DAQP on the whole tree, the base
+*HQPCfg.txt
+
+# 2: DAQP on the whole tree, lower levels in the model
+*HQPCfg-free.txt
+
+# 3: DAQP on the whole tree, center at 0
+*HQPCfg-prox0.txt
+
+# 4: qpOASES on the whole tree
+*HQPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strInnerBSC  InnerBSCfg-qpoases.txt  # the inner Solver
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END HQPDistBSCfg.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - HQPCfg.txt  - - - - - - - - - - - - - - - - -
+#
+# The base ComputeConfig of the HQPSolver of HQPBSCfg.txt: the center of the
+# regularization follows the solution of the previous level (intProxCenter
+# 1), so that each level is the problem that the reference of the tester
+# solves in the null space of the higher levels, the rows of the lower levels
+# are relaxed and their slacks fixed to 0 (intRelaxLower 1, the default), and
+# the inner Solver is DAQP (InnerBSCfg-daqp.txt). The variants
+# HQPCfg-free.txt and HQPCfg-prox0.txt change one of these, and HQPBSCfg.txt
+# changes the inner Solver of each of them.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intProxCenter  1  # center at the solution of the previous level
+intRelaxLower  1  # rows of the lower levels relaxed
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strInnerBSC  InnerBSCfg-daqp.txt  # the inner Solver
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END HQPCfg.txt  - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

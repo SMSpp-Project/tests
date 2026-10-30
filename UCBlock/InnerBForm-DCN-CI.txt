@@ -1,0 +1,23 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - InnerBForm-DCN-CI.txt - - - - - - - - - - - - - -
+#
+# The formulations of InnerBForm-DCN.txt that the batteries of this suite
+# compare in CI, where their time is short: the PTDF and the KIRCHHOFF
+# formulations of the DCNetworkBlock.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*InnerBCfg-PTDF.txt     # 1st formulation: PTDF
+*InnerBCfg.txt          # 2nd formulation: KIRCHHOFF
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBForm-DCN-CI.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

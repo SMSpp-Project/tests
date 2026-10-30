@@ -16,16 +16,22 @@
 # :MILPSolver, which reads the assembled Block whole and is therefore still
 # solving the extensive form, is cross-checked against
 # BendersDecompositionSolver. The second run is skipped where that Solver is
-# not in the build, its configuration naming it.
+# not in the build, its configuration naming it. On the stochastic Block as
+# the file gives it the instance is read once per formulation of the network
+# of its inner Block (InnerBForm-DCN.txt, InnerBForm-DCN-CI.txt in CI), each
+# copy solved by the same Solver and all of them compared with each other
+# and with the reference [-F]; the Benders form is assembled from the one
+# copy in the formulation of InnerBCfg.txt [-B].
 #
 # the instances of the thermal family of pypsa2smspp (gen_thermal_tssb.py,
 # units x periods x scenarios in the name) are unit commitments in every
 # scenario, where a Lagrangian dual gives a bound below the optimum by the
 # duality gap: they are run with BSPar-2S-LD-IP.txt, the :MILPSolver on the
 # integer problem cross-checked with the PrimalProximalHeur, whose interval
-# must contain the optimum [-E], and the recursive Lagrangian dual, declared
-# a relaxation [-R]; on their Benders form the :MILPSolver is cross-checked
-# with BendersDecompositionSolver whose subproblems are solved by the
+# must contain the optimum [-E], and the recursive Lagrangian dual and the
+# LagrangianDualRelaxationSolver, declared relaxations [-R]; on their
+# Benders form the :MILPSolver is cross-checked with
+# BendersDecompositionSolver whose subproblems are solved by the
 # recursive Lagrangian dual and a feasible solution is recovered at the
 # design of its master, with a MILP master (BSPar-BDS-2S-LD.txt) and with a
 # bundle master (BSPar-BDS-2S-CVX-LD.txt), whose intervals, as that of the
@@ -48,6 +54,11 @@ bds_par="${TSSB_BDS_PAR-BSPar-BDS-2S.txt}"
 DEFAULT_SLV=0
 parse_batch_args "$@"
 
+# the formulations of the network, compared with each other on every
+# instance [see InnerBForm-DCN.txt]; in CI only two of them
+forms=InnerBForm-DCN.txt
+[ -n "$CI" ] && forms=InnerBForm-DCN-CI.txt
+
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ file name ] = PyPsa objective value
 # (Obj_PyPSA column of the summary_all_cases.csv produced by the
@@ -61,6 +72,14 @@ REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_demand.nc]=4.822693602e+0
 REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_maxpower.nc]=3.812776176e+09
 REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_hydroinflow.nc]=3.742200254e+09
 REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_complete.nc]=4.920921646e+09
+
+# the tree c3_d3_both of MultiStageStochasticBlock/batches/batch-pypsa as its
+# flat two-stage equivalent, the nine leaves being the scenarios, once with
+# one network and once with the buses of each of the ten carriers of the
+# network in a carrier of the UCBlock (tree_instance_generator.py --tssb
+# --carriers); the reference is the optimum of the flat network
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_both_flat.nc]=3.488357705e+09
+REF_OBJ[smspp_network_small_fewsectors__snap24__c3_d3_both_flat_carriers.nc]=3.488357705e+09
 
 # the thermal family: the optimum of PyPSA and Gurobi on the deterministic
 # equivalent that extensive_thermal_tssb.py writes, which the :MILPSolver
@@ -85,7 +104,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb/smspp_*.nc; do
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+    run_test "$exe" "$what" -S "$par" -F "$forms" -w "$slv" -r "$ref"
 
     # the Benders form of the same instance, where the Solver that keeps the
     # design in a master of its own can stand beside a :MILPSolver
@@ -110,8 +129,16 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
       exit 1
     fi
 
-    run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -B InnerBCfg.txt \
-             -R ",,r" -E ",inf" -r "$ref"
+    run_test "$exe" "$what" -S BSPar-2S-LD-IP.txt -F "$forms" \
+             -R ",,r,r" -E ",inf,,inf" -r "$ref"
+    # the same with a Solver that no build has named before the heuristic,
+    # which the tester drops on every copy with its entry of -E and with the
+    # position of the Solver that -w names: the tolerance and the reading of
+    # the heuristic have to stay its own [see BSPar-2S-IP-missing.txt]
+    run_test "$exe" "$what" -S BSPar-2S-IP-missing.txt -F "$forms" \
+             -R ",," -E "inf,inf," -r "$ref"
+    run_test "$exe" "$what" -S BSPar-2S-IP-missing.txt -F "$forms" \
+             -w 1 -r "$ref"
     # the Benders form, whose subproblems (a unit commitment per scenario)
     # are solved by the recursive Lagrangian dual: BDS gives the bound of the
     # dual below and, recovering a feasible solution at the design of its

@@ -58,7 +58,8 @@ include $(LgDSLVSDR)/makefile
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(MMCFOBJ) $(SMS++OBJ) $(MCFLEOBJ) $(CMMNUOBJ)
+MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(MMCFOBJ) $(SMS++OBJ) $(MCFLEOBJ) \
+	$(CMMNUOBJ)
 
 # libraries
 MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(MMCFLIB) $(SMS++LIB) $(MCFLELIB)
@@ -69,7 +70,8 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(MMCFINC) $(MCFLEINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(MMCFINC) $(MCFLEINC) \
+	$(CMMNUINC)
 
 # includes
 MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(MMCFH) $(MCFLEH) $(CMMNUH)

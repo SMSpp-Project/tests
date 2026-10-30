@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - BKBSCfg-DP.txt - - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - - BKBSCfg-DP.txt  - - - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of the knapsack of a facility: the dynamic
 # programming solver of the binary knapsack, whose continuous items (the
@@ -63,5 +63,5 @@ ComputeConfig         # exact type of the ComputeConfig object
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END BKBSCfg-DP.txt - - - - - - - - - - - - - - 
+# - - - - - - - - - - - - - END BKBSCfg-DP.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

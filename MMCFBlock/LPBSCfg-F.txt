@@ -1,9 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - LPBSCfg-F.txt - - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a MCFBlock solved by a :MCFSolver
-#
-#   Enrico Gorgone, Antonio Frangioni
+# A txt description of a BlockSolverConfig for a MCFBlock solved by a
+# :MCFSolver
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,7 +16,8 @@ BlockSolverConfig     # exact type of the Configuration object
 MCFSolver<MCFSimplex>     # name of Solver
 #MCFSolver<RelaxIV>     # name of Solver
 #MCFSolver<MCFCplex>    # name of Solver
-#MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>     # name of Solver
+# name of Solver
+#MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>
 
 1  # number of ComputeConfig in this BlockSolverConfig
 

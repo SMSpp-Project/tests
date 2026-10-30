@@ -14,7 +14,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3 # number of (the names of) Solver in this BlockSolverConfig
+4 # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
@@ -23,8 +23,9 @@ GRBMILPSolver         # name of 1st Solver
 #HiGHSMILPSolver      # name of 1st Solver
 LagrangianDualSolver  # name of 2nd Solver
 PrimalProximalHeur    # name of 3rd Solver
+LagrangianDualRelaxationSolver  # name of 4th Solver
 
-3 # number of ComputeConfig in this BlockSolverConfig
+4 # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -61,6 +62,7 @@ str_LDSlv_ISName  ParallelBundleSolver  # the inner Solver
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the PrimalProximalHeur
 
+*PPHCfg.txt
 *PPHCfg.txt
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -

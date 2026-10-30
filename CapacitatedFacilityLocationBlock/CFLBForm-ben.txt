@@ -1,0 +1,39 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - CFLBForm-ben.txt  - - - - - - - - - - - - - - -
+#
+# The formulations that batch-ben compares: the natural formulation, whose
+# continuous relaxation is solved by a :MILPSolver, against a copy in the
+# Benders formulation whose relaxation separates the Benders cuts.
+#
+# The first formulation is the original Block, a pair of its BlockConfig and
+# its BlockSolverConfig; each of the others is an R3Block of it, a vector
+# of the Configuration that makes it [see get_R3_Block()], its BlockConfig
+# and its BlockSolverConfig, which an UpdateSolver keeps up to date with the
+# changes of the original Block; each R3Block is compared with the original
+# Block [see -F of CFL_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of formulations: the Block, then its R3Block
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# the original Block
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+*CFLBCfg-NF.txt         # its BlockConfig
+*CFLBSCfg-ben.txt       # its BlockSolverConfig
+
+# the 1st R3Block
+SimpleConfiguration<std::vector<Configuration*>>
+3  # the Configuration that makes it, its BlockConfig, its BlockSolverConfig
+*R3BCfg-copy.txt        # how it is made
+*CFLBCfg-BF.txt         # its BlockConfig
+*BenBSCfg.txt           # its BlockSolverConfig
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END CFLBForm-ben.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

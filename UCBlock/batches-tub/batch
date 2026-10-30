@@ -25,31 +25,31 @@ par=BSCfg.txt
 
 # ACAD + Lagrangian - - - - - - - - - - - - - - - - - - - -
 
-# the formulation of the unit is the BlockConfig TUBCfg-<form>.txt, one per
-# formulation (3bin/T/pt/DP/SU/SD/SUSD), -PC adding the perspective cuts. We
-# test every formulation with cuts. The interval-based formulations
-# (pt/DP/SU/SD/SUSD) are too expensive on large-horizon instances, so there we
-# skip them and keep only 3bin/T.
-for form in 3bin-PC T-PC pt-PC DP-PC SU-PC SD-PC SUSD-PC; do
-  for i in 24 96; do
-    # skip the expensive interval-based formulations on large instances
-    if [ $form != 3bin-PC ] && [ $form != T-PC ] && [ $i -eq 96 ]; then
-      continue
-    fi
-    for j in 1 12 16 23; do
-      # in CI only 5 of the 100 ramp profiles are run (they are variations of
-      # the same shape); the local sweep stays exhaustive
-      if [ -n "$CI" ]; then hlist="1 25 50 75 100"; else hlist=$(seq 1 100); fi
-      for h in $hlist; do
-        #for (( seed = 0 ; seed < 20 ; seed++ )); do
-          seed=0
+# the formulations of the unit are compared on each instance: it is read once
+# per BlockConfig TUBCfg-<form>.txt that TUBForm-PC.txt lists, i.e., every
+# formulation (3bin/T/pt/DP/SU/SD/SUSD) with the perspective cuts, each copy is
+# solved by the same Solver, and the copies must agree with each other as the
+# two Solver of each copy do. The interval-based formulations (pt/DP/SU/SD/SUSD)
+# are too expensive on large-horizon instances, so there the list is
+# TUBForm-PC-3bin-T.txt, which keeps only 3bin/T.
+for i in 24 96; do
+  # only the cheap formulations on large instances
+  forms=TUBForm-PC.txt
+  [ $i -eq 96 ] && forms=TUBForm-PC-3bin-T.txt
+  for j in 1 12 16 23; do
+    # in CI only 5 of the 100 ramp profiles are run (they are variations of
+    # the same shape); the local sweep stays exhaustive
+    if [ -n "$CI" ]; then hlist="1 25 50 75 100"; else hlist=$(seq 1 100); fi
+    for h in $hlist; do
+      #for (( seed = 0 ; seed < 20 ; seed++ )); do
+        seed=0
 
-          what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
+        what=${DATADIR}/${i}/S${j}ramp${h}_${i}.nc4
 
-          run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" -B "TUBCfg-$form.txt" -n "$iter"
+        run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
+            -F "$forms" -n "$iter"
 
-        #done
-      done
+      #done
     done
   done
 done

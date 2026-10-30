@@ -5,8 +5,6 @@
 # two different Solver: a :MILPSolver and a LagrangianDualSolver using a
 # BundleSolver as the inner Solver
 #
-#   Enrico Gorgone, Antonio Frangioni, Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

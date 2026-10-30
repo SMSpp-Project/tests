@@ -1,0 +1,59 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MOSEKCfg.txt  - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of MOSEKMILPSolver as the inner Solver of an HQPSolver
+# (InnerBSCfg-mosek.txt): one thread, the tolerances of its interior point
+# tightened, since the levels after the first one are compared with the
+# values of the higher levels kept to the accuracy of each solve, and no
+# eliminator in the presolve, which on the levels with many slacks fixed
+# (two equal bounds) lets the interior point stall with no solution,
+# depending on the rounding of the data (e.g., with the objects of clang++
+# but not with those of g++); with no presolve at all, the larger levels of
+# the instances of HQPBlock stall instead.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intMaxThread                                1  # one thread
+MSK_IPAR_PRESOLVE_ELIMINATOR_MAX_NUM_TRIES  0  # no eliminator
+
+3  # number of double parameters
+
+# now all the double parameters
+MSK_DPAR_INTPNT_QO_TOL_REL_GAP  1e-10  # relative gap
+MSK_DPAR_INTPNT_QO_TOL_PFEAS    1e-10  # primal feasibility
+MSK_DPAR_INTPNT_QO_TOL_DFEAS    1e-10  # dual feasibility
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MOSEKCfg.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

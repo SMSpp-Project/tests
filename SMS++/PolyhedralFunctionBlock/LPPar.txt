@@ -40,7 +40,8 @@ intLogVerb    0 # LogVerb, log verbosity of the MILPSolver
 # now all the double parameters
 dblRelAcc     1e-8 # relative accuracy required to solution
 dblFAccSol    1e-9 # tight feasibility tolerance: needed because the test
-                   # tolerance (2e-7 relative) is tighter than CPLEX's default
+                   # tolerance (2e-7 relative) is tighter than CPLEX's
+                   # default
                    # LP simplex feasibility tolerance (1e-6), so an LP solved
                    # at default precision can drift past the test tolerance
                    # over many iterations of accumulated modifications

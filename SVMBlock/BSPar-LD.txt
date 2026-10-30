@@ -3,7 +3,8 @@
 #
 # A txt description of a BlockSolverConfig for a SVMBlock with the consensus
 # structure [see SVMBlock::set_structure()], i.e., the training problem
-# written as one problem per chunk tied by consensus constraints, to be solved
+# written as one problem per chunk tied by consensus constraints, to be
+# solved
 # by three different Solver: a :MILPSolver, which flattens the whole tree and
 # therefore solves the rewriting as a whole, a LagrangianDualSolver, which
 # relaxes the consensus constraints and solves the Lagrangian dual with a

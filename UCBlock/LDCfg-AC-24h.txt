@@ -1,0 +1,57 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - LDCfg-AC-24h.txt  - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the LagrangianDualSolver of the AC instances over 24
+# hours [see BSPar-AC-24h.txt]: that of LDCfg-AC.txt with a limit on the
+# iterations, since on them the Lagrangian Dual does not close its gap in 90
+# minutes; a Solver that is stopped says so, and its lower bound stays
+# valid. The limit is on the iterations and not on the time: with
+# dblMaxTime 600 the Solver ends with kError at some 830-870 s on
+# ES_acopf_srd_id_c01_24h_1 (3 runs out of 3 alone, 1 out of 3 in the
+# battery, with 1 or 8 threads, no message from GUROBI), while with the
+# iterations it stops cleanly; the 15 iterations take 145-250 s on the
+# instances of batch-ac (dantzig, load 210-350).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg-AC.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intMaxIter  15 # max number of iterations of each call
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END LDCfg-AC-24h.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

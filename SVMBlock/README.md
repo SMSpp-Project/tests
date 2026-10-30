@@ -87,8 +87,11 @@ it is read as a `SVMBlock` in netCDF format and no data set is generated.
 Note that the training problem itself only exists for the linear kernel, the
 only one whose feature map is the identity, and that `LagrangianDualSolver`
 only applies to the consensus structure, whence the four `BlockSolverConfig`:
-[BSPar.txt](BSPar.txt), a `:MILPSolver` and `SMOSolver`,
-[BSPar-LSVM.txt](BSPar-LSVM.txt), the same two plus `LIBSVMSolver`,
+[BSPar.txt](BSPar.txt), `SMOSolver` and a `:MILPSolver` for each kind of
+algorithm for a convex quadratic program (`GRBMILPSolver` as the reference,
+the active-set `QPOASESMILPSolver`, the interior-point `MOSEKMILPSolver` and
+the first-order `OSQPMILPSolver`), [BSPar-LSVM.txt](BSPar-LSVM.txt), a
+`:MILPSolver`, `SMOSolver` and `LIBSVMSolver`,
 [BSPar-LD.txt](BSPar-LD.txt), which adds `LagrangianDualSolver` handing each
 chunk to a `:MILPSolver`, and [BSPar-LD-SMO.txt](BSPar-LD-SMO.txt), the same
 one with each chunk handed to a `SMOSolver` instead.
@@ -141,3 +144,48 @@ tolerance they are given: a run that stops there is reported as
 `kLowPrecision`, and the cross-check holds it to the only thing it then
 claims, i.e., that the optimum is not above the value it returns. It is only
 registered with CTest when `SVMBlock` has been built with LIBLINEAR.
+
+## The Frank-Wolfe test
+
+`SVM_FW_test` ([test_fw.cpp](test_fw.cpp)) uses the data sets of the suite
+for two problems that `FrankWolfeSolver` decomposes, each built as a father
+`AbstractBlock` whose `Objective` is a dense `QuadFunction` and whose
+sub-`Block` are the feasible region, every `:Solver` of the father being
+cross-checked against the others from the same starting point:
+
+- with `-P 0`, the least-squares fit of an affine model in Euclidean balls,
+  i.e. the constrained form of ridge regression, the weights and the bias
+  being dealt to `-k` balls of radius R / sqrt( k ) each: a feasible region
+  that is not a polytope, whose oracle is the `BallSolver` of the tester, a
+  linear function being minimized over a ball in closed form; with `-r` not
+  positive, R is that fraction of the norm of the unconstrained fit, so that
+  the balls are active;
+
+- with `-P 1`, the Wolfe dual of the SVM on a box, the bias being
+  regularised so that there is no equality constraint, with the linear or
+  the Gaussian kernel (`-K`) and the bound `-C`, whose oracle is
+  `BoxSolver`.
+
+The usage of the executable is
+
+       ./SVM_FW_test -S <BlockSolverConfig> -L <BlockSolverConfig> [options]
+                     <data set>
+       -P, --problem <p>  0 the fit in balls, 1 the SVM dual [0]
+       -k, --groups <K>   balls the coordinates are dealt to [1]
+       -r, --radius <R>   radius of the whole; if <= 0, - R times the norm
+                          of the unconstrained fit [-0.5]
+       -g, --regress      the targets are real numbers
+       -K, --kernel <k>   the dual only: 0 linear, 2 Gaussian [0]
+       -C, --parC <x>     the dual only: the bound C [1]
+
+where `-S` is the `BlockSolverConfig` of the father,
+[FWBSCfg.txt](FWBSCfg.txt), which registers a `:MILPSolver` as the reference
+and `FrankWolfeSolver` in six variants of its direction, and `-L` that of
+each sub-`Block`, [BallBSCfg.txt](BallBSCfg.txt) or
+[BoxBSCfg.txt](BoxBSCfg.txt). `FrankWolfeSolver` is read by its
+[ `get_lb()` , `get_ub()` ], the reference by its value: a run that stops at
+its cap of iterations is held to its bounds, which is what the certificate of
+a direction other than the gradient is about. The battery is
+[batch-fw](batches/batch-fw); on the box the variants do not reach the
+accuracy they are asked for in the iterations they are given, and they are
+held to their bounds only (`-E inf`).

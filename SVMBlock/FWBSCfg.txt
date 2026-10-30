@@ -1,0 +1,252 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - FWBSCfg.txt - - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the father AbstractBlock of the Frank-Wolfe test
+# of the suite, the least-squares fit in balls (whose oracle is BallSolver,
+# BallBSCfg.txt) or the Wolfe dual on a box (BoxSolver, BoxBSCfg.txt).
+#
+# It registers the monolithic reference and one FrankWolfeSolver per
+# variant of the direction, the way the BSPar of the suite do with the
+# Solver of the SVMBlock: a single run cross-checks the variants against
+# one another and all of them against the reference, a run stopped by
+# intMaxIter being held to its bounds only.
+#
+# Every variant is an override of FWCfg.txt, which holds what they have in
+# common. An override block writes the extra-Configuration slot even when
+# it changes nothing of it: one that leaves it out is read on to the end of
+# the stream and swallows the ComputeConfig that follows it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+7 # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # 1: the monolithic reference, a QCP with
+                      # the balls
+#CPXMILPSolver        #   (uncomment the available backend)
+FrankWolfeSolver      # 2: vanilla Frank-Wolfe
+FrankWolfeSolver      # 3: Blended Pairwise
+FrankWolfeSolver      # 4: the aggregate of two pieces
+FrankWolfeSolver      # 5: the master of 10 pieces
+FrankWolfeSolver      # 6: the same, out of a pool of 30
+FrankWolfeSolver      # 7: the primal-dual bundle method
+
+7 # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+
+# 1: the monolithic reference
+*MILPCfg-FW.txt
+
+# 2: vanilla Frank-Wolfe, the plain conditional gradient
+
+*FWCfg.txt
+
+# 3: Blended Pairwise, which on the box of the dual converges linearly
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intAlgorithm    2 # BPCG
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+* # [none] the extra Configuration slot
+
+# 4: the aggregate of two pieces in closed form, which needs the test
+#    of dblFWAccept, however small
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intFWDirection  3 # eDirAggregate
+
+1 # number of double parameters
+
+# now all the double parameters
+dblFWAccept     1e-6 # only directions that do not decrease
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+* # [none] the extra Configuration slot
+
+# 5: the master of 10 pieces, the refused directions corrected
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+3 # number of integer parameters
+
+# now all the integer parameters
+intFWDirection  2  # eDirBundleMP
+intFWBundleSize 10 # pieces of the master
+intFWOnReject   1  # eRejCorrect
+
+1 # number of double parameters
+
+# now all the double parameters
+dblFWAccept     0.5 # the fraction of the bound to keep
+
+1 # number of string parameters
+
+# now all the string parameters
+strFWMPBCfg     MPBCfg-FW.txt # the Solver of the master
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+* # [none] the extra Configuration slot
+
+# 6: the same master given the active and the tightest pieces out of
+#    a pool of 30
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+4 # number of integer parameters
+
+# now all the integer parameters
+intFWDirection  2  # eDirBundleMP
+intFWBundleSize 10 # pieces of the master
+intFWCutPolicy  1  # eCutRelevant
+intFWCutPool    30 # pieces of the pool
+
+1 # number of double parameters
+
+# now all the double parameters
+dblFWAccept     0.5 # the fraction of the bound to keep
+
+1 # number of string parameters
+
+# now all the string parameters
+strFWMPBCfg     MPBCfg-FW.txt # the Solver of the master
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+* # [none] the extra Configuration slot
+
+# 7: the primal-dual bundle method, whose master bounds the gap out of
+#    how the ball or the box curves, a refused step not being taken
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1 # number of integer parameters
+
+# now all the integer parameters
+intFWDirection  4 # eDirPrimalDual
+
+1 # number of double parameters
+
+# now all the double parameters
+dblFWAccept     0.5 # the fraction of the bound to keep
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+* # [none] the extra Configuration slot
+
+# end of BlockSolverConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END FWBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

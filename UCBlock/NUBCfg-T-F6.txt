@@ -3,8 +3,8 @@
 #
 # The BlockConfig of a NuclearUnitBlock that selects the T formulation of the
 # thermal part, without Perspective Cuts, and the formulation F6 of the
-# operating rules, the flow on the label graph (static_variables = 1537), for
-# the BlockCopySolver of BSCfg-nuc-forms.txt and BSCfg-nuc-graph.txt.
+# operating rules, the flow on the label graph (static_variables = 1537), one
+# of the formulations of NUBForm-graph.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -33,7 +33,8 @@ BlockConfig # exact type of the Configuration object
 # +8192 the rows of the reach of the output from a start-up and towards
 # a shut-down, +16384 the caps of the runs of the network formulations by
 # the reach of the rules, +32768 the rows of F2 on the private outputs of
-# the network formulations, +65536 the perspective cuts on the bands
+# the network formulations, +65536 the perspective cuts on the bands,
+# +131072 the bands by configurations (F3b, with F2)
 SimpleConfiguration<int>
 1537
 

@@ -3,15 +3,18 @@
 #
 # Lean cross-check BlockSolverConfig for LARGE instances (e.g., the Pisinger
 # hard instances, see batch-pisinger), where efficiency matters: it attaches,
-# for each family of algorithm, only its best-performing representative, rather
+# for each family of algorithm, only its best-performing representative,
+# rather
 # than all the equivalent variants BSPar.txt cross-checks on the smaller
 # instances. So: the exact MILP reference (:MILPSolver), the core dynamic
-# program (the fastest exact DP, in place of the full-table and parallel ones),
+# program (the fastest exact DP, in place of the full-table and parallel
+# ones),
 # the from-scratch greedy relaxation (faster than the incremental one), whose
 # true bounds must BRACKET the optimum, and the BranchAndXSolver in its best
 # exploration mode (parallel depth-first).
 #
-# The per-solver ComputeConfig are the factored *Cfg.txt fragments shared with
+# The per-solver ComputeConfig are the factored *Cfg.txt fragments shared
+# with
 # BSPar.txt; the BranchAndXSolver one overrides BX-baseCfg.txt as there.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -25,7 +28,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 CoreDPBinaryKnapsackSolver            # 2nd: exact core DP (best DP)

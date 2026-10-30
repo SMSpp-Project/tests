@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # usage: batch-ldvscuts < exe file > < log file >
-#        < exe file > = path of the executable file, default ../CFL_test
+#        < exe file > = path of the executable file, default ./CFL_test
 #        < log file > = name of the log file, default no log (stdout)
 #
 # Lagrangian-dual vs cuts arrangement: same knapsack Lagrangian-dual R3Block
@@ -26,25 +26,20 @@
 # To run it anyway as a loose-tolerance sanity check, uncomment the run_test
 # line below that passes cmptol=2e-3 (just above the 1.906e-3 max) and comment
 # out the default one.
+# The figures above are those of CPLEX; the :MILPSolver is now GUROBI
+# [see CFLBSCfg-ldvscuts.txt], whose cuts at the root node are not those of
+# CPLEX, and the gap is larger: on the 68 runs of this batch only 4 pass at
+# 1e-5 and 14 at 2e-3, the largest relative gap being 7.6e-2.
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
+# the common part, which reads the arguments [see cfl_battery.sh]
+source "$(dirname "$0")/cfl_battery.sh" "$@"
 
-# run from the LDVScuts config directory so CFL_test reads its config files
-# (BPar*, BSPar*, R3BCfg) there
-cd "$(dirname "$0")/../LDVScuts" || exit 1
+# the original Block and its R3Block, each with its configuration
+forms=CFLBForm-ldvscuts.txt
 
-
-DATADIR=../../../CapacitatedFacilityLocationBlock/data
-
-CFL_test=${1:-../CFL_test}
-mlf=${2:-}
-
-niter=0
 # wchg = 257 = change facility costs (bit 0) and the abstract representation
 # (+256)
 wchg=257
-rounds=40
 maxseed=1
 
 # ad-hoc relative tolerance that absorbs the legitimate LD-vs-cuts bound
@@ -54,17 +49,12 @@ cmptol=2e-3
 
 # ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for f in 102 113 124 42 62 73 91 103 114 131 43 63 74 92 104 121 132 44 \
-  64 81 93 111 122 134 51 71 82 94 112 123 41 61 72 84; do
-  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
+cfl_orlib "${cfl_orlib_small[@]}"
 
-    what=${DATADIR}/txt/ORLib/cap${f}.txt
-
-    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
-    # ... or, with the ad-hoc tolerance, all instances pass (#chng %chng cmptol):
-    # run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds" 10 0.5 "$cmptol"
-
-  done
-done
+# ... or, with the ad-hoc tolerance, each run also given -m 10 -q 0.5 -T
+# "$cmptol" (#chng %chng cmptol): replace the call above with
+#   for f in "${cfl_orlib_small[@]}"; do
+#     cfl_run "${DATADIR}/txt/ORLib/cap${f}.txt" c -m 10 -q 0.5 -T "$cmptol"
+#   done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

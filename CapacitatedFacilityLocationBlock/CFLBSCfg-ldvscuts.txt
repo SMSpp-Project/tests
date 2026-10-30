@@ -1,0 +1,97 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - CFLBSCfg-ldvscuts.txt - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a
+# CapacitatedFacilityLocationBlock to be solved by a :MILPSolver (either to
+# integer optimality or the continuous relaxation) with the use of the strong
+# forcing constraints
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver   # name of Solver
+GRBMILPSolver    # name of Solver
+#SCIPMILPSolver  # name of Solver
+#HiGHSMILPSolver # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+8  # number of integer parameters
+
+# now all the integer parameters
+#intLogVerb     10 # log verbosity of the MILPSolver
+# never change the following to 1, since solving the integer program
+# (albeit at the root node only) is required to have the strong forcing
+# constraints separated
+intRelaxIntVars  0 # nonzero if the continuous relaxation is solved
+# if the optimal integer solution is required, consider changing the
+# following to 3 (separate user cuts at the root node & every other node),
+# although this is not 100% guaranteed to be better
+intCutSepPar     1 # separate user cuts at the root node only
+Threads          1 # avoid parallel
+# if the optimal integer solution is required, comment out the next stuff
+Cuts             0 # disable all the cuts of GUROBI
+GomoryPasses     0 # (separately) disable Gomory cuts
+LiftProjectCuts  0 # (separately) disable L&P cuts
+RINS             0 # disable RINS
+PoolSolutions    1 # keep no other solution than the best one
+# -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier, 3 = barrier +
+# crossover, 4 = network
+#Method 4
+
+5  # number of double parameters
+
+# now all the double parameters
+#dblMaxTime     60 # max time: 1 minute
+# the root node and its cut loop only: with 0 GUROBI stops before the cuts
+NodeLimit        1
+Heuristics       0 # disable the heuristics
+IntFeasTol    1e-9 # the tightest integrality tolerance
+MIPGapAbs    1e-12
+MIPGap       1e-12
+
+0 # number of string parameters
+
+# now all the string parameters
+#strOutputFile  cfl1.lp
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END CFLBSCfg-ldvscuts.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

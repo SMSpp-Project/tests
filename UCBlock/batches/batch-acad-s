@@ -16,8 +16,12 @@
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 
-DEFAULT_EXE=./UCBlock_test
+DEFAULT_EXE=./UCBlock_ML_test
 DEFAULT_PAR=BSPar-DP-BX.txt
+# the 5th Solver of BSPar-DP-BX.txt is in the library that only the tester
+# with Torch has [see the README.md of the suite]; in a build without it the
+# other tester is run, which drops that Solver
+[ -x "$DEFAULT_EXE" ] || DEFAULT_EXE=./UCBlock_test
 # the Lagrangian Dual of these instances is solved over sub-Block that the
 # dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
 # the PrimalProximalHeur needs and what makes its inner Solver converge, and
@@ -29,6 +33,12 @@ DEFAULT_PAR=BSPar-DP-BX.txt
 # solving its own problem exactly while of this one it only bounds the side
 # a relaxation bounds [see BSPar-DP.txt]
 REL="${REL:-,r}"
+# the LagrangianDualRelaxationSolver of the BlockSolverConfig (the 4th
+# Solver) is a relaxation: its upper bound is the other side of the
+# relaxation, not of this problem, so it is declared one in REL, and only
+# its lower bound is held, to correctness alone [see BSPar-DP.txt]
+EPS="${EPS:-,,,inf}"   # with BSPar-DP.txt, whose 4th Solver it is
+REL4="${REL4:-,r,,r}"  # the same
 
 parse_batch_args "$@"
 
@@ -47,11 +57,16 @@ for size in $sizes; do
     # units of size 10 only: on each instance it takes 2 to 8 minutes, and a
     # test is given an hour there
     p=$par
+    rel=$REL
+    eps=
     if [ -n "$CI" ] && [ "$size" != 10 ] && [ "$par" = "$DEFAULT_PAR" ]; then
       p=BSPar-DP.txt
+      rel=$REL4
+      eps=$EPS
     fi
 
-    run_test "$exe" "$what" -S "$p" -R "$REL" -B InnerBCfg.txt
+    run_test "$exe" "$what" -S "$p" -R "$rel" ${eps:+-E "$eps"} \
+             -B InnerBCfg.txt
 
   done
 done

@@ -1,0 +1,51 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - MOSEKCfg-C.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of MOSEKMILPSolver in LPPar_CL_C.txt: that of
+# QPCfg-C.txt, with two threads, since the interior point of MOSEK 12 fails
+# on QGROW7 with 4 threads or more and on QPCSTAIR with one, and solves both
+# with two, so that the outcome does not depend on the cores of the machine.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*QPCfg-C.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intMaxThread    2  # two threads
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END MOSEKCfg-C.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -127,16 +127,17 @@ each time the same procedure is applied and the results of the two
 
 The usage of the executable is the following:
 
-       ./AbstractBlock_readwrite_test seed [wchg nvar dens #rounds #chng %chng]
-       wchg: what to change, coded bit-wise [31]
-             0 = add rows, 1 = delete rows
-             2 = modify rows, 3 = modify constants
-             4 = change global lower/upper bound
-       nvar: number of variables [10]
-       dens: rows / variables [4]
-       #rounds: how many iterations [40]
-       #chng: number changes [10]
-       %chng: probability of changing [0.5]
+       ./AbstractBlock_readwrite_test [options]
+       -e, --seed <n>      seed of the random generator [0]
+       -k, --wchg <bits>   what to change, coded bit-wise [31]
+                           1 = add rows, 2 = delete rows
+                           4 = modify rows, 8 = modify constants
+                           16 = change global lower/upper bound
+       -n, --rounds <n>    how many iterations [10]
+       -m, --nchng <n>     number of changes [10]
+       -q, --pchng <p>     probability of changing [0.5]
+       -N, --nvar <n>      number of variables [10]
+       -d, --dens <x>      rows / variables [4]
 
 [batches/batch-readwrite](batches/batch-readwrite) runs a not-so-large set of
 tests with different sizes and seeds of the random generator.
@@ -164,16 +165,24 @@ back as at the end of a `compute()`. The instances that make each of them
 matter are built on purpose, i.e., with the subproblems feasible everywhere
 for the optimality cuts and infeasible at some first-stage point for the
 feasibility ones, and in the nested shape a subproblem has when it is a model
-of its own rather than a bare set of rows.
+of its own rather than a bare set of rows. One more instance has `Constraint`
+on the first-stage `Variable` alone, a ramp between consecutive ones and a
+minimum on their sum that the starting point violates: the master of the
+MILP regime reads them out of the master `Block`, and the `BundleSolver` of
+the convex one has them in its master problem, as rows in the primal form and
+as multipliers in the dual one.
 
 The configurations are the `BSPar-BDS*.txt` files, one per way of writing a
 cut (`BSPar-BDS.txt` the convex regime, whose master is a `BundleSolver`,
-`BSPar-BDS-MILP.txt` the MILP regime, whose master is a `:MILPSolver`, and
-the others each a variant of the latter named after what it changes); the
-master is configured by `BDSMCfg.txt` in the convex regime (with `MPBCfg.txt`
-for the master problem of the bundle) and by `BDSMCfg-MILP.txt` in the MILP
-one, and the subproblems by `BDSSCfg.txt`, which also gives the reference
-optimum of the monolithic model. The tester takes no argument:
+`BSPar-BDS-Primal.txt` the same with the primal master problem in the
+`BundleSolver`, `BSPar-BDS-MILP.txt` the MILP regime, whose master is a
+`:MILPSolver`, and the others each a variant of the latter named after what
+it changes); the master is configured by `BDSMCfg.txt` in the convex regime
+(the `BundleSolver` by `BDSMCCfg.txt`, and `MPBCfg.txt` for the master
+problem of the bundle), by `BDSMCfg-Primal.txt` with the primal master
+problem and by `BDSMCfg-MILP.txt` in the MILP one, and the subproblems by
+`BDSSCfg.txt`, which also gives the reference optimum of the monolithic
+model. The tester takes no argument:
 
     ./AbstractBlock_BDS_test
 

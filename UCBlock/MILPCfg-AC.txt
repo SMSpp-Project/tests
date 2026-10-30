@@ -1,0 +1,61 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  MILPCfg-AC.txt - - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the :MILPSolver of the AC instances [see BSPar-AC.txt and
+# BSPar-AC-24h.txt]: that of MILPCfg.txt with the GUROBI settings the AC
+# relaxations need. They are convex QCPs with second-order cones, more
+# degenerate than the DC LPs, so that the default settings can pick a
+# different optimal point than the LagrangianDualSolver: the barrier without
+# presolve and with the most careful numerics. NonConvex 0 says that the
+# model is convex (GUROBI refuses it otherwise), so that the optimal value is
+# also the lower bound GRBMILPSolver reports; with the default -1 it reports
+# OBJBOUND, which on the 24h instances is 1.7% below the optimum.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*MILPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+4 # number of integer parameters
+
+# now all the integer parameters
+Method              2 # -1 = auto (default), 0 = primal, 1 = dual,
+                      # 2 = barrier, 3 = barrier + crossover
+Presolve            0 # 0 = off, 1 = conservative, 2 = aggressive
+                      # (default -1)
+NumericFocus        3 # 0 = auto (default), 1..3 = increasing precision
+NonConvex           0 # the model is convex [see above]
+
+0 # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0 # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0 # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0 # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0 # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END MILPCfg-AC.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

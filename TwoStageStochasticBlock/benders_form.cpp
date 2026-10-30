@@ -67,9 +67,8 @@ AbstractBlock * benders_form( TwoStageStochasticBlock * tssb )
 
   for( const auto & p : paths ) {
    const auto nv = p->get_number_elements< ColVariable >( leaf );
-   auto e = p->get_element< ColVariable >( leaf );
    for( Index j = 0 ; j < nv ; ++j )
-    xk[ l ].push_back( e + j );
+    xk[ l ].push_back( p->get_element< ColVariable >( leaf , j ) );
    }
   }
 

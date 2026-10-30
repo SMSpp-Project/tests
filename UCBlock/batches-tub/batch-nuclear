@@ -26,13 +26,13 @@
 # reserves and reactive power, and is run in four regimes: energy only, a
 # rewarded spinning reserve (TUDPS_RESCOST), a priced reactive power
 # (TUDPS_QCOST) and a few rounds of changes of the costs, plus a run with
-# part of the modulation variables fixed (TUDPS_FIXMOD). In the runs that
-# solve once, the formulations of the operating rules other than the
-# default one are compared with it too, each by a BlockCopySolver of
-# BSCfg-nuc-forms.txt (the compact ones, with the caps of the runs by the
-# reach of the rules) and, outside CI, of BSCfg-nuc-graph.txt (the flows on
-# the label graph). In CI only the first unit of the first seed of each
-# family is run.
+# part of the modulation variables fixed (TUDPS_FIXMOD). Each run compares
+# the formulations of NUBForm.txt with each other (the T formulation with
+# Perspective Cuts and its tight forms of the rules); outside CI, each unit
+# with the operating rules is also solved once with the compact
+# formulations of the rules of NUBForm-rules.txt and once with the flows on
+# the label graph of NUBForm-graph.txt, which are far slower. In CI only the
+# first unit of the first seed of each family is run.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
@@ -42,18 +42,21 @@ RULESDIR=../../UCBlock/data/nc4/1UC_Data/nuclear/48
 
 TUDPS_test=${1:-./TUDPS_test}
 par=BSCfg-nuc.txt
-# the same, with a BlockCopySolver for each compact formulation of the rules,
-# and for each flow on their label graph (far slower, not in the short run)
-forms=BSCfg-nuc-forms.txt
-graph=BSCfg-nuc-graph.txt
 
 seed=0
 wchg=0      # just solve and compare the optimum (no cost perturbation here)
-form=T-PC   # the T formulation with Perspective Cuts
+# the formulations of the unit compared with each other, all of them the
+# same set of schedules [see NUBForm.txt]; in CI only the two ends; the
+# compact formulations of the rules and the flows on their label graph
+# apart, once per unit, being slower
+forms=NUBForm.txt
+[ -n "$CI" ] && forms=NUBForm-CI.txt
+rules=NUBForm-rules.txt
+graph=NUBForm-graph.txt
 
 # the original model - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 for f in "${DATADIR}"/*/*.nc4; do
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -B "TUBCfg-$form.txt"
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -F "$forms"
 done
 
 # the operating rules - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -64,22 +67,24 @@ else
 fi
 
 if [ -z "$files" ]; then
-  echo "batch-nuclear: no instance in ${RULESDIR}, only the original model run" >&2
+  echo "batch-nuclear: no instance in ${RULESDIR}," \
+       "only the original model run" >&2
   exit 0
 fi
 
 for f in $files; do
-  run_test "$TUDPS_test" "$f" -S "$forms" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$forms" -n 0
   TUDPS_RESCOST=-0.05 \
-   run_test "$TUDPS_test" "$f" -S "$forms" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$forms" -n 0
   TUDPS_QCOST=-0.01 \
-   run_test "$TUDPS_test" "$f" -S "$forms" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$forms" -n 0
   TUDPS_FIXMOD=7 \
-   run_test "$TUDPS_test" "$f" -S "$forms" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$forms" -n 0
   if [ -z "$CI" ]; then
-    run_test "$TUDPS_test" "$f" -S "$graph" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+    run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$rules" -n 0
+    run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$graph" -n 0
   fi
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -B "TUBCfg-$form.txt" -n 5
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -F "$forms" -n 5
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

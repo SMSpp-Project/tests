@@ -69,11 +69,11 @@ include $(MCFCSSDR)/makefile
 
 # object files
 MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(CFLBkOBJ) $(SMS++OBJ) $(MCFBkOBJ) \
-        $(MCFCSOBJ) $(libMCFClOBJ) $(MCFLEOBJ) $(CMMNUOBJ)
+	$(MCFCSOBJ) $(libMCFClOBJ) $(MCFLEOBJ) $(CMMNUOBJ)
 
 # libraries
 MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(CFLBkLIB) $(SMS++LIB) $(MCFBkLIB) \
-        $(libMCFClLIB) $(MCFLELIB)
+	$(libMCFClLIB) $(MCFLELIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
@@ -82,11 +82,11 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 
 # include directives
 MINC =  $(SMS++INC) $(BNDSLVINC) $(LgDSLVINC) $(CFLBkINC) $(MCFBkINC) \
-        $(MCFCSINC) $(libMCFClINC) $(MCFLEINC) $(CMMNUINC)
+	$(MCFCSINC) $(libMCFClINC) $(MCFLEINC) $(CMMNUINC)
 
 # includes
 MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(CFLBkH) $(MCFBkH) $(MCFCSH) \
-        $(MCFLEH) $(CMMNUH)
+	$(MCFLEH) $(CMMNUH)
 
 # compile command
 
