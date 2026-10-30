@@ -4,10 +4,11 @@
 /** @file
  * What the tester of HQPBlock and HQPSolver needs besides the HQPSolver: the
  * dense description of a hierarchical QP, its loading into an HQPBlock and
- * into an HQPDistBlock, the independent reference solution computed level by level in the null space
- * of the equality tasks of the higher levels (with a small dense primal
- * active-set method for the QP of each level), and the comparison of the
- * levels solved by an HQPSolver of a BlockSolverConfig with it.
+ * into an HQPDistBlock, the independent reference solution computed level by
+ * level in the null space of the equality tasks of the higher levels (with a
+ * small dense primal active-set method for the QP of each level), and the
+ * comparison of the levels solved by an HQPSolver of a BlockSolverConfig with
+ * it.
  *
  * The reference follows the classical approach: level p is solved in the
  * variables \f$ ( y , w_p ) \f$, \f$ x = \bar{x}_{p-1} + Z_p y \f$, where

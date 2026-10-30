@@ -67,8 +67,8 @@ else
 fi
 
 if [ -z "$files" ]; then
-  echo "batch-nuclear: no instance in ${RULESDIR}," \
-       "only the original model run" >&2
+  echo "batch-nuclear: no instance in ${RULESDIR}, only the original model" \
+       "run" >&2
   exit 0
 fi
 

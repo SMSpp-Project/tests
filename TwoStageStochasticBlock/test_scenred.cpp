@@ -178,7 +178,8 @@ static void write_reduced_tssb( const std::string & orig_file ,
    flat.insert( flat.end() , sc.begin() , sc.end() );
   dg.addVar( "Scenarios" , netCDF::NcDouble() , { nd , sd } )
     .putVar( flat.data() );
-  dg.addVar( "PoolWeights" , netCDF::NcDouble() , nd ).putVar( weights.data() );
+  dg.addVar( "PoolWeights" , netCDF::NcDouble() , nd )
+    .putVar( weights.data() );
   }
  }
 
@@ -255,7 +256,8 @@ static Reduction heuristic_reduce( DiscreteScenarioSet * dss , int K ,
 
  const auto & sol = srb->get_solution();
  if( sol.selected_indices.empty() )
-  throw( std::runtime_error( "heuristic_reduce: no representative selected" ) );
+  throw( std::runtime_error(
+                       "heuristic_reduce: no representative selected" ) );
 
  Reduction r;
  r.selected   = sol.selected_indices;
@@ -343,7 +345,8 @@ int main( int argc , char * argv[] )
   if(      a == "-i" && i + 1 < argc ) instance_file = argv[ ++i ];
   else if( a == "-c" && i + 1 < argc ) solver_file   = argv[ ++i ];
   else if( a == "-m" && i + 1 < argc ) method        = argv[ ++i ];
-  else if( a == "-r" && i + 1 < argc ) K             = std::atoi( argv[ ++i ] );
+  else if( a == "-r" && i + 1 < argc ) K             =
+                                        std::atoi( argv[ ++i ] );
   }
 
  if( instance_file.empty() ) {

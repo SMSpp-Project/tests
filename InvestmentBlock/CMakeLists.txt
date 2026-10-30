@@ -67,10 +67,12 @@ if (TARGET SMS++::InvestmentBlock)
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME IB_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/IB_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/IB_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME IB_test/${BATCH_NAME}
@@ -81,7 +83,8 @@ if (TARGET SMS++::InvestmentBlock)
         endif ()
         # Make each batch test require the investment_nc4_extracted fixture
         set_tests_properties(IB_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED investment_nc4_extracted)
+                             PROPERTIES FIXTURES_REQUIRED
+                             investment_nc4_extracted)
 
         # batch-stochastic and batch-pypsa run the modular instances a second
         # time with the inner Block solved by the LagrangianDualSolver, which

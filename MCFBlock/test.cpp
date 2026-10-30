@@ -631,7 +631,8 @@ int main( int argc , char **argv )
            ? LF( MCFB->get_objective() ) : nullptr;
 
    if( tochange == 1 ) {
-    CNumber newcst = intcost( c_min + CNumber( dis( rg ) * ( c_max - c_min ) ) );
+    CNumber newcst = intcost( c_min +
+                              CNumber( dis( rg ) * ( c_max - c_min ) ) );
     Index arc = Index( dis( rg ) * ( MCFB->get_NArcs() - 1 ) );
 
     if( lf ) {  // change via abstract representation
@@ -646,7 +647,8 @@ int main( int argc , char **argv )
    else {
     MCFBlock::Vec_CNumber newcsts( tochange );
     for( Index i = 0 ; i < tochange ; ++i )
-     newcsts[ i ] = intcost( c_min + CNumber( dis( rg ) * ( c_max - c_min ) ) );
+     newcsts[ i ] = intcost( c_min +
+                             CNumber( dis( rg ) * ( c_max - c_min ) ) );
 
     // in 50% of the cases do a ranged change, in the others a sparse change
     if( dis( rg ) <= 0.5 ) {

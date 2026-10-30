@@ -20,8 +20,8 @@
  * Block and of every R3Block, are compared.
  *
  * Otherwise, the first Solver attached to each R3Block is supposed to be
- * solving some kind of continuous relaxation and a certain number of rounds of a
- * simple slope scaling heuristic are ran on that Block, then the results
+ * solving some kind of continuous relaxation and a certain number of rounds of
+ * a simple slope scaling heuristic are ran on that Block, then the results
  * (both lower and upper bound) are compared with the optimal value of the
  * other Solver (not expecting they be equal).
  *

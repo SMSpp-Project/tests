@@ -9,11 +9,12 @@
  * this tester changes the *feasible region* of the sub-Block, which inherently
  * requires knowing the Block type: it builds K MCFBlock as the sub-Block of an
  * AbstractBlock father with a random DQuadFunction father objective, solves it
- * by both a FrankWolfeSolver and a :MILPSolver, then repeatedly changes the arc
- * capacities of a sub-Block (MCFBlock::chg_ucaps, borrowing the change logic of
- * tests/MCFBlock) and re-solves, cross-checking the two optima. This exercises
- * the feasibility handling of FrankWolfeSolver (atoms that became infeasible
- * are dropped and the active set re-built / warm-started), see intHandleMod.
+ * by both a FrankWolfeSolver and a :MILPSolver, then repeatedly changes the
+ * arc capacities of a sub-Block (MCFBlock::chg_ucaps, borrowing the change
+ * logic of tests/MCFBlock) and re-solves, cross-checking the two optima. This
+ * exercises the feasibility handling of FrankWolfeSolver (atoms that became
+ * infeasible are dropped and the active set re-built / warm-started), see
+ * intHandleMod.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -89,7 +90,8 @@ int main( int argc , char ** argv )
  help += "  -k, --children <K>   number of MCFBlock sub-Block copies [2]\n"
          "  -a, --scale <s>      scale of the random father objective [1]\n"
          "  -e, --seed <n>       random seed [1]\n"
-         "  -M, --modrounds <n>  random cost/capacity Modification rounds [5]\n";
+         "  -M, --modrounds <n>  random cost/capacity Modification rounds "
+         "[5]\n";
 
  process_args( argc , argv , process_specific_arg );
 
@@ -141,12 +143,13 @@ int main( int argc , char ** argv )
                      std::numeric_limits< double >::quiet_NaN() , 1e-5 );
 
  // randomized Modification rounds (in the style of tests/MCFBlock): each round
- // randomly changes the arc costs (an *objective* change -> sub-Block-objective
- // Modification) and/or the arc capacities (a *feasible-region* change), of the
- // first sub-Block, always perturbing from the *original* values (not
- // compounding, which would drift towards infeasibility). This exercises both
- // the objective handling (c0 re-snapshot / atom-cost recompute) and the
- // feasibility handling (infeasible-atom drop) of FrankWolfeSolver.
+ // randomly changes the arc costs (an *objective* change ->
+ // sub-Block-objective Modification) and/or the arc capacities (a
+ // *feasible-region* change), of the first sub-Block, always perturbing from
+ // the *original* values (not compounding, which would drift towards
+ // infeasibility). This exercises both the objective handling (c0 re-snapshot
+ // / atom-cost recompute) and the feasibility handling (infeasible-atom drop)
+ // of FrankWolfeSolver.
  //
  // Every chg_* is issued with BOTH the physical and the abstract Modification
  // (eModBlck, eModBlck): the physical one notifies the native LMO (MCFSolver),
@@ -189,7 +192,8 @@ int main( int argc , char ** argv )
    mcf->chg_ucaps( caps.begin() , MCFBlock::Range( 0 , na ) , eModBlck ,
                    eModBlck );
    }
-  if( what == 3 ) {                                // toggle one arc's fix status
+  // toggle one arc's fix status
+  if( what == 3 ) {
    Index a = Index( na * pos( rg ) ) % na; // (a VariableMod: closing an
    if( ! closed[ a ] ) {                           //  arc shrinks the region,
     vars[ a ]->set_value( 0 );                     //  reopening relaxes it)

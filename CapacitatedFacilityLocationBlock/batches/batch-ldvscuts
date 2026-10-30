@@ -19,9 +19,10 @@
 # hold on every instance (it is not a bug, and no solver / leaf / bundle-tuning
 # config removes it: B2 is identical with the DP and the :MILPSolver integer
 # leaves and immune to bundle tuning). Out of 136 (instance,seed,wchg in
-# {1,257}) runs,
-# 131 agree to ~1e-9; the 5 that exceed 1e-5 (max relative gap over 40 rounds):
-#   wchg=257:  cap64/seed0 1.83e-4   cap42/seed0 6.70e-4   cap51/seed0 1.906e-3 (max)
+# {1,257}) runs, 131 agree to ~1e-9; the 5 that exceed 1e-5 (max relative gap
+# over 40 rounds):
+#   wchg=257:  cap64/seed0 1.83e-4   cap42/seed0 6.70e-4   cap51/seed0 1.906e-3
+#              (max)
 #   wchg=1  :  cap44/seed0 3.87e-4   cap62/seed1 6.84e-4
 # To run it anyway as a loose-tolerance sanity check, uncomment the run_test
 # line below that passes cmptol=2e-3 (just above the 1.906e-3 max) and comment

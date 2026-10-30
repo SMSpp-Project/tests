@@ -23,8 +23,8 @@ par=BSCfg.txt
 # per BlockConfig TUBCfg-<form>.txt that TUBForm-PC.txt lists, i.e., every
 # formulation (3bin/T/pt/DP/SU/SD/SUSD) with the perspective cuts, each copy is
 # solved by the same Solver, and the copies must agree with each other as the
-# two Solver of each copy do. Only the short horizon is run here, hence the list
-# is always the whole one.
+# two Solver of each copy do. Only the short horizon is run here, hence the
+# list is always the whole one.
 i=24
 j=1
 # in CI only 5 of the 100 ramp profiles are run (they are variations of the

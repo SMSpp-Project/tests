@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 #
-# usage: batch-jooken [ <exe> ] [ <timeout s> ] [ <memcap KB> ] [ <cap filter> ]
-#        <exe>        = path of the executable, default BinaryKnapsackBlock_test
+# usage: batch-jooken [ <exe> ] [ <timeout s> ] [ <memcap KB> ]
+#                     [ <cap filter> ]
+#        <exe>        = path of the executable,
+#        default BinaryKnapsackBlock_test
 #        <timeout s>  = per-run wall-clock limit, default 60
 #        <memcap KB>  = per-run address-space cap (ulimit -v), default 8 GB
 #        <cap filter> = only instances whose capacity substring matches, e.g.
@@ -91,18 +93,21 @@ for csv in $(printf '%s\n' "${csvs[@]}" | sort); do
     if [ $rc -eq 124 ]; then
       st="${RED}TIMEOUT${NC}"
     elif echo "$out" | grep -qi "passed"; then
-      st="${GREEN}OK ${dt}s${NC}"; solved[$label]=$(( ${solved[$label]:-0} + 1 ))
+      st="${GREEN}OK ${dt}s${NC}"
+      solved[$label]=$(( ${solved[$label]:-0} + 1 ))
     elif echo "$out" | grep -qiE "bad_alloc|out of memory|std::bad"; then
       st="${RED}OOM${NC}"
     else
-      st="${RED}FAIL(rc=$rc)${NC}"; fail=1   # finished, but wrong: a real failure
+      # finished, but wrong: a real failure
+      st="${RED}FAIL(rc=$rc)${NC}"; fail=1
     fi
     printf "  %-10s -> %b\n" "$label" "$st"
   done
 done
 
 echo "------------------------------------------------------------"
-echo "solved / $total instances (timeout ${TIMEOUT}s, memcap $(( MEMCAP/1024 )) MB):"
+echo "solved / $total instances (timeout ${TIMEOUT}s," \
+     "memcap $(( MEMCAP/1024 )) MB):"
 for entry in "${lineup[@]}"; do
   label="${entry%%:*}"
   printf "  %-10s : %d\n" "$label" "${solved[$label]:-0}"

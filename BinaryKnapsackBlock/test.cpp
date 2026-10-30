@@ -176,8 +176,9 @@ bool CrossCheckSolvers( void )
  if( ! SolveAll( BKB , classify , ref , 2e-06 ) )
   return( false );
 
- // BinaryKnapsackBlock-specific self-consistency: every feasible exact Solver's
- // reported value must equal the value recomputed from its returned solution
+ // BinaryKnapsackBlock-specific self-consistency: every feasible exact
+ // Solver's reported value must equal the value recomputed from its returned
+ // solution
  for( std::size_t k = 0 ; k < M ; ++k ) {
   if( ! feasible[ k ] )
    continue;                               // infeasible: no primal x to read
@@ -280,10 +281,10 @@ static std::vector< PisingerInst > read_pisinger( const std::string & path )
 
 /*--------------------------------------------------------------------------*/
 // the Pisinger mode (-C <csv>): test every instance of the .csv with ALL the
-// attached Solver (the CrossCheckSolvers() solver-vs-solver cross-check) AND against
-// the published optimum z (solver-vs-reference), reusing one Block and one set
-// of Solver across the whole class (the data of each instance is set with the
-// chg_*() Modification, to which the Solver react)
+// attached Solver (the CrossCheckSolvers() solver-vs-solver cross-check) AND
+// against the published optimum z (solver-vs-reference), reusing one Block and
+// one set of Solver across the whole class (the data of each instance is set
+// with the chg_*() Modification, to which the Solver react)
 
 static bool run_pisinger( const std::string & csv , const std::string & sconf )
 {
@@ -407,7 +408,8 @@ int main( int argc , char **argv )
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed\n"
          "  -k, --wchg <bits>               what to change, bit-wise [127]:\n"
-         "                                    1 sense, 2 capacity, 4 profits,\n"
+         "                                    1 sense, 2 capacity, 4 "
+         "profits,\n"
          "                                    8 weights, 16 fix, 32 unfix,\n"
          "                                    64 integrality\n"
          "  -N, --nvar <n>                  number of variables [100]\n"
@@ -668,7 +670,7 @@ int main( int argc , char **argv )
       LOG( "(S)" );
       }
      else {
-      lfobj->modify_coefficients( std::move( nP ) , std::move( nms ) );    // AR
+      lfobj->modify_coefficients( std::move( nP ) , std::move( nms ) );   // AR
       LOG( "(AS)" );
       }
      }
@@ -707,7 +709,7 @@ int main( int argc , char **argv )
       LOG( "(S)" );
       }
      else {
-      lfcnst->modify_coefficients( std::move( nW ) , std::move( nms ) );   // AR
+      lfcnst->modify_coefficients( std::move( nW ) , std::move( nms ) );  // AR
       LOG( "(AS)" );
       }
      }

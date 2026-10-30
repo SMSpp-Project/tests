@@ -24,9 +24,12 @@
 # --------------------------------------------------------------------------- #
 
 set(SMSPP_TEST_LABELS_BoxSolver                 "SMS++;MILPSolver")
-set(SMSPP_TEST_LABELS_LagBFunction              "SMS++;BundleSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_PolyhedralFunction        "SMS++;BundleSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_PolyhedralFunctionBlock   "SMS++;BundleSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_LagBFunction
+    "SMS++;BundleSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_PolyhedralFunction
+    "SMS++;BundleSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_PolyhedralFunctionBlock
+    "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_QuadFunction              "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
 # the four testers posed on an AbstractBlock ask for modules beyond these two,
@@ -34,25 +37,41 @@ set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
 # so what the directory declares is what they all need and the rest is set
 # test by test
 set(SMSPP_TEST_LABELS_AbstractBlock             "SMS++;MILPSolver")
-set(SMSPP_TEST_LABELS_BendersBFunction          "SMS++;BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_BinaryKnapsackBlock       "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_BendersBFunction
+    "SMS++;BundleSolver;MCFBlock;MCFClassSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_BinaryKnapsackBlock
+    "BinaryKnapsackBlock;BranchAndXSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock
-                                                "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver;MCFClassSolver;MCFLemonSolver;MILPSolver")
+    "BundleSolver;CapacitatedFacilityLocationBlock;LagrangianDualSolver"
+    "MCFClassSolver;MCFLemonSolver;MILPSolver")
 # MMCFBlock hosts two testers: MMCF_test (vs the MMCFCplex reference) and
 # MMCFBlock_test (cross-check of a :MILPSolver and a LagrangianDualSolver), so
 # the label is the union of what the two exercise
-set(SMSPP_TEST_LABELS_MMCFBlock                 "BundleSolver;LagrangianDualSolver;MCFLemonSolver;MMCFBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_UCBlock                   "BundleSolver;LagrangianDualSolver;UCBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_MCFBlock                  "MCFBlock;MCFClassSolver;MCFLemonSolver;MILPSolver")
-set(SMSPP_TEST_LABELS_InvestmentBlock           "BundleSolver;InvestmentBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_TwoStageStochasticBlock   "BundleSolver;LagrangianDualSolver;TwoStageStochasticBlock;UCBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_MultiStageStochasticBlock "BundleSolver;LagrangianDualSolver;MultiStageStochasticBlock;TwoStageStochasticBlock;UCBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_LukFiBlock                "BundleSolver;LukFiBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_SVMBlock                  "BundleSolver;LagrangianDualSolver;SVMBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_SingleFlowDCRBlock        "SingleFlowDCRBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_MMCFBlock
+    "BundleSolver;LagrangianDualSolver;MCFLemonSolver;MMCFBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_UCBlock
+    "BundleSolver;LagrangianDualSolver;UCBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_MCFBlock
+    "MCFBlock;MCFClassSolver;MCFLemonSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_InvestmentBlock
+    "BundleSolver;InvestmentBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_TwoStageStochasticBlock
+    "BundleSolver;LagrangianDualSolver;TwoStageStochasticBlock;UCBlock"
+    "MILPSolver")
+set(SMSPP_TEST_LABELS_MultiStageStochasticBlock
+    "BundleSolver;LagrangianDualSolver;MultiStageStochasticBlock"
+    "TwoStageStochasticBlock;UCBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_LukFiBlock
+    "BundleSolver;LukFiBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SVMBlock
+    "BundleSolver;LagrangianDualSolver;SVMBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SingleFlowDCRBlock
+    "SingleFlowDCRBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_SATBlock                  "SATBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_SatellitesBlock           "BundleSolver;LagrangianDualSolver;SatellitesBlock;MILPSolver")
-set(SMSPP_TEST_LABELS_MultiKnapsackAssignBlock  "BundleSolver;LagrangianDualSolver;MultiKnapsackAssignBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_SatellitesBlock
+    "BundleSolver;LagrangianDualSolver;SatellitesBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_MultiKnapsackAssignBlock
+    "BundleSolver;LagrangianDualSolver;MultiKnapsackAssignBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_HQPBlock                  "HQPBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test

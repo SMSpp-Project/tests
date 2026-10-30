@@ -80,13 +80,15 @@ void print_help( const char * program_name ) {
  cout << "  --no-demand              Disable demand uncertainty" << endl;
  cout << "  --no-maxpower            Disable renewable uncertainty" << endl;
  cout << "  --verbose <level>        Verbosity level 0-2 (default: 1)" << endl;
- cout << "  --validate               Enable scenario validation (WILL SEGFAULT with demand)"
+ cout << "  --validate               Enable scenario validation "
+  "(WILL SEGFAULT with demand)"
       << endl;
  cout << "  --no-validate            Skip scenario validation" << endl;
  cout << "  --validate-only          Only validate instance, don't generate "
   "scenarios"
       << endl;
- cout << "  --timeout <seconds>      Validation timeout per scenario (default: "
+ cout << "  --timeout <seconds>      Validation timeout per scenario "
+  "(default: "
   "10)"
       << endl;
  cout << "  --solver-config <path>   Solver configuration file (default: "
@@ -95,11 +97,13 @@ void print_help( const char * program_name ) {
  cout << "  -h, --help               Show this help message" << endl;
  cout << "\nExamples:" << endl;
  cout << "  " << program_name << " -i EC_CO_Test.nc4 -n 100 -v 0.3" << endl;
- cout << "  " << program_name << " -i EC_NC_Test.nc4 --no-demand -n 50" << endl;
+ cout << "  " << program_name << " -i EC_NC_Test.nc4 --no-demand -n 50"
+      << endl;
  cout << "  " << program_name << " -i EC_CO_Test.nc4 --no-maxpower -n 30"
       << endl;
  cout << "  " << program_name
-      << " -i EC_CO_Test.nc4 --validate-only  # Just validate instance" << endl;
+      << " -i EC_CO_Test.nc4 --validate-only  # Just validate instance"
+      << endl;
  }
 /*--------------------------------------------------------------------------*/
 
@@ -268,10 +272,11 @@ UCGeneratorConfig parse_arguments( int argc , char * argv[] ) {
 
 struct UCData {
  vector< double > demand_profile;             // ActivePowerDemand flattened
- vector< vector< double > > renewable_profiles; // MaxPower for each renewable unit
+ // MaxPower for each renewable unit
+ vector< vector< double > > renewable_profiles;
  vector< int > renewable_unit_indices;        // Indices of intermittent units
- vector< int > thermal_unit_indices;          // Indices of ThermalUnitBlock units
-                                              // (here-and-now commitment vars)
+ // Indices of ThermalUnitBlock units (here-and-now commitment vars)
+ vector< int > thermal_unit_indices;
  int num_periods = 0;
  int num_nodes = 0;
  int num_renewable_units = 0;
@@ -385,7 +390,8 @@ UCData load_uc_instance(
         data.num_renewable_units++;
 
         if( config.verbose >= 2 ) {
-         cout << "    Found intermittent unit " << name << " at index " << unit_index << endl;
+         cout << "    Found intermittent unit " << name << " at index "
+              << unit_index << endl;
         }
        }
       }
@@ -583,14 +589,14 @@ vector< vector< double > > combine_scenarios(
  }
 
  // Ensure we have the requested number of scenarios
- while( combined_scenarios.size() < static_cast< size_t >( config.num_scenarios )
-   ) {
+ while( combined_scenarios.size() <
+        static_cast< size_t >( config.num_scenarios ) ) {
   // Duplicate scenarios with small random perturbations
   mt19937 gen( config.seed + combined_scenarios.size() );
   uniform_real_distribution<> perturb( 0.95 , 1.05 );
 
-  size_t idx = combined_scenarios.size() % ( combined_scenarios.size() - 1 ) + 1
-  ;
+  size_t idx = combined_scenarios.size() % ( combined_scenarios.size() - 1 ) +
+               1;
   vector< double > new_scenario = combined_scenarios[ idx ];
   for( double & val : new_scenario ) {
    if( val != 0 ) { // Don't perturb zeros
@@ -601,7 +607,8 @@ vector< vector< double > > combine_scenarios(
  }
 
  // Trim to exact number if we have too many
- if( combined_scenarios.size() > static_cast< size_t >( config.num_scenarios ) ) {
+ if( combined_scenarios.size() >
+     static_cast< size_t >( config.num_scenarios ) ) {
   combined_scenarios.resize( config.num_scenarios );
  }
 
@@ -681,7 +688,8 @@ bool validate_scenario(
    size_t start_idx = config.enable_demand ? demand_size : 0;
 
    // Apply to each intermittent unit using the correct indices
-   for( size_t idx = 0; idx < original_data.renewable_unit_indices.size(); ++idx ) {
+   for( size_t idx = 0; idx < original_data.renewable_unit_indices.size();
+        ++idx ) {
     int unit_index = original_data.renewable_unit_indices[idx];
 
     // Get the specific unit block by index
@@ -775,8 +783,8 @@ vector< double > regenerate_scenario(
   switch( cluster ) {
   case 0: // Normal cluster
    for( size_t i = 0; i < base_data.demand_profile.size(); ++i ) {
-    demand_scenario[ i ] = base_data.demand_profile[ i ] * mild_variation( gen )
-    ;
+    demand_scenario[ i ] = base_data.demand_profile[ i ] *
+                           mild_variation( gen );
    }
    break;
 
@@ -960,7 +968,8 @@ static void save_tssb_netcdf(
   auto tldim = pg.addDim( "PathTotalLength" , nth * 2 );
 
   vector< unsigned int > starts( nth );
-  for( int k = 0 ; k < nth ; ++k ) starts[ k ] = static_cast< unsigned int >( k * 2 );
+  for( int k = 0 ; k < nth ; ++k )
+   starts[ k ] = static_cast< unsigned int >( k * 2 );
 
   vector< char > node_types( nth * 2 );
   vector< string > group_names( nth * 2 );
@@ -976,16 +985,21 @@ static void save_tssb_netcdf(
    range_idx[ 2*k + 1 ]   = static_cast< unsigned int >( T );
   }
 
-  pg.addVar( "PathStart"     , netCDF::NcUint() , pdim  ).putVar( starts.data() );
-  pg.addVar( "PathNodeTypes" , netCDF::NcChar() , tldim ).putVar( node_types.data() );
+  pg.addVar( "PathStart"     , netCDF::NcUint() , pdim  )
+     .putVar( starts.data() );
+  pg.addVar( "PathNodeTypes" , netCDF::NcChar() , tldim )
+     .putVar( node_types.data() );
   {
    auto gv = pg.addVar( "PathGroupIndices" , netCDF::NcString() , tldim );
    vector< const char * > cptrs( group_names.size() );
-   for( size_t i = 0 ; i < group_names.size() ; ++i ) cptrs[ i ] = group_names[ i ].c_str();
+   for( size_t i = 0 ; i < group_names.size() ; ++i )
+    cptrs[ i ] = group_names[ i ].c_str();
    gv.putVar( cptrs.data() );
   }
-  pg.addVar( "PathElementIndices" , netCDF::NcUint() , tldim ).putVar( elem_idx.data() );
-  pg.addVar( "PathRangeIndices"   , netCDF::NcUint() , tldim ).putVar( range_idx.data() );
+  pg.addVar( "PathElementIndices" , netCDF::NcUint() , tldim )
+     .putVar( elem_idx.data() );
+  pg.addVar( "PathRangeIndices"   , netCDF::NcUint() , tldim )
+     .putVar( range_idx.data() );
  }
 
  // ---- StochasticBlock: inner UCBlock (raw copy) + DataMapping(s) ----------
@@ -1029,8 +1043,10 @@ static void save_tssb_netcdf(
   auto ssd = sg.addDim( "SetSizeDim" , ss_vec.size() );
   sg.addVar( "SetSize" , netCDF::NcUint() , ssd ).putVar( ss_vec.data() );
 
-  // SetElements: 4 values per mapping -> {from_start, from_end, to_start, to_end}
-  // Scenario vector layout: [demand: nd*T][renewable_0: T]...[renewable_{ni-1}: T]
+  // SetElements: 4 values per mapping -> {from_start, from_end, to_start,
+  // to_end}
+  // Scenario vector layout: [demand: nd*T][renewable_0: T]...
+  // [renewable_{ni-1}: T]
   vector< unsigned int > se_vec;
   {
    const unsigned int T_u  = static_cast< unsigned int >( T );
@@ -1076,7 +1092,8 @@ static void save_tssb_netcdf(
    auto ap_pdim = apg.addDim( "PathDim" , num_paths );
    auto ap_tdim = apg.addDim( "PathTotalLength" , total_len );
 
-   apg.addVar( "PathStart" , netCDF::NcUint() , ap_pdim ).putVar( path_starts.data() );
+   apg.addVar( "PathStart" , netCDF::NcUint() , ap_pdim )
+      .putVar( path_starts.data() );
    if( total_len > 0 ) {
     apg.addVar( "PathNodeTypes" , netCDF::NcChar() , ap_tdim )
        .putVar( path_node_types.data() );
@@ -1219,11 +1236,13 @@ int main( int argc , char * argv[] ) {
    cout << "Uncertainty types:" << endl;
    cout << "  Demand: " << ( config.enable_demand ? "enabled" : "disabled" )
         << endl;
-   cout << "  Renewable: " << ( config.enable_renewable ? "enabled" : "disabled" )
+   cout << "  Renewable: "
+        << ( config.enable_renewable ? "enabled" : "disabled" )
         << endl;
    if( config.validate ) {
     cout << "Validation: "
-         << ( config.validate_only ? "validate-only mode" : "enabled" ) << endl;
+         << ( config.validate_only ? "validate-only mode" : "enabled" )
+         << endl;
     cout << "Solver config: " << config.solver_config << endl;
     cout << "Timeout: " << config.validation_timeout << " seconds" << endl;
    }
@@ -1331,8 +1350,8 @@ int main( int argc , char * argv[] ) {
     }
 
     bool valid =
-      validate_scenario( config.instance_path , data , combined_scenarios[ s ] , config ,
-     false );
+      validate_scenario( config.instance_path , data ,
+                         combined_scenarios[ s ] , config , false );
 
     if( valid ) {
      if( config.verbose >= 2 ) {
@@ -1410,8 +1429,8 @@ int main( int argc , char * argv[] ) {
   if( config.verbose >= 1 ) {
    cout << "\nSaving scenarios to: " << config.output_path << endl;
   }
-  save_scenarios_netcdf( config.output_path , combined_scenarios , config , data
-    );
+  save_scenarios_netcdf( config.output_path , combined_scenarios , config ,
+                         data );
 
   // Generate step: also write a full TSSB file, if requested
   if( ! config.tssb_output_path.empty() ) {

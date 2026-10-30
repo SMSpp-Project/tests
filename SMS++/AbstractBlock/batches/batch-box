@@ -34,7 +34,8 @@ for nvar in 2 10 50; do
         # few cases with small optimal value may trigger an error although
         # they are not consequential, which is why we print stuff in the
         # tester but leave the batch running
-        run_test "$exe" -S "$par" -e "$seed" -k "$what" -N "$nvar" -s "$nson" -d "$dens" -n "$iter"
+        run_test "$exe" -S "$par" -e "$seed" -k "$what" -N "$nvar" \
+                 -s "$nson" -d "$dens" -n "$iter"
 
       done
     done

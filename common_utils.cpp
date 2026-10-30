@@ -627,7 +627,8 @@ void collect_vars( Block * b , const std::vector< std::string > & groups ,
 
  auto obj = dynamic_cast< FRealObjective * >( b->get_objective() );
  if( ! obj )
-  throw( std::invalid_argument( "collect_vars: child has no FRealObjective" ) );
+  throw( std::invalid_argument(
+                            "collect_vars: child has no FRealObjective" ) );
  auto f = obj->get_function();
  const Block::Index n = f->get_num_active_var();
  for( Block::Index i = 0 ; i < n ; ++i )
@@ -693,7 +694,8 @@ Function * make_father_objective( std::vector< ColVariable * > & vars ,
  using Coefficient = DQuadFunction::Coefficient;
  const Index nv = Index( vars.size() );
 
- if( obj_type == 0 ) {  // DQuadFunction: sum_i ( a_i x_i^2 + b_i x_i ), a_i > 0
+ // DQuadFunction: sum_i ( a_i x_i^2 + b_i x_i ), a_i > 0
+ if( obj_type == 0 ) {
   DQuadFunction::v_coeff_triple tr( nv );
   for( Index i = 0 ; i < nv ; ++i )
    tr[ i ] = std::make_tuple( vars[ i ] , Coefficient( scale * rnd( rg ) ) ,
@@ -701,8 +703,9 @@ Function * make_father_objective( std::vector< ColVariable * > & vars ,
   return( new DQuadFunction( std::move( tr ) ) );
   }
 
- if( obj_type == 1 ) {  // QuadFunction: off-diagonal terms (i+1,i), kept PSD by
-                        // Gershgorin diagonal dominance ( 2 a_i >= sum |q| )
+ // QuadFunction: off-diagonal terms (i+1,i), kept PSD by Gershgorin diagonal
+ // dominance ( 2 a_i >= sum |q| )
+ if( obj_type == 1 ) {
   QuadFunction::v_off_diag_term nd;
   std::vector< double > rowabs( nv , 0.0 );
   for( Index i = 0 ; i + 1 < nv ; ++i ) {
@@ -872,7 +875,8 @@ namespace {
    if( ( n_total >= 4 ) && ( 2 * ( n_inf + n_unb ) > n_total ) )
     std::cerr << ANSI_YELLOW << "[WARNING] " << ( n_inf + n_unb )
               << " of " << n_total << " multi-Solver comparisons were "
-                 "unanimously " << ( n_unb > n_inf ? "unbounded" : "infeasible" )
+                 "unanimously "
+              << ( n_unb > n_inf ? "unbounded" : "infeasible" )
               << ": this run passed mostly via solver agreement on the "
                  "absence of a solution, not by comparing solutions."
               << ANSI_RESET << "\n";
@@ -2082,10 +2086,11 @@ bool process_standard_arg( int opt )
    break;
    }
   case 'c': conf_prefix = normalize_prefix( std::string( optarg ) );
-            // also hand the -c prefix to Configuration, so filenames referenced
-            // from inside a Configuration file (the "*filename" includes and the
-            // strInnerBSC / str_LagBF_BSCfg meta-config chains) are resolved
-            // against it, exactly as Block::set_filename_prefix() does for -p
+            // also hand the -c prefix to Configuration, so filenames
+            // referenced from inside a Configuration file (the "*filename"
+            // includes and the strInnerBSC / str_LagBF_BSCfg meta-config
+            // chains) are resolved against it, exactly as
+            // Block::set_filename_prefix() does for -p
             Configuration::set_filename_prefix( std::string( conf_prefix ) );
             break;
   case 'E': parse_eps_list( std::string( optarg ) ); break;
