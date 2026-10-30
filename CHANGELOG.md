@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InvestmentBlock`: the battery `batches-design/batch` converts by
+  `design_converter` each network of the `UCBlock` archive with the design in
+  its units and lines (a `TwoStageStochasticBlock` among them) and holds the
+  `InvestmentBlock` it gives to the PyPSA objective of the same network
+  written as an `InvestmentBlock`; the references are in
+  `batches/ref-pypsa`, which `batch-pypsa` reads too
+
 - `SMS++/AbstractBlock`: `LagrangianDualSolver_Box_test -k 128` gives the
   Objective of the sub-Blocks and of the root random weights, which the
   `:MILPSolver` applies by itself and the `LagrangianDualSolver` through
@@ -240,6 +247,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TwoStageStochasticBlock/batches/batch-pypsa`
 
 ### Changed
+
+- `InvestmentBlock`: `IB_test` reaches the inner Block of each
+  `InvestmentFunction` of the `InvestmentBlock` [see
+  `InvestmentBlock::get_investment_functions()`], the one of its Objective
+  or the one of each component of an `InvestmentBlock` that has split its
+  inner Block, rather than casting its single Function, which a split one
+  does not have; the "meta"-BlockConfig give a component (an
+  `AbstractBlock`) the `OBlockConfig` of the `InvestmentBlock`
 
 - `MSSB_test` checks on every instance that the `Block` written in memory
   and read back has the weights of the Objective of the original, as well

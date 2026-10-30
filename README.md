@@ -205,7 +205,12 @@ the `test` directory of the module itself.
   `gen_sddp_initud.py` writes, where a thermal unit with a minimum up time
   is started up at the end of a stage, or one with a minimum down time is
   shut down there; where the `InvestmentFunction` cannot pass the state, a
-  known defect, its value is printed and not held to the reference.
+  known defect, its value is printed and not held to the reference. The
+  battery `batches-design/batch` converts by the tool `design_converter` each
+  network of the `UCBlock` archive written with the design in its units and
+  lines into an `InvestmentBlock`, and holds its value to the PyPSA objective
+  of the same network written by pypsa2smspp as an `InvestmentBlock`
+  (`batches/ref-pypsa`, which `batch-pypsa` reads too).
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`

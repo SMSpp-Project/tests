@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# usage: batch < converter > < exe file > < log file >
+#        < converter > = path of design_converter, default ./design_converter
+#        < exe file >  = path of IB_test, default ./IB_test
+#        < log file >  = name of log file, default no log
+#
+# converts with design_converter each network of UCBlock/data/nc4/pypsa-data
+# written with the design in the units and lines of its UCBlock (those with
+# "ext" in the name, and the modular one), and solves the InvestmentBlock it
+# gives, which has to have the PyPSA objective value of the same network
+# written by pypsa2smspp with the design in an InvestmentBlock [see
+# ../batches/ref-pypsa]: the twin has the same name in
+# InvestmentBlock/data/nc4/pypsa-data, but for the modular network, whose
+# name ends in _investment.nc rather than in _ucblock.nc. Among them is a
+# TwoStageStochasticBlock, whose first-stage paths to the designs are
+# dropped.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+conv="${1:-./design_converter}"
+exe="${2:-./IB_test}"
+mlf="${3:-}"
+
+source "$(dirname "$0")/../batches/ref-pypsa"
+
+# the converted files, removed at the end whatever happens
+out=$(mktemp -d)
+trap 'rm -rf "$out"' EXIT
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ran=0
+
+for what in ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_*ext*.nc \
+            ../../UCBlock/data/nc4/pypsa-data/ucblock/smspp_mod_*_ucblock.nc
+do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    ran=$((ran + 1))
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[${base/_ucblock.nc/_investment.nc}]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for the twin of file: $base"
+      exit 1
+    fi
+
+    run_test "$conv" "$what" "$out/$base"
+    run_test "$exe" -B InnerBCfg.txt -S BSPar.txt -o "$ref" "$out/$base"
+
+done
+
+# a batch that has found no instance at all has tested nothing, and saying so
+# is the only way to tell it apart from one where everything went well
+if [ "$ran" -eq 0 ]; then
+    echo "No instance found in ../../UCBlock/data/nc4/pypsa-data/ucblock"
+    exit 1
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
