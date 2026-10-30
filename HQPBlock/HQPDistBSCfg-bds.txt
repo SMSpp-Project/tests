@@ -2,9 +2,12 @@
 # - - - - - - - - - - - - - HQPDistBSCfg-bds.txt  - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of the HQPDistBlock with the structure kBenders in
-# the tester of HQPBlock [see HQPDistForms.txt]: DAQP on the whole tree,
-# i.e., the centralized hierarchy written with the t and the link rows, in
-# the setting of HQPCfg.txt.
+# the tester of HQPBlock [see HQPDistForms.txt], with two HQPSolver in the
+# setting of HQPCfg.txt: DAQP on the whole tree, i.e., the centralized
+# hierarchy written with the y, the t and the link rows, whose Hessian is
+# singular [see InnerBSCfg-daqp-prox.txt], and the Benders decomposition of
+# InnerBSCfg-bds.txt, which solves each level only up to a gap and is held
+# to wider tolerances [see batches/batch-generated].
 #
 # An HQPSolver whose inner Solver is not in the build is left out.
 #
@@ -15,17 +18,91 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-1  # number of (the names of) Solver in this BlockSolverConfig
+2  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HQPSolver  # 1st: DAQP on the whole tree
+HQPSolver  # 2nd: Benders decomposition
 
-1  # number of ComputeConfig in this BlockSolverConfig
+2  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 1: DAQP on the whole tree
-*HQPCfg.txt
+*HQPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strInnerBSC  InnerBSCfg-daqp-prox.txt  # the inner Solver
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 2: Benders decomposition
+*HQPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strInnerBSC  InnerBSCfg-bds.txt  # the inner Solver
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
 
 # end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
 

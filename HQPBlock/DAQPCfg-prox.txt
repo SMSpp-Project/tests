@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - DAQPCfg-prox.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of DAQPMILPSolver as the inner Solver of an HQPSolver
+# on a problem whose Hessian is singular (InnerBSCfg-daqp-prox.txt), e.g.,
+# the whole tree of an HQPDistBlock with the structure kBenders, where the
+# y, the t and the slacks of the coupling rows have no quadratic term:
+# DAQP then solves it by proximal-point iterations, which with their
+# automatic stopping tolerance leave x off by about 1e-6, and with 1e-12
+# give the solution to the accuracy of a positive definite one.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblDAQPEtaProx  1e-12  # stop of the proximal-point iterations
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END DAQPCfg-prox.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

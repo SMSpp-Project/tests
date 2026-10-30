@@ -22,6 +22,14 @@
 # with a slack of the order of the square root of their accuracy, which the
 # next levels see (e.g., the third level of the infeasible and satisfied
 # tasks with the center of the regularization at 0).
+#
+# The Benders decomposition of the HQPDistBlock with the structure kBenders
+# (the 20th HQPSolver, the 2nd of HQPDistBSCfg-bds.txt) is held to 1e-5 on
+# the values of the levels and to 1e-2 on x rather than to 1e-6 and 1e-3:
+# it stops when no cut is violated by more than 1e-9 relative, which the
+# master holds to its feasibility tolerance of 1e-9, and with the
+# regularization 1e-3 a gap of 1e-9 on the value of a level leaves x free
+# by about 1e-3.
 
 # run from the test directory so HQPBlock_test reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -35,6 +43,7 @@ DEFAULT_PAR=BSPar.txt
 parse_batch_args "$@"
 
 run_test "$exe" -S "$par" -F HQPDistForms.txt \
-  -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5 -I 1:13,4:14
+  -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5,,,,,,,,1e-5 \
+  -X ,,,,,,,,,,,,,,,,,,,1e-2 -I 1:13,4:14
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

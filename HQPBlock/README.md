@@ -54,11 +54,19 @@ formulation of `HQPDistForms.txt`, given with `-F`, a pair of a
   qpOASES in the first one;
 
 - F1, the structure `kBenders` (`HQPDistBCfg-bds.txt`), with the coupling
-  rows in the root and their parts in the sub-Blocks, and that of
-  `HQPDistBSCfg-bds.txt`, DAQP on the whole tree in the first setting.
+  rows in the root, a copy in the root of each column of an equality
+  coupling row and the parts of the others in the sub-Blocks, and those of
+  `HQPDistBSCfg-bds.txt`, both in the first setting: DAQP on the whole
+  tree, whose Hessian is singular, with the proximal-point iterations
+  stopped at `1e-12` (`InnerBSCfg-daqp-prox.txt`, `DAQPCfg-prox.txt`), and
+  the Benders decomposition of `InnerBSCfg-bds.txt`, a
+  `BendersDecompositionSolver` (`BDSCfg.txt`) whose subproblems are solved
+  by DAQP and whose master by Gurobi (`BDSMCfg.txt`), left out by a build
+  without it.
 
 The `HQPSolver` of each formulation follow those of the `HQPBlock`, and
-those of the previous formulation, in the positions of `-E` and `-I`.
+those of the previous formulation, in the positions of `-E`, `-X` and
+`-I`.
 
 An `HQPSolver` whose inner Solver is not in the build is reported and left
 out, and if none of them has one the tester has nothing to do and says so
@@ -73,6 +81,10 @@ The usage of the executable is the following:
                               the HQPSolver at position i (from 1) takes
                               fewer iterations than that at j in the
                               steps reached by Modification
+       -X, --xtol <tol>[,...]
+                              the tolerance on x of each HQPSolver, in
+                              the order of the BlockSolverConfig, an
+                              empty one for the default
 
 plus the options that every SMS++ tester understands (`--help` lists them
 all), among which `-S`, the configuration, `-F`, the formulations of the
@@ -102,9 +114,12 @@ The batteries are:
 - `batches/batch-generated`, the hierarchies built by the tester; the
   interior-point inner Solvers are held to `1e-5` on the values rather than
   `1e-6`, since an inequality task satisfied exactly at its level leaves
-  them a slack of the order of the square root of their accuracy, and in
-  the run of Model Predictive Control DAQP and qpOASES must take fewer
-  iterations than the same ones solving from scratch;
+  them a slack of the order of the square root of their accuracy, the
+  Benders decomposition to `1e-5` on the values and `1e-2` on `x` rather
+  than `1e-3`, since it stops when no cut is violated by more than `1e-9`
+  relative and with the regularization `1e-3` such a gap leaves `x` free by
+  about `1e-3`, and in the run of Model Predictive Control DAQP and qpOASES
+  must take fewer iterations than the same ones solving from scratch;
 
 - `batches/batch-radial`, the instances that HQPBlock distributes in
   `data/nc4` (some steps of a centralized Model Predictive Control of 8

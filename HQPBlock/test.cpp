@@ -78,7 +78,13 @@
  * keep the rows of the lower levels in the model and on the instance
  * files; -E gives the tolerance of each HQPSolver in the order of the
  * BlockSolverConfig, in place of these, for an inner Solver that does not
- * reach them [see the batteries].
+ * reach them [see the batteries]. On the hierarchies built here x is
+ * compared with tolerance 1e-3 (1e-2 for the HQPSolver that keep the rows
+ * of the lower levels in the model), and -X gives that of each HQPSolver in
+ * the same order, for an inner Solver that solves each level only up to a
+ * gap: with the regularization \f$ \varepsilon \f$, a gap \f$ \delta \f$
+ * on the value of a level leaves x free by about \f$ \sqrt{ 2 \delta /
+ * \varepsilon } \f$.
  *
  * An HQPSolver whose inner Solver is not in the build is reported and left
  * out; if none of them has one, the tester exits with 77, the status of a
@@ -129,6 +135,9 @@ static std::string form_name;       // with a space after, if any
 // fewer iterations than that at the second one
 static std::vector< std::pair< std::size_t , std::size_t > > fewer;
 
+// the tolerances on x of -X, by position (from 0), NaN where none is given
+static std::vector< double > solver_xtol;
+
 // the iterations of the inner Solvers of each HQPSolver, by position, in the
 // solves of the steps reached by Modification, and whether there are any
 static std::map< std::size_t , long > step_iter;
@@ -159,6 +168,21 @@ static double vtol_of( const HQPSolver * s , double dflt )
  }
 
 /*--------------------------------------------------------------------------*/
+// the tolerance on x that -X declares for s, in the order of the
+// BlockSolverConfig (one value for all of them), dflt if none
+
+static double xtol_of( const HQPSolver * s , double dflt )
+{
+ const auto it = position.find( s );
+ if( it == position.end() )
+  return( dflt );
+ const std::size_t k = ( solver_xtol.size() == 1 ) ? 0 : it->second;
+ if( ( k < solver_xtol.size() ) && ( ! std::isnan( solver_xtol[ k ] ) ) )
+  return( solver_xtol[ k ] );
+ return( dflt );
+ }
+
+/*--------------------------------------------------------------------------*/
 /*--------------------- THE HIERARCHIES BUILT HERE -------------------------*/
 /*--------------------------------------------------------------------------*/
 // compares s with the reference with its center of the regularization: the
@@ -167,7 +191,7 @@ static double vtol_of( const HQPSolver * s , double dflt )
 // Solver gives it to about 1e-4; the rows of the lower levels left in the
 // model with free slacks make the Hessian singular, which the inner Solver
 // deals with less accurately, so the tolerances are then wider; the one on
-// the values can be given with -E
+// the values can be given with -E, the one on x with -X
 
 static int check( const std::string & what , HQPSolver * s ,
                   const RefSolution & ref , const RefSolution & ref0 )
@@ -176,7 +200,7 @@ static int check( const std::string & what , HQPSolver * s ,
  return( compare( what , s ,
                   s->get_int_par( HQPSolver::intProxCenter ) ? ref : ref0 ,
                   vtol_of( s , lower ? 1e-5 : 1e-6 ) ,
-                  lower ? 1e-2 : 1e-3 ) );
+                  xtol_of( s , lower ? 1e-2 : 1e-3 ) ) );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -896,8 +920,40 @@ static void parse_fewer( const std::string & arg )
  }
 
 /*--------------------------------------------------------------------------*/
-// the options of this tester: -P, the file of the previous step, and -I,
-// the pairs whose iterations are compared
+// the tolerances of -X, separated by commas, an empty one for the default
+
+static void parse_xtol( const std::string & arg )
+{
+ solver_xtol.clear();
+ std::size_t pos = 0;
+ for( ; ; ) {
+  std::size_t next = arg.find( ',' , pos );
+  if( next == std::string::npos )
+   next = arg.size();
+  const std::string v = arg.substr( pos , next - pos );
+  double t = std::numeric_limits< double >::quiet_NaN();
+  if( ! v.empty() ) {
+   std::size_t r = 0;
+   try {
+    t = std::stod( v , & r );
+    }
+   catch( ... ) {
+    r = 0;
+    }
+   if( ( r != v.size() ) || ( ! ( t > 0 ) ) )
+    throw( std::invalid_argument( "-X: " + v + " is not a positive "
+                                  "tolerance" ) );
+   }
+  solver_xtol.push_back( t );
+  if( next == arg.size() )
+   break;
+  pos = next + 1;
+  }
+ }
+
+/*--------------------------------------------------------------------------*/
+// the options of this tester: -P, the file of the previous step, -I, the
+// pairs whose iterations are compared, and -X, the tolerances on x
 
 static bool process_specific_arg( int opt )
 {
@@ -907,6 +963,9 @@ static bool process_specific_arg( int opt )
    return( true );
   case( 'I' ):
    parse_fewer( optarg );
+   return( true );
+  case( 'X' ):
+   parse_xtol( optarg );
    return( true );
   default:
    return( false );
@@ -920,11 +979,13 @@ int main( int argc , char ** argv )
  docopt_desc = "SMS++ HQPBlock test: the HQPSolver of the BlockSolverConfig "
                "against the\nnull-space reference, on the hierarchies built "
                "here or on the instance file.\n";
- short_opts += "P:I:";
+ short_opts += "P:I:X:";
  long_opts.insert( std::prev( long_opts.end() ) ,
                    { "previous" , required_argument , nullptr , 'P' } );
  long_opts.insert( std::prev( long_opts.end() ) ,
                    { "fewer" , required_argument , nullptr , 'I' } );
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   { "xtol" , required_argument , nullptr , 'X' } );
  help += "  -P, --previous <file>           the instance of the previous "
          "step, also\n"
          "                                  changed into this one by "
@@ -933,7 +994,12 @@ int main( int argc , char ** argv )
          "(from 1) takes\n"
          "                                  fewer iterations than that at "
          "j in the steps\n"
-         "                                  reached by Modification\n";
+         "                                  reached by Modification\n"
+         "  -X, --xtol <tol>[,...]          the tolerance on x of each "
+         "HQPSolver, in the\n"
+         "                                  order of the BlockSolverConfig, "
+         "an empty one\n"
+         "                                  for the default\n";
  filename_optional = true;
  process_args( argc , argv , process_specific_arg );
  require_solver_config();

@@ -1,0 +1,72 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BDSMCfg.txt - - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the master of the BendersDecompositionSolver of
+# BDSCfg.txt: Gurobi, the master being a convex QP in the y, the t, the
+# slacks of the coupling rows and the epigraph Variable, with the cuts as
+# dynamic Constraint. The dual simplex, since the barrier stops with
+# numerical troubles on the masters of the lower levels, and the cuts held
+# to 1e-9: the values of the levels can be of the order of 1e-6, and with
+# the default 1e-6 a cut violated by less is taken as satisfied, which
+# gives back the same point at each round.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver  # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+Threads  1  # one thread
+Method   1  # dual simplex
+
+2  # number of double parameters
+
+# now all the double parameters
+dblRelAcc       1e-9  # relative accuracy required to the solution
+FeasibilityTol  1e-9  # the cuts held to 1e-9 by the master
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BDSMCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

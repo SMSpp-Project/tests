@@ -40,10 +40,14 @@ include $(HQPBkSDR)/makefile-s
 MILPSSDR = ../../MILPSolver
 include $(MILPSSDR)/makefile-s
 
+# BendersDecompositionSolver, the Benders decomposition of the HQPDistBlock
+BnDSLVSDR = ../../BendersDecompositionSolver
+include $(BnDSLVSDR)/makefile
+
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(HQPBkOBJ) $(MILPSOBJ) $(SMS++OBJ) $(CMMNUOBJ)
+MOBJ =  $(HQPBkOBJ) $(MILPSOBJ) $(BnDSLVOBJ) $(SMS++OBJ) $(CMMNUOBJ)
 
 # libraries
 MLIB =  $(HQPBkLIB) $(MILPSLIB) $(SMS++LIB)
@@ -54,10 +58,10 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(HQPBkINC) $(MILPSINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(HQPBkINC) $(MILPSINC) $(BnDSLVINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(HQPBkH) $(MILPSH) $(CMMNUH)
+MH =    $(SMS++H) $(HQPBkH) $(MILPSH) $(BnDSLVH) $(CMMNUH)
 
 # compile command
 

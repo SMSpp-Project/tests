@@ -1,0 +1,60 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BDSCfg.txt  - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the BendersDecompositionSolver of InnerBSCfg-bds.txt:
+# the MILP regime, i.e., the cutting-plane loop on a master with an epigraph
+# Variable for each owner, whose cuts are valid for the value function of a
+# convex QP since their constants are its values; the reformulation undone
+# after each compute(), since the problem of each owner changes from a level
+# to the next one and all the cuts with it; the feasibility cuts of the
+# phase one, an owner having no solution where the y and the t ask of it
+# what its own rows do not allow; the relative accuracy 1e-7, the one that
+# the subproblems reach; the subproblems solved by DAQP as in
+# InnerBSCfg-daqp.txt and the master as in BDSMCfg.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+3  # number of integer parameters
+
+# now all the integer parameters
+int_BDSlv_Regime   1  # 0 = convex master, 1 = MILP master
+int_BDSlv_FeasCut  3  # feasibility cuts of the phase one
+int_BDSlv_Restore  1  # the HQPDistBlock given back after each compute()
+
+1  # number of double parameters
+
+# now all the double parameters
+dblRelAcc  1e-7  # relative accuracy of the Benders decomposition
+
+2  # number of string parameters
+
+# now all the string parameters
+str_Bsub_BSCfg  InnerBSCfg-daqp.txt  # BlockSolverConfig of the subproblems
+str_Mstr_BSCfg  BDSMCfg.txt  # BlockSolverConfig of the master
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BDSCfg.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
