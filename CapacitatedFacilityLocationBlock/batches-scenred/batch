@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # usage: batch [ options ]
-#        --generator < path >   scenario generator, default ./CFLScenarioGenerator
+#        --generator < path >   scenario generator,
+#                               default ./CFLScenarioGenerator
 #        --solve < path >       reduction test, default ./TSSB_scenred_test
 #        --instances < list >   instance base names, default cap102
 #        --n < list >           scenario counts N, default 200
@@ -39,7 +40,7 @@ for _slot in GEN SOLVE; do
     [[ -n "$1" ]] && printf -v "$_slot" '%s' "$1"
     shift
 done
-IDIR="${IDIR:-${HERE}/../../../CapacitatedFacilityLocationBlock/data/nc4/ORLib}"
+IDIR="${IDIR:-$HERE/../../../CapacitatedFacilityLocationBlock/data/nc4/ORLib}"
 SDIR="${SDIR:-${TMPDIR:-/tmp}/cfl_scenarios}"
 CFGDIR="${CFGDIR:-${HERE}/..}"   # where the configurations live
 
@@ -81,16 +82,20 @@ done
 [ ! -d "$IDIR" ] && {
     echo "ERROR: instance directory not found: $IDIR"; exit 1; }
 
-# allow a bare filename for solver (e.g. BSCfg-scenred.txt): resolve under CFGDIR.
+# allow a bare filename for solver (e.g. BSCfg-scenred.txt): resolve under
+# CFGDIR.
 # A value containing a slash is treated as a path and used as is.
 [[ "$SOLVER" != */* ]] && SOLVER="$CFGDIR/$SOLVER"
-[ ! -f "$SOLVER" ] && { echo "ERROR: solver config not found: $SOLVER"; exit 1; }
+[ ! -f "$SOLVER" ] && {
+    echo "ERROR: solver config not found: $SOLVER"; exit 1; }
 
 mkdir -p "$SDIR"
 
-echo "Instance,N,K,Method,Full_Obj,Reduced_Obj,Gap_Pct,RedTime_s,AlgoTime_s" > "$OUTPUT_CSV"
+echo "Instance,N,K,Method,Full_Obj,Reduced_Obj,Gap_Pct,RedTime_s,AlgoTime_s" \
+     > "$OUTPUT_CSV"
 printf "\n%-8s %-5s %-4s %-10s %16s %16s %10s %15s %15s\n" \
-    "Instance" "N" "K" "Method" "Full_Obj" "Reduced_Obj" "Gap(%)" "RedTime(s)" "AlgoTime(s)"
+    "Instance" "N" "K" "Method" "Full_Obj" "Reduced_Obj" "Gap(%)" \
+    "RedTime(s)" "AlgoTime(s)"
 printf '%.0s=' {1..106}; printf "\n"
 
 for INST in $INSTANCES; do
@@ -110,25 +115,35 @@ for INST in $INSTANCES; do
             for M in $METHODS; do
                 OUT=$("$SOLVE" -i "$TSSB" -r "$K" -m "$M" -c "$SOLVER" 2>&1)
 
-                FULL=$(echo "$OUT" | grep -oP 'Full\s+\(N=[0-9]+\):\s*\K[0-9.eE+-]+' | head -1)
-                RED=$(echo "$OUT"  | grep -oP 'Reduced \(K=[0-9]+\):\s*\K[0-9.eE+-]+' | head -1)
+                FULL=$(echo "$OUT" \
+                    | grep -oP 'Full\s+\(N=[0-9]+\):\s*\K[0-9.eE+-]+' \
+                    | head -1)
+                RED=$(echo "$OUT" \
+                    | grep -oP 'Reduced \(K=[0-9]+\):\s*\K[0-9.eE+-]+' \
+                    | head -1)
                 GAP=$(echo "$OUT"  | grep -oP 'Gap:\s*\K[0-9.eE+-]+' | head -1)
-                RTIME_MS=$(echo "$OUT" | grep -oP 'Reduced \(K=[0-9]+\):[^(]*\(\K[0-9.]+(?=\s*ms\))' | head -1)
+                RTIME_MS=$(echo "$OUT" \
+                    | grep -oP \
+                      'Reduced \(K=[0-9]+\):[^(]*\(\K[0-9.]+(?=\s*ms\))' \
+                    | head -1)
                 : ${FULL:=NA}; : ${RED:=NA}; : ${GAP:=NA}; : ${RTIME_MS:=NA}
 
                 # RedTime_s/AlgoTime_s: the generic solver only reports one
                 # timing (the reduction step itself, in ms); kept in both
                 # columns for CSV-format compatibility with old runs.
                 if [ "$RTIME_MS" != "NA" ]; then
-                    RTIME=$(awk -v ms="$RTIME_MS" 'BEGIN{printf "%.4f", ms/1000}')
+                    RTIME=$(awk -v ms="$RTIME_MS" \
+                            'BEGIN{printf "%.4f", ms/1000}')
                 else
                     RTIME=NA
                 fi
                 ALGOTIME="$RTIME"
 
                 printf "%-8s %-5s %-4s %-10s %16s %16s %10s %15s %15s\n" \
-                    "$INST" "$N" "$K" "$M" "$FULL" "$RED" "$GAP" "$RTIME" "$ALGOTIME"
-                echo "$INST,$N,$K,$M,$FULL,$RED,$GAP,$RTIME,$ALGOTIME" >> "$OUTPUT_CSV"
+                    "$INST" "$N" "$K" "$M" "$FULL" "$RED" "$GAP" "$RTIME" \
+                    "$ALGOTIME"
+                echo "$INST,$N,$K,$M,$FULL,$RED,$GAP,$RTIME,$ALGOTIME" \
+                     >> "$OUTPUT_CSV"
             done
         done
     done

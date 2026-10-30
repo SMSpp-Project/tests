@@ -130,12 +130,14 @@ static void nc_copy_group_recursive( const netCDF::NcGroup & src ,
 /*--------------------------------------------------------------------------*/
 /* Build a reduced TwoStageStochasticBlock file containing the given
  * scenarios (with weights weights), by cloning the original file's
- * StaticAbstractPath + StochasticBlock and writing a fresh DiscreteScenarioSet.
- * Taking the scenario vectors directly (rather than indices into a DSS) lets
- * the same routine serve both the V-matrix solves and the CSSC block factory */
+ * StaticAbstractPath + StochasticBlock and writing a fresh
+ * DiscreteScenarioSet. Taking the scenario vectors directly (rather than
+ * indices into a DSS) lets the same routine serve both the V-matrix solves
+ * and the CSSC block factory */
 
 static void write_reduced_tssb( const std::string & orig_file ,
-                                const std::vector< std::vector< double > > & scenarios ,
+                                const std::vector< std::vector< double > > &
+                                 scenarios ,
                                 const std::vector< double > & weights ,
                                 const std::string & out_file )
 {
@@ -174,8 +176,10 @@ static void write_reduced_tssb( const std::string & orig_file ,
   flat.reserve( K * SS );
   for( const auto & sc : scenarios )
    flat.insert( flat.end() , sc.begin() , sc.end() );
-  dg.addVar( "Scenarios" , netCDF::NcDouble() , { nd , sd } ).putVar( flat.data() );
-  dg.addVar( "PoolWeights" , netCDF::NcDouble() , nd ).putVar( weights.data() );
+  dg.addVar( "Scenarios" , netCDF::NcDouble() , { nd , sd } ).putVar(
+                                                                flat.data() );
+  dg.addVar( "PoolWeights" , netCDF::NcDouble() , nd ).putVar(
+                                                             weights.data() );
  }
  }
 /*--------------------------------------------------------------------------*/
@@ -197,12 +201,14 @@ uc_first_stage_vars( TwoStageStochasticBlock * tssb );
 
 static SolveResult solve_tssb_file( const std::string & file ,
                                     BlockSolverConfig * bsc ,
-                                    const std::vector< double > * fix = nullptr )
+                                    const std::vector< double > * fix =
+                                     nullptr )
 {
  Block * raw = Block::deserialize( file );
  auto * tssb = dynamic_cast< TwoStageStochasticBlock * >( raw );
  if( ! tssb ) { delete raw;
-  throw std::runtime_error( "solve_tssb_file: not a TwoStageStochasticBlock" ); }
+  throw std::runtime_error(
+                   "solve_tssb_file: not a TwoStageStochasticBlock" ); }
  std::unique_ptr< Block > owner( tssb );
 
  tssb->generate_abstract_variables();
@@ -214,7 +220,8 @@ static SolveResult solve_tssb_file( const std::string & file ,
  if( fix ) {
   if( fix->size() != fs.size() )
    throw std::runtime_error( "solve_tssb_file: first-stage size mismatch (" +
-    std::to_string( fix->size() ) + " vs " + std::to_string( fs.size() ) + ")" );
+    std::to_string( fix->size() ) + " vs " + std::to_string( fs.size() ) +
+    ")" );
   for( size_t k = 0 ; k < fs.size() ; ++k ) {
    fs[ k ]->set_value( ( *fix )[ k ] );
    fs[ k ]->is_fixed( true , eNoMod );   // solver reads fixed bounds at load
@@ -274,7 +281,8 @@ static Index heuristic_pick( DiscreteScenarioSet * dss , int algo )
 /* UCBlock first-stage extractor. This navigates the actual UC investment
  * model and returns the here-and-now design variables directly:
  *   - IntermittentUnitBlock : the capacity design variable   (get_design())
- *   - BatteryUnitBlock      : battery + converter design     (get_batt/conv_design())
+ *   - BatteryUnitBlock      : battery + converter design
+ *                                                  (get_batt/conv_design())
  *   - DesignNetworkBlock    : the per-line network design    (get_design())
  *
  * Variables are taken from scenario-0's block (get_sub_Block(0))
@@ -294,10 +302,10 @@ uc_design_vars( Block * scenario_block )
   throw std::runtime_error( "uc_design_vars: inner block is not a UCBlock" );
 
  // unit design variables. A design variable is a first-stage
- // variable only when the unit is actually in design mode, it means its investment
- // cost is non-zero (cf. IntermittentUnitBlock.cpp: the design variable is
- // generated only when InvestmentCost != 0), the same holds per-component for
- // a battery's storage and converter investment
+ // variable only when the unit is actually in design mode, it means its
+ // investment cost is non-zero (cf. IntermittentUnitBlock.cpp: the design
+ // variable is generated only when InvestmentCost != 0), the same holds
+ // per-component for a battery's storage and converter investment
  for( Index u = 0 ; u < uc->get_number_units() ; ++u ) {
   UnitBlock * ub = uc->get_unit_block( u );
   if( auto * iub = dynamic_cast< IntermittentUnitBlock * >( ub ) ) {
@@ -354,7 +362,8 @@ static bool first_stage_shared( const std::string & file )
 /*--------------------------------------------------------------------------*/
 /*------------------------------- cssc_pick --------------------------------*/
 /*--------------------------------------------------------------------------*/
-/* run the real CSSCScenarioReductionSolver and return the selected scenario index*/
+/* run the real CSSCScenarioReductionSolver and return the selected scenario
+ * index*/
 
 static Index cssc_pick( const std::string & orig_file ,
                         DiscreteScenarioSet * dss ,
@@ -369,8 +378,9 @@ static Index cssc_pick( const std::string & orig_file ,
   throw std::runtime_error( "cssc_pick: not a TwoStageStochasticBlock" ); }
  std::unique_ptr< Block > owner( tssb );
 
- // deserialize a standalone StochasticBlock (the file's Block_0/StochasticBlock)
- // to serve as the scenario applicator required by set_Block
+ // deserialize a standalone StochasticBlock (the file's
+ // Block_0/StochasticBlock) to serve as the scenario applicator required by
+ // set_Block
  std::unique_ptr< Block > stoch_owner;
  {
   netCDF::NcFile f( orig_file , netCDF::NcFile::read );
@@ -385,11 +395,12 @@ static Index cssc_pick( const std::string & orig_file ,
  // Re-resolve every DataMapping caller against this StochasticBlock's own
  // inner block. StochasticBlock::deserialize sets the caller via
  // AbstractPath::get_element(), which returns nullptr for an EMPTY path (the
- // demand mapping, whose caller is the UCBlock itself). set_caller_from_reference()
- // instead maps an empty path to the reference block. Without this, Strategy B's
- // set_data() would invoke set_active_power_demand() on a null UCBlock (segfault);
- // Strategy A is unaffected (it never injects through this applicator) but the
- // fix-up is harmless for it
+ // demand mapping, whose caller is the UCBlock itself).
+ // set_caller_from_reference() instead maps an empty path to the reference
+ // block. Without this, Strategy B's set_data() would invoke
+ // set_active_power_demand() on a null UCBlock (segfault); Strategy A is
+ // unaffected (it never injects through this applicator) but the fix-up is
+ // harmless for it
  if( auto * inner = stoch->get_inner_block() )
   for( const auto & m : stoch->get_data_mappings() )
    m->set_caller_from_reference( inner );
@@ -465,8 +476,9 @@ int main( int argc , char * argv[] )
   auto dss = std::make_unique< DiscreteScenarioSet >();
   {
    netCDF::NcFile f( instance_file , netCDF::NcFile::read );
-   // NB: store the groups in named locals; chaining getGroup(...).getGroup(...)
-   // on a temporary NcGroup leaves deserialize reading an empty group.
+   // NB: store the groups in named locals; chaining
+   // getGroup(...).getGroup(...) on a temporary NcGroup leaves deserialize
+   // reading an empty group.
    auto b0 = f.getGroup( "Block_0" );
    auto dg = b0.getGroup( "DiscreteScenarioSet" );
    dss->deserialize( dg );
@@ -512,7 +524,8 @@ int main( int argc , char * argv[] )
   }
   {
    auto t_now = std::chrono::high_resolution_clock::now();
-   ms_full = std::chrono::duration_cast<std::chrono::milliseconds>( t_now - t_full_start ).count();
+   ms_full = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                               t_now - t_full_start ).count();
   }
 
   // ---- build the N single-scenario reduced TSSB files -------------------
@@ -528,7 +541,8 @@ int main( int argc , char * argv[] )
   // ---- cost-space matrix V ----------------------------------------------
   std::cout << "\nBuilding cost-space matrix V (" << N << "x" << N << ")...\n";
   t_vmat_start = std::chrono::high_resolution_clock::now();
-  std::vector< std::vector< double > > V( N , std::vector< double >( N , 0.0 ) );
+  std::vector< std::vector< double > > V( N ,
+                                          std::vector< double >( N , 0.0 ) );
   std::vector< std::vector< double > > xstar( N );
   for( Index i = 0 ; i < N ; ++i ) {
    auto r = solve_tssb_file( files[ i ] , bsc.get() );   // anticipative
@@ -541,7 +555,8 @@ int main( int argc , char * argv[] )
      V[ i ][ j ] = solve_tssb_file( files[ j ] , bsc.get() , &xstar[ i ] ).obj;
   {
    auto t_now = std::chrono::high_resolution_clock::now();
-   ms_vmat = std::chrono::duration_cast<std::chrono::milliseconds>( t_now - t_vmat_start ).count();
+   ms_vmat = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                               t_now - t_vmat_start ).count();
   }
 
   std::cout << "  V =\n";
@@ -573,7 +588,8 @@ int main( int argc , char * argv[] )
 
   // ---- method selections (with per-method timing) --------------------------
   using Clock = std::chrono::high_resolution_clock;
-  struct Method { std::string name; Index pick; long long ms; long long redtime_ms; };
+  struct Method { std::string name; Index pick; long long ms;
+                  long long redtime_ms; };
   std::vector< Method > methods;
 
   auto timed_heuristic = [ & ]( int algo ) -> Method {
@@ -584,24 +600,32 @@ int main( int argc , char * argv[] )
    return { "" , p , ms , 0 };  // redtime_ms computed later
   };
 
-  { auto m = timed_heuristic( 0 ); m.name = "baseline"; methods.push_back( m ); }
-  { auto m = timed_heuristic( 1 ); m.name = "dupacova"; methods.push_back( m ); }
-  { auto m = timed_heuristic( 2 ); m.name = "bestfit";  methods.push_back( m ); }
-  { auto m = timed_heuristic( 3 ); m.name = "firstfit"; methods.push_back( m ); }
+  { auto m = timed_heuristic( 0 ); m.name = "baseline";
+    methods.push_back( m ); }
+  { auto m = timed_heuristic( 1 ); m.name = "dupacova";
+    methods.push_back( m ); }
+  { auto m = timed_heuristic( 2 ); m.name = "bestfit";
+    methods.push_back( m ); }
+  { auto m = timed_heuristic( 3 ); m.name = "firstfit";
+    methods.push_back( m ); }
 
   // CSSC: run the real CSSCScenarioReductionSolver (Step-1 V + Step-2 MILP).
-  // The total CSSC time includes V-matrix (Step 1) + MILP partitioning (Step 2)
+  // The total CSSC time includes V-matrix (Step 1) + MILP partitioning
+  // (Step 2)
   std::cout << "\nRunning CSSC solver...\n";
   t_cssc_start = Clock::now();
   Index cssc_idx = cssc_pick( instance_file , dss.get() , bsc.get() );
   ms_cssc = std::chrono::duration_cast< std::chrono::milliseconds >(
               Clock::now() - t_cssc_start ).count();
-  long long ms_cssc_total = ms_vmat + ms_cssc;  // V-matrix (Step1) + MILP (Step2)
-  methods.push_back( { "cssc" , cssc_idx , ms_cssc_total , 0 } );  // redtime_ms computed later
+  // V-matrix (Step1) + MILP (Step2)
+  long long ms_cssc_total = ms_vmat + ms_cssc;
+  methods.push_back( { "cssc" , cssc_idx , ms_cssc_total ,
+                       0 } );  // redtime_ms computed later
 
   // ---- compute redtime for each method --------------------------------
   for( auto & m : methods ) {
-   std::vector< std::vector< double > > red_scen = { dss->get_scenario( m.pick ) };
+   std::vector< std::vector< double > > red_scen = {
+                                                dss->get_scenario( m.pick ) };
    std::vector< double > red_weights = { 1.0 };
    std::string red_file = "/tmp/redtime_" + m.name + ".nc";
    write_reduced_tssb( instance_file , red_scen , red_weights , red_file );
@@ -656,13 +680,17 @@ int main( int argc , char * argv[] )
 
   // ---- timing summary -----
   auto t_total = std::chrono::high_resolution_clock::now();
-  long long ms_total = std::chrono::duration_cast<std::chrono::milliseconds>( t_total - t_start ).count();
+  long long ms_total = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                  t_total - t_start ).count();
   std::cout << "\n=== Computation times ===\n"
             << "  Full TSSB (v*)             : " << ms_full << " ms"
             << ( have_v_star ? "" : " [skipped]" ) << "\n"
-            << "  CSSC Step-1 (V-matrix, N=" << N << ", " << N * N << " solves) : " << ms_vmat << " ms\n"
-            << "  CSSC Step-2 (MILP partitioning)                : " << ms_cssc << " ms\n"
-            << "  CSSC total  (Step-1 + Step-2)                  : " << ms_cssc_total << " ms\n";
+            << "  CSSC Step-1 (V-matrix, N=" << N << ", " << N * N
+            << " solves) : " << ms_vmat << " ms\n"
+            << "  CSSC Step-2 (MILP partitioning)                : "
+            << ms_cssc << " ms\n"
+            << "  CSSC total  (Step-1 + Step-2)                  : "
+            << ms_cssc_total << " ms\n";
 
   for( Index i = 0 ; i < N ; ++i ) std::remove( files[ i ].c_str() );
   return 0;

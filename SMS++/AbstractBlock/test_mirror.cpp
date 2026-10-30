@@ -102,8 +102,8 @@ static double solve( Block * blck )
 /*--------------------------------------------------------------------------*/
 /// solves the original and the copy and compares, keeping \p us attached
 
-static void check_pair( const std::string & what , Block * orig , Block * copy ,
-                        Solver * us )
+static void check_pair( const std::string & what , Block * orig ,
+                        Block * copy , Solver * us )
 {
  orig->unregister_Solver( us , false );
  const double a = solve( orig );

@@ -15,12 +15,12 @@ start-up and shut-down limits and ramps as wide as the maximum power, off
 since 10 instants before the horizon of every stage) and a slack unit at
 20 per MWh. The demand is 0 everywhere except at one instant of the first
 stage (and, in shutlast, of the second), where it is 100 in the first
-scenario and 130 in the second, so that the thermal unit is fully on there also in the continuous relaxation
-(which the backward pass of the training solves) and the training converges
-with the relaxation and the exact problem giving the same value; the design
-is the thermal unit, fixed at its installed quantity 1, at no cost, hence
-the value of the InvestmentFunction is the mean of the costs of the two
-simulations.
+scenario and 130 in the second, so that the thermal unit is fully on there also
+in the continuous relaxation (which the backward pass of the training solves)
+and the training converges with the relaxation and the exact problem giving the
+same value; the design is the thermal unit, fixed at its installed quantity 1,
+at no cost, hence the value of the InvestmentFunction is the mean of the costs
+of the two simulations.
 
   minup3    the peak is at the last instant of the first stage, and the unit
             has MinUpTime 3: it starts up there, and it has to stay on for

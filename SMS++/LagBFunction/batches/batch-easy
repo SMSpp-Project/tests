@@ -47,11 +47,13 @@ ndopar() {
 }
 
 # CLI order: seed wchg nvar nf nt dens rounds max_changes change_probability
-# ndopar size detach. nf=1/2: hard polyhedral components; nf=-2 also adds a linear
-# objective. All mixed profiles use nt<0, with one or three easy components.
+# ndopar size detach. nf=1/2: hard polyhedral components; nf=-2 also adds a
+# linear objective. All mixed profiles use nt<0, with one or three easy
+# components.
 for group in static updates sized sparse all-easy; do
     case "$phase:$group" in
-        all:*|mixed:static|mixed:updates|mixed:sized|static:static|updates:updates|sized:sized|sparse:sparse|all-easy:all-easy) ;;
+        all:*|mixed:static|mixed:updates|mixed:sized|static:static| \
+        updates:updates|sized:sized|sparse:sparse|all-easy:all-easy) ;;
         *) continue ;;
     esac
 
@@ -139,7 +141,8 @@ for group in static updates sized sparse all-easy; do
                         done
                         ;;
                     sparse)
-                        # Bit 9 selects partial coupling to the outer variables.
+                        # Bit 9 selects partial coupling to the outer
+                        # variables.
                         # 736 = 512 + 224: sparse coupling plus inner updates.
                         run_test "$LagBFunction_test" -e "$seed" -k 512 \
                             -N "$size" -f "$nf" -t "$nt" -d 3 -n 0 -m 5 \

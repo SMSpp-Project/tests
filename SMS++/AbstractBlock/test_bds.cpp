@@ -145,7 +145,8 @@ static std::vector< ColVariable > * make_y( bool set_start ,
    y_i.is_integer( true );
   if( set_start )
    y_i.set_value( 0.3 );  // start where the capacity Constraint bind non-
-                          // degenerately, so the first Benders cut is informative
+                          // degenerately, so the first Benders cut is
+                          // informative
   }
  return( y );
  }
@@ -187,9 +188,11 @@ static void add_first_stage_rows( AbstractBlock * block ,
 
 // the monolithic LP: y and all scenarios' x in a single Block (the reference
 // model). With with_slack == false the demand can only be served through x, so
-// the problem becomes infeasible for small y (used to exercise feasibility cuts)
+// the problem becomes infeasible for small y (used to exercise feasibility
+// cuts)
 
-static AbstractBlock * build_monolithic( bool with_slack = true , int nsub = 1 ,
+static AbstractBlock * build_monolithic( bool with_slack = true ,
+					 int nsub = 1 ,
 					 bool integer = false ,
 					 bool first_stage = false )
 {
@@ -218,7 +221,8 @@ static AbstractBlock * build_monolithic( bool with_slack = true , int nsub = 1 ,
 // whose capacity Constraint couple y (the structure BendersDecompositionSolver
 // expects, with nsub subproblems)
 
-static AbstractBlock * build_structured( bool with_slack = true , int nsub = 1 ,
+static AbstractBlock * build_structured( bool with_slack = true ,
+					 int nsub = 1 ,
 					 bool integer = false ,
 					 bool first_stage = false )
 {
@@ -325,8 +329,8 @@ static AbstractBlock * build_nested( int nsub = 1 )
    }
   sub->add_static_constraint( * cap , "capacity" + t );
 
-  // the scenario itself only pays the slacks, the cost of the second stage being in
-  // the Block it is made of
+  // the scenario itself only pays the slacks, the cost of the second stage
+  // being in the Block it is made of
   auto sf = new LinearFunction();
   for( int j = 0 ; j < N ; ++j )
    sf->add_variable( & ( * sl )[ j ] , BigM );
@@ -448,7 +452,8 @@ static AbstractBlock * build_sparse( unsigned seed , bool scaled ,
 // lower bound; no Solver parameter is ever set in code, everything comes from
 // the configuration file
 
-static double solve_from_config( AbstractBlock * block , const std::string & fn ,
+static double solve_from_config( AbstractBlock * block ,
+				 const std::string & fn ,
 				 int & status , long * iters = nullptr ,
 				 long * cuts = nullptr )
 {
@@ -801,7 +806,8 @@ int main( void )
             << " ( " << it_u4 << " rounds , " << ct_u4 << " cuts )"
             << "   deepest = " << v_d4 << " ( " << it_d4 << " rounds , "
             << ct_d4 << " cuts )   static = " << v_s4 << " ( " << it_s4
-            << " rounds , " << ct_s4 << " cuts )   static and Sherali-Lunday = "
+            << " rounds , " << ct_s4
+            << " cuts )   static and Sherali-Lunday = "
             << v_l4 << " ( " << it_l4 << " rounds , " << ct_l4 << " cuts )"
             << std::endl;
   delete root_f4;

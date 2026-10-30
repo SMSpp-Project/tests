@@ -92,10 +92,12 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-pypsa")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME TSSB_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/TSSB_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/TSSB_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME TSSB_test/${BATCH_NAME}

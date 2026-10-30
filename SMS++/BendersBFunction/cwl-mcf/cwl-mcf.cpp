@@ -522,7 +522,8 @@ double cwl_mcf( std::string file_name )
   if( LB > -Inf< double >() )
    std::cout << "Relaxation value = " << setprecision( 12 ) << LB << " ~ ";
   if( bestUB < Inf< double >() )
-   std::cout << "heuristic value = " << setprecision( 12 ) << bestUB << std::endl;
+   std::cout << "heuristic value = " << setprecision( 12 ) << bestUB
+             << std::endl;
   if( ( LB > -Inf< double >() ) &&
       ( bestUB < Inf< double >() ) )
    std::cout << "gap = " << setprecision( 4 ) << ( bestUB - LB ) / LB;

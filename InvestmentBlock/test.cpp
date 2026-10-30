@@ -159,7 +159,8 @@ std::string sol_input;           ///< filename of input Solution (-I)
 std::string sol_output;          ///< filename of output Solution (-O)
 std::string sol_cfg_file;        ///< filename of output Solution Config (-C)
 bool output_solution = false;    ///< true if solution has to be output (-o)
-bool writeprob       = false;    ///< if the problem should be written back (-n)
+/// if the problem should be written back (-n)
+bool writeprob       = false;
 
 /// parse the current optarg as a long int, returning -1 on parse error
 

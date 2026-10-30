@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # usage: batch < exe file >
-#        < exe file > = path of the executable file, default ./AbstractBlock_readwrite_test
+#        < exe file > = path of the executable file,
+#        default ./AbstractBlock_readwrite_test
 #
 # writes each generated Block to file and reads it back, checking the
 # round-trip over a range of sizes, densities and seeds

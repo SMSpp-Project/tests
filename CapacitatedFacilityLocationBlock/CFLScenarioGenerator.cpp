@@ -3,8 +3,8 @@
 /*--------------------------------------------------------------------------*/
 /** @file
  * Standalone scenario generator for Capacitated Facility Location (CFL)
- * problems. Generates and validates stochastic demand scenarios, saving them as
- * DiscreteScenarioSet in netCDF format
+ * problems. Generates and validates stochastic demand scenarios, saving them
+ * as DiscreteScenarioSet in netCDF format
  *
  * \author Benoît Tran \n
  *         Dipartimento di Informatica \n
@@ -60,7 +60,8 @@ struct GeneratorConfig {
 void print_help( const char * program_name ) {
  cout << "Usage: " << program_name << " [options]" << endl;
  cout << "\nOptions:" << endl;
- cout << "  -i, --instance <path>     Path to base CFL instance file (required)"
+ cout << "  -i, --instance <path>     Path to base CFL instance file "
+  "(required)"
   << endl;
  cout << "  -o, --output <path>       Output path for scenarios (default: "
   "<instance>_scenarios.nc4)"
@@ -72,7 +73,8 @@ void print_help( const char * program_name ) {
   "0.2)"
   << endl;
  cout << "  -s, --seed <number>       Random seed (default: 42)" << endl;
- cout << "  --verbose <level>         Verbosity level 0-2 (default: 1)" << endl;
+ cout << "  --verbose <level>         Verbosity level 0-2 (default: 1)"
+  << endl;
  cout << "  --no-validate            Skip scenario validation" << endl;
  cout << "  --validate-only          Only validate instance, don't generate "
   "scenarios"
@@ -647,7 +649,8 @@ void save_scenarios_text(
  const string & filename ,
  const vector< vector< double > > & scenarios ,
  const GeneratorConfig & config ) {
- string txt_file = filename.substr( 0 , filename.find_last_of( '.' ) ) + ".txt";
+ string txt_file = filename.substr( 0 , filename.find_last_of( '.' ) ) +
+                   ".txt";
 
  if( config.verbose >= 1 ) {
   cout << "Also saving scenarios as text to: " << txt_file << endl;
@@ -722,7 +725,8 @@ int main( int argc , char * argv[ ] ) {
   if( config.verbose >= 1 ) cout << "Loading base instance..." << endl;
 
   Block * base_block = Block::deserialize( config.instance_path );
-  auto * cfl = dynamic_cast< CapacitatedFacilityLocationBlock * >( base_block );
+  auto * cfl = dynamic_cast< CapacitatedFacilityLocationBlock * >(
+                                                                base_block );
 
   if( ! cfl ) {
    delete base_block;
@@ -755,7 +759,8 @@ int main( int argc , char * argv[ ] ) {
     base_demands[ i ] = cfl->get_Demand( i );
    }
 
-   bool valid = validate_scenario( cfl , base_demands , base_demands , config );
+   bool valid = validate_scenario( cfl , base_demands , base_demands ,
+                                   config );
 
    if( config.verbose >= 1 ) {
     if( valid ) {
@@ -815,8 +820,8 @@ int main( int argc , char * argv[ ] ) {
      cout << "  Validating scenario " << s << "...";
     }
 
-    bool valid = validate_scenario( cfl , base_demands , scenarios[ s ] , config
-    );
+    bool valid = validate_scenario( cfl , base_demands , scenarios[ s ] ,
+                                    config );
 
     if( valid ) {
      if( config.verbose >= 2 ) {

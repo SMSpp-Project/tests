@@ -106,7 +106,8 @@ using namespace SMSpp_di_unipi_it;
  *        ignore them entirely. */
 /// @{
 
-extern std::string docopt_desc;     ///< test description; set by the test before calling docopt()
+/// test description; set by the test before calling docopt()
+extern std::string docopt_desc;
 
 extern std::string exe;             ///< name of the executable file
 extern std::string filename;        ///< input filename (last positional argv)
@@ -114,12 +115,15 @@ extern std::string bconf_file;      ///< BlockConfig filename (-B)
 extern std::string sconf_file;      ///< BlockSolverConfig filename (-S)
 extern std::string fconf_file;      ///< list of BlockConfig formulations (-F)
 extern std::string block_prefix;    ///< prefix for all Block filenames (-p)
-extern std::string conf_prefix;     ///< prefix for all Configuration filenames (-c)
+/// prefix for all Configuration filenames (-c)
+extern std::string conf_prefix;
 
 extern bool sol_verbose;            ///< if the Solver should be verbose
-extern bool dryrun;                 ///< if compute() need not really be called (-D)
+/// if compute() need not really be called (-D)
+extern bool dryrun;
 
-extern int verbosity_level;         ///< verbosity level (0 = silent, >0 = verbose output, -v)
+/// verbosity level (0 = silent, >0 = verbose output, -v)
+extern int verbosity_level;
 
 /// reference objective for the ref-vs-Solver comparison; defaults to NaN
 /** Tests set this directly (positional argv or test-specific option); the
@@ -272,19 +276,22 @@ Block::Subset GenerateRand( Block::Index m , Block::Index k ,
                             std::mt19937 & rg , bool ord = true );
 
 /*--------------------------------------------------------------------------*/
-/// pretty-print a Solver result (objective value or kInfeasible/kUnbounded/error)
-/** @param hs   has-solution flag (the caller has decoded the Solver return code)
+/// pretty-print a Solver result (objective value or
+/// kInfeasible/kUnbounded/error)
+/** @param hs   has-solution flag (the caller has decoded the Solver return
+ *              code)
  *  @param rtrn the raw Solver return code (used only when @p hs is false)
  *  @param fo   the objective value (used only when @p hs is true)
  *
- *  Uses the def manipulator for the numeric output so the same format is shared
- *  by every test program. */
+ *  Uses the def manipulator for the numeric output so the same format is
+ *  shared by every test program. */
 
 void PrintResults( bool hs , int rtrn , double fo );
 
 /*--------------------------------------------------------------------------*/
 /// std::terminate handler that prints the active exception and aborts
-/** Install with std::set_terminate( smspp_terminate ); at the top of main(). */
+/** Install with std::set_terminate( smspp_terminate ); at the top of
+ *  main(). */
 
 void smspp_terminate( void );
 
@@ -639,7 +646,8 @@ void print_instance_line( const std::vector< double > & times ,
 std::string reading_token( const SolverReading & r );
 
 /*--------------------------------------------------------------------------*/
-/// cross-check per-Solver readings against each other and an optional reference
+/// cross-check per-Solver readings against each other and an optional
+/// reference
 /** Pure verdict logic shared by SolveAll() and by tests that run their own
  *  solve loop (so the cross-check is implemented once). For each Solver k:
  *  @p has_solution[k] says whether it found a solution, @p status[k] is its
@@ -969,7 +977,8 @@ bool check_var_solutions( Block * block , double tol = 1e-6 );
 double own_rows_violation( Block * block );
 
 /*--------------------------------------------------------------------------*/
-/// check the solution a relaxation Solver reconstructs against the relaxed rows
+/// check the solution a relaxation Solver reconstructs against the relaxed
+/// rows
 /** For every Solver of @p block that is_relaxation() says solves a relaxation
  *  and that has a primal solution, writes it in the Variable and checks it
  *  against the rows @p block itself holds, i.e. the ones the relaxation has

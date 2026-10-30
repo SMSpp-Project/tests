@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 #
 # usage: batchLC_I < exe file >
-#        < exe file > = path of the executable file, default ./MILPSolver_QuadFunction_test
+#        < exe file > = path of the executable file,
+#        default ./MILPSolver_QuadFunction_test
 #
-# runs MILPSolver_QuadFunction_test over the LC_I instance set (objective/constraints combination
-# given by the directory and the type of qf_run)
+# runs MILPSolver_QuadFunction_test over the LC_I instance set
+# (objective/constraints combination given by the directory and the type of
+# qf_run)
 
 # the common part, which reads the argument [see qf_battery.sh]
 source "$(dirname "$0")/qf_battery.sh" "$@"

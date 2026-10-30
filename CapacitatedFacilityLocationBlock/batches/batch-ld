@@ -4,10 +4,10 @@
 #        < exe file > = path of the executable file, default ./CFL_test
 #        < log file > = name of the log file, default no log (stdout)
 #
-# Lagrangian-dual arrangement: B2 is a copy CapacitatedFacilityLocationBlock
-# in the knapsack formulation solved by a LagrangianDualSolver (BundleSolver
-# driving the dual, an LP leaf via :MILPSolver on the subproblems); runs the small
-# ORLib instances
+# Lagrangian-dual arrangement: B2 is a copy CapacitatedFacilityLocationBlock in
+# the knapsack formulation solved by a LagrangianDualSolver (BundleSolver
+# driving the dual, an LP leaf via :MILPSolver on the subproblems); runs the
+# small ORLib instances
 
 # the common part, which reads the arguments [see cfl_battery.sh]
 source "$(dirname "$0")/cfl_battery.sh" "$@"

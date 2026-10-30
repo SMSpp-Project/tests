@@ -86,24 +86,24 @@
  * of UCBlock. On each instance it is checked that the value is the expected
  * one, that the coefficients of every row are the scale of the unit times the
  * factor of the data, that the dual has the expected absolute value (not on
- * S0 and S, whose battery makes the problem a MILP), that UCBlock::is_feasible()
- * holds at the optimum while a solution exceeding a budget violates the
- * rows, and that the instance written back by UCBlock::serialize() has the
- * same optimum. On A the duals also go through a UCBlockSolution and its
- * netCDF form; on A2 and M2 the setters of the budget and of its lower bound,
- * by range and by subset, change the rows of the attached Solver; on A2
- * scaling a unit with the Solver attached gives the optimum of the scaled
- * instance read from scratch, also when the unit is held by a LagBFunction
- * as a LagrangianDualSolver does, and with a LagrangianDualSolver attached
- * (whose ComputeConfig is LDCfg-tight.txt, the LDCfg.txt of the batches
- * with a tighter threshold) the Lagrangian dual gives that same optimum, whether the unit is
- * scaled before the Solver is attached or after; on S scaling the battery
- * gives the expected optimum. Finally, an instance with inconsistent data
- * must be refused by UCBlock::deserialize() in five ways: two zones and no
- * PollutantZones, a PollutantRho of the wrong size, a
- * TotalNumberPollutantZones that is not the sum of NumberPollutantZones, a
- * NumberStorages that is not the number of storages of the units, and a
- * PollutantStorageRho of the wrong size.
+ * S0 and S, whose battery makes the problem a MILP), that
+ * UCBlock::is_feasible() holds at the optimum while a solution exceeding a
+ * budget violates the rows, and that the instance written back by
+ * UCBlock::serialize() has the same optimum. On A the duals also go through a
+ * UCBlockSolution and its netCDF form; on A2 and M2 the setters of the budget
+ * and of its lower bound, by range and by subset, change the rows of the
+ * attached Solver; on A2 scaling a unit with the Solver attached gives the
+ * optimum of the scaled instance read from scratch, also when the unit is held
+ * by a LagBFunction as a LagrangianDualSolver does, and with a
+ * LagrangianDualSolver attached (whose ComputeConfig is LDCfg-tight.txt, the
+ * LDCfg.txt of the batches with a tighter threshold) the Lagrangian dual gives
+ * that same optimum, whether the unit is scaled before the Solver is attached
+ * or after; on S scaling the battery gives the expected optimum. Finally, an
+ * instance with inconsistent data must be refused by UCBlock::deserialize() in
+ * five ways: two zones and no PollutantZones, a PollutantRho of the wrong
+ * size, a TotalNumberPollutantZones that is not the sum of
+ * NumberPollutantZones, a NumberStorages that is not the number of storages of
+ * the units, and a PollutantStorageRho of the wrong size.
  *
  * The instances are written in a temporary directory, and solved by the first
  * :MILPSolver in the Solver factory.
@@ -1342,7 +1342,8 @@ static int test( void )
   auto uc = load( with_schedule );
   generate( uc , nullptr );
   auto tu = uc->get_unit_block( 0 );
-  for( const auto & dp : { "ThermalUnitDPSolver" , "ThermalUnitExtDPSolver" } ) {
+  for( const auto & dp :
+        { "ThermalUnitDPSolver" , "ThermalUnitExtDPSolver" } ) {
    bool refused = false;
    try {
     attach( tu , { dp } );
