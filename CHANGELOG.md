@@ -240,6 +240,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `MSSB_test` checks on every instance that the `Block` written in memory
+  and read back has the weights of the Objective of the original, as well
+  as the round trip of its `Solution`
+
 - `TwoStageStochasticBlock`: `benders_form()` weights the cost of the design
   taken out of each leaf by the factor with which its `Objective` enters the
   `TwoStageStochasticBlock` [see `Block::get_objective_weight()`], the
