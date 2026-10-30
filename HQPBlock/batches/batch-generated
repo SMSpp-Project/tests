@@ -29,7 +29,10 @@
 # it stops when no cut is violated by more than 1e-9 relative, which the
 # master holds to its feasibility tolerance of 1e-9, and with the
 # regularization 1e-3 a gap of 1e-9 on the value of a level leaves x free
-# by about 1e-3.
+# by about 1e-3. The same with the Objective of each level at value about 1
+# (the 21st, intLevelScale), whose gap is then relative to the level, is
+# held to 1e-5 on the values and to the default 1e-3 on x, which it misses
+# by an order of magnitude but on the dependent rows (3e-4).
 
 # run from the test directory so HQPBlock_test reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -43,7 +46,7 @@ DEFAULT_PAR=BSPar.txt
 parse_batch_args "$@"
 
 run_test "$exe" -S "$par" -F HQPDistForms.txt \
-  -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5,,,,,,,,1e-5 \
+  -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5,,,,,,,,1e-5,1e-5 \
   -X ,,,,,,,,,,,,,,,,,,,1e-2 -I 1:13,4:14
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

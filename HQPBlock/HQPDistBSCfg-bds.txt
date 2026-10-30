@@ -2,12 +2,15 @@
 # - - - - - - - - - - - - - HQPDistBSCfg-bds.txt  - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of the HQPDistBlock with the structure kBenders in
-# the tester of HQPBlock [see HQPDistForms.txt], with two HQPSolver in the
-# setting of HQPCfg.txt: DAQP on the whole tree, i.e., the centralized
+# the tester of HQPBlock [see HQPDistForms.txt], with three HQPSolver in
+# the setting of HQPCfg.txt: DAQP on the whole tree, i.e., the centralized
 # hierarchy written with the y, the t and the link rows, whose Hessian is
 # singular [see InnerBSCfg-daqp-prox.txt], and the Benders decomposition of
-# InnerBSCfg-bds.txt, which solves each level only up to a gap and is held
-# to wider tolerances [see batches/batch-generated].
+# InnerBSCfg-bds.txt, which solves each level only up to a gap, as it is
+# and with the Objective of each level multiplied by the inverse of its
+# value (intLevelScale): the values of the levels being small, the gap left
+# by tolerances that are absolute in practice is relatively large without
+# the scale, which is held to wider tolerances [see batches/batch-generated].
 #
 # An HQPSolver whose inner Solver is not in the build is left out.
 #
@@ -18,13 +21,14 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+3  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HQPSolver  # 1st: DAQP on the whole tree
 HQPSolver  # 2nd: Benders decomposition
+HQPSolver  # 3rd: Benders decomposition, each level at its scale
 
-2  # number of ComputeConfig in this BlockSolverConfig
+3  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -75,6 +79,44 @@ strInnerBSC  InnerBSCfg-daqp-prox.txt  # the inner Solver
 
 # now all the integer parameters
 # [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strInnerBSC  InnerBSCfg-bds.txt  # the inner Solver
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 3: Benders decomposition, each level at its scale
+*HQPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intLevelScale  1  # the Objective of each level at value about 1
 
 0  # number of double parameters
 

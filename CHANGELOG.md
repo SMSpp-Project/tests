@@ -57,8 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hierarchies split among 3 owners (with the structure `kConsensus`, DAQP
   and qpOASES on the whole tree; with `kBenders`, DAQP on the whole tree
   and the Benders decomposition of `BendersDecompositionSolver`, if in the
-  build, the latter held to its own tolerances on the values and on `x`,
-  the one on `x` given with the new option `-X`),
+  build, as it is and with the scale of the levels of `HQPSolver`, held to
+  their own tolerances on the values and on `x`, the one on `x` given with
+  the new option `-X`),
   with an independent null-space implementation; `batch-generated`
   on random and degenerate hierarchies, on a step of Model Predictive
   Control and on a run of 10 small ones, where DAQP and qpOASES starting
