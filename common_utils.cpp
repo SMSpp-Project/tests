@@ -1640,7 +1640,7 @@ double tree_objective_value( Block * block )
   }
 
  for( auto sb : block->get_nested_Blocks() )
-  value += tree_objective_value( sb );
+  value += sb->get_objective_weight() * tree_objective_value( sb );
 
  return( value );
 

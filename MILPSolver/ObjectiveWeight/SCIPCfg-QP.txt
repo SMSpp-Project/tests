@@ -1,0 +1,33 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - SCIPCfg-QP.txt  - - - - - - - - - - - - - - - -
+#
+# A txt description of the ComputeConfig of SCIPMILPSolver in the tester of
+# the weights of a Block, whose Objective are partly quadratic: the
+# feasibility tolerances of SCIP, 1e-6 by default, are taken to 1e-9, so
+# that its optimal value agrees with those of the other Solver to the 1e-6
+# the tester asks for.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig  # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+2  # number of double parameters
+# now all the double parameters - - - - - - - - - - - - - - - - - - - - - -
+numerics/feastol      1e-9  # primal feasibility tolerance of SCIP
+numerics/dualfeastol  1e-9  # dual feasibility tolerance of SCIP
+
+0  # number of string parameters
+0  # number of vector-of-int parameters
+0  # number of vector-of-double parameters
+0  # number of vector-of-string parameters
+
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END SCIPCfg-QP.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SMS++/AbstractBlock`: `LagrangianDualSolver_Box_test -k 128` gives the
+  Objective of the sub-Blocks and of the root random weights, which the
+  `:MILPSolver` applies by itself and the `LagrangianDualSolver` through
+  its `LagBFunction`, the `BoxSolver` of the sub-Blocks not seeing them
+
+- `MILPSolver/ObjectiveWeight`: `MILPSolver_ObjectiveWeight_test` builds a
+  random tree of `AbstractBlock` three levels deep with a weight on the
+  `Objective` and one on the Variable of each `Block`, and its twin with no
+  weight and the coefficients already multiplied by the weights (those of
+  the `Objective` along the path, that of the Variable of a son in the rows
+  of its father), attaches the `Solver` of a `BlockSolverConfig` to both
+  roots and to a `Block` of the middle level, and checks every `Solver`
+  against the twin, then changes both trees in the same way (the
+  coefficients of the rows and the weights with the `Solver` attached
+  comprised) and checks them again, and checks that a change of the
+  weights is refused while a `Solver` that cannot handle it is attached to
+  an ancestor; `batch-weight`
+  runs it with `Objective` partly quadratic (`BSPar.txt`, without
+  `HiGHSMILPSolver`, whose active set calls unbounded some of these convex
+  QPs) and all linear (`BSPar-LP.txt`)
+
 - `TwoStageStochasticBlock`: the cross-check of `BSPar-BDS-2S.txt` also
   has the `BendersDecompositionSolver` with HiGHS in the master and in the
   subproblems (`BDSCfg-2S-HiGHS.txt`, `BDSMCfg-MILP-HiGHS.txt`,
@@ -218,6 +239,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TwoStageStochasticBlock/batches/batch-pypsa`
 
 ### Changed
+
+- `TwoStageStochasticBlock`: `benders_form()` weights the cost of the design
+  taken out of each leaf by the factor with which its `Objective` enters the
+  `TwoStageStochasticBlock` [see `Block::get_objective_weight()`], the
+  probability of the scenario being the weight of its `Objective` rather
+  than a factor of its coefficients, and gives the wrapper of a leaf the
+  weight of the ancestors the leaf leaves behind
+
+- `tree_objective_value()`, with which `check_var_solutions()` values the
+  solution of each `Solver`, multiplies each `Objective` by the weights
+  along the path [see `Block::get_objective_weight()`]
 
 - `MILPSolver/QuadFunction`: `HPIPMMILPSolver` has in `LPPar_CL_C-dense.txt`
   the `ComputeConfig` `HPIPMCfg-C.txt`, that of `QPCfg-C.txt` with a limit

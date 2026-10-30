@@ -93,6 +93,13 @@ the `test` directory of the module itself.
   (such as `MILPSolver` and its derived classes `CPXMILPSolver` ,
   `SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`).
 
+- [`ObjectiveWeight`](MILPSolver/ObjectiveWeight), the weight of the
+  `Objective` of a Block in the `:MILPSolver`: a random tree of
+  `AbstractBlock` with a weight on each `Objective` is checked against its
+  twin, which has the coefficients already multiplied by the weights, with
+  the `Solver` attached to the root and to a Block of the middle level, at
+  first and after rounds of random changes of the `Objective`.
+
 - [`BundleSolver/ML`](BundleSolver/ML), the benchmark of the machine-learning
   driven `BundleSolver` against the plain one, over a split of the instances
   of `MMCFBlock` and of `UCBlock`: it is here, and not in the `test` of its

@@ -1,0 +1,50 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for the trees of the tester of
+# the weight of the Objective whose Objective are partly quadratic: the
+# :MILPSolver with a handling of their own of the Modification of the
+# Objective (GRBMILPSolver, CPXMILPSolver, SCIPMILPSolver, MOSEKMILPSolver)
+# and DAQPMILPSolver, which reads the objective of MILPSolver, all with
+# their default parameters but the tolerances of SCIP and of MOSEK on a
+# quadratic problem (SCIPCfg-QP.txt, MOSEKCfg-QP.txt). HiGHSMILPSolver is
+# in BSPar-LP.txt only, since the active set QP solver of HiGHS (up to
+# 1.15.1 at least) calls unbounded some of these convex QPs, whose
+# variables are all bounded. The tester
+# checks each Solver against the twin of the Block, a Solver that this
+# build has not being left out.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+5  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver      # name of 1st Solver
+CPXMILPSolver      # name of 2nd Solver
+SCIPMILPSolver     # name of 3rd Solver
+MOSEKMILPSolver    # name of 4th Solver
+DAQPMILPSolver     # name of 5th Solver
+
+5  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*SCIPCfg-QP.txt   # the tolerances of SCIP
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*MOSEKCfg-QP.txt  # the tolerances of MOSEK
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

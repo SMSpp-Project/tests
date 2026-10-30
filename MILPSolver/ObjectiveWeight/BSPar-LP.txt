@@ -1,0 +1,45 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-LP.txt  - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for the trees of the tester of
+# the weight of the Objective whose Objective are all linear (-k 32): the
+# Solver of BSPar.txt and HiGHSMILPSolver, which is there only for the
+# linear programs [see BSPar.txt], all with their default parameters.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+6  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver      # name of 1st Solver
+CPXMILPSolver      # name of 2nd Solver
+SCIPMILPSolver     # name of 3rd Solver
+MOSEKMILPSolver    # name of 4th Solver
+DAQPMILPSolver     # name of 5th Solver
+HiGHSMILPSolver    # name of 6th Solver
+
+6  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+# 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*  # [none]
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-LP.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

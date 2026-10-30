@@ -938,7 +938,9 @@ bool SolveBoth( Block * block ,
 /*--------------------------------------------------------------------------*/
 /// value of the Objective of @p block and of all its inner Block
 /** Recomputes every Objective of the tree on the current value of the
- *  Variable and sums them, i.e., what the tree is worth right now. */
+ *  Variable and sums them, each multiplied by the product of the weights
+ *  [see Block::set_objective_weight()] along the path from @p block, whose
+ *  own weight is excluded, i.e., what the tree is worth right now. */
 
 double tree_objective_value( Block * block );
 

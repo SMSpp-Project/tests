@@ -40,12 +40,19 @@ The usage of the executable is the following:
              0 = bounds, 1 = objective
              2 = linking coefficients, 3 = linking lhs/rhs
              6 = a linking constraint is added or removed
+             7 = weights on the Objective of the sub-Block (and of the root)
        nvar: number of variables [10]
        nson: number of sub-Block [2]
        dens: number of constraints, fraction of nvar * nson [0.1]
        #rounds: how many iterations [40]
        #chng: number changes [10]
        %chng: probability of changing [0.5]
+
+Bit 7 gives the Objective of each sub-Block a weight in [ 0.1 , 10 ] [see
+`Block::set_objective_weight()`], and the root one that no Solver attached to
+it sees: the `:MILPSolver` applies them by itself, the `LagrangianDualSolver`
+through its `LagBFunction` and the `BoxSolver` of the sub-Block does not see
+them, hence the two Solver agree only if both have them right.
 
 Bit 6 is the one the batch does not turn on, and on purpose: a linking
 constraint that is born after the Solver has been attached is a case nothing

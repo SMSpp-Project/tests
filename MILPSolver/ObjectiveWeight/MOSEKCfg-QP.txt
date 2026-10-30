@@ -1,0 +1,34 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - MOSEKCfg-QP.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of the ComputeConfig of MOSEKMILPSolver in the tester
+# of the weights of a Block, whose Objective are partly quadratic: the
+# tolerances of the interior point method of MOSEK on a quadratic problem
+# are taken to 1e-10, so that its optimal value agrees with those of the
+# other Solver to the 1e-6 the tester asks for.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig  # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+3  # number of double parameters
+# now all the double parameters - - - - - - - - - - - - - - - - - - - - - -
+MSK_DPAR_INTPNT_QO_TOL_REL_GAP  1e-10  # relative gap
+MSK_DPAR_INTPNT_QO_TOL_PFEAS    1e-10  # primal feasibility
+MSK_DPAR_INTPNT_QO_TOL_DFEAS    1e-10  # dual feasibility
+
+0  # number of string parameters
+0  # number of vector-of-int parameters
+0  # number of vector-of-double parameters
+0  # number of vector-of-string parameters
+
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END MOSEKCfg-QP.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
