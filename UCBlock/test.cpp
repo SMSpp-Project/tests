@@ -27,15 +27,16 @@
  * instead checks the pollutant budget constraints of UCBlock.
  *
  * Called as UCBlock_test --scale, with no other argument, it instead checks
- * the scale factor of a unit, i.e., the number of copies of it the UCBlock
- * holds. The Objective of a scaled unit is the scale factor times the cost
- * of one copy, while its Variable stay those of one copy, which the rows of
- * the UCBlock that use them multiply by the factor [see UnitBlock::scale()]:
- * a unit scaled after the model is built must therefore give the model of
- * one scaled before it, and the data of the unit must not move. What a
- * dualizing Solver writes into the Objective, being scaled, is divided back
- * into the cost of one copy, which is what the (physical) DP Solvers read,
- * and they in turn answer for all the copies. This is checked on a thermal
+ * the number of copies of a unit the UCBlock holds. The Objective, the
+ * Variable and the rows of a replicated unit stay those of one copy, the
+ * copies being the weights of the unit, which the Solver applies, while the
+ * UCBlock multiplies by them the constants the unit brings, i.e., the fixed
+ * consumption in the right-hand sides of the node injection rows [see
+ * UnitBlock::replicate()]: a unit replicated after the model is built must
+ * therefore give the model of one replicated before it, and the data of the
+ * unit must not move. What a dualizing Solver writes into the Objective is
+ * the cost of one copy, which is what the (physical) DP Solvers read, and
+ * they answer for one copy. This is checked on a thermal
  * unit in each of the seven formulations, with and without the perspective
  * cuts, and on a nuclear one, both of them carrying a cost of every kind
  * the Objective can hold, the two reserves and the reactive power.
@@ -44,7 +45,7 @@
  * constraints against the objective value of PyPSA, which however writes a
  * limit with a single zone spanning all the nodes, and knows nothing of what
  * is peculiar to UCBlock: several zones per pollutant, a node belonging to no
- * zone, the scale of a unit, the Modification that change a budget, the
+ * zone, the copies of a unit, the Modification that change a budget, the
  * Solution and the netCDF form of all this. These are checked here, on
  * instances small enough that every optimum is known.
  *
@@ -64,8 +65,8 @@
  *   (the rate of U2 must not count). Optimum 2200, dual of CO2 in zone 0
  *   equal to 20;
  *
- * - A2: A with a NOx budget of 20, optimum 3000 with dual 200; with U1
- *   scaled by 0.25, 3150 with dual 250;
+ * - A2: A with a NOx budget of 20, optimum 3000 with dual 200; with 0.25
+ *   copies of U1, 3150 with dual 250;
  *
  * - B: CO2 alone, with neither NumberPollutantZones nor PollutantZones (one
  *   zone of all the nodes), budget 50 and rates depending on time (1 and 0.5
@@ -80,30 +81,30 @@
  * - S0 and S: the battery and CO2 with rates 1 and 0.5 and budget 100, the
  *   level of the battery at the end of the horizon counting -2 in S
  *   (PollutantStorageRho), which lowers the optimum from 3000 to 1800; with
- *   the battery scaled by 0.1 the optimum of S is 2700.
+ *   0.1 copies of the battery the optimum of S is 2700.
  *
  * The optima have been computed on a linear program written independently
  * of UCBlock. On each instance it is checked that the value is the expected
- * one, that the coefficients of every row are the scale of the unit times the
- * factor of the data, that the dual has the expected absolute value (not on
- * S0 and S, whose battery makes the problem a MILP), that
+ * one, that the coefficients of every row are the factors of the data, those
+ * of one copy of the unit, that the dual has the expected absolute value (not
+ * on S0 and S, whose battery makes the problem a MILP), that
  * UCBlock::is_feasible() holds at the optimum while a solution exceeding a
  * budget violates the rows, and that the instance written back by
  * UCBlock::serialize() has the same optimum. On A the duals also go through a
  * UCBlockSolution and its netCDF form; on A2 and M2 the setters of the budget
  * and of its lower bound, by range and by subset, change the rows of the
- * attached Solver; on A2 scaling a unit with the Solver attached gives the
- * optimum of the scaled instance read from scratch, also when the unit is held
- * by a LagBFunction as a LagrangianDualSolver does, and with a
+ * attached Solver; on A2 replicating a unit with the Solver attached gives the
+ * optimum of the replicated instance read from scratch, also when the unit is
+ * held by a LagBFunction as a LagrangianDualSolver does, and with a
  * LagrangianDualSolver attached (whose ComputeConfig is LDCfg-tight.txt, the
  * LDCfg.txt of the batches with a tighter threshold) the Lagrangian dual gives
- * that same optimum, whether the unit is scaled before the Solver is attached
- * or after; on S scaling the battery gives the expected optimum. Finally, an
- * instance with inconsistent data must be refused by UCBlock::deserialize() in
- * five ways: two zones and no PollutantZones, a PollutantRho of the wrong
- * size, a TotalNumberPollutantZones that is not the sum of
- * NumberPollutantZones, a NumberStorages that is not the number of storages of
- * the units, and a PollutantStorageRho of the wrong size.
+ * that same optimum, whether the unit is replicated before the Solver is
+ * attached or after; on S replicating the battery gives the expected optimum.
+ * Finally, an instance with inconsistent data must be refused by
+ * UCBlock::deserialize() in five ways: two zones and no PollutantZones, a
+ * PollutantRho of the wrong size, a TotalNumberPollutantZones that is not the
+ * sum of NumberPollutantZones, a NumberStorages that is not the number of
+ * storages of the units, and a PollutantStorageRho of the wrong size.
  *
  * The instances are written in a temporary directory, and solved by the first
  * :MILPSolver in the Solver factory.
@@ -506,8 +507,8 @@ static Index first_zone( const UCBlock * uc , Index p )
 /// true if every row has exactly the terms of the data
 /** Each row must have, for each generator of a unit at a node of its zone
  * and each time with a nonzero rate, the active power with coefficient the
- * scale of the unit times the rate, and for each storage the level with
- * coefficient the scale times its factor; and nothing else. */
+ * rate, and for each storage the level with coefficient its factor, those
+ * of one copy of the unit; and nothing else. */
 
 static bool rows_match_data( UCBlock * uc )
 {
@@ -536,7 +537,6 @@ static bool rows_match_data( UCBlock * uc )
      for( Index t = 0 ; ap && ( t < T ) ; ++t )
       if( uc->get_pollutant_rho( t , p , eg ) != 0 )
        expected.emplace_back( & ap[ t ] ,
-                              ub->get_scale() *
                               uc->get_pollutant_rho( t , p , eg ) );
      }
     if( ! uc->get_pollutant_storage_rho().empty() ) {
@@ -548,7 +548,7 @@ static bool rows_match_data( UCBlock * uc )
       auto level = ub->get_storage_level( s );
       for( Index t = 0 ; level && ( zone == z ) && ( t < T ) ; ++t )
        if( uc->get_pollutant_storage_rho( t , p , st + s ) != 0 )
-        expected.emplace_back( & level[ t ] , ub->get_scale() *
+        expected.emplace_back( & level[ t ] ,
                                uc->get_pollutant_storage_rho( t , p ,
                                                               st + s ) );
       }
@@ -582,7 +582,7 @@ static UCBlock * run( const std::string & name , const Instance & in ,
  const double v = solve( uc );
  check( near( v , value ) , "optimum " + std::to_string( v ) + " == " +
                             std::to_string( value ) );
- check( rows_match_data( uc ) , "rows are scale times the data" );
+ check( rows_match_data( uc ) , "rows are the data" );
  if( dual >= 0 )
   check( near( std::abs( uc->get_const_pollutant_constraints()[ dual_p ]
                          [ dual_z ].get_dual() ) , dual ) ,
@@ -707,55 +707,62 @@ static int test( void )
                             eModBlck , eModBlck );
   check( near( solve( uc ) , 3000 ) , "set_pollutant_budget( subset )" );
 
-  uc->get_unit_block( 1 )->scale( 0.25 , eModBlck , eModBlck );
-  check( rows_match_data( uc ) , "rows follow the scale of a unit" );
-  check( near( solve( uc ) , 3150 ) , "scaled unit with the Solver attached" );
+  uc->get_unit_block( 1 )->replicate( 0.25 , eModBlck , eModBlck );
+  check( rows_match_data( uc ) , "rows stay those of one copy of a unit" );
+  check( near( solve( uc ) , 3150 ) ,
+         "replicated unit with the Solver attached" );
+  // the rows hold one copy, and their check has to weigh the Variable of
+  // the unit with its copies as the Solver does
+  SimpleConfiguration< double > tol( 1e-6 );
+  check( uc->is_feasible( false , & tol ) ,
+         "is_feasible() at the optimum of the replicated unit" );
   release( uc );
 
   auto fresh = load( ( dir / "A2.nc4" ).string() );
-  fresh->get_unit_block( 1 )->scale( 0.25 , eNoMod , eNoMod );
+  fresh->get_unit_block( 1 )->replicate( 0.25 , eNoMod , eNoMod );
   attach( fresh );
-  check( near( solve( fresh ) , 3150 ) , "scaled unit read from scratch" );
+  check( near( solve( fresh ) , 3150 ) , "replicated unit read from scratch" );
   check( near( std::abs( fresh->get_const_pollutant_constraints()[ 1 ][ 0 ]
-                         .get_dual() ) , 250 ) , "dual of the scaled unit" );
+                         .get_dual() ) , 250 ) ,
+         "dual of the replicated unit" );
   release( fresh );
   }
 
- /* A2 with the unit scaled while a LagBFunction holds it, as it does while a
-  * LagrangianDualSolver is attached: the LagBFunction is then the father of
-  * the unit, and the unit is its only sub-Block, while the scale must still
-  * rewrite the rows of unit 1 and not those of unit 0. */
+ /* A2 with the unit replicated while a LagBFunction holds it, as it does
+  * while a LagrangianDualSolver is attached: the LagBFunction is then the
+  * father of the unit, and the unit is its only sub-Block, while the copies
+  * must still reach the UCBlock, and leave the rows as they are. */
  {
   auto uc = load( ( dir / "A2.nc4" ).string() );
   attach( uc );
   auto unit = uc->get_unit_block( 1 );
   auto lbf = new LagBFunction( unit );
   lbf->set_f_Block( uc );
-  unit->scale( 0.25 , eModBlck , eModBlck );
-  check( rows_match_data( uc ) , "rows follow the scale of a unit under a "
-                                 "LagBFunction" );
+  unit->replicate( 0.25 , eModBlck , eModBlck );
+  check( rows_match_data( uc ) , "rows stay those of one copy of a unit "
+                                 "under a LagBFunction" );
   lbf->set_inner_block( nullptr , false );
   lbf->set_f_Block( nullptr );
   unit->set_f_Block( uc );
   delete lbf;
-  check( near( solve( uc ) , 3150 ) , "scaled under a LagBFunction" );
+  check( near( solve( uc ) , 3150 ) , "replicated under a LagBFunction" );
   release( uc );
   }
 
  /* A2 with a LagrangianDualSolver attached, which by default gives each
   * LagBFunction only the dual pairs of the relaxed constraints its sub-Block
-  * appears in [see intSparseLagPairs]: scaling a unit rewrites coefficients
-  * of relaxed rows, and each change has to reach the Lagrangian term of the
-  * right LagBFunction. The instance being continuous, the Lagrangian dual is
-  * its optimum, 3150 with the unit scaled, whether it is scaled before the
-  * Solver is attached or after. The ComputeConfig of the LagrangianDualSolver
-  * LDCfg-tight.txt, which is the LDCfg.txt of the batches, next to which the
-  * test is run [see CMakeLists.txt], with a tighter threshold on the
-  * residual: the one of the batches stops the Bundle some 6% away from the
-  * optimum, at a value that does not change with the scale, and the check
-  * would not see it. */
+  * appears in [see intSparseLagPairs]: replicating a unit changes the weight
+  * of its Variable in relaxed rows, and the change has to reach the
+  * Lagrangian term of the right LagBFunction. The instance being continuous,
+  * the Lagrangian dual is its optimum, 3150 with 0.25 copies of the unit,
+  * whether it is replicated before the Solver is attached or after. The
+  * ComputeConfig of the LagrangianDualSolver LDCfg-tight.txt, which is the
+  * LDCfg.txt of the batches, next to which the test is run [see
+  * CMakeLists.txt], with a tighter threshold on the residual: the one of the
+  * batches stops the Bundle some 6% away from the optimum, at a value that
+  * does not change with the copies, and the check would not see it. */
  {
-  // the value of the Lagrangian dual of A2 with unit 1 scaled by 0.25,
+  // the value of the Lagrangian dual of A2 with 0.25 copies of unit 1,
   // before the LagrangianDualSolver is attached or after
   const auto lagrangian = [ & ]( bool after ) {
    auto cc = dynamic_cast< ComputeConfig * >(
@@ -764,12 +771,12 @@ static int test( void )
     return( std::numeric_limits< double >::quiet_NaN() );
    auto uc = load( ( dir / "A2.nc4" ).string() );
    if( ! after )
-    uc->get_unit_block( 1 )->scale( 0.25 , eNoMod , eNoMod );
+    uc->get_unit_block( 1 )->replicate( 0.25 , eNoMod , eNoMod );
    BlockSolverConfig bsc( 1 );
    bsc.add_ComputeConfig( "LagrangianDualSolver" , cc );
    bsc.apply( uc );
    if( after )
-    uc->get_unit_block( 1 )->scale( 0.25 , eModBlck , eModBlck );
+    uc->get_unit_block( 1 )->replicate( 0.25 , eModBlck , eModBlck );
    auto solver = static_cast< CDASolver * >(
                                     uc->get_registered_solvers().front() );
    const auto status = solver->compute( false );
@@ -787,8 +794,8 @@ static int test( void )
   const auto after = lagrangian( true );
   check( ( std::abs( before - 3150 ) <= 1e-5 * 3150 ) &&
          ( std::abs( after - 3150 ) <= 1e-5 * 3150 ) ,
-         "scaled unit with a LagrangianDualSolver attached: " +
-         std::to_string( after ) + " and, scaled before, " +
+         "replicated unit with a LagrangianDualSolver attached: " +
+         std::to_string( after ) + " and, replicated before, " +
          std::to_string( before ) + " == 3150" );
   }
 
@@ -839,9 +846,13 @@ static int test( void )
  {
   auto uc = run( "S" , S , 1800 );
   check( uc->get_number_storages() == 1 , "one storage, the battery" );
-  uc->get_unit_block( 4 )->scale( 0.1 , eModBlck , eModBlck );
-  check( rows_match_data( uc ) , "rows follow the scale of the battery" );
-  check( near( solve( uc ) , 2700 ) , "scaled battery" );
+  uc->get_unit_block( 4 )->replicate( 0.1 , eModBlck , eModBlck );
+  check( rows_match_data( uc ) ,
+         "rows stay those of one copy of the battery" );
+  check( near( solve( uc ) , 2700 ) , "replicated battery" );
+  SimpleConfiguration< double > tol( 1e-6 );
+  check( uc->is_feasible( false , & tol ) ,
+         "is_feasible() at the optimum of the replicated battery" );
   release( uc );
   }
 
@@ -901,7 +912,7 @@ static const std::vector< std::string > SolverNames =
 
 static constexpr double Eps = 1e-6;
 
-/// the scale factor the unit under investment is given
+/// the number of copies the unit under investment is given
 
 static constexpr double Kappa = 3;
 
@@ -939,8 +950,8 @@ static bool near( double a , double b )
 
 /*--------------------------------------------------------------------------*/
 /// writes the instance in the file with the given name, returning its path
-/** The instance has one node, a unit that is scaled and a SlackUnitBlock
- * that makes it feasible whatever the first one does. The scaled unit is a
+/** The instance has one node, a unit that is replicated and a SlackUnitBlock
+ * that makes it feasible whatever the first one does. The replicated unit is a
  * ThermalUnitBlock with a cost of every kind the Objective can carry, i.e.,
  * start-up, shut-down, linear, quadratic and fixed, the two reserves and the
  * reactive power, or the NuclearUnitBlock that adds to them the costs of the
@@ -970,8 +981,8 @@ static std::string write( const std::string & name , bool nuclear ,
  g.addVar( "ActivePowerDemand" , netCDF::NcDouble() ,
            { dN , dT } ).putVar( demand.data() );
 
- // the two reserves are asked for, so that their rows exist and carry the
- // scale factor of the unit; the reactive demand does the same for the
+ // the two reserves are asked for, so that their rows exist and hold the
+ // Variable of the unit; the reactive demand does the same for the
  // reactive node injection rows
  const std::vector< double > reserve( T , 1 );
  g.addVar( "PrimaryDemand" , netCDF::NcDouble() ,
@@ -982,7 +993,7 @@ static std::string write( const std::string & name , bool nuclear ,
  g.addVar( "ReactivePowerDemand" , netCDF::NcDouble() ,
            { dN , dT } ).putVar( reactive.data() );
 
- // the unit that is scaled - - - - - - - - - - - - - - - - - - - - - - - - -
+ // the unit that is replicated - - - - - - - - - - - - - - - - - - - - - - -
 
  auto u = g.addGroup( "UnitBlock_0" );
  u.putAtt( "type" , nuclear ? "NuclearUnitBlock" : "ThermalUnitBlock" );
@@ -1012,7 +1023,7 @@ static std::string write( const std::string & name , bool nuclear ,
  put( "InitialPower" , 150 );
  put_i( "InitUpDownTime" , 4 );
  // what the unit consumes while it is off, which the node injection rows
- // carry weighed with its scale factor
+ // carry weighed with its number of copies
  put( "FixedConsumption" , 30 );
  put( "PrimaryRho" , 0.05 );
  put( "SecondaryRho" , 0.1 );
@@ -1112,15 +1123,18 @@ static std::string formulation( Configuration * bc )
 
 /*--------------------------------------------------------------------------*/
 /// every number the abstract representation of the UCBlock is made of
-/** The coefficients of the Objective of each unit and the two sides and the
- * coefficients of each row the UCBlock owns, in the order in which they are
- * generated: two UCBlock that hold the same model give the same vector. */
+/** The weights and the coefficients of the Objective of each unit and the two
+ * sides and the coefficients of each row the UCBlock owns, in the order in
+ * which they are generated: two UCBlock that hold the same model give the
+ * same vector. */
 
 static std::vector< double > snapshot( UCBlock * uc )
 {
  std::vector< double > v;
 
  for( Index u = 0 ; u < uc->get_number_units() ; ++u ) {
+  v.push_back( uc->get_unit_block( u )->get_objective_weight() );
+  v.push_back( uc->get_unit_block( u )->get_variable_weight() );
   auto obj = dynamic_cast< FRealObjective * >(
                                    uc->get_unit_block( u )->get_objective() );
   if( ! obj )
@@ -1192,29 +1206,29 @@ static double solve( Block * b , Index i = 0 )
  }
 
 /*--------------------------------------------------------------------------*/
-/// the model of a unit scaled after it is built is that of one scaled before
-/** The UCBlock is built and the unit is then scaled, which has to rewrite
- * every coefficient that carries the scale factor, both in the Objective of
- * the unit and in the rows of the UCBlock that use its Variable; the same
- * UCBlock with the unit scaled before anything is built is the model it must
- * give, and its optimum is the same. Scaling must leave the data of the unit,
- * which are those of one copy, where they are. */
+/// the model of a unit replicated after it is built is that of one before
+/** The UCBlock is built and the unit is then replicated, which has to change
+ * its weights and the right-hand sides of the rows of the UCBlock that the
+ * fixed consumption of the unit brings, and leave every coefficient, those
+ * of one copy, where it is; the same UCBlock with the unit replicated before
+ * anything is built is the model it must give, and its optimum is the same.
+ * Replicating must leave the data of the unit, which are those of one copy,
+ * where they are. */
 
 static void check_model( const std::string & inst , Configuration * bc ,
                          const std::string & what )
 {
  auto A = load( inst );
  generate( A , bc );
- // the Solver is attached before the unit is scaled, as it is when an
- // InvestmentBlock scales it: what the scaling writes into the Objective
- // then comes back to the unit, which must not take it for a change of the
- // cost of one copy
+ // the Solver is attached before the unit is replicated, as it is when an
+ // InvestmentBlock replicates it: the Solver must apply the weights, and the
+ // unit must not take them for a change of the cost of one copy
  if( ! solver_name.empty() )
   attach( A , { solver_name } );
  auto tu = static_cast< ThermalUnitBlock * >( A->get_unit_block( 0 ) );
  const auto cost = tu->get_linear_term();
  const auto start_up = tu->get_start_up_cost();
- A->get_unit_block( 0 )->scale( Kappa , eModBlck , eModBlck );
+ A->get_unit_block( 0 )->replicate( Kappa , eModBlck , eModBlck );
  check( tu->get_linear_term() == cost ,
         what + ": the cost of one copy is left alone" );
  check( tu->get_start_up_cost() == start_up ,
@@ -1223,11 +1237,11 @@ static void check_model( const std::string & inst , Configuration * bc ,
  auto B = load( inst );
  if( bc )
   b_config_Block( B->get_unit_block( 0 ) , bc , "" );
- B->get_unit_block( 0 )->scale( Kappa , eNoMod , eNoMod );
+ B->get_unit_block( 0 )->replicate( Kappa , eNoMod , eNoMod );
  generate( B , nullptr );
 
  check( snapshot( A ) == snapshot( B ) ,
-        what + ": scaled after == scaled before" );
+        what + ": replicated after == replicated before" );
 
  if( ! solver_name.empty() ) {
   attach( B , { solver_name } );
@@ -1243,12 +1257,13 @@ static void check_model( const std::string & inst , Configuration * bc ,
  }
 
 /*--------------------------------------------------------------------------*/
-/// the DP Solver of a scaled unit answers for all its copies
-/** The Objective of a scaled unit is the scale factor times the cost of one
- * copy, and the DP Solver, which reads the data of one copy, has to answer
- * for all of them. A dualizing Solver writes its multipliers into the
- * Objective, i.e., scaled: what the unit stores is that change divided back
- * into the cost of one copy, which is what the DP reads. */
+/// the DP Solver of a replicated unit answers for one copy
+/** The Objective of a replicated unit is the cost of one copy, the copies
+ * being its weight, which a Solver attached to the unit does not see: the
+ * DP Solver, which reads the data of one copy, answers for one copy as the
+ * MILP does. A dualizing Solver writes its multipliers into the Objective,
+ * and what the unit stores is that change as the cost of one copy, which is
+ * what the DP reads. */
 
 static void check_dp( const std::string & inst , const std::string & dp ,
                       const std::string & what )
@@ -1264,10 +1279,10 @@ static void check_dp( const std::string & inst , const std::string & dp ,
  check( near( solve( tu , 0 ) , solve( tu , 1 ) ) ,
         what + ": the DP and the MILP agree on the unit" );
 
- tu->scale( Kappa );
+ tu->replicate( Kappa );
  const auto cost = tu->get_linear_term();
 
- // a price on the power, as a dualizing Solver puts it, i.e., scaled
+ // a price on the power, as a dualizing Solver puts it
  const double price = *std::max_element( cost.begin() , cost.end() ) + 1;
  auto qf = static_cast< DQuadFunction * >(
             static_cast< FRealObjective * >( tu->get_objective()
@@ -1275,7 +1290,7 @@ static void check_dp( const std::string & inst , const std::string & dp ,
  const Index first = qf->is_active( & tu->get_active_power( 0 )[ 0 ] );
  DQuadFunction::Vec_FunctionValue nc( T );
  for( Index t = 0 ; t < T ; ++t )
-  nc[ t ] = qf->get_linear_coefficient( first + t ) - Kappa * price;
+  nc[ t ] = qf->get_linear_coefficient( first + t ) - price;
  tu->anyone_there( true );
  qf->modify_linear_coefficients( std::move( nc ) ,
                                  Block::Range( first , first + T ) ,
@@ -1287,19 +1302,19 @@ static void check_dp( const std::string & inst , const std::string & dp ,
  check( per_copy , what + ": the price is stored as the cost of one copy" );
 
  check( near( solve( tu , 0 ) , solve( tu , 1 ) ) ,
-        what + ": the DP and the MILP agree on the scaled unit" );
+        what + ": the DP and the MILP agree on the replicated unit" );
 
  attach( tu , {} );
  delete uc;
  }
 
 /*--------------------------------------------------------------------------*/
-/// the checks of the scale factor of a unit [see the file comment]
+/// the checks of the copies of a unit [see the file comment]
 
 static int test( void )
 {
  solver_name = first_Solver_of( SolverNames ,
-			        "what a :Solver says of the scaled unit; "
+			        "what a :Solver says of the replicated unit; "
 			        "the model is checked all the same" );
  if( ! solver_name.empty() )
   std::cout << "solving with " << solver_name << std::endl;
@@ -1324,7 +1339,7 @@ static int test( void )
  check_model( nuclear , nullptr , "nuclear" );
 
  // a thermal unit asked to follow a reference schedule: the deviation from
- // it is weighed with the scale factor as every other term, the schedule
+ // it is weighed with the copies as every other term, the schedule
  // being that of one unit [see ThermalUnitBlock::generate_objective()]. The
  // DP Solvers know nothing of it, hence they are not asked about it
  const auto with_schedule = write( "schedule" , false , true );
@@ -1413,7 +1428,7 @@ int main( int argc , char ** argv )
  if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--pollutant" ) )
   return( pollutant::test() );
 
- // the same goes for the checks of the scale factor of a unit
+ // the same goes for the checks of the copies of a unit
  if( ( argc == 2 ) && ( std::string( argv[ 1 ] ) == "--scale" ) )
   return( scaling::test() );
 

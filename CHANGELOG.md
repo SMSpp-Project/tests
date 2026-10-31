@@ -248,6 +248,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `UCBlock`: `UCBlock_test --scale` and `--pollutant` check the copies of
+  a unit as the weights of its Block, the rows and the Objective of the unit
+  keeping the coefficients of one copy, a unit replicated after the model is
+  built giving the model (weights included) of one replicated before it,
+  and `is_feasible()` at the optimum of the replicated unit and battery
+
 - `InvestmentBlock`: the SDDPBlock of `batches-sddp` is solved by the
   `SDDPSimulationSolver` of SDDPBlock, the first Solver of its
   BlockSolverConfig (`SDDPBSCfg-sddp.txt`), which the InvestmentFunction
