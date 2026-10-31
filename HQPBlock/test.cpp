@@ -30,7 +30,12 @@
  *   the new data solved from scratch;
  *
  * - a run of 10 steps of Model Predictive Control on the same HQPBlock,
- *   each changing b, d, A and C a little, checked against the reference.
+ *   each changing b, d, A and C a little, checked against the reference;
+ *
+ * - a small Model Predictive Control with its stage structure [see
+ *   HQPBlock::StageData]: two robots, four stages, the dynamics, the limits
+ *   and the smoothness of the inputs, a row between the robots and their
+ *   goals.
  *
  * The HQPSolver with intProxCenter == 1 solve exactly the problem of the
  * reference, hence also x is compared; for the others only the values of
@@ -57,7 +62,10 @@
  * generated the instance) and with the reference with the regularization
  * of the file on the step and on the slacks; x is printed but not checked,
  * since with a small regularization it is fixed only to about the square
- * root of the accuracy of each solve. If the file of the previous step of
+ * root of the accuracy of each solve; if the reference runs out of
+ * iterations (its active-set method has no rule against cycling, which the
+ * degenerate levels of the longer horizons need), the values are compared
+ * with the file only. If the file of the previous step of
  * the same run is given with -P, the step is also reached by Modification:
  * the HQPBlock of the previous step is solved, changed into this one by
  * set_b(), set_d(), set_A() and set_C(), and solved again, as the Model
@@ -88,7 +96,10 @@
  *
  * An HQPSolver whose inner Solver is not in the build is reported and left
  * out; if none of them has one, the tester exits with 77, the status of a
- * test that had nothing to do.
+ * test that had nothing to do. An HQPSolver whose inner Solver does not
+ * apply to a hierarchy, i.e., throws std::invalid_argument (e.g., one that
+ * needs the stage structure, on a hierarchy that has none), is reported and
+ * left out for that hierarchy.
  *
  * \author Donato Meoli \n
  *         Dipartimento di Informatica \n
@@ -150,6 +161,23 @@ static void count_step( const HQPSolver * s )
 {
  step_iter[ position.at( s ) ] += s->get_elapsed_iterations();
  stepped = true;
+ }
+
+/*--------------------------------------------------------------------------*/
+// compute() of s in st, false if its inner Solver does not apply to the
+// hierarchy what (std::invalid_argument), which is reported
+
+static bool run( HQPSolver * s , const std::string & what , int & st )
+{
+ try {
+  st = s->compute();
+  }
+ catch( const std::invalid_argument & e ) {
+  std::cout << what << " [" << label( s ) << "]: does not apply ("
+            << e.what() << "), skipped" << std::endl;
+  return( false );
+  }
+ return( true );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -369,6 +397,78 @@ static Instance weighted_instance( void )
  }
 
 /*--------------------------------------------------------------------------*/
+// two robots in the plane over N = 4 stages, s_{k+1} = s_k + u_k / 4 from
+// s_0 given (the right-hand sides of the dynamics), the columns as in the
+// HO-MPC package: the inputs u_{j,k} first, then the states s_{j,k+1}, each
+// block by robot and then by stage. Level 0 the dynamics, 1 |u| <= 1, 2 the
+// smoothness |u_k - u_{k-1}| <= 0.3 (rows of stage k on u_{k-1}), 3 the
+// first coordinate of robot 0 at least 0.5 above that of robot 1 at stage
+// 2 (a row on s_2 only, of stage 1), 4 the goals at every stage, beyond
+// what the limits allow at the first stages
+
+static Instance stage_instance( void )
+{
+ Instance in;
+ in.name = "stages";
+ const int R = 2 , N = 4 , nu = 2 , ns = 2;
+ in.n = R * N * ( nu + ns );
+ in.eps = 1e-3;
+ auto ucol = [ & ]( int j , int k , int i ) {
+  return( j * N * nu + k * nu + i ); };
+ auto scol = [ & ]( int j , int k , int i ) {  // s_{j,k}, k >= 1
+  return( R * N * nu + j * N * ns + ( k - 1 ) * ns + i ); };
+
+ auto & st = in.stages;
+ st.num_stages = N;
+ st.var_stage.assign( in.n , 0 );
+ st.var_state.assign( in.n , 0 );
+ for( int j = 0 ; j < R ; ++j )
+  for( int k = 0 ; k < N ; ++k )
+   for( int i = 0 ; i < 2 ; ++i ) {
+    st.var_stage[ ucol( j , k , i ) ] = k;
+    st.var_stage[ scol( j , k + 1 , i ) ] = k + 1;
+    st.var_state[ scol( j , k + 1 , i ) ] = 1;
+    }
+
+ const double s0[ 2 ][ 2 ] = { { 0 , 0 } , { 0.3 , -0.2 } };
+ const double goal[ 2 ][ 2 ] = { { -1.5 , 0.8 } , { 1.6 , 1.2 } };
+ const int m = R * N * ns;
+ Mat A0 = Mat::Zero( m , in.n ) , C1 = Mat::Zero( 2 * m , in.n );
+ Mat C2 = Mat::Zero( 2 * m , in.n ) , C3 = Mat::Zero( 1 , in.n );
+ Mat A4 = Mat::Zero( m , in.n );
+ Vec b0 = Vec::Zero( m ) , b4( m );
+ int r = 0 , c = 0;
+ for( int j = 0 ; j < R ; ++j )
+  for( int k = 0 ; k < N ; ++k )
+   for( int i = 0 ; i < 2 ; ++i , ++r ) {
+    A0( r , scol( j , k + 1 , i ) ) = 1;
+    A0( r , ucol( j , k , i ) ) = -0.25;
+    if( k )
+     A0( r , scol( j , k , i ) ) = -1;
+    else
+     b0( r ) = s0[ j ][ i ];
+    A4( r , scol( j , k + 1 , i ) ) = 1;
+    b4( r ) = goal[ j ][ i ];
+    for( int sg = 0 ; sg < 2 ; ++sg , ++c ) {
+     C1( c , ucol( j , k , i ) ) = sg ? -1 : 1;
+     if( k ) {
+      C2( c , ucol( j , k , i ) ) = sg ? -1 : 1;
+      C2( c , ucol( j , k - 1 , i ) ) = sg ? 1 : -1;
+      }
+     }
+    }
+ C3( 0 , scol( 1 , 2 , 0 ) ) = 1;
+ C3( 0 , scol( 0 , 2 , 0 ) ) = -1;
+ Vec d2 = Vec::Constant( 2 * m , 0.3 );
+ add_level( in , A0 , b0 , Mat( 0 , in.n ) , Vec( 0 ) );
+ add_level( in , Mat( 0 , in.n ) , Vec( 0 ) , C1 , Vec::Ones( 2 * m ) );
+ add_level( in , Mat( 0 , in.n ) , Vec( 0 ) , C2 , d2 );
+ add_level( in , Mat( 0 , in.n ) , Vec( 0 ) , C3 , Vec::Constant( 1 , -0.5 ) );
+ add_level( in , A4 , b4 , Mat( 0 , in.n ) , Vec( 0 ) );
+ return( in );
+ }
+
+/*--------------------------------------------------------------------------*/
 // the HQPSolver of the BlockSolverConfig that have an inner Solver; those
 // that have none are reported, once; their positions are counted from that
 // of the first HQPSolver of the kind of Block
@@ -451,7 +551,9 @@ static int solve_and_check( const Instance & in , bool report )
  configure( block );
  int errors = 0;
  for( auto s : working( attach_to( block ) , report , first_of( block ) ) ) {
-  const int st = s->compute();
+  int st = 0;
+  if( ! run( s , in.name , st ) )
+   continue;
   if( st != Solver::kOK ) {
    std::cout << in.name << " [" << label( s ) << "]: status " << st
              << " -> KO" << std::endl;
@@ -503,8 +605,9 @@ static int mpc_step( void )
  const auto slvrs = working( attach_to( block ) , false ,
                              first_of( block ) );
  int errors = 0;
+ int st0 = 0;
  for( auto s : slvrs )
-  s->compute();
+  run( s , in.name , st0 );
 
  // the new data: b and d moved, A and C perturbed, an entry out of the
  // pattern of a row added and one of the pattern zeroed
@@ -551,8 +654,10 @@ static int mpc_step( void )
 
  for( std::size_t i = 0 ; i < slvrs.size() ; ++i ) {
   auto s = slvrs[ i ];
-  const int st = s->compute();
-  const int fst = fslvrs[ i ]->compute();
+  int st = 0 , fst = 0;
+  if( ! ( run( s , nw.name , st ) &&
+          run( fslvrs[ i ] , nw.name + ", from scratch" , fst ) ) )
+   continue;
   if( ( st != Solver::kOK ) || ( fst != Solver::kOK ) ) {
    std::cout << nw.name << " [" << label( s ) << "]: status " << st
              << " (from scratch " << fst << ") -> KO" << std::endl;
@@ -583,8 +688,9 @@ static int mpc_run( void )
  configure( block );
  const auto slvrs = working( attach_to( block ) , false ,
                              first_of( block ) );
+ int st0 = 0;
  for( auto s : slvrs )
-  s->compute();
+  run( s , in.name , st0 );
 
  std::mt19937 g( 32 );
  int errors = 0;
@@ -608,7 +714,9 @@ static int mpc_run( void )
 
   const RefSolution ref = reference( in ) , ref0 = reference( in , false );
   for( auto s : slvrs ) {
-   const int st = s->compute();
+   int st = 0;
+   if( ! run( s , in.name , st ) )
+    continue;
    count_step( s );
    if( st != Solver::kOK ) {
     std::cout << in.name << " [" << label( s ) << "]: status " << st
@@ -659,6 +767,7 @@ static int generated( void )
  cases.push_back( slack_instance() );
  cases.push_back( dependent_instance() );
  cases.push_back( weighted_instance() );
+ cases.push_back( stage_instance() );
 
  errors += generated_in< HQPBlock >( cases );
 
@@ -760,7 +869,9 @@ static int check_file( const std::string & what ,
 {
  int errors = 0;
  for( auto s : sl ) {
-  const int st = s->compute();
+  int st = 0;
+  if( ! run( s , what , st ) )
+   continue;
   if( step )
    count_step( s );
   if( st != Solver::kOK ) {
@@ -772,7 +883,8 @@ static int check_file( const std::string & what ,
   // the tolerance on x is infinite: it is printed, not checked
   const double vtol = vtol_of( s , VTOL );
   errors += compare( what + " vs file" , s , fsol , vtol , 1e100 );
-  errors += compare( what + " vs reference" , s , ref , vtol , 1e100 );
+  if( ref.ok )
+   errors += compare( what + " vs reference" , s , ref , vtol , 1e100 );
   }
  return( errors );
  }
@@ -805,12 +917,15 @@ static int from_file( void )
  const Instance in = instance_of( *block , nm );
  const RefSolution fsol = file_solution( filename , in );
  const RefSolution ref = reference( in , true , in.eps );
- if( ! ( fsol.ok && ref.ok ) ) {
-  std::cout << nm << ": no solution in the file, or the reference failed"
-            << " -> KO" << std::endl;
+ if( ! fsol.ok ) {
+  std::cout << nm << ": no solution in the file -> KO" << std::endl;
   delete block;
   return( 1 );
   }
+ // the solution in the file is a reference of its own
+ if( ! ref.ok )
+  std::cout << nm << ": the null-space reference runs out of iterations, "
+            << "the HQPSolver are compared with the file only" << std::endl;
 
  errors += check_file( nm , working( attach( *block , sconf_file ) , true ) ,
                        fsol , ref );
@@ -824,8 +939,9 @@ static int from_file( void )
    }
   else {
    const auto psl = working( attach( *prev , sconf_file ) , false );
+   int st0 = 0;
    for( auto s : psl )
-    s->compute();
+    run( s , previous , st0 );
    for( Block::Index p = 0 ; p < block->get_num_levels() ; ++p ) {
     const auto e = block->get_eq_start( p ) , i = block->get_ineq_start( p );
     prev->set_b( p , std::vector< double >( block->get_b().begin() + e ,

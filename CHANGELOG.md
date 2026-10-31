@@ -102,6 +102,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   module, each step also reached by Modification of the previous one, with
   the label `HQPBlock;MILPSolver`
 
+- `HQPBlock`: `HQPBSCfg.txt` attaches a 15th `HQPSolver`, whose inner
+  Solver is `HQPStageSolver` (`InnerBSCfg-stage.txt`), as a differential
+  override of `HQPCfg.txt`; the tester leaves out, for a hierarchy, an
+  `HQPSolver` whose inner Solver throws `std::invalid_argument` on it, and
+  builds also a small Model Predictive Control with the stage structure of
+  `HQPBlock`, `batch-radial` also runs two steps with the control horizon
+  10, which have it, and an instance on which the null-space reference runs
+  out of iterations is compared with the solution in the file only
+
 - `MILPSolver/QuadFunction/LPPar_CL_C-dense.txt` also attaches
   `HPIPMMILPSolver`, with `QPCfg-C.txt`, so that `batchCL_C_dense`,
   `batchMPC_C_dense` and `batchMM_C_dense` run it next to the other dense

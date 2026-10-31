@@ -10,7 +10,14 @@
 # Control of 8 robots crossing in the middle of a circle, against the
 # solution of each level written in the file and against the null-space
 # reference; a step that follows the previous one in the run is also
-# reached by Modification of the HQPBlock of the previous step (-P).
+# reached by Modification of the HQPBlock of the previous step (-P). The
+# runs are those of the control horizon 3 (radial8_s*), whose files have no
+# stage structure, and two consecutive steps of the control horizon 10
+# (radial8_N010_s040 and s041), which have it, so that HQPStageSolver (the
+# 15th HQPSolver of BSPar.txt) solves these and is left out of the others;
+# the other instances with the stage structure, where the dense inner
+# Solvers take minutes per level, are left to the unit test of HQPBlock,
+# which solves them with HQPStageSolver alone.
 
 # run from the test directory so HQPBlock_test reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -28,18 +35,20 @@ data=../../HQPBlock/data/nc4
 # the steps in their order, each with the previous one if it is the step
 # before it - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-prev=""
-prev_step=-2
-for f in "${data}"/radial8_s*.nc4; do
-  [ -e "${f}" ] || { echo "no instance in ${data}"; exit 1; }
-  step=$(( 10#$(basename "${f}" .nc4 | sed 's/.*_s//') ))
-  if [ $(( prev_step + 1 )) -eq "${step}" ]; then
-    run_test "$exe" -S "$par" -P "${prev}" "${f}"
-  else
-    run_test "$exe" -S "$par" "${f}"
-  fi
-  prev="${f}"
-  prev_step=${step}
+for run in radial8_s radial8_N010_s04; do
+  prev=""
+  prev_step=-2
+  for f in "${data}"/${run}*.nc4; do
+    [ -e "${f}" ] || { echo "no instance ${run}* in ${data}"; exit 1; }
+    step=$(( 10#$(basename "${f}" .nc4 | sed 's/.*_s//') ))
+    if [ $(( prev_step + 1 )) -eq "${step}" ]; then
+      run_test "$exe" -S "$par" -P "${prev}" "${f}"
+    else
+      run_test "$exe" -S "$par" "${f}"
+    fi
+    prev="${f}"
+    prev_step=${step}
+  done
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
