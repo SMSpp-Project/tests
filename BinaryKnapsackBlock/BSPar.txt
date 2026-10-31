@@ -3,8 +3,7 @@
 #
 # Cross-check BlockSolverConfig for a PURE-BINARY BinaryKnapsackBlock: it
 # attaches EVERY solver / formulation that must give the SAME integer
-# optimum,
-# so that a single sweep cross-checks them all (see batch):
+# optimum, so that a single sweep cross-checks them all (see batch):
 #
 #   - :MILPSolver                         exact MIP (the reference optimum)
 #   - CoreDPBinaryKnapsackSolver          exact core / non-dominated-state DP

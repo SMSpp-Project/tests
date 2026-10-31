@@ -2,14 +2,11 @@
 # - - - - - - - - - - - - - - - - BSPar-milp.txt  - - - - - - - - - - - - - -
 #
 # Single-exact-solver BlockSolverConfig: the greedy relaxation (which
-# brackets
-# the optimum) plus the exact CPLEX MILP (:MILPSolver). It is the "CPLEX"
-# entry
-# of the hard-instance lineups (batch-jooken and batch-pisinger-large), run
-# one
-# solver per process to map where a strong MIP engine cracks the
-# large-capacity
-# instances that defeat the core DP and the greedy-bound B&B.
+# brackets the optimum) plus the exact CPLEX MILP (:MILPSolver). It is the
+# "CPLEX" entry of the hard-instance lineups (batch-jooken and
+# batch-pisinger-large), run one solver per process to map where a strong MIP
+# engine cracks the large-capacity instances that defeat the core DP and the
+# greedy-bound B&B.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

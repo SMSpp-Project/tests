@@ -14,8 +14,8 @@
 # relaxation, the same role its from-scratch sibling plays here.
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments
-# shared
-# with BSPar.txt (included via '*'), so there is no duplicated configuration.
+# shared with BSPar.txt (included via '*'), so there is no duplicated
+# configuration.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

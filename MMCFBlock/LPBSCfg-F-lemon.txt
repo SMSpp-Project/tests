@@ -3,8 +3,7 @@
 #
 # A txt description of a BlockSolverConfig for a MCFBlock solved by the
 # network simplex of LEMON, which takes the fractional Lagrangian costs
-# thanks
-# to the tolerances MCFLemonSolver compiles it with
+# thanks to the tolerances MCFLemonSolver compiles it with
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

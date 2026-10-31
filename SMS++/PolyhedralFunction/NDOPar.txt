@@ -12,7 +12,7 @@
 
 BlockSolverConfig     # exact type of the Configuration object
 
-1  # the BlockSolverConfig is not a "differential" one: values are being set
+1  # the BlockSolverConfig is a "differential" one
 
 3  # number of (the names of) Solver in this BlockSolverConfig
 

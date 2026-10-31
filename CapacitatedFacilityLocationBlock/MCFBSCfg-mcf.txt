@@ -24,45 +24,45 @@ MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # 1st Solver
 MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>  # 2nd Solver
 MCFLemonSolverCostScaling<MCFListDigraph,double,double>     # 3rd Solver
 MCFLemonSolverCapacityScaling<MCFListDigraph,double,double> # 4th Solver
-MCFSolver<MCFSimplex>                                       # 9th Solver
-MCFSolver<RelaxIV>                                          # 10th Solver
-MCFSolver<MCFCplex>                                         # 11th Solver
+MCFSolver<MCFSimplex>                                       # 5th Solver
+MCFSolver<RelaxIV>                                          # 6th Solver
+MCFSolver<MCFCplex>                                         # 7th Solver
 
 7  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig: every Solver runs as it comes
 
-# - - - - - - - - - - - - -   1st ComputeConfig - - - - - - - - - - - - - - -
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverNetworkSimplex on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   2nd ComputeConfig - - - - - - - - - - - - - - -
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCycleCanceling on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   3rd ComputeConfig - - - - - - - - - - - - - - -
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCostScaling on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   4th ComputeConfig - - - - - - - - - - - - - - -
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCapacityScaling on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   9th ComputeConfig - - - - - - - - - - - - - - -
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (MCFSimplex)
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -  10th ComputeConfig - - - - - - - - - - - - - - -
+# 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (RelaxIV)
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -  11th ComputeConfig - - - - - - - - - - - - - - -
+# 7th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (MCFCplex)
 
 *DfltCfg.txt

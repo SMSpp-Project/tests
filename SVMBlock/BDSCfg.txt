@@ -5,17 +5,14 @@
 # the Benders structure of a SVMBlock, i.e., the one where the model stays in
 # the master and each chunk holds only the slacks of its own samples: the
 # master is then the regularisation term plus one epigraph variable per
-# chunk,
-# and the subproblems are linear programs.
+# chunk, and the subproblems are linear programs.
 #
 # The regime is the MILP one, where the master is a Block of the Solver's own
 # into which the SVMBlock is grafted: the convex one would have the Solver
-# add
-# the sub-Block carrying the value functions to the SVMBlock itself, which
-# only an AbstractBlock lets a Solver do. The master is a quadratic program
-# all the same, the regularisation term being where it is, and the
-# :MILPSolver
-# it goes to takes it as such
+# add the sub-Block carrying the value functions to the SVMBlock itself,
+# which only an AbstractBlock lets a Solver do. The master is a quadratic
+# program all the same, the regularisation term being where it is, and the
+# :MILPSolver it goes to takes it as such
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

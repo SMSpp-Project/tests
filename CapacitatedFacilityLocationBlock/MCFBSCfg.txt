@@ -27,43 +27,43 @@ MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # 3rd Solver
 MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>  # 4th Solver
 MCFLemonSolverCostScaling<MCFListDigraph,double,double>     # 5th Solver
 MCFLemonSolverCapacityScaling<MCFListDigraph,double,double> # 6th Solver
-MCFSolver<MCFCplex>                                         # 11th Solver
+MCFSolver<MCFCplex>                                         # 7th Solver
 
 7  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig: every Solver runs as it comes
 
-# - - - - - - - - - - - - -   1st ComputeConfig - - - - - - - - - - - - - - -
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (MCFSimplex)
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   2nd ComputeConfig - - - - - - - - - - - - - - -
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (RelaxIV)
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   3rd ComputeConfig - - - - - - - - - - - - - - -
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverNetworkSimplex on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   4th ComputeConfig - - - - - - - - - - - - - - -
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCycleCanceling on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   5th ComputeConfig - - - - - - - - - - - - - - -
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCostScaling on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   6th ComputeConfig - - - - - - - - - - - - - - -
+# 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCapacityScaling on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -  11th ComputeConfig - - - - - - - - - - - - - - -
+# 7th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (MCFCplex)
 
 *DfltCfg.txt

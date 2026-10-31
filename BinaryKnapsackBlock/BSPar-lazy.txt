@@ -3,11 +3,11 @@
 #
 # Cross-check BlockSolverConfig exercising the LAZY bounding protocol of the
 # BranchAndXSolver (intBoundingProtocol = 1, which evaluates a node when it
-# is
-# extracted from the open set rather than when it is created): the exact MILP
-# reference plus the BX in each of its serial exploration strategies, all of
-# which must reach the same optimum as with the (default) eager protocol,
-# since when a node is evaluated changes nothing of what is explored.
+# is extracted from the open set rather than when it is created): the exact
+# MILP reference plus the BX in each of its serial exploration strategies,
+# all of which must reach the same optimum as with the (default) eager
+# protocol, since when a node is evaluated changes nothing of what is
+# explored.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
