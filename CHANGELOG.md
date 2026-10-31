@@ -254,6 +254,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   built giving the model (weights included) of one replicated before it,
   and `is_feasible()` at the optimum of the replicated unit and battery
 
+- `InvestmentBlock`: `IB_test` no longer shifts the initial point and the
+  solution by the lower bounds of the design Variable, which InvestmentBlock
+  no longer reformulates, and the `IBOCfg*.txt` give no Configuration for
+  the static constraints
+
 - `InvestmentBlock`: the SDDPBlock of `batches-sddp` is solved by the
   `SDDPSimulationSolver` of SDDPBlock, the first Solver of its
   BlockSolverConfig (`SDDPBSCfg-sddp.txt`), which the InvestmentFunction

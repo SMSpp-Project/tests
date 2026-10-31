@@ -45,8 +45,8 @@
  * typically a "meta"-BlockConfig (see InnerBCfg.txt), which is dispatched to
  * the InvestmentBlock and inside the inner Block of its InvestmentFunction,
  * the UCBlock of each stage of an SDDPBlock included. The BlockConfig of the
- * InvestmentBlock is an OBlockConfig (see IBOCfg.txt), which reformulates the
- * bounds on the investment and gives the InvestmentFunction its
+ * InvestmentBlock is an OBlockConfig (see IBOCfg.txt), which gives the
+ * InvestmentFunction its
  * ComputeConfig (see IFCfg.txt), whose extra Configuration holds the
  * BlockSolverConfig of the inner Block: everything is said by the
  * configuration files, and the tester only reads and applies them.
@@ -429,13 +429,9 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ,
     first_solver->get_var_solution();
     std::cout << "Solution: " << std::endl;
     const auto & variables = investment_block->get_variables();
-    const auto & var_lb = investment_block->get_variable_lower_bound();
     const auto width = std::to_string( variables.size() ).size();
     for( Index i = 0 ; i < variables.size() ; ++i ) {
-     auto value = variables[ i ].get_value();
-     if( investment_block->get_reformulate_bounds() && ( i < var_lb.size() ) &&
-      ( var_lb[ i ] > -Inf< double >() ) )
-      value += var_lb[ i ];
+     const auto value = variables[ i ].get_value();
      std::cout << std::setw( width ) << i << " " << value << std::endl;
     }
    }
@@ -737,21 +733,6 @@ void set_initial_point( InvestmentBlock * investment_block ) {
     std::to_string( initial_point.size() ) + ", but "
     "there are " + std::to_string( num_variables ) +
     " variables." ) );
-
-  // the bounds are reformulated (or not) when the constraints are generated
-  investment_block->generate_abstract_constraints();
-  if( investment_block->get_reformulate_bounds() ) {
-   // If variable bounds have been reformulated, the initial point must be
-   // adjusted.
-
-   const auto & var_lower_bound =
-    investment_block->get_variable_lower_bound();
-   for( Index i = 0 ; i < initial_point.size() ; ++i ) {
-    if( ( i < var_lower_bound.size() ) &&
-     ( var_lower_bound[ i ] > -Inf< double >() ) )
-     initial_point[ i ] -= var_lower_bound[ i ];
-   }
-  }
  }
  else // Since no initial point has been provided, we use the default one.
   initial_point = get_default_initial_point( investment_block );
@@ -909,8 +890,7 @@ void process_prob_file( const netCDF::NcFile & file ) {
   if( ! block_config )
    throw( std::logic_error( "BlockConfig group was not properly provided" ) );
   // the OBlockConfig gives its ComputeConfig to the Objective, which has to
-  // be there already; the constraints wait for the BlockConfig, which says
-  // whether the bounds are reformulated
+  // be there already
   investment_block->generate_abstract_variables();
   investment_block->generate_objective();
   block_config->apply( investment_block );
@@ -1022,8 +1002,7 @@ void process_block_file( const netCDF::NcFile & file ) {
     configure_inner_Blocks( investment_block , given_block_config ,
                             bconf_file );
    // the OBlockConfig gives its ComputeConfig to the Objective, which has to
-   // be there already; the constraints wait for the BlockConfig, which says
-   // whether the bounds are reformulated
+   // be there already
    investment_block->generate_abstract_variables();
    investment_block->generate_objective();
    b_config_Block( investment_block , given_block_config , bconf_file );
