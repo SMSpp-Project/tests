@@ -14,8 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of `NuclearUnitBlock` with the default one (`NUBForm-rules.txt`: F1T, F0, F2
   and its variants, F3a, F3b, F4, on the T formulation without Perspective
   Cuts, and F2 on the SUSD formulation with the caps of the runs by the reach
-  of the rules, `NUBCfg-SUSD-F2-RC.txt`), and the flows on the label graph of
-  the rules (`NUBForm-graph.txt`), the `:MILPSolver` of a single unit being
+  of the rules, `NUBCfg-SUSD-F2-RC.txt`), and on the first unit of each family
+  the flows on the label graph of the rules (`NUBForm-graph.txt`), which take
+  up to hours on a unit, the `:MILPSolver` of a single unit being
   written once in `MILPCfg-NUB.txt`
 
 - `UCBlock/BlockCopySolver`, a `Solver` of the testers that solves a copy of
