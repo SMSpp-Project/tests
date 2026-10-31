@@ -16,9 +16,10 @@
 # scenario, and the reference is the objective of the equivalent flat network
 # solved by PyPsa.
 #
-# NOTE: the inner Block is solved by Gurobi, see BSCfg.txt: HiGHS grinds for a
-# thousand seconds on these instances and then reports an error. Switching that
-# file leaves batch-pypsa identical, verified line by line.
+# NOTE: the inner Block is solved by HiGHS by the simplex method, see
+# BSCfg.txt: by its interior point method HiGHS takes nine times as long on
+# these instances. Switching that file leaves batch-pypsa identical, verified
+# line by line.
 #
 # NOTE: these runs are given an initial point, and it is not optional. Over
 # part of the design space the inner Block is infeasible, because scaling the

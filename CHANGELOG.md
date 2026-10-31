@@ -285,7 +285,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   where it is infeasible the InvestmentFunction cuts the point away with the
   homogeneous multipliers of the dual direction, without which
   `batch-stochastic` stopped above the optimum on
-  `smspp_stoch_tssb_c3_d3_renewables.nc`
+  `smspp_stoch_tssb_c3_d3_renewables.nc`; the note of `batch-stochastic`
+  says so
 
 - the testers of the stochastic Block give the Solver their log at the
   verbosity of `-v`
