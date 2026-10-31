@@ -281,11 +281,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the static constraints
 
 - `InvestmentBlock`: the inner Block of `BSCfg.txt` is solved by
-  `GRBMILPSolver` with `intHomogeneousDirection` 1, rather than by
-  `HiGHSMILPSolver`: where it is infeasible the InvestmentFunction cuts the
-  point away with the homogeneous multipliers of the dual direction, which
-  HiGHSMILPSolver cannot give, and `batch-stochastic` stopped above the
-  optimum on `smspp_stoch_tssb_c3_d3_renewables.nc`
+  `HiGHSMILPSolver` by the simplex method, with `intHomogeneousDirection` 1:
+  where it is infeasible the InvestmentFunction cuts the point away with the
+  homogeneous multipliers of the dual direction, without which
+  `batch-stochastic` stopped above the optimum on
+  `smspp_stoch_tssb_c3_d3_renewables.nc`
 
 - the testers of the stochastic Block give the Solver their log at the
   verbosity of `-v`
