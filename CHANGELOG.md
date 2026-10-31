@@ -583,6 +583,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `cmake/FindCPLEX.cmake` drops the cached paths of CPLEX when one of them
+  does not exist any more (e.g., in a build directory configured once outside
+  and once inside a container, or after an upgrade), so that all of them are
+  searched again; the stale include directory was kept, since `find_path()`
+  does not search a cached one again, and the configuration stopped on
+  reading the version from a header that is not there
+
 - `MMCFBlock`: `mnetgen` has its own `drand48()` and `srand48()` on any
   Windows, the C library of MinGW-w64 lacking them as that of MSVC does
 
