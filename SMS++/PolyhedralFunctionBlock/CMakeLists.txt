@@ -7,6 +7,7 @@ if (NOT hasParent)
     # Solvers
     find_package(BundleSolver)
     find_package(MILPSolver)
+    find_package(BDMinQuadSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -25,6 +26,13 @@ endif ()
 if (TARGET SMS++::MILPSolver)
     target_link_libraries(PolyhedralFunctionBlock_test PRIVATE
                           SMS++::MILPSolver)
+endif ()
+
+# the Solver of the master of the 2nd row of NDOPar.txt, which the tester
+# leaves out when the build does not have it
+if (TARGET SMS++::BDMinQuadSolver)
+    target_link_libraries(PolyhedralFunctionBlock_test PRIVATE
+                          SMS++::BDMinQuadSolver)
 endif ()
 
 smspp_install(PolyhedralFunctionBlock_test)
@@ -71,5 +79,13 @@ endforeach ()
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# the battery runs BDMinQuadSolver too when the build has it, which the map
+# of the directory does not declare since the suite does not need it
+set(_batch PolyhedralFunctionBlock_test/batch)
+if ((TARGET SMS++::BDMinQuadSolver) AND (TEST ${_batch}))
+    set_tests_properties(${_batch} PROPERTIES LABELS
+        "${SMSPP_TEST_LABELS_PolyhedralFunctionBlock};BDMinQuadSolver")
+endif ()
 
 # --------------------------------------------------------------------------- #

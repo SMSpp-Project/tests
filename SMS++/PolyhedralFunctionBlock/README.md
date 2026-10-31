@@ -30,18 +30,28 @@ such as `CPXMILPSolver` , `SCIPMILPSolver` or `GRBMILPSolver`);
 also, `UpdateSolver` are registered to all its sons (`PolyhedralFunctionBlock`,
 or directly to itself if and( nf ) = 1) that maps all the `Modification` 
 to the corresponding son of NDOBlock (or to NDOBlock if abs( nf ) = 1). 
-The latter is configured to use the "natural" representation and has an 
-appropriate NDO `Solver` attached (say, `BundleSolver`).
+The latter is configured to use the "natural" representation and has the
+NDO `Solver` of `NDOPar.txt` attached: a `BundleSolver` whose dual master
+problem is solved by the `:MILPSolver` of `MPBCfg.txt`, one whose primal
+master problem is solved by the `BDMinQuadSolver` of `MPBCfg-BDMQ.txt` and
+one whose primal master problem is solved by the `DAQPMILPSolver` of
+`MPBCfg-DAQP.txt`, each of the last two being left out when the build does
+not have the `Solver` of its master.
 
-After all this is done, the NDOBlock and LPBlock are solved with the
-registered `Solver` and the results (termination status and objective
-value, if applicable) are compared.
+After all this is done, LPBlock is solved with its `Solver`, which gives the
+reference, and NDOBlock with each of its `Solver`, and the results
+(termination status and objective value, if applicable) of each of them are
+compared with the reference. A `Solver` whose `compute()` throws
+`std::invalid_argument`, i.e., that does not handle the problem (as
+`BDMinQuadSolver` does on a master with a linear part), is reported as
+"n.a." and is not called again, the test failing only if one of the others
+disagrees with the reference.
 
 Then, repeatedly a "linearized" `PolyhedralFunctionBlock` in LPBlock is
 randomly modified, with the `Modification` automatically transmitted to
 the corresponding "natural" `PolyhedralFunctionBlock` in NDOBlock to keep
 them in synch. Then both are re-solved several times; each time the results
-of the two `Solver` are compared.
+of each `Solver` of NDOBlock are compared with those of LPBlock.
 
 The usage of the executable is the following:
 
@@ -83,8 +93,8 @@ epigraph. The geometric pruning alone is tested in
 [PolyhedralFunction](../PolyhedralFunction).
 
 A makefile is also provided that builds the executable including the
-`BundleSolver` module and all its dependencies, in particular `MILPSolver`
-(and, obviously, the core SMS++ library).
+`BundleSolver` and `BDMinQuadSolver` modules and all their dependencies, in
+particular `MILPSolver` (and, obviously, the core SMS++ library).
 
 
 ## Authors

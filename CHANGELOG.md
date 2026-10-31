@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SMS++/PolyhedralFunctionBlock`: `NDOPar.txt` also registers the
+  `BundleSolver` with the primal master problem solved by `BDMinQuadSolver`
+  (`MPBCfg-BDMQ.txt`, unscaled) and by `DAQPMILPSolver` (`MPBCfg-DAQP.txt`),
+  as differential overrides of the `ComputeConfig` of the first one, which
+  is now the fragment `BSCfg.txt`; the tester checks every `Solver` of
+  `NDOBlock` against the LP, doubling the conditional bound at most once per
+  round, and reports as "n.a." from then on a `Solver` whose `compute()`
+  throws `std::invalid_argument`. A
+  `BundleSolver` whose `strMPBSolverCfg` names a `Solver` that the build
+  does not have is left out of a `BlockSolverConfig`, as a
+  `LagrangianDualSolver` whose inner `Solver` is not there
+
 - `InvestmentBlock`: the battery `batches-design/batch` converts by
   `design_converter` each network of the `UCBlock` archive with the design in
   its units and lines (a `TwoStageStochasticBlock` among them) and holds the
