@@ -46,7 +46,7 @@ intMaxIter  1000  # the limit on the iterations of HPIPM
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END HPIPMCfg-C.txt  - - - - - - - - - - - - - -

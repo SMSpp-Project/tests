@@ -41,36 +41,36 @@ intLogVerb      0 # log verbosity of the MILPSolver
 intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
 
-1 # number of double parameters
-dblMaxTime 300 # max running time (seconds), as in the timing study of TUDPS
+1  # number of double parameters
 
 # now all the double parameters
+dblMaxTime 300 # max running time (seconds), as in the timing study of TUDPS
 
 ## All specific HiGHS parameter
 #primal_feasibility_tolerance 1e-9
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 #strOutputFile  1tub.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this is the ComputeConfig of NuclearUnitExtDPSolver
@@ -85,37 +85,36 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END BSCfg-nuc-lim.txt - - - - - - - - - - - - - -

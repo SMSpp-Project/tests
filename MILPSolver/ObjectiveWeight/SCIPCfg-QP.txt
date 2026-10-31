@@ -10,22 +10,43 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig  # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> only the entries below are changed
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 2  # number of double parameters
-# now all the double parameters - - - - - - - - - - - - - - - - - - - - - -
+# now all the double parameters - - - - - - - - - - - - - - - - - - - - - - -
+
+# now all the double parameters
 numerics/feastol      1e-9  # primal feasibility tolerance of SCIP
 numerics/dualfeastol  1e-9  # dual feasibility tolerance of SCIP
 
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
 0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
 0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
 0  # number of vector-of-string parameters
 
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

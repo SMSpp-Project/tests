@@ -96,7 +96,7 @@ strInnerBSC  InnerBSCfg-qpoases.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 5: qpOASES, lower levels in the model
 *HQPCfg-free.txt +
@@ -134,7 +134,7 @@ strInnerBSC  InnerBSCfg-qpoases.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 6: qpOASES, center at 0
 *HQPCfg-prox0.txt +
@@ -172,7 +172,7 @@ strInnerBSC  InnerBSCfg-qpoases.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 7: MOSEK, the base
 *HQPCfg.txt +
@@ -210,7 +210,7 @@ strInnerBSC  InnerBSCfg-mosek.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 8: MOSEK, lower levels in the model
 *HQPCfg-free.txt +
@@ -248,7 +248,7 @@ strInnerBSC  InnerBSCfg-mosek.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 9: MOSEK, center at 0
 *HQPCfg-prox0.txt +
@@ -286,7 +286,7 @@ strInnerBSC  InnerBSCfg-mosek.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 10: Clarabel, the base
 *HQPCfg.txt +
@@ -324,7 +324,7 @@ strInnerBSC  InnerBSCfg-clarabel.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 11: Clarabel, lower levels in the model
 *HQPCfg-free.txt +
@@ -362,7 +362,7 @@ strInnerBSC  InnerBSCfg-clarabel.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 12: Clarabel, center at 0
 *HQPCfg-prox0.txt +
@@ -400,7 +400,7 @@ strInnerBSC  InnerBSCfg-clarabel.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 13: DAQP, the base, each solve from scratch
 *HQPCfg.txt +
@@ -438,7 +438,7 @@ strInnerBSC  InnerBSCfg-daqp-cold.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 14: qpOASES, the base, each solve from scratch
 *HQPCfg.txt +
@@ -476,9 +476,9 @@ strInnerBSC  InnerBSCfg-qpoases-cold.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END HQPBSCfg.txt  - - - - - - - - - - - - - - -

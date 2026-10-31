@@ -62,7 +62,7 @@ str_Mstr_BSCfg  BDSMCfg.txt # BlockSolverConfig of the master
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END BDSCfg.txt - - - - - - - - - - - - - - -

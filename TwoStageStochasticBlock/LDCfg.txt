@@ -7,12 +7,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig         # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-16 # number of integer parameters
+16  # number of integer parameters
 
 # now all the integer parameters
 intPushCostToOwner     1 # whether sub-Block Objective are changed
@@ -41,7 +41,7 @@ inttSPar1             12
 # maximum number of function evaluations at each iteration
 intMaxNrEvls           2
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 dblRelAcc           1e-6 # relative accuracy required to solution
@@ -65,35 +65,35 @@ dbltMinor          1e-10 # minimum value for t
 dbltInit            1e+1 # initial value for t
 dbltSPar2           1e-2 # parameter for the long-term t-strategy
 
-3 # number of string parameters
+3  # number of string parameters
 
 # now all the string parameters
 # the inner Solver used by LagrangianDualSolver
-str_LDSlv_ISName   BundleSolver
+str_LDSlv_ISName                BundleSolver
 # BlockSolverConfig for the LagBFunctions
 str_LagBF_BSCfg                 BSCfg2.txt
 # BlockSolverConfig for the MasterProblemBlock's Solver
 strMPBSolverCfg                 MPBCfg.txt
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END LDCfg.txt - - - - - - - - - - - - - - - -

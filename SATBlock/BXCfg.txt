@@ -44,7 +44,7 @@ strNameOfBlockSolverConfigurationFile BXBSCfg.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
 

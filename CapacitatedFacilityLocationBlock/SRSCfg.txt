@@ -14,7 +14,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 
-# now the name of the Solver  - - - - - - - - - - - - - - - - - - - - - - - -
+# now the name of the Solver - - - - - - - - - - - - - - - - - - - - - - - -
 ScenarioReductionSolver  # name of the Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
@@ -22,11 +22,11 @@ ScenarioReductionSolver  # name of the Solver
 # now the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the ScenarioReductionSolver
 
-ComputeConfig     # exact type of the Configuration object
+ComputeConfig # exact type of the Configuration object
 
 1  # the ComputeConfig is a "differential" one
 
-5 # number of integer parameters
+5  # number of integer parameters
 
 # now all the integer parameters
 # reduction method: comment this one and uncomment the desired one
@@ -39,34 +39,35 @@ intShuffle       0 # shuffle representatives in FirstFit (0 = no, 1 = yes)
 intRandomSeed    0 # random seed for shuffling (0 = default seed)
 intLogVerb       2 # log verbosity (0 = silent, 1 = normal, 2 = detailed)
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
-* # no extra Configuration
+# pointer to the "extra" Configuration
+*  # no extra Configuration
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END SRSCfg.txt - - - - - - - - - - - - - - -

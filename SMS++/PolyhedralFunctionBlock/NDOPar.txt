@@ -27,11 +27,11 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-17 # number of integer parameters
+17  # number of integer parameters
 
 # now all the integer parameters
 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
-intMPStbl              0
+intMPStbl         0
 intMaxIter   100000 # MaxIter, max number of iterations for each call
 intMaxThread      0 # MaxThread, max number of new tasks to spawn
 intLogVerb       12 # LogVerb, log verbosity of main Bundle algorithm
@@ -63,7 +63,7 @@ intTrgtMng        0 # bit-wise encoding targets and accuracies management:
                     # bit 4: if Lipschitz constant is used to compute the
                     # upper model
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 dblRelAcc     1e-9 # relative accuracy required to solution
@@ -89,33 +89,32 @@ dbltSPar2    0.001 # parameter for the long-term t-strategy
 # minimum number/fraction of function evaluations at each iteration
 #dblMinNrEvls     2
 
-1 # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
 # BlockSolverConfig for the MasterProblemBlock's Solver
 strMPBSolverCfg  MPBCfg.txt
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END NDOPar.txt - - - - - - - - - - - - - - -

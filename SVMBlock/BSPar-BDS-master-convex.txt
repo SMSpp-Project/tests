@@ -40,13 +40,13 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-14 # number of integer parameters
+14  # number of integer parameters
 
 # now all the integer parameters
 # the primal MP, the only one carrying the quadratic 0-th component
-intMPPrimal            1
+intMPPrimal       1
 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
-intMPStbl              0
+intMPStbl         0
 intMaxIter   100000 # MaxIter, max number of iterations for each call
 intLogVerb        0 # LogVerb, log verbosity of main Bundle algorithm
 # discard items when they have been useless for <this> iterations
@@ -67,7 +67,7 @@ inttSPar1         0
 # maximum number of function evaluations at each iteration
 intMaxNrEvls      2
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 # relative accuracy required to solution: the values are of
@@ -97,29 +97,29 @@ dbltInit      1e+3
                    # it to t/(1+t) on the weights anyway
 dbltSPar2    0.001 # parameter for the long-term t-strategy
 
-1 # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
 # BlockSolverConfig of the MasterProblemBlock Solver
 strMPBSolverCfg  MPBCfg.txt
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

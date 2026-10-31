@@ -21,34 +21,35 @@ BlockConfig # exact type of the ComputeConfig object
 
 # static_constraints
 SimpleConfiguration<int>
-7    # bit 0 = demand, bit 1 = capacity, bit 2 = strong
+7  # bit 0 = demand, bit 1 = capacity, bit 2 = strong
 
 # dynamic_constraints
 SimpleConfiguration<std::pair<int,double>>
 375
+
 1e-4
 
 # static_variables
 SimpleConfiguration<int>
-0    # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
+0  # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
-*    # [none]
+*  # [none]
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END CFLBCfg-NF-SFsep.txt  - - - - - - - - - - - - -

@@ -57,9 +57,9 @@ str_Bsub_BSCfg  BDSSCfg-DAQP.txt  # BlockSolverConfig of the subproblems
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - END BSPar-BDS-Phase1-DAQP.txt - - - - - - - - - - - -

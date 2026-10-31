@@ -78,9 +78,9 @@ strInnerBSC  InnerBSCfg-qpoases.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END HQPDistBSCfg.txt  - - - - - - - - - - - - - -

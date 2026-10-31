@@ -68,7 +68,7 @@ strInnerBSC  InnerBSCfg-daqp-prox.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 2: Benders decomposition
 *HQPCfg.txt +
@@ -106,7 +106,7 @@ strInnerBSC  InnerBSCfg-bds.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 3: Benders decomposition, each level at its scale
 *HQPCfg.txt +
@@ -144,9 +144,9 @@ strInnerBSC  InnerBSCfg-bds.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END HQPDistBSCfg-bds.txt  - - - - - - - - - - - - -

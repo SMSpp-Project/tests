@@ -24,7 +24,7 @@ DAQPMILPSolver  # name of 1st Solver
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *DAQPCfg-cold.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - END InnerBSCfg-daqp-cold.txt  - - - - - - - - - - - -

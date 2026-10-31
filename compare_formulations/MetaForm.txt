@@ -19,15 +19,17 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 # 1st formulation: the BlockConfig and the BlockSolverConfig
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
 *MetaConfig1.txt        # its (meta-)BlockConfig
 *BSCfg1.txt             # its BlockSolverConfig
 
 # 2nd formulation: the BlockConfig and the BlockSolverConfig
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
 *MetaConfig2.txt        # its (meta-)BlockConfig
 *BSCfg2.txt             # its BlockSolverConfig
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END MetaForm.txt  - - - - - - - - - - - - - - -

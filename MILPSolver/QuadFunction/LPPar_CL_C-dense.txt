@@ -57,7 +57,7 @@ HPIPMMILPSolver     # name of 6th Solver
 
 *HPIPMCfg-C.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END LPPar_CL_C-dense.txt  - - - - - - - - - - - - -

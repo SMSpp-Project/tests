@@ -35,7 +35,6 @@ ComputeConfig # exact type of the ComputeConfig object
 intLogVerb      0 # log verbosity of the MILPSolver
 intRelaxIntVars 1 # solve the LP relaxation of the strong formulation
 intCutSepPar    0 # no separation needed: the strong constraints are static
-
 ## All specific GUROBI parameter (uncomment based on Solver)
 Threads         1 # avoid parallel
 
@@ -61,37 +60,36 @@ Threads         1 # avoid parallel
 # crossover, 4 = network
 #Method 4
 
-1 # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
 dblMaxTime      120 # max time: 1 minute
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 #strOutputFile  cfl1.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END CFLBSCfg-cuts.txt - - - - - - - - - - - - - -

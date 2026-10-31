@@ -19,15 +19,17 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 # 1st formulation: the monolithic formulation
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
 *BPar-ND.txt            # its BlockConfig
 *BSPar-ND.txt           # its BlockSolverConfig
 
 # 2nd formulation: the Benders formulation
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
 *BPar-ND-Ben.txt        # its BlockConfig
 *BSPar-ND-Ben.txt       # its BlockSolverConfig
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END NDForm.txt  - - - - - - - - - - - - - - - -

@@ -44,7 +44,7 @@ intProxCenter  0  # center at 0
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END HQPCfg-prox0.txt  - - - - - - - - - - - - - -

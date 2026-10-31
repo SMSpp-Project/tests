@@ -35,15 +35,19 @@ DAQPMILPSolver     # name of 5th Solver
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 *  # [none]
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 *  # [none]
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*SCIPCfg-QP.txt   # the tolerances of SCIP
+
+*SCIPCfg-QP.txt  # the tolerances of SCIP
 # 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 *MOSEKCfg-QP.txt  # the tolerances of MOSEK
 # 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 *  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -

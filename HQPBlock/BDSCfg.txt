@@ -35,7 +35,7 @@ dblRelAcc  1e-7  # relative accuracy of the Benders decomposition
 
 # now all the string parameters
 str_Bsub_BSCfg  InnerBSCfg-daqp.txt  # BlockSolverConfig of the subproblems
-str_Mstr_BSCfg  BDSMCfg.txt  # BlockSolverConfig of the master
+str_Mstr_BSCfg  BDSMCfg.txt          # BlockSolverConfig of the master
 
 0  # number of vector-of-int parameters
 
@@ -53,7 +53,7 @@ str_Mstr_BSCfg  BDSMCfg.txt  # BlockSolverConfig of the master
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BDSCfg.txt  - - - - - - - - - - - - - - -

@@ -32,7 +32,7 @@ CoreDPBinaryKnapsackSolver            # 2nd: exact core DP
 # 2: the exact core DP, shared fragment
 *CDPCfg.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END BSPar-coredp.txt - - - - - - - - - - - - -

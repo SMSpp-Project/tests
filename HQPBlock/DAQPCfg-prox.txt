@@ -47,7 +47,7 @@ dblDAQPEtaProx  1e-12  # stop of the proximal-point iterations
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END DAQPCfg-prox.txt  - - - - - - - - - - - - - -

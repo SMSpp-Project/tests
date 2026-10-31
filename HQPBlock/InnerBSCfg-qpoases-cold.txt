@@ -24,7 +24,7 @@ QPOASESMILPSolver  # name of 1st Solver
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *QPOASESCfg-cold.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - -  END InnerBSCfg-qpoases-cold.txt  - - - - - - - - - - -

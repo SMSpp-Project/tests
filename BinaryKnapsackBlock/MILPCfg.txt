@@ -25,6 +25,9 @@ dblRelAcc                            1e-08
 
 0  # number of string parameters
 
+# now all the string parameters
+# [none]
+
 0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
@@ -41,7 +44,7 @@ dblRelAcc                            1e-08
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
 

@@ -24,7 +24,7 @@ MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # name of Solver
 
 # now all the ComputeConfig
 #[none]
-*
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END LPBSCfg-F-lemon.txt - - - - - - - - - - - - -

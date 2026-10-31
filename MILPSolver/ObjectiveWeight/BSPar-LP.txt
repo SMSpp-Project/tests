@@ -28,17 +28,22 @@ HiGHSMILPSolver    # name of 6th Solver
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 *  # [none]
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 *  # [none]
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 *  # [none]
 # 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 *  # [none]
 # 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 *  # [none]
 # 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 *  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BSPar-LP.txt  - - - - - - - - - - - - - - -

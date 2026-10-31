@@ -18,7 +18,13 @@ ComputeConfig # exact type of the ComputeConfig object
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 1  # number of string parameters
 
@@ -41,7 +47,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
 
