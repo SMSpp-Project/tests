@@ -32,6 +32,17 @@ include ../makefile_common
 InvsBkSDR = ../../InvestmentBlock
 include $(InvsBkSDR)/makefile-c
 
+# the Blocks the inner Block of an InvestmentBlock is made of, which it
+# reaches polymorphically and this program names: UCBlock, SDDPBlock (with
+# StochasticBlock) and the basic makefile of TwoStageStochasticBlock, since
+# StochasticBlock comes with SDDPBlock already
+UCBckDIR = ../../UCBlock
+include $(UCBckDIR)/lib/makefile
+SDDPBkSDR = ../../SDDPBlock
+include $(SDDPBkSDR)/makefile-s
+TSSBkSDR = ../../TwoStageStochasticBlock
+include $(TSSBkSDR)/makefile
+
 # define input macros for BundleSolver makefile, then include it
 BNDSLVSDR = ../../BundleSolver
 include $(BNDSLVSDR)/makefile-s
@@ -48,10 +59,12 @@ include $(LgDSLVSDR)/makefile
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(InvsBkOBJ) $(CMMNUOBJ)
+MOBJ =  $(BNDSLVOBJ) $(LgDSLVOBJ) $(InvsBkOBJ) $(UCBckOBJ) $(SDDPBkOBJ) \
+	$(TSSBkOBJ) $(CMMNUOBJ)
 
 # libraries
-MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(InvsBkLIB)
+MLIB =  $(BNDSLVLIB) $(LgDSLVLIB) $(InvsBkLIB) $(UCBckLIB) $(SDDPBkLIB) \
+	$(TSSBkLIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
@@ -59,10 +72,12 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(BNDSLVINC) $(LgDSLVINC) $(InvsBkINC) $(CMMNUINC)
+MINC =  $(BNDSLVINC) $(LgDSLVINC) $(InvsBkINC) $(UCBckINC) $(SDDPBkINC) \
+	$(TSSBkINC) $(CMMNUINC)
 
 # includes
-MH =    $(BNDSLVH) $(LgDSLVH) $(InvsBkH) $(CMMNUH)
+MH =    $(BNDSLVH) $(LgDSLVH) $(InvsBkH) $(UCBckH) $(SDDPBkH) $(TSSBkH) \
+	$(CMMNUH)
 
 # compile command
 

@@ -131,12 +131,13 @@ if (TARGET SMS++::TwoStageStochasticBlock)
     # takes is among the labels of this suite, since the rest of it runs
     # without them, so the tester is built only where they are.
     if (TARGET SMS++::BendersDecompositionSolver AND
-        TARGET SMS++::InvestmentBlock)
+        TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock)
 
         add_executable(TSSB_BDS_test test_bds.cpp)
         target_link_libraries(TSSB_BDS_test PRIVATE
                 SMS++::TwoStageStochasticBlock
                 SMS++::InvestmentBlock
+                SMS++::UCBlock
                 SMS++::BendersDecompositionSolver
                 SMS++::BundleSolver
                 SMS++::MILPSolver)

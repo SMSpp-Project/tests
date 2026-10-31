@@ -248,6 +248,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `InvestmentBlock`: the SDDPBlock of `batches-sddp` is solved by the
+  `SDDPSimulationSolver` of SDDPBlock, the first Solver of its
+  BlockSolverConfig (`SDDPBSCfg-sddp.txt`), which the InvestmentFunction
+  takes; `IB_test` and `TSSB_BDS_test` link UCBlock (and `IB_test`
+  SDDPBlock and TwoStageStochasticBlock) themselves, InvestmentBlock no
+  longer bringing them, and are built only where they are
+
 - `InvestmentBlock`: `IB_test` reaches the inner Block of each
   `InvestmentFunction` of the `InvestmentBlock` [see
   `InvestmentBlock::get_investment_functions()`], the one of its Objective

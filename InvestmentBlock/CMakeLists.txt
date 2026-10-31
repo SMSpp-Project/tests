@@ -4,6 +4,8 @@
 if (NOT hasParent)
     # Blocks
     find_package(InvestmentBlock)
+    find_package(UCBlock)
+    find_package(SDDPBlock)
     find_package(TwoStageStochasticBlock)
     find_package(MultiStageStochasticBlock)
     # Solvers
@@ -16,11 +18,15 @@ endif ()
 smspp_require_labelled_modules()
 
 # ----- Tests --------------------------------------------------------------- #
-if (TARGET SMS++::InvestmentBlock)
+# the tester names the units of the inner UCBlock and the SDDPBlock, which
+# the InvestmentBlock reaches polymorphically
+if (TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock AND
+    TARGET SMS++::SDDPBlock)
 
     add_executable(IB_test test.cpp ../common_utils.cpp)
     target_include_directories(IB_test PRIVATE ..)
-    target_link_libraries(IB_test PRIVATE SMS++::InvestmentBlock)
+    target_link_libraries(IB_test PRIVATE SMS++::InvestmentBlock
+                          SMS++::UCBlock SMS++::SDDPBlock)
 
     if (TARGET SMS++::BundleSolver)
         target_link_libraries(IB_test PRIVATE SMS++::BundleSolver)
