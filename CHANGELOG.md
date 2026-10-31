@@ -565,6 +565,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `TwoStageStochasticBlock/TUBSCfg-DP.txt` declared no ComputeConfig and
+  wrote one all the same, empty, which SMS++ never read: it is gone, and
+  the dynamic programming Solver runs with its defaults as it did
+
 - the Frank-Wolfe decomposition with the network simplex of LEMON in
   `batch` and `batch-dense` of MCFBlock runs the reduced lineup, as the one
   with the network simplex of MCFClass does, through the new
