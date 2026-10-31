@@ -571,6 +571,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `MMCFBlock`: `mnetgen` has its own `drand48()` and `srand48()` on any
+  Windows, the C library of MinGW-w64 lacking them as that of MSVC does
+
 - `TwoStageStochasticBlock/TUBSCfg-DP.txt` declared no ComputeConfig and
   wrote one all the same, empty, which SMS++ never read: it is gone, and
   the dynamic programming Solver runs with its defaults as it did
