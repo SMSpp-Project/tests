@@ -16,10 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is now the fragment `BSCfg.txt`; the tester checks every `Solver` of
   `NDOBlock` against the LP, doubling the conditional bound at most once per
   round, and reports as "n.a." from then on a `Solver` whose `compute()`
-  throws `std::invalid_argument`. A
-  `BundleSolver` whose `strMPBSolverCfg` names a `Solver` that the build
-  does not have is left out of a `BlockSolverConfig`, as a
-  `LagrangianDualSolver` whose inner `Solver` is not there
+  throws `std::invalid_argument`. A `BundleSolver` whose `strMPBSolverCfg`
+  names a `Solver` that the build does not have is left out of a
+  `BlockSolverConfig`, as a `LagrangianDualSolver` whose inner `Solver` is
+  not there
+
+- `TwoStageStochasticBlock`: `BendersDecompositionSolver` in the convex
+  regime with the master solved by the `BundleSolver` that is the
+  cutting-plane method of Kelley on the integer design (`KelleyCfg.txt`,
+  `BDSMCfg-Kelley.txt`, `MPBCfg-IP.txt`), one more row of
+  `BSPar-MMCF-BDS.txt`, `BSPar-MMCF-BDSLD.txt` and `BSPar-BDS-2S-LD.txt`
+  beside the MILP regime it is the loop of, written as an override of the
+  ComputeConfig of the MILP regime, which for the two of MMCFBlock is now a
+  file of its own (`BDSCfg-MMCF.txt`, `BDSCfg-MMCF-LD.txt`)
 
 - `InvestmentBlock`: the battery `batches-design/batch` converts by
   `design_converter` each network of the `UCBlock` archive with the design in
@@ -277,6 +286,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   point away with the homogeneous multipliers of the dual direction, which
   HiGHSMILPSolver cannot give, and `batch-stochastic` stopped above the
   optimum on `smspp_stoch_tssb_c3_d3_renewables.nc`
+
+- the testers of the stochastic Block give the Solver their log at the
+  verbosity of `-v`
 
 - `InvestmentBlock`: the SDDPBlock of `batches-sddp` is solved by the
   `SDDPSimulationSolver` of SDDPBlock, the first Solver of its
