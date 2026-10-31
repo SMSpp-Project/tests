@@ -5,6 +5,11 @@
 # InvestmentBlock (a UCBlock, or a TwoStageStochasticBlock of UCBlock), to be
 # solved by a :MILPSolver; the InvestmentFunction gets it from IFCfg.txt
 #
+# Gurobi rather than HiGHS: where the inner Block is infeasible the
+# InvestmentFunction cuts the point away with the homogeneous multipliers of
+# the dual direction (intHomogeneousDirection), which HiGHSMILPSolver cannot
+# give, and without the cut the bundle stops above the optimum
+#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -15,8 +20,8 @@ BlockSolverConfig     # exact type of the Configuration object
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver    # name of Solver
-#GRBMILPSolver    # name of Solver
-HiGHSMILPSolver   # name of Solver
+GRBMILPSolver    # name of Solver
+#HiGHSMILPSolver   # name of Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -28,12 +33,13 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-3  # number of integer parameters
+4  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # LogVerb, log verbosity of the MILPSolver
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints
+intHomogeneousDirection 1  # the dual direction is - A' y, a certificate
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
@@ -46,7 +52,7 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 #Presolve      0   # 0 = off, 1 = conservative, 2 = aggressive (default -1)
 #NumericFocus  3   # 0 = auto (default), 1..3 = increasing precision focus
 
-2  # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # All specific HiGHS parameter (uncomment based on Solver)
@@ -55,15 +61,15 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 # asked for 1e-9, HiGHS declares the model optimal and, in the same breath,
 # its primal solution infeasible, which reaches the caller as a solve that
 # went well with no solution in it
-primal_feasibility_tolerance  1e-7
-dual_feasibility_tolerance    1e-7
+#primal_feasibility_tolerance  1e-7
+#dual_feasibility_tolerance    1e-7
 
-2  # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # All specific HiGHS parameter (uncomment based on Solver)
-presolve  off    # disable presolve for reproducibility
-solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
+#presolve  off    # disable presolve for reproducibility
+#solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
                  # (ipm = interior point: converges to analytic center,
                  # unique x*)
 

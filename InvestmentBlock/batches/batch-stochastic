@@ -16,7 +16,7 @@
 # scenario, and the reference is the objective of the equivalent flat network
 # solved by PyPsa.
 #
-# NOTE: the inner Block is solved by Gurobi, see BSCfg1.txt: HiGHS grinds for a
+# NOTE: the inner Block is solved by Gurobi, see BSCfg.txt: HiGHS grinds for a
 # thousand seconds on these instances and then reports an error. Switching that
 # file leaves batch-pypsa identical, verified line by line.
 #

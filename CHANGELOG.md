@@ -259,6 +259,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   no longer reformulates, and the `IBOCfg*.txt` give no Configuration for
   the static constraints
 
+- `InvestmentBlock`: the inner Block of `BSCfg.txt` is solved by
+  `GRBMILPSolver` with `intHomogeneousDirection` 1, rather than by
+  `HiGHSMILPSolver`: where it is infeasible the InvestmentFunction cuts the
+  point away with the homogeneous multipliers of the dual direction, which
+  HiGHSMILPSolver cannot give, and `batch-stochastic` stopped above the
+  optimum on `smspp_stoch_tssb_c3_d3_renewables.nc`
+
 - `InvestmentBlock`: the SDDPBlock of `batches-sddp` is solved by the
   `SDDPSimulationSolver` of SDDPBlock, the first Solver of its
   BlockSolverConfig (`SDDPBSCfg-sddp.txt`), which the InvestmentFunction
