@@ -607,6 +607,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- on Windows, the executables that copy their DLLs next to themselves
+  are linked one at a time (a job pool of Ninja), since two copies of the
+  same DLL into one directory collided (e.g., with the clang++ of MSYS2)
+
 - `cmake/FindCPLEX.cmake` drops the cached paths of CPLEX when one of them
   does not exist any more (e.g., in a build directory configured once outside
   and once inside a container, or after an upgrade), so that all of them are
