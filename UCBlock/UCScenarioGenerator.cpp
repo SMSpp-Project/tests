@@ -669,7 +669,7 @@ bool validate_scenario(
    // UCBlock expects the range to cover all node-time pairs
    try {
     uc_block->set_active_power_demand(
-      scenario_demand.begin() ,
+      Block::MF_dbl_sp( scenario_demand ) ,
       Block::Range( 0 , demand_size ) );
    } catch( const exception & e ) {
     if( config.verbose >= 1 ) {
@@ -705,7 +705,7 @@ bool validate_scenario(
 
      // Use time range for set_maximum_power
      unit_block->set_maximum_power(
-       unit_profile.begin() ,
+       Block::MF_dbl_sp( unit_profile ) ,
        Block::Range( 0 , original_data.num_periods ) );
 
     } else {

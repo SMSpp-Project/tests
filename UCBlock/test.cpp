@@ -699,11 +699,13 @@ static int test( void )
   auto uc = run( "A2" , A2 , 3000 , 200 , 1 , 0 );
 
   std::vector< double > budget = { 1000 };
-  uc->set_pollutant_budget( budget.begin() , Block::Range( 2 , 3 ) ,
+  uc->set_pollutant_budget( Block::MF_dbl_sp( budget ) , Block::Range( 2 ,
+                                                                       3 ) ,
                             eModBlck , eModBlck );
   check( near( solve( uc ) , 2200 ) , "set_pollutant_budget( range )" );
   budget = { 20 };
-  uc->set_pollutant_budget( budget.begin() , Block::Subset( { 2 } ) , true ,
+  uc->set_pollutant_budget( Block::MF_dbl_sp( budget ) ,
+                            Block::Subset( { 2 } ) , true ,
                             eModBlck , eModBlck );
   check( near( solve( uc ) , 3000 ) , "set_pollutant_budget( subset )" );
 
@@ -825,11 +827,13 @@ static int test( void )
   auto uc = run( "M2" , M2 , 1600 , 20 , 0 , 0 );
 
   std::vector< double > floor = { -INF };
-  uc->set_pollutant_min_budget( floor.begin() , Block::Range( 0 , 1 ) ,
+  uc->set_pollutant_min_budget( Block::MF_dbl_sp( floor ) , Block::Range( 0 ,
+                                                                          1 ) ,
                                 eModBlck , eModBlck );
   check( near( solve( uc ) , 1400 ) , "set_pollutant_min_budget( range )" );
   floor = { 150 };
-  uc->set_pollutant_min_budget( floor.begin() , Block::Subset( { 0 } ) ,
+  uc->set_pollutant_min_budget( Block::MF_dbl_sp( floor ) ,
+                                Block::Subset( { 0 } ) ,
                                 true , eModBlck , eModBlck );
   check( near( solve( uc ) , 1600 ) , "set_pollutant_min_budget( subset )" );
   release( uc );
@@ -1390,10 +1394,12 @@ static int test( void )
   auto moved = same;
   for( auto & v : moved )
    ++v;
-  uc->set_active_power_demand( moved.cbegin() , Block::Range( 0 , N * T ) ,
-                               eModBlck , eModBlck );
-  uc->set_active_power_demand( same.cbegin() , Block::Range( 0 , N * T ) ,
-                               eModBlck , eModBlck );
+  uc->set_active_power_demand( Block::MF_dbl_sp( moved ) ,
+                               Block::Range( 0 , N * T ) , eModBlck ,
+                               eModBlck );
+  uc->set_active_power_demand( Block::MF_dbl_sp( same ) ,
+                               Block::Range( 0 , N * T ) , eModBlck ,
+                               eModBlck );
   check( snapshot( uc ) == before ,
          "the demand written back leaves the rows where they are" );
   delete uc;

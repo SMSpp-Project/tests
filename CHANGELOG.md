@@ -269,6 +269,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- the testers of BinaryKnapsackBlock, CapacitatedFacilityLocationBlock,
+  MCFBlock, InvestmentBlock and UCBlock, and the scenario generators of
+  CapacitatedFacilityLocationBlock and UCBlock, pass the data to the setters
+  as spans, the forms taking an iterator being gone
+
 - `UCBlock`: `UCBlock_test --scale` and `--pollutant` check the copies of
   a unit as the weights of its Block, the rows and the Objective of the unit
   keeping the coefficients of one copy, a unit replicated after the model is

@@ -318,8 +318,8 @@ static bool run_pisinger( const std::string & csv , const std::string & sconf )
  have_ref = true;
  for( std::size_t k = 0 ; k < insts.size() ; ++k ) {
   N = insts[ k ].N;
-  BKB->chg_weights( insts[ k ].W.begin() );       // all the weights
-  BKB->chg_profits( insts[ k ].P.begin() );       // all the profits
+  BKB->chg_weights( Block::MF_dbl_sp( insts[ k ].W ) );  // all the weights
+  BKB->chg_profits( Block::MF_dbl_sp( insts[ k ].P ) );  // all the profits
   BKB->chg_capacity( insts[ k ].C );
   ref_opt = insts[ k ].z;
   LOG( insts[ k ].name << ": " );
@@ -655,7 +655,7 @@ int main( int argc , char **argv )
      Range rng = generateRange( m );
 
      if( dis( rg ) < 0.5 ) {
-      BKB->chg_profits( nP.begin() , rng );              // PR
+      BKB->chg_profits( Block::MF_dbl_sp( nP ) , rng );              // PR
       LOG( "(R)" );
       }
      else {
@@ -666,7 +666,7 @@ int main( int argc , char **argv )
     else {                                    // or subset modification
      Subset nms = generateSubset( m ); 
      if( dis( rg ) < 0.5 ) {
-      BKB->chg_profits( nP.begin() , std::move( nms ) );              // PR
+      BKB->chg_profits( Block::MF_dbl_sp( nP ) , std::move( nms ) );  // PR
       LOG( "(S)" );
       }
      else {
@@ -693,7 +693,7 @@ int main( int argc , char **argv )
      Range rng = generateRange( m );
 
      if( dis( rg ) < 0.5 ) {
-      BKB->chg_weights( nW.begin() , rng );              // PR
+      BKB->chg_weights( Block::MF_dbl_sp( nW ) , rng );              // PR
       LOG( "(R)" );
       }
      else {
@@ -705,7 +705,7 @@ int main( int argc , char **argv )
      Subset nms = generateSubset( m ); 
 
      if( dis( rg ) < 0.5 ) {
-      BKB->chg_weights( nW.begin() , std::move( nms ) );              // PR
+      BKB->chg_weights( Block::MF_dbl_sp( nW ) , std::move( nms ) );  // PR
       LOG( "(S)" );
       }
      else {

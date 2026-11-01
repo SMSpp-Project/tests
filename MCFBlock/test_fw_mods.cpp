@@ -180,7 +180,8 @@ int main( int argc , char ** argv )
    for( Index a = 0 ; a < na ; ++a )
     costs[ a ] = std::round( double( orig_costs[ a ] ) *
                              ( 0.7 + 0.6 * pos( rg ) ) );
-   mcf->chg_costs( costs.begin() , MCFBlock::Range( 0 , na ) , eModBlck ,
+   mcf->chg_costs( Block::MF_dbl_sp( costs ) , MCFBlock::Range( 0 , na ) ,
+                   eModBlck ,
                    eModBlck );
    }
   if( ( what == 1 ) || ( what == 2 ) ) {           // change caps (feasibility)
@@ -189,7 +190,8 @@ int main( int argc , char ** argv )
     caps[ a ] = MCFBlock::FNumber( std::max( 1.0 ,
                    std::round( double( orig_caps[ a ] ) *
                                ( 0.85 + 0.45 * pos( rg ) ) ) ) );
-   mcf->chg_ucaps( caps.begin() , MCFBlock::Range( 0 , na ) , eModBlck ,
+   mcf->chg_ucaps( Block::MF_dbl_sp( caps ) , MCFBlock::Range( 0 , na ) ,
+                   eModBlck ,
                    eModBlck );
    }
   // toggle one arc's fix status
