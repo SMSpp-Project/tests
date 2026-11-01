@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InvestmentBlock`: `batches-sddp/batch` also optimizes an
+  `InvestmentBlock` over an `SDDPBlock` whose design is free and has a
+  cost (`ib_sddp_invest.nc4` of `gen_sddp_initud.py`), and checks that the
+  bundle reaches the value at the optimal design, below those at the fixed
+  designs around it, which it reaches only if the linearization read off
+  the solution of each simulated scenario is right
+
 - `InvestmentBlock`: `batch-stochastic` solves the network of Italy with 5
   nodes of pypsa-eur-instances, with 5 scenarios of demand, both with the
   `InvestmentBlock` split into a component per scenario and kept whole
