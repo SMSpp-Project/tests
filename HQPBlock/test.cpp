@@ -173,8 +173,8 @@ static bool run( HQPSolver * s , const std::string & what , int & st )
   st = s->compute();
   }
  catch( const std::invalid_argument & e ) {
-  std::cout << what << " [" << label( s ) << "]: does not apply ("
-            << e.what() << "), skipped" << std::endl;
+  std::cout << what << " [" << label( s ) << "]: does not apply (" << e.what()
+	    << "), skipped" << std::endl;
   return( false );
   }
  return( true );
@@ -414,9 +414,11 @@ static Instance stage_instance( void )
  in.n = R * N * ( nu + ns );
  in.eps = 1e-3;
  auto ucol = [ & ]( int j , int k , int i ) {
-  return( j * N * nu + k * nu + i ); };
+  return( j * N * nu + k * nu + i );
+  };
  auto scol = [ & ]( int j , int k , int i ) {  // s_{j,k}, k >= 1
-  return( R * N * nu + j * N * ns + ( k - 1 ) * ns + i ); };
+  return( R * N * nu + j * N * ns + ( k - 1 ) * ns + i );
+  };
 
  auto & st = in.stages;
  st.num_stages = N;
@@ -656,7 +658,7 @@ static int mpc_step( void )
   auto s = slvrs[ i ];
   int st = 0 , fst = 0;
   if( ! ( run( s , nw.name , st ) &&
-          run( fslvrs[ i ] , nw.name + ", from scratch" , fst ) ) )
+	  run( fslvrs[ i ] , nw.name + ", from scratch" , fst ) ) )
    continue;
   if( ( st != Solver::kOK ) || ( fst != Solver::kOK ) ) {
    std::cout << nw.name << " [" << label( s ) << "]: status " << st
@@ -925,7 +927,7 @@ static int from_file( void )
  // the solution in the file is a reference of its own
  if( ! ref.ok )
   std::cout << nm << ": the null-space reference runs out of iterations, "
-            << "the HQPSolver are compared with the file only" << std::endl;
+	    << "the HQPSolver are compared with the file only" << std::endl;
 
  errors += check_file( nm , working( attach( *block , sconf_file ) , true ) ,
                        fsol , ref );

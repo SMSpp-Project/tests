@@ -81,7 +81,7 @@ struct Instance {
  std::vector< Mat > A , C;
  std::vector< Vec > b , d , we , wi;
  double eps = 0;
- HQPBlock::StageData stages;   ///< the stage structure, if any
+ HQPBlock::StageData stages;  ///< the stage structure, if any
 
  [[nodiscard]] int levels( void ) const { return( int( A.size() ) ); }
  };
@@ -116,8 +116,8 @@ inline void load( HQPBlock & block , const Instance & in )
   }
  auto st = in.stages;
  block.load( in.n , std::move( A ) , std::move( b ) , std::move( C ) ,
-             std::move( d ) , std::move( we ) , std::move( wi ) , in.eps ,
-             {} , std::move( st ) );
+	     std::move( d ) , std::move( we ) , std::move( wi ) , in.eps , {} ,
+	     std::move( st ) );
  }
 
 /*--------------------------------------------------------------------------*/
