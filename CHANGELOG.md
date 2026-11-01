@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InvestmentBlock`: `batch-stochastic` solves the network of Italy with 5
+  nodes of pypsa-eur-instances, with 5 scenarios of demand, both with the
+  `InvestmentBlock` split into a component per scenario and kept whole
+  (`ScenarioDecomposition` 0), against the value of PyPSA; the whole form
+  is left out in CI
+
 - `SMS++/PolyhedralFunctionBlock`: `NDOPar.txt` also registers the
   `BundleSolver` with the primal master problem solved by `BDMinQuadSolver`
   (`MPBCfg-BDMQ.txt`, unscaled) and by `DAQPMILPSolver` (`MPBCfg-DAQP.txt`),
