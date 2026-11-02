@@ -26,10 +26,11 @@ dblRelAcc 1e-6
 # now all the double parameters
 # [none]
 
-1  # number of string parameters
+2  # number of string parameters
 
 # now all the string parameters
 strNameOfBlockSolverConfigurationFile InnerBSCfg-BX.txt
+strLogFileName log/RabaxSFCFPRS.log
 
 0  # number of vector-of-int parameters
 
