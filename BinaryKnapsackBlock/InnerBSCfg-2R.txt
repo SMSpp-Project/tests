@@ -4,12 +4,10 @@
 # Two-Solver BlockSolverConfig: TWO GreedyRelaxationBinaryKnapsackSolver as
 # the inner relaxations of a BranchAndXSolver, used only to exercise the
 # per-node parallel evaluation of the relaxations
-# (intThreadForDifferentSolvers
-# > 1; see computeRelaxationsParallel()). The two relaxations are identical,
-# so
-# the result must match the single-relaxation one: this validates the
-# parallel
-# reduction, NOT a speedup (the knapsack has one cheap relaxation).
+# (intThreadForDifferentSolvers > 1; see computeRelaxationsParallel()). The
+# two relaxations are identical, so the result must match the
+# single-relaxation one: this validates the parallel reduction, NOT a speedup
+# (the knapsack has one cheap relaxation).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -34,9 +32,18 @@ ComputeConfig # exact type of the ComputeConfig object
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -54,9 +61,9 @@ ComputeConfig # exact type of the ComputeConfig object
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -66,9 +73,18 @@ ComputeConfig # exact type of the ComputeConfig object
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -86,11 +102,10 @@ ComputeConfig # exact type of the ComputeConfig object
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END InnerBSCfg-2R.txt - - - - - - - - - - - - -

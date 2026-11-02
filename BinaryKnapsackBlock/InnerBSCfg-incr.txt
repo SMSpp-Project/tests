@@ -23,7 +23,7 @@ GreedyRelaxationBinaryKnapsackSolver  # name of 1st Solver
 # 1st ComputeConfig: the greedy fill kept across the Changes
 *GRCfg-incr.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END InnerBSCfg-incr.txt - - - - - - - - - - - - -

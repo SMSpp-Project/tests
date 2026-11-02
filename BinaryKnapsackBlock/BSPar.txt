@@ -3,8 +3,7 @@
 #
 # Cross-check BlockSolverConfig for a PURE-BINARY BinaryKnapsackBlock: it
 # attaches EVERY solver / formulation that must give the SAME integer
-# optimum,
-# so that a single sweep cross-checks them all (see batch):
+# optimum, so that a single sweep cross-checks them all (see batch):
 #
 #   - :MILPSolver                         exact MIP (the reference optimum)
 #   - CoreDPBinaryKnapsackSolver          exact core / non-dominated-state DP
@@ -96,7 +95,13 @@ intMaxThread   1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -114,7 +119,7 @@ intMaxThread   1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 7: BranchAndXSolver, breadth-first
 *BX-baseCfg.txt +
@@ -128,7 +133,13 @@ intSolveMethod 1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -146,7 +157,7 @@ intSolveMethod 1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 8: BranchAndXSolver, depth-first parallel (4 workers)
 *BX-baseCfg.txt +
@@ -161,7 +172,13 @@ intMaxThread   4
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -179,7 +196,7 @@ intMaxThread   4
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 9: BranchAndXSolver, per-node parallel solvers (two inner relaxations)
 *BX-baseCfg.txt +
@@ -192,6 +209,9 @@ intMaxThread   4
 intThreadForDifferentSolvers 2
 
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 1  # number of string parameters
 
@@ -214,7 +234,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-2R.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 10-12: the same BranchAndXSolver modes, but driven by the incremental
 # greedy relaxation (InnerBSCfg-incr.txt) instead of the from-scratch one,
@@ -227,7 +247,13 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-2R.txt
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 1  # number of string parameters
 
@@ -250,7 +276,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 11: BranchAndXSolver, serial depth-first, incremental inner relaxation
 *BX-baseCfg.txt +
@@ -265,6 +291,9 @@ intMaxThread   1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 1  # number of string parameters
 
 # now all the string parameters
@@ -286,7 +315,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 12: BranchAndXSolver, depth-first parallel (4 workers), incremental inner
 *BX-baseCfg.txt +
@@ -301,6 +330,9 @@ intMaxThread   4
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 1  # number of string parameters
 
 # now all the string parameters
@@ -322,7 +354,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 13: BranchAndXSolver, best-first with the tree retained for reoptimization
 *BX-baseCfg.txt +
@@ -336,7 +368,13 @@ intReoptimize 1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -354,12 +392,12 @@ intReoptimize 1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 14th: RECORD under the same reoptimization of the 3rd
 *CDPCfg-reopt3.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -

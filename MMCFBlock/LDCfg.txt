@@ -7,12 +7,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig         # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-17 # number of integer parameters
+17  # number of integer parameters
 
 # now all the integer parameters
 intDoEasy            0 # do easy components for (some) LagBFunction
@@ -49,7 +49,7 @@ intTrgtMng           0 # bit-wise encoding targets and accuracies management:
                        # bit 4: if Lipschitz constant is used to compute the
                        # upper model
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 dblRelAcc         1e-5 # relative accuracy required to solution
@@ -73,36 +73,37 @@ dbltMinor         1e-6 # minimum value for t
 dbltInit          1e+1 # initial value for t
 dbltSPar2         1e-4 # parameter for the long-term t-strategy
 
-3 # number of string parameters
+3  # number of string parameters
 
 # now all the string parameters
 # the inner Solver used by LagrangianDualSolver
 #str_LDSlv_ISName ParallelBundleSolver
-str_LDSlv_ISName BundleSolver # the inner Solver used by LagrangianDualSolver
+str_LDSlv_ISName BundleSolver         # the inner Solver used by
+                                      # LagrangianDualSolver
 # BlockSolverConfig for the MasterProblemBlock's Solver
-strMPBSolverCfg                 MPBCfg.txt
-str_LagBF_BSCfg         LPBSCfg-F.txt # Flow relaxation, using :MCFSolver
+strMPBSolverCfg  MPBCfg.txt
+str_LagBF_BSCfg  LPBSCfg-F.txt        # Flow relaxation, using :MCFSolver
 # Knapsack relaxation, using CoreDPBinaryKnapsackSolver
 #str_LagBF_BSCfg     LPBSCfg-K-DP.txt
 #str_LagBF_BSCfg     LPBSCfg-K-CX.txt # Flow relaxation, using a :MILPSolver
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -18,34 +18,34 @@ BlockConfig # exact type of the Configuration object
 
 # the Configuration for the structure, i.e., the tree of sub-Block
 SimpleConfiguration<int>
-1    # 0 = kConsensus, 1 = kBenders
+1  # 0 = kConsensus, 1 = kBenders
 
 # static_constraints
-*    # [none]
+*  # [none]
 
 # dynamic_constraints
-*    # [none]
+*  # [none]
 
 # static_variables
-*    # [none]
+*  # [none]
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
-*    # [none]
+*  # [none]
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END HQPDistBCfg-bds.txt - - - - - - - - - - - - -

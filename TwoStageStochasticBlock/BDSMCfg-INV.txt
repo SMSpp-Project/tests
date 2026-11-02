@@ -30,7 +30,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-13 # number of integer parameters
+13  # number of integer parameters
 
 # now all the integer parameters
 intMPStbl         0 # stabilization: 0 = proximal, 1 = level,
@@ -56,7 +56,7 @@ inttSPar1        12 # long-term t-strategy (0 = none, 4 = soft, 8 = hard,
 # maximum number of function evaluations at each iteration
 intMaxNrEvls      2
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 dblRelAcc      1e-8 # relative accuracy required to solution: with 1e-6 the
@@ -93,29 +93,29 @@ dbltInit       1e+3 # initial value for t: with 1e+5, which is where the
                     # value to 65.6 s reaching it
 dbltSPar2     0.001 # parameter for the long-term t-strategy
 
-1 # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
 strMPBSolverCfg  MPBCfg-BDS.txt # BlockSolverConfig of the
                                 # MasterProblemBlock Solver
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

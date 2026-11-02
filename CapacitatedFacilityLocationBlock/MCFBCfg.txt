@@ -18,31 +18,31 @@ BlockConfig # exact type of the ComputeConfig object
 *  # [none]
 
 # static_constraints
-*    # [none]
+*  # [none]
 
 # dynamic_constraints
-*    # [none]
+*  # [none]
 
 # static_variables
-*    # [none]
+*  # [none]
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
-*    # [none]
+*  # [none]
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END MCFBCfg.txt - - - - - - - - - - - - - - -

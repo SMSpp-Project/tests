@@ -45,7 +45,7 @@ intDAQPWarmStart  0  # each solve from the empty working set
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END DAQPCfg-cold.txt  - - - - - - - - - - - - - -

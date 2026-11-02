@@ -23,7 +23,7 @@ CaDiCaLSATSolver  # 1st: the relaxation
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *OLLCfg-node.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END BXBSCfg.txt  - - - - - - - - - - - - - -

@@ -62,7 +62,7 @@ presolve                     off  # or an infeasible subproblem leaves
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END BDSSCfg-HiGHS.txt - - - - - - - - - - - - - -

@@ -13,7 +13,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig  # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> all non-provided parameters are not changed
 

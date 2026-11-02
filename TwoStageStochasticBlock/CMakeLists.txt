@@ -92,10 +92,12 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-pypsa")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME TSSB_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/TSSB_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/TSSB_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME TSSB_test/${BATCH_NAME}
@@ -129,12 +131,13 @@ if (TARGET SMS++::TwoStageStochasticBlock)
     # takes is among the labels of this suite, since the rest of it runs
     # without them, so the tester is built only where they are.
     if (TARGET SMS++::BendersDecompositionSolver AND
-        TARGET SMS++::InvestmentBlock)
+        TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock)
 
         add_executable(TSSB_BDS_test test_bds.cpp)
         target_link_libraries(TSSB_BDS_test PRIVATE
                 SMS++::TwoStageStochasticBlock
                 SMS++::InvestmentBlock
+                SMS++::UCBlock
                 SMS++::BendersDecompositionSolver
                 SMS++::BundleSolver
                 SMS++::MILPSolver)

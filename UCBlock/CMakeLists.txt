@@ -93,7 +93,8 @@ if (TARGET SMS++::UCBlock)
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         # the tester the battery names, if this build has it
         set(BATCH_EXE UCBlock_test)
         file(STRINGS ${BATCH_FILE} BATCH_DEFAULT_EXE
@@ -163,7 +164,8 @@ if (TARGET SMS++::UCBlock)
     # which is why each of them is given both.
     file(GLOB TUB_BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches-tub/*")
     foreach (BATCH_FILE ${TUB_BATCH_FILES})
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         add_batch_test(TUDPS_test ${BATCH_NAME} UCBlock_FW_test)
         set_tests_properties(TUDPS_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
@@ -247,7 +249,8 @@ smspp_label_tests()
 set(_batch UCScenarioGenerator/batches-scenred/batch)
 if (TEST ${_batch})
     set(_labels ${SMSPP_TEST_LABELS_UCBlock}
-                ScenarioReductionSolver StochasticBlock TwoStageStochasticBlock)
+                ScenarioReductionSolver StochasticBlock
+                TwoStageStochasticBlock)
     set_tests_properties(${_batch} PROPERTIES LABELS "${_labels}")
 endif ()
 

@@ -13,12 +13,12 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1 # number of (the names of) Solver in this BlockSolverConfig
+1  # number of (the names of) Solver in this BlockSolverConfig
 
-# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - 
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 DPBinaryKnapsackSolver  # the oracle: the exact, full-table DP
 
-1 # number of ComputeConfig in this BlockSolverConfig
+1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # the shared fragment, which sets no parameter

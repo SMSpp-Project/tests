@@ -43,7 +43,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-BX-LD-DP.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BXLDCfg-DP.txt  - - - - - - - - - - - - - -

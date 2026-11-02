@@ -29,7 +29,8 @@ foreach (BATCH_FILE ${BATCH_FILES})
     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
     if (UNIX)
         add_test(NAME BoxSolver_test/${BATCH_NAME}
-                 COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/BoxSolver_test
+                 COMMAND bash ${BATCH_FILE}
+                         ${CMAKE_CURRENT_BINARY_DIR}/BoxSolver_test
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     elseif (WIN32)
         add_test(NAME BoxSolver_test/${BATCH_NAME}

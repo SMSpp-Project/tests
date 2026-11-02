@@ -15,12 +15,12 @@ start-up and shut-down limits and ramps as wide as the maximum power, off
 since 10 instants before the horizon of every stage) and a slack unit at
 20 per MWh. The demand is 0 everywhere except at one instant of the first
 stage (and, in shutlast, of the second), where it is 100 in the first
-scenario and 130 in the second, so that the thermal unit is fully on there also in the continuous relaxation
-(which the backward pass of the training solves) and the training converges
-with the relaxation and the exact problem giving the same value; the design
-is the thermal unit, fixed at its installed quantity 1, at no cost, hence
-the value of the InvestmentFunction is the mean of the costs of the two
-simulations.
+scenario and 130 in the second, so that the thermal unit is fully on there also
+in the continuous relaxation (which the backward pass of the training solves)
+and the training converges with the relaxation and the exact problem giving the
+same value; the design is the thermal unit, fixed at its installed quantity 1,
+at no cost, hence the value of the InvestmentFunction is the mean of the costs
+of the two simulations.
 
   minup3    the peak is at the last instant of the first stage, and the unit
             has MinUpTime 3: it starts up there, and it has to stay on for
@@ -50,6 +50,19 @@ simulations.
             keep it off until the instant 3, and the slack unit would serve
             the peak of the second stage
 
+Besides, ib_sddp_invest.nc4 is minup1 with the design free in [0.5, 2] and
+a cost of 100 per unit installed beyond the quantity 1, so that the bundle
+of the InvestmentBlock has to follow the linearization of the
+InvestmentFunction, which is read off the solution of each simulation, to
+reach its optimum; ib_sddp_fix_<s>.nc4 are the same with the design fixed
+at s = 1.2, 1.3 and 1.4, whose values the battery computes as well. The
+scale s widens the maximum power of the thermal unit to s * 100, and the
+second scenario needs 130 at its peak: the value decreases up to s = 1.3,
+beyond which the slack unit serves nothing and the operating cost does not
+change while the investment cost grows, hence the optimum is at s = 1.3 and
+its value is below those at 1.2 and 1.4 (printed as INVEST_DESIGN and
+INVEST_FIXED).
+
 usage: gen_sddp_initud.py <output directory>
 
 The instances are written by ncgen from their CDL, and the reference values
@@ -64,6 +77,8 @@ from pathlib import Path
 STAGES = 3
 T = 4
 PEAK = [100, 130]
+# the fixed designs around the optimum of ib_sddp_invest, the optimum second
+FIXED = [1.2, 1.3, 1.4]
 REF = {"minup3": 1550, "minup1": 1450, "noswitch": 1500, "shutlast": 2900}
 # per variant: the instant of the peak in each stage that has one, MinUpTime
 # and MinDownTime of the thermal unit
@@ -214,13 +229,14 @@ def sddp_file(variant):
     return "\n".join(o + sddpblock(variant) + ["}", "}"]) + "\n"
 
 
-def ib_file(variant):
+def ib_file(variant, bounds=(1, 1), cost=0):
     o = ["netcdf ib_sddp {", ":SMS++_file_type = 1 ;", "group: Block_0 {",
          "dimensions:", " NumAssets = 1 ;", "variables:",
          " double LowerBound ;", " double UpperBound ;", " double Cost ;",
          " double InstalledQuantity ;", " uint Assets(NumAssets) ;",
          " byte AssetType ;", ':type = "InvestmentBlock" ;', "data:",
-         " LowerBound = 1 ;", " UpperBound = 1 ;", " Cost = 0 ;",
+         " LowerBound = %r ;" % float(bounds[0]),
+         " UpperBound = %r ;" % float(bounds[1]), " Cost = %r ;" % float(cost),
          " InstalledQuantity = 1 ;", " Assets = 1 ;", " AssetType = 0 ;",
          "group: InnerBlock {"]
     return "\n".join(o + sddpblock(variant) + ["}", "}", "}"]) + "\n"
@@ -243,6 +259,13 @@ def main():
         write(out, "sddp_" + variant, sddp_file(variant))
         write(out, "ib_sddp_" + variant, ib_file(variant))
         print("REF_OBJ[%s]=%s" % (variant, REF[variant]))
+    # minup1 with the design free, on which the bundle has to move, and the
+    # same at three fixed designs around its optimum
+    write(out, "ib_sddp_invest", ib_file("minup1", (0.5, 2), 100))
+    for x in FIXED:
+        write(out, "ib_sddp_fix_%g" % x, ib_file("minup1", (x, x), 100))
+    print("INVEST_DESIGN=1.3")
+    print("INVEST_FIXED=(%s)" % " ".join("%g" % x for x in FIXED))
 
 
 if __name__ == "__main__":

@@ -127,15 +127,18 @@ if (TARGET SMS++::SVMBlock)
     endif ()
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME SVM_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/SVM_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/SVM_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             # the batch that runs on the LIBSVM data sets needs them there
             if (BATCH_NAME MATCHES "batch-real")
                 set_tests_properties(SVM_test/${BATCH_NAME}
-                                     PROPERTIES FIXTURES_REQUIRED svm_libsvm_extracted)
+                                     PROPERTIES FIXTURES_REQUIRED
+                                     svm_libsvm_extracted)
             endif ()
         elseif (WIN32)
             add_test(NAME SVM_test/${BATCH_NAME}

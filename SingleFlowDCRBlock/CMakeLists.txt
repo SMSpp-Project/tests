@@ -23,7 +23,8 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                           PRIVATE SMS++::SingleFlowDCRBlock)
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(SingleFlowDCRBlock_test PRIVATE SMS++::MILPSolver)
+        target_link_libraries(SingleFlowDCRBlock_test PRIVATE
+                              SMS++::MILPSolver)
     endif ()
 
     # the BranchAndXSolver of batch-instances-bx, whose nodes are solved by
@@ -66,7 +67,8 @@ if (TARGET SMS++::SingleFlowDCRBlock)
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (BATCH_NAME STREQUAL "batches/batch-instances-cplex"
                 AND NOT (CPLEX_FOUND AND TARGET SMS++::MILPSolver))
             continue ()
@@ -78,7 +80,7 @@ if (TARGET SMS++::SingleFlowDCRBlock)
         if (UNIX)
             add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
                      COMMAND bash ${BATCH_FILE}
-                             ${CMAKE_CURRENT_BINARY_DIR}/SingleFlowDCRBlock_test
+                         ${CMAKE_CURRENT_BINARY_DIR}/SingleFlowDCRBlock_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
@@ -90,7 +92,8 @@ if (TARGET SMS++::SingleFlowDCRBlock)
         endif ()
         if (BATCH_NAME MATCHES "^batches/batch-instances")
             set_tests_properties(SingleFlowDCRBlock_test/${BATCH_NAME}
-                                 PROPERTIES FIXTURES_REQUIRED dcr_nc4_extracted)
+                                 PROPERTIES FIXTURES_REQUIRED
+                                 dcr_nc4_extracted)
         endif ()
     endforeach ()
 
@@ -122,7 +125,7 @@ if (TARGET SMS++::SingleFlowDCRBlock)
             if (UNIX)
                 add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
                          COMMAND bash ${BATCH_FILE}
-                                 ${CMAKE_CURRENT_BINARY_DIR}/MultiFlowDCRBlock_test
+                             ${CMAKE_CURRENT_BINARY_DIR}/MultiFlowDCRBlock_test
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             elseif (WIN32)
                 add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
@@ -133,7 +136,8 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             endif ()
             set_tests_properties(MultiFlowDCRBlock_test/${BATCH_NAME}
-                                 PROPERTIES FIXTURES_REQUIRED dcr_nc4_extracted)
+                                 PROPERTIES FIXTURES_REQUIRED
+                                 dcr_nc4_extracted)
         endforeach ()
     endif ()
 endif ()

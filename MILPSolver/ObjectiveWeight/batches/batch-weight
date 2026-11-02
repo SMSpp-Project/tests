@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# The tester of the weights of a Block on trees of different sizes and
+# seeds: with Objective partly quadratic and every change, those of the
+# coefficients of the rows and of the weights with the Solver attached
+# comprised (-k 207), the QuadFunction in the first leaf too (-k 223), with
+# the Solver of BSPar.txt, and with all the Objective linear (-k 235) with
+# those of BSPar-LP.txt, which comprise HiGHSMILPSolver.
+#
+# usage: batch-weight [ <tester> ]
+
+exe="${1:-./MILPSolver_ObjectiveWeight_test}"
+fail=0
+for run in "207 BSPar.txt" "223 BSPar.txt" "235 BSPar-LP.txt" ; do
+ set -- $run
+ for N in 2 4 8 ; do
+  for s in 1 2 3 ; do
+   for e in 1 2 3 ; do
+    echo "-k $1 -S $2 -N $N -s $s -e $e"
+    "$exe" -S $2 -k $1 -N $N -s $s -e $e -n 10 -m 3
+    rc=$?
+    [ $rc -eq 77 ] && exit 77  # no Solver of the configuration in this build
+    [ $rc -eq 0 ] || fail=1
+    done
+   done
+  done
+ done
+exit $fail

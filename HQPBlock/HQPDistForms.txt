@@ -21,15 +21,17 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 # F0: kConsensus
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
 *HQPDistBCfg-cons.txt   # its BlockConfig
 *HQPDistBSCfg.txt       # its BlockSolverConfig
 
 # F1: kBenders
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
 *HQPDistBCfg-bds.txt    # its BlockConfig
 *HQPDistBSCfg-bds.txt   # its BlockSolverConfig
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END HQPDistForms.txt  - - - - - - - - - - - - - -

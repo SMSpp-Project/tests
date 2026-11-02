@@ -15,12 +15,12 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1 # number of (the names of) Solver in this BlockSolverConfig
+1  # number of (the names of) Solver in this BlockSolverConfig
 
-# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 FrankWolfeSolver      # the decomposition, vanilla Frank-Wolfe
 
-1 # number of ComputeConfig in this BlockSolverConfig
+1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 
@@ -30,33 +30,33 @@ FrankWolfeSolver      # the decomposition, vanilla Frank-Wolfe
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intAlgorithm    0 # vanilla
 intMaxAtoms     0 # no active set to bound
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -65,7 +65,7 @@ intMaxAtoms     0 # no active set to bound
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # end of BlockSolverConfig
 

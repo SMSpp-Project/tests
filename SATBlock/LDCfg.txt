@@ -11,18 +11,17 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig  # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-19 # number of integer parameters
+19  # number of integer parameters
 
 # now all the integer parameters
 intMPStbl          0  # stabilization: 0 proximal, 1 level, 2 doubly
 # first those of LagrangianDualSolver proper
 int_LDSlv_iBCopy   0  # the sub-Block are moved, not R3B-copied
-
 # then those of BundleSolver as its inner Solver
 intDoEasy          0  # no easy components, not even the LagBFunction
 intMaxIter     10000  # max number of iterations for each call
@@ -42,7 +41,7 @@ intMaxNrEvls       2  # max function evaluations at each iteration
 intFrcLstSS        0  # all the components computed at the optimum or not
 intTrgtMng         0  # bit-wise management of targets and accuracies
 
-16 # number of double parameters
+16  # number of double parameters
 
 # now all the double parameters
 dblRelAcc       1e-6  # relative accuracy required to the solution

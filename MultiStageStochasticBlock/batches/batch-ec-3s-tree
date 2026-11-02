@@ -9,9 +9,10 @@
 # Same as batch-ec-3s but for the SHARED-TREE instances (MSSB_EC_*_3S_tree.nc4
 # produced by csv2nc4.jl --multistage --shared-tree): the scenario data lives
 # in a single shared MultiStageDiscreteScenarioSet consumed by the inner
-# TwoStageStochasticBlock through views. The extensive form is identical, so the
-# reference objective values are exactly those of the corresponding baked
-# MSSB_EC_*_3S instances (the ref is looked up by stripping the `_tree` suffix).
+# TwoStageStochasticBlock through views. The extensive form is identical, so
+# the reference objective values are exactly those of the corresponding baked
+# MSSB_EC_*_3S instances (the ref is looked up by stripping the `_tree`
+# suffix).
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"

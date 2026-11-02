@@ -4,10 +4,11 @@
 /** @file
  * What the tester of HQPBlock and HQPSolver needs besides the HQPSolver: the
  * dense description of a hierarchical QP, its loading into an HQPBlock and
- * into an HQPDistBlock, the independent reference solution computed level by level in the null space
- * of the equality tasks of the higher levels (with a small dense primal
- * active-set method for the QP of each level), and the comparison of the
- * levels solved by an HQPSolver of a BlockSolverConfig with it.
+ * into an HQPDistBlock, the independent reference solution computed level by
+ * level in the null space of the equality tasks of the higher levels (with a
+ * small dense primal active-set method for the QP of each level), and the
+ * comparison of the levels solved by an HQPSolver of a BlockSolverConfig with
+ * it.
  *
  * The reference follows the classical approach: level p is solved in the
  * variables \f$ ( y , w_p ) \f$, \f$ x = \bar{x}_{p-1} + Z_p y \f$, where
@@ -80,6 +81,7 @@ struct Instance {
  std::vector< Mat > A , C;
  std::vector< Vec > b , d , we , wi;
  double eps = 0;
+ HQPBlock::StageData stages;  ///< the stage structure, if any
 
  [[nodiscard]] int levels( void ) const { return( int( A.size() ) ); }
  };
@@ -112,8 +114,10 @@ inline void load( HQPBlock & block , const Instance & in )
                    std::vector< double >( in.wi[ p ].data() ,
                           in.wi[ p ].data() + in.wi[ p ].size() ) );
   }
+ auto st = in.stages;
  block.load( in.n , std::move( A ) , std::move( b ) , std::move( C ) ,
-             std::move( d ) , std::move( we ) , std::move( wi ) , in.eps );
+	     std::move( d ) , std::move( we ) , std::move( wi ) , in.eps , {} ,
+	     std::move( st ) );
  }
 
 /*--------------------------------------------------------------------------*/

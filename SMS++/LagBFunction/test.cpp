@@ -969,7 +969,8 @@ static bool NDO_improves_along_LP_ray( Solver * slvrLP )
  for( Index i = 0 ; i < n ; ++i )
   (*NDOx)[ i ].set_value( x0[ i ] );
 
- const double eps = 1e-9 * std::max( { 1.0 , std::abs( f0 ) , std::abs( f1 ) } );
+ const double eps = 1e-9 * std::max( { 1.0 , std::abs( f0 ) ,
+                                       std::abs( f1 ) } );
  return( ( f1 < f0 - eps ) && ( f2 < f1 - eps ) );
  }
 
@@ -1422,7 +1423,8 @@ int main( int argc , char **argv )
    // keeps the LPBlock-vs-NDOBlock comparison mathematically sound.
    Subset subset;
    if( sparse_subset )
-    subset = GenerateSubset( nvar , std::max( Index( 1 ) , Index( nvar / 2 ) ) );
+    subset = GenerateSubset( nvar , std::max( Index( 1 ) ,
+                                              Index( nvar / 2 ) ) );
    else {
     subset.resize( nvar );
     std::iota( subset.begin() , subset.end() , Index( 0 ) );

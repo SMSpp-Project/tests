@@ -32,10 +32,11 @@ ComputeConfig # exact type of the ComputeConfig object
 3  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+intLogVerb      0                                # log verbosity of the
+                                                 # MILPSolver
+intRelaxIntVars 1                                # nonzero if the continuous
+                                                 # relaxation is solved
 #intCutSepPar   0 # separate user cuts at the root node & sub-nodes
-
 ## All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Threads                       1       # avoid parallel
 #CPXPARAM_MIP_Display                    3       # more verbose log
@@ -49,44 +50,44 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
                                                  # sifting, 6 = concurrent
 
 ## All specific GUROBI parameter (uncomment based on Solver)
-Threads     1       # avoid parallel
+Threads         1                                # avoid parallel
 #NodeLimit  0       # only do root node
 #CutPasses  1000000 # enable standard cuts
 #Heuristics 0       # disable heuristic
 #Method     4       # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
-                    # 3 = barrier + crossover, 4 = network
+                                                 # 3 = barrier + crossover, 4
+                                                 # = network
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 #dblMaxTime     60 # max time: 1 minute
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 #strOutputFile  cfl1.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END CFLBSCfg-mcf.txt  - - - - - - - - - - - - - -

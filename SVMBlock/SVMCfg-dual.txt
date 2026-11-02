@@ -3,8 +3,7 @@
 #
 # A txt description of a BlockConfig for a SVMBlock asking its abstract
 # representation to encode the Wolfe dual of the training problem, which is
-# the
-# only thing there is for a nonlinear kernel
+# the only thing there is for a nonlinear kernel
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -19,32 +18,32 @@ BlockConfig # exact type of the Configuration object
 *  # [none]
 
 # static_constraints
-*    # [none]
+*  # [none]
 
 # dynamic_constraints
-*    # [none]
+*  # [none]
 
 # static_variables
 SimpleConfiguration<int>
-0    # 0 = Wolfe dual, 1 = the training problem itself
+0  # 0 = Wolfe dual, 1 = the training problem itself
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
-*    # [none]
+*  # [none]
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END SVMCfg-dual.txt - - - - - - - - - - - - - -

@@ -10,30 +10,42 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 BlockConfig # exact type of the Configuration object
+
 1  # the BlockConfig is a "differential" one
+
 2  # version of the BlockConfig format
 # the Configuration for the structure, i.e., the tree of sub-Block
+
 *  # [none]
 # static_constraints
+
 SimpleConfiguration<int>
-1    # use [1] or not [0] the forcing constraints of the MMCFBlock
+1  # use [1] or not [0] the forcing constraints of the MMCFBlock
 # dynamic_constraints
-*    # [none]
+
+*  # [none]
 # static_variables
+
 SimpleConfiguration<int>
-0    # 0 = monolithic, 1 = Benders (formulation)
+0  # 0 = monolithic, 1 = Benders (formulation)
 # dynamic_variables
-*    # [none]
+
+*  # [none]
 # objective
-*    # [none]
+
+*  # [none]
 # is_feasible
-*    # [none]
+
+*  # [none]
 # is_optimal
-*    # [none]
+
+*  # [none]
 # solution
-*    # [none]
+
+*  # [none]
 # extra
-*    # [none]
+
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BPar-ND.txt - - - - - - - - - - - - - - - -

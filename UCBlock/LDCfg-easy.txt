@@ -14,32 +14,34 @@
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-1 # number of integer parameters
+1  # number of integer parameters
 
+# now all the integer parameters
 intDoEasy 1 # do easy components for (some) LagBFunction
 
-3 # number of double parameters
+3  # number of double parameters
 
+# now all the double parameters
 dblNZEps  1e-4 # threshold to declare 0 the || residual ||
 dbltStar  1e+4 # multiplies || residual || to estimate the gap
 dbltInit  1e-3 # initial value for t
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-1 # number of vector-of-string parameters
+1  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # the components that the inner BundleSolver never treats as "easy": the
@@ -48,7 +50,7 @@ dbltInit  1e-3 # initial value for t
 vstrNoEasy 2 ThermalUnitBlock BatteryUnitBlock
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END LDCfg-easy.txt  - - - - - - - - - - - - - -

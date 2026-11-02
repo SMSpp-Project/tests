@@ -23,9 +23,9 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-8 # number of (the names of) Solver in this BlockSolverConfig
+8  # number of (the names of) Solver in this BlockSolverConfig
 
-# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver       # the monolithic reference
 #CPXMILPSolver        #   (uncomment the available backend)
 #GRBMILPSolver
@@ -38,7 +38,7 @@ FrankWolfeSolver      # 6: oracles in parallel
 FrankWolfeSolver      # 7: master of 2 pieces
 FrankWolfeSolver      # 8: master of 10 pieces
 
-8 # number of ComputeConfig in this BlockSolverConfig
+8  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 
@@ -51,33 +51,33 @@ FrankWolfeSolver      # 8: master of 10 pieces
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intAlgorithm    0 # vanilla
 intMaxAtoms     0 # no active set to bound
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -86,7 +86,7 @@ intMaxAtoms     0 # no active set to bound
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # 3: the Away-step variant, which keeps an active set of atoms and can
 #    take weight away from one of them
@@ -95,33 +95,33 @@ intMaxAtoms     0 # no active set to bound
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intAlgorithm    1 # Away-step
 intMaxAtoms     0 # unbounded active set
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -130,7 +130,7 @@ intMaxAtoms     0 # unbounded active set
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # 4: the Blended Pairwise variant, which moves weight between two atoms
 #    of the active set rather than towards a new one
@@ -139,33 +139,33 @@ intMaxAtoms     0 # unbounded active set
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intAlgorithm    2 # BPCG
 intMaxAtoms     0 # unbounded active set
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -174,7 +174,7 @@ intMaxAtoms     0 # unbounded active set
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # 5: Away-step with the active set bounded, i.e., with aggregation: the
 #    least active atoms are merged when they are more than the cap
@@ -183,33 +183,33 @@ intMaxAtoms     0 # unbounded active set
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intAlgorithm    1 # Away-step
 intMaxAtoms     8 # the cap that makes it aggregate
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -218,7 +218,7 @@ intMaxAtoms     8 # the cap that makes it aggregate
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # 6: vanilla with the Linear Minimization Oracle of the sub-Block run in
 #    parallel, which changes nothing of what is computed
@@ -227,34 +227,34 @@ intMaxAtoms     8 # the cap that makes it aggregate
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-3 # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
 intAlgorithm    0 # vanilla
 intMaxAtoms     0 # no active set to bound
 intMaxThread    4 # the oracles of the sub-Block, in parallel
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -263,7 +263,7 @@ intMaxThread    4 # the oracles of the sub-Block, in parallel
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # 7: the direction taken from a stabilized master of two pieces, solved
 #    in closed form, rather than from the gradient alone
@@ -272,34 +272,34 @@ intMaxThread    4 # the oracles of the sub-Block, in parallel
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-3 # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
 intAlgorithm    0 # vanilla
 intMaxAtoms     0 # no active set to bound
 intFWDirection  1 # eDirBundle
 
-1 # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
 dblFWt          1 # how much the master is stabilized
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -308,7 +308,7 @@ dblFWt          1 # how much the master is stabilized
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # 8: the same direction taken from a master of ten pieces, which is a
 #    MasterProblemBlock solved by the Solver of MPBCfg-FW.txt
@@ -317,35 +317,35 @@ dblFWt          1 # how much the master is stabilized
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-4 # number of integer parameters
+4  # number of integer parameters
 
 # now all the integer parameters
-intAlgorithm    0 # vanilla
-intMaxAtoms     0 # no active set to bound
-intFWDirection  2 # eDirBundleMP
-intFWBundleSize 10 # the pieces the master keeps
+intAlgorithm    0   # vanilla
+intMaxAtoms     0   # no active set to bound
+intFWDirection  2   # eDirBundleMP
+intFWBundleSize 10  # the pieces the master keeps
 
-1 # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
 dblFWt          1 # how much the master is stabilized
 
-1 # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
 strFWMPBCfg     MPBCfg-FW.txt # the Solver of the master problem
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -354,7 +354,7 @@ strFWMPBCfg     MPBCfg-FW.txt # the Solver of the master problem
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # end of BlockSolverConfig
 

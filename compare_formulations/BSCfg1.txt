@@ -46,37 +46,36 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 #Method      0    # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
                   # 3 = barrier + crossover, 4 = network
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-1 # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
 strOutputFile   uc1.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END BSCfg1.txt - - - - - - - - - - - - - - -

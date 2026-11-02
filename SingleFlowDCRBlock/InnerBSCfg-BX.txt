@@ -35,11 +35,9 @@ intMaxCuts 0       # positive max new Benders cuts per compute(), initial cut in
 
 2  # number of double parameters
 
+# now all the double parameters
 dblAbsAcc 1e-6
 dblRelAcc 1e-6
-
-# now all the double parameters
-# [none]
 
 1  # number of string parameters
 
@@ -62,9 +60,9 @@ strLogFileName log/SFDCRBRelaxationSolver.log
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - -  END InnerBSCfg-BX.txt  - - - - - - - - - - - - -

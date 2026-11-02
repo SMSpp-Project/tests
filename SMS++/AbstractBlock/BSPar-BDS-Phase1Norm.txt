@@ -37,7 +37,7 @@ ComputeConfig # exact type of the ComputeConfig object
 int_BDSlv_Regime  1  # 0 = convex master, 1 = MILP master
 int_BDSlv_FeasCut 3  # 0 = always feasible, 1 = Farkas, 2 = combinatorial,
                      # 3 = the cut of the phase one
-int_BDSlv_PhaseOneWeights 1 # 0 = unit costs, 1 = 1 / the norm of the row
+int_BDSlv_PhaseOneWeights 1  # 0 = unit costs, 1 = 1 / the norm of the row
 
 0  # number of double parameters
 
@@ -66,11 +66,10 @@ str_Mstr_BSCfg  BDSMCfg-MILP.txt  # BlockSolverConfig of the master
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - -  END BSPar-BDS-Phase1Norm.txt - - - - - - - - - - - -

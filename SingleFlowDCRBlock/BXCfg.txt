@@ -20,6 +20,7 @@ intMaxThread   1  # one thread
 
 2  # number of double parameters
 
+# now all the double parameters
 dblAbsAcc 1e-6
 dblRelAcc 1e-6
 
@@ -27,6 +28,7 @@ dblRelAcc 1e-6
 # [none]
 
 2  # number of string parameters
+
 
 # now all the string parameters
 strNameOfBlockSolverConfigurationFile InnerBSCfg-BX.txt
@@ -48,7 +50,7 @@ strLogFileName log/RabaxSFCFPRS.log
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
 

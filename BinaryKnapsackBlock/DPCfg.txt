@@ -14,9 +14,18 @@ ComputeConfig # exact type of the ComputeConfig object
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -34,7 +43,7 @@ ComputeConfig # exact type of the ComputeConfig object
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
 

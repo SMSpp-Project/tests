@@ -12,7 +12,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-BlockConfig  # exact type of the Configuration object
+BlockConfig # exact type of the Configuration object
 
 1  # the BlockConfig is a "differential" one
 

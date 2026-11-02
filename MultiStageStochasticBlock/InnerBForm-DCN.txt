@@ -21,7 +21,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *InnerBCfg-CYCLE.txt    # 2nd formulation: CYCLE
 *InnerBCfg.txt          # 3rd formulation: KIRCHHOFF
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END InnerBForm-DCN.txt  - - - - - - - - - - - - - -

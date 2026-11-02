@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # usage: batchCL_C_dense < exe file >
-#        < exe file > = path of the executable file, default ./MILPSolver_QuadFunction_test
+#        < exe file > = path of the executable file,
+#        default ./MILPSolver_QuadFunction_test
 #
 # runs MILPSolver_QuadFunction_test with the dense QP :MILPSolver of
 # LPPar_CL_C-dense.txt (DAQPMILPSolver, QPOASESMILPSolver, ProxQPMILPSolver,

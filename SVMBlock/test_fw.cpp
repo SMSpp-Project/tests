@@ -121,7 +121,8 @@ int BallSolver::compute( bool changedvars )
  auto ab = dynamic_cast< AbstractBlock * >( get_Block() );
  if( ! ab ) {
   unlock();
-  throw( std::invalid_argument( "BallSolver::compute: not an AbstractBlock" ) );
+  throw( std::invalid_argument(
+                         "BallSolver::compute: not an AbstractBlock" ) );
   }
 
  auto obj = dynamic_cast< FRealObjective * >( ab->get_objective() );
@@ -294,7 +295,8 @@ static AbstractBlock * build_balls( SVMBlock * svm , BlockSolverConfig * lbsc ,
                                   new DQuadFunction( std::move( sq ) ) );
   sb->add_static_constraint( *ball , "ball" );
 
-  auto obj = new FRealObjective( sb , new LinearFunction( std::move( zero ) ) );
+  auto obj = new FRealObjective( sb ,
+                                 new LinearFunction( std::move( zero ) ) );
   obj->set_sense( Objective::eMin , eNoMod );
   sb->set_objective( obj );
 
@@ -311,7 +313,8 @@ static AbstractBlock * build_balls( SVMBlock * svm , BlockSolverConfig * lbsc ,
                              Coefficient( H[ i * d + i ] ) );
   for( Index j = 0 ; j < i ; ++j )
    if( H[ i * d + j ] != 0 )
-    nd.push_back( std::make_tuple( i , j , Coefficient( 2 * H[ i * d + j ] ) ) );
+    nd.push_back( std::make_tuple( i , j ,
+                                   Coefficient( 2 * H[ i * d + j ] ) ) );
   }
  auto obj = new FRealObjective( father ,
                                 new QuadFunction( std::move( tr ) ,
@@ -322,7 +325,8 @@ static AbstractBlock * build_balls( SVMBlock * svm , BlockSolverConfig * lbsc ,
  }
 
 /*--------------------------------------------------------------------------*/
-/// the Wolfe dual of the SVM on boxes: the father, its boxes and their Variable
+/// the Wolfe dual of the SVM on boxes: the father, its boxes and their
+/// Variable
 /** With the bias regularised the dual has no equality constraint, and it is
  *  min { a' Q a / 2 - 1' a : 0 <= a <= C }, Q_kl = y_k y_l ( K( x_k , x_l )
  *  + 1 ); the samples are dealt to n_groups boxes, whose oracle minimizes a
@@ -378,7 +382,8 @@ static AbstractBlock * build_dual( SVMBlock * svm , BlockSolverConfig * lbsc ,
    }
   sb->add_static_constraint( *box , "box" );
 
-  auto obj = new FRealObjective( sb , new LinearFunction( std::move( zero ) ) );
+  auto obj = new FRealObjective( sb ,
+                                 new LinearFunction( std::move( zero ) ) );
   obj->set_sense( Objective::eMin , eNoMod );
   sb->set_objective( obj );
 

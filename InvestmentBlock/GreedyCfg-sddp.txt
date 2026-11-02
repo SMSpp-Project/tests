@@ -22,17 +22,34 @@ intUnregisterSolver 0 # keep the Solver of the stages until it leaves
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
+# now all the vector-of-int parameters
+# [none]
+
 0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
 
 0  # number of vector-of-string parameters
 
+# now all the vector-of-string parameters
+# [none]
+
 # pointer to the "extra" Configuration
 SimpleConfiguration<std::vector<Configuration*>>
-2                  # the number of elements in the vector
+
+2  # the number of elements in the vector
+
 *                  # no BlockConfig of the UCBlock of each stage
 *UCBSCfg-sddp.txt  # the BlockSolverConfig of the UCBlock of each stage
 

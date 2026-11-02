@@ -17,7 +17,8 @@ target_include_directories(MILPSolver_QuadFunction_test PRIVATE ../..)
 target_link_libraries(MILPSolver_QuadFunction_test PRIVATE SMS++::SMS++)
 
 if (TARGET SMS++::MILPSolver)
-    target_link_libraries(MILPSolver_QuadFunction_test PRIVATE SMS++::MILPSolver)
+    target_link_libraries(MILPSolver_QuadFunction_test PRIVATE
+                          SMS++::MILPSolver)
 endif ()
 
 smspp_install(MILPSolver_QuadFunction_test)
@@ -39,7 +40,8 @@ foreach (BATCH_FILE ${BATCH_FILES})
     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
     if (UNIX)
         add_test(NAME MILPSolver_QuadFunction_test/${BATCH_NAME}
-                 COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/MILPSolver_QuadFunction_test
+                 COMMAND bash ${BATCH_FILE}
+                     ${CMAKE_CURRENT_BINARY_DIR}/MILPSolver_QuadFunction_test
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     elseif (WIN32)
         add_test(NAME MILPSolver_QuadFunction_test/${BATCH_NAME}

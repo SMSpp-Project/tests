@@ -29,9 +29,9 @@ MMCFBlock/data/*
 MMCFBlock/gen/Canad.tgz
 InvestmentBlock/investment_candidates.txt
 CapacitatedFacilityLocationBlock/*/CFL[12].txt
-CapacitatedFacilityLocationBlock/*/log[12].txt
-CapacitatedFacilityLocationBlock/*/logLD.txt
-CapacitatedFacilityLocationBlock/*/logMILP.txt
+CapacitatedFacilityLocationBlock/**/log[12].txt
+CapacitatedFacilityLocationBlock/**/logLD.txt
+CapacitatedFacilityLocationBlock/**/logMILP.txt
 
 # the netCDF files the SVM serialization checks write
 SVMBlock/svmblock.nc4

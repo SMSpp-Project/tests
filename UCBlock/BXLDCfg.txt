@@ -44,7 +44,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-BX-LD.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
 

@@ -9,6 +9,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InvestmentBlock`: `batches-sddp/batch` also optimizes an
+  `InvestmentBlock` over an `SDDPBlock` whose design is free and has a
+  cost (`ib_sddp_invest.nc4` of `gen_sddp_initud.py`), and checks that the
+  bundle reaches the value at the optimal design, below those at the fixed
+  designs around it, which it reaches only if the linearization read off
+  the solution of each simulated scenario is right
+
+- `InvestmentBlock`: `batch-stochastic` solves the network of Italy with 5
+  nodes of pypsa-eur-instances, with 5 scenarios of demand, both with the
+  `InvestmentBlock` split into a component per scenario and kept whole
+  (`ScenarioDecomposition` 0), against the value of PyPSA; the whole form
+  is left out in CI
+
+- `SMS++/PolyhedralFunctionBlock`: `NDOPar.txt` also registers the
+  `BundleSolver` with the primal master problem solved by `BDMinQuadSolver`
+  (`MPBCfg-BDMQ.txt`, unscaled) and by `DAQPMILPSolver` (`MPBCfg-DAQP.txt`),
+  as differential overrides of the `ComputeConfig` of the first one, which
+  is now the fragment `BSCfg.txt`; the tester checks every `Solver` of
+  `NDOBlock` against the LP, doubling the conditional bound at most once per
+  round, and reports as "n.a." from then on a `Solver` whose `compute()`
+  throws `std::invalid_argument`. A `BundleSolver` whose `strMPBSolverCfg`
+  names a `Solver` that the build does not have is left out of a
+  `BlockSolverConfig`, as a `LagrangianDualSolver` whose inner `Solver` is
+  not there
+
+- `TwoStageStochasticBlock`: `BendersDecompositionSolver` in the convex
+  regime with the master solved by the `BundleSolver` that is the
+  cutting-plane method of Kelley on the integer design (`KelleyCfg.txt`,
+  `BDSMCfg-Kelley.txt`, `MPBCfg-IP.txt`), one more row of
+  `BSPar-MMCF-BDS.txt`, `BSPar-MMCF-BDSLD.txt` and `BSPar-BDS-2S-LD.txt`
+  beside the MILP regime it is the loop of, written as an override of the
+  ComputeConfig of the MILP regime, which for the two of MMCFBlock is now a
+  file of its own (`BDSCfg-MMCF.txt`, `BDSCfg-MMCF-LD.txt`)
+
+- `InvestmentBlock`: the battery `batches-design/batch` converts by
+  `design_converter` each network of the `UCBlock` archive with the design in
+  its units and lines (a `TwoStageStochasticBlock` among them) and holds the
+  `InvestmentBlock` it gives to the PyPSA objective of the same network
+  written as an `InvestmentBlock`; the references are in
+  `batches/ref-pypsa`, which `batch-pypsa` reads too
+
+- `SMS++/AbstractBlock`: `LagrangianDualSolver_Box_test -k 128` gives the
+  Objective of the sub-Blocks and of the root random weights, which the
+  `:MILPSolver` applies by itself and the `LagrangianDualSolver` through
+  its `LagBFunction`, the `BoxSolver` of the sub-Blocks not seeing them
+
+- `MILPSolver/ObjectiveWeight`: `MILPSolver_ObjectiveWeight_test` builds a
+  random tree of `AbstractBlock` three levels deep with a weight on the
+  `Objective` and one on the Variable of each `Block`, and its twin with no
+  weight and the coefficients already multiplied by the weights (those of
+  the `Objective` along the path, that of the Variable of a son in the rows
+  of its father), attaches the `Solver` of a `BlockSolverConfig` to both
+  roots and to a `Block` of the middle level, and checks every `Solver`
+  against the twin, then changes both trees in the same way (the
+  coefficients of the rows and the weights with the `Solver` attached
+  comprised) and checks them again, and checks that a change of the
+  weights is refused while a `Solver` that cannot handle it is attached to
+  an ancestor; `batch-weight`
+  runs it with `Objective` partly quadratic (`BSPar.txt`, without
+  `HiGHSMILPSolver`, whose active set calls unbounded some of these convex
+  QPs) and all linear (`BSPar-LP.txt`)
+
 - `TwoStageStochasticBlock`: the cross-check of `BSPar-BDS-2S.txt` also
   has the `BendersDecompositionSolver` with HiGHS in the master and in the
   subproblems (`BDSCfg-2S-HiGHS.txt`, `BDSMCfg-MILP-HiGHS.txt`,
@@ -34,7 +96,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   qpOASES solving each level from scratch), and those of each formulation
   of `HQPDistForms.txt`, given with `-F`, on the `HQPDistBlock` of the same
   hierarchies split among 3 owners (with the structure `kConsensus`, DAQP
-  and qpOASES on the whole tree; with `kBenders`, DAQP on the whole tree),
+  and qpOASES on the whole tree; with `kBenders`, DAQP on the whole tree
+  and the Benders decomposition of `BendersDecompositionSolver`, if in the
+  build, as it is and with the scale of the levels of `HQPSolver`, held to
+  their own tolerances on the values and on `x`, the one on `x` given with
+  the new option `-X`),
   with an independent null-space implementation; `batch-generated`
   on random and degenerate hierarchies, on a step of Model Predictive
   Control and on a run of 10 small ones, where DAQP and qpOASES starting
@@ -42,6 +108,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from scratch (`-I`), `batch-radial` on the instances in `data/nc4` of the
   module, each step also reached by Modification of the previous one, with
   the label `HQPBlock;MILPSolver`
+
+- `HQPBlock`: `HQPBSCfg.txt` attaches a 15th `HQPSolver`, whose inner
+  Solver is `HQPStageSolver` (`InnerBSCfg-stage.txt`), as a differential
+  override of `HQPCfg.txt`; the tester leaves out, for a hierarchy, an
+  `HQPSolver` whose inner Solver throws `std::invalid_argument` on it, and
+  builds also a small Model Predictive Control with the stage structure of
+  `HQPBlock`, `batch-radial` also runs two steps with the control horizon
+  10, which have it, and an instance on which the null-space reference runs
+  out of iterations is compared with the solution in the file only
 
 - `MILPSolver/QuadFunction/LPPar_CL_C-dense.txt` also attaches
   `HPIPMMILPSolver`, with `QPCfg-C.txt`, so that `batchCL_C_dense`,
@@ -215,6 +290,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `TwoStageStochasticBlock/batches/batch-pypsa`
 
 ### Changed
+
+- the testers of BinaryKnapsackBlock, CapacitatedFacilityLocationBlock,
+  MCFBlock, InvestmentBlock and UCBlock, and the scenario generators of
+  CapacitatedFacilityLocationBlock and UCBlock, pass the data to the setters
+  as spans, the forms taking an iterator being gone
+
+- `UCBlock`: `UCBlock_test --scale` and `--pollutant` check the copies of
+  a unit as the weights of its Block, the rows and the Objective of the unit
+  keeping the coefficients of one copy, a unit replicated after the model is
+  built giving the model (weights included) of one replicated before it,
+  and `is_feasible()` at the optimum of the replicated unit and battery
+
+- `InvestmentBlock`: `IB_test` no longer shifts the initial point and the
+  solution by the lower bounds of the design Variable, which InvestmentBlock
+  no longer reformulates, and the `IBOCfg*.txt` give no Configuration for
+  the static constraints
+
+- `InvestmentBlock`: the inner Block of `BSCfg.txt` is solved by
+  `HiGHSMILPSolver` by the simplex method, with `intHomogeneousDirection` 1:
+  where it is infeasible the InvestmentFunction cuts the point away with the
+  homogeneous multipliers of the dual direction, without which
+  `batch-stochastic` stopped above the optimum on
+  `smspp_stoch_tssb_c3_d3_renewables.nc`; the note of `batch-stochastic`
+  says so
+
+- the testers of the stochastic Block give the Solver their log at the
+  verbosity of `-v`
+
+- `InvestmentBlock`: the SDDPBlock of `batches-sddp` is solved by the
+  `SDDPSimulationSolver` of SDDPBlock, the first Solver of its
+  BlockSolverConfig (`SDDPBSCfg-sddp.txt`), which the InvestmentFunction
+  takes; `IB_test` and `TSSB_BDS_test` link UCBlock (and `IB_test`
+  SDDPBlock and TwoStageStochasticBlock) themselves, InvestmentBlock no
+  longer bringing them, and are built only where they are
+
+- `InvestmentBlock`: `IB_test` reaches the inner Block of each
+  `InvestmentFunction` of the `InvestmentBlock` [see
+  `InvestmentBlock::get_investment_functions()`], the one of its Objective
+  or the one of each component of an `InvestmentBlock` that has split its
+  inner Block, rather than casting its single Function, which a split one
+  does not have; the "meta"-BlockConfig give a component (an
+  `AbstractBlock`) the `OBlockConfig` of the `InvestmentBlock`
+
+- `MSSB_test` checks on every instance that the `Block` written in memory
+  and read back has the weights of the Objective of the original, as well
+  as the round trip of its `Solution`
+
+- `TwoStageStochasticBlock`: `benders_form()` weights the cost of the design
+  taken out of each leaf by the factor with which its `Objective` enters the
+  `TwoStageStochasticBlock` [see `Block::get_objective_weight()`], the
+  probability of the scenario being the weight of its `Objective` rather
+  than a factor of its coefficients, and gives the wrapper of a leaf the
+  weight of the ancestors the leaf leaves behind
+
+- `tree_objective_value()`, with which `check_var_solutions()` values the
+  solution of each `Solver`, multiplies each `Objective` by the weights
+  along the path [see `Block::get_objective_weight()`]
 
 - `MILPSolver/QuadFunction`: `HPIPMMILPSolver` has in `LPPar_CL_C-dense.txt`
   the `ComputeConfig` `HPIPMCfg-C.txt`, that of `QPCfg-C.txt` with a limit
@@ -502,6 +634,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   twice
 
 ### Fixed
+
+- on Windows, the executables that copy their DLLs next to themselves
+  are linked one at a time (a job pool of Ninja), since two copies of the
+  same DLL into one directory collided (e.g., with the clang++ of MSYS2)
+
+- `cmake/FindCPLEX.cmake` drops the cached paths of CPLEX when one of them
+  does not exist any more (e.g., in a build directory configured once outside
+  and once inside a container, or after an upgrade), so that all of them are
+  searched again; the stale include directory was kept, since `find_path()`
+  does not search a cached one again, and the configuration stopped on
+  reading the version from a header that is not there
+
+- `MMCFBlock`: `mnetgen` has its own `drand48()` and `srand48()` on any
+  Windows, the C library of MinGW-w64 lacking them as that of MSVC does
+
+- `TwoStageStochasticBlock/TUBSCfg-DP.txt` declared no ComputeConfig and
+  wrote one all the same, empty, which SMS++ never read: it is gone, and
+  the dynamic programming Solver runs with its defaults as it did
 
 - the Frank-Wolfe decomposition with the network simplex of LEMON in
   `batch` and `batch-dense` of MCFBlock runs the reduced lineup, as the one

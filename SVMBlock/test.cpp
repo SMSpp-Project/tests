@@ -82,7 +82,8 @@ Index nchunk = 1;           ///< chunks the samples are dealt out to, 1 = none
 bool benders = false;       ///< the Benders structure instead of the consensus
 Index wf = 0;               ///< what formulation, coded bit-wise
 int kernel = SVMBlock::kLinear;   ///< which kernel
-double kmemory = -1;              ///< MB the Gram matrix may take, < 0 = default
+/// MB the Gram matrix may take, < 0 = default
+double kmemory = -1;
 bool regression = false;    ///< if the model is a regression one
 double parC = 1;            ///< the trade-off parameter C
 double parE = 0.1;          ///< the half-width of the insensitivity tube
@@ -92,8 +93,10 @@ bool reopt = false;         ///< re-solve after changing the training problem
 bool abstract = true;       ///< whether the abstract representation is built
 
 Index ngrid = 0;            ///< values of C of the model selection, 0 = none
-Index npgrid = 0;           ///< values of gamma of the model selection, 0 = none
-Index gorder = 0;           ///< in which order the grid is walked [see run_grid]
+/// values of gamma of the model selection, 0 = none
+Index npgrid = 0;
+/// in which order the grid is walked [see run_grid]
+Index gorder = 0;
 Index gwhich = 0;           ///< which of the two solves the grid takes
 
 Index nincr = 0;            ///< samples learnt one at a time, 0 = none
@@ -756,8 +759,8 @@ int main( int argc , char ** argv )
          "The two share\n"
          "                                  what the Block keeps of the "
          "kernel, so a\n"
-         "                                  comparison free of that takes each "
-         "in its own run\n"
+         "                                  comparison free of that takes "
+         "each in its own run\n"
          "  -I, --incremental <n>           learn n more samples one at a "
          "time, timing\n"
          "                                  each Solver over the additions "

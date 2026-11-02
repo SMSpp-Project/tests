@@ -39,7 +39,8 @@ for i in 24; do
                -F TUBForm-mustrun.txt -n "$rounds" -m "$nchg" -q "$pchg" -u
 
       run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
-               -F TUBForm-mustrun.txt -n "$rounds" -m "$nchg" -q "$pchg" -u -d 5000
+               -F TUBForm-mustrun.txt -n "$rounds" -m "$nchg" -q "$pchg" -u \
+               -d 5000
 
     done
   done

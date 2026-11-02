@@ -111,7 +111,9 @@ AbstractBlock * benders_form( TwoStageStochasticBlock * tssb )
  root->add_static_variable( *x , "x" );
  root->add_static_constraint( *bnd , "design bound" );
 
- // the cost of the design, taken out of the Objective of every leaf
+ /* the cost of the design, taken out of the Objective of every leaf and
+  * weighted as the Objective enters the TwoStageStochasticBlock [see
+  * Block::get_objective_weight()], i.e., by the probability of its leaf */
  auto rlf = new LinearFunction();
  std::vector< double > cost( n , 0 );
 
@@ -127,7 +129,8 @@ AbstractBlock * benders_form( TwoStageStochasticBlock * tssb )
      const auto & vv = lf->get_v_var();
      for( Index i = 0 ; i < vv.size() ; ++i )
       if( vv[ i ].first == var ) {
-       cost[ j ] += vv[ i ].second;
+       cost[ j ] += obj->get_Block()->get_objective_weight( tssb ) *
+                    vv[ i ].second;
        lf->remove_variable( i );
        break;
        }
@@ -148,10 +151,16 @@ AbstractBlock * benders_form( TwoStageStochasticBlock * tssb )
  robj->set_sense( Objective::eMin );
  root->set_objective( robj );
 
- // one subproblem per leaf, the wrapper carrying the coupling
+ /* one subproblem per leaf, the wrapper carrying the coupling and the
+  * weight of the ancestors of the leaf below the TwoStageStochasticBlock,
+  * which the leaf leaves behind while keeping its own */
  for( Index l = 0 ; l < L ; ++l ) {
   auto leaf = tssb->get_leaf_block( l );
+  const double wa = leaf->get_objective_weight( tssb ) /
+                    leaf->get_objective_weight();
   auto sub = new AbstractBlock( root );
+  if( wa != 1 )
+   sub->set_objective_weight( wa );
 
   /* the wrapper adds nothing to the Objective of the leaf, but it has to say
    * which way the subproblem goes: a Block with no Objective answers eUndef,

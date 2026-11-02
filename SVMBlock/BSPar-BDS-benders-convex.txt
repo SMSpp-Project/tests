@@ -41,8 +41,10 @@ int_BDSlv_Regime  0  # 0 = convex master, 1 = MILP master
 2  # number of string parameters
 
 # now all the string parameters
-str_Bsub_BSCfg  BSPar-BDS-sub.txt # BlockSolverConfig of the subproblems
-str_Mstr_BSCfg  BSPar-BDS-master-convex.txt # BlockSolverConfig of the master
+str_Bsub_BSCfg  BSPar-BDS-sub.txt            # BlockSolverConfig of the
+                                             # subproblems
+str_Mstr_BSCfg  BSPar-BDS-master-convex.txt  # BlockSolverConfig of the
+                                             # master
 
 0  # number of vector-of-int parameters
 
@@ -60,11 +62,10 @@ str_Mstr_BSCfg  BSPar-BDS-master-convex.txt # BlockSolverConfig of the master
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - -  END BSPar-BDS-benders-convex.txt - - - - - - - - - -

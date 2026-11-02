@@ -20,8 +20,8 @@
  * Block and of every R3Block, are compared.
  *
  * Otherwise, the first Solver attached to each R3Block is supposed to be
- * solving some kind of continuous relaxation and a certain number of rounds of a
- * simple slope scaling heuristic are ran on that Block, then the results
+ * solving some kind of continuous relaxation and a certain number of rounds of
+ * a simple slope scaling heuristic are ran on that Block, then the results
  * (both lower and upper bound) are compared with the optimal value of the
  * other Solver (not expecting they be equal).
  *
@@ -449,7 +449,7 @@ static bool SlopeScaling( Solver * Slvr1 , int rtrn1st )
   // iteration this is permanent, and therefore use the standard eNoBlck
   if( h ) {
    auto iM = h < niter - 1 ? eNoMod : eNoBlck;
-   B1->chg_facility_costs( F.begin() , Block::INFRange , iM , iM );
+   B1->chg_facility_costs( Block::MF_dbl_sp( F ) , Block::INFRange , iM , iM );
    }
 
   // now compute the value of the new feasible solution
@@ -481,7 +481,7 @@ static bool SlopeScaling( Solver * Slvr1 , int rtrn1st )
 
   // change the facility costs in B1: thanks to the UpdateSolver (whose
   // Modification are *not* inhibited) this is immediately forwarded to B2
-  B1->chg_facility_costs( NF.begin() );
+  B1->chg_facility_costs( Block::MF_dbl_sp( NF ) );
 
   #if DETACH_2ND
    B2->unregister_Solver( Slvr2 );
@@ -937,7 +937,7 @@ int main( int argc , char **argv )
        LF( B1->get_objective() )->modify_coefficients( std::move( NC ) , rng );
        }
       else  // change via call to chg_* method
-       B1->chg_facility_costs( NC.begin() , rng );
+       B1->chg_facility_costs( Block::MF_dbl_sp( NC ) , rng );
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
@@ -955,7 +955,8 @@ int main( int argc , char **argv )
 					      std::move( sbst ) , ord );
        }
       else  // change via call to chg_* method
-       B1->chg_facility_costs( NC.begin() , std::move( sbst ) , ord );
+       B1->chg_facility_costs( Block::MF_dbl_sp( NC ) , std::move( sbst ) ,
+                               ord );
 
       LOG1( ")" );
       }
@@ -996,7 +997,7 @@ int main( int argc , char **argv )
        LF( B1->get_objective() )->modify_coefficients( std::move( NC ) , rng );
        }
       else  // change via call to chg_* method
-       B1->chg_transportation_costs( NC.begin() , rng );
+       B1->chg_transportation_costs( Block::MF_dbl_sp( NC ) , rng );
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
@@ -1016,7 +1017,8 @@ int main( int argc , char **argv )
 						       ord );
        }
       else  // change via call to chg_* method
-       B1->chg_transportation_costs( NC.begin() , std::move( sbst ) , ord );
+       B1->chg_transportation_costs( Block::MF_dbl_sp( NC ) ,
+                                     std::move( sbst ) , ord );
 
       LOG1( ")" );
       }
@@ -1063,7 +1065,7 @@ int main( int argc , char **argv )
 	LF( & (*cap)[ i ] )->modify_coefficient( n , - *(NCit++) , iM );
        }
       else         // change via call to chg_* method
-       B1->chg_facility_capacities( NC.begin() , rng );
+       B1->chg_facility_capacities( Block::MF_dbl_sp( NC ) , rng );
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
@@ -1080,7 +1082,8 @@ int main( int argc , char **argv )
 	LF( & (*cap)[ i ] )->modify_coefficient( n , - *(NCit++) , iM );
        }
       else       // change via call to chg_* method
-       B1->chg_facility_capacities( NC.begin() , std::move( sbst ) , ord );
+       B1->chg_facility_capacities( Block::MF_dbl_sp( NC ) ,
+                                    std::move( sbst ) , ord );
 
       LOG1( ")" );
       }
@@ -1111,7 +1114,7 @@ int main( int argc , char **argv )
       rng.first = dis( rg ) * ( n - tochange );
       rng.second = rng.first  + tochange;
       auto NC = rndscale( B1->get_Demands().data() , rng );
-      B1->chg_customer_demands( NC.begin() , rng );
+      B1->chg_customer_demands( Block::MF_dbl_sp( NC ) , rng );
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
@@ -1121,7 +1124,8 @@ int main( int argc , char **argv )
       if( ! ord )
        LOG1( ",u" );
 
-      B1->chg_customer_demands( NC.begin() , std::move( sbst ) , ord );
+      B1->chg_customer_demands( Block::MF_dbl_sp( NC ) , std::move( sbst ) ,
+                                ord );
       LOG1( ")" );
       }
 

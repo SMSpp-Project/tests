@@ -23,7 +23,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *NUBCfg-T-PC-RM.txt     # 4th formulation: T-PC, both
 *NUBCfg-T-PC-RC.txt     # 5th formulation: T-PC, separated tight rows
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END NUBForm.txt - - - - - - - - - - - - - - - -

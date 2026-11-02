@@ -49,7 +49,7 @@ strInnerBSC  InnerBSCfg-daqp.txt  # the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END HQPCfg.txt  - - - - - - - - - - - - - - - -

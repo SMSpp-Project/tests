@@ -36,11 +36,18 @@ each inner Solver and setting,
   which makes the Hessian singular; `HQPCfg-prox0.txt`, with the center of
   the regularization at 0;
 
-- the last two are DAQP and qpOASES in the first setting with each solve
-  from scratch (`InnerBSCfg-daqp-cold.txt`, `InnerBSCfg-qpoases-cold.txt`,
-  with `intDAQPWarmStart 0` and `intQPOASESHotStart 0`) rather than from the
-  previous solve of the same level, which the inner Solver of each level of
-  an `HQPSolver` re-optimizes from step to step;
+- the 13th and the 14th are DAQP and qpOASES in the first setting with
+  each solve from scratch (`InnerBSCfg-daqp-cold.txt`,
+  `InnerBSCfg-qpoases-cold.txt`, with `intDAQPWarmStart 0` and
+  `intQPOASESHotStart 0`) rather than from the previous solve of the same
+  level, which the inner Solver of each level of an `HQPSolver`
+  re-optimizes from step to step;
+
+- the 15th is `HQPStageSolver` of HQPBlock in the first setting
+  (`InnerBSCfg-stage.txt`), the primal active-set method whose subproblems
+  are solved by a Riccati recursion over the stages, which applies only to
+  a hierarchy with the stage structure of `HQPBlock` and is left out of the
+  others;
 
 while the `HQPDistBlock`, where each hierarchy built by the tester is split
 among 3 owners of consecutive blocks of columns, is solved once for each
@@ -54,15 +61,26 @@ formulation of `HQPDistForms.txt`, given with `-F`, a pair of a
   qpOASES in the first one;
 
 - F1, the structure `kBenders` (`HQPDistBCfg-bds.txt`), with the coupling
-  rows in the root and their parts in the sub-Blocks, and that of
-  `HQPDistBSCfg-bds.txt`, DAQP on the whole tree in the first setting.
+  rows in the root, a copy in the root of each column of an equality
+  coupling row and the parts of the others in the sub-Blocks, and those of
+  `HQPDistBSCfg-bds.txt`, both in the first setting: DAQP on the whole
+  tree, whose Hessian is singular, with the proximal-point iterations
+  stopped at `1e-12` (`InnerBSCfg-daqp-prox.txt`, `DAQPCfg-prox.txt`), and
+  the Benders decomposition of `InnerBSCfg-bds.txt`, a
+  `BendersDecompositionSolver` (`BDSCfg.txt`) whose subproblems are solved
+  by DAQP and whose master by Gurobi (`BDSMCfg.txt`), left out by a build
+  without it, as it is and with the `Objective` of each level at value
+  about 1 (`intLevelScale`).
 
 The `HQPSolver` of each formulation follow those of the `HQPBlock`, and
-those of the previous formulation, in the positions of `-E` and `-I`.
+those of the previous formulation, in the positions of `-E`, `-X` and
+`-I`.
 
 An `HQPSolver` whose inner Solver is not in the build is reported and left
 out, and if none of them has one the tester has nothing to do and says so
-with the status 77.
+with the status 77; one whose inner Solver does not apply to a hierarchy
+(it throws `std::invalid_argument`, as `HQPStageSolver` does on a hierarchy
+with no stage structure) is reported and left out for that hierarchy.
 
 The usage of the executable is the following:
 
@@ -73,6 +91,10 @@ The usage of the executable is the following:
                               the HQPSolver at position i (from 1) takes
                               fewer iterations than that at j in the
                               steps reached by Modification
+       -X, --xtol <tol>[,...]
+                              the tolerance on x of each HQPSolver, in
+                              the order of the BlockSolverConfig, an
+                              empty one for the default
 
 plus the options that every SMS++ tester understands (`--help` lists them
 all), among which `-S`, the configuration, `-F`, the formulations of the
@@ -83,7 +105,9 @@ hierarchies are built by the tester: random ones, one with a level of
 equalities only, one of inequalities only
 and an empty one, an inequality task that cannot be satisfied at its level
 and one already satisfied (whose values are known), dependent rows, weights
-different from 1, a step of Model Predictive Control that changes `b`, `d`,
+different from 1, a small Model Predictive Control of two robots over four
+stages with its stage structure, a step of Model Predictive Control that
+changes `b`, `d`,
 `A` (also out of the pattern of a row) and `C` of the same `HQPBlock`
 between two solves, checked also against a new `HQPBlock` solved from
 scratch, and a run of 10 small such steps; with `-F`, each of them also as
@@ -102,13 +126,20 @@ The batteries are:
 - `batches/batch-generated`, the hierarchies built by the tester; the
   interior-point inner Solvers are held to `1e-5` on the values rather than
   `1e-6`, since an inequality task satisfied exactly at its level leaves
-  them a slack of the order of the square root of their accuracy, and in
-  the run of Model Predictive Control DAQP and qpOASES must take fewer
-  iterations than the same ones solving from scratch;
+  them a slack of the order of the square root of their accuracy, the
+  Benders decomposition to `1e-5` on the values and `1e-2` on `x` rather
+  than `1e-3`, since it stops when no cut is violated by more than `1e-9`
+  relative and with the regularization `1e-3` such a gap leaves `x` free by
+  about `1e-3` (with the scale of the levels, which makes the gap relative
+  to the level, to `1e-5` on the values and the default on `x`), and in
+  the run of Model Predictive Control DAQP and qpOASES
+  must take fewer iterations than the same ones solving from scratch;
 
 - `batches/batch-radial`, the instances that HQPBlock distributes in
   `data/nc4` (some steps of a centralized Model Predictive Control of 8
-  robots crossing in the middle of a circle), downloaded from the GitLab
+  robots crossing in the middle of a circle, with the control horizon 3
+  and, with the stage structure, two steps with the horizon 10),
+  downloaded from the GitLab
   Package Registry when the battery is run; each step that follows the
   previous one in the run is also reached by Modification of the
   `HQPBlock` of the previous step, as the Model Predictive Control does,

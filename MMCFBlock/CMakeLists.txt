@@ -20,12 +20,15 @@ add_subdirectory(gen/Mnetgen)
 
 # ----- Custom commands and targets ----------------------------------------- #
 
-# Custom command to run gen/batch with the mnetgen exe if the .generated file does not exist
+# Custom command to run gen/batch with the mnetgen exe if the .generated file
+# does not exist
 if (UNIX)
     add_custom_command(
             OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch ${CMAKE_CURRENT_BINARY_DIR}/gen/Mnetgen/mnetgen
-            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
+            COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch
+                    ${CMAKE_CURRENT_BINARY_DIR}/gen/Mnetgen/mnetgen
+            COMMAND ${CMAKE_COMMAND} -E touch
+                    ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
             COMMENT "Running mnetgen"
             VERBATIM
@@ -36,7 +39,8 @@ elseif (WIN32)
             # using Git for Windows that includes Git Bash
             COMMAND "C:/Program Files/Git/bin/bash.exe"
             "${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch" "$<TARGET_FILE:mnetgen>"
-            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
+            COMMAND ${CMAKE_COMMAND} -E touch
+                    ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
             COMMENT "Running mnetgen"
             VERBATIM
@@ -133,7 +137,8 @@ smspp_require_labelled_modules()
 # Create a test fixture to generate files by running run_mnetgen.
 # This test will build and run the run_mnetgen target
 add_test(NAME run_mnetgen
-         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_mnetgen)
+         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                 --target run_mnetgen)
 # Mark run_mnetgen as a fixture that sets up "mnetgen_generated"
 set_tests_properties(run_mnetgen
                      PROPERTIES FIXTURES_SETUP mnetgen_generated)
@@ -180,10 +185,12 @@ if (TARGET SMS++::MMCFBlock AND
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches-ref/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME MMCF_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/MMCF_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/MMCF_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME MMCF_test/${BATCH_NAME}
@@ -210,7 +217,8 @@ if (TARGET SMS++::MMCFBlock)
     target_link_libraries(MMCFBlock_test PRIVATE SMS++::MMCFBlock)
 
     if (TARGET SMS++::LagrangianDualSolver)
-        target_link_libraries(MMCFBlock_test PRIVATE SMS++::LagrangianDualSolver)
+        target_link_libraries(MMCFBlock_test PRIVATE
+                              SMS++::LagrangianDualSolver)
     endif ()
 
     if (TARGET SMS++::BundleSolver)
@@ -255,10 +263,12 @@ if (TARGET SMS++::MMCFBlock)
                           ${ML_BATCH})
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME MMCFBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/MMCFBlock_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/MMCFBlock_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME MMCFBlock_test/${BATCH_NAME}

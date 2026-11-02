@@ -3,9 +3,8 @@
 #
 # A txt description of a BlockConfig for a SVMBlock asking its abstract
 # representation to encode the training problem itself, which only exists for
-# the
-# linear kernel, no other one having an explicit finite-dimensional feature
-# map
+# the linear kernel, no other one having an explicit finite-dimensional
+# feature map
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -20,32 +19,32 @@ BlockConfig # exact type of the Configuration object
 *  # [none]
 
 # static_constraints
-*    # [none]
+*  # [none]
 
 # dynamic_constraints
-*    # [none]
+*  # [none]
 
 # static_variables
 SimpleConfiguration<int>
-1    # 0 = Wolfe dual, 1 = the training problem itself
+1  # 0 = Wolfe dual, 1 = the training problem itself
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
-*    # [none]
+*  # [none]
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END SVMCfg-primal.txt - - - - - - - - - - - - -
