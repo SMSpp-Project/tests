@@ -567,16 +567,12 @@ int main( int argc , char ** argv )
    delete c;
    return( 1 );
    }
-  // a BlockSolverConfig with a Solver that this build has not (e.g.,
-  // BDMinQuadSolver, an optional module) is left out, and said
-  bool there = true;
-  for( const auto & name :
-       static_cast< BlockSolverConfig * >( bsc )->get_SolverNames() )
-   if( ! Solver::has_Solver( name ) ) {
-    cout << name << " is not in this build, left out" << endl;
-    there = false;
-    }
-  if( ! there )
+  // the Solver that this build has not (e.g., BDMinQuadSolver, an
+  // optional module) are taken out, and a BlockSolverConfig left with none
+  // is left out
+  auto cfg = static_cast< BlockSolverConfig * >( bsc );
+  drop_missing_Solvers( cfg , sconf_file , true );
+  if( ! cfg->num_ComputeConfig() )
    continue;
   auto mpb = build( bsc );
   if( mpb->get_registered_solvers().empty() ) {

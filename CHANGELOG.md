@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `MasterProblemBlock`: a `BlockSolverConfig` of `MPBSolvers.txt` whose
   `Solver` is not in the build (e.g., `BDMinQuadSolver`, an optional
-  module) is left out, and said, instead of aborting every case of `batch`
-  when it is applied
+  module) is left out, with the warning of the other batteries, instead of
+  aborting every case of `batch` when it is applied: the tester uses
+  `drop_missing_Solvers()` of `common_utils`, now public, whose `none_ok`
+  leaves a configuration with no `Solver` to the caller rather than exiting
 
 ## [0.8.0] - 2026-11-03
 

@@ -307,20 +307,10 @@ std::vector< NamedSolver > named_solvers;
 }  // end( anonymous namespace )
 
 /*--------------------------------------------------------------------------*/
-/* Takes out of a BlockSolverConfig the Solver that this build does not have.
- * A configuration names every Solver that makes sense on the instances of a
- * battery, so that a run solves with all of them and compares; but which
- * Solver are there depends on the modules the build has and on the external
- * libraries each of them has found, and asking the factory for one that is
- * not there throws [see Solver::new_Solver()], which would kill the whole
- * run rather than that one comparison. What is left out is said, name by
- * name, so that the log of a run tells what it has actually solved with; it
- * is returned, last first, with its index in the configuration. */
 
-using Dropped = std::vector< std::pair< Block::Index , std::string > >;
-
-static Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
-				     const std::string & fn )
+Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
+			      const std::string & fn ,
+			      bool none_ok )
 {
  Dropped dropped;
  if( ! bsc )
@@ -382,6 +372,8 @@ static Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
    * the one of a test that has nothing to do rather than of one that failed,
    * which is what the batteries and ctest read it as
    * [see SKIP_RETURN_CODE and run_test of batch_common.sh]. */
+  if( none_ok )
+   return( dropped );
   std::cerr << ANSI_YELLOW << "[SKIPPED] none of the " << asked
 	    << " Solver that " << fn << " names is in this build"
 	    << ANSI_RESET << std::endl;
