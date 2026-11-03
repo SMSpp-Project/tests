@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `MasterProblemBlock`: a tester of the `Solver` of a `MasterProblemBlock`
+  on synthetic master problems of a bundle method (components, short or
+  long cuts, vertical rows, lower bounds, level, box, linear part), which
+  compares those of `MPBSolvers.txt` with the first one while the master
+  problem is changed as a bundle method changes it; `batch` for the CI and
+  `batch-long`, on larger master problems, by hand
+
 - `SVMBlock`: `FWBSCfg.txt` registers the primal-dual bundle method also
   with a refused direction corrected and with a refused step not taken
   (`intFWOnReject` 1 and 2), next to the default, which asks the oracle

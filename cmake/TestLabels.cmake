@@ -30,6 +30,7 @@ set(SMSPP_TEST_LABELS_PolyhedralFunction
     "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunctionBlock
     "SMS++;BundleSolver;MILPSolver")
+set(SMSPP_TEST_LABELS_MasterProblemBlock        "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_QuadFunction              "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_ObjectiveWeight           "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")

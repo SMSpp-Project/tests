@@ -86,6 +86,11 @@ the `test` directory of the module itself.
   core library, plus `PolyhedralFunctionBlock_prune_test`, the unit test of
   the LP-based pruning of the rows.
 
+- [`MasterProblemBlock`](SMS++/MasterProblemBlock), a tester of the
+  `Solver` of a `MasterProblemBlock` (such as `GRBMILPSolver`,
+  `DAQPMILPSolver` and `BDMinQuadSolver`) against each other, on synthetic
+  master problems of a bundle method changed as the method changes them.
+
 ### The Solver
 
 - [`QuadFunction`](MILPSolver/QuadFunction), a tester which provides very
