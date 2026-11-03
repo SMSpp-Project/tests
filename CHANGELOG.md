@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `MasterProblemBlock`: a `BlockSolverConfig` of `MPBSolvers.txt` whose
+  `Solver` is not in the build (e.g., `BDMinQuadSolver`, an optional
+  module) is left out, and said, instead of aborting every case of `batch`
+  when it is applied
+
 ## [0.8.0] - 2026-11-03
 
 ### Added
