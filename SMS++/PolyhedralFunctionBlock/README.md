@@ -43,7 +43,7 @@ reference, and NDOBlock with each of its `Solver`, and the results
 (termination status and objective value, if applicable) of each of them are
 compared with the reference. A `Solver` whose `compute()` throws
 `std::invalid_argument`, i.e., that does not handle the problem (as
-`BDMinQuadSolver` does on a master with a linear part), is reported as
+`BDMinQuadSolver` does on a master with linear constraints), is reported as
 "n.a." and is not called again, the test failing only if one of the others
 disagrees with the reference.
 
@@ -77,12 +77,17 @@ The usage of the executable is the following:
        -V, --pvert <p>     probability that a generated row is vertical [0]
        -X, --detach <0|1>  if the Solver of NDOBlock is detached and
                            re-attached [0]
+       -S, --solvercfg <f> the BlockSolverConfig of NDOBlock [NDOPar.txt]
 
 A batch file is provided that runs a not-so-large buy yet comprehensive set
 of tests with different sizes and seeds of the random generator; all these
 passing is a good sign that no regressions have been done for the tested
 modules, and in particular for `PolyhedralFunction` and
-`PolyhedralFunctionBlock`.
+`PolyhedralFunctionBlock`. `batch-kelley` runs the same battery with the
+`BundleSolver` of `NDOPar-Kelley.txt`, i.e., the proximal one and the
+cutting-plane method of Kelley (no stabilization) with the primal and with
+the dual master problem, on the instances where the cutting-plane master
+does not become unbounded.
 
 `PolyhedralFunctionBlock_prune_test` is a unit test of
 `PolyhedralFunctionBlock::remove_redundant_rows()`: it builds a convex

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `PolyhedralFunctionBlock`: `batch-kelley` runs the battery with the
+  `BundleSolver` of `NDOPar-Kelley.txt`, the proximal one and the
+  cutting-plane method of Kelley with the primal and with the dual master
+  problem, on the instances where the cutting-plane master does not become
+  unbounded; the tester takes its `BlockSolverConfig` with -S (`NDOPar.txt`
+  if none is given), and `batch` passes it as `sconf`
+
 - `InvestmentBlock`: `batches-sddp/batch` also optimizes an
   `InvestmentBlock` over an `SDDPBlock` whose design is free and has a
   cost (`ib_sddp_invest.nc4` of `gen_sddp_initud.py`), and checks that the

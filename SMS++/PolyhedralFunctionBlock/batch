@@ -38,6 +38,8 @@
 #   - scales: list of scaling modes to sweep (default: "0 1 2 3"):
 #             0 = none, 1 = local row scaling, 2 = global epigraph scaling,
 #             3 = both. Bits 11 and 12 are ORed into $what accordingly.
+#   - sconf: the BlockSolverConfig of the NDOBlock, given to the tester with
+#            -S (default: none, i.e., NDOPar.txt) [see batch-kelley]
 #   - seeds: number of random seeds per configuration (default: 20)
 #
 # Note: very small sizes (e.g. size=2) and very low densities (e.g.
@@ -91,7 +93,7 @@ for dual in $duals; do
 
               "$PolyhedralFunctionBlock_test" -e $seed -k $scaled_what \
                   -N $size -d $dens -f $nf -n $cur_iter -m $nchg \
-                  -q $pchg -V $vert
+                  -q $pchg -V $vert ${sconf:+-S "$sconf"}
 
               retVal=$?
               cases=$(( cases + 1 ))

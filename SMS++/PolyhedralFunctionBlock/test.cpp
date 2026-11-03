@@ -14,12 +14,12 @@
  * has an appropriate LP Solver registered; also, UpdateSolver are registered
  * to all its sons (PolyhedralFunctionBlock) that maps all the Modification
  * to the corresponding son of the second. The latter is configured to use the
- * "natural" representation and has the NDO Solver of NDOPar.txt attached. At
- * each round a "linearized" PolyhedralFunctionBlock is randomly modified,
- * with the Modification automatically transmitted to the corresponding
- * "natural" PolyhedralFunctionBlock to keep them in synch. Then both are
- * solved, the second by each of its Solver, and the result of each is
- * compared with that of the LP.
+ * "natural" representation and has the NDO Solver of NDOPar.txt (or of the
+ * file of -S) attached. At each round a "linearized" PolyhedralFunctionBlock
+ * is randomly modified, with the Modification automatically transmitted to
+ * the corresponding "natural" PolyhedralFunctionBlock to keep them in synch.
+ * Then both are solved, the second by each of its Solver, and the result
+ * of each is compared with that of the LP.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -1838,16 +1838,17 @@ int main( int argc , char **argv )
   }
  
  // for NDOBlock do this by reading the appropriate BlockSolverConfig
- // from NDOPar.txt and apply() it to the NDOBlock. NDOPar.txt selects
- // the BundleSolver on the natural representation in both primal and
- // dual mode (cf. the cfg = 0 above), each of which is checked against
- // the LP.
- auto bsc = Configuration::deserialize( "NDOPar.txt" );
+ // from the file of -S, NDOPar.txt if there is none, and apply() it to the
+ // NDOBlock. The BlockSolverConfig selects the BundleSolver on the natural
+ // representation in both primal and dual mode (cf. the cfg = 0 above),
+ // each of which is checked against the LP.
+ const std::string ndo_file = sconf_file.empty() ? "NDOPar.txt" : sconf_file;
+ auto bsc = Configuration::deserialize( ndo_file );
  if( ! bsc ) {
-  cerr << "Error: cannot load BSC from NDOPar.txt" << endl;
+  cerr << "Error: cannot load BSC from " << ndo_file << endl;
   return( 1 );
   }
- s_config_Block( NDOBlock , bsc , "NDOPar.txt" );
+ s_config_Block( NDOBlock , bsc , ndo_file );
 
  // open log-file - - - - - - - - - - -  - - - - - - - - - - - - - - - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

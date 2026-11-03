@@ -57,7 +57,7 @@ add_test(NAME PolyhedralFunctionBlock_prune_test
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add a test for each batch file
-file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch")
+file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch*")
 foreach (BATCH_FILE ${BATCH_FILES})
     # Remove the source directory prefix to get the batch name
     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
