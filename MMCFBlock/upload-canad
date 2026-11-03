@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cd ../..
+bash upload-to-package-registry tests/MMCFBlock/gen/Canad.tgz

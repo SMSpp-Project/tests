@@ -1,0 +1,6 @@
+Instance,Method,Pick,Reduced_Obj,InSample_Gap_Abs,InSample_Gap_Pct,Impl_Cost,ImplErr_Abs,ImplErr_Pct,Reference,RefLabel
+network_smspp_model_base_s_2___2050__snap24__scen3,baseline,0,2.4848351e+09,1.1796413e+09,32.19,5.654175e+09,1.9896986e+09,54.30,3664476394,v*
+network_smspp_model_base_s_2___2050__snap24__scen3,dupacova,1,3.3180634e+09,3.46413e+08,9.45,3.8714961e+09,2.0701972e+08,5.65,3664476394,v*
+network_smspp_model_base_s_2___2050__snap24__scen3,bestfit,1,3.3180634e+09,3.46413e+08,9.45,3.8714961e+09,2.0701972e+08,5.65,3664476394,v*
+network_smspp_model_base_s_2___2050__snap24__scen3,firstfit,1,3.3180634e+09,3.46413e+08,9.45,3.8714961e+09,2.0701972e+08,5.65,3664476394,v*
+network_smspp_model_base_s_2___2050__snap24__scen3,cssc,2,3.7329434e+09,68467024,1.87,3.6784134e+09,13936977,0.38,3664476394,v*

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file >     = path of the executable file, default
+#                           ./SingleFlowDCRBlock_test
+#
+# sweeps SingleFlowDCRBlock_test over a range of network sizes, 5 seeds
+# each, and over three values of the "tightness" of the deadline: 1.05 is
+# just above the delay of the one path the instance is built around, so
+# that few routings are feasible and the delay constraint is what decides,
+# while at 4 the deadline is loose and the problem is essentially a
+# min-cost path
+#
+# each instance in both formulations, the formulations of DCRForm.txt: the SOCP
+# one, which is exact, and the "P/C" one, in which the two cone constraints
+# are only outer-approximated by the linear cuts that have been separated so
+# far, so that its :MILPSolver solves a relaxation of the DCR problem, which
+# the variant declares; the Solver of each are cross-checked, then those of
+# the two copies against each other
+#
+# the SingleFlowDCRBendersSolver stops on its own criterion and does not
+# declare how much of a gap it leaves, so "-E ,inf" holds it to the base
+# Solver contract alone, i.e. to the interval [ get_lb() , get_ub() ]
+# containing the optimum
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+exe=${1:-./SingleFlowDCRBlock_test}
+
+for n in 10 20 40; do
+
+  m=$(( 3 * n ))
+
+  for t in 1.05 1.5 4; do
+    for (( seed = 0 ; seed < 5 ; seed++ )); do
+
+      run_test "$exe" -F DCRForm.txt -E ,inf -n "$n" -m "$m" \
+               -t "$t" -e "$seed"
+
+    done # seed
+  done   # t
+
+done     # n
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

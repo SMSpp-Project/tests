@@ -1,0 +1,1149 @@
+/*--------------------------------------------------------------------------*/
+/*--------------------------- common_utils.h -------------------------------*/
+/*--------------------------------------------------------------------------*/
+/** @file
+ * Common utilities shared by the SMS++ test programs.
+ *
+ * Three groups of helpers:
+ *
+ * - output and parsing: the ostream manipulators def() and fixd(), the
+ *   string-to-T parser Str2Sthg(), the pretty-printer of Solver return codes
+ *   PrintResults(), the std::terminate handler smspp_terminate(),
+ *   load_Block_or_exit(), which reads a Block out of a text file, and
+ *   GenerateRand(), which draws a random subset of indices;
+ *
+ * - configuration: b_config_Block() and s_config_Block() apply a BlockConfig
+ *   or a BlockSolverConfig to a Block, dispatching to the nested sub-Block
+ *   when the Configuration is a meta-configuration (see there);
+ *
+ * - the cross-check: SolveAll() computes every Solver registered to a Block,
+ *   reads each one as the interval [ get_lb() , get_ub() ] that, by the base
+ *   Solver contract, contains the optimum, and checks each of them against
+ *   the best bounds the whole set provides (a reference objective value,
+ *   when known, being one more Solver): correctness always, and the quality
+ *   it declares when it says it delivered it. See cross_check() for the
+ *   criterion and @ref solver_eps for where that declaration comes from.
+ *   The result is one uniform log line per instance, printed by
+ *   print_instance_line(). Tests that need their own solve loop call
+ *   cross_check() and print_instance_line() directly, so verdict and log
+ *   format are implemented once anyway.
+ *
+ * \author Antonio Frangioni \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
+ *
+ * \author Donato Meoli \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
+ *
+ * \copyright &copy; by Antonio Frangioni, Donato Meoli
+ */
+/*--------------------------------------------------------------------------*/
+
+#ifndef __TESTS_COMMON_UTILS
+#define __TESTS_COMMON_UTILS
+
+/*--------------------------------------------------------------------------*/
+/*------------------------------ MACROS ------------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+#ifndef USECOLORS
+ #define USECOLORS 1
+#endif
+#if( USECOLORS )
+ #define RED( x ) "\x1B[31m" #x "\033[0m"
+ #define GREEN( x ) "\x1B[32m" #x "\033[0m"
+ #define YELLOW( x ) "\x1B[33m" #x "\033[0m"
+ // raw on/off codes, for colouring runtime (non-literal) messages
+ #define ANSI_RED    "\x1B[31m"
+ #define ANSI_YELLOW "\x1B[33m"
+ #define ANSI_RESET  "\033[0m"
+#else
+ #define RED( x ) #x
+ #define GREEN( x ) #x
+ #define YELLOW( x ) #x
+ #define ANSI_RED    ""
+ #define ANSI_YELLOW ""
+ #define ANSI_RESET  ""
+#endif
+
+/*--------------------------------------------------------------------------*/
+/*----------------------------- INCLUDES -----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+#include <getopt.h>
+#include <filesystem>
+
+#include <cmath>
+#include <cstddef>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <limits>
+#include <random>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <AbstractBlock.h>
+#include <Block.h>
+#include <BlockSolverConfig.h>
+#include <ColVariable.h>
+#include <PolyhedralFunction.h>
+#include <Solution.h>
+
+/*--------------------------------------------------------------------------*/
+/*-------------------------------- USING -----------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+using namespace SMSpp_di_unipi_it;
+
+/*--------------------------------------------------------------------------*/
+/*------------------------------- GLOBALS ----------------------------------*/
+/*--------------------------------------------------------------------------*/
+/** @name Global variables shared across SMS++ tests that opt into the
+ *        getopt-style command line. Tests that parse argv positionally can
+ *        ignore them entirely. */
+/// @{
+
+/// test description; set by the test before calling docopt()
+extern std::string docopt_desc;
+
+extern std::string exe;             ///< name of the executable file
+extern std::string filename;        ///< input filename (last positional argv)
+extern std::string bconf_file;      ///< BlockConfig filename (-B)
+extern std::string sconf_file;      ///< BlockSolverConfig filename (-S)
+extern std::string fconf_file;      ///< list of BlockConfig formulations (-F)
+extern std::string block_prefix;    ///< prefix for all Block filenames (-p)
+/// prefix for all Configuration filenames (-c)
+extern std::string conf_prefix;
+
+extern bool sol_verbose;            ///< if the Solver should be verbose
+/// if compute() need not really be called (-D)
+extern bool dryrun;
+
+/// verbosity level (0 = silent, >0 = verbose output, -v)
+extern int verbosity_level;
+
+/// reference objective for the ref-vs-Solver comparison; defaults to NaN
+/** Tests set this directly (positional argv or test-specific option); the
+ *  default getopt baseline does not parse it because individual tests use
+ *  different conventions for the option letter. */
+extern double RefObjective;
+
+/// the optimality tolerances declared by -E, NaN where none was declared
+/** The gap that each Solver is allowed to leave, positionally with respect
+ *  to the registration order (= the Solver order in the BlockSolverConfig),
+ *  with the empty field meaning "not declared here":
+ *
+ *      -E ,,5e-2
+ *
+ *  A single value applies to every Solver, and eps = inf declares nothing
+ *  beyond the base contract, i.e. only that [ get_lb() , get_ub() ] contains
+ *  the optimum, which is also what a Solver returning kLowPrecision is held
+ *  to whatever its tolerance. -E is only needed where the accuracy a Solver
+ *  was asked for is not what it can be held to, which is the case of the
+ *  heuristics; see eps_of(). */
+extern std::vector< double > solver_eps;
+
+/*--------------------------------------------------------------------------*/
+/// which Solver solve a relaxation of the problem rather than the problem
+/** Positional on the order of the BlockSolverConfig, exactly like
+ *  @ref solver_eps, and filled by -R. A relaxation is a Solver of a
+ *  different problem: it is required to solve that one exactly, hence to
+ *  bound its optimum on both sides within its own tolerance, but of the
+ *  optimum of this problem only one of its two bounds says anything [see
+ *  SolverReading::Valid]. Being a relaxation is a property of the
+ *  configuration, not of the class: a LagrangianDualSolver whose sub-Block
+ *  are solved as continuous relaxations is one thing, and the same Solver
+ *  over integer sub-Block is another. */
+
+extern std::vector< bool > solver_relaxation;
+
+/*--------------------------------------------------------------------------*/
+/// whether -R declared Solver @p k to be solving a relaxation
+
+bool is_relaxation( std::size_t k );
+
+/*--------------------------------------------------------------------------*/
+/// declare that @p option of a tester names the Solver in position @p k
+/** Positional on the order of the BlockSolverConfig, exactly like
+ *  @ref solver_eps, e.g. the heuristic that -w of the stochastic testers
+ *  reads by its upper bound: the Solver that this build does not have are
+ *  taken out of it as they are of -E and -R [see s_config_Block()]. What is
+ *  returned is the handle that named_Solver() takes. */
+
+std::size_t name_Solver( const std::string & option , std::size_t k );
+
+/// where the Solver named by @p h is now
+/** Its position among the Solver registered to the Block, which is the one
+ *  given less those that are not in this build before it, or
+ *  std::string::npos if the Solver itself is not in this build, in which case
+ *  the tester has to go on as without the option. */
+
+std::size_t named_Solver( std::size_t h );
+
+/// the status the last SolveAll() got from Solver @p k
+/** What compute() returned to the last SolveAll() for its Solver @p k, or
+ *  Solver::kUnEval if it has not solved it. */
+
+int last_status( std::size_t k );
+
+/// the optimality tolerance of Solver @p k
+/** What -E declares for @p k if it declares anything, else the accuracy
+ *  Solver @p s was asked for, i.e. its dblRelAcc, which is the number that
+ *  counts for a Solver that delivers what it is asked. @p dflt is returned
+ *  when there is neither: pass no Solver and infinity for a reading that
+ *  claims nothing unless -E says otherwise, such as the one-sided bound of
+ *  a heuristic, whose dblRelAcc drives its stopping condition and says
+ *  nothing about the quality of the solution it returns. */
+
+double eps_of( std::size_t k , Solver * s = nullptr ,
+               double dflt = std::numeric_limits< double >::quiet_NaN() );
+
+/*--------------------------------------------------------------------------*/
+/// default short command-line options string used by process_standard_arg()
+/** Tests that need extra options override this (and long_opts / help) in
+ *  their main() before calling process_args(), then handle the
+ *  test-specific switches in their own dispatcher. */
+extern std::string short_opts;
+
+/// default long command-line options vector
+
+extern std::vector< option > long_opts;
+
+/// default help text printed by docopt()
+
+extern std::string help;
+
+/*--------------------------------------------------------------------------*/
+/// drop a standard short option, so that a test can redefine it
+/** Erases @p opt from @ref short_opts, together with the ':' or '::' that
+ *  says which argument it takes. A test redefining one of the standard
+ *  letters with a different argument, a flag where the standard one takes a
+ *  value say, has to call this before appending its own: getopt_long()
+ *  honours the FIRST occurrence of a letter in the string, so appending
+ *  alone would leave the standard reading in force. Redefining a letter
+ *  that takes the same kind of argument needs nothing, process_args()
+ *  already gives the test's own dispatcher the first say. */
+
+void override_short_opt( char opt );
+
+/// @}
+/*--------------------------------------------------------------------------*/
+/*------------------------------ FUNCTIONS ---------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+/// set precision for long floats (7 digits) in scientific notation
+
+inline std::ostream & def( std::ostream & os )
+{
+ os.setf( std::ios::scientific , std::ios::floatfield );
+ os << std::setprecision( 7 );
+ return( os );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// set precision for short floats (4 digits) in fixed notation
+
+inline std::ostream & fixd( std::ostream & os )
+{
+ os.setf( std::ios::fixed , std::ios::floatfield );
+ os << std::setprecision( 4 );
+ return( os );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// parse a C-string into a value of type T via std::istringstream
+
+template< class T >
+inline void Str2Sthg( const char * const str , T & sthg )
+{
+ std::istringstream( str ) >> sthg;
+ }
+
+/*--------------------------------------------------------------------------*/
+/// a random subset of @p k distinct indices out of 0 ... @p m - 1
+/** Shuffles 0 ... @p m - 1 with @p rg and keeps the first @p k elements,
+ *  sorted in increasing order if @p ord is true (the default) and in the
+ *  order the shuffle left them otherwise. The draws from @p rg are those of
+ *  one std::shuffle() of @p m elements whatever @p k and @p ord are, so a
+ *  tester consumes the generator in the same way whichever of the two orders
+ *  it asks for. A @p k larger than @p m is an error of the caller, reported
+ *  on std::cerr before exiting with status 1. */
+
+Block::Subset GenerateRand( Block::Index m , Block::Index k ,
+                            std::mt19937 & rg , bool ord = true );
+
+/*--------------------------------------------------------------------------*/
+/// pretty-print a Solver result (objective value or
+/// kInfeasible/kUnbounded/error)
+/** @param hs   has-solution flag (the caller has decoded the Solver return
+ *              code)
+ *  @param rtrn the raw Solver return code (used only when @p hs is false)
+ *  @param fo   the objective value (used only when @p hs is true)
+ *
+ *  Uses the def manipulator for the numeric output so the same format is
+ *  shared by every test program. */
+
+void PrintResults( bool hs , int rtrn , double fo );
+
+/*--------------------------------------------------------------------------*/
+/// std::terminate handler that prints the active exception and aborts
+/** Install with std::set_terminate( smspp_terminate ); at the top of
+ *  main(). */
+
+void smspp_terminate( void );
+
+/*--------------------------------------------------------------------------*/
+/// load a Block out of a text file, or stop with a clear message
+/** Block::load( std::string ) writes on std::cerr and returns when the file
+ *  cannot be opened, leaving the Block empty, so what the test meets is not
+ *  the missing file but whatever the empty instance breaks first: on a
+ *  CapacitatedFacilityLocationBlock, for one, an exception saying that the
+ *  number of facilities is too small, which reaches std::terminate() and
+ *  dumps core. This opens the file itself, exits with 1 citing @p fn if it
+ *  is not there, and otherwise hands the stream to load(), which being the
+ *  virtual one also spares the caller the Block:: qualification that the
+ *  load() overloads of the derived class would otherwise hide. */
+
+void load_Block_or_exit( Block * block , const std::string & fn ,
+                         char frmt = 0 );
+
+/*--------------------------------------------------------------------------*/
+/// the first of the named :Solver that this build has, "" if it has none
+/** Returns the name of the first :Solver of @p names that the factory holds,
+ *  and the empty string when it holds none of them. Which :Solver are there
+ *  depends on the modules the build has and on the external libraries each of
+ *  them has found, and asking the factory for one that is not there throws
+ *  [see Solver::new_Solver()], which kills the run: whoever needs a :Solver
+ *  of a family, any of them, picks it through this. When none is there the
+ *  names looked for and what @p what the run gives up are said on std::cerr,
+ *  so that a build without them reports what it is not checking rather than
+ *  passing in silence. */
+
+std::string first_Solver_of( const std::vector< std::string > & names ,
+                             const std::string & what );
+
+/*--------------------------------------------------------------------------*/
+/// apply a (meta-)BlockConfig to a Block
+/** If @p b_config is a plain BlockConfig, apply() a clone() of it to
+ *  @p block, since apply() moves the Configuration it holds into the Block:
+ *  @p b_config is left whole, and it can be applied again.
+ *
+ *  If it is a
+ *
+ *    SimpleConfiguration< std::map< std::string , Configuration * > >
+ *
+ *  scan @p block and every nested sub-Block (BFS, including @p block itself),
+ *  and for every Block whose classname() matches a key in the map apply()
+ *  a clone() of the corresponding BlockConfig.
+ *
+ *  Anything else: print an error citing @p fn and exit(1). */
+
+void b_config_Block( Block * block , Configuration * b_config ,
+                     const std::string & fn );
+
+/*--------------------------------------------------------------------------*/
+/// read the list of the (meta-)BlockConfig a battery tries on one instance
+/** A battery that compares formulations reads the instance once per
+ *  formulation and gives each copy its own (meta-)BlockConfig, which
+ *  b_config_Block() applies; the formulations are the elements of a
+ *
+ *    SimpleConfiguration< std::vector< Configuration * > >
+ *
+ *  in file @p fn, each of them a BlockConfig or a meta one, typically the
+ *  "*file" of one that the battery already has, or else a
+ *
+ *    SimpleConfiguration< std::pair< Configuration * , Configuration * > >
+ *
+ *  whose first element is that (meta-)BlockConfig and whose second is the
+ *  (meta-)BlockSolverConfig of that formulation, for the formulations that are
+ *  solved by Solver of their own [see solver_config_of()], or else a
+ *
+ *    SimpleConfiguration< std::vector< Configuration * > >
+ *
+ *  of the same two and of a third, a SimpleConfiguration< std::vector< int
+ *  > > saying which of the Solver of that formulation solve a relaxation of
+ *  the problem (1) and which do not (0), in their order, i.e., the -R of that
+ *  formulation alone [see attach_formulation_Solvers()]. The list is the
+ *  business of the battery and not of the Block: a BlockConfig applies to one
+ *  Block, and what a battery wants is the same Block several times, each time
+ *  configured differently and solved by the same Solver, so that two
+ *  formulations that do not give the same optimum are seen.
+ *
+ *  The elements of the list are called formulations even where they are
+ *  not formulations in the strict sense, e.g., the structures of a SAT
+ *  instance or the R3Block of a CapacitatedFacilityLocationBlock with
+ *  their own BlockSolverConfig: each of them, together with its Solver, is
+ *  a way of writing and solving the same problem, which is all that the
+ *  comparison needs.
+ *
+ *  Returns the list, which the caller deletes once the copies have been
+ *  configured; a file that cannot be read, that holds anything else, or
+ *  whose list is empty or has an empty element, is an error citing @p fn,
+ *  and the run stops with exit(1). */
+
+SimpleConfiguration< std::vector< Configuration * > > *
+ read_formulations( const std::string & fn );
+
+/*--------------------------------------------------------------------------*/
+/// apply a (meta-)BlockSolverConfig to a Block, optionally clear() for cleanup
+/** Mirror of b_config_Block() for BlockSolverConfig. The differences are:
+ *
+ *  - no clone() is required since BlockSolverConfig::apply() does not transfer
+ *    ownership;
+ *
+ *  - after apply(), every BlockSolverConfig is clear()-ed (or, in the
+ *    meta-mode, every value of the map is clear()-ed) so the same object can
+ *    be re-applied at the end of main() to unregister the Solver and free
+ *    the resources. Pass @p clear_after = false to skip this clear() when
+ *    the same BlockSolverConfig is applied multiple times (e.g., re-attach
+ *    in a test loop) and a single deferred clear() is done by the caller.
+ *
+ *  @p fn defaults to the empty string so the same call can be reused at
+ *  cleanup time without a filename to cite in error messages. */
+
+void s_config_Block( Block * block , Configuration * s_config ,
+                     const std::string & fn = "" ,
+                     bool clear_after = true );
+
+/*--------------------------------------------------------------------------*/
+/// which Solver getter to use when extracting the objective value
+/** Different Solver families "return" their result through different methods:
+ *  MILPSolver-like Solver expose the optimum via get_var_value();
+ *  LagrangianDualSolver computes a lower bound on a minimization problem;
+ *  PrimalProximalHeuristic computes an upper bound. The enum lets the
+ *  comparison helpers be parametric over this choice. */
+
+enum class ObjGetter {
+ VarValue ,    ///< Solver::get_var_value()
+ LowerBound ,  ///< Solver::get_lb()
+ UpperBound    ///< Solver::get_ub()
+ };
+
+/*--------------------------------------------------------------------------*/
+/// extract the objective value from a Solver using the chosen getter
+/** Not const-correct on the Solver pointer because SMS++ Solver::get_lb() /
+ *  get_ub() / get_var_value() are not marked const. */
+
+double get_obj_value( Solver * slvr , ObjGetter g );
+
+/*--------------------------------------------------------------------------*/
+/// format an objective value the canonical way (scientific, 7 digits)
+
+std::string fmt_obj( double v );
+
+/*--------------------------------------------------------------------------*/
+/// how a single Solver's result enters the per-instance cross-check
+/** The interval [ lb , ub ] that the Solver claims contains the optimum,
+ *  plus the gap eps it is allowed to leave.
+ *
+ *  Both bounds are valid by the base Solver contract, so they are compared
+ *  against those of the other Solver at face value. eps is instead a claim
+ *  about the quality of the answer, and it is what a heuristic returning
+ *  ( -inf , ub ], or a relaxation returning [ lb , +inf ), is held to: how
+ *  close its one bound has to come to the best opposite bound anybody
+ *  proved, see cross_check(). eps = inf claims nothing, eps = NaN means
+ *  "the tolerance the cross-check is called with". */
+
+struct SolverReading {
+ /// which end of the interval is a bound on the optimum of THIS problem
+ /** A Solver that solves the problem it is attached to bounds its optimum on
+  * both sides, which is #kBoth. A Solver that solves a relaxation of it
+  * bounds the optimum of the relaxation, and only the end of the interval
+  * the relaxation is on says anything about this problem: #kLower for a
+  * minimization problem, whose relaxations bound it from below, #kUpper for
+  * a maximization one. The other end is still read, but as what it is, the
+  * bound of the relaxed problem on itself. */
+
+ enum Valid { kBoth = 0 , kLower = 1 , kUpper = 2 };
+
+ double lb  = - std::numeric_limits< double >::infinity();  ///< z* >= lb
+ double ub  =   std::numeric_limits< double >::infinity();  ///< z* <= ub
+ double eps =   std::numeric_limits< double >::quiet_NaN(); ///< allowed gap
+ Valid valid = kBoth;                            ///< which end bounds z*
+
+ /// an optimum @p v claimed up to @p e
+ static SolverReading exact( double v ,
+                             double e =
+                              std::numeric_limits< double >::quiet_NaN() )
+ { return( SolverReading{ v , v , e } ); }
+
+ /// a lower bound on z*, tight up to @p e (by default, no claim at all)
+ static SolverReading lower_bound( double v , double e = s_inf() )
+ { return( SolverReading{ v , s_inf() , e } ); }
+
+ /// an upper bound on z*, tight up to @p e (by default, no claim at all)
+ static SolverReading upper_bound( double v , double e = s_inf() )
+ { return( SolverReading{ - s_inf() , v , e } ); }
+
+ /// the value the Solver reports, i.e. its finite bound (lb first)
+
+ double claimed( void ) const
+ { return( std::isfinite( lb ) ? lb : ub ); }
+
+ private:
+
+ static constexpr double s_inf( void )
+ { return( std::numeric_limits< double >::infinity() ); }
+ };
+
+/*--------------------------------------------------------------------------*/
+/// classify+read a Solver: maps (Solver*, index) to a SolverReading
+/** Called by SolveAll() once per feasible Solver, after it has compute()d, to
+ *  decide how to read and cross-check its result. The default is
+ *  read_bounds(), which needs no knowledge of the Solver; tests with needs
+ *  (a value that only get_var_value() exposes, or extra per-Solver
+ *  bookkeeping) wrap it or pass their own. */
+
+using SolverClassifier =
+ std::function< SolverReading ( Solver * , std::size_t ) >;
+
+/*--------------------------------------------------------------------------*/
+/// default reading of Solver @p k: its [ get_lb() , get_ub() ] and its -E eps
+/** No Solver type or name is ever inspected: a Solver that closes the gap
+ *  gives a point, a pure relaxation gives [ lb , +inf ), a pure heuristic
+ *  gives ( -inf , ub ], and a Solver that found nothing gives the whole line.
+ *  How tight each one is held to be is not deduced here but declared by
+ *  @ref solver_eps, because exactness is a property of the configuration and
+ *  of the instance, not of the class: a LagrangianDualSolver is exact only
+ *  when the relaxation it solves happens to be tight. */
+
+SolverReading read_bounds( Solver * s , std::size_t k );
+
+/*--------------------------------------------------------------------------*/
+/// classifier reading every Solver via @p g as a claimed optimum
+/** For the Solver that publish their result only through get_var_value(),
+ *  which the [ get_lb() , get_ub() ] interval of read_bounds() would not
+ *  see. The -E tolerance of each Solver still applies. */
+
+SolverClassifier exact_getter( ObjGetter g = ObjGetter::VarValue );
+
+/*--------------------------------------------------------------------------*/
+/** @name Building a father Block out of the copies of a leaf one
+ *
+ * What a test of a decomposition needs before it can decompose anything: a
+ * father Block whose sub-Block are the copies of a leaf Block read from a
+ * file, and an Objective over their Variable that couples them. Nothing of
+ * this is of one Solver rather than another, the father being the same
+ * object whichever :Solver is then asked to solve it.
+ * @{ */
+
+/// a random number in [ -1 , 1 ] drawn from @p rg
+
+inline double rnd( std::mt19937 & rg )
+{ std::uniform_real_distribution<> d( 0.0 , 1.0 ); return( 2 * d( rg ) - 1 ); }
+
+/// a random number in [ 0 , 1 ) drawn from @p rg
+
+inline double pos( std::mt19937 & rg )
+{ std::uniform_real_distribution<> d( 0.0 , 1.0 ); return( d( rg ) ); }
+
+/*--------------------------------------------------------------------------*/
+/// the ColVariable of @p b the father Objective is built over
+/** Collects into @p vars the named static-variable groups of @p b, or, given
+ *  no name, the Variable active in the Objective of @p b.
+ *
+ *  Which Variable the father Objective couples is a choice of the instance:
+ *  for a Block whose objective spans every variable (e.g. MCFBlock)
+ *  collecting from the objective takes them all, while for a Block whose
+ *  formulation carries auxiliary objective variables (e.g. ThermalUnitBlock)
+ *  the named groups pick the "physical" ones, which is what a decomposition
+ *  of that unit is about. */
+
+void collect_vars( Block * b , const std::vector< std::string > & groups ,
+                   std::vector< ColVariable * > & vars );
+
+/*--------------------------------------------------------------------------*/
+/// a father AbstractBlock with @p k copies of the Block in @p filename
+/** Reads the Block in @p filename @p k times, makes the copies the sub-Block
+ *  of a father AbstractBlock, applies the BlockConfig @p bconf to each of
+ *  them if one is named, and collects the Variable of the father Objective
+ *  into @p vars [see collect_vars()]. The father is returned with no
+ *  Objective, which make_father_objective() is there to build. */
+
+AbstractBlock * build_father( const std::string & filename , int k ,
+                              const std::string & bconf ,
+                              const std::vector< std::string > & groups ,
+                              std::vector< ColVariable * > & vars );
+
+/*--------------------------------------------------------------------------*/
+/// random data ( A , b ) of a convex PolyhedralFunction, max_r ( A_r x + b_r )
+
+void generate_poly( Block::Index nv , int poly_rows , double scale ,
+                    std::mt19937 & rg ,
+                    PolyhedralFunction::MultiVector & A ,
+                    PolyhedralFunction::RealVector & b );
+
+/*--------------------------------------------------------------------------*/
+/// a random Function over @p vars, to be the Objective of a father Block
+/** With @p obj_type 0 a DQuadFunction, 1 a QuadFunction and 2 a convex
+ *  PolyhedralFunction; @p scale multiplies the coefficients and @p poly_rows
+ *  is how many rows the third one has (its default being one more than the
+ *  Variable). The quadratic ones are built positive definite, by giving the
+ *  diagonal what Gershgorin asks for. */
+
+Function * make_father_objective( std::vector< ColVariable * > & vars ,
+                                  int obj_type , double scale ,
+                                  int poly_rows , std::mt19937 & rg );
+
+/** @} ---------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------------*/
+/// make every Solver of @p b log at the verbosity the command line asks for
+/** If the tester was asked to be verbose (the standard `-v` option, which
+ *  sets verbosity_level), every Solver registered to @p b is made to log to
+ *  std::cout at that verbosity via the standard Solver::intLogVerb parameter.
+ *  This overrides, from the command line, the per-Solver value read from the
+ *  ComputeConfig (default 0), `-v` being an explicit request of whoever runs
+ *  the test. */
+
+void apply_solver_verbosity( Block * b );
+
+/*--------------------------------------------------------------------------*/
+/// print the uniform per-instance log
+/** Reports what each Solver returned, on a line of its own:
+ *
+ *      <name of the Solver>  = <tok>   <t> s
+ *      ...
+ *      Ref                   = <r>     (|diff| = <d>)
+ *      -> <verdict>
+ *
+ *  The names come from @p names, which is what each Solver answers to
+ *  classname(); given none, the Solver are numbered S0, S1, ... and the whole
+ *  report is one line, which is what a test keeping its own solve loop over a
+ *  couple of Solver wants. The names being as long as they are, and what
+ *  makes a failure visible being the disagreement between two values, the
+ *  values are aligned one under the other.
+ *
+ *  @p times and @p value_tokens must have the same length (one entry per
+ *  Solver), and so must @p names when it is given; a Ref is printed only if
+ *  @p ref is not NaN, and the "(|diff| = ...)" detail only if @p diff is also
+ *  not NaN. Used both by SolveAll() and by the tests that keep their own
+ *  solve loop, so that every test prints the same thing.
+ *
+ *  With @p always == false the report is only printed when verbose (the -v
+ *  option or the `verbose` environment variable) or on a KO verdict: this is
+ *  what the tests that re-solve in a loop of modification rounds use, so
+ *  their default output stays terse. SolveAll() passes true instead, so the
+ *  one cross-check per instance is always visible. */
+
+void print_instance_line( const std::vector< double > & times ,
+                          const std::vector< std::string > & value_tokens ,
+                          double ref ,
+                          const std::string & verdict ,
+                          double diff =
+                           std::numeric_limits< double >::quiet_NaN() ,
+                          bool always = false ,
+                          const std::vector< std::string > & names = {} );
+
+/*--------------------------------------------------------------------------*/
+/// format a SolverReading as a value token ("v" or "[ lb , ub ]")
+/** The bounds are printed as the Solver returned them, the tolerance it
+ *  declares playing no part here. */
+
+std::string reading_token( const SolverReading & r );
+
+/*--------------------------------------------------------------------------*/
+/// cross-check per-Solver readings against each other and an optional
+/// reference
+/** Pure verdict logic shared by SolveAll() and by tests that run their own
+ *  solve loop (so the cross-check is implemented once). For each Solver k:
+ *  @p has_solution[k] says whether it found a solution, @p status[k] is its
+ *  return code (for infeasible/unbounded parity), and @p rd[k] is its reading
+ *  (consulted only when has_solution[k]).
+ *
+ *  Feasibility must be unanimous: with no @p ref, a single Solver passes iff
+ *  it found a solution, all-infeasible passes as OK(e) and all-unbounded as
+ *  OK(u); any mix (or any errored Solver) is KO.
+ *
+ *  All feasible is the agreement check between Solver. The optimum is not
+ *  known, so what each of them is measured against is the best knowledge the
+ *  whole set provides, i.e. \f$ LB^* \f$ the largest of the lower bounds and
+ *  \f$ UB^* \f$ the smallest of the upper bounds, @p ref being one more
+ *  Solver returning \f$[ ref , ref ]\f$. Every Solver owes correctness, i.e.
+ *  that its bounds do not contradict the others,
+ *
+ *  \f[
+ *   ub_k \geq LB^* \;\; , \;\; lb_k \leq UB^*
+ *  \f]
+ *
+ *  up to @p tol, which is the numerical noise floor. A Solver that returns
+ *  kOK, i.e. that says it delivered what it was asked, also owes quality,
+ *  each of its bounds being within its declared \f$\varepsilon_k\f$ of the
+ *  best opposite one,
+ *
+ *  \f[
+ *   ub_k - LB^* \leq \varepsilon_k s \;\; , \;\;
+ *   UB^* - lb_k \leq \varepsilon_k s \;\; , \;\;
+ *   s = \max( 1 , | \cdot | )
+ *  \f]
+ *
+ *  where \f$\varepsilon_k\f$ is never taken smaller than @p tol, below
+ *  which the comparison would only measure the noise of the cross-check
+ *  itself. This is what holds a heuristic to the quality, and a relaxation
+ *  to the gap, that it claims: an exact Solver returns \f$[ v , v ]\f$ and
+ *  both reduce to agreeing with everybody else on the optimum. A Solver that
+ *  returns kLowPrecision, or that stopped on any other condition, promised
+ *  nothing and owes nothing beyond correctness, exactly as one whose
+ *  \f$\varepsilon_k\f$ is infinite. Infinite bounds are not compared,
+ *  there being nothing to compare.
+ *
+ *  @p verdict_out receives the token ("OK(f)"/"OK(e)"/"OK(u)"/"OK"/"KO",
+ *  where OK(f) means at least one reading pinned the optimum from both
+ *  sides); @p diff_out receives |z* - ref| when both are defined (z* being
+ *  the value of the first such reading), else NaN. */
+
+bool cross_check( const std::vector< SolverReading > & rd ,
+                  const std::vector< bool > & has_solution ,
+                  const std::vector< int > & status ,
+                  double ref , double tol ,
+                  std::string & verdict_out , double & diff_out );
+
+/*--------------------------------------------------------------------------*/
+/// print the parameters of the Solvers, if -v 2 or -v 3 is given
+/** Prints what print_parameters() says of the Solvers, i.e., the value each
+ *  parameter has been actually given, after the BlockSolverConfig, along
+ *  with its default. With verbosity_level == 2 these are only the Solvers
+ *  registered to @p block (for a Solver that wraps another one, as
+ *  LagrangianDualSolver does, the parameters of the wrapped one are shown
+ *  too, since they are in its index space); with verbosity_level >= 3 they
+ *  are those registered to any of its sub-Blocks as well, recursively. The
+ *  Solvers of the same class registered to Blocks of the same class and with
+ *  the very same parameters, as those of the many sub-Blocks of a
+ *  decomposition typically are, are printed once, with their number. It is
+ *  the same printout as that of -v 2 and -v 3 in the tools. A no-op when
+ *  verbosity_level < 2. */
+
+void print_solver_parameters( Block * block );
+
+/*--------------------------------------------------------------------------*/
+/// what SolveAll() read of each Solver, for a comparison across Block
+/** One entry per Solver, in the order of the comparison: its reading, if it
+ *  has a solution, its status, its time, the token printed for it and its
+ *  name. SolveAll() fills it if given one, and SolveFormulations() compares
+ *  the records of the copies of a Block with each other. */
+
+struct SolveRecord {
+ std::vector< SolverReading > rd;      ///< the reading of each Solver
+ std::vector< bool > hs;               ///< whether it has a solution
+ std::vector< int > status;            ///< what compute() returned
+ std::vector< double > times;          ///< how long it took
+ std::vector< std::string > tok;       ///< the token printed for it
+ std::vector< std::string > names;     ///< its classname()
+ };
+
+/*--------------------------------------------------------------------------*/
+/// run EVERY Solver registered on @p block and cross-check the results
+/** For each instance it computes every Solver (timing each), maps each
+ *  result to a SolverReading via @p classify, hands the readings to
+ *  cross_check() (see its comment for the agreement criterion), prints the
+ *  uniform per-instance line via print_instance_line() showing ALL the
+ *  Solver values (and @p ref, if given), and returns the pass/fail verdict.
+ *
+ *  @p tol is the numerical tolerance of the comparisons, i.e. how much of a
+ *  difference is attributed to floating-point noise rather than to a
+ *  disagreement; how much of a gap each Solver may leave is instead declared
+ *  per Solver by -E (@ref solver_eps).
+ *
+ *  Out-params, if non-null, are populated from the FIRST Solver (value,
+ *  has-solution flag, elapsed time, elapsed iterations).
+ *
+ *  If @p bsc is given, the Solver that are run are those that @p bsc has
+ *  registered to @p block [see BlockSolverConfig::get_Solvers()], in that
+ *  order, rather than ALL the Solver registered to the Block: this keeps
+ *  the cross-check to the Solver the test itself attached even when
+ *  somebody else (say, an enumerative Solver under test) has registered
+ *  further Solver of its own to the same Block.
+ *
+ *  If @p start is given, it is written into @p block before each Solver
+ *  computes, so that a Solver that starts from the values of the Variable
+ *  it finds in the Block starts from the same point whatever ran before it,
+ *  and the comparison does not depend on the order of the Solver. Without
+ *  it, each Solver finds what the previous one has left. */
+
+bool SolveAll( Block * block ,
+               const SolverClassifier & classify ,
+               double ref = std::numeric_limits< double >::quiet_NaN() ,
+               double tol = 1e-5 ,
+               double * out_fo1 = nullptr ,
+               bool   * out_hs1 = nullptr ,
+               double * out_time1 = nullptr ,
+               long   * out_it1 = nullptr ,
+               BlockSolverConfig * bsc = nullptr ,
+               Solution * start = nullptr ,
+               SolveRecord * record = nullptr );
+
+/*--------------------------------------------------------------------------*/
+/// SolveAll() reading every Solver with read_bounds(), the usual case
+/** The optional @p bsc restricts the run to the Solver it registered [see
+ *  the main SolveAll()]. */
+
+bool SolveAll( Block * block ,
+               double ref = std::numeric_limits< double >::quiet_NaN() ,
+               double tol = 1e-5 ,
+               double * out_fo1 = nullptr ,
+               bool   * out_hs1 = nullptr ,
+               double * out_time1 = nullptr ,
+               long   * out_it1 = nullptr ,
+               BlockSolverConfig * bsc = nullptr );
+
+/*--------------------------------------------------------------------------*/
+/// SolveAll() of each copy of a Block, then the copies against each other
+/** @p blocks are copies of the same Block, each configured by one formulation
+ *  of its (meta-)BlockConfig [see read_formulations()] and with its Solver
+ *  attached, @p names what the formulations are called in the report. Each
+ *  copy is solved by SolveAll() as if it were alone, with its line headed by
+ *  "formulation <name>:", and then the readings of all the Solver of all the
+ *  copies go through one cross_check(), since they are bounds on the same
+ *  optimum whatever the formulation: a formulation that solves another problem
+ *  makes the exact Solver of its copy contradict those of the others. That
+ *  joint check is printed as one more block, each Solver named "<formulation>
+ *  <classname>", and the result is the conjunction of all.
+ *
+ *  With one copy this is SolveAll() and nothing else, so that a tester given
+ *  one BlockConfig prints what it always printed. @p bscs, if not empty,
+ *  gives the BlockSolverConfig of each copy, which restricts its comparison
+ *  to the Solver that it registered [see SolveAll()]; @p relax, if not empty,
+ *  gives for each copy which of its Solver solve a relaxation, in place of
+ *  -R [see attach_formulation_Solvers()]; @p classify, @p ref and @p tol are
+ *  those of SolveAll(). */
+
+bool SolveFormulations( const std::vector< Block * > & blocks ,
+                        const std::vector< std::string > & names ,
+                        const SolverClassifier & classify ,
+                        double ref =
+                         std::numeric_limits< double >::quiet_NaN() ,
+                        double tol = 1e-5 ,
+                        const std::vector< BlockSolverConfig * > & bscs = {} ,
+                        const std::vector< std::vector< bool > > &
+                         relax = {} );
+
+/*--------------------------------------------------------------------------*/
+/// the options of the rounds of random changes of a tester
+/** The testers that change their Block at random and re-solve it share five
+ *  options: -e the seed of the random generator, -k what is changed (a
+ *  bit-wise code whose meaning is the tester's), -n the number of rounds,
+ *  -m the number of changes and -q the probability of a change. A tester
+ *  binds its names to the fields of round_opts, sets its defaults there,
+ *  calls add_round_options() before process_args() and
+ *  process_round_option() first in its own handler of the options. */
+
+struct RoundOptions {
+ long int seed = 0;            ///< seed of the random generator (-e)
+ Block::Index wchg = 0;        ///< what is changed, bit-wise (-k)
+ Block::Index n_repeat = 40;   ///< number of rounds (-n)
+ Block::Index n_change = 10;   ///< number of changes (-m)
+ double p_change = 0.5;        ///< probability of a change (-q)
+ };
+
+extern RoundOptions round_opts;  ///< the options of the rounds of changes
+
+/// adds -e, -k, -n, -m and -q, the help of -k being @p wchg_help
+void add_round_options( const std::string & wchg_help );
+
+/// handles one of -e, -k, -n, -m and -q, false if @p opt is none of them
+bool process_round_option( int opt );
+
+/*--------------------------------------------------------------------------*/
+/// the main of a tester that loads a Block out of a file and cross-checks
+/// its Solver
+/** The Block is a new @p classname, or the one -b names if @p any_class,
+ *  loaded out of the instance file [see Block::load()] once per formulation of
+ *  its BlockConfig [see get_formulations()], each copy with the
+ *  Solver of its BlockSolverConfig, and the Solver are compared with
+ *  SolveFormulations() within the tolerance @p tol, and with the reference
+ *  objective value of -r. A run whose BlockSolverConfig names no Solver of
+ *  this build has nothing to do and returns 77. @p desc is the description
+ *  of the tester in its help. Returns the exit code of the tester. */
+
+int load_solve_test( int argc , char ** argv , const std::string & desc ,
+                     const std::string & classname , bool any_class = false ,
+                     double tol = 1e-6 );
+
+/*--------------------------------------------------------------------------*/
+/// the (meta-)BlockConfig of a run: the list of -F, or the one of -B
+/** A tester that compares formulations gets its formulations from -F, a file
+ *  read by read_formulations(), and a tester run with -B gets the
+ *  single BlockConfig of that file as a list of one; exactly one of the two
+ *  must be given, otherwise the run stops with exit(1), unless @p optional,
+ *  in which case a run given neither has one formulation with no BlockConfig
+ *  (a nullptr), the Block being left as it is read. The formulations are
+ *  named F0, F1, ... in the order of the list; with -B the one formulation is
+ *  named after the file. A formulation that is a pair also carries its own
+ *  (meta-)BlockSolverConfig, nullptr otherwise. The caller deletes the
+ *  returned owner once the copies are configured and their Solver
+ *  attached. */
+
+struct Formulations {
+ Configuration * owner = nullptr;          ///< what holds them, to delete
+ std::vector< Configuration * > configs;   ///< the (meta-)BlockConfig
+ std::vector< Configuration * > solvers;   ///< their BlockSolverConfig
+ std::vector< std::vector< int > > relax;  ///< their -R, empty if none
+ std::vector< std::string > names;         ///< what each is called
+ std::string file;                         ///< the file they come from
+ };
+
+Formulations get_formulations( bool optional = false );
+
+/*--------------------------------------------------------------------------*/
+/// the (meta-)BlockSolverConfig of the formulation @p k of @p v
+/** A clone() of the one of its pair, if the formulation is one, else the one
+ *  of -S read anew, so that each copy has its own to apply(), clear() and keep
+ *  for the cleanup; the caller deletes it. A formulation with no
+ *  BlockSolverConfig of its own and no -S stops the run with exit(1). */
+
+Configuration * solver_config_of( const Formulations & v ,
+                                  std::size_t k );
+
+/*--------------------------------------------------------------------------*/
+/// s_config_Block() of the BlockSolverConfig @p bsc of the formulation @p k
+/** Applies @p bsc to @p block as s_config_Block() does (@p clear_after is
+ *  its), and returns which of the Solver it attached solve a relaxation:
+ *  those that the formulation says, if it says anything, else those of -R, in
+ *  either case without the Solver that this build does not have [see
+ *  s_config_Block()]. What is returned is what SolveFormulations() wants for
+ *  that copy; -R itself is left as it was, while -E is filtered anew out of
+ *  what was given and left as it is for this copy. */
+
+std::vector< bool > attach_formulation_Solvers( Block * block ,
+                                                Configuration * bsc ,
+                                                const Formulations & v ,
+                                                std::size_t k ,
+                                                bool clear_after = true );
+
+/*--------------------------------------------------------------------------*/
+/// SolveAll() of the one or two Solver registered to @p block
+/** The Solver are read via @p g1 and @p g2 rather than as the interval of
+ *  their bounds, which is what the tests whose Solver only publish a value
+ *  need. With @p one_sided_le false (the default) both readings claim an
+ *  optimum and must agree; with it true the first is only a lower bound and
+ *  the second only an upper bound, so the verdict becomes LB <= UB, and each
+ *  of the two is held to what -E declares for it, if anything.
+ *
+ *  Out-params, if non-null, are populated from the first Solver: value,
+ *  has-solution flag, elapsed time, elapsed iterations. */
+
+bool SolveBoth( Block * block ,
+                ObjGetter g1 = ObjGetter::LowerBound ,
+                ObjGetter g2 = ObjGetter::LowerBound ,
+                bool one_sided_le = false ,
+                double tol = 1e-5 ,
+                double * out_fo1 = nullptr ,
+                bool   * out_hs1 = nullptr ,
+                double * out_time1 = nullptr ,
+                long   * out_it1 = nullptr );
+
+/*--------------------------------------------------------------------------*/
+/// value of the Objective of @p block and of all its inner Block
+/** Recomputes every Objective of the tree on the current value of the
+ *  Variable and sums them, each multiplied by the product of the weights
+ *  [see Block::set_objective_weight()] along the path from @p block, whose
+ *  own weight is excluded, i.e., what the tree is worth right now. */
+
+double tree_objective_value( Block * block );
+
+/*--------------------------------------------------------------------------*/
+/// check that the solution of each Solver is worth what the Solver says
+/** For every Solver registered to @p block that has one, has the primal
+ *  solution written in the Variable [see Solver::get_var_solution()] and
+ *  checks that tree_objective_value(), recomputed on it, gives back the
+ *  value the Solver reports [see Solver::get_var_value()], to the relative
+ *  tolerance @p tol. A Solver that has no primal solution is skipped, and
+ *  so is one whose reported value is not finite, there being nothing to
+ *  compare the solution with.
+ *
+ *  This is where a solution that is RECONSTRUCTED rather than found gets
+ *  looked at: a LagrangianDualSolver writes the Variable from the convex
+ *  combination that the important linearization of each LagBFunction
+ *  describes, and neither the cross-check nor anything else ever reads that
+ *  number, so a combination that is wrong, or missing, is invisible without
+ *  this. Note that the reconstructed solution is worth the value of the
+ *  relaxation only inasmuch as the residual is zero, which is what the
+ *  stopping parameters of the inner Solver are asked to deliver: hence the
+ *  tolerance here is that of a solution recovered from a converged dual,
+ *  not that of the cross-check. */
+
+bool check_var_solutions( Block * block , double tol = 1e-6 );
+
+/*--------------------------------------------------------------------------*/
+/// largest violation of the Constraint that @p block itself holds
+/** Computes every FRowConstraint of @p block, the static and the dynamic
+ *  ones, and returns the largest relative violation among them. The inner
+ *  Block are NOT visited: what is measured is only what the Block couples,
+ *  which for a Lagrangian relaxation is exactly the set of rows that have
+ *  been dualised. Constraint of other kinds are skipped, the linking rows
+ *  being FRowConstraint wherever this is used. */
+
+double own_rows_violation( Block * block );
+
+/*--------------------------------------------------------------------------*/
+/// check the solution a relaxation Solver reconstructs against the relaxed
+/// rows
+/** For every Solver of @p block that is_relaxation() says solves a relaxation
+ *  and that has a primal solution, writes it in the Variable and checks it
+ *  against the rows @p block itself holds, i.e. the ones the relaxation has
+ *  dualised, with own_rows_violation() and the relative tolerance @p tol.
+ *
+ *  check_var_solutions() cannot say anything about these Solver, the value
+ *  they report being that of the relaxation and not of what they write [see
+ *  there], so their reconstructed solution goes unread: a convex combination
+ *  taken with the wrong multipliers, or not taken at all, is invisible. It
+ *  is not invisible here, because at convergence the residual is zero and
+ *  hence the combination satisfies the dualised rows, while a wrong one
+ *  does not. Note that nothing is claimed about the rows of the inner Block:
+ *  the combination is a point of the convex hull of each of them, and for an
+ *  integer sub-problem it is not a point of the sub-problem at all.
+ *
+ *  The residual is zero only in the sense the stopping condition gives to
+ *  "zero", i.e. up to the threshold of dblNZEps, and the violation of the
+ *  dualised rows is of that order: the default tolerance is therefore a
+ *  loose multiple of the thresholds the batteries use, and what it catches
+ *  is a combination that is wrong, not one that is imprecise. */
+
+bool check_relaxation_solutions( Block * block , double tol = 1e-1 ,
+                                 double ref = std::numeric_limits< double
+                                                             >::quiet_NaN() ,
+                                 double ref_tol = 1e-5 );
+
+/*--------------------------------------------------------------------------*/
+/// print "fo ~ Ref = ref (|diff| = ..., OK/KO)" and return whether OK
+/** Tolerance: |fo - ref| ≤ rel_tol × max(1, |fo|, |ref|).
+ *  @p time1 and @p iters are pre-pended for output symmetry with SolveBoth. */
+
+bool CheckRefValue( double fo , double ref ,
+                    double rel_tol = 1e-5 ,
+                    double time1 = 0.0 , long iters = 0 );
+
+/*--------------------------------------------------------------------------*/
+/// run the (only) Solver of @p block and compare obj against @p ref
+/** Bundle solve + ref-check into one call for the single-Solver case. */
+
+bool SolveAndCheckRef( Block * block , double ref ,
+                       ObjGetter g = ObjGetter::LowerBound ,
+                       double rel_tol = 1e-5 );
+
+/*--------------------------------------------------------------------------*/
+/*------------------------ CLI baseline (opt-in) ---------------------------*/
+/*--------------------------------------------------------------------------*/
+/** Helpers to give tests a getopt-style command line with a small shared
+ *  baseline (-h help, -B BlockConfig, -S SolverConfig, -p Block prefix,
+ *  -c Config prefix, -D dryrun, -v verbose). Tests that need extra options
+ *  override @ref short_opts / @ref long_opts / @ref help and handle the
+ *  extra switches via their own dispatcher (calling process_standard_arg()
+ *  to deal with the baseline first). */
+
+/// normalize a directory prefix in a portable way (adds trailing separator)
+
+inline std::string normalize_prefix( const std::string & prefix )
+{
+ if( prefix.empty() )
+  return( prefix );
+
+ std::filesystem::path p( prefix );
+ p = p.lexically_normal();
+
+ auto s = p.string();
+ if( s.empty() )
+  return( s );
+
+ if( ( s.back() != '/' ) && ( s.back() != '\\' ) )
+  s += std::filesystem::path::preferred_separator;
+
+ return( s );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// resolve @p name against @p prefix in a portable way
+/** If @p name is absolute, returns it normalized; otherwise prepends @p
+ *  prefix (if non-empty) and normalizes. Used to apply the --prefix
+ *  (block_prefix) and --configdir (conf_prefix) options. */
+
+inline std::string resolve_with_prefix( const std::string & prefix ,
+                                        const std::string & name )
+{
+ if( name.empty() )
+  return( name );
+
+ std::filesystem::path p( name );
+ if( p.is_absolute() )
+  return( p.lexically_normal().string() );
+
+ if( prefix.empty() )
+  return( p.lexically_normal().string() );
+
+ return( ( std::filesystem::path( prefix ) / p ).lexically_normal().string() );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// extract the file basename from a (possibly empty) full path
+
+inline std::string get_filename( const std::string & fullpath )
+{
+ if( fullpath.empty() )
+  return( fullpath );
+ return( std::filesystem::path( fullpath ).filename().string() );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// open an SMS++ nc4 file, return its file type (eProbFile or eBlockFile)
+
+int read_open_netCDF( netCDF::NcFile & f , std::string fn );
+
+/*--------------------------------------------------------------------------*/
+/// print the test description and the standard usage to stdout
+
+void docopt( void );
+
+/*--------------------------------------------------------------------------*/
+/// processes one of the default command-line arguments
+/** Returns true if @p opt was recognised as a standard option, false if it
+ *  was unknown (so the caller can dispatch it as a test-specific option or
+ *  emit a usage error). Tests that extend short_opts/long_opts should call
+ *  process_standard_arg() first and handle the test-specific switches in
+ *  their own dispatcher.  */
+
+bool process_standard_arg( int opt );
+
+/*--------------------------------------------------------------------------*/
+/// processes all command-line arguments via getopt_long()
+/** Drives the parsing loop, sets @p filename from the last positional arg,
+ *  and exits 1 with a usage hint on error. */
+
+void process_args( int argc , char ** argv );
+
+/*--------------------------------------------------------------------------*/
+/// processes all command-line arguments, with test-specific options
+/** Same as the two-argument overload, but @p custom_arg is called first for
+ *  each option so that a test can handle its OWN command-line options (the
+ *  ones it appends to short_opts / long_opts) on top of the standard ones
+ *  (the instance positional and -B / -S / -c / -p / -D / -v, handled
+ *  centrally by process_standard_arg()). This is the exact same machinery
+ *  the tools use: the standard parameters live here, every test only adds
+ *  its specific ones. @p custom_arg returns true if it consumed the option.
+ *
+ *  If @p filename_optional is true (set by a test that generates its own
+ *  instance rather than reading one, e.g. the seed-driven testers) a
+ *  missing positional instance is not an error. */
+
+void process_args( int argc , char ** argv , bool ( *custom_arg )( int opt ) );
+
+/*--------------------------------------------------------------------------*/
+/// true if the instance positional argument is optional (generator tests)
+extern bool filename_optional;
+
+/*--------------------------------------------------------------------------*/
+/// require that a BlockSolverConfig was provided (-S); throw otherwise
+void require_solver_config( void );
+
+/// require that a BlockConfig was provided (-B); throw otherwise
+void require_block_config( void );
+
+/*--------------------------------------------------------------------------*/
+
+#endif  /* __TESTS_COMMON_UTILS */
+
+/*--------------------------------------------------------------------------*/
+/*-------------------------- End common_utils.h ----------------------------*/
+/*--------------------------------------------------------------------------*/

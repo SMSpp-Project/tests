@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - IFCfg.txt - - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the InvestmentFunction of the ad hoc form of test_bds,
+# which the OBlockConfig of the InvestmentBlock gives to its Objective [see
+# IBOCfg.txt]: its extra Configuration holds the BlockSolverConfig of the
+# inner Block [see InvBSCfg.txt].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# pointer to the "extra" Configuration: the BlockSolverConfig of the inner
+# Block of the InvestmentFunction
+
+# pointer to the "extra" Configuration
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+1  # the number of elements in the map
+
+BlockSolverConfig  *InvBSCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END IFCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

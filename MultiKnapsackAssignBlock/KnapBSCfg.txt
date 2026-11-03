@@ -1,0 +1,29 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - KnapBSCfg.txt - - - - - - - - - - - - - - - -
+#
+# BlockSolverConfig of a BinaryKnapsackBlock, the sub-Block of a
+# MultiKnapsackAssignBlock for a pair of a knapsack and a class, solved by
+# the CoreDPBinaryKnapsackSolver with its default parameters. Its first item
+# has a negative weight (minus the capacity of the knapsack), which the
+# Solver complements.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+CoreDPBinaryKnapsackSolver  # name of 1st Solver
+
+0  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  END KnapBSCfg.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

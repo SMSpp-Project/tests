@@ -1,0 +1,36 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - LPPar_I.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a Block containing the QP
+# reprsentation of the problem solved by the tester of the quadratic
+# functions; this being a QP (with no sub-Block), a :MILPSolver (say, a
+# CPXMILPSolver , SCIPMILPSolver, GRBMILPSolver or a HiGHSMILPSolver) is
+# perfectly adequate.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver # name of 1st Solver
+#GRBMILPSolver  # name of 1st Solver
+SCIPMILPSolver # name of 1st Solver
+#HiGHSMILPSolver # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*SCIPCfg-I.txt
+
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END LPPar_I.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

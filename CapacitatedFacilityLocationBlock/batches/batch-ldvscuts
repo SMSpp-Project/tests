@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# usage: batch-ldvscuts < exe file > < log file >
+#        < exe file > = path of the executable file, default ./CFL_test
+#        < log file > = name of the log file, default no log (stdout)
+#
+# Lagrangian-dual vs cuts arrangement: same knapsack Lagrangian-dual R3Block
+# as batch-ld, configured to be contrasted with the user-cuts setting; runs
+# the small ORLib instances.
+#
+# NOTE: this batch is deliberately NOT on the ctest pipeline (see CMakeLists).
+# It compares two genuinely *different* valid lower bounds:
+#   B1 = cut-strengthened LP bound  (demand kept exact; CFLB separates the
+#        per-facility strong forcing x_ij <= y_i, and the :MILPSolver adds
+#        generic / cross-facility cuts on top);
+#   B2 = integer-knapsack Lagrangian dual (demand relaxed, decomposed per
+#        facility -> only the per-facility knapsack closure is reachable).
+# Their difference is NOT sign-definite, so the default 1e-5 equality cannot
+# hold on every instance (it is not a bug, and no solver / leaf / bundle-tuning
+# config removes it: B2 is identical with the DP and the :MILPSolver integer
+# leaves and immune to bundle tuning). Out of 136 (instance,seed,wchg in
+# {1,257}) runs, 131 agree to ~1e-9; the 5 that exceed 1e-5 (max relative gap
+# over 40 rounds):
+#   wchg=257:  cap64/seed0 1.83e-4   cap42/seed0 6.70e-4   cap51/seed0 1.906e-3
+#              (max)
+#   wchg=1  :  cap44/seed0 3.87e-4   cap62/seed1 6.84e-4
+# To run it anyway as a loose-tolerance sanity check, uncomment the run_test
+# line below that passes cmptol=2e-3 (just above the 1.906e-3 max) and comment
+# out the default one.
+# The figures above are those of CPLEX; the :MILPSolver is now GUROBI
+# [see CFLBSCfg-ldvscuts.txt], whose cuts at the root node are not those of
+# CPLEX, and the gap is larger: on the 68 runs of this batch only 4 pass at
+# 1e-5 and 14 at 2e-3, the largest relative gap being 7.6e-2.
+
+# the common part, which reads the arguments [see cfl_battery.sh]
+source "$(dirname "$0")/cfl_battery.sh" "$@"
+
+# the original Block and its R3Block, each with its configuration
+forms=CFLBForm-ldvscuts.txt
+
+# wchg = 257 = change facility costs (bit 0) and the abstract representation
+# (+256)
+wchg=257
+maxseed=1
+
+# ad-hoc relative tolerance that absorbs the legitimate LD-vs-cuts bound
+# difference documented above (just above the 1.906e-3 max); only used by the
+# commented-out run_test variant below
+cmptol=2e-3
+
+# ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+cfl_orlib "${cfl_orlib_small[@]}"
+
+# ... or, with the ad-hoc tolerance, each run also given -m 10 -q 0.5 -T
+# "$cmptol" (#chng %chng cmptol): replace the call above with
+#   for f in "${cfl_orlib_small[@]}"; do
+#     cfl_run "${DATADIR}/txt/ORLib/cap${f}.txt" c -m 10 -q 0.5 -T "$cmptol"
+#   done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

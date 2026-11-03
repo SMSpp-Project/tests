@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# usage: batch-s < exe file > < log file >
+#        < exe file > = path of the executable file, default ./CFL_test
+#        < log file > = name of the log file, default no log (stdout)
+#
+# default arrangement (B1 = natural-formulation LP, B2 = MCF flow relaxation),
+# reduced to small instances only, so that solving them to integer optimality
+# is an option (required, e.g., to test changing the problem type)
+
+# the common part, which reads the arguments [see cfl_battery.sh]
+source "$(dirname "$0")/cfl_battery.sh" "$@"
+
+# the original Block and its R3Block, each with its configuration
+forms=CFLBForm.txt
+
+# wchg = 831 = all data changes + abstract representation (+256) + the +512
+# ("set eps & no negative design") bit, always required with a MCF R3Block
+wchg=831
+maxseed=1
+
+# ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+cfl_orlib "${cfl_orlib_small[@]}"
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

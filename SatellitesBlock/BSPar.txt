@@ -1,0 +1,40 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+#
+# BlockSolverConfig for a ConstellationBlock, a DiscreteConstellationBlock
+# or a MultiTargetBlock, registering the two Solver to be cross-checked:
+#
+#   - :MILPSolver            the abstract representation of the whole tree
+#                            (MILPCfg.txt)
+#   - LagrangianDualSolver   the constraints linking the sub-Block relaxed,
+#                            the Lagrangian dual solved by a BundleSolver
+#                            (LDCfg.txt)
+#
+# The problem being an integer one, the Lagrangian dual is a relaxation of it
+# and the batteries declare it so (-R ,r).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GRBMILPSolver         # name of 1st Solver
+#CPXMILPSolver        #   (uncomment the available backend)
+#SCIPMILPSolver
+#HiGHSMILPSolver
+LagrangianDualSolver  # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*MILPCfg.txt          # ComputeConfig of the :MILPSolver
+*LDCfg.txt            # ComputeConfig of the LagrangianDualSolver
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

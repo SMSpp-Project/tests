@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# usage: batch-bds < exe file > < log file >
+#        < exe file > = path of the executable file, default ./SVM_test
+#        < log file > = output log file (no log if absent)
+#
+# the other way of splitting the same sum: the training problem written the
+# Benders way, i.e., with the model and the regularisation term left in the
+# master and each chunk holding only the slacks of its own samples, attacked
+# by BendersDecompositionSolver. The configuration registers three Solver on
+# the one Block, a :MILPSolver on the abstract representation of the whole
+# thing, the ad hoc SMOSolver on the physical one, which knows nothing of the
+# split, and the Benders one, so that what is checked at every run is that
+# the three agree on the optimal value of the training problem
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./SVM_test
+DEFAULT_PAR=BSPar-BDS.txt
+parse_batch_args "$@"
+
+# with one chunk there is nothing to decompose, hence the sweep starts at two
+if [ -n "$CI" ]; then slist="2 3"; else slist="2 3 5 10"; fi
+
+for s in ${slist}; do
+
+  # wf: the linear (0) or the quadratic (+1) penalty of the training errors,
+  # and the bias free (0) or regularised (+2); the subproblems of the Benders
+  # form are linear programs in the first case and quadratic ones in the
+  # second, so both are worth sweeping
+  for wf in 0 1 2 3; do
+
+    run_test "$exe" -b -S BSPar-BDS.txt -f "$wf" -s "$s" \
+             -N 60 -M 4 -C 0.1 -K 0
+
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file > < log file >
+#        < exe file > = path of the executable file, default ./CFL_test
+#        < log file > = name of the log file, default no log (stdout)
+#
+# default arrangement: B1 is the natural-formulation LP, B2 is the MCF flow
+# relaxation; runs a largish set of ORLib, Yang and TBED instances and checks
+# that the two lower bounds coincide along a sequence of random modifications
+
+# the common part, which reads the arguments [see cfl_battery.sh]
+source "$(dirname "$0")/cfl_battery.sh" "$@"
+
+# the original Block and its R3Block, each with its configuration
+forms=CFLBForm.txt
+
+# wchg = 831 = all data changes + abstract representation (+256) + the +512
+# ("set eps & no negative design") bit, always required with a MCF R3Block
+wchg=831
+maxseed=2
+
+# ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+cfl_orlib
+
+# Yang and TBED: the 40 rounds take from 1 to 6 seconds on a Yang instance
+# and some 15 on a TBED one, so CI runs the first instance of each Yang size
+# and the first TBED one with seed 0 only (some 30 seconds), and a local run
+# all of them with all the seeds (some 7 minutes)
+if [ -n "$CI" ]; then
+  maxseed=0
+  yang=1
+  tbed=1
+else
+  yang=
+  tbed="1 6 11 16 19"
+fi
+
+# Yang - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+cfl_yang $yang
+
+# TBED - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+cfl_tbed $tbed
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,82 @@
+##############################################################################
+################################ makefile ####################################
+##############################################################################
+#                                                                            #
+#   makefile of test (for MMCFBlock)                                         #
+#                                                                            #
+#                              Antonio Frangioni                             #
+#                          Dipartimento di Informatica                       #
+#                              Universita' di Pisa                           #
+#                                                                            #
+##############################################################################
+
+# module name
+NAME = MMCF_test
+
+# basic directory
+DIR = .
+
+# common stuff
+include ../makefile_common
+
+# define & include the necessary modules- - - - - - - - - - - - - - - - - - -
+# if a module is not used in the current configuration, just comment out the
+# corresponding include line
+# each module outputs some macros to be used here:
+# *OBJ is the final object(s) / library
+# *LIB is the external libraries + -L< libdirs >
+# *H   is the list of all include files
+# *INC is the -I< include directories >
+
+# OPT*** stuff
+#OPTUxH = $(libMMCFSDR)OPTUtils/OPTUtils.h $(libMMCFSDR)OPTUtils/OPTtypes.h \
+#	 $(libMMCFSDR)OPTUtils/OPTvect.h
+#OPTUxINC = -I$(libMMCFSDR)OPTUtils
+
+# core SMS++
+SMS++SDR = ../../SMS++
+include $(SMS++SDR)/lib/makefile-inc
+
+# MILPSolver
+MILPSSDR = ../../MILPSolver
+include $(MILPSSDR)/makefile-s
+
+# MMCFBlock
+MMCFSDR = ../../MMCFBlock
+include $(MMCFSDR)/makefile-s
+
+# MMCFClass
+libMMCFSDR = $(DIR)/MMCFClass
+include $(libMMCFSDR)/lib/makefile-c
+
+# main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
+
+# object files
+MOBJ =  $(MMCFOBJ) $(MILPSOBJ) $(libMMCFOBJ) $(SMS++OBJ)
+
+# libraries
+MLIB =  $(SMS++LIB) $(MILPSLIB) $(MMCFLIB) $(libMMCFLIB)
+
+# MMCF_test needs CPLEX, its reference solver being MMCFCplex, as with CMake
+ifneq ($(MMXOBJ),)
+$(DIR)/$(NAME): $(MOBJ) $(DIR)/test_reference.o
+	$(CC) -o $(DIR)/$(NAME) $(DIR)/test_reference.o $(MOBJ) $(MLIB) $(SW)
+else
+$(DIR)/$(NAME):
+	@echo "$(NAME) not built: it needs CPLEX [see MMCFClass/MMCFCplex]"
+endif
+
+# dependencies: every .o from its .cpp + every recursively included .h- - - -
+
+# include directives
+MINC =  $(libMMCFINC) $(SMS++INC) $(MILPSINC) $(MMCFINC) $(OPTUxINC)
+
+# includes
+MH =    $(SMS++H) $(MILPSH) $(MMCFH) $(libMMCFH) $(OPTUxH)
+
+# compile command
+
+$(DIR)/test_reference.o: $(DIR)/test_reference.cpp $(MH)
+	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)
+
+############################ End of makefile #################################

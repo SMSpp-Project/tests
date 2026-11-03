@@ -1,0 +1,24 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - SubBSPar.txt  - - - - - - - - - - - - - - - -
+#
+# The meta-BlockSolverConfig of the sub-Block of the Lagrangian
+# decomposition [see str_LagBF_BSCfg in LDCfg.txt]: a map classname -->
+# BlockSolverConfig, which LagrangianDualSolver dispatches over the inner
+# Block of its LagBFunction.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockSolverConfig, i.e., a map classname --> its
+# BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+3  # the number of elements in the map
+
+SatelliteBlock          *MILPBSCfg.txt
+DiscreteSatelliteBlock  *SatBSCfg-discrete.txt
+SingleTargetBlock       *MILPBSCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END SubBSPar.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

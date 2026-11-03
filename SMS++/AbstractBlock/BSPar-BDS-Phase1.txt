@@ -1,0 +1,35 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  BSPar-BDS-Phase1.txt - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a Block having a single
+# BendersDecompositionSolver attached, in the MILP regime, with an infeasible
+# subproblem cut away by the cut of a phase one, i.e., of the problem that
+# minimizes the total violation of the coupling Constraint: the multipliers
+# are then bounded by the unit costs of the slacks, which is the
+# normalization that decides which of the many cuts the infeasibility offers
+# is taken.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+0  # the BlockSolverConfig is not a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+BendersDecompositionSolver # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*BDSCfg-Phase1.txt
+
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END BSPar-BDS-Phase1.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

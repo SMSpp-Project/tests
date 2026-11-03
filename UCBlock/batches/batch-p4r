@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+#
+# usage: batch-p4r < exe file > < par file > < log file >
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#        < exe file > = path of the executable file, default UCBlock_test
+#
+# runs all the plan4res public instances, with the same configuration:
+#
+#   FirstSetofInstances   single-node thermal and hydrothermal UCBlocks
+#   SecondSetofInstances  richer UCBlocks (hydro systems with polyhedral inflow
+#                         values, intermittent units, batteries, up to several
+#                         nodes and over a thousand units; the four reserve-
+#                         bearing ones L_B_C_26 / L_B_C_31 / L_B_C_32 /
+#                         L_H_C_34 also feed the 1UC_TUB single-unit instances
+#                         used by the ThermalUnitBlock_Solver test)
+#   pHydro                single-node thermal fleet coupled to a cascade of
+#                         HydroUnitBlocks placed directly under the UCBlock
+#
+# for LagrangianDualSolver + BundleSolver:
+# correct value of tStar: 1e-2
+# correct value of dblCtOff: 0.1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar-DP.txt
+# the Lagrangian Dual of these instances is solved over sub-Block that the
+# dynamic programming Solver solves exactly [see BSPar-DP.txt], which is what
+# the PrimalProximalHeur needs and what makes its inner Solver converge
+# the LagrangianDualSolver here solves a relaxation of the problem, and with
+# the sub-problems solved exactly the bound it gives is the Lagrangian one,
+# which has a duality gap: it is declared as such, so that it is held to
+# solving its own problem exactly while of this one it only bounds the side
+# a relaxation bounds [see BSPar-DP.txt]
+REL="${REL:-,r,,r}"
+# the LagrangianDualRelaxationSolver of the BlockSolverConfig (the 4th
+# Solver) is a relaxation: its upper bound is the other side of the
+# relaxation, not of this problem, so it is declared one in REL, and only
+# its lower bound is held, to correctness alone [see BSPar-DP.txt]
+EPS4=",,,inf"   # the default of the instances not in EPS below
+
+parse_batch_args "$@"
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+DATADIR=../../UCBlock/data/nc4/plan4res-data
+
+# what the interval of a relaxation is worth, per instance - - - - - - - - -
+# The Lagrangian dual of an instance whose thermal units carry a commitment
+# has an integrality gap, and on the one below the bundle stops with its own
+# interval 6e-5 wide while reporting kOK, i.e. while claiming the 1e-6 of its
+# dblRelAcc [see LDCfg-DP.txt]. The -E of that Solver says what its interval
+# is actually worth, the cross-check holding it to that and not to what the
+# Solver promised.
+
+declare -A EPS
+
+EPS[L_B_C_24.nc4]=,1e-4,,inf
+
+# the same on the nuclear L_B_N_1, where the bundle stops with an interval
+# 2.5e-3 wide (2.7478877e+07 to 2.7547156e+07) while reporting kOK: it
+# declares the residual null under its dblNZEps of 1e-2 [see BSPar-DP.txt],
+# and a smaller one would leave the bound unpublished
+EPS[L_B_N_1.nc4]=,3e-3,,inf
+
+# how much the solution the LagrangianDualSolver reconstructs may violate the
+# rows it dualises, per instance [see -V of UCBlock_test, 0.1 by default].
+# On L_H_C_35 the bundle stops with the residual z*, which is the violation
+# of the dualised rows by the convex combination, of 2-norm 0.27, its largest
+# entry being 0.157 MW; it stops by the test on || z* ||_2 against dblNZEps
+# (1e-2) times the norm of the first full subgradient [intWZNorm = 10, see
+# LDCfg-DP.txt and LDCfg-DPe.txt], which on the nodal balances of 18 nodes
+# with demands from 5e+3 to 1.5e+5 MW is orders of magnitude larger. The
+# violated rows are the node injection rows, whose right-hand side is 0 (the
+# demand being on the side of the network), so that their relative violation
+# is the absolute one: 0.157 MW is 3e-5 of the smallest nodal demand. The
+# reconstruction is what the convergence of the dual gives, and it is held
+# to it.
+
+declare -A VIOL
+
+VIOL[L_H_C_35.nc4]=0.5
+
+# the BlockSolverConfig of each instance - - - - - - - - - - - - - - - - - -
+# The pHydro instances have the master problems of the bundles solved by the
+# barrier [see BSPar-DPb.txt and MPBCfg-barrier.txt]: with the dual simplex
+# the Lagrangian Dual does not converge in the time it is given, and on
+# pHydro_18 the master fails numerically. A BlockSolverConfig given on the
+# command line is used for all the instances.
+
+par_of() {
+    if [ "$par" = "$DEFAULT_PAR" ] && [[ "$1" == */pHydro/* ]]; then
+        echo BSPar-DPb.txt
+    else
+        echo "$par"
+    fi
+}
+
+# each plan4res solve takes minutes under LagrangianDualSolver + BundleSolver
+# with a MILP reference, so the full set (54 instances) runs for hours and
+# blows the 3h GitLab.com shared-runner cap. In CI run a small smoke sample
+# covering the instance families (thermal L_B_C, hydrothermal L_B_H, nuclear
+# L_B_N, and a pHydro cascade); local runs every instance of all three sets.
+if [ -n "$CI" ]; then
+    instances="FirstSetofInstances/L_B_C_24.nc4
+               FirstSetofInstances/L_B_H_19.nc4
+               FirstSetofInstances/L_B_N_1.nc4
+               FirstSetofInstances/L_B_N_9.nc4
+               pHydro/20090907_pHydro_4_none.nc4"
+    for rel in $instances; do
+        eps=${EPS[$(basename "$rel")]}
+        what=${DATADIR}/${rel}
+        run_test "$exe" "$what" -S "$(par_of "$what")" -R "$REL" \
+                 -E "${eps:-$EPS4}" -B InnerBCfg.txt
+    done
+else
+    for what in "${DATADIR}"/FirstSetofInstances/*.nc4 \
+                "${DATADIR}"/SecondSetofInstances/*.nc4 \
+                "${DATADIR}"/pHydro/*.nc4; do
+
+        eps=${EPS[$(basename "$what")]}
+        viol=${VIOL[$(basename "$what")]}
+
+        run_test "$exe" "$what" -S "$(par_of "$what")" -R "$REL" \
+                 -E "${eps:-$EPS4}" ${viol:+-V "$viol"} -B InnerBCfg.txt
+
+    done
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

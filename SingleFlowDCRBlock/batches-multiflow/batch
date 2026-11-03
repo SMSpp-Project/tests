@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file >
+#        < exe file > = path of the executable file, default
+#                       ./MultiFlowDCRBlock_test
+#
+# runs MultiFlowDCRBlock_test on the instances of the module with the first
+# 1 to 5 flows of each network of garr and sndlib and of the waxman networks
+# of up to 300 nodes, and with the first 1 and 2 of each of the 260 networks
+# of topo, in data/nc4/multi of SingleFlowDCRBlock (see data/README.md
+# there), each solved by a :MILPSolver on the formulation that holds all the
+# flows and by the LagrangianDualSolver that relaxes the mutual capacity
+# constraints, with each flow solved by the SingleFlowDCRBendersSolver
+# (BSPar-multi.txt), by the same with its cuts reused across the calls
+# (BSPar-multi-reuse.txt) and with the warm start of its multiplier
+# (BSPar-multi-warm.txt), and by a :MILPSolver (BSPar-multi-milp.txt)
+#
+# the Lagrangian dual is not tight in general, hence "-R ,r" declares the
+# LagrangianDualSolver a relaxation, i.e., its value has to be at most the
+# optimum; with 1 flow the mutual capacity of an arc is its own, so that the
+# relaxed constraints are redundant and the dual is the flow itself; the
+# instances of topo with more flows are left out only to keep the batch
+# short, and so are the waxman networks of 400 nodes and more, on which an
+# instance takes longer than ten minutes
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+exe=${1:-./MultiFlowDCRBlock_test}
+DATADIR=../../SingleFlowDCRBlock/data/nc4/multi
+
+# in CI one instance in 10 is run: the whole of it takes more than the hour
+# a test is given there, and the instances of a network differ only by the
+# number of flows
+if [ -n "$CI" ]; then every=10; else every=1; fi
+
+ran=0
+k=0
+for what in "$DATADIR"/{garr,sndlib}/*_[1-5].nc4 \
+            "$DATADIR"/waxman/w1_[123]00_*_[1-5].nc4 \
+            "$DATADIR"/topo/*_[12].nc4; do
+  [ -f "$what" ] || continue
+  (( k++ % every )) && continue
+  ran=1
+  for par in BSPar-multi.txt BSPar-multi-reuse.txt BSPar-multi-warm.txt \
+             BSPar-multi-milp.txt; do
+    run_test "$exe" "$what" -S "$par" -R ,r
+  done
+done
+
+# a batch that has found no instance at all has tested nothing, and saying so
+# is the only way to tell it apart from one where everything went well
+if [ "$ran" -eq 0 ]; then
+  echo "No instance found in $DATADIR"
+  exit 1
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

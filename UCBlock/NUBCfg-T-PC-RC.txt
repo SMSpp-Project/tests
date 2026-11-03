@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - NUBCfg-T-PC-RC.txt  - - - - - - - - - - - - - - -
+#
+# The BlockConfig of a NuclearUnitBlock that selects the T formulation of the
+# thermal unit with Perspective Cuts and, for the operating rules, the tight
+# rows of the operating rules, those written on the starts being separated
+# rather than written (TightRules + TightCuts, +160) [see NuclearUnitBlock]:
+# static_variables = 169.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static_constraints
+*  # [none]
+
+# dynamic_constraints
+*  # [none]
+
+# static_variables: the formulation, 0 = 3bin, 1 = T, 2 = pt, 3 = DP,
+# 4 = SU, 5 = SD, 6 = SUSD, +8 with Perspective Cuts, +32 the tight rows,
+# +64 the tight big-M, +128 the tight rows separated
+SimpleConfiguration<int>
+169
+
+# dynamic_variables
+*  # [none]
+
+# objective
+*  # [none]
+
+# is_feasible
+*  # [none]
+
+# is_optimal
+*  # [none]
+
+# solution
+*  # [none]
+
+# extra
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END NUBCfg-T-PC-RC.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

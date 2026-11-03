@@ -1,0 +1,8 @@
+dataset_dir : C:\smspp-project\tests\MMCFBlock\data\Mnetgen
+format      : jlf
+parts       : .arc,.mut,.nod,.sup
+stratified  : False
+total       : 216
+seed        : 42
+ratios      : train=0.8, val=0.1, test=0.1
+counts      : train=172, val=21, test=23
