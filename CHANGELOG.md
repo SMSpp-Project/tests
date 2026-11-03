@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   again with the gradient; `batch-fw` holds the two to their bounds on the
   box as the others
 
+- `pypsa_instances`, the scripts that write the instances of the batches
+  converted from PyPSA networks (`UCBlock/batches/batch-pypsa`,
+  `batch-nuclear`, `InvestmentBlock/batches/batch-pypsa` and the stochastic
+  ones) and print their reference values, which were among the tests of
+  pypsa2smspp
+
 - `PolyhedralFunctionBlock`: `batch-kelley` runs the battery with the
   `BundleSolver` of `NDOPar-Kelley.txt`, the proximal one and the
   cutting-plane method of Kelley with the primal and with the dual master

@@ -29,7 +29,7 @@
 # are also exact, or a valid bound, but take minutes, hence they are left out
 #
 # the instances are written by gen_modular_tssb.py and emit_modular_tssb.py
-# in the test/references of pypsa2smspp, whose README says with which values
+# in pypsa_instances/references, whose README says with which values
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"

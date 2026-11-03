@@ -282,6 +282,11 @@ the `test` directory of the module itself.
   that a module does not export stops the build and a factory registration
   lost through the import stops the run.
 
+- [`pypsa_instances`](pypsa_instances), not a test: the Python scripts that
+  write the instances of the batches converted from PyPSA networks by
+  pypsa2smspp (those of `UCBlock`, `InvestmentBlock` and of the stochastic
+  `Block`), and print their reference values.
+
 The tests run as traditional command line executables. Most of the tests
 can also run as a
 [CTest](https://cmake.org/cmake/help/latest/manual/ctest.1.html) suite.
