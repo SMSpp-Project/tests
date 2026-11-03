@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the suite `MILPSolver/ConvexMIQP`: `MILPSolver_ConvexMIQP_test` generates
+  from a seed the random strictly convex MIQPs of the paper of FAST-QPA, and
+  those it does not have (equality and ranged rows, bounded and binary
+  integer variables, bounded continuous ones, a maximization, two kinds of
+  infeasible instance), and cross-checks the `FASTQPAMILPSolver`, with its
+  defaults and three variants, against `GRBMILPSolver` and `CPXMILPSolver`
+  (`BSPar.txt`), checking the solution each of them writes on the data; the
+  batteries `batch-paper` and `batch-edge`
+
 - `batch-instances-bx` of `SingleFlowDCRBlock`: a `BranchAndXSolver` whose
   nodes are solved by the `SFDCRBRelaxationSolver` next to the `Solver` of
   `BSPar.txt` (`BSPar-BX.txt`, `BXCfg.txt`, `InnerBSCfg-BX.txt`), on the

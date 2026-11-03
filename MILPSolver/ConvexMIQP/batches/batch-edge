@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# usage: batch-edge < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default
+#                       MILPSolver_ConvexMIQP_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# Cross-check on the cases the instances of the paper do not have, on the
+# same generator, three seeds each: no row at all, no integer variable,
+# equality and ranged rows, bounded and binary integer variables, bounded
+# continuous ones, a maximization, an infeasible relaxation and a feasible
+# relaxation with no integer solution.
+
+# run from the test directory so the tester reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../../batch_common.sh"
+
+DEFAULT_EXE=./MILPSolver_ConvexMIQP_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+# the cases, one per line, each run with every seed
+cases=(
+  "-m 0 -i 0.5 -n 20"               # no row
+  "-m 0 -i 1 -n 15"                 # no row, all integer
+  "-m 5 -i 0 -n 20"                 # no integer variable
+  "-m 5 -i 0 -n 20 -o 1"            # no integer variable, bounded
+  "-m 5 -i 0.5 -n 20 -q 3"          # equality rows
+  "-m 6 -i 0.25 -n 20 -q 2 -w 2"    # equality and ranged rows
+  "-m 5 -i 0.5 -n 20 -u 2"          # bounded integer variables
+  "-m 5 -i 1 -n 20 -u 1"            # all integer in [ -1 , 1 ]
+  "-m 5 -i 0.5 -n 20 -b"            # binary variables
+  "-m 5 -i 1 -n 20 -b -t 1"         # all binary, knapsack rows
+  "-m 5 -i 0.5 -n 20 -u 2 -o 2"     # all variables bounded
+  "-m 5 -i 0.5 -n 20 -x"            # a maximization
+  "-m 5 -i 1 -n 15 -b -x"           # a maximization, all binary
+  "-m 3 -i 0.5 -n 20 -z 1"          # an infeasible relaxation
+  "-m 3 -i 0.5 -n 20 -z 2 -u 3"     # no integer solution
+  "-m 3 -i 1 -n 12 -z 2 -b"         # no binary solution
+  )
+
+# sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+for c in "${cases[@]}"; do
+  for e in 0 1 2; do
+    # the options of the case are split on purpose
+    # shellcheck disable=SC2086
+    run_test "$exe" -S "$par" ${c} -e "$e"
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

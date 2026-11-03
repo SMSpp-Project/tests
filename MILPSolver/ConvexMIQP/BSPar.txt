@@ -1,0 +1,206 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
+#
+# Cross-check BlockSolverConfig for a convex MIQP: it attaches the
+# FASTQPAMILPSolver with its defaults and three variants of it, each a
+# differential override of FQCfg.txt, and two :MILPSolver as references
+# (MILPCfg.txt), which must all give the same optimum (see batches/):
+#
+#   - FASTQPAMILPSolver  its defaults
+#   - FASTQPAMILPSolver  no early pruning (intFQEarlyPrune 0)
+#   - FASTQPAMILPSolver  no warm start (intFQWarmStart 0)
+#   - FASTQPAMILPSolver  the bounds of the integer variables as rows
+#                        (intFQIntBoundsAsRows 1)
+#   - GRBMILPSolver      the reference, with no dual reduction
+#   - CPXMILPSolver      the reference
+#
+# A Solver that is not in the build is left out [see
+# drop_missing_Solvers() in common_utils.cpp].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+6  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+FASTQPAMILPSolver  # 1st: its defaults
+FASTQPAMILPSolver  # 2nd: no early pruning
+FASTQPAMILPSolver  # 3rd: no warm start
+FASTQPAMILPSolver  # 4th: the bounds of the integer variables as rows
+GRBMILPSolver      # 5th: the reference
+CPXMILPSolver      # 6th: the reference
+
+6  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: its defaults
+*FQCfg.txt
+
+# 2: the dual of a node solved to optimality before the comparison with the
+# incumbent
+*FQCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intFQEarlyPrune  0  # no early pruning
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 3: the dual of a node solved from the zero multipliers
+*FQCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intFQWarmStart  0  # no warm start
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 4: the finite bounds of the integer variables as rows of the relaxations
+*FQCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intFQIntBoundsAsRows  1  # bounds as rows
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 5: the reference, with no dual reduction in the presolve of GUROBI, which
+# otherwise answers that an instance with an infeasible relaxation is
+# "infeasible or unbounded", a status that GRBMILPSolver takes as unbounded
+*MILPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+DualReductions  0  # no dual reduction
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 6: the reference
+*MILPCfg.txt
+
+# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

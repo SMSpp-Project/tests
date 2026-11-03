@@ -28,6 +28,7 @@ set(SMSPP_TEST_LABELS_LagBFunction              "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunction        "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_PolyhedralFunctionBlock   "SMS++;BundleSolver;MILPSolver")
 set(SMSPP_TEST_LABELS_QuadFunction              "SMS++;MILPSolver")
+set(SMSPP_TEST_LABELS_ConvexMIQP                "SMS++;MILPSolver")
 set(SMSPP_TEST_LABELS_compare_formulations      "SMS++")
 # the four testers posed on an AbstractBlock ask for modules beyond these two,
 # a different set each, and each of them is guarded by its own if( TARGET ),
