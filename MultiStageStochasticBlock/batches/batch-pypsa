@@ -66,7 +66,7 @@ REF_OBJ[${P}__snap24__c3_d3_renewables_carriers.nc]=3.488357705e+09
 REF_OBJ[${P}__snap24__c3_d3_hydro_carriers.nc]=3.454083599e+09
 REF_OBJ[${P}__snap24__c3_d3_both_carriers.nc]=3.488357705e+09
 REF_OBJ[${P}__snap24__c4_d3_both_carriers.nc]=3.435694613e+09
-# the modular family of pypsa2smspp (gen_modular_tssb.py, 48 periods, 10
+# the modular family of pypsa_instances (gen_modular_tssb.py, 48 periods, 10
 # scenarios in 2 outer realizations, 2 buses, modules turned off), the same
 # network TwoStageStochasticBlock/batch-pypsa-modular has as a TSSB and
 # InvestmentBlock/batch-stochastic under an InvestmentBlock

@@ -24,6 +24,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   formulations can be compared in one run as further `Solver` of one
   `BlockSolverConfig`, each with its own time; it is built with
   `TUDPS_test`
+
+## [0.8.0] - 2026-11-03
+
+### Added
+
+- `MasterProblemBlock`: a tester of the `Solver` of a `MasterProblemBlock`
+  on synthetic master problems of a bundle method (components, short or
+  long cuts, vertical rows, lower bounds, level, box, linear part), which
+  compares those of `MPBSolvers.txt` with the first one while the master
+  problem is changed as a bundle method changes it; `batch` for the CI and
+  `batch-long`, on larger master problems, by hand
+
+- `SVMBlock`: `FWBSCfg.txt` registers the primal-dual bundle method also
+  with a refused direction corrected and with a refused step not taken
+  (`intFWOnReject` 1 and 2), next to the default, which asks the oracle
+  again with the gradient; `batch-fw` holds the two to their bounds on the
+  box as the others
+
+- `pypsa_instances`, the scripts that write the instances of the batches
+  converted from PyPSA networks (`UCBlock/batches/batch-pypsa`,
+  `batch-nuclear`, `InvestmentBlock/batches/batch-pypsa` and the stochastic
+  ones) and print their reference values, which were among the tests of
+  pypsa2smspp
+
 - `PolyhedralFunctionBlock`: `batch-kelley` runs the battery with the
   `BundleSolver` of `NDOPar-Kelley.txt`, the proximal one and the
   cutting-plane method of Kelley with the primal and with the dual master
@@ -656,6 +680,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   twice
 
 ### Fixed
+
+- `SVMBlock`: the usage line of `batch-fw` names the `BlockSolverConfig` it
+  takes as its second argument, before the log file
 
 - on Windows, the executables that copy their DLLs next to themselves
   are linked one at a time (a job pool of Ninja), since two copies of the
@@ -2056,7 +2083,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First test release.
 
-[Unreleased]: https://gitlab.com/smspp/tests/-/compare/0.7.0...develop
+[Unreleased]: https://gitlab.com/smspp/tests/-/compare/0.8.0...develop
+[0.8.0]: https://gitlab.com/smspp/tests/-/compare/0.7.0...0.8.0
 [0.7.0]: https://gitlab.com/smspp/tests/-/compare/0.6.0...0.7.0
 [0.6.0]: https://gitlab.com/smspp/tests/-/compare/0.5.4...0.6.0
 [0.5.4]: https://gitlab.com/smspp/tests/-/compare/0.5.3...0.5.4

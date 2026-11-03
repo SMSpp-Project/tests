@@ -122,8 +122,8 @@ subproblems. The `investment_outside` form of the same two, i.e., the
 ad hoc Benders decomposition of an `InvestmentBlock` over the whole
 stochastic Block, is run by `InvestmentBlock/batches/batch-stochastic`
 against the same reference. The instances are written by
-`gen_modular_tssb.py` and `emit_modular_tssb.py`, in the
-`scripts/smspp_instances/references` of pypsa-eur-instances.
+`gen_modular_tssb.py` and `emit_modular_tssb.py`, in
+`pypsa_instances/references`.
 
 `TSSB_scenred_test` is the generic tester of the scenario reduction: it
 reads a `TwoStageStochasticBlock` out of a netCDF file, with its scenario
