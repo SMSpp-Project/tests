@@ -3,10 +3,11 @@
 #
 # Base ComputeConfig for a BranchAndXSolver on a BinaryKnapsackBlock: it only
 # sets the inner BlockSolverConfig (the GreedyRelaxationBinaryKnapsackSolver
-# leaf, InnerBSCfg.txt) and leaves the exploration at its default (best-first,
-# serial, no cuts). The cross-check config BSPar.txt includes it once per BX
-# mode and overrides (via '*BX-baseCfg.txt +') only the mode-specific
-# parameters, so the inner-solver configuration is never duplicated.
+# leaf, InnerBSCfg.txt) and leaves the exploration at its default
+# (best-first, serial, no cuts). The cross-check config BSPar.txt includes it
+# once per BX mode and overrides (via '*BX-baseCfg.txt +') only the
+# mode-specific parameters, so the inner-solver configuration is never
+# duplicated.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,7 +18,13 @@ ComputeConfig # exact type of the ComputeConfig object
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 1  # number of string parameters
 
@@ -40,7 +47,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
 

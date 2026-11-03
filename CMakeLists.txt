@@ -48,6 +48,14 @@ function(smspp_install target_name)
                 $<TARGET_FILE_DIR:${target_name}>
                 COMMAND_EXPAND_LISTS
                 COMMENT "Copying runtime DLLs next to ${target_name}.exe")
+        # one link at a time, since two copies of the same DLL into a
+        # directory collide, and Ninja links in parallel
+        get_property(_pools GLOBAL PROPERTY JOB_POOLS)
+        if (NOT _pools MATCHES "smspp_runtime_dlls=")
+            set_property(GLOBAL APPEND PROPERTY JOB_POOLS smspp_runtime_dlls=1)
+        endif ()
+        set_property(TARGET ${target_name}
+                     PROPERTY JOB_POOL_LINK smspp_runtime_dlls)
     endif ()
 
     #[[install(TARGETS ${target_name}
@@ -145,6 +153,13 @@ add_subdirectory(SingleFlowDCRBlock)
 add_subdirectory(SATBlock)
 add_subdirectory(SatellitesBlock)
 add_subdirectory(MultiKnapsackAssignBlock)
+add_subdirectory(HQPBlock)
+
+# the program that imports the C++20 module of every SMS++ module in the
+# build, which are there when SMSpp_BUILD_MODULE is ON [see SMS++]
+if (SMSpp_BUILD_MODULE)
+    add_subdirectory(import_modules)
+endif ()
 
 # the one tester that is posed on no Block in particular: it reads whichever
 # two the configurations name and compares the two formulations

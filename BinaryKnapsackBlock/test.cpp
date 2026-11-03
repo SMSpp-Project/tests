@@ -39,15 +39,6 @@
  #define LOG( x )
 #endif
 
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
 /*--------------------------------------------------------------------------*/
 /*----------------------------- INCLUDES -----------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -185,8 +176,9 @@ bool CrossCheckSolvers( void )
  if( ! SolveAll( BKB , classify , ref , 2e-06 ) )
   return( false );
 
- // BinaryKnapsackBlock-specific self-consistency: every feasible exact Solver's
- // reported value must equal the value recomputed from its returned solution
+ // BinaryKnapsackBlock-specific self-consistency: every feasible exact
+ // Solver's reported value must equal the value recomputed from its returned
+ // solution
  for( std::size_t k = 0 ; k < M ; ++k ) {
   if( ! feasible[ k ] )
    continue;                               // infeasible: no primal x to read
@@ -289,10 +281,10 @@ static std::vector< PisingerInst > read_pisinger( const std::string & path )
 
 /*--------------------------------------------------------------------------*/
 // the Pisinger mode (-C <csv>): test every instance of the .csv with ALL the
-// attached Solver (the CrossCheckSolvers() solver-vs-solver cross-check) AND against
-// the published optimum z (solver-vs-reference), reusing one Block and one set
-// of Solver across the whole class (the data of each instance is set with the
-// chg_*() Modification, to which the Solver react)
+// attached Solver (the CrossCheckSolvers() solver-vs-solver cross-check) AND
+// against the published optimum z (solver-vs-reference), reusing one Block and
+// one set of Solver across the whole class (the data of each instance is set
+// with the chg_*() Modification, to which the Solver react)
 
 static bool run_pisinger( const std::string & csv , const std::string & sconf )
 {
@@ -326,8 +318,8 @@ static bool run_pisinger( const std::string & csv , const std::string & sconf )
  have_ref = true;
  for( std::size_t k = 0 ; k < insts.size() ; ++k ) {
   N = insts[ k ].N;
-  BKB->chg_weights( insts[ k ].W.begin() );       // all the weights
-  BKB->chg_profits( insts[ k ].P.begin() );       // all the profits
+  BKB->chg_weights( Block::MF_dbl_sp( insts[ k ].W ) );  // all the weights
+  BKB->chg_profits( Block::MF_dbl_sp( insts[ k ].P ) );  // all the profits
   BKB->chg_capacity( insts[ k ].C );
   ref_opt = insts[ k ].z;
   LOG( insts[ k ].name << ": " );
@@ -416,7 +408,8 @@ int main( int argc , char **argv )
                    my_opts.begin() , my_opts.end() );
  help += "  -e, --seed <n>                  pseudo-random generator seed\n"
          "  -k, --wchg <bits>               what to change, bit-wise [127]:\n"
-         "                                    1 sense, 2 capacity, 4 profits,\n"
+         "                                    1 sense, 2 capacity, 4 "
+         "profits,\n"
          "                                    8 weights, 16 fix, 32 unfix,\n"
          "                                    64 integrality\n"
          "  -N, --nvar <n>                  number of variables [100]\n"
@@ -662,7 +655,7 @@ int main( int argc , char **argv )
      Range rng = generateRange( m );
 
      if( dis( rg ) < 0.5 ) {
-      BKB->chg_profits( nP.begin() , rng );              // PR
+      BKB->chg_profits( Block::MF_dbl_sp( nP ) , rng );              // PR
       LOG( "(R)" );
       }
      else {
@@ -673,11 +666,11 @@ int main( int argc , char **argv )
     else {                                    // or subset modification
      Subset nms = generateSubset( m ); 
      if( dis( rg ) < 0.5 ) {
-      BKB->chg_profits( nP.begin() , std::move( nms ) );              // PR
+      BKB->chg_profits( Block::MF_dbl_sp( nP ) , std::move( nms ) );  // PR
       LOG( "(S)" );
       }
      else {
-      lfobj->modify_coefficients( std::move( nP ) , std::move( nms ) );    // AR
+      lfobj->modify_coefficients( std::move( nP ) , std::move( nms ) );   // AR
       LOG( "(AS)" );
       }
      }
@@ -700,7 +693,7 @@ int main( int argc , char **argv )
      Range rng = generateRange( m );
 
      if( dis( rg ) < 0.5 ) {
-      BKB->chg_weights( nW.begin() , rng );              // PR
+      BKB->chg_weights( Block::MF_dbl_sp( nW ) , rng );              // PR
       LOG( "(R)" );
       }
      else {
@@ -712,11 +705,11 @@ int main( int argc , char **argv )
      Subset nms = generateSubset( m ); 
 
      if( dis( rg ) < 0.5 ) {
-      BKB->chg_weights( nW.begin() , std::move( nms ) );              // PR
+      BKB->chg_weights( Block::MF_dbl_sp( nW ) , std::move( nms ) );  // PR
       LOG( "(S)" );
       }
      else {
-      lfcnst->modify_coefficients( std::move( nW ) , std::move( nms ) );   // AR
+      lfcnst->modify_coefficients( std::move( nW ) , std::move( nms ) );  // AR
       LOG( "(AS)" );
       }
      }

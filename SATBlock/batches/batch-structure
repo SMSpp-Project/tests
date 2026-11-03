@@ -10,7 +10,9 @@
 # clauses bound by a fraction of linking clauses, written by smspp_satgen
 # with a planted assignment and the groups of the variables, each one given
 # both structures out of its groups [see SATBlock::set_structure()]: the
-# relaxation of BPar-R.txt and the decomposition of BPar-D.txt. The Solver
+# relaxation of BPar-R.txt and the decomposition of BPar-D.txt, the list of
+# SATBForm.txt, the instance being read once per structure and the Solver of
+# the two copies compared with each other as well. The Solver
 # of BSPar-LD.txt that see the whole instance must give the same optimum,
 # and the LagrangianDualSolver, the last one, declared to solve a relaxation
 # by -R, a lower bound on it. Each instance is then changed 3 times by the
@@ -32,7 +34,7 @@ satgen="${4:-smspp_satgen}"
 
 # the instances are written in a directory of their own, removed at the end
 dir="$(mktemp -d)"
-trap 'rm -rf "${dir}"' EXIT
+trap 'rm -rf "${dir}"; report_skipped' EXIT
 
 # sweep- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -43,10 +45,8 @@ for k in 2 4; do
         inst="${dir}/k${k}_n${n}_f${f}_s${seed}.nc4"
         "${satgen}" -k "$k" -n "$n" -f "$f" -g 2 -P -s "$seed" "${inst}" \
           || exit 1
-        for bcf in BPar-R.txt BPar-D.txt; do
-          run_test "$exe" -B "$bcf" -S "$par" -R ",,,,r" -n 3 -e "$seed" \
-            "${inst}"
-        done
+        run_test "$exe" -F SATBForm.txt -S "$par" -R ",,,,r" -n 3 \
+          -e "$seed" "${inst}"
       done
     done
   done

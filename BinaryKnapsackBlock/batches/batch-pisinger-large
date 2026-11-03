@@ -2,7 +2,8 @@
 #
 # usage: batch-pisinger-large [ <exe> ] [ <timeout s> ] [ <memcap KB> ]
 #                             [ <name filter> ]
-#        <exe>          = path of the executable, default BinaryKnapsackBlock_test
+#        <exe>          = path of the executable,
+#        default BinaryKnapsackBlock_test
 #        <timeout s>    = per-run wall-clock limit, default 120
 #        <memcap KB>    = per-run address-space cap (ulimit -v), default 8 GB
 #        <name filter>  = only instances whose name matches, e.g. _1000_ ; all
@@ -48,7 +49,8 @@ ldir="../../BinaryKnapsackBlock/data/txt-large"
 shopt -s nullglob
 csvs=( "$ldir"/*${NAMEF}*.csv )
 if [ "${#csvs[@]}" -eq 0 ]; then
-  echo "SKIP batch-pisinger-large: no .csv under $ldir (run data/fetch-txt-large)"
+  echo "SKIP batch-pisinger-large: no .csv under $ldir" \
+       "(run data/fetch-txt-large)"
   exit 0
 fi
 
@@ -80,7 +82,8 @@ for csv in $(printf '%s\n' "${csvs[@]}" | sort -t_ -k3 -n); do
     if [ $rc -eq 124 ]; then
       st="${RED}TIMEOUT${NC}"
     elif echo "$out" | grep -qi "passed"; then
-      st="${GREEN}OK ${dt}s${NC}"; solved[$label]=$(( ${solved[$label]:-0} + 1 ))
+      st="${GREEN}OK ${dt}s${NC}"
+      solved[$label]=$(( ${solved[$label]:-0} + 1 ))
     elif echo "$out" | grep -qiE "bad_alloc|out of memory|std::bad"; then
       st="${RED}OOM${NC}"
     else
@@ -91,7 +94,8 @@ for csv in $(printf '%s\n' "${csvs[@]}" | sort -t_ -k3 -n); do
 done
 
 echo "------------------------------------------------------------"
-echo "solved / $total instances (timeout ${TIMEOUT}s, memcap $(( MEMCAP/1024 )) MB):"
+echo "solved / $total instances (timeout ${TIMEOUT}s," \
+     "memcap $(( MEMCAP/1024 )) MB):"
 for entry in "${lineup[@]}"; do
   label="${entry%%:*}"
   printf "  %-10s : %d\n" "$label" "${solved[$label]:-0}"

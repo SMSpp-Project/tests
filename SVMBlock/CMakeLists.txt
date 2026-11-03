@@ -9,6 +9,7 @@ if (NOT hasParent)
     find_package(BundleSolver)
     find_package(MILPSolver)
     find_package(BendersDecompositionSolver)
+    find_package(FrankWolfeSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -17,14 +18,16 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::SVMBlock)
 
-    # Create a test fixture to fetch the LIBSVM data sets by running
-    # extract_svm_libsvm, the target the SVMBlock module declares: the data
-    # live with the module, as UCBlock's and CapacitatedFacilityLocationBlock's
-    # do, and batch-real is the batch that runs on them
+    # the instances of SVMBlock, downloaded and extracted when the tests that
+    # read them are run, not when they are built [see the CMakeLists.txt of the
+    # module]; the lock is shared by the tests that build a target of the data
+    # of the module, which under ctest -j would write the same files at once
     add_test(NAME extract_svm_libsvm
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target extract_svm_libsvm)
-    set_tests_properties(extract_svm_libsvm
-                         PROPERTIES FIXTURES_SETUP svm_data_extracted)
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                     --target extract_svm_libsvm)
+    set_tests_properties(extract_svm_libsvm PROPERTIES
+                         FIXTURES_SETUP svm_libsvm_extracted
+                         RESOURCE_LOCK svm_data)
 
     add_executable(SVM_test test.cpp ../common_utils.cpp)
     target_include_directories(SVM_test PRIVATE ..)
@@ -72,12 +75,41 @@ if (TARGET SMS++::SVMBlock)
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 
+    # FrankWolfeSolver on two problems built out of the data sets of this
+    # suite: the least-squares fit in Euclidean balls, a feasible region that
+    # is not a polytope, whose oracle is the closed-form BallSolver of the
+    # tester, and the Wolfe dual on a box, whose oracle is BoxSolver
+    if (TARGET SMS++::FrankWolfeSolver)
+        add_executable(SVM_FW_test test_fw.cpp ../common_utils.cpp)
+        target_include_directories(SVM_FW_test PRIVATE ..)
+        target_link_libraries(SVM_FW_test PRIVATE
+                              SMS++::SVMBlock
+                              SMS++::FrankWolfeSolver)
+        if (TARGET SMS++::MILPSolver)
+            target_link_libraries(SVM_FW_test PRIVATE SMS++::MILPSolver)
+        endif ()
+
+        smspp_install(SVM_FW_test)
+
+        if (UNIX)
+            add_test(NAME SVM_FW_test/batch-fw
+                     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-fw
+                             ${CMAKE_CURRENT_BINARY_DIR}/SVM_FW_test
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+            set_tests_properties(SVM_FW_test/batch-fw PROPERTIES
+                                 FIXTURES_REQUIRED svm_libsvm_extracted)
+        endif ()
+    endif ()
+
     # Add a test for each batch file. batch-libsvm and batch-liblinear need
     # LIBSVMSolver and LIBLINEARSolver, which SVMBlock only builds when the
     # library each of them wraps is found: without it the Solver is not in the
     # factory and its BlockSolverConfig would throw, so the batch is left out
     # rather than failing.
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
+    # batch-fw is not run by SVM_test but by SVM_FW_test, see above
+    list(REMOVE_ITEM BATCH_FILES
+         "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-fw")
     if (NOT SVMBlock_HAS_LIBSVM)
         list(REMOVE_ITEM BATCH_FILES
              "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-libsvm")
@@ -95,15 +127,18 @@ if (TARGET SMS++::SVMBlock)
     endif ()
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME SVM_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/SVM_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/SVM_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             # the batch that runs on the LIBSVM data sets needs them there
             if (BATCH_NAME MATCHES "batch-real")
                 set_tests_properties(SVM_test/${BATCH_NAME}
-                                     PROPERTIES FIXTURES_REQUIRED svm_data_extracted)
+                                     PROPERTIES FIXTURES_REQUIRED
+                                     svm_libsvm_extracted)
             endif ()
         elseif (WIN32)
             add_test(NAME SVM_test/${BATCH_NAME}
@@ -118,5 +153,14 @@ endif ()
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# The battery of FrankWolfeSolver runs one module more than the rest of the
+# suite declares, and the suite is not skipped when that module is out of the
+# build, so it is labelled with it here rather than in the map of the
+# directory.
+if (TARGET SMS++::SVMBlock AND TARGET SMS++::FrankWolfeSolver AND UNIX)
+    set_tests_properties(SVM_FW_test/batch-fw PROPERTIES LABELS
+                         "${SMSPP_TEST_LABELS_SVMBlock};FrankWolfeSolver")
+endif ()
 
 # --------------------------------------------------------------------------- #

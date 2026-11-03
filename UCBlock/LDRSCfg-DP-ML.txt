@@ -47,7 +47,7 @@ intLearnNodes     2  # nodes of strong branching before the fitting
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END LDRSCfg-DP-ML.txt - - - - - - - - - - - - - -

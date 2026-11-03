@@ -40,11 +40,15 @@ par=BSCfg-nuc.txt
 
 seed=0
 wchg=0      # just solve and compare the optimum (no cost perturbation here)
-form=T-PC   # the T formulation with Perspective Cuts
+# the formulations of the unit compared with each other: the T formulation
+# with Perspective Cuts and its tight forms of the operating rules, all of
+# them the same set of schedules [see NUBForm.txt]; in CI only the two ends
+forms=NUBForm.txt
+[ -n "$CI" ] && forms=NUBForm-CI.txt
 
 # the original model - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 for f in "${DATADIR}"/*/*.nc4; do
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -B "TUBCfg-$form.txt"
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k "$wchg" -F "$forms"
 done
 
 # the operating rules - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -55,19 +59,20 @@ else
 fi
 
 if [ -z "$files" ]; then
-  echo "batch-nuclear: no instance in ${RULESDIR}, only the original model run" >&2
+  echo "batch-nuclear: no instance in ${RULESDIR}, only the original model" \
+       "run" >&2
   exit 0
 fi
 
 for f in $files; do
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$forms" -n 0
   TUDPS_RESCOST=-0.05 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$forms" -n 0
   TUDPS_QCOST=-0.01 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$forms" -n 0
   TUDPS_FIXMOD=7 \
-   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -B "TUBCfg-$form.txt" -n 0
-  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -B "TUBCfg-$form.txt" -n 5
+   run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 0 -F "$forms" -n 0
+  run_test "$TUDPS_test" "$f" -S "$par" -e "$seed" -k 7 -F "$forms" -n 5
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

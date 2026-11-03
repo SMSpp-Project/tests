@@ -69,7 +69,7 @@ done
 if [ -n "${fwexe}" ]; then
 
   source "$(dirname "$0")/fw_lmo_solvers"
-  trap fw_lmo_cleanup EXIT
+  trap 'fw_lmo_cleanup; report_skipped' EXIT
   fw_lmo_copies "MCFSolver<RelaxIV>" "MCFSolver<MCFCplex>" \
                 "MCFLemonSolverNetworkSimplex<${LEMON}" \
                 "MCFLemonSolverCycleCanceling<${LEMON}" \

@@ -2,8 +2,8 @@
 # - - - - - - - - - - - - - - LPBSCfg-F-lemon.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MCFBlock solved by the
-# network simplex of LEMON, which takes the fractional Lagrangian costs thanks
-# to the tolerances MCFLemonSolver compiles it with
+# network simplex of LEMON, which takes the fractional Lagrangian costs
+# thanks to the tolerances MCFLemonSolver compiles it with
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -23,7 +23,7 @@ MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # name of Solver
 
 # now all the ComputeConfig
 #[none]
-*
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END LPBSCfg-F-lemon.txt - - - - - - - - - - - - -

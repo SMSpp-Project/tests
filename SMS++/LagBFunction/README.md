@@ -191,42 +191,44 @@ results of the two `Solver` are compared.
 
 The usage of the executable is the following:
 
-       ./LagBFunction_test seed [wchg nvar #nf #nt dens #rounds #chng %chng
-                                 ndopar size detach]
-       wchg: what to change, coded bit-wise [511]
-             0 = add rows, 1 = delete rows 
-             2 = modify rows, 3 = modify constants
-             4 = change global lower/upper bound
-             5 = modify costs, 6 = modify demands
-             7 = modify flow bounds
-             8 = change linear objective
-             9 = each LagBFunction dualises a random subset (exercises sparse Lambda)
-            10 = remove one dual_pair from a single LagBFunction (naked, not GroupMod;
-                 exercises dense->sparse auto-promotion + per-Function Mod dispatch)
-            11 = add one dual_pair to a single LagBFunction (naked; on a new
-                 coordinate of the master or on one it already has)
-            12 = the inner Block of an easy LagBFunction issues an
-                 NBModification
-       nvar: number of variables [10]
-       |#nf|: number of PolyFunction (< 0: linear function) [1]
-       |#nt|: number of transportation (< 0: easy comp.) [1]
-       dens: rows / variables [3]
-       #rounds: how many iterations [40]
-       #chng: number of changes [10]
-       %chng: probability of changing [0.5]
-       ndopar: BlockSolverConfig of NDOBlock [NDOPar.txt, NDOPar-Hard.txt
-               if #nt > 0]
-       size: size Variable of easy comp. (0 none, 1 owned, 2 given) [0]
-       detach: if the Solver of NDOBlock are detached and re-attached
-               before each compute() [0]
+       ./LagBFunction_test [options]
+       -e, --seed <n>      seed of the random generator [0]
+       -k, --wchg <bits>   what to change, coded bit-wise [511]
+                           bit 0 = add rows, 1 = delete rows
+                           2 = modify rows, 3 = modify constants
+                           4 = change global lower/upper bound
+                           5 = modify costs, 6 = modify demands
+                           7 = modify flow bounds
+                           8 = change linear objective
+                           9 = each LagBFunction dualises a random subset
+                           10 = remove one dual_pair from a single
+                                LagBFunction (naked, not GroupMod)
+                           11 = add one dual_pair to a single LagBFunction
+                                (on a new coordinate of the master or on
+                                one it already has)
+                           12 = the inner Block of an easy LagBFunction
+                                issues an NBModification
+       -n, --rounds <n>    how many iterations [40]
+       -m, --nchng <n>     number of changes [10]
+       -q, --pchng <p>     probability of changing [0.5]
+       -N, --nvar <n>      number of variables [10]
+       -f, --nf <n>        |nf| PolyhedralFunction (< 0: linear function) [1]
+       -t, --nt <n>        |nt| transportation problems (< 0: easy
+                           components) [1]
+       -d, --dens <x>      rows / variables [3]
+       -S <file>           BlockSolverConfig of NDOBlock [NDOPar.txt,
+                           NDOPar-Hard.txt if nt > 0]
+       -z, --size <0|1|2>  size Variable of the easy components (0 none,
+                           1 owned, 2 given) [0]
+       -X, --detach <0|1>  if the Solver of NDOBlock are detached and
+                           re-attached before each compute() [0]
 
-An empty argument keeps the default. Whether the `BundleSolver` treat the
-`LagBFunction` as easy components, and which of their dual values they keep,
-is `intDoEasy` in the BlockSolverConfig `ndopar`, which must agree with the
-sign of #nt: `NDOPar.txt` treats them as easy without keeping any dual
+Whether the `BundleSolver` treat the `LagBFunction` as easy components,
+and which of their dual values they keep, is `intDoEasy` in the
+BlockSolverConfig given by -S, which must agree with the sign of nt: `NDOPar.txt` treats them as easy without keeping any dual
 value, `NDOPar-Hard.txt` as hard, `NDOPar-Dual.txt` as easy keeping all
-their dual values (bits 2 and 3 of `intDoEasy`) and `NDOPar-RC.txt` as
-easy keeping their reduced costs (bit 3), each of the others having a
+their dual values (bits 1 and 2 of `intDoEasy`) and `NDOPar-RC.txt` as
+easy keeping their reduced costs (bit 1), each of the others having a
 `-Dual.txt` version as well. With detach 1 each `Solver` is unregistered
 from NDOBlock and registered again before each `compute()`, so that it
 builds its data structures anew out of the changed Block. With size 1 or 2 the balances and
@@ -239,9 +241,9 @@ the inner `Block`, declared with `Block::set_owned_size_variable()`, with 2
 the inner `Block` is given a Variable of the master by
 `Block::set_size_variable()`. With 0 the inner `Block` is a plain
 `AbstractBlock`, which takes no size Variable: the master leaves it
-unscaled, unless bit 5 (+32) of `intDoEasy` in the configuration has it
+unscaled, unless bit 4 (+16) of `intDoEasy` in the configuration has it
 scale a copy of it that it has in its place, following the changes of the
-inner `Block`. Bit 4 (+16) has the master leave all the easy components
+inner `Block`. Bit 3 (+8) has the master leave all the easy components
 unscaled.
 
 A batch file `batches/batch` is provided that runs a largish (but

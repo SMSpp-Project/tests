@@ -103,17 +103,6 @@
 
 #define SKIP_BEAT 3
 
-/*--------------------------------------------------------------------------*/
-
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
 /*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 #define DYNAMIC_VARS 1
@@ -629,23 +618,20 @@ static bool SolveBoth( void )
 // standard parameter (-S BlockSolverConfig) is handled centrally by
 // common_utils. This tester GENERATES its own BoxBlock from the seed, so it
 // takes no instance positional (filename_optional = true).
-long int seed = 0;
-Index wchg = 3;
-double p_change = 0.6;
-Index n_change = 10;
-Index n_repeat = 100;
+long int & seed = round_opts.seed;
+Index & wchg = round_opts.wchg;
+double & p_change = round_opts.p_change;
+Index & n_change = round_opts.n_change;
+Index & n_repeat = round_opts.n_repeat;
 
 /*--------------------------------------------------------------------------*/
 
 static bool process_specific_arg( int opt )
 {
+ if( process_round_option( opt ) )
+  return( true );
  switch( opt ) {
-  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
-  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
   case( 'N' ): Str2Sthg( optarg , nvar );      return( true );
-  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
-  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
-  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
   default:                                     return( false );
   }
  }
@@ -666,24 +652,16 @@ int main( int argc , char **argv )
 
  docopt_desc = "SMS++ BoxSolver test.\n";
  filename_optional = true;
- short_opts += "e:k:N:n:m:q:";
+ round_opts = { 0 , 3 , 100 , 10 , 0.6 };
+ add_round_options(
+  "                                    1 bounds, 2 objective coefficients"
+  "\n" );
+ short_opts += "N:";
  const std::vector< option > my_opts = {
-   { "seed"   , required_argument , nullptr , 'e' } ,
-   { "wchg"   , required_argument , nullptr , 'k' } ,
-   { "nvar"   , required_argument , nullptr , 'N' } ,
-   { "rounds" , required_argument , nullptr , 'n' } ,
-   { "nchng"  , required_argument , nullptr , 'm' } ,
-   { "pchng"  , required_argument , nullptr , 'q' } };
+   { "nvar" , required_argument , nullptr , 'N' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
- help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [3]:\n"
-         "                                    1 bounds, 2 objective coefficients"
-         "\n"
-         "  -N, --nvar <n>                  number of variables [10]\n"
-         "  -n, --rounds <n>                how many iterations [100]\n"
-         "  -m, --nchng <n>                 number of changes [10]\n"
-         "  -q, --pchng <p>                 probability of changing [0.6]\n";
+ help += "  -N, --nvar <n>                  number of variables [10]\n";
 
  process_args( argc , argv , process_specific_arg );
 

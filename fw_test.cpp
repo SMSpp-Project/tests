@@ -55,20 +55,24 @@ using Coefficient = DQuadFunction::Coefficient;
 
 // test-specific command-line options (set by process_specific_arg)
 int n_children = 2;     // -k : number of sub-Block (copies of the input Block)
-int obj_type = 0;       // -o : 0 = DQuadFunction, 1 = QuadFunction, 2 = Polyhedral
-double obj_scale = 1.0; // -a : scale of the (random) father objective coefficients
+// -o : 0 = DQuadFunction, 1 = QuadFunction, 2 = Polyhedral
+int obj_type = 0;
+// -a : scale of the (random) father objective coefficients
+double obj_scale = 1.0;
 long seed = 1;          // -e : random seed
-int poly_rows = 0;      // -r : number of rows of the PolyhedralFunction (0 = nvar+1)
+// -r : number of rows of the PolyhedralFunction (0 = nvar+1)
+int poly_rows = 0;
 std::string refconf;    // -F : BlockSolverConfig for the reference (Poly test)
 int mod_rounds = 0;     // -M : extra solve rounds, each perturbing the father
                         // (and a sub-Block) objective to exercise Modification
                         // handling (re-snapshot / re-cache on re-solve)
 std::vector< std::string > var_groups;  // -V : named static-variable groups to
                         // build the father objective over (empty = whole
-                        // sub-Block objective). Lets the test pick the "physical"
-                        // variables of a sub-Block (e.g. ThermalUnitBlock's
-                        // "p_thermal","u_thermal") and ignore the formulation's
-                        // auxiliary objective variables.
+                        // sub-Block objective). Lets the test pick the
+                        // "physical" variables of a sub-Block (e.g.
+                        // ThermalUnitBlock's "p_thermal","u_thermal") and
+                        // ignore the formulation's auxiliary objective
+                        // variables.
 
 std::mt19937 rg;
 
@@ -120,15 +124,18 @@ int main( int argc , char ** argv )
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -k, --children <K>   number of sub-Block copies [2]\n"
-         "  -o, --objtype <t>    father objective: 0 DQuad, 1 Quad, 2 Poly [0]\n"
+         "  -o, --objtype <t>    father objective: 0 DQuad, 1 Quad, 2 Poly "
+         "[0]\n"
          "  -a, --scale <s>      scale of the random father objective [1]\n"
          "  -e, --seed <n>       random seed [1]\n"
          "  -r, --rows <m>       PolyhedralFunction rows [nvar+1]\n"
-         "  -F, --refconf <f>    reference (MILP) BlockSolverConfig, Poly test\n"
+         "  -F, --refconf <f>    reference (MILP) BlockSolverConfig, Poly "
+         "test\n"
          "  -M, --modrounds <n>  extra re-solve rounds, each perturbing the\n"
          "                       father and a sub-Block objective (tests the\n"
          "                       Modification handling) [0]\n"
-         "  -V, --vargroups <l>  comma-separated names of the sub-Block static\n"
+         "  -V, --vargroups <l>  comma-separated names of the sub-Block "
+         "static\n"
          "                       variable groups to build the father over\n"
          "                       (default: the whole sub-Block objective)\n";
 
@@ -142,18 +149,20 @@ int main( int argc , char ** argv )
 
  rg.seed( seed );
 
- // ----- single-block path ( DQuad / Quad ): both Solver via -S, SolveAll -----
+ // ----- single-block path ( DQuad / Quad ): both Solver via -S, SolveAll ----
 
  if( obj_type != 2 ) {
   std::vector< ColVariable * > vars;
-  auto father = build_father( filename , n_children , bconf_file , var_groups , vars );
+  auto father = build_father( filename , n_children , bconf_file , var_groups ,
+                              vars );
   if( vars.empty() ) {
    cerr << "Error: the sub-Block have no ColVariable" << endl;
    exit( 1 );
    }
 
   auto obj = new FRealObjective( father ,
-            make_father_objective( vars , obj_type , obj_scale , poly_rows , rg ) );
+            make_father_objective( vars , obj_type , obj_scale , poly_rows ,
+                                   rg ) );
   obj->set_sense( Objective::eMin , eNoMod );
   father->set_objective( obj );
 
@@ -166,8 +175,9 @@ int main( int argc , char ** argv )
   // optional reference solver(s) via -R, registered *additively* so SolveAll
   // cross-checks them against the solver(s) under test in -S. Without -R the
   // single solver in -S runs alone: this is how FrankWolfeSolver is profiled
-  // without the (possibly very slow) reference solve. The solver log can be set
-  // straight from the ComputeConfig via the standard strLogFileName parameter.
+  // without the (possibly very slow) reference solve. The solver log can be
+  // set straight from the ComputeConfig via the standard strLogFileName
+  // parameter.
   Configuration * rbsc = nullptr;
   if( ! refconf.empty() ) {
    rbsc = Configuration::deserialize( refconf );
@@ -208,7 +218,8 @@ int main( int argc , char ** argv )
    for( Index i = 0 ; i < n ; ++i )
     nc[ i ] = obj_scale * rnd( rg );
    if( auto dq = dynamic_cast< DQuadFunction * >( f ) )
-    dq->modify_linear_coefficients( std::move( nc ) , Function::Range( 0 , n ) );
+    dq->modify_linear_coefficients( std::move( nc ) ,
+                                    Function::Range( 0 , n ) );
    else if( auto lf = dynamic_cast< LinearFunction * >( f ) )
     lf->modify_coefficients( std::move( nc ) , Function::Range( 0 , n ) );
    };
@@ -217,9 +228,9 @@ int main( int argc , char ** argv )
    perturb( obj->get_function() );                     // father objective
    // perturb the first sub-Block objective only when the father is built over
    // the whole sub-Block objective (var_groups empty): otherwise the sub-Block
-   // objective carries formulation-auxiliary variables (e.g. ThermalUnitBlock's
-   // perspective cuts) that a full-range coefficient change would not be able
-   // to bridge to the physical data
+   // objective carries formulation-auxiliary variables (e.g.
+   // ThermalUnitBlock's perspective cuts) that a full-range coefficient change
+   // would not be able to bridge to the physical data
    if( var_groups.empty() ) {
     auto & sb = father->get_nested_Blocks();
     if( auto fo = dynamic_cast< FRealObjective * >(     // first sub-Block obj
@@ -235,7 +246,8 @@ int main( int argc , char ** argv )
    ok = ok && okr;
    }
 
-  cout << ( ok ? GREEN( All tests passed!! ) : RED( Shit happened!! ) ) << endl;
+  cout << ( ok ? GREEN( All tests passed!! ) : RED( Shit happened!! ) )
+       << endl;
 
   delete start;
   s_config_Block( father , bsc );
@@ -245,12 +257,13 @@ int main( int argc , char ** argv )
   return( ok ? 0 : 1 );
   }
 
- // ----- two-block path ( Polyhedral ): FW on copy1 vs MILP on copy2 ----------
- // copy1 has the PolyhedralFunction as its father Objective (for FW); copy2 has
- // the *same* PolyhedralFunction inside a (linearized) PolyhedralFunctionBlock,
- // solved monolithically by a :MILPSolver. F-W on a nonsmooth objective has no
- // global-convergence guarantee, so we check that its bracket [ lb , ub ] is
- // valid (contains the true optimum); equality is a bonus.
+ // ----- two-block path ( Polyhedral ): FW on copy1 vs MILP on copy2 ---------
+ // copy1 has the PolyhedralFunction as its father Objective (for FW); copy2
+ // has the *same* PolyhedralFunction inside a (linearized)
+ // PolyhedralFunctionBlock, solved monolithically by a :MILPSolver. F-W on a
+ // nonsmooth objective has no global-convergence guarantee, so we check that
+ // its bracket [ lb , ub ] is valid (contains the true optimum); equality is a
+ // bonus.
 
  if( refconf.empty() ) {
   cerr << "Error: the Polyhedral test needs the reference config (-R)" << endl;
@@ -258,8 +271,10 @@ int main( int argc , char ** argv )
   }
 
  std::vector< ColVariable * > vars1 , vars2;
- auto father1 = build_father( filename , n_children , bconf_file , var_groups , vars1 );
- auto father2 = build_father( filename , n_children , bconf_file , var_groups , vars2 );
+ auto father1 = build_father( filename , n_children , bconf_file , var_groups ,
+                              vars1 );
+ auto father2 = build_father( filename , n_children , bconf_file , var_groups ,
+                              vars2 );
  if( vars1.empty() || ( vars1.size() != vars2.size() ) ) {
   cerr << "Error: the two Block copies do not match" << endl;
   exit( 1 );
@@ -276,21 +291,25 @@ int main( int argc , char ** argv )
   PolyhedralFunction::VarVector vv( vars1.begin() , vars1.end() );
   auto pf = new PolyhedralFunction( std::move( vv ) ,
                                     PolyhedralFunction::MultiVector( A ) ,
-                                    PolyhedralFunction::RealVector( b ) , NEGINF );
+                                    PolyhedralFunction::RealVector( b ) ,
+                                    NEGINF );
   pf->set_is_convex( true , eNoMod );
   auto obj = new FRealObjective( father1 , pf );
   obj->set_sense( Objective::eMin , eNoMod );
   father1->set_objective( obj );
  }
 
- // copy2: the same PolyhedralFunction inside a (linearized) PolyhedralFunctionBlock
+ // copy2: the same PolyhedralFunction inside a (linearized)
+ // PolyhedralFunctionBlock
  {
   auto pfb = new PolyhedralFunctionBlock( father2 );
   auto & pf = pfb->get_PolyhedralFunction();
-  pf.set_variables( PolyhedralFunction::VarVector( vars2.begin() , vars2.end() ) );
+  pf.set_variables( PolyhedralFunction::VarVector( vars2.begin() ,
+                                                   vars2.end() ) );
   PolyhedralFunction::BoolVector iV( A.size() , false );
   pf.set_PolyhedralFunction( PolyhedralFunction::MultiVector( A ) ,
-                             PolyhedralFunction::RealVector( b ) , NEGINF , true ,
+                             PolyhedralFunction::RealVector( b ) , NEGINF ,
+                             true ,
                              eNoMod , std::move( iV ) );
   auto bc = new BlockConfig();   // 1 = "linearized primal" ( MILP-digestible )
   bc->f_static_variables_Configuration = new SimpleConfiguration< int >( 1 );

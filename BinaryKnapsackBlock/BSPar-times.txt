@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - BSPar-incr.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-times.txt - - - - - - - - - - - - - - - -
 #
 # Cross-check BlockSolverConfig for the incremental greedy relaxation: it
 # attaches the exact reference optimum (:MILPSolver) and the BranchAndXSolver
@@ -8,8 +8,6 @@
 # incremental variant reaches the same optimum as the reference.
 #
 # Give us log and also use greedy solver
-#
-#   Donato Meoli
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -23,10 +21,10 @@ BlockSolverConfig     # exact type of the Configuration object
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 DPBinaryKnapsackSolver                # 1st: the exact reference optimum
 BranchAndXSolver                      # 2nd: BX best-first, incremental inner
-BranchAndXSolver                      # 3rd: BX depth-first, incremental inner
+# 3rd: BX depth-first, incremental inner
+BranchAndXSolver
 BranchAndXSolver                      # 4rd: BX best-first, greedy one
 BranchAndXSolver                      # 5rd: BX depth-first, greedy one
-
 
 5  # number of ComputeConfig in this BlockSolverConfig
 
@@ -42,7 +40,13 @@ BranchAndXSolver                      # 5rd: BX depth-first, greedy one
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 2  # number of string parameters
 
@@ -66,7 +70,7 @@ strLogFileName IncrementalBestFS
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 3: BranchAndXSolver, serial depth-first, with the incremental inner
 *BX-baseCfg.txt +
@@ -80,6 +84,9 @@ intSolveMethod 0
 intMaxThread   1
 
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 2  # number of string parameters
 
@@ -103,10 +110,7 @@ strLogFileName IncrementalDFS
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
-
-
-
+*  # [none]
 
 # 4: BranchAndXSolver, best-first, with the greedy inner relaxation
 *BX-baseCfg.txt +
@@ -115,7 +119,13 @@ strLogFileName IncrementalDFS
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 2  # number of string parameters
 
@@ -139,7 +149,7 @@ strLogFileName GreedyBestFS
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 5: BranchAndXSolver, serial depth-first, with the greedy inner
 *BX-baseCfg.txt +
@@ -154,12 +164,14 @@ intMaxThread   1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 2  # number of string parameters
 
 # now all the string parameters
 strNameOfBlockSolverConfigurationFile InnerBSCfg.txt
 strLogFileName GreedyDFS
-
 
 0  # number of vector-of-int parameters
 
@@ -177,10 +189,10 @@ strLogFileName GreedyDFS
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End BSPar-incr.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-times.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

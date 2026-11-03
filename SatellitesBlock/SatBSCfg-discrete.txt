@@ -20,8 +20,8 @@ DiscreteSatelliteSolver  # name of 1st Solver
 1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
-*                     # no ComputeConfig: DiscreteSatelliteSolver has no
-                      # parameter
+*  # no ComputeConfig: DiscreteSatelliteSolver has no
+   # parameter
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END SatBSCfg-discrete.txt - - - - - - - - - - - - -

@@ -12,6 +12,7 @@ if (NOT hasParent)
     find_package(MILPSolver)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
+    find_package(SubGradSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -28,19 +29,30 @@ if (TARGET SMS++::MultiKnapsackAssignBlock)
                                   SMS++::LagrangianDualSolver
                                   SMS++::BundleSolver)
 
+    # the third Solver of BSPar.txt, which the tester leaves out of the
+    # cross-check when the build does not have it
+    if (TARGET SMS++::SubGradSolver)
+        target_link_libraries(MultiKnapsackAssignBlock_test
+                              PRIVATE SMS++::SubGradSolver)
+    endif ()
+
     smspp_install(MultiKnapsackAssignBlock_test)
 
-    # the instances come from the GitLab Package Registry of the module: a
-    # fixture builds the target that downloads and extracts them
+    # the instances of MultiKnapsackAssignBlock, downloaded and extracted when
+    # the tests that read them are run, not when they are built [see the
+    # CMakeLists.txt of the module]; the lock is shared by the tests that build
+    # a target of the data of the module, which under ctest -j would write the
+    # same files at once
     add_test(NAME extract_mkab_txt
              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                      --target extract_mkab_txt)
-    set_tests_properties(extract_mkab_txt
-                         PROPERTIES FIXTURES_SETUP mkab_data_extracted)
+    set_tests_properties(extract_mkab_txt PROPERTIES
+                         FIXTURES_SETUP mkab_txt_extracted
+                         RESOURCE_LOCK mkab_data)
 
     add_batch_test(MultiKnapsackAssignBlock_test batches/batch)
     set_tests_properties(MultiKnapsackAssignBlock_test/batches/batch
-                         PROPERTIES FIXTURES_REQUIRED mkab_data_extracted)
+                         PROPERTIES FIXTURES_REQUIRED mkab_txt_extracted)
 
 endif ()
 

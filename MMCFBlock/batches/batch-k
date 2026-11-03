@@ -20,12 +20,8 @@
 # takes four seconds. The ones below take a few seconds each; this is a test
 # of the formulation, not a benchmark of it.
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
-
-DATADIR=data
-
-MMCFBlock_test=${1:-./MMCFBlock_test}
+# the common part, which reads the argument [see mmcf_battery.sh]
+source "$(dirname "$0")/mmcf_battery.sh" "$@"
 
 for what in p33 p34 p35 p36 p41 p42 p43 p44; do
 

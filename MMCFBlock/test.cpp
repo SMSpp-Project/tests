@@ -59,30 +59,6 @@
 #define DETACH_2ND 0
 
 /*--------------------------------------------------------------------------*/
-// if nonzero, the two Block are not solved at every round of changes, but
-// only every SKIP_BEAT + 1 rounds. this allows changes to accumulate, and
-// therefore puts more pressure on the Modification handling of the Solver
-// (in case this tries to do "smart" things rather than dumbly processing
-// each one in turn)
-//
-// note that the number of rounds of changes is them multiplied by
-// SKIP_BEAT + 1, so that the input parameter still dictates the number of
-// Block solutions
-
-#define SKIP_BEAT 0
-
-/*--------------------------------------------------------------------------*/
-
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
-/*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -143,26 +119,11 @@ const FunctionValue INF = SMSpp_di_unipi_it::Inf< FunctionValue >();
 MMCFBlock * TestBlock;         // the [MMCF]Block that is solved
 int wprnt = 0;
 
-std::mt19937 rg;               // base random generator
-std::uniform_real_distribution<> dis( 0.0 , 1.0 );
-
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-/*----------------------------------------------------------------------------
-
-static double rndfctr( void )
-{
- // return a random number between 0.5 and 2, with 50% probability of being
- // < 1
- double fctr = dis( rg ) - 0.5;
- return( fctr < 0 ? - fctr : fctr * 4 );
- }
-
-----------------------------------------------------------------------------*/
-
-/*-------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
 
 static void PrintSol( CDASolver * slvr , bool first ,
 		      double time ,  double objFunc )
@@ -343,8 +304,6 @@ int main( int argc , char **argv )
  // standard params (instance positional + -B + -S) are parsed by
  // common_utils; the test only appends its own knobs
 
- assert( SKIP_BEAT >= 0 );
-
  docopt_desc = "SMS++ LagrangianDualSolver-on-MMCFBlock test.\n";
  short_opts += "t:w:e:";
  const std::vector< option > my_opts = {
@@ -451,77 +410,11 @@ int main( int argc , char **argv )
     n_rounds = inner->get_int_par( idx );
    }
 
- bool AllPassed = false;
+ bool AllPassed = true;
  for( int r = 0 ; r < n_rounds ; ++r ) {
   CLOG1( n_rounds > 1 , "[round " << r << "] " );
-  AllPassed = SolveBoth();
+  AllPassed &= SolveBoth();
   }
-
- // main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // now, for n_repeat times:
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- // - up to n_change ... are ...
- //
- // then the TestBlock is re-solved with both Solver
-
- /*!!
- for( Index rep = 0 ; rep < n_repeat * ( SKIP_BEAT + 1 ) ; ) {
-  LOG1( rep << ": ");
-
-  // do stuff 1 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  if( ( wchg & 1 ) && ( dis( rg ) <= p_change ) )
-   if( Index tochange = Index( dis( rg ) * n_change ) ) {
-    LOG1( "... " << tochange << " ... - " );
-
-    }
-
-  // do stuff 2 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-  if( ( wchg & 2 ) && ( dis( rg ) <= p_change ) )
-   if( Index tochange = min( m - 1 , Index( dis( rg ) * n_change ) ) ) {
-    LOG1( "... " << tochange << " ..." );
-
-    
-    if( dis( rg ) <= 0.5 ) {  // in 50% of the cases do a ranged change
-     LOG1( "(r) - " );
-
-     }
-    else {  // in the other 50% of the cases, do a sparse change
-     LOG1( "(s) - " );
-     Subset nms( GenerateRand( m , tochange , rg ) );
-
-     }
-
-    }
-
-  // ...
-
-
-  // if verbose, print out stuff- - - - - - - - - - - - - - - - - - - - - - -
-
-  #if( LOG_LEVEL >= 3 )
-   ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
-		                     MILPSolver::strOutputFile , "LPBlock-" +
-		                     std::to_string( rep ) + ".lp" );
-  #endif
-
-  // finally, re-solve the problems- - - - - - - - - - - - - - - - - - - - -
-  // ... every SKIP_BEAT + 1 rounds
-
-  if( ! ( ++rep % ( SKIP_BEAT + 1 ) ) )
-   AllPassed &= SolveBoth();
-  #if( LOG_LEVEL >= 1 )
-  else
-   cout << endl;
-  #endif
-
-  }  // end( main loop )- - - - - - - - - - - - - - - - - - - - - - - - - - -
-     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-     !!*/
 
  if( AllPassed )
   cout << GREEN( All tests passed!! ) << endl;

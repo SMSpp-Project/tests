@@ -5,6 +5,11 @@
 # InvestmentBlock (a UCBlock, or a TwoStageStochasticBlock of UCBlock), to be
 # solved by a :MILPSolver; the InvestmentFunction gets it from IFCfg.txt
 #
+# HiGHS by the simplex method: where the inner Block is infeasible the
+# InvestmentFunction cuts the point away with the homogeneous multipliers of
+# the dual direction (intHomogeneousDirection), and without the cut the
+# bundle stops above the optimum
+#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -28,17 +33,19 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-3  # number of integer parameters
+4  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # LogVerb, log verbosity of the MILPSolver
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints
+intHomogeneousDirection 1  # the dual direction is - A' y, a certificate
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)
                   # disable presolve for reproducibility
-#CPXPARAM_Emphasis_Numerical      1   # 0 = off (default), 1 = extreme numerical caution
+# 0 = off (default), 1 = extreme numerical caution
+#CPXPARAM_Emphasis_Numerical      1
 
 # All specific GUROBI parameter (uncomment based on Solver)
 #Method        1   # 0 = primal, 1 = dual simplex (matches CPLEX default)
@@ -47,6 +54,7 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 
 2  # number of double parameters
 
+# now all the double parameters
 # All specific HiGHS parameter (uncomment based on Solver)
 # the tolerances are absolute, while the objective of these instances is of
 # the order of 1e11, whose last digit in double precision is already 1e-5:
@@ -56,36 +64,37 @@ intCutSepPar    7 # separate user cuts + lazy constraints
 primal_feasibility_tolerance  1e-7
 dual_feasibility_tolerance    1e-7
 
-2 # number of string parameters
+2  # number of string parameters
 
+# now all the string parameters
 # All specific HiGHS parameter (uncomment based on Solver)
-presolve  off    # disable presolve for reproducibility
-solver    ipm    # "choose" (default), "simplex", "ipm", "pdlp"
-                 # (ipm = interior point: converges to analytic center, unique x*)
+presolve  off      # disable presolve for reproducibility
+solver    simplex  # "choose" (default), "simplex", "ipm", "pdlp"
+               # (ipm = interior point: converges to analytic center,
+               # unique x*)
 
 #strOutputFile  uc1.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSCfg.txt - - - - - - - - - - - - - - - -

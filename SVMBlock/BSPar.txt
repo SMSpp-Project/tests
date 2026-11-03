@@ -3,8 +3,11 @@
 #
 # A txt description of a BlockSolverConfig for a SVMBlock whose abstract
 # representation encodes either the Wolfe dual or the primal formulation of
-# the training problem, to be solved by two different Solver: a :MILPSolver
-# and the ad hoc SMOSolver
+# the training problem, to be solved by the ad hoc SMOSolver and by a
+# :MILPSolver for each kind of algorithm for a convex quadratic program: a
+# commercial one as the reference, the dense active-set one of qpOASES, the
+# interior-point one of MOSEK and the first-order one of OSQP; a :MILPSolver
+# that is not in the build is left out of the run [see common_utils]
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,24 +16,39 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+5  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver                  # name of 1st Solver
 GRBMILPSolver                   # name of 1st Solver
 #SCIPMILPSolver                 # name of 1st Solver
 #HiGHSMILPSolver                # name of 1st Solver
 SMOSolver                       # name of 2nd Solver
+QPOASESMILPSolver               # name of 3rd Solver
+MOSEKMILPSolver                 # name of 4th Solver
+OSQPMILPSolver                  # name of 5th Solver
 
-2  # number of ComputeConfig in this BlockSolverConfig
+5  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# ComputeConfig of the :MILPSolver
+# ComputeConfig of the reference :MILPSolver
 *LPCCfg.txt
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the SMOSolver
 *SMOCfg.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the QPOASESMILPSolver
+*LPCCfg.txt
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the MOSEKMILPSolver
+*LPCCfg.txt
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the OSQPMILPSolver
+*LPCCfg.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -

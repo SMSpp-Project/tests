@@ -10,7 +10,7 @@
 # and then as a NuclearUnitBlock with one family of operating rules added at
 # a time (the modulations, the daily limits on them and on the start-ups, the
 # three bands of the output, the deep decreases, and the whole set of the
-# rules); they are written by test/nuclear_generator.py of pypsa2smspp.
+# rules); they are written by pypsa_instances/nuclear_generator.py.
 #
 # PyPSA has no such rules, hence its optimum is a relaxation of all but the
 # first two instances and cannot be the reference value here, as it is in
@@ -68,7 +68,7 @@ for what in ../../UCBlock/data/nc4/pypsa-data/nuclear/smspp_*.nc; do
 
     run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -r "$ref"
 
-    run_test "$exe" "$what" -S BSPar-DP.txt -R ",r,r" -E ",1e-2," \
+    run_test "$exe" "$what" -S BSPar-DP.txt -R ",r,r,r" -E ",1e-2,,inf" \
              -B InnerBCfg.txt
 
 done

@@ -7,7 +7,7 @@
 # battery batch-easy: the BundleSolver of BSCfg.txt with the doubly
 # stabilized method, whose dual master problem scales the easy components
 # by their size Variable, or by a copy of their inner Block when this has
-# none (bit 5 of intDoEasy), keeping none of their dual values, which
+# none (bit 4 of intDoEasy), keeping none of their dual values, which
 # NDOPar-DS-Dual.txt keeps
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -32,41 +32,41 @@ BundleSolver          # name of Solver
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
 intMPStbl         2 # doubly stabilized
-intDoEasy        33 # easy components, scaled through a copy if need be
+intDoEasy        17 # easy components, scaled through a copy if need be
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END NDOPar-DS.txt  - - - - - - - - - - - - - -

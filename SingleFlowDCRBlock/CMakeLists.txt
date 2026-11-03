@@ -8,6 +8,7 @@ if (NOT hasParent)
     find_package(MILPSolver)
     find_package(LagrangianDualSolver)
     find_package(BundleSolver)
+    find_package(BranchAndXSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -22,18 +23,41 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                           PRIVATE SMS++::SingleFlowDCRBlock)
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(SingleFlowDCRBlock_test PRIVATE SMS++::MILPSolver)
+        target_link_libraries(SingleFlowDCRBlock_test PRIVATE
+                              SMS++::MILPSolver)
+    endif ()
+
+    # the BranchAndXSolver of batch-instances-bx, whose nodes are solved by
+    # the SFDCRBRelaxationSolver: the battery is only there when the build
+    # has the former and the SingleFlowDCRBlock in it has the latter
+    set(DCR_HAS_BX FALSE)
+    if (TARGET SMS++::BranchAndXSolver)
+        target_link_libraries(SingleFlowDCRBlock_test
+                              PRIVATE SMS++::BranchAndXSolver)
+        get_target_property(DCR_INC SMS++::SingleFlowDCRBlock
+                            INTERFACE_INCLUDE_DIRECTORIES)
+        foreach (DIR ${DCR_INC})
+            string(REGEX REPLACE "^\\$<BUILD_INTERFACE:(.*)>$" "\\1" DIR
+                   "${DIR}")
+            if (EXISTS "${DIR}/SFDCRBRelaxationSolver.h")
+                set(DCR_HAS_BX TRUE)
+            endif ()
+        endforeach ()
     endif ()
 
     smspp_install(SingleFlowDCRBlock_test)
 
-    # the batteries on the instances of the module need them extracted first,
-    # which this test does, building the target that downloads them
+    # the instances of SingleFlowDCRBlock, downloaded and extracted when the
+    # tests that read them are run, not when they are built [see the
+    # CMakeLists.txt of the module]; the lock is shared by the tests that build
+    # a target of the data of the module, which under ctest -j would write the
+    # same files at once
     add_test(NAME extract_dcr_nc4
              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                      --target extract_dcr_nc4)
-    set_tests_properties(extract_dcr_nc4
-                         PROPERTIES FIXTURES_SETUP dcr_data_extracted)
+    set_tests_properties(extract_dcr_nc4 PROPERTIES
+                         FIXTURES_SETUP dcr_nc4_extracted
+                         RESOURCE_LOCK dcr_data)
 
     # the battery that solves the SOCP formulation with CPLEX where Gurobi is
     # not stable is only there when CPLEX is [see socp-unstable.txt]
@@ -43,15 +67,20 @@ if (TARGET SMS++::SingleFlowDCRBlock)
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (BATCH_NAME STREQUAL "batches/batch-instances-cplex"
                 AND NOT (CPLEX_FOUND AND TARGET SMS++::MILPSolver))
+            continue ()
+        endif ()
+        if (BATCH_NAME STREQUAL "batches/batch-instances-bx"
+                AND NOT DCR_HAS_BX)
             continue ()
         endif ()
         if (UNIX)
             add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
                      COMMAND bash ${BATCH_FILE}
-                             ${CMAKE_CURRENT_BINARY_DIR}/SingleFlowDCRBlock_test
+                         ${CMAKE_CURRENT_BINARY_DIR}/SingleFlowDCRBlock_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
@@ -63,7 +92,8 @@ if (TARGET SMS++::SingleFlowDCRBlock)
         endif ()
         if (BATCH_NAME MATCHES "^batches/batch-instances")
             set_tests_properties(SingleFlowDCRBlock_test/${BATCH_NAME}
-                                 PROPERTIES FIXTURES_REQUIRED dcr_data_extracted)
+                                 PROPERTIES FIXTURES_REQUIRED
+                                 dcr_nc4_extracted)
         endif ()
     endforeach ()
 
@@ -95,7 +125,7 @@ if (TARGET SMS++::SingleFlowDCRBlock)
             if (UNIX)
                 add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
                          COMMAND bash ${BATCH_FILE}
-                                 ${CMAKE_CURRENT_BINARY_DIR}/MultiFlowDCRBlock_test
+                             ${CMAKE_CURRENT_BINARY_DIR}/MultiFlowDCRBlock_test
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             elseif (WIN32)
                 add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
@@ -106,7 +136,8 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             endif ()
             set_tests_properties(MultiFlowDCRBlock_test/${BATCH_NAME}
-                                 PROPERTIES FIXTURES_REQUIRED dcr_data_extracted)
+                                 PROPERTIES FIXTURES_REQUIRED
+                                 dcr_nc4_extracted)
         endforeach ()
     endif ()
 endif ()

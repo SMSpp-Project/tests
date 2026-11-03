@@ -5,7 +5,7 @@
 # "linear objective" and multiple sub-Block having a "C05 objective", some
 # of which being LagBFunction, solved by the tester for LagBFunction: the
 # two BundleSolver of NDOPar.txt, the proximal and the trust region one,
-# which also keep all the dual values of the easy components (bits 2 and 3
+# which also keep all the dual values of the easy components (bits 1 and 2
 # of intDoEasy), as the runs that change their demands (bit 6 of wchg) have
 # them do
 #
@@ -32,38 +32,38 @@ BundleSolver          # name of 2nd Solver
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-1 # number of integer parameters
+1  # number of integer parameters
 
 # now all the integer parameters
-intDoEasy        13 # easy components, all their dual values
+intDoEasy        7  # easy components, all their dual values
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # trust region, all the dual values of the easy components
@@ -72,41 +72,41 @@ intDoEasy        13 # easy components, all their dual values
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
-intMPStbl         4 # trust region
-intDoEasy        13 # easy components, all their dual values
+intMPStbl        4  # trust region
+intDoEasy        7  # easy components, all their dual values
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - -  END NDOPar-Dual.txt  - - - - - - - - - - - - - -

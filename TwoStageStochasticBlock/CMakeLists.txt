@@ -48,7 +48,8 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::TwoStageStochasticBlock)
 
-    add_executable(TSSB_test test.cpp benders_form.cpp ../common_utils.cpp)
+    add_executable(TSSB_test test.cpp benders_form.cpp ../stochastic_test.cpp
+                             ../common_utils.cpp)
     target_include_directories(TSSB_test PRIVATE ..)
     target_link_libraries(TSSB_test PRIVATE SMS++::TwoStageStochasticBlock)
 
@@ -91,10 +92,12 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-pypsa")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME TSSB_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/TSSB_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/TSSB_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME TSSB_test/${BATCH_NAME}
@@ -103,13 +106,13 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:TSSB_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
-        # Re-use the same `uc_data_extracted` fixture set up by
+        # Re-use the same `uc_nc4_extracted` fixture set up by
         # tests/UCBlock/CMakeLists.txt: it builds the
         # extract_uc_nc4 target which produces the EC nc4 files used here.
         # CTest fixtures are global, so referencing it from a different
         # subdirectory just adds a dependency without redefining the test.
         set_tests_properties(TSSB_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
+                             PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
 
         # batch-pypsa runs each instance twice, the second time on the Benders
         # form, whose BlockSolverConfig names a Solver that may not be in the
@@ -128,12 +131,13 @@ if (TARGET SMS++::TwoStageStochasticBlock)
     # takes is among the labels of this suite, since the rest of it runs
     # without them, so the tester is built only where they are.
     if (TARGET SMS++::BendersDecompositionSolver AND
-        TARGET SMS++::InvestmentBlock)
+        TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock)
 
         add_executable(TSSB_BDS_test test_bds.cpp)
         target_link_libraries(TSSB_BDS_test PRIVATE
                 SMS++::TwoStageStochasticBlock
                 SMS++::InvestmentBlock
+                SMS++::UCBlock
                 SMS++::BendersDecompositionSolver
                 SMS++::BundleSolver
                 SMS++::MILPSolver)
@@ -194,9 +198,9 @@ if (TARGET SMS++::TwoStageStochasticBlock AND TARGET SMS++::MMCFBlock AND
                          $<TARGET_FILE:mmcf_tssb_gen>
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # the instances are written out of the Canad ones, which the
-        # fetch_canad_data test of the MMCFBlock suite downloads
+        # extract_mmcf_Canad test of the MMCFBlock suite downloads
         set_tests_properties(TSSB_test/batches/batch-mmcf
-                             PROPERTIES FIXTURES_REQUIRED canad_fetched)
+                             PROPERTIES FIXTURES_REQUIRED mmcf_Canad_extracted)
     endif ()
 endif ()
 

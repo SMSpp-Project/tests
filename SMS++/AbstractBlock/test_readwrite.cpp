@@ -46,15 +46,6 @@
 
 #define PANIC( x ) if( ! ( x ) ) PANICMSG
 
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
 /*--------------------------------------------------------------------------*/
 
 // This option enable to write/read files in different formats.
@@ -168,12 +159,14 @@ std::vector< ColVariable > * xLP;  // pointer to (static) x LP variables
 std::list< BoxConstraint > * LPbnd;   // BoxConstraint for LPBlock
 
 int rtrnfirstLP; // status returned by first optimization
-bool hsfirstLP; // wheter or not the first optimization produced an optimal solution
+// wheter or not the first optimization produced an optimal solution
+bool hsfirstLP;
 double fofirstLP; // optimal solution of first optimization
 double tfirstLP = 0; // wall-clock time of the first optimization
 
 int rtrnsecondLP; // status returned by second optimization
-bool hssecondLP; // wheter or not the second optimization produced an optimal solution
+// wheter or not the second optimization produced an optimal solution
+bool hssecondLP;
 double fosecondLP; // optimal solution of second optimization
 
 
@@ -348,14 +341,16 @@ static bool SolveFirst( void )
   rtrnfirstLP = slvrLP->compute( false );
   auto end = std::chrono::system_clock::now();
   tfirstLP = std::chrono::duration< double >( end - start ).count();
-  hsfirstLP = ( ( rtrnfirstLP >= Solver::kOK ) && ( rtrnfirstLP < Solver::kError ) )
+  hsfirstLP = ( ( rtrnfirstLP >= Solver::kOK ) &&
+                ( rtrnfirstLP < Solver::kError ) )
               || ( rtrnfirstLP == Solver::kLowPrecision );
   fofirstLP = hsfirstLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
                      : ( convex ? INF : -INF );
 
   if( hsfirstLP ) {
    LOG1( "OK(f) - " );
-   LOG1( "First optimization produced an optimal solution : " << fofirstLP << endl );
+   LOG1( "First optimization produced an optimal solution : " << fofirstLP
+         << endl );
    return( true );
    }
 
@@ -394,7 +389,8 @@ static bool SolveSecond( void )
   rtrnsecondLP = slvrLP->compute( false );
   auto end = std::chrono::system_clock::now();
   double tsecondLP = std::chrono::duration< double >( end - start ).count();
-  hssecondLP = ( ( rtrnsecondLP >= Solver::kOK ) && ( rtrnsecondLP < Solver::kError ) )
+  hssecondLP = ( ( rtrnsecondLP >= Solver::kOK ) &&
+                 ( rtrnsecondLP < Solver::kError ) )
               || ( rtrnsecondLP == Solver::kLowPrecision );
 
   /* NOTE:
@@ -417,7 +413,8 @@ static bool SolveSecond( void )
   #endif
 
   if( hssecondLP )
-   LOG1( "Second optimization produced an optimal solution : " << fosecondLP << endl );
+   LOG1( "Second optimization produced an optimal solution : " << fosecondLP
+         << endl );
   else if( rtrnsecondLP == Solver::kInfeasible )
     LOG1( "Second optimization produced an unfeasible model" << endl );
   else if( rtrnsecondLP == Solver::kUnbounded )
@@ -435,7 +432,7 @@ static bool SolveSecond( void )
   bool ok;
   std::string verdict;
   if( hsfirstLP && hssecondLP && ( abs( fofirstLP - fosecondLP ) <= 2e-7 *
-                 max( double( 1 ) , abs( max( fofirstLP , fosecondLP ) ) ) ) ) {
+                max( double( 1 ) , abs( max( fofirstLP , fosecondLP ) ) ) ) ) {
    ok = true; verdict = "OK(f)";
    }
   else if( ( rtrnfirstLP == Solver::kInfeasible ) &&
@@ -477,45 +474,45 @@ int main( int argc , char **argv )
  // reading command line parameters - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
- long int seed = 0;
- Index wchg = 31;
- double dens = 4;
- double p_change = 0.5;
- Index n_change = 10;
- Index n_repeat = 10;
+ round_opts.wchg = 31;
+ round_opts.n_repeat = 10;
+ static double dens = 4;
 
- switch( argc ) {
-  case( 8 ): Str2Sthg( argv[ 7 ] , p_change );
-  case( 7 ): Str2Sthg( argv[ 6 ] , n_change );
-  case( 6 ): Str2Sthg( argv[ 5 ] , n_repeat );
-  case( 5 ): Str2Sthg( argv[ 4 ] , dens );
-  case( 4 ): Str2Sthg( argv[ 3 ] , nvar );
-  case( 3 ): Str2Sthg( argv[ 2 ] , wchg );
-  case( 2 ): Str2Sthg( argv[ 1 ] , seed );
-             break;
-  default: cerr << "Usage: " << argv[ 0 ] <<
-	   " seed [wchg nvar dens #rounds #chng %chng]"
- 		<< endl <<
-           "       wchg: what to change, coded bit-wise [31]"
-		<< endl <<
-           "             1 = add rows, 2 = delete rows"
-		<< endl <<
-           "             4 = modify rows, 8 = modify constants"
-		<< endl <<
-           "             16 = change global lower/upper bound"
-        << endl <<
-        "       nvar: number of variables [10]"
-        << endl <<
-        "       dens: rows / variables [4]"
-        << endl <<
-        "       #rounds: how many iterations [10]"
-        << endl <<
-        "       #chng: number changes [10]"
-        << endl <<
-        "       %chng: probability of changing [0.5]"
-        << endl;
-	   return( 1 );
-  }
+ docopt_desc = "SMS++ AbstractBlock read/write test.\n";
+ add_round_options(
+  "                                    1 add rows, 2 delete rows,\n"
+  "                                    4 modify rows, 8 modify constants,\n"
+  "                                    16 change global lower/upper bound\n"
+  );
+ short_opts += "N:d:";
+ const std::vector< option > my_opts = {
+   { "nvar" , required_argument , nullptr , 'N' } ,
+   { "dens" , required_argument , nullptr , 'd' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help +=
+  "  -N, --nvar <n>                  number of variables [10]\n"
+  "  -d, --dens <x>                  rows / variables [4]\n"
+;
+
+ // the instance is generated, so no input file is needed
+ filename_optional = true;
+
+ process_args( argc , argv , []( int opt ) {
+   if( process_round_option( opt ) )
+    return( true );
+   switch( opt ) {
+    case( 'N' ): Str2Sthg( optarg , nvar ); return( true );
+    case( 'd' ): Str2Sthg( optarg , dens ); return( true );
+    default: return( false );
+    }
+   } );
+
+ long int seed = round_opts.seed;
+ Index wchg = round_opts.wchg;
+ Index n_repeat = round_opts.n_repeat;
+ Index n_change = round_opts.n_change;
+ double p_change = round_opts.p_change;
 
  if( nvar < 1 ) {
   cout << "error: nvar too small";
@@ -690,7 +687,8 @@ int main( int argc , char **argv )
   #endif
 
   #if TEST_FILE_TYPE == 3
-    secondLPBlock = dynamic_cast< AbstractBlock * >( Block::deserialize( output_name_net ));
+    secondLPBlock = dynamic_cast< AbstractBlock * >(
+                                  Block::deserialize( output_name_net ));
   #endif
  }
 
@@ -929,14 +927,14 @@ int main( int argc , char **argv )
     ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
                                 MILPSolver::strOutputFile , rep_name );
 
-    // finally, re-solve the problems with the first solver - - - - - - - - - - -
+    // finally, re-solve the problems with the first solver - - - - - - - - - -
     // ... every SKIP_BEAT + 1 rounds
     SolveFirst();
 
     // Write the .nc4 file. Here, the structure of the file is very simple:
     // it is a SMS++_file_type composed by a single problem with a Block inside
-    // corresponding to an AbstractBlock. Within this Group, we use the Variable 
-    // "Model" to store the .lp representation of the model.
+    // corresponding to an AbstractBlock. Within this Group, we use the
+    // Variable "Model" to store the .lp representation of the model.
     #if TEST_FILE_TYPE == 3
     {
     netCDF::NcFile f( rep_name_net , netCDF::NcFile::replace );
@@ -959,7 +957,7 @@ int main( int argc , char **argv )
     }
     #endif
 
-    // construct the second LP by simply reading the previous written model - - -
+    // construct the second LP by simply reading the previous written model - -
     {
     secondLPBlock = new AbstractBlock();
 
@@ -976,12 +974,13 @@ int main( int argc , char **argv )
     #endif
 
     #if TEST_FILE_TYPE == 3
-      secondLPBlock = dynamic_cast< AbstractBlock * >( Block::deserialize( rep_name_net ));
+      secondLPBlock = dynamic_cast< AbstractBlock * >(
+                                    Block::deserialize( rep_name_net ));
     #endif
     }
 
-    // attach the Solver to the Block- - - - - - - - - - - - - - - - - - - - - -
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // attach the Solver to the Block- - - - - - - - - - - - - - - - - - - - -
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // for both Block do this by reading an appropriate BlockSolverConfig from
     // file and apply() it to the Block; note that the BlockSolverConfig are
     // clear()-ed and kept to do the cleanup at the end
@@ -994,8 +993,8 @@ int main( int argc , char **argv )
                                 MILPSolver::strOutputFile , "SecondLPBlock-" + 
                                 std::to_string( rep ) + ".lp" );
 
-    // second solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // second solver call - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     bool AllPassed = SolveSecond();
 
     ++rep;

@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - TUBCfg-3bin-PC.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - TUBCfg-3bin-PC.txt  - - - - - - - - - - - - - - -
 #
 # The BlockConfig of a ThermalUnitBlock that selects the 3bin formulation
 # with Perspective Cuts (static_variables = 8).
@@ -46,5 +46,5 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END TUBCfg-3bin-PC.txt- - - - - - - - - - - - - -
+# - - - - - - - - - - - - END TUBCfg-3bin-PC.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

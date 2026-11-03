@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - TUBCfg-T.txt- - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - TUBCfg-T.txt  - - - - - - - - - - - - - - - -
 #
 # The BlockConfig of a ThermalUnitBlock that selects the T formulation,
 # without Perspective Cuts (static_variables = 1).
@@ -50,5 +50,5 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - END TUBCfg-T.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END TUBCfg-T.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

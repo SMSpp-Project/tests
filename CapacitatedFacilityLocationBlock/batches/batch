@@ -8,70 +8,40 @@
 # relaxation; runs a largish set of ORLib, Yang and TBED instances and checks
 # that the two lower bounds coincide along a sequence of random modifications
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
+# the common part, which reads the arguments [see cfl_battery.sh]
+source "$(dirname "$0")/cfl_battery.sh" "$@"
 
-# run from the test root (one level up) so CFL_test reads the default config
-# files (BPar*, BSPar*, R3BCfg) there
-cd "$(dirname "$0")/.." || exit 1
+# the original Block and its R3Block, each with its configuration
+forms=CFLBForm.txt
 
-
-DATADIR=../../CapacitatedFacilityLocationBlock/data
-
-CFL_test=${1:-./CFL_test}
-mlf=${2:-}
-
-niter=0
 # wchg = 831 = all data changes + abstract representation (+256) + the +512
 # ("set eps & no negative design") bit, always required with a MCF R3Block
 wchg=831
-rounds=40
 maxseed=2
 
 # ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for what in ${DATADIR}/txt/ORLib/*.txt; do
+cfl_orlib
 
-  for (( seed = 0 ; seed <= maxseed ; seed++ )); do
-
-    run_test "$CFL_test" "$what" c "$niter" "$seed" "$wchg" "$rounds"
-
-  done
-done
-
-# Yang and TBED are skipped in CI: a single one of these instances runs for
-# hours (40 re-solve rounds on a large facility-location problem), far past
-# any CI budget. ORLib above gives the regression signal; local runs the lot.
+# Yang and TBED: the 40 rounds take from 1 to 6 seconds on a Yang instance
+# and some 15 on a TBED one, so CI runs the first instance of each Yang size
+# and the first TBED one with seed 0 only (some 30 seconds), and a local run
+# all of them with all the seeds (some 7 minutes)
 if [ -n "$CI" ]; then
-  exit 0
+  maxseed=0
+  yang=1
+  tbed=1
+else
+  yang=
+  tbed="1 6 11 16 19"
 fi
 
 # Yang - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for i in 30-200 60-200 60-300 80-400; do
-  for (( h = 1 ; h <= 5 ; h++ )); do
-    for (( seed = 0 ; seed <= maxseed ; seed++ )); do
-
-      what=${DATADIR}/txt/Yang/${i}/${i}-${h}.txt
-
-      run_test "$CFL_test" "$what" l "$niter" "$seed" "$wchg" "$rounds"
-
-    done
-  done
-done
+cfl_yang $yang
 
 # TBED - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for i in 300; do            # 300_1500 500 700 1000
-  for h in 1 6 11 16 19; do #for (( h = 1 ; h <= 10 ; h++ ))
-    for (( seed = 0 ; seed <= maxseed ; seed++ )); do
-
-      what=${DATADIR}/txt/TBED/${i}/i${i}_${h}.txt
-
-      run_test "$CFL_test" "$what" f "$niter" "$seed" "$wchg" "$rounds"
-
-    done
-  done
-done
+cfl_tbed $tbed
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

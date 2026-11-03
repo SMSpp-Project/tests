@@ -6,10 +6,11 @@
 #        < log file > = name of log file, default no log
 #
 # the same cross-check the second run of batch-pypsa does, on the instances
-# in which the expansion is actually built: they are the same PyPSA networks, written with
-# the capital costs scaled by the same factor the horizon is cut by, so that
-# the investment can pay for itself and the first stage is a decision rather
-# than a formality [see SCALE_CAPITAL_COSTS in the generator of pypsa2smspp]
+# in which the expansion is actually built: they are the same PyPSA networks,
+# written with the capital costs scaled by the same factor the horizon is cut
+# by, so that the investment can pay for itself and the first stage is a
+# decision rather than a formality [see SCALE_CAPITAL_COSTS in the generator
+# of pypsa2smspp]
 #
 # the Benders Solver runs here in its convex regime, i.e. with the value
 # functions in the Objective of the master and a bundle driving the loop,
@@ -30,11 +31,12 @@ parse_batch_args "$@"
 # each entry: [ file name ] = PyPsa objective value
 
 declare -A REF_OBJ
+P=smspp_network_small_fewsectors
 
-REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_demand_invest.nc]=2.1884021766e+08
-REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_maxpower_invest.nc]=1.7659454519e+08
-REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_hydroinflow_invest.nc]=1.3152296125e+08
-REF_OBJ[smspp_network_small_fewsectors__snap100__scen3_complete_invest.nc]=2.8391748465e+08
+REF_OBJ[${P}__snap100__scen3_demand_invest.nc]=2.1884021766e+08
+REF_OBJ[${P}__snap100__scen3_maxpower_invest.nc]=1.7659454519e+08
+REF_OBJ[${P}__snap100__scen3_hydroinflow_invest.nc]=1.3152296125e+08
+REF_OBJ[${P}__snap100__scen3_complete_invest.nc]=2.8391748465e+08
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

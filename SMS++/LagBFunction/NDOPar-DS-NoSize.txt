@@ -6,7 +6,7 @@
 # of which being LagBFunction, solved by the tester for LagBFunction in the
 # battery batch-easy: the BundleSolver of NDOPar-DS.txt, whose dual master
 # problem does not scale the easy components by their size Variable, i.e.,
-# has the mass of the lower model fixed to 1 (bit 4 of intDoEasy), keeping
+# has the mass of the lower model fixed to 1 (bit 3 of intDoEasy), keeping
 # none of their dual values, which NDOPar-DS-NoSize-Dual.txt keeps
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31,41 +31,41 @@ BundleSolver          # name of Solver
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-2 # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
-intMPStbl         2 # doubly stabilized
-intDoEasy        17 # easy components, not scaled by a size Variable
+intMPStbl        2  # doubly stabilized
+intDoEasy        9  # easy components, not scaled by a size Variable
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - -  END NDOPar-DS-NoSize.txt - - - - - - - - - - - -

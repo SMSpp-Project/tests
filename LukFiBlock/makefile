@@ -64,4 +64,4 @@ MH =    $(SMS++H) $(BNDSLVH) $(LukFiH)
 $(DIR)/main.o: $(DIR)/main.cpp $(MH)
 	$(CC) -c $*.cpp -o $@ $(MINC) $(SW)
 
-############################ End of makefile ################################
+############################ End of makefile #################################

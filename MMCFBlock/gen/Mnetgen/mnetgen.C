@@ -8,8 +8,9 @@
 
 using namespace std;
 
-#ifdef _MSC_VER
- // custom implementation for MSVC
+#if defined(_WIN32)
+ // custom implementation for Windows, whose C library (of MSVC as of
+ // MinGW-w64) has no drand48(): the same 48-bit generator
  static unsigned long long seed = 1;  // initial seed
 
  // function that simulates `drand48()`

@@ -30,40 +30,64 @@ such as `CPXMILPSolver` , `SCIPMILPSolver` or `GRBMILPSolver`);
 also, `UpdateSolver` are registered to all its sons (`PolyhedralFunctionBlock`,
 or directly to itself if and( nf ) = 1) that maps all the `Modification` 
 to the corresponding son of NDOBlock (or to NDOBlock if abs( nf ) = 1). 
-The latter is configured to use the "natural" representation and has an 
-appropriate NDO `Solver` attached (say, `BundleSolver`).
+The latter is configured to use the "natural" representation and has the
+NDO `Solver` of `NDOPar.txt` attached: a `BundleSolver` whose dual master
+problem is solved by the `:MILPSolver` of `MPBCfg.txt`, one whose primal
+master problem is solved by the `BDMinQuadSolver` of `MPBCfg-BDMQ.txt` and
+one whose primal master problem is solved by the `DAQPMILPSolver` of
+`MPBCfg-DAQP.txt`, each of the last two being left out when the build does
+not have the `Solver` of its master.
 
-After all this is done, the NDOBlock and LPBlock are solved with the
-registered `Solver` and the results (termination status and objective
-value, if applicable) are compared.
+After all this is done, LPBlock is solved with its `Solver`, which gives the
+reference, and NDOBlock with each of its `Solver`, and the results
+(termination status and objective value, if applicable) of each of them are
+compared with the reference. A `Solver` whose `compute()` throws
+`std::invalid_argument`, i.e., that does not handle the problem (as
+`BDMinQuadSolver` does on a master with linear constraints), is reported as
+"n.a." and is not called again, the test failing only if one of the others
+disagrees with the reference.
 
 Then, repeatedly a "linearized" `PolyhedralFunctionBlock` in LPBlock is
 randomly modified, with the `Modification` automatically transmitted to
 the corresponding "natural" `PolyhedralFunctionBlock` in NDOBlock to keep
 them in synch. Then both are re-solved several times; each time the results
-of the two `Solver` are compared.
+of each `Solver` of NDOBlock are compared with those of LPBlock.
 
 The usage of the executable is the following:
 
-      ./PolyhedralFunctionBlock_test seed [wchg nvar dens #nf #rounds #chng %chng]
-       wchg: what to change, coded bit-wise [319]
-             0 = add rows, 1 = delete rows 
-             2 = modify rows, 3 = modify constants
-             4 = change global lower/upper bound
-             5 = change linear objective
-             8 (+256) = do "abstract" changes
-       nvar: number of variables [10]
-       dens: rows / variables [3]
-       #nf: number of PolyhedralFunction in the sub-Block [0]
-       #rounds: how many iterations [40]
-       #chng: number of changes [10]
-       %chng: probability of changing [0.5]
+       ./PolyhedralFunctionBlock_test [options]
+       -e, --seed <n>      seed of the random generator [0]
+       -k, --wchg <bits>   what to change, coded bit-wise [63]
+                           1 = add rows, 2 = delete rows
+                           4 = modify rows, 8 = modify constants
+                           16 = change local lower/upper bound
+                           32 = change linear objective
+                           64 = change global lower/upper bound
+                           512 = do "abstract" changes
+                           1024 = use the dual (Fenchel) representation
+                                  for the LPBlock
+                           2048 = scale each PFB row locally
+                           4096 = apply one global PFB epigraph scale
+       -n, --rounds <n>    how many iterations [40]
+       -m, --nchng <n>     number of changes [10]
+       -q, --pchng <p>     probability of changing [0.5]
+       -N, --nvar <n>      number of variables [10]
+       -d, --dens <x>      rows / variables [3]
+       -f, --nf <n>        number of PolyhedralFunction in the sub-Block [0]
+       -V, --pvert <p>     probability that a generated row is vertical [0]
+       -X, --detach <0|1>  if the Solver of NDOBlock is detached and
+                           re-attached [0]
+       -S, --solvercfg <f> the BlockSolverConfig of NDOBlock [NDOPar.txt]
 
 A batch file is provided that runs a not-so-large buy yet comprehensive set
 of tests with different sizes and seeds of the random generator; all these
 passing is a good sign that no regressions have been done for the tested
 modules, and in particular for `PolyhedralFunction` and
-`PolyhedralFunctionBlock`.
+`PolyhedralFunctionBlock`. `batch-kelley` runs the same battery with the
+`BundleSolver` of `NDOPar-Kelley.txt`, i.e., the proximal one and the
+cutting-plane method of Kelley (no stabilization) with the primal and with
+the dual master problem, on the instances where the cutting-plane master
+does not become unbounded.
 
 `PolyhedralFunctionBlock_prune_test` is a unit test of
 `PolyhedralFunctionBlock::remove_redundant_rows()`: it builds a convex
@@ -74,8 +98,8 @@ epigraph. The geometric pruning alone is tested in
 [PolyhedralFunction](../PolyhedralFunction).
 
 A makefile is also provided that builds the executable including the
-`BundleSolver` module and all its dependencies, in particular `MILPSolver`
-(and, obviously, the core SMS++ library).
+`BundleSolver` and `BDMinQuadSolver` modules and all their dependencies, in
+particular `MILPSolver` (and, obviously, the core SMS++ library).
 
 
 ## Authors

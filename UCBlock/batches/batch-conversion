@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+#
+# usage: batch-conversion < exe file > < par file > < log file >
+#        < exe file > = path of the executable file, default UCBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar-DP.txt
+#        < log file > = name of log file, default no log
+#
+# runs the UCBlock instances with a ConversionUnitBlock, a unit with one
+# commitment and several generators on their own nodes, and checks that all
+# the Solver find the reference objective value:
+#
+#   multi-energy  electricity and heat on two nodes: a combined heat and
+#                 power plant written as a ConversionUnitBlock (me_*_unit)
+#                 and the same plant as a ThermalUnitBlock whose output
+#                 hyperarcs split into electricity and heat (me_*_hyperarc),
+#                 back-pressure (bp), with a reserve (bpres), with a CO2
+#                 budget over the heat node (bppol), extraction-condensing
+#                 (ec), and a meshed electric network with a heat node
+#                 (mesh), and the back-pressure ones and the mesh with the
+#                 electricity and the heat as two carriers, the plant a
+#                 ThermalUnitBlock with two outputs (me_*_carrier), and all
+#                 of them with the two carriers and the plant the
+#                 ConversionUnitBlock, each generator with its output on its
+#                 carrier (me_*_unitcarrier); the
+#                 reference is the optimum by hand and by an independent
+#                 MILP [see data/gen_multi_energy.py of UCBlock]
+#
+#   carriers      small PyPSA networks with the electricity, the hydrogen,
+#                 the gas and the heat as carriers, whose links are units
+#                 with their outputs on the carriers of their buses: an
+#                 electrolyzer, a fuel cell, a store of hydrogen and a gas
+#                 turbine (carriers_h2), the same over two regions with an
+#                 electric line and a hydrogen pipeline (carriers_net), a
+#                 CHP with two outputs and a heat pump whose COP changes over
+#                 time (carriers_heat); the reference is the optimum of
+#                 PyPSA [see data/gen_carriers.py of UCBlock]
+#
+#   conversion    the committable links of the test networks of pypsa2smspp,
+#                 each a ConversionUnitBlock between a gas, an electric and a
+#                 heat node: a back-pressure CHP alone, with no line, with
+#                 ramps and an empty start-up range, with a heat store and the
+#                 CO2 of the fuel as third output, in a meshed AC network
+#                 with a hyperarc, next to an extendable boiler or a solar
+#                 generator (chp_*), and with a heat pump whose COP changes
+#                 over time, a delayed output, modules, the modules built and
+#                 a continuous design (chpx_), and a continuous design with
+#                 ramps and start-up and shut-down limits, off and on before
+#                 the horizon, and modules built with one on before it
+#                 (chpy_); the reference is the optimum of PyPSA [see
+#                 data/gen_conversion.py of UCBlock]; each of them also with
+#                 the gas, the electric and the heat buses as the nodes of
+#                 three carriers, the generators of the ConversionUnitBlock
+#                 having each its output on the carrier of its node, and the
+#                 other links between two carriers units with outputs
+#                 (*_carriers), held to the same reference
+#
+# They take milliseconds, hence they all run in CI too.
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+
+DEFAULT_EXE=./UCBlock_test
+DEFAULT_PAR=BSPar-DP.txt
+# the LagrangianDualSolver here solves a relaxation of the problem, and with
+# the sub-problems solved exactly the bound it gives is the Lagrangian one,
+# which has a duality gap: it is declared as such, so that it is held to
+# solving its own problem exactly while of this one it only bounds the side
+# a relaxation bounds [see BSPar-DP.txt]
+REL="${REL:-,r,,r}"
+# the LagrangianDualRelaxationSolver of the BlockSolverConfig (the 4th
+# Solver) is a relaxation: its upper bound is the other side of the
+# relaxation, not of this problem, so it is declared one in REL, and only
+# its lower bound is held, to correctness alone [see BSPar-DP.txt]
+EPS="${EPS:-,,,inf}"
+
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+
+declare -A REF_OBJ
+
+REF_OBJ[me_bp_unit.nc4]=21700
+REF_OBJ[me_bp_hyperarc.nc4]=21700
+REF_OBJ[me_bpres_unit.nc4]=21700
+REF_OBJ[me_bpres_hyperarc.nc4]=21700
+REF_OBJ[me_bppol_unit.nc4]=22350
+REF_OBJ[me_bppol_hyperarc.nc4]=22350
+REF_OBJ[me_ec_unit.nc4]=28900
+REF_OBJ[me_ec_hyperarc.nc4]=28900
+REF_OBJ[me_mesh_unit.nc4]=31600
+REF_OBJ[me_bp_carrier.nc4]=21700
+REF_OBJ[me_bpres_carrier.nc4]=21700
+REF_OBJ[me_bppol_carrier.nc4]=22350
+REF_OBJ[me_mesh_carrier.nc4]=31600
+REF_OBJ[me_bp_unitcarrier.nc4]=21700
+REF_OBJ[me_bpres_unitcarrier.nc4]=21700
+REF_OBJ[me_bppol_unitcarrier.nc4]=22350
+REF_OBJ[me_ec_unitcarrier.nc4]=28900
+REF_OBJ[me_mesh_unitcarrier.nc4]=31600
+
+REF_OBJ[carriers_h2.nc4]=4.971875000e+03
+REF_OBJ[carriers_heat.nc4]=1.143790909e+04
+REF_OBJ[carriers_net.nc4]=5.288392857e+03
+
+REF_OBJ[chp_3n_2g_1gext_1cl.nc4]=3.138068182e+04
+REF_OBJ[chp_3n_3g_1cl.nc4]=3.063068182e+04
+REF_OBJ[chp_3n_3g_1cl_0l.nc4]=3.150000000e+04
+REF_OBJ[chp_3n_3g_1cl_ramp.nc4]=8.530000000e+04
+REF_OBJ[chp_4n_3g_2s_1cl.nc4]=7.644204545e+04
+REF_OBJ[chp_5n_3g_1cl_3l_1ml.nc4]=3.250000000e+04
+REF_OBJ[chp_tssb_3n_3g_1gext_1cl.nc4]=2.264602273e+04
+REF_OBJ[chp_tssb_3n_4g_1cl.nc4]=2.189602273e+04
+REF_OBJ[chpx_3n_3g_1cl_delay.nc4]=7.513684211e+04
+REF_OBJ[chpx_3n_3g_1clext.nc4]=3.993068182e+04
+REF_OBJ[chpx_3n_3g_1clmod.nc4]=2.673068182e+04
+REF_OBJ[chpx_3n_3g_1clmod_build.nc4]=3.593068182e+04
+REF_OBJ[chpx_3n_3g_1clmodext.nc4]=3.593068182e+04
+REF_OBJ[chpx_3n_3g_2cl_cop.nc4]=2.838289474e+04
+REF_OBJ[chpx_3n_3g_2cl_cop_delay.nc4]=2.826390625e+04
+REF_OBJ[chpy_3n_3g_1clext_ramp.nc4]=4.676000000e+04
+REF_OBJ[chpy_3n_3g_1clext_ramp_on.nc4]=4.480000000e+04
+REF_OBJ[chpy_3n_3g_1clmod_build_on.nc4]=3.573068182e+04
+REF_OBJ[chp_3n_2g_1gext_1cl_carriers.nc4]=3.138068182e+04
+REF_OBJ[chp_3n_3g_1cl_carriers.nc4]=3.063068182e+04
+REF_OBJ[chp_3n_3g_1cl_0l_carriers.nc4]=3.150000000e+04
+REF_OBJ[chp_3n_3g_1cl_ramp_carriers.nc4]=8.530000000e+04
+REF_OBJ[chp_4n_3g_2s_1cl_carriers.nc4]=7.644204545e+04
+REF_OBJ[chp_5n_3g_1cl_3l_1ml_carriers.nc4]=3.250000000e+04
+REF_OBJ[chp_tssb_3n_3g_1gext_1cl_carriers.nc4]=2.264602273e+04
+REF_OBJ[chp_tssb_3n_4g_1cl_carriers.nc4]=2.189602273e+04
+REF_OBJ[chpx_3n_3g_1cl_delay_carriers.nc4]=7.513684211e+04
+REF_OBJ[chpx_3n_3g_1clext_carriers.nc4]=3.993068182e+04
+REF_OBJ[chpx_3n_3g_1clmod_carriers.nc4]=2.673068182e+04
+REF_OBJ[chpx_3n_3g_1clmod_build_carriers.nc4]=3.593068182e+04
+REF_OBJ[chpx_3n_3g_1clmodext_carriers.nc4]=3.593068182e+04
+REF_OBJ[chpx_3n_3g_2cl_cop_carriers.nc4]=2.838289474e+04
+REF_OBJ[chpx_3n_3g_2cl_cop_delay_carriers.nc4]=2.826390625e+04
+REF_OBJ[chpy_3n_3g_1clext_ramp_carriers.nc4]=4.676000000e+04
+REF_OBJ[chpy_3n_3g_1clext_ramp_on_carriers.nc4]=4.480000000e+04
+REF_OBJ[chpy_3n_3g_1clmod_build_on_carriers.nc4]=3.573068182e+04
+
+# what the Solver solve, per instance - - - - - - - - - - - - - - - - - - - -
+# The units of several modules have an integer commitment, 0 to the number of
+# modules, and no binary Variable: the PrimalProximalHeur, whose proximal
+# term is on the binary static Variable, then solves the Lagrangian Dual and
+# nothing more, finding no primal solution, hence it is declared a
+# relaxation there, held to bounding the side a relaxation bounds.
+
+declare -A REL_OF
+
+REL_OF[chpx_3n_3g_1clmod.nc4]=,r,r,r
+REL_OF[chpx_3n_3g_1clmod_build.nc4]=,r,r,r
+REL_OF[chpx_3n_3g_1clmodext.nc4]=,r,r,r
+REL_OF[chpy_3n_3g_1clmod_build_on.nc4]=,r,r,r
+REL_OF[chpx_3n_3g_1clmod_carriers.nc4]=,r,r,r
+REL_OF[chpx_3n_3g_1clmod_build_carriers.nc4]=,r,r,r
+REL_OF[chpx_3n_3g_1clmodext_carriers.nc4]=,r,r,r
+REL_OF[chpy_3n_3g_1clmod_build_on_carriers.nc4]=,r,r,r
+
+# The LagrangianDualSolver stops on me_bppol_carrier and on
+# me_bppol_unitcarrier with the norm of the aggregated subgradient below
+# dblNZEps (1e-2 in LDCfg-DPe.txt) and the gap not closed, at [ 21700.8 ,
+# 21718.5 ], while with dblNZEps = 1e-8 it finds 22350: its bound is right
+# but not tight, which is the stopping rule of the BundleSolver and not the
+# model (the two forms of the same case with one carrier reach 22350). The
+# same on chp_3n_3g_1cl_ramp_carriers, at [ 66327.6 , 66624.7 ], while the
+# Lagrangian dual is 67181.9 (the value of the 4th Solver, and of the
+# LagrangianDualSolver with dblNZEps = 1e-8 and on the network form). There
+# it is held to the side it bounds, as the 4th Solver is.
+
+declare -A EPS_OF
+
+EPS_OF[me_bppol_carrier.nc4]=,inf,,inf
+EPS_OF[me_bppol_unitcarrier.nc4]=,inf,,inf
+EPS_OF[chp_3n_3g_1cl_ramp_carriers.nc4]=,inf,,inf
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# each instance with each formulation of the network: PTDF, CYCLE and the
+# KIRCHHOFF of InnerBCfg.txt, the list of InnerBForm-DCN.txt; the instance is
+# read once per formulation, and the Solver of all the copies are compared
+# with each other as well as with the reference
+for what in ../../UCBlock/data/nc4/multi-energy/me_*.nc4 \
+            ../../UCBlock/data/nc4/conversion/*.nc4 \
+            ../../UCBlock/data/nc4/carriers/*.nc4; do
+
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+
+    rel=${REL_OF[$base]}
+    eps=${EPS_OF[$base]}
+
+    run_test "$exe" "$what" -S "$par" -R "${rel:-$REL}" -E "${eps:-$EPS}" \
+             -F InnerBForm-DCN.txt -r "$ref"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

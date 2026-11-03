@@ -53,7 +53,7 @@ str_LDSlv_ISCfg ISCfg-LDRS.txt  # ComputeConfig of the inner Solver
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END LDRSCfg.txt - - - - - - - - - - - - - - -

@@ -1,13 +1,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar-milp.txt  - - - - - - - - - - - - - -
 #
-# Single-exact-solver BlockSolverConfig: the greedy relaxation (which brackets
-# the optimum) plus the exact CPLEX MILP (:MILPSolver). It is the "CPLEX" entry
-# of the hard-instance lineups (batch-jooken and batch-pisinger-large), run one
-# solver per process to map where a strong MIP engine cracks the large-capacity
-# instances that defeat the core DP and the greedy-bound B&B.
-#
-#   Donato Meoli
+# Single-exact-solver BlockSolverConfig: the greedy relaxation (which
+# brackets the optimum) plus the exact CPLEX MILP (:MILPSolver). It is the
+# "CPLEX" entry of the hard-instance lineups (batch-jooken and
+# batch-pisinger-large), run one solver per process to map where a strong MIP
+# engine cracks the large-capacity instances that defeat the core DP and the
+# greedy-bound B&B.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -21,7 +20,8 @@ BlockSolverConfig     # exact type of the Configuration object
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GreedyRelaxationBinaryKnapsackSolver  # 1st: relaxation, brackets the optimum
 HiGHSMILPSolver                       # 2nd: the exact MILP
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 
@@ -47,7 +47,13 @@ intMaxThread   1  # a single thread
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -65,10 +71,10 @@ intMaxThread   1  # a single thread
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End BSPar-milp.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-milp.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

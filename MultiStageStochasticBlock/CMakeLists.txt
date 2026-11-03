@@ -18,7 +18,8 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::MultiStageStochasticBlock)
 
-    add_executable(MSSB_test test.cpp ../common_utils.cpp)
+    add_executable(MSSB_test test.cpp ../stochastic_test.cpp
+                   ../common_utils.cpp)
     target_include_directories(MSSB_test PRIVATE ..)
     target_link_libraries(MSSB_test PRIVATE SMS++::MultiStageStochasticBlock)
 
@@ -51,10 +52,12 @@ if (TARGET SMS++::MultiStageStochasticBlock)
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-pypsa")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (UNIX)
             add_test(NAME MSSB_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/MSSB_test
+                     COMMAND bash ${BATCH_FILE}
+                             ${CMAKE_CURRENT_BINARY_DIR}/MSSB_test
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         elseif (WIN32)
             add_test(NAME MSSB_test/${BATCH_NAME}
@@ -63,13 +66,13 @@ if (TARGET SMS++::MultiStageStochasticBlock)
                              "${BATCH_FILE}" "$<TARGET_FILE:MSSB_test>"
                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         endif ()
-        # Re-use the same `uc_data_extracted` fixture set up by
+        # Re-use the same `uc_nc4_extracted` fixture set up by
         # tests/UCBlock/CMakeLists.txt: it builds the
         # extract_uc_nc4 target which produces the EC nc4 files used here.
         # CTest fixtures are global, so referencing it from a different
         # subdirectory just adds a dependency without redefining the test.
         set_tests_properties(MSSB_test/${BATCH_NAME}
-                             PROPERTIES FIXTURES_REQUIRED uc_data_extracted)
+                             PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
     endforeach ()
 endif ()
 

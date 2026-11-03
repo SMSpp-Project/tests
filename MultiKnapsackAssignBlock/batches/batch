@@ -8,8 +8,9 @@
 #
 # Cross-check on the instances that MultiKnapsackAssignBlock distributes in
 # data/txt: the :MILPSolver on the whole tree and the Lagrangian dual of the
-# integer problem, declared a relaxation with -R, which has to bound the
-# optimum of the former from above.
+# integer problem, solved by a BundleSolver and by a SubGradSolver, both
+# declared a relaxation with -R, which have to bound the optimum of the
+# former from above.
 
 # run from the test directory so the tester reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -30,7 +31,7 @@ data=../../MultiKnapsackAssignBlock/data/txt
 for n in 50 100; do
   for rm in r2-m4 r4-m8; do
     for c in u w s; do
-      run_test "$exe" -S "$par" -R ,r "${data}/mkap-n${n}-${rm}-${c}.txt" \
+      run_test "$exe" -S "$par" -R ,r,r "${data}/mkap-n${n}-${rm}-${c}.txt" \
                < /dev/null
     done
   done

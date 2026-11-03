@@ -13,19 +13,11 @@
 # BundleSolver is built with Torch, so this batch fails (unknown Solver name)
 # on a Torch-less build.
 
-# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
-source "$(dirname "$0")/../../batch_common.sh"
-
-DATADIR=data
-
-MMCFBlock_test=${1:-./MMCFBlock_test}
+# the common part, which reads the argument [see mmcf_battery.sh]
+source "$(dirname "$0")/mmcf_battery.sh" "$@"
 
 # Canad - - - - - - - - - - - - - - - - - - - -
 
-for what in ${DATADIR}/Canad/*.dat; do
-
-  run_test "$MMCFBlock_test" "$what" -B BPar.txt -S BSPar-ML.txt -t s
-
-done
+mmcf_canad BPar.txt BSPar-ML.txt
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

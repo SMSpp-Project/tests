@@ -9,8 +9,8 @@
 # runs all the THREE-stage energy community instances and checks that the
 # objective value of their extensive form matches the EnergyCommunity.jl
 # @stochastic reference one. A three-stage MultiStageStochasticBlock aggregates
-# one inner TwoStageStochasticBlock per long-period (scen_s) scenario; the inner
-# Block additionally ties the day-ahead aggregated declared-dispatch bid
+# one inner TwoStageStochasticBlock per long-period (scen_s) scenario; the
+# inner Block additionally ties the day-ahead aggregated declared-dispatch bid
 # (ECNetworkBlock's p_agg_dec) across the short-period (scen_eps) scenarios,
 # while the dispatch and the imbalance vary per short-period one. This is
 # exactly EnergyCommunity.jl@stochastic's three-stage model (a two-stage
@@ -24,6 +24,11 @@ DEFAULT_EXE=./MSSB_test
 DEFAULT_PAR=BSPar-MS.txt
 DEFAULT_SLV=0
 parse_batch_args "$@"
+
+# the formulations of the network of the inner Block, compared with each
+# other on every instance [see InnerBForm-DCN.txt]; in CI only two of them
+forms=InnerBForm-DCN.txt
+[ -n "$CI" ] && forms=InnerBForm-DCN-CI.txt
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ filename ] = | EnergyCommunity.jl@stochastic three-stage
@@ -70,7 +75,7 @@ for what in ../../UCBlock/data/nc4/EC_Data/mssb/MSSB_EC_CO_*_3S.nc4 \
       exit 1
     fi
 
-    run_test "$exe" "$what" -S "$par" -B InnerBCfg.txt -w "$slv" -r "$ref"
+    run_test "$exe" "$what" -S "$par" -F "$forms" -w "$slv" -r "$ref"
 done
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

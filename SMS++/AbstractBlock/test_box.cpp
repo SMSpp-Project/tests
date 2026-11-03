@@ -73,17 +73,6 @@
 #define SKIP_BEAT 0
 
 /*--------------------------------------------------------------------------*/
-
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
-/*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
@@ -93,6 +82,8 @@
 #include <random>
 
 #include "AbstractBlock.h"
+
+#include <cmath>
 
 #include "common_utils.h"
 
@@ -153,7 +144,7 @@ static constexpr FunctionValue INF = Inf< RHSValue >();
 
 AbstractBlock * TestBlock;  // the AbstractBlock that is solved
 Index nvar = 10;            // number of variables
-Index wchg = 15;            // parameters of what is done
+Index & wchg = round_opts.wchg;  // parameters of what is done
 
 bool minobj;                // whether min or max
 bool isquad;                // whether lin or quad
@@ -276,6 +267,13 @@ static AbstractBlock * construct_son( void )
 
  //!! check the AbstractBlock
  BoxBlock->is_correct();
+
+ // with wchg & 128 the Objective of the sub-Block has a weight in [ 0.1 , 10 ]
+ // [see Block::set_objective_weight()], which the :MILPSolver applies and the
+ // LagrangianDualSolver through its LagBFunction, while the BoxSolver of the
+ // sub-Block does not see it
+ if( wchg & 128 )
+  BoxBlock->set_objective_weight( std::pow( 10.0 , 2 * dis( rg ) - 1 ) );
 
  return( BoxBlock );
  }
@@ -412,26 +410,23 @@ static bool SolveBoth( void )
 // common_utils. This tester GENERATES its own Block from the seed, so it
 // takes no instance positional (filename_optional = true).
 // (nvar and wchg are declared as globals above.)
-long int seed = 0;
+long int & seed = round_opts.seed;
 Index nson = 2;
 double dens = 0.1;
-double p_change = 0.5;
-Index n_change = 10;
-Index n_repeat = 40;
+double & p_change = round_opts.p_change;
+Index & n_change = round_opts.n_change;
+Index & n_repeat = round_opts.n_repeat;
 
 /*--------------------------------------------------------------------------*/
 
 static bool process_specific_arg( int opt )
 {
+ if( process_round_option( opt ) )
+  return( true );
  switch( opt ) {
-  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
-  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
   case( 'N' ): Str2Sthg( optarg , nvar );      return( true );
   case( 's' ): Str2Sthg( optarg , nson );      return( true );
   case( 'd' ): Str2Sthg( optarg , dens );      return( true );
-  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
-  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
-  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
   default:                                     return( false );
   }
  }
@@ -452,34 +447,28 @@ int main( int argc , char **argv )
 
  docopt_desc = "SMS++ LagrangianDualSolver-on-AbstractBlock test.\n";
  filename_optional = true;
- short_opts += "e:k:N:s:d:n:m:q:";
+ round_opts = { 0 , 15 , 40 , 10 , 0.5 };
+ add_round_options(
+  "                                    1 bounds, 2 obj coeffs, "
+  "4 linking constraints,\n"
+  "                                    8 linking lhs/rhs, "
+  "16 force quadratic obj,\n"
+  "                                    32 Lagrangian heuristic "
+  "(one-sided bound),\n"
+  "                                    64 a linking constraint is added\n"
+  "                                    or removed, 128 weights on the\n"
+  "                                    Objective of the sub-Blocks\n" );
+ short_opts += "N:s:d:";
  const std::vector< option > my_opts = {
-   { "seed"   , required_argument , nullptr , 'e' } ,
-   { "wchg"   , required_argument , nullptr , 'k' } ,
-   { "nvar"   , required_argument , nullptr , 'N' } ,
-   { "nson"   , required_argument , nullptr , 's' } ,
-   { "dens"   , required_argument , nullptr , 'd' } ,
-   { "rounds" , required_argument , nullptr , 'n' } ,
-   { "nchng"  , required_argument , nullptr , 'm' } ,
-   { "pchng"  , required_argument , nullptr , 'q' } };
+   { "nvar" , required_argument , nullptr , 'N' } ,
+   { "nson" , required_argument , nullptr , 's' } ,
+   { "dens" , required_argument , nullptr , 'd' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
- help += "  -e, --seed <n>                  pseudo-random generator seed [0]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [15]:\n"
-         "                                    1 bounds, 2 obj coeffs, "
-         "4 linking constraints,\n"
-         "                                    8 linking lhs/rhs, "
-         "16 force quadratic obj,\n"
-         "                                    32 Lagrangian heuristic "
-         "(one-sided bound),\n"
-         "                                    64 a linking constraint is added or removed\n"
-         "  -N, --nvar <n>                  number of variables [10]\n"
+ help += "  -N, --nvar <n>                  number of variables [10]\n"
          "  -s, --nson <n>                  number of sub-Blocks [2]\n"
          "  -d, --dens <x>                  constraints as fraction of "
-         "nvar*nson [0.1]\n"
-         "  -n, --rounds <n>                how many iterations [40]\n"
-         "  -m, --nchng <n>                 number of changes [10]\n"
-         "  -q, --pchng <p>                 probability of changing [0.5]\n";
+         "nvar*nson [0.1]\n";
 
  process_args( argc , argv , process_specific_arg );
 
@@ -524,6 +513,10 @@ int main( int argc , char **argv )
   // the construction has finished
 
   TestBlock = new AbstractBlock();
+
+  // the weight of the root, which no Solver attached to it sees
+  if( wchg & 128 )
+   TestBlock->set_objective_weight( 1 + dis( rg ) );
 
   // create the sub-Block and add them
   for( Index k = 0 ; k++ < nson ; )

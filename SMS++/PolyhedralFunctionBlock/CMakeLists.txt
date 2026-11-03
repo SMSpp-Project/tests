@@ -7,6 +7,7 @@ if (NOT hasParent)
     # Solvers
     find_package(BundleSolver)
     find_package(MILPSolver)
+    find_package(BDMinQuadSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -18,11 +19,20 @@ target_include_directories(PolyhedralFunctionBlock_test PRIVATE ../..)
 target_link_libraries(PolyhedralFunctionBlock_test PRIVATE SMS++::SMS++)
 
 if (TARGET SMS++::BundleSolver)
-    target_link_libraries(PolyhedralFunctionBlock_test PRIVATE SMS++::BundleSolver)
+    target_link_libraries(PolyhedralFunctionBlock_test PRIVATE
+                          SMS++::BundleSolver)
 endif ()
 
 if (TARGET SMS++::MILPSolver)
-    target_link_libraries(PolyhedralFunctionBlock_test PRIVATE SMS++::MILPSolver)
+    target_link_libraries(PolyhedralFunctionBlock_test PRIVATE
+                          SMS++::MILPSolver)
+endif ()
+
+# the Solver of the master of the 2nd row of NDOPar.txt, which the tester
+# leaves out when the build does not have it
+if (TARGET SMS++::BDMinQuadSolver)
+    target_link_libraries(PolyhedralFunctionBlock_test PRIVATE
+                          SMS++::BDMinQuadSolver)
 endif ()
 
 smspp_install(PolyhedralFunctionBlock_test)
@@ -47,19 +57,21 @@ add_test(NAME PolyhedralFunctionBlock_prune_test
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add a test for each batch file
-file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch")
+file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batch*")
 foreach (BATCH_FILE ${BATCH_FILES})
     # Remove the source directory prefix to get the batch name
     string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
     if (UNIX)
         add_test(NAME PolyhedralFunctionBlock_test/${BATCH_NAME}
-                 COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/PolyhedralFunctionBlock_test
+                 COMMAND bash ${BATCH_FILE}
+                     ${CMAKE_CURRENT_BINARY_DIR}/PolyhedralFunctionBlock_test
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     elseif (WIN32)
         add_test(NAME PolyhedralFunctionBlock_test/${BATCH_NAME}
                  # using Git for Windows that includes Git Bash
                  COMMAND "C:/Program Files/Git/bin/bash.exe"
-                         "${BATCH_FILE}" "$<TARGET_FILE:PolyhedralFunctionBlock_test>"
+                         "${BATCH_FILE}"
+                         "$<TARGET_FILE:PolyhedralFunctionBlock_test>"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 endforeach ()
@@ -67,5 +79,13 @@ endforeach ()
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# the battery runs BDMinQuadSolver too when the build has it, which the map
+# of the directory does not declare since the suite does not need it
+set(_batch PolyhedralFunctionBlock_test/batch)
+if ((TARGET SMS++::BDMinQuadSolver) AND (TEST ${_batch}))
+    set_tests_properties(${_batch} PROPERTIES LABELS
+        "${SMSPP_TEST_LABELS_PolyhedralFunctionBlock};BDMinQuadSolver")
+endif ()
 
 # --------------------------------------------------------------------------- #

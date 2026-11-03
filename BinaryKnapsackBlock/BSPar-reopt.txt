@@ -10,8 +10,6 @@
 # which the re-seeded frontier is re-explored (the parallel depth-first
 # exploration, which retains nothing, is deliberately not here).
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -23,13 +21,16 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 BranchAndXSolver                      # 2nd: BX best-first, reoptimization on
-BranchAndXSolver                      # 3rd: BX best-first with dives, reopt on
+# 3rd: BX best-first with dives, reopt on
+BranchAndXSolver
 BranchAndXSolver                      # 4th: BX depth-first serial, reopt on
-BranchAndXSolver                      # 5th: BX breadth-first, reoptimization on
+# 5th: BX breadth-first, reoptimization on
+BranchAndXSolver
 
 5  # number of ComputeConfig in this BlockSolverConfig
 
@@ -50,7 +51,13 @@ intReoptimize 1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -68,7 +75,7 @@ intReoptimize 1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 3: BranchAndXSolver, best-first with dives, tree retained
 *BX-baseCfg.txt +
@@ -83,7 +90,13 @@ intSolveMethod 3
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -101,7 +114,7 @@ intSolveMethod 3
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 4: BranchAndXSolver, serial depth-first, tree retained
 *BX-baseCfg.txt +
@@ -117,7 +130,13 @@ intMaxThread   1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -135,7 +154,7 @@ intMaxThread   1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 5: BranchAndXSolver, breadth-first, tree retained
 *BX-baseCfg.txt +
@@ -150,7 +169,13 @@ intSolveMethod 1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -168,10 +193,10 @@ intSolveMethod 1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - End BSPar-reopt.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-reopt.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

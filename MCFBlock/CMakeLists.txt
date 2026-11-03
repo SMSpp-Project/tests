@@ -35,16 +35,15 @@ if (TARGET SMS++::MCFBlock)
 
     smspp_install(MCFBlock_test)
 
-    # Create a test fixture to generate .nc4 files by running run_dmx2nc4.
-    # This test will build and run the run_dmx2nc4 target
+    # the netCDF instances dmx2nc4 writes out of those of data/dmx, when the
+    # tests that read them are run [see the CMakeLists.txt of MCFBlock]; the
+    # lock is that of the data of the module
     add_test(NAME run_dmx2nc4
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_dmx2nc4)
-    # Mark it as a fixture that sets up "dmx2nc4_generated"; the test
-    # MCFClassSolver_run_dmx2nc4 builds the same target, and the two would
-    # write the same files at once under ctest -j, hence the common lock
-    set_tests_properties(run_dmx2nc4
-                         PROPERTIES FIXTURES_SETUP dmx2nc4_generated
-                                    RESOURCE_LOCK MCFBlock_dmx2nc4)
+             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                     --target run_dmx2nc4)
+    set_tests_properties(run_dmx2nc4 PROPERTIES
+                         FIXTURES_SETUP dmx2nc4_generated
+                         RESOURCE_LOCK mcf_data)
 
     # The Frank-Wolfe decomposition of a father Block whose leaves are the
     # MCFBlock of this suite. The tester is the generic one (../fw_test.cpp):
@@ -82,7 +81,8 @@ if (TARGET SMS++::MCFBlock)
         # the same decomposition while the feasible region of a sub-Block
         # changes (arc costs, capacities and fixing): what it changes is of
         # the MCFBlock, hence this tester is not the generic one
-        add_executable(MCFBlock_FWmods_test test_fw_mods.cpp ../common_utils.cpp)
+        add_executable(MCFBlock_FWmods_test test_fw_mods.cpp
+                       ../common_utils.cpp)
         target_include_directories(MCFBlock_FWmods_test PRIVATE ..)
         target_link_libraries(MCFBlock_FWmods_test PRIVATE
                               SMS++::FrankWolfeSolver SMS++::MCFBlock)
@@ -114,7 +114,8 @@ if (TARGET SMS++::MCFBlock)
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         add_batch_test(MCFBlock_test ${BATCH_NAME}
                        MCFBlock_FW_test MCFBlock_FWmods_test)
         # Make each batch test require the dmx2nc4_generated fixture
@@ -135,7 +136,7 @@ if (TARGET SMS++::FrankWolfeSolver)
     foreach (_t IN LISTS _tests)
         if (_t MATCHES "^MCFBlock_test/batches/")
             set_tests_properties(${_t} PROPERTIES
-                                 LABELS "${SMSPP_TEST_LABELS_MCFBlock};FrankWolfeSolver")
+                LABELS "${SMSPP_TEST_LABELS_MCFBlock};FrankWolfeSolver")
         endif ()
     endforeach ()
 endif ()

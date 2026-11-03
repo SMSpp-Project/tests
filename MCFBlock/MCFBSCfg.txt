@@ -4,11 +4,8 @@
 # A BlockSolverConfig registering the LMO :Solver to each MCFBlock sub-Block.
 # The LMO minimizes the (modified) linear objective over the min-cost-flow
 # polytope; a network-simplex MCFSolver does it with no external dependency.
-# The tolerances of MCFClass are absolute, and by default 100 times the
-# machine epsilon: on the fractional costs the LMO is given, i.e., the
-# gradient of the father, MCFSimplex then pivots for ever (e.g., on
-# goto10_8_1), hence they are set here. batches/fw_lmo_solvers copies this
-# file with the name of RelaxIV in place of that of MCFSimplex
+# batches/fw_lmo_solvers copies this file with the name of RelaxIV in place
+# of that of MCFSimplex
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,14 +14,14 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1 # number of (the names of) Solver in this BlockSolverConfig
+1  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 MCFSolver<MCFSimplex>     # name of Solver: the LMO of the MCFBlock
 #MCFSolver<MCFCplex>      # name of Solver
 #CPXMILPSolver            # name of Solver
 
-1 # number of ComputeConfig in this BlockSolverConfig
+1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -42,36 +39,35 @@ kReopt         1  # reoptimize: the default of MCFSolver never reaches
                   # the :MCFClass, and MCFSimplex is built with it off
 # [none]
 
-2 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
-dblAbsAcc    1e-9  # tolerance of the flows
-dblAAccDSol  1e-9  # tolerance of the reduced costs
+# [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - 
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END MCFBSCfg.txt - - - - - - - - - - - - - -

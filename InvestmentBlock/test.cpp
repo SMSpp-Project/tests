@@ -45,8 +45,8 @@
  * typically a "meta"-BlockConfig (see InnerBCfg.txt), which is dispatched to
  * the InvestmentBlock and inside the inner Block of its InvestmentFunction,
  * the UCBlock of each stage of an SDDPBlock included. The BlockConfig of the
- * InvestmentBlock is an OBlockConfig (see IBOCfg.txt), which reformulates the
- * bounds on the investment and gives the InvestmentFunction its
+ * InvestmentBlock is an OBlockConfig (see IBOCfg.txt), which gives the
+ * InvestmentFunction its
  * ComputeConfig (see IFCfg.txt), whose extra Configuration holds the
  * BlockSolverConfig of the inner Block: everything is said by the
  * configuration files, and the tester only reads and applies them.
@@ -159,7 +159,8 @@ std::string sol_input;           ///< filename of input Solution (-I)
 std::string sol_output;          ///< filename of output Solution (-O)
 std::string sol_cfg_file;        ///< filename of output Solution Config (-C)
 bool output_solution = false;    ///< true if solution has to be output (-o)
-bool writeprob       = false;    ///< if the problem should be written back (-n)
+/// if the problem should be written back (-n)
+bool writeprob       = false;
 
 /// parse the current optarg as a long int, returning -1 on parse error
 
@@ -300,11 +301,13 @@ static double get_solver_objective_value( Solver * solver ) {
  return( solver->get_lb() );
 }
 
-static bool test_investment_solvers( InvestmentBlock * investment_block ) {
- try {
-  auto investment_function = static_cast< InvestmentFunction * >(
-   investment_block->get_function() );
+// solves the InvestmentBlock with all its Solver and cross-checks them, and
+// with the reference objective value; if @p record is given, it receives
+// what each Solver gave, for the comparison of the copies of the Block
 
+static bool test_investment_solvers( InvestmentBlock * investment_block ,
+                                     SolveRecord * record = nullptr ) {
+ try {
   auto & solvers = investment_block->get_registered_solvers();
 
   if( solvers.empty() )
@@ -398,6 +401,13 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ) {
   print_instance_line( times , toks , RefObjective , verdict , diff );
   (void) it1;
 
+  if( record ) {
+   std::vector< std::string > names( M );
+   for( std::size_t k = 0 ; k < M ; ++k )
+    names[ k ] = S[ k ]->classname();
+   *record = { rd , hsv , statusv , times , toks , names };
+   }
+
 #if( LOG_LEVEL >= 0 )
   if( all_passed )
    std::cout << GREEN( All tests passed!! ) << std::endl;
@@ -419,13 +429,9 @@ static bool test_investment_solvers( InvestmentBlock * investment_block ) {
     first_solver->get_var_solution();
     std::cout << "Solution: " << std::endl;
     const auto & variables = investment_block->get_variables();
-    const auto & var_lb = investment_block->get_variable_lower_bound();
     const auto width = std::to_string( variables.size() ).size();
     for( Index i = 0 ; i < variables.size() ; ++i ) {
-     auto value = variables[ i ].get_value();
-     if( investment_block->get_reformulate_bounds() && ( i < var_lb.size() ) &&
-      ( var_lb[ i ] > -Inf< double >() ) )
-      value += var_lb[ i ];
+     const auto value = variables[ i ].get_value();
      std::cout << std::setw( width ) << i << " " << value << std::endl;
     }
    }
@@ -560,7 +566,7 @@ bool update_hydro_unit( Block * previous_block , Block * block ,
   flow_rate[ g ] =
    previous_unit->get_flow_rate( g , time_horizon - 1 )->get_value();
 
- unit->set_initial_flow_rate( flow_rate.cbegin() );
+ unit->set_initial_flow_rate( Block::MF_dbl_sp( flow_rate ) );
 
  return( true );
 }
@@ -587,13 +593,13 @@ bool update_battery_unit( Block * previous_block , Block * block ,
   ( previous_unit->get_active_power( 0 ) + time_horizon - 1 )->get_value()
  };
 
- unit->set_initial_power( initial_power_data.cbegin() );
+ unit->set_initial_power( Block::MF_dbl_sp( initial_power_data ) );
 
  std::vector< double > initial_storage_data = {
   previous_unit->get_storage_level()[ time_horizon - 1 ].get_value()
  };
 
- unit->set_initial_storage( initial_storage_data.cbegin() );
+ unit->set_initial_storage( Block::MF_dbl_sp( initial_storage_data ) );
 
  return( true );
 }
@@ -619,7 +625,7 @@ bool update_thermal_unit( Block * previous_block , Block * block ,
  std::vector< double > active_power_data = {
   ( previous_unit->get_active_power( 0 ) + time_horizon - 1 )->get_value()
  };
- unit->set_initial_power( active_power_data.cbegin() );
+ unit->set_initial_power( Block::MF_dbl_sp( active_power_data ) );
 
  return( true );
 }
@@ -727,21 +733,6 @@ void set_initial_point( InvestmentBlock * investment_block ) {
     std::to_string( initial_point.size() ) + ", but "
     "there are " + std::to_string( num_variables ) +
     " variables." ) );
-
-  // the bounds are reformulated (or not) when the constraints are generated
-  investment_block->generate_abstract_constraints();
-  if( investment_block->get_reformulate_bounds() ) {
-   // If variable bounds have been reformulated, the initial point must be
-   // adjusted.
-
-   const auto & var_lower_bound =
-    investment_block->get_variable_lower_bound();
-   for( Index i = 0 ; i < initial_point.size() ; ++i ) {
-    if( ( i < var_lower_bound.size() ) &&
-     ( var_lower_bound[ i ] > -Inf< double >() ) )
-     initial_point[ i ] -= var_lower_bound[ i ];
-   }
-  }
  }
  else // Since no initial point has been provided, we use the default one.
   initial_point = get_default_initial_point( investment_block );
@@ -775,16 +766,33 @@ void set_log( SDDPBlock * sddp_block , std::ostream * output_stream ) {
 
 
 /*--------------------------------------------------------------------------*/
-/// configures the inner Block of the InvestmentFunction
-/** The inner Block of the InvestmentFunction, and the UCBlock of every stage
- * of an SDDPBlock, which sits behind a BendersBFunction, are out of reach of
- * the nested-Block BFS started at the InvestmentBlock: the given
- * "meta"-BlockConfig is dispatched to each of them here. */
+/// the inner Blocks of the InvestmentBlock
+/** The inner Block of each InvestmentFunction of the InvestmentBlock: the
+ * one of its Objective, or the one of each of its components when the
+ * InvestmentBlock has split its inner Block [see
+ * InvestmentBlock::get_investment_functions()]. */
 
-void configure_inner_Blocks( InvestmentFunction * investment_function ,
+std::vector< Block * > inner_Blocks( const InvestmentBlock * investment_block )
+{
+ std::vector< Block * > blocks;
+ for( auto f : investment_block->get_investment_functions() )
+  for( auto block : f->get_nested_Blocks() )
+   blocks.push_back( block );
+ return( blocks );
+}
+
+/*--------------------------------------------------------------------------*/
+/// configures the inner Blocks of the InvestmentBlock
+/** The inner Blocks of the InvestmentBlock [see inner_Blocks()], and the
+ * UCBlock of every stage of an SDDPBlock, which sits behind a
+ * BendersBFunction, are out of reach of the nested-Block BFS started at the
+ * InvestmentBlock: the given "meta"-BlockConfig is dispatched to each of them
+ * here. */
+
+void configure_inner_Blocks( const InvestmentBlock * investment_block ,
                              Configuration * block_config ,
                              const std::string & name ) {
- for( auto block : investment_function->get_nested_Blocks() )
+ for( auto block : inner_Blocks( investment_block ) )
   if( auto sddp_block = dynamic_cast< SDDPBlock * >( block ) ) {
    for( Index t = 0 ; t < sddp_block->get_time_horizon() ; ++t )
     for( Index j = 0 ; j < sddp_block->get_num_sub_blocks_per_stage() ; ++j )
@@ -796,16 +804,16 @@ void configure_inner_Blocks( InvestmentFunction * investment_function ,
 }
 
 /*--------------------------------------------------------------------------*/
-/// checks that the InvestmentFunction has been given its Solver
-/** The Solver of the inner Block of the InvestmentFunction come with the
+/// checks that each InvestmentFunction has been given its Solver
+/** The Solver of the inner Block of an InvestmentFunction come with the
  * ComputeConfig of the InvestmentFunction, which the OBlockConfig of the
  * InvestmentBlock gives to its Objective (see IBOCfg.txt). When the inner
  * Block is an SDDPBlock, the SDDPGreedySolver so registered, which simulate
  * the scenarios one stage after the other, are each given the callback()
  * that passes the final state of a stage to the next. */
 
-void check_inner_Solvers( InvestmentFunction * investment_function ) {
- for( auto block : investment_function->get_nested_Blocks() ) {
+void check_inner_Solvers( const InvestmentBlock * investment_block ) {
+ for( auto block : inner_Blocks( investment_block ) ) {
   if( block->get_registered_solvers().empty() ) {
    std::cerr << "error: the inner Block of the InvestmentFunction has no "
              << "Solver: the BlockConfig of the InvestmentBlock must be an "
@@ -819,8 +827,9 @@ void check_inner_Solvers( InvestmentFunction * investment_function ) {
     if( auto greedy = dynamic_cast< SDDPGreedySolver * >( solver ) ) {
      const auto sub_block_index = Index( greedy->get_int_par(
                                      SDDPGreedySolver::intSubBlockIndex ) );
-     greedy->set_callback( [ sddp_block , sub_block_index ]( Index stage ) {
-                            callback( sddp_block , stage , sub_block_index );
+     greedy->set_callback( [ sub_block_index ]( SDDPBlock * b ,
+                                                Index stage ) {
+                            callback( b , stage , sub_block_index );
                             } );
      }
   }
@@ -869,13 +878,10 @@ void process_prob_file( const netCDF::NcFile & file ) {
    Block::new_Block( block_group , nullptr ) );
   assert( investment_block );
 
-  auto investment_function = static_cast< InvestmentFunction * >(
-   investment_block->get_function() );
-
   // Configure the inner Block, then the InvestmentBlock, whose BlockConfig
   // gives the InvestmentFunction the Solver of the inner Block
   if( inner_block_config )
-   configure_inner_Blocks( investment_function , inner_block_config ,
+   configure_inner_Blocks( investment_block , inner_block_config ,
                            bconf_file );
 
   auto block_config_group = problem_group.getGroup( "BlockConfig" );
@@ -884,14 +890,13 @@ void process_prob_file( const netCDF::NcFile & file ) {
   if( ! block_config )
    throw( std::logic_error( "BlockConfig group was not properly provided" ) );
   // the OBlockConfig gives its ComputeConfig to the Objective, which has to
-  // be there already; the constraints wait for the BlockConfig, which says
-  // whether the bounds are reformulated
+  // be there already
   investment_block->generate_abstract_variables();
   investment_block->generate_objective();
   block_config->apply( investment_block );
   block_config->clear();
 
-  check_inner_Solvers( investment_function );
+  check_inner_Solvers( investment_block );
 
   // Possibly set the initial point
   set_initial_point( investment_block );
@@ -909,7 +914,7 @@ void process_prob_file( const netCDF::NcFile & file ) {
 
   // Set the output stream for the log of the inner Solvers
 
-  for( auto block : investment_function->get_nested_Blocks() )
+  for( auto block : inner_Blocks( investment_block ) )
    if( auto sddp_block = dynamic_cast< SDDPBlock * >( block ) )
     set_log( sddp_block , &std::cout );
    else
@@ -940,109 +945,125 @@ void process_block_file( const netCDF::NcFile & file ) {
  auto blocks = file.getGroups();
 
  // the BlockConfig: an OBlockConfig for the InvestmentBlock, or a
- // "meta"-BlockConfig with one [see InnerBCfg.txt]
- if( bconf_file.empty() ) {
+ // "meta"-BlockConfig with one [see InnerBCfg.txt], or the list of them
+ // (-F), each InvestmentBlock being then solved once per formulation and the
+ // copies compared with each other
+ if( bconf_file.empty() && fconf_file.empty() ) {
   std::cerr << "error: a BlockConfig for the InvestmentBlock must be given "
             << "(see InnerBCfg.txt)" << std::endl;
   exit( 1 );
  }
- auto given_block_config = Configuration::deserialize( bconf_file );
- if( ! given_block_config ) {
-  std::cerr << "error: cannot load BlockConfig " << bconf_file << std::endl;
-  exit( 1 );
- }
-
- // Load BlockSolverConfig from file
- Configuration * solver_config = Configuration::deserialize( sconf_file );
- if( ! solver_config ) {
-  std::cerr << "error: cannot load BlockSolverConfig " << sconf_file
-            << std::endl;
-  exit( 1 );
- }
+ auto forms = get_formulations();
 
  // For each Block descriptor
  for( auto block_description : blocks ) {
-  // Deserialize the Block
-  auto block_type_att = block_description.second.getAtt( "type" );
-  if( block_type_att.isNull() ) {
-   std::cerr << "The netCDF attribute 'type' was not found in the netCDF "
-             << "group " << block_description.second.getName() << std::endl;
-   exit( 1 );
-  }
-
-  std::string block_type;
-  block_type_att.getValues( block_type );
-
-  if( block_type != "InvestmentBlock" ) {
-   std::cerr << "The Block in the netCDF file " << block_type << " is "
-             << block_type << ", but it must be an InvestmentBlock"
-             << std::endl;
-   exit( 1 );
-  }
-
-  auto investment_block = dynamic_cast< InvestmentBlock * >(
-   Block::new_Block( block_description.second , nullptr ) );
-
-  // deserialize gives up, having said why, when a type it needs is not in the
-  // Block factory, which is what happens when that type is not linked in
-  if( ! investment_block ) {
-   std::cerr << "error: cannot build the InvestmentBlock of " << filename
-             << std::endl;
-   exit( 1 );
+  SolveRecord all;
+  bool passed = true;
+  for( std::size_t v = 0 ; v < forms.configs.size() ; ++v ) {
+   auto given_block_config = forms.configs[ v ];
+   if( forms.configs.size() > 1 )
+    std::cout << "formulation " << forms.names[ v ] << ":" << std::endl;
+   Configuration * solver_config = solver_config_of( forms , v );
+   // Deserialize the Block
+   auto block_type_att = block_description.second.getAtt( "type" );
+   if( block_type_att.isNull() ) {
+    std::cerr << "The netCDF attribute 'type' was not found in the netCDF "
+              << "group " << block_description.second.getName() << std::endl;
+    exit( 1 );
    }
 
-  auto investment_function = static_cast< InvestmentFunction * >(
-   investment_block->get_function() );
+   std::string block_type;
+   block_type_att.getValues( block_type );
 
-  // Configure the inner Block, then the InvestmentBlock, whose (O)BlockConfig
-  // gives the InvestmentFunction the Solver of the inner Block: a plain
-  // BlockConfig only concerns the InvestmentBlock, while a "meta"-BlockConfig
-  // is also dispatched inside the InvestmentFunction, since the nested-Block
-  // BFS cannot cross the Function boundary
-  if( ! dynamic_cast< BlockConfig * >( given_block_config ) )
-   configure_inner_Blocks( investment_function , given_block_config ,
-                           bconf_file );
-  // the OBlockConfig gives its ComputeConfig to the Objective, which has to
-  // be there already; the constraints wait for the BlockConfig, which says
-  // whether the bounds are reformulated
-  investment_block->generate_abstract_variables();
-  investment_block->generate_objective();
-  b_config_Block( investment_block , given_block_config , bconf_file );
+   if( block_type != "InvestmentBlock" ) {
+    std::cerr << "The Block in the netCDF file " << block_type << " is "
+              << block_type << ", but it must be an InvestmentBlock"
+              << std::endl;
+    exit( 1 );
+   }
 
-  check_inner_Solvers( investment_function );
+   auto investment_block = dynamic_cast< InvestmentBlock * >(
+    Block::new_Block( block_description.second , nullptr ) );
 
-  // Possibly set the initial point
-  set_initial_point( investment_block );
+   // deserialize gives up, having said why, when a type it needs is not in the
+   // Block factory, which is what happens when that type is not linked in
+   if( ! investment_block ) {
+    std::cerr << "error: cannot build the InvestmentBlock of " << filename
+              << std::endl;
+    exit( 1 );
+    }
 
-  // Finally, apply the Solver configuration
-  s_config_Block( investment_block , solver_config , sconf_file );
+   // Configure the inner Block, then the InvestmentBlock, whose (O)BlockConfig
+   // gives the InvestmentFunction the Solver of the inner Block: a plain
+   // BlockConfig only concerns the InvestmentBlock, while a "meta"-BlockConfig
+   // is also dispatched inside the InvestmentFunction, since the nested-Block
+   // BFS cannot cross the Function boundary
+   if( ! dynamic_cast< BlockConfig * >( given_block_config ) )
+    configure_inner_Blocks( investment_block , given_block_config ,
+                            bconf_file );
+   // the OBlockConfig gives its ComputeConfig to the Objective, which has to
+   // be there already
+   investment_block->generate_abstract_variables();
+   investment_block->generate_objective();
+   b_config_Block( investment_block , given_block_config , bconf_file );
 
-  if( investment_block->get_registered_solvers().empty() ) {
-   std::cerr << "Error: no Solver registered to InvestmentBlock"
-             << std::endl;
-   exit( 1 );
-  }
+   check_inner_Solvers( investment_block );
 
-  // Set the output stream for the log of the inner Solvers
-  for( auto block : investment_function->get_nested_Blocks() )
-   if( auto sddp_block = dynamic_cast< SDDPBlock * >( block ) )
-    set_log( sddp_block , &std::cout );
-   else
-    for( auto solver : block->get_registered_solvers() )
-     if( solver )
-      solver->set_log( &std::cout );
+   // Possibly set the initial point
+   set_initial_point( investment_block );
 
-  // Solve
-  AllPassed &= test_investment_solvers( investment_block );
+   // Finally, apply the Solver configuration
+   s_config_Block( investment_block , solver_config , sconf_file );
 
-  // Cleanup solver attachments/configurations
-  s_config_Block( investment_block , solver_config );
+   if( investment_block->get_registered_solvers().empty() ) {
+    std::cerr << "Error: no Solver registered to InvestmentBlock"
+              << std::endl;
+    exit( 1 );
+   }
 
-  delete investment_block;
+   // Set the output stream for the log of the inner Solvers
+   for( auto block : inner_Blocks( investment_block ) )
+    if( auto sddp_block = dynamic_cast< SDDPBlock * >( block ) )
+     set_log( sddp_block , &std::cout );
+    else
+     for( auto solver : block->get_registered_solvers() )
+      if( solver )
+       solver->set_log( &std::cout );
+
+   // Solve
+   SolveRecord rec;
+   passed &= test_investment_solvers( investment_block , & rec );
+   for( std::size_t k = 0 ; k < rec.rd.size() ; ++k ) {
+    all.rd.push_back( rec.rd[ k ] );
+    all.hs.push_back( rec.hs[ k ] );
+    all.status.push_back( rec.status[ k ] );
+    all.times.push_back( rec.times[ k ] );
+    all.tok.push_back( rec.tok[ k ] );
+    all.names.push_back( forms.names[ v ] + " " + rec.names[ k ] );
+    }
+
+   // Cleanup solver attachments/configurations
+   s_config_Block( investment_block , solver_config );
+
+   delete investment_block;
+   delete solver_config;
+  }  // end( for( v ) )
+
+  // the Solver of all the copies against each other, the copies being the
+  // same problem
+  if( forms.configs.size() > 1 ) {
+   std::string verdict;
+   double diff;
+   passed &= cross_check( all.rd , all.hs , all.status , RefObjective ,
+                          1e-5 , verdict , diff );
+   std::cout << "formulations against each other:";
+   print_instance_line( all.times , all.tok , RefObjective , verdict , diff ,
+                        true , all.names );
+   }
+  AllPassed &= passed;
  }
 
- delete given_block_config;
- delete solver_config;
+ delete forms.owner;
 }
 
 /*--------------------------------------------------------------------------*/

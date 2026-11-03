@@ -1,7 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  InnerBSCfg.txt - - - - - - - - - - - - - - -
 #
-# Single-Solver BlockSolverConfig: the inner GreedyRelaxationBinaryKnapsackSolver
+# Single-Solver BlockSolverConfig: the inner
+# GreedyRelaxationBinaryKnapsackSolver
 # (continuous knapsack relaxation + branching) that BranchAndXSolver
 # applies to the Block (see strNameOfBlockSolverConfigurationFile in
 # BSPar-BX.txt).
@@ -28,9 +29,18 @@ ComputeConfig # exact type of the ComputeConfig object
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -48,11 +58,10 @@ ComputeConfig # exact type of the ComputeConfig object
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END InnerBSCfg.txt - - - - - - - - - - - - - -

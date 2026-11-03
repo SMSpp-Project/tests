@@ -1,5 +1,5 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - -BDSCfg-MILP.txt- - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BDSCfg-MILP.txt - - - - - - - - - - - - - - - -
 #
 # The ComputeConfig of a BendersDecompositionSolver in the MILP regime: the
 # master is solved by a :MILPSolver with the Benders cuts added as lazy
@@ -53,5 +53,5 @@ str_Mstr_BSCfg  BDSMCfg-MILP.txt  # BlockSolverConfig of the master
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - -END BDSCfg-MILP.txt- - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BDSCfg-MILP.txt - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -32,6 +32,12 @@ The usage of the executable is the following:
        ./UCBlock_test UC-file [BSC-file]
        BSC-file: BlockSolverConfig description [BSPar.txt]
 
+`UCBlock_ML_test` is the same tester with the `LagrangianDualSolverML`
+library linked in, which only a build with Torch has: a `BlockSolverConfig`
+that asks for one of its `Solver` (as `BSPar-DP-BX.txt` does) is run with it,
+and the batteries that use one name it as their default executable, while
+the other tester does not pay for loading Torch at every start.
+
 The test are supposed to be run on the pure-thermal "academic" UC
 instances available at
 
@@ -94,7 +100,10 @@ Since the "DP formulation" is rather large, the batch file
 batches/batch-acad-s is provided for the first case that only
 solves the set of "academic" UC instances that are appropriately
 small. Instead, batches/batch-acad is meant for the second case
-and solves them all. 
+and solves them all. It also solves the two bus instances of
+constant/ in the data of UCBlock, whose UCBlock has a constant term
+of the network in its own Objective, positive in one and negative in
+the other.
 
 Both batches automatically copy the right TUBCfg\*.txt and
 TUBSCfg\*.txt for the intended tests to succeed.

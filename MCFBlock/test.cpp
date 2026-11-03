@@ -96,15 +96,6 @@
  #define CLOG2( y , x , z )
 #endif
 
-#define USECOLORS 1
-#if( USECOLORS )
- #define RED( x ) "\x1B[31m" #x "\033[0m"
- #define GREEN( x ) "\x1B[32m" #x "\033[0m"
-#else
- #define RED( x ) #x
- #define GREEN( x ) #x
-#endif
-
 /*--------------------------------------------------------------------------*/
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -336,7 +327,7 @@ static void restore_deficits( const MCFBlock::Vec_FNumber & orig )
  // deficits are per-node and the node count never changes in this test, so
  // the saved vector always aligns; this undoes the deficit drift that is the
  // usual cause of permanent infeasibility
- MCFB->chg_dfcts( orig.begin() , Range( 0 , orig.size() ) );
+ MCFB->chg_dfcts( Block::MF_dbl_sp( orig ) , Range( 0 , orig.size() ) );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -360,28 +351,14 @@ static void restore_capacities( const MCFBlock::Vec_FNumber & orig )
 
 /*--------------------------------------------------------------------------*/
 
-// test-specific command-line knobs, set by process_specific_arg(); the
+// the options of the rounds of random changes [see RoundOptions]; the
 // standard parameters (instance positional, -S BlockSolverConfig, -c/-p
 // prefixes) are handled centrally by common_utils
-long int seed = 1;
-unsigned int wchg = 255;
-double p_change = 0.5;
-Index n_change = 10;
-Index n_repeat = 40;
-
-/*--------------------------------------------------------------------------*/
-
-static bool process_specific_arg( int opt )
-{
- switch( opt ) {
-  case( 'e' ): Str2Sthg( optarg , seed );      return( true );
-  case( 'k' ): Str2Sthg( optarg , wchg );      return( true );
-  case( 'n' ): Str2Sthg( optarg , n_repeat );  return( true );
-  case( 'm' ): Str2Sthg( optarg , n_change );  return( true );
-  case( 'q' ): Str2Sthg( optarg , p_change );  return( true );
-  default:                                     return( false );
-  }
- }
+long int & seed = round_opts.seed;
+Index & wchg = round_opts.wchg;
+double & p_change = round_opts.p_change;
+Index & n_change = round_opts.n_change;
+Index & n_repeat = round_opts.n_repeat;
 
 /*--------------------------------------------------------------------------*/
 
@@ -396,29 +373,15 @@ int main( int argc , char **argv )
  // the test only appends its own knobs
 
  docopt_desc = "SMS++ MCFBlock-vs-MILP test.\n";
- short_opts += "e:k:n:m:q:";
- const std::vector< option > my_opts = {
-   { "seed"    , required_argument , nullptr , 'e' } ,
-   { "wchg"    , required_argument , nullptr , 'k' } ,
-   { "rounds"  , required_argument , nullptr , 'n' } ,
-   { "nchng"   , required_argument , nullptr , 'm' } ,
-   { "pchng"   , required_argument , nullptr , 'q' } };
- long_opts.insert( std::prev( long_opts.end() ) ,
-                   my_opts.begin() , my_opts.end() );
- help += "  -e, --seed <n>                  pseudo-random generator seed [1]\n"
-         "  -k, --wchg <bits>               what to change, bit-wise [255]:\n"
-         "                                    1 costs, 2 capacities, "
-         "4 deficits, 8 close arcs,\n"
-         "                                    16 re-open arcs, 32 delete arcs, "
-         "64 create arcs,\n"
-         "                                    128 use abstract representation\n"
-         "  -n, --rounds <n>                number of changing rounds [40]\n"
-         "  -m, --nchng <n>                 avg number of elements to change "
-         "[10]\n"
-         "  -q, --pchng <p>                 probability of any single change "
-         "[0.5]\n";
+ round_opts = { 1 , 255 , 40 , 10 , 0.5 };
+ add_round_options(
+  "                                    1 costs, 2 capacities, "
+  "4 deficits, 8 close arcs,\n"
+  "                                    16 re-open arcs, 32 delete arcs, "
+  "64 create arcs,\n"
+  "                                    128 use abstract representation\n" );
 
- process_args( argc , argv , process_specific_arg );
+ process_args( argc , argv , process_round_option );
 
  // the BlockSolverConfig (-S) must be provided explicitly: the test never
  // falls back to a hardcoded default Configuration
@@ -668,7 +631,8 @@ int main( int argc , char **argv )
            ? LF( MCFB->get_objective() ) : nullptr;
 
    if( tochange == 1 ) {
-    CNumber newcst = intcost( c_min + CNumber( dis( rg ) * ( c_max - c_min ) ) );
+    CNumber newcst = intcost( c_min +
+                              CNumber( dis( rg ) * ( c_max - c_min ) ) );
     Index arc = Index( dis( rg ) * ( MCFB->get_NArcs() - 1 ) );
 
     if( lf ) {  // change via abstract representation
@@ -683,7 +647,8 @@ int main( int argc , char **argv )
    else {
     MCFBlock::Vec_CNumber newcsts( tochange );
     for( Index i = 0 ; i < tochange ; ++i )
-     newcsts[ i ] = intcost( c_min + CNumber( dis( rg ) * ( c_max - c_min ) ) );
+     newcsts[ i ] = intcost( c_min +
+                             CNumber( dis( rg ) * ( c_max - c_min ) ) );
 
     // in 50% of the cases do a ranged change, in the others a sparse change
     if( dis( rg ) <= 0.5 ) {
@@ -695,7 +660,7 @@ int main( int argc , char **argv )
       lf->modify_coefficients( std::move( newcsts ) , Range( strt , stp ) );
       }
      else {  // change via call to chg_* method
-      MCFB->chg_costs( newcsts.begin() , Range( strt , stp ) );
+      MCFB->chg_costs( Block::MF_dbl_sp( newcsts ) , Range( strt , stp ) );
       LOG1( "s(r) - " );
       }
      }
@@ -709,7 +674,7 @@ int main( int argc , char **argv )
       CLOG2( ord , "s(s,a) - " , "s(s,a,u) - " );
       }
      else {  // change via call to chg_* method
-      MCFB->chg_costs( newcsts.begin() , std::move( nms ) , ord );
+      MCFB->chg_costs( Block::MF_dbl_sp( newcsts ) , std::move( nms ) , ord );
       CLOG2( ord , "s(s) - " , "s(s,u) - " );
       }
      }
@@ -756,7 +721,7 @@ int main( int argc , char **argv )
       MCFB->close_channel( chnl );
       }
      else {  // change via call to chg_* method
-      MCFB->chg_ucaps( newcaps.begin() , Range( strt , stp ) );
+      MCFB->chg_ucaps( Block::MF_dbl_sp( newcaps ) , Range( strt , stp ) );
       LOG1( "ies(r) - " );
       }
      }
@@ -777,7 +742,7 @@ int main( int argc , char **argv )
       MCFB->close_channel( chnl );
       }
      else {  // change via call to chg_* method
-      MCFB->chg_ucaps( newcaps.begin() , std::move( nms ) , ord );
+      MCFB->chg_ucaps( Block::MF_dbl_sp( newcaps ) , std::move( nms ) , ord );
       CLOG2( ord , "ies(s) - " , "iess(s,u) - " );
       }
      }

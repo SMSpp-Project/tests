@@ -15,12 +15,14 @@
  *
  * Usage:
  *
- *   MMCFND_test [-t frmt] -m mono-BlockConfig -M mono-BlockSolverConfig
- *               -b Benders-BlockConfig -B Benders-BlockSolverConfig
- *               [-r samples] [-e seed] [-g gap] < instance >
+ *   MMCFND_test -F formulations [-t frmt] [-r samples] [-e seed] [-g gap]
+ *               < instance >
  *
- * frmt is the format of MMCFBlock::load() ('s' for the Canad instances, the
- * default), gap the relative tolerance of the comparisons (1e-5 by default).
+ * formulations is the list of the two formulations [see
+ * read_formulations()], each a pair of its BlockConfig and its
+ * BlockSolverConfig, in any order, frmt is the format of MMCFBlock::load()
+ * ('s' for the Canad instances, the default), gap the relative tolerance of
+ * the comparisons (1e-5 by default).
  *
  * \author Donato Meoli \n
  *         Dipartimento di Informatica \n
@@ -33,6 +35,8 @@
 /*--------------------------------------------------------------------------*/
 
 #include "MMCFNetworkDesignBlock.h"
+
+#include "common_utils.h"
 
 #include "BlockSolverConfig.h"
 #include "Solver.h"
@@ -63,8 +67,7 @@ namespace {
 /// BlockSolverConfig read from file
 
 MMCFNetworkDesignBlock * build( const std::string & inst , char frmt ,
-				const std::string & bcf ,
-				const std::string & scf )
+				Configuration * bc , Configuration * sc )
 {
  auto blk = new MMCFNetworkDesignBlock;
  std::ifstream f( inst );
@@ -72,20 +75,16 @@ MMCFNetworkDesignBlock * build( const std::string & inst , char frmt ,
   throw( std::invalid_argument( "cannot open " + inst ) );
  blk->load( f , frmt );
 
- auto bc = dynamic_cast< BlockConfig * >( Configuration::deserialize( bcf ) );
- if( ! bc )
-  throw( std::invalid_argument( bcf + " is not a BlockConfig" ) );
- bc->apply( blk );
- delete bc;
+ b_config_Block( blk , bc , fconf_file );
 
  blk->generate_abstract_variables();
  blk->generate_abstract_constraints();
  blk->generate_objective();
 
- auto bsc = dynamic_cast< BlockSolverConfig * >(
-                                           Configuration::deserialize( scf ) );
+ auto bsc = dynamic_cast< BlockSolverConfig * >( sc );
  if( ! bsc )
-  throw( std::invalid_argument( scf + " is not a BlockSolverConfig" ) );
+  throw( std::invalid_argument( fconf_file + " has a BlockSolverConfig that "
+                                "is not" ) );
  bsc->apply( blk );
  delete bsc;
 
@@ -107,6 +106,23 @@ void cleanup( MMCFNetworkDesignBlock * blk ) {
  delete blk;
  }
 
+/*--------------------------------------------------------------------------*/
+
+char frmt = 's';
+int samples = 5 , seed = 0;
+double gap = 1e-5;
+
+bool process_specific_arg( int opt )
+{
+ switch( opt ) {
+  case( 't' ): frmt = optarg[ 0 ];          return( true );
+  case( 'r' ): samples = std::atoi( optarg ); return( true );
+  case( 'e' ): seed = std::atoi( optarg );    return( true );
+  case( 'g' ): gap = std::atof( optarg );     return( true );
+  default:                                    return( false );
+  }
+ }
+
 }  // end( anonymous namespace )
 
 /*--------------------------------------------------------------------------*/
@@ -115,41 +131,46 @@ void cleanup( MMCFNetworkDesignBlock * blk ) {
 
 int main( int argc , char ** argv )
 {
- char frmt = 's';
- std::string mb , ms , bb , bs;
- int samples = 5 , seed = 0;
- double gap = 1e-5;
+ docopt_desc = "SMS++ MMCFNetworkDesignBlock test.\n";
+ short_opts += "t:r:e:g:";
+ const std::vector< option > my_opts = {
+   { "type"    , required_argument , nullptr , 't' } ,
+   { "samples" , required_argument , nullptr , 'r' } ,
+   { "seed"    , required_argument , nullptr , 'e' } ,
+   { "gap"     , required_argument , nullptr , 'g' } };
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   my_opts.begin() , my_opts.end() );
+ help += "  -t, --type <c>                  format of the instance [s]\n"
+         "  -r, --samples <n>               the y at which the Benders cut\n"
+         "                                  is checked [5]\n"
+         "  -e, --seed <n>                  seed of the y [0]\n"
+         "  -g, --gap <x>                   relative tolerance [1e-5]\n"
+         "\n"
+         "The formulations (-F) are the two formulations, each a pair of its\n"
+         "BlockConfig and its BlockSolverConfig.\n";
+ process_args( argc , argv , process_specific_arg );
+ const std::string inst( filename );
 
- for( int opt ; ( opt = getopt( argc , argv , "t:m:M:b:B:r:e:g:" ) ) != -1 ; )
-  switch( opt ) {
-   case 't': frmt = optarg[ 0 ]; break;
-   case 'm': mb = optarg; break;
-   case 'M': ms = optarg; break;
-   case 'b': bb = optarg; break;
-   case 'B': bs = optarg; break;
-   case 'r': samples = std::atoi( optarg ); break;
-   case 'e': seed = std::atoi( optarg ); break;
-   case 'g': gap = std::atof( optarg ); break;
-   default:
-    std::cerr << "usage: " << argv[ 0 ] << " [-t frmt] -m BC -M BSC -b BC"
-              << " -B BSC [-r samples] [-e seed] [-g gap] instance"
-              << std::endl;
-    return( 1 );
-   }
- if( ( optind >= argc ) || mb.empty() || ms.empty() || bb.empty() ||
-     bs.empty() ) {
-  std::cerr << argv[ 0 ] << ": the instance and the four Configuration "
-            << "are required" << std::endl;
+ auto forms = get_formulations();
+ if( forms.configs.size() != 2 ) {
+  std::cerr << argv[ 0 ] << ": the formulations are the two formulations"
+            << std::endl;
   return( 1 );
   }
- const std::string inst( argv[ optind ] );
 
  std::cout << std::setprecision( 10 );
  bool ok = true;
 
- // the two formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
- auto mono = build( inst , frmt , mb , ms );
- auto bend = build( inst , frmt , bb , bs );
+ // the two formulations, the monolithic one and the Benders one - - - - - -
+ auto f0 = build( inst , frmt , forms.configs[ 0 ] ,
+                  solver_config_of( forms , 0 ) );
+ auto f1 = build( inst , frmt , forms.configs[ 1 ] ,
+                  solver_config_of( forms , 1 ) );
+ delete forms.owner;
+ const bool first_mono =
+  f0->get_formulation() == MMCFNetworkDesignBlock::kMonolithic;
+ auto mono = first_mono ? f0 : f1;
+ auto bend = first_mono ? f1 : f0;
  if( ( mono->get_formulation() != MMCFNetworkDesignBlock::kMonolithic ) ||
      ( bend->get_formulation() != MMCFNetworkDesignBlock::kBenders ) ) {
   std::cerr << "the BlockConfig give the wrong formulations" << std::endl;

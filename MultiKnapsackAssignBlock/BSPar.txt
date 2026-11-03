@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
-# BlockSolverConfig for a MultiKnapsackAssignBlock, registering the two
+# BlockSolverConfig for a MultiKnapsackAssignBlock, registering the three
 # Solver to be cross-checked:
 #
 #   - :MILPSolver            the abstract representation of the whole tree
@@ -9,9 +9,11 @@
 #   - LagrangianDualSolver   the constraints linking the BinaryKnapsackBlock
 #                            relaxed, the Lagrangian dual solved by a
 #                            BundleSolver (LDCfg.txt)
+#   - LagrangianDualSolver   the same Lagrangian dual, solved by a
+#                            SubGradSolver (LDCfg-SG.txt)
 #
 # The problem being an integer one, the Lagrangian dual is a relaxation of it
-# and the battery declares it so (-R ,r).
+# and the battery declares it so (-R ,r,r).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -20,7 +22,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+3  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver
@@ -28,12 +30,15 @@ GRBMILPSolver         # name of 1st Solver
 #SCIPMILPSolver
 #HiGHSMILPSolver
 LagrangianDualSolver  # name of 2nd Solver
+LagrangianDualSolver  # name of 3rd Solver
 
-2  # number of ComputeConfig in this BlockSolverConfig
+3  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *MILPCfg.txt          # ComputeConfig of the :MILPSolver
 *LDCfg.txt            # ComputeConfig of the LagrangianDualSolver
+*LDCfg-SG.txt         # ComputeConfig of the LagrangianDualSolver with a
+                      # SubGradSolver inside
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -

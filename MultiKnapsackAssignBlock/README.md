@@ -21,8 +21,13 @@ and what they answer is cross-checked:
   classname from the meta-`BlockSolverConfig` `SubBSPar.txt`, i.e., the
   `CoreDPBinaryKnapsackSolver` of `KnapBSCfg.txt`. The problem being an
   integer one, the Lagrangian dual is a relaxation of it, which the battery
-  declares with `-R ,r`: its upper bound has to stay above the value of the
-  best solution that the `:MILPSolver` finds.
+  declares with `-R`: its upper bound has to stay above the value of the
+  best solution that the `:MILPSolver` finds;
+
+- the same `LagrangianDualSolver` with a `SubGradSolver` as the inner
+  `Solver` (`LDCfg-SG.txt`), i.e., the deflected subgradient method of the
+  Volume algorithm, which is also a relaxation and is held to the same
+  bound; a build without `SubGradSolver` leaves it out of the cross-check.
 
 The usage of the executable is the following:
 

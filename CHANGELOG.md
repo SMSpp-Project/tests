@@ -7,6 +7,806 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-03
+
+### Added
+
+- `MasterProblemBlock`: a tester of the `Solver` of a `MasterProblemBlock`
+  on synthetic master problems of a bundle method (components, short or
+  long cuts, vertical rows, lower bounds, level, box, linear part), which
+  compares those of `MPBSolvers.txt` with the first one while the master
+  problem is changed as a bundle method changes it; `batch` for the CI and
+  `batch-long`, on larger master problems, by hand
+
+- `SVMBlock`: `FWBSCfg.txt` registers the primal-dual bundle method also
+  with a refused direction corrected and with a refused step not taken
+  (`intFWOnReject` 1 and 2), next to the default, which asks the oracle
+  again with the gradient; `batch-fw` holds the two to their bounds on the
+  box as the others
+
+- `pypsa_instances`, the scripts that write the instances of the batches
+  converted from PyPSA networks (`UCBlock/batches/batch-pypsa`,
+  `batch-nuclear`, `InvestmentBlock/batches/batch-pypsa` and the stochastic
+  ones) and print their reference values, which were among the tests of
+  pypsa2smspp
+
+- `PolyhedralFunctionBlock`: `batch-kelley` runs the battery with the
+  `BundleSolver` of `NDOPar-Kelley.txt`, the proximal one and the
+  cutting-plane method of Kelley with the primal and with the dual master
+  problem, on the instances where the cutting-plane master does not become
+  unbounded; the tester takes its `BlockSolverConfig` with -S (`NDOPar.txt`
+  if none is given), and `batch` passes it as `sconf`
+
+- `InvestmentBlock`: `batches-sddp/batch` also optimizes an
+  `InvestmentBlock` over an `SDDPBlock` whose design is free and has a
+  cost (`ib_sddp_invest.nc4` of `gen_sddp_initud.py`), and checks that the
+  bundle reaches the value at the optimal design, below those at the fixed
+  designs around it, which it reaches only if the linearization read off
+  the solution of each simulated scenario is right
+
+- `InvestmentBlock`: `batch-stochastic` solves the network of Italy with 5
+  nodes of pypsa-eur-instances, with 5 scenarios of demand, both with the
+  `InvestmentBlock` split into a component per scenario and kept whole
+  (`ScenarioDecomposition` 0), against the value of PyPSA; the whole form
+  is left out in CI
+
+- `SMS++/PolyhedralFunctionBlock`: `NDOPar.txt` also registers the
+  `BundleSolver` with the primal master problem solved by `BDMinQuadSolver`
+  (`MPBCfg-BDMQ.txt`, unscaled) and by `DAQPMILPSolver` (`MPBCfg-DAQP.txt`),
+  as differential overrides of the `ComputeConfig` of the first one, which
+  is now the fragment `BSCfg.txt`; the tester checks every `Solver` of
+  `NDOBlock` against the LP, doubling the conditional bound at most once per
+  round, and reports as "n.a." from then on a `Solver` whose `compute()`
+  throws `std::invalid_argument`. A `BundleSolver` whose `strMPBSolverCfg`
+  names a `Solver` that the build does not have is left out of a
+  `BlockSolverConfig`, as a `LagrangianDualSolver` whose inner `Solver` is
+  not there
+
+- `TwoStageStochasticBlock`: `BendersDecompositionSolver` in the convex
+  regime with the master solved by the `BundleSolver` that is the
+  cutting-plane method of Kelley on the integer design (`KelleyCfg.txt`,
+  `BDSMCfg-Kelley.txt`, `MPBCfg-IP.txt`), one more row of
+  `BSPar-MMCF-BDS.txt`, `BSPar-MMCF-BDSLD.txt` and `BSPar-BDS-2S-LD.txt`
+  beside the MILP regime it is the loop of, written as an override of the
+  ComputeConfig of the MILP regime, which for the two of MMCFBlock is now a
+  file of its own (`BDSCfg-MMCF.txt`, `BDSCfg-MMCF-LD.txt`)
+
+- `InvestmentBlock`: the battery `batches-design/batch` converts by
+  `design_converter` each network of the `UCBlock` archive with the design in
+  its units and lines (a `TwoStageStochasticBlock` among them) and holds the
+  `InvestmentBlock` it gives to the PyPSA objective of the same network
+  written as an `InvestmentBlock`; the references are in
+  `batches/ref-pypsa`, which `batch-pypsa` reads too
+
+- `SMS++/AbstractBlock`: `LagrangianDualSolver_Box_test -k 128` gives the
+  Objective of the sub-Blocks and of the root random weights, which the
+  `:MILPSolver` applies by itself and the `LagrangianDualSolver` through
+  its `LagBFunction`, the `BoxSolver` of the sub-Blocks not seeing them
+
+- `MILPSolver/ObjectiveWeight`: `MILPSolver_ObjectiveWeight_test` builds a
+  random tree of `AbstractBlock` three levels deep with a weight on the
+  `Objective` and one on the Variable of each `Block`, and its twin with no
+  weight and the coefficients already multiplied by the weights (those of
+  the `Objective` along the path, that of the Variable of a son in the rows
+  of its father), attaches the `Solver` of a `BlockSolverConfig` to both
+  roots and to a `Block` of the middle level, and checks every `Solver`
+  against the twin, then changes both trees in the same way (the
+  coefficients of the rows and the weights with the `Solver` attached
+  comprised) and checks them again, and checks that a change of the
+  weights is refused while a `Solver` that cannot handle it is attached to
+  an ancestor; `batch-weight`
+  runs it with `Objective` partly quadratic (`BSPar.txt`, without
+  `HiGHSMILPSolver`, whose active set calls unbounded some of these convex
+  QPs) and all linear (`BSPar-LP.txt`)
+
+- `TwoStageStochasticBlock`: the cross-check of `BSPar-BDS-2S.txt` also
+  has the `BendersDecompositionSolver` with HiGHS in the master and in the
+  subproblems (`BDSCfg-2S-HiGHS.txt`, `BDSMCfg-MILP-HiGHS.txt`,
+  `BDSSCfg-HiGHS.txt`), i.e., the Benders decomposition where there is no
+  licence of GUROBI, next to the one with GUROBI, whose `ComputeConfig` is
+  now the fragment `BDSCfg-2S.txt` that both include
+
+- `SVMBlock`: `FWBSCfg.txt` also registers `FrankWolfeSolver` with the
+  primal-dual bundle direction (`intFWDirection` `eDirPrimalDual`), on the
+  balls and on the box of the dual alike
+
+- `SMS++/AbstractBlock`: `AbstractBlock_BDS_test` also runs the phase one
+  on four scenarios with the subproblems solved by DAQP, which gives no
+  Farkas certificate (`BSPar-BDS-Phase1-DAQP.txt`), the `ComputeConfig` of
+  the phase one being the fragment `BDSCfg-Phase1.txt`
+
+- `HQPBlock`, the suite of `HQPBlock`, `HQPDistBlock` and `HQPSolver`:
+  `HQPBlock_test` compares level by level every `HQPSolver` of `BSPar.txt`,
+  a map from the classname of the Block to its `BlockSolverConfig` (on the
+  `HQPBlock`, DAQP, qpOASES, MOSEK and Clarabel as inner Solver, each with
+  the rows of the lower levels relaxed or in the model and with the center
+  of the regularization at the previous solution or at 0, and DAQP and
+  qpOASES solving each level from scratch), and those of each formulation
+  of `HQPDistForms.txt`, given with `-F`, on the `HQPDistBlock` of the same
+  hierarchies split among 3 owners (with the structure `kConsensus`, DAQP
+  and qpOASES on the whole tree; with `kBenders`, DAQP on the whole tree
+  and the Benders decomposition of `BendersDecompositionSolver`, if in the
+  build, as it is and with the scale of the levels of `HQPSolver`, held to
+  their own tolerances on the values and on `x`, the one on `x` given with
+  the new option `-X`),
+  with an independent null-space implementation; `batch-generated`
+  on random and degenerate hierarchies, on a step of Model Predictive
+  Control and on a run of 10 small ones, where DAQP and qpOASES starting
+  from the previous solve of each level must take fewer iterations than
+  from scratch (`-I`), `batch-radial` on the instances in `data/nc4` of the
+  module, each step also reached by Modification of the previous one, with
+  the label `HQPBlock;MILPSolver`
+
+- `HQPBlock`: `HQPBSCfg.txt` attaches a 15th `HQPSolver`, whose inner
+  Solver is `HQPStageSolver` (`InnerBSCfg-stage.txt`), as a differential
+  override of `HQPCfg.txt`; the tester leaves out, for a hierarchy, an
+  `HQPSolver` whose inner Solver throws `std::invalid_argument` on it, and
+  builds also a small Model Predictive Control with the stage structure of
+  `HQPBlock`, `batch-radial` also runs two steps with the control horizon
+  10, which have it, and an instance on which the null-space reference runs
+  out of iterations is compared with the solution in the file only
+
+- `MILPSolver/QuadFunction/LPPar_CL_C-dense.txt` also attaches
+  `HPIPMMILPSolver`, with `QPCfg-C.txt`, so that `batchCL_C_dense`,
+  `batchMPC_C_dense` and `batchMM_C_dense` run it next to the other dense
+  QP :MILPSolver
+
+- `MILPSolver/QuadFunction` also has the convex QPs of two test sets of
+  qpbenchmark (Apache License 2.0): the 64 of model predictive control in
+  robotics of `mpc_qpbenchmark` in `MPC`, and 61 of the dense subset of
+  the Maros-Meszaros test set in `MarosMeszaros`, written as LP files by
+  `qpb2lp.py`, with their optimal values in `available_instances.txt`;
+  `batchMPC_C`, `batchMM_C` (with `LPPar_CL_C.txt`) and
+  `batchMPC_C_dense`, `batchMM_C_dense` (with `LPPar_CL_C-dense.txt`)
+  solve them
+
+- `import_modules`, built when `SMSpp_BUILD_MODULE` is `ON`, imports the
+  C++20 module of each SMS++ module in the build, names their main classes
+  and gets a `Block` or a `Solver` of each one from the factory
+
+- `InvestmentBlock/batches-sddp/batch` compares, at a fixed design, the
+  simulation that the `InvestmentFunction` runs over an `SDDPBlock` with the
+  simulation of the same `SDDPBlock` by `sddp_solver`, and both with the
+  value by hand, on four toy instances written by
+  `InvestmentBlock/gen_sddp_initud.py` whose thermal unit is started up at
+  the last instant of the first stage with `MinUpTime` 3 or 1, is off
+  there, or shuts down there with `MinDownTime` 3, the first being a known
+  defect of the `InvestmentFunction` that is printed and does not fail the
+  battery; it runs where `investmentblock_solver`, `sddp_solver`, Python and
+  `ncgen` are, with the configurations `InvestmentBlock/*-sddp*.txt`
+- `SingleFlowDCRBlock/batches-multiflow/batch` also runs the
+  `LagrangianDualSolver` whose flows are solved by the
+  `SingleFlowDCRBendersSolver` with `intReuseCuts` 1
+  (`BSPar-multi-reuse.txt`, `DCRBSCfg-reuse.txt`) and with `intWarmLambda` 1
+  (`BSPar-multi-warm.txt`, `DCRBSCfg-warm.txt`), which no test turned on
+
+- `SingleFlowDCRBlock/batches-multiflow/batch` runs the instances with 1
+  flow too, and none is left out any more: with the multi-flow instances of
+  the data version 2026-10-18 of SingleFlowDCRBlock, whose mutual capacity
+  is the sum of the individual ones, the 18 instances of topo that were
+  infeasible are not, and Gurobi solves the 6 it did not
+
+- the first-stage rows of `AbstractBlock_BDS_test`: an instance whose
+  first-stage `Variable` have `Constraint` of their own, a ramp between
+  consecutive ones and a minimum on their sum that the starting point
+  violates, solved in the MILP regime and in the convex one with the primal
+  (`BSPar-BDS-Primal.txt`, `BDSMCfg-Primal.txt`) and the dual master
+  problem in the `BundleSolver` against the monolithic model; the
+  `ComputeConfig` of the `BundleSolver` of the master is now the fragment
+  `BDSMCCfg.txt`, which `BDSMCfg.txt` includes and `BDSMCfg-Primal.txt`
+  overrides
+
+- `batch-instances-bx` of `SingleFlowDCRBlock`: a `BranchAndXSolver` whose
+  nodes are solved by the `SFDCRBRelaxationSolver` next to the `Solver` of
+  `BSPar.txt` (`BSPar-BX.txt`, `BXCfg.txt`, `InnerBSCfg-BX.txt`), on the
+  SOCP formulation with its `BlockConfig`, hence with its feasibility
+  tolerance (on the P/C one in CI, as `batch-instances`); the build adds it
+  only when it has the `BranchAndXSolver` and the `SingleFlowDCRBlock` in it
+  has the `SFDCRBRelaxationSolver`
+- the `LagrangianDualRelaxationSolver` next to the `PrimalProximalHeur` in
+  the cross-checks of `UCBlock` (`BSPar.txt`, `BSPar-DP.txt`, `BSPar-AC.txt`,
+  `BSPar-AC-24h.txt`, `BSPar-PYPSA.txt`, `BSPar-par.txt`,
+  `BSPar-par-aggr.txt`) and of `TwoStageStochasticBlock`
+  (`BSPar-2S-LD-IP.txt`), with the same `ComputeConfig` (that of
+  `BSPar-PYPSA.txt` now the fragment `PPHCfg-PYPSA.txt`); its upper bound is
+  the other side of the relaxation, so the batteries declare it a relaxation
+  and hold its lower bound to correctness alone (`-R ...,r -E ...,inf`)
+
+- `SVM_FW_test` in the suite of `SVMBlock` and its battery `batch-fw`:
+  `FrankWolfeSolver` on two problems built out of the data sets of the
+  suite, the least-squares fit in Euclidean balls, a feasible region that is
+  not a polytope whose oracle is the closed-form `BallSolver` of the tester,
+  and the Wolfe dual of the SVM on a box, whose oracle is `BoxSolver`, the
+  variants of the direction of `FWBSCfg.txt` cross-checked against a
+  `:MILPSolver` by their bounds
+
+- `sweep` of `batch_common.sh`, which runs a command for every combination
+  of the values of some parameters, the batteries of
+  `BinaryKnapsackBlock_test` that sweep the parameters of a generated
+  instance (`batch`, `batch-mixed`, `batch-negative`) writing only the
+  values, and their run once in `batches/bkb_battery.sh`; the runs are
+  those they made before
+
+- `UCBlock/batches/batch-acad` also solves the two bus `UCBlock` of
+  `constant/` in the data of UCBlock (version 2026-10-13), whose own
+  `Objective` has the constant term of the network (+1000 and -1000),
+  against their optimum by hand, skipping them when they are not in the
+  data: the value a Solver reports of its solution and its bounds must both
+  count it
+
+- `SolveVariants()` of `common_utils`: given copies of a `Block`, each
+  configured by one variant of its `BlockConfig`, it cross-checks the
+  `Solver` of each copy as `SolveAll()` does and then the `Solver` of all
+  the copies against each other, since whatever the formulation they bound
+  the same optimum; `-F <list>` is a standard option of the testers, the
+  list a `SimpleConfiguration<std::vector<Configuration*>>` whose elements
+  are (meta-)`BlockConfig` or pairs (meta-)`BlockConfig` +
+  `BlockSolverConfig` (`SimpleConfiguration<std::pair<Configuration*,
+  Configuration*>>`), read by `get_BlockConfig_variants()`, and
+  `solver_config_of()` gives the `BlockSolverConfig` of each copy
+
+- `UCBlock_test` takes `-F`, and `UCBlock/batches/batch-pypsa` runs each
+  PyPSA instance once with the formulations of the `DCNetworkBlock` listed
+  in `InnerBVar-DCN.txt` (PTDF, CYCLE, KIRCHHOFF) instead of once per
+  formulation, comparing them with each other as well as with PyPSA
+
+- `TUDPS_test` compares formulations with each other: given with `-F` a
+  list of (meta-)`BlockConfig`, a
+  `SimpleConfiguration<std::vector<Configuration*>>` such as
+  `UCBlock/TUBVar-PC.txt`, it reads the unit once per element, gives each
+  copy its own `BlockConfig` and the same `BlockSolverConfig`, makes each
+  random change to all the copies, and besides the two `Solver` of each copy
+  checks that the copies have the same optimum, which no battery did while
+  each formulation was a run of its own; `read_BlockConfig_variants()` of
+  `common_utils` reads the list for any tester
+
+- `UCBlock/batches/batch-ac` also runs 6 of the 53 AC instances over 24
+  hours (`ES_acopf_srd_id_*_24h_1`: c01, c14, da, g2, d2_c03, d2_c12, both
+  days and the extremes of the total demand), on the SOCP relaxation of
+  `ACNetworkBlock` [`InnerBCfg-SOCP.txt`, `ACBCfg-SOCP.txt`], with a limit
+  on the iterations of the `LagrangianDualSolver` (with `dblMaxTime` it ends
+  with `kError` past the limit) and on the time of the `PrimalProximalHeur`
+  [`BSPar-AC-24h.txt`, `LDCfg-AC-24h.txt`, `PPHCfg-AC-24h.txt`]: their
+  verdict says that the bounds are consistent, not that the values agree;
+  `BSPar-AC.txt` is made of the fragments `MILPCfg-AC.txt` (now with
+  `NonConvex 0`, so that GUROBI reports the optimum of the convex relaxation
+  as its lower bound and not `OBJBOUND`), `LDCfg-AC.txt` and `PPHCfg-AC.txt`,
+  whose warm start [`WSBSCfg-AC.txt`] solves the relaxation with the
+  settings of `MILPCfg-AC.txt`, on which it no longer stops on numerical
+  trouble (GUROBI status 12)
+
+- `UCBlock/batches/batch-conversion` runs the instances with a
+  `ConversionUnitBlock`: the multi-energy ones of UCBlock (a combined heat
+  and power plant as a `ConversionUnitBlock` and as a `ThermalUnitBlock`
+  with hyperarcs, a meshed network with a heat node) against their known
+  optimum, and those that pypsa2smspp makes of the committable links of its
+  test networks (`nc4/conversion`, data version 2026-10-15: time-varying
+  efficiency, delays, modules, design, also with ramps and on before the
+  horizon) against the optimum of PyPSA, each
+  with the three formulations of the network (`InnerBVar-DCN.txt`), skipping
+  them when they are not in the data; the `ConversionUnitBlock` inner to the
+  `LagrangianDualSolver` is solved with its integer commitment [see
+  `CUBSCfg-MIP.txt` and `InnerBSCfg-DP.txt`], and on the units of several
+  modules, whose commitment is integer and not binary, the
+  `PrimalProximalHeur` only bounds the optimum and is declared a
+  relaxation
+
+- `UCBlock/batches/batch-conversion` also runs the multi-energy cases with
+  the electricity and the heat as two carriers, the plant being a
+  `ThermalUnitBlock` with two outputs (`me_*_carrier`) or the
+  `ConversionUnitBlock` whose generators have each its output on its
+  carrier (`me_*_unitcarrier`), the PyPSA networks with the electricity,
+  the hydrogen, the gas and the heat as carriers (`carriers_*`) and the
+  cases of the committable links of pypsa2smspp with the gas, the electric
+  and the heat buses as three carriers (`conversion/*_carriers.nc4`),
+  against the optimum by hand and of PyPSA, and per instance the tolerances
+  of its Solver (`EPS_OF`)
+
+- the carrier form of the PyPSA instances, where the buses of each carrier
+  of the network are the nodes of a carrier of the `UCBlock` and the links
+  between two carriers are units with outputs (`*_carriers.nc`, written by
+  the generators of pypsa-eur-instances with `--carriers`), held to the
+  same reference as the network form: the networks with the hydrogen in
+  `UCBlock/batches/batch-pypsa` and `InvestmentBlock/batches/batch-pypsa`,
+  the trees of the PyPSA-Eur network with ten carriers, whose CO2 pipeline
+  is a line with a design in the network of its carrier, in
+  `MultiStageStochasticBlock/batches/batch-pypsa` and, with the investment
+  outside, in `InvestmentBlock/batches/batch-stochastic` (from
+  `initial_investment_stochastic_carriers.txt`, the point of the other
+  form in the order of the assets of this one), and the flat two-stage
+  equivalent of one tree, in both forms, in
+  `TwoStageStochasticBlock/batches/batch-pypsa`
+
+### Changed
+
+- the testers of BinaryKnapsackBlock, CapacitatedFacilityLocationBlock,
+  MCFBlock, InvestmentBlock and UCBlock, and the scenario generators of
+  CapacitatedFacilityLocationBlock and UCBlock, pass the data to the setters
+  as spans, the forms taking an iterator being gone
+
+- `UCBlock`: `UCBlock_test --scale` and `--pollutant` check the copies of
+  a unit as the weights of its Block, the rows and the Objective of the unit
+  keeping the coefficients of one copy, a unit replicated after the model is
+  built giving the model (weights included) of one replicated before it,
+  and `is_feasible()` at the optimum of the replicated unit and battery
+
+- `InvestmentBlock`: `IB_test` no longer shifts the initial point and the
+  solution by the lower bounds of the design Variable, which InvestmentBlock
+  no longer reformulates, and the `IBOCfg*.txt` give no Configuration for
+  the static constraints
+
+- `InvestmentBlock`: the inner Block of `BSCfg.txt` is solved by
+  `HiGHSMILPSolver` by the simplex method, with `intHomogeneousDirection` 1:
+  where it is infeasible the InvestmentFunction cuts the point away with the
+  homogeneous multipliers of the dual direction, without which
+  `batch-stochastic` stopped above the optimum on
+  `smspp_stoch_tssb_c3_d3_renewables.nc`; the note of `batch-stochastic`
+  says so
+
+- the testers of the stochastic Block give the Solver their log at the
+  verbosity of `-v`
+
+- `InvestmentBlock`: the SDDPBlock of `batches-sddp` is solved by the
+  `SDDPSimulationSolver` of SDDPBlock, the first Solver of its
+  BlockSolverConfig (`SDDPBSCfg-sddp.txt`), which the InvestmentFunction
+  takes; `IB_test` and `TSSB_BDS_test` link UCBlock (and `IB_test`
+  SDDPBlock and TwoStageStochasticBlock) themselves, InvestmentBlock no
+  longer bringing them, and are built only where they are
+
+- `InvestmentBlock`: `IB_test` reaches the inner Block of each
+  `InvestmentFunction` of the `InvestmentBlock` [see
+  `InvestmentBlock::get_investment_functions()`], the one of its Objective
+  or the one of each component of an `InvestmentBlock` that has split its
+  inner Block, rather than casting its single Function, which a split one
+  does not have; the "meta"-BlockConfig give a component (an
+  `AbstractBlock`) the `OBlockConfig` of the `InvestmentBlock`
+
+- `MSSB_test` checks on every instance that the `Block` written in memory
+  and read back has the weights of the Objective of the original, as well
+  as the round trip of its `Solution`
+
+- `TwoStageStochasticBlock`: `benders_form()` weights the cost of the design
+  taken out of each leaf by the factor with which its `Objective` enters the
+  `TwoStageStochasticBlock` [see `Block::get_objective_weight()`], the
+  probability of the scenario being the weight of its `Objective` rather
+  than a factor of its coefficients, and gives the wrapper of a leaf the
+  weight of the ancestors the leaf leaves behind
+
+- `tree_objective_value()`, with which `check_var_solutions()` values the
+  solution of each `Solver`, multiplies each `Objective` by the weights
+  along the path [see `Block::get_objective_weight()`]
+
+- `MILPSolver/QuadFunction`: `HPIPMMILPSolver` has in `LPPar_CL_C-dense.txt`
+  the `ComputeConfig` `HPIPMCfg-C.txt`, that of `QPCfg-C.txt` with a limit
+  of 1000 iterations instead of the 100 of the default mode of HPIPM, with
+  which it stopped with no solution, an interval that the tester accepts,
+  on `QCAPRI`, `QSCAGR7` and `QSCAGR25` of `batchMM_C_dense`; with the 1000
+  it solves the last two, and returns an error on `QCAPRI`, which
+  `batchMM_C_dense` leaves out as it does the other models some of its
+  Solver do not solve
+
+- `SVMBlock/BSPar.txt` adds to `GRBMILPSolver` and `SMOSolver` one
+  `:MILPSolver` for each other kind of algorithm for a convex quadratic
+  program: the active-set `QPOASESMILPSolver`, the interior-point
+  `MOSEKMILPSolver` and the first-order `OSQPMILPSolver`, so that the
+  batteries of the SVM dual and primal also check how they take the changes
+  of the training problem
+
+- the makefiles that include LagrangianDualSolver no longer include
+  BranchAndXSolver, which it no longer needs, save those of the tests whose
+  configurations use it (UCBlock)
+
+- `MILPSolver/QuadFunction/LPPar_CL_C.txt` gives `MOSEKMILPSolver` two
+  threads, with `MOSEKCfg-C.txt`, since its interior point fails on `QGROW7`
+  of `batchMM_C` with 4 threads or more and on `QPCSTAIR` with one, and
+  solves both with two, so that the outcome of the battery does not depend
+  on the cores of the machine
+
+- `SolveAll()` reports a `Solver` whose `compute()` throws as an error in
+  the line of the instance, with `Error! (throw)` and the message of the
+  exception on the standard error, and goes on with the other `Solver`,
+  rather than ending the tester: the exception of one `Solver` (e.g., the
+  active set of `HiGHSMILPSolver` that does not solve a QP) left the others
+  without a value
+
+- the tester of `UCBlock` is built without the `LagrangianDualSolverML`
+  library, whose loading of Torch cost more than many of the instances, and
+  `UCBlock_ML_test` is the same tester with it; `batch-acad-s`, whose
+  `BSPar-DP-BX.txt` asks for a `Solver` of that library, names it as its
+  default executable and is run with it when the build has it
+
+- every test and every battery runs with `OPENBLAS_NUM_THREADS=1`, unless
+  the caller sets it, OpenBLAS starting one idle thread per core as soon as
+  it is loaded
+
+- `InvestmentBlock/batches-sddp/batch` holds the `InvestmentFunction` to the
+  value by hand on minup3 too, now that it simulates on a copy of the
+  `SDDPBlock`; `GreedyCfg-sddp.txt` gives the `SDDPGreedySolver` the
+  BlockSolverConfig of the stages (`UCBSCfg-sddp.txt`)
+- the batteries of `MILPSolver/QuadFunction` solve each model with every
+  Solver of their BlockSolverConfig and check them against each other and
+  against the known optimal value (`SolveAll()`), where the tester used the
+  first one alone; the models of the class CL (a convex objective and linear
+  constraints) have configurations of their own, `LPPar_CL_C.txt` with
+  `MOSEKMILPSolver`, `ClarabelMILPSolver`, `PIQPMILPSolver` (sparse) and
+  `OSQPMILPSolver` next to `SCIPMILPSolver`, and `LPPar_CL_I.txt` with
+  `MOSEKMILPSolver`, the ComputeConfig of each Solver being a fragment;
+  `batchCL_C_dense` runs the dense `DAQPMILPSolver`, `QPOASESMILPSolver`,
+  `ProxQPMILPSolver`, `QPMADMILPSolver` and `QuadProgMILPSolver` (the last
+  two with their Hessian regularized) of `LPPar_CL_C-dense.txt`, which the
+  tester takes from `-S`, on the models of the class with up to about 2000
+  variables
+
+- `intDoEasy` in the configurations follows the new bits of BundleSolver
+  (e.g., 13 is now 7, 45 is now 23), as do the comments that name them
+
+- the batteries `batch`, `batch-mcf` and `batch-cuts` of
+  `CapacitatedFacilityLocationBlock` run the Yang and TBED instances in CI
+  too, the first instance of each Yang size and the first TBED one with
+  seed 0 only, and all of them locally as before (`cfl_yang` takes the
+  numbers of the instances); they were skipped in CI as running for hours,
+  which was `MCFSimplex` pivoting for ever on an infeasible round of the MCF
+  R3Block (`batch-cuts`, which has none, had only copied the skip), and with
+  it fixed the 40 rounds take seconds
+
+- the LMO of the `MCFBlock` suite (`MCFBlock/MCFBSCfg.txt`) runs `MCFSimplex`
+  with the tolerances of `MCFClass`, no longer at 1e-9: they had been set
+  because `goto10_8_1` pivoted for ever, which does not happen any more
+
+- what the testers compare with -F is called a formulation everywhere, and
+  no longer a variant: the lists are `*Form*.txt` (`TUBForm*.txt`,
+  `NUBForm*.txt`, `InnerBForm-DCN*.txt`, `InnerBForm-LD.txt`,
+  `CFLBForm*.txt`, `SATBForm.txt`, `DCRForm.txt`, `NDForm.txt`,
+  `MetaForm.txt`, formerly `*Var*.txt`), the long option is
+  `--formulations`, the functions of `common_utils` are `read_formulations()`,
+  `get_formulations()`, `SolveFormulations()` and
+  `attach_formulation_Solvers()`, and the output says `formulation Fk:` and
+  `formulations against each other:`
+
+- the five options of the rounds of random changes (-e seed, -k what to
+  change, -n rounds, -m changes, -q probability) are written once in
+  `common_utils` [see `RoundOptions` and `add_round_options()`] and used
+  by the nine testers that change their Block at random: those of
+  `SMS++/BoxSolver`, `AbstractBlock` (box), `MCFBlock`,
+  `CapacitatedFacilityLocationBlock` and `UCBlock` (TUDPS), which had a
+  copy each, and those of `SMS++/PolyhedralFunction`,
+  `PolyhedralFunctionBlock`, `LagBFunction` and `AbstractBlock`
+  (readwrite), which took positional arguments; the NDOBlock configuration
+  of `LagBFunction_test` is the standard -S, and `MILPSolver/QuadFunction`
+  takes -t and -r in place of its positional arguments
+
+- `IB_test` takes -F, the list of the BlockConfig to compare, like the
+  other testers: `InvestmentBlock/batches/batch-pypsa` and `batch-stochastic`
+  solve each instance with a network with the three formulations of it
+  (`InnerBVar-DCN.txt`, `InnerBVar-DCN-CI.txt` in CI), and the modular
+  ones with the inner Block solved as a linear program and by the recursive
+  Lagrangian dual in one run (`InnerBVar-LD.txt`), the copies being compared
+  with each other
+
+- `BSPar-2S.txt` of `TwoStageStochasticBlock`, the default of `batch-pypsa`
+  and `batch-ec`, has the master problem of the bundle of its
+  `LagrangianDualSolver` solved by GUROBI's barrier
+  (`MPBCfg-barrier.txt`, from the `ComputeConfig` of the master now in
+  `MILPCfg-MPB.txt`, which `MPBCfg.txt` includes, as in `UCBlock`): with the
+  dual simplex the master of the maxpower instance of `batch-pypsa` failed
+  numerically at every call after a few dozen iterations, and the
+  Lagrangian Dual ended in error, while with the barrier no master fails
+
+- `UCBlock/batches/batch-p4r` solves the pHydro instances with
+  `BSPar-DPb.txt`, whose `LagrangianDualSolver`, `PrimalProximalHeur` and
+  `LagrangianDualRelaxationSolver` have the master problem of the bundle
+  solved by GUROBI's barrier (`MPBCfg-barrier.txt`, from the `ComputeConfig`
+  of the master now in `MILPCfg-MPB.txt`, which `MPBCfg.txt` includes): with
+  the dual simplex the Lagrangian Dual stopped at the 300 seconds of the
+  battery on four of the five, and on `pHydro_18` its master failed
+  numerically, while with the barrier it converges on all of them in less
+  than half of that time; a `BlockSolverConfig` given on the command line is
+  still used for every instance
+
+- `UCBlock/batches/batch-ec` solves each instance with the three
+  formulations of the network (`InnerBVar-DCN.txt`, `InnerBVar-DCN-CI.txt`
+  in CI) and compares them with each other
+
+- `UCBlock/batches-tub/batch-nuclear` compares the formulations of the
+  `NuclearUnitBlock`: the T formulation with Perspective Cuts and its tight
+  forms of the operating rules (`NUBVar.txt` with
+  `NUBCfg-T-PC-{R,M,RM,RC}.txt`, `NUBVar-CI.txt` in CI), which describe the
+  same set of schedules
+
+- the batteries of `MultiStageStochasticBlock` and `batch-ec` of
+  `TwoStageStochasticBlock` solve each instance with the three formulations
+  of the network of its inner Block (`InnerBVar-DCN.txt`, PTDF and
+  KIRCHHOFF only in CI), comparing them with each other; the copies are
+  read as with one copy, by the lower bound of their Solver
+
+- `batch-pypsa` of `TwoStageStochasticBlock` solves each instance with the
+  three formulations of the network of its inner Block
+  (`InnerBForm-DCN.txt`, `InnerBForm-DCN-CI.txt` in CI), comparing them
+  with each other and with the reference, as `batch-ec` does; the runs on
+  the Benders form keep the one formulation of `InnerBCfg.txt`
+
+- `SatellitesBlock_test` and `MultiKnapsackAssignBlock_test` are a call of
+  `load_solve_test()` of `common_utils`, which loads the Block out of the
+  file, once per variant of `-F`, and cross-checks its Solver with
+  `SolveVariants()`; their runs are those they made before
+
+- the testers no longer define their own `RED`/`GREEN` macros, which are
+  those of `common_utils.h`, and `UCBlock_test` and `MMCFBlock_test` no
+  longer carry the commented-out template of a loop of changes they never
+  made, nor the random generator and the macros it would have used
+
+- `MCFBlock/batches/batch` and `batch-dense` share `batches/mcf_battery.sh`,
+  the sweep of the changes over the instances being the values of its
+  parameters [see `sweep`], each battery naming only its sizes; the runs are
+  those they made before
+
+- the batteries of `MMCFBlock_test` share `batches/mmcf_battery.sh`, the
+  Canad instances with a list of `BlockSolverConfig` and the Mnetgen ones,
+  the runs being those they made before (the commented-out instances of 256
+  nodes are gone)
+
+- the six batteries of `MILPSolver/QuadFunction` share
+  `batches/qf_battery.sh`, each only naming its family of instances and its
+  type, the runs being those they made before
+
+- the batteries of `CapacitatedFacilityLocationBlock` share
+  `batches/cfl_battery.sh`, the arguments, the runs of an instance for
+  every seed and the ORLib, Yang and TBED instances: each of them only says
+  its variants, its changes, its seeds and which instances it runs, the
+  runs being those it made before
+
+- the header and END boxes of the configuration files that lacked them or
+  had them with another name or the name glued to the dashes, the author
+  lines and the lines over 77 columns, the comments being rewrapped and
+  nothing else of the files changing
+
+- `TSSB_test` and `MSSB_test` are one main, `stochastic_test.{cpp,h}`, the
+  two `test.cpp` only saying which class they read and what they add (the
+  Benders form of `-b`, the round trip of the `Solution`); both take `-F`,
+  reading the instance once per variant of the `BlockConfig` and comparing
+  the copies with `SolveVariants()`, and `-R`
+
+- `MMCFND_test` takes the two formulations of `MMCFNetworkDesignBlock`
+  with `-F NDVar.txt` (pairs `BlockConfig` + `BlockSolverConfig`) instead
+  of `-m`/`-M`/`-b`/`-B`, its options being parsed by `common_utils`
+
+- `SingleFlowDCRBlock/batches/batch` runs each instance in both
+  formulations, the SOCP and the P/C one, with `-F DCRVar.txt`, whose
+  variants carry their `BlockSolverConfig` and their `-R`, and compares
+  them with each other; `batch-pc` is gone, and `batch-instances` runs the
+  two formulations in one run where it runs both
+
+- a variant of `-F` may be the vector of its `BlockConfig`, its
+  `BlockSolverConfig` and a `SimpleConfiguration<std::vector<int>>` saying
+  which of its `Solver` solve a relaxation, i.e., its own `-R`;
+  `attach_variant_Solvers()` of `common_utils` applies the
+  `BlockSolverConfig` of a copy and gives `SolveVariants()` the `-R` of
+  that copy, each copy taking out of it the `Solver` this build does not
+  have (before, a run of several copies took them out of `-R` once per
+  copy)
+
+- `SATBlock_test` and `SingleFlowDCRBlock_test` take `-F` [see
+  `SolveVariants()`], given which they read the instance once per
+  `BlockConfig` of the list; `SATBlock/batches/batch-structure` gives each
+  instance both structures in one run (`SATBVar.txt`: the relaxation of
+  `BPar-R.txt` and the decomposition of `BPar-D.txt`), each round of
+  Modification making the same change to both copies, and compares them
+  with each other; `get_BlockConfig_variants()` takes `optional`, for the
+  testers that may be given no `BlockConfig` at all
+
+- the tester of `CapacitatedFacilityLocationBlock` takes its configuration
+  from the list of `-F`, one per battery (`CFLBVar*.txt`): the pair
+  `BlockConfig` + `BlockSolverConfig` of the original `Block`, then one or
+  more R3Block, each the vector of the `Configuration` it is made with, its
+  `BlockConfig` and its `BlockSolverConfig`, with its own `UpdateSolver`;
+  the lower bounds of all their `Solver` are compared, not only those of
+  the first one, so that the flow relaxation is solved by every
+  `:MCFSolver` its `BlockSolverConfig` lists; its positional arguments are
+  options (`-t`, `-s`, `-e`, `-k`, `-n`, `-m`, `-q`, `-T`); the sub-folders
+  `cuts`, `MCF`, `LD`, `LDVScuts` and `Ben` with their copies of
+  `BPar1.txt`, `BPar2.txt`, `BSPar1.txt`, `BSPar2.txt` and `R3BCfg.txt` are
+  gone, the configurations being flat files named after what they configure
+  (`CFLBCfg-*.txt`, `CFLBSCfg-*.txt`, `MCFBCfg.txt`, `MCFBSCfg*.txt`,
+  `R3BCfg-copy.txt`, `R3BCfg-MCF.txt`), the identical ones merged
+
+- `compare_formulations` is a thin wrapper of `SolveVariants()`: it takes
+  `-F` and the variants of `MetaVar.txt`, each a pair `BlockConfig` +
+  `BlockSolverConfig`, instead of `-X`/`-Y`; its CMake target links
+  `UCBlock` and `MILPSolver` when they are in the build, without which it
+  could not read the instances of its batch
+
+- `UCBlock_test --scale` no longer builds the `BlockConfig` of the
+  formulations of the unit in code: it reads them from the lists
+  `UCBlock/TUBVar.txt` (the seven formulations, new) and
+  `UCBlock/TUBVar-PC.txt` (the seven with the Perspective Cuts) with
+  `read_BlockConfig_variants()`, and it is run in the directory of the
+  suite, which holds them
+
+- `b_config_Block()` of `common_utils` applies a clone of a plain
+  `BlockConfig`, as it already did for a meta one: `apply()` moves the
+  `Configuration` it holds into the `Block`, so the same `BlockConfig`
+  applied twice gave nothing the second time
+
+- the batteries of `UCBlock/batches-tub` that looped over the formulations
+  of the unit in bash (`batch`, `batch-acad-all`, `batch-acad-red`,
+  `batch-mustrun`, `batch-reserve`, `batch-reserve-red`, `batch-shutdown`)
+  run each instance once with `-F` and the list of its formulations
+  (`TUBVar-PC.txt`, `TUBVar-PC-3bin-T.txt` on the long horizons,
+  `TUBVar-mustrun.txt`, `TUBVar-shutdown.txt`); each run reports the
+  `Solver` of every formulation as before and, when they agree, the line
+  `formulations ... agree in <n> solves` before its verdict
+
+- the comments of `UCBlock/batches/batch-ac` and of the AC configurations
+  say what is solved: a convex relaxation of the AC model, whose McCormick
+  inequalities are not separated in a continuous solve, by GUROBI (not
+  SCIP); the 24h instances stay skipped, with the measured reason (the
+  `:MILPSolver` alone solves one in a few minutes, the Lagrangian chain does
+  not converge in 90 minutes and exceeds the sessions of the license)
+
+- `compare` of `ml_bench` prints a line when each side of an instance starts
+  and one when it ends, with its time and iterations or why it failed, so
+  that a side that does not end is seen while it runs
+
+- the tests that set up the instances of a module are named after the
+  target they build (`extract_<prefix>_<fmt>`, `run_<tool>`), set up the
+  fixture `<prefix>_<fmt>_extracted` or `<tool>_generated` and share the
+  lock `<prefix>_data`; `fetch_bk_data`, `fetch_sat_data` and
+  `fetch_canad_data` are now `extract_bk_txt`, `extract_sat_cnf` with
+  `extract_sat_wcnf`, and `extract_mmcf_Canad`, whose archive MMCFBlock
+  downloads as the modules do
+
+### Removed
+
+- `UCBlock/batches-tub/batch-acad-all`, which made the runs of
+  `batches-tub/batch` but those of Frank-Wolfe, so that ctest made them
+  twice
+
+### Fixed
+
+- `SVMBlock`: the usage line of `batch-fw` names the `BlockSolverConfig` it
+  takes as its second argument, before the log file
+
+- on Windows, the executables that copy their DLLs next to themselves
+  are linked one at a time (a job pool of Ninja), since two copies of the
+  same DLL into one directory collided (e.g., with the clang++ of MSYS2)
+
+- `cmake/FindCPLEX.cmake` drops the cached paths of CPLEX when one of them
+  does not exist any more (e.g., in a build directory configured once outside
+  and once inside a container, or after an upgrade), so that all of them are
+  searched again; the stale include directory was kept, since `find_path()`
+  does not search a cached one again, and the configuration stopped on
+  reading the version from a header that is not there
+
+- `MMCFBlock`: `mnetgen` has its own `drand48()` and `srand48()` on any
+  Windows, the C library of MinGW-w64 lacking them as that of MSVC does
+
+- `TwoStageStochasticBlock/TUBSCfg-DP.txt` declared no ComputeConfig and
+  wrote one all the same, empty, which SMS++ never read: it is gone, and
+  the dynamic programming Solver runs with its defaults as it did
+
+- the Frank-Wolfe decomposition with the network simplex of LEMON in
+  `batch` and `batch-dense` of MCFBlock runs the reduced lineup, as the one
+  with the network simplex of MCFClass does, through the new
+  `FatherBSPar-fast-lemon.txt`: `FatherBSPar-lemon.txt` gives the whole
+  lineup, whose Away-step and Blended Pairwise variants with an unbounded
+  active set did not end in hours on those instances
+
+- the makefiles of the tests and of the tools build also with g++: they
+  take the option that stops at the first error and the one of the
+  debugging information, which clang++ and g++ spell differently
+  (`-ferror-limit=1` and `-glldb` against `-fmax-errors=1` and `-ggdb`),
+  from `SMSppSWERR` and `SMSppSWDBG` of `lib/makefile-OS` of SMS++
+
+- the makefiles that include the one of LagrangianDualSolver include also
+  the one of BranchAndXSolver, whose branching rules LagrangianDualSolver
+  uses, and so build again
+
+- `BinaryKnapsackBlock/makefile` links CPLEX only through MILPSolver, which
+  adds it when it is there, and so builds without it
+
+- `MMCFBlock/MMCFClass` compiles MMCFCplex only if CPLEX is there
+  (`CPLEX_PRESENT` of `extlib`), and
+  `MMCFBlock/makefile` then leaves out `MMCF_test`, whose reference solver
+  is MMCFCplex, as CMake does
+
+- `MILPSolver/QuadFunction/MOSEKCfg-I.txt` asks MOSEK for the outer
+  approximation of the conic relaxations: with the nonlinear ones and the
+  few threads of a CI runner, MOSEK 11.0 declared optimal -33.7755 on
+  QPLib_10056, whose optimum is -33.8568, and `batchCL_I` failed
+
+- the SingleFlowDCRBlock tester checks the Solution of a Solver against
+  the problem only if the formulation of its copy does not declare it a
+  relaxation: with -F it read the -R of the command line, which is empty,
+  so the point of the P/C relaxation of `DCRForm.txt` was found to violate
+  the delay, and `batches/batch-instances` stopped at its first instance;
+  each check now also names the formulation of the Solver
+
+- the here-and-now `AbstractPath` of the network design `Variable` of the
+  two `s_5` instances of `TwoStageStochasticBlock/data-scenred` give the
+  position of each design line, not its line index: past the 11 lines out of
+  design they pointed to the wrong `Variable`, and the last 11 past the end
+  of the group, on which `TSSB_reduction_test` crashed
+
+- `batches-scenred/batch` of `TwoStageStochasticBlock` fails when the
+  tester fails on some instance, rather than always passing
+
+- the Benders form `benders_form.cpp` builds for `TSSB_test` and the check
+  of `TSSB_reduction_test` for here-and-now `Variable` shared by the
+  scenarios take the elements of a here-and-now `AbstractPath` selecting an
+  explicit, non-contiguous subset of a group, rather than the ones following
+  the first element
+
+- the `BundleSolver` of `BSPar-Inv.txt` of `TwoStageStochasticBlock` asks
+  1e-6 of relative accuracy, the tolerance within which `TSSB_BDS_test`
+  compares the ad hoc Benders form with the extensive optimum, not 1e-4,
+  where it could stop on the bound of the box of the variables above that
+  tolerance
+
+- the `BundleSolver` of `BSPar.txt` of `InvestmentBlock` asks 1e-5 of
+  relative accuracy, not 1e-4: `IB_test` reads its value as the optimum
+  and compares it with the reference within 1e-5, and the `BundleSolver`,
+  which now stops on the bound of the box of the variables, stops where
+  1e-4 asks, 1.7e-5 above the reference on `smspp_2n_2c_1g_1lext.nc` of
+  `batch-pypsa`
+
+- the Solver that an option names by its position, i.e., the heuristic that
+  -w of the stochastic testers reads by its upper bound, follows the Solver
+  that the build does not have as -E and -R do [see `name_Solver()`]: it
+  moves down past one before it, rather than landing on another Solver, and
+  if it is itself not there the warning says so and the run goes on as
+  without the option; and a `BlockSolverConfig` that adds its Solver to
+  those already registered to the Block (as the reference one of
+  `fw_test`) takes out of -E and -R the entries of its Solver after them,
+  not of the first ones. `BSPar-2S-IP-missing.txt` names the missing
+  Solver before the `PrimalProximalHeur`, and `batch-pypsa` of
+  `TwoStageStochasticBlock` runs it also with -w
+
+- with -F and a `BlockSolverConfig` naming a Solver that the build does not
+  have, the entry of that Solver in -E was taken out once per copy of the
+  Block rather than once, so that the tolerances of the Solver after it
+  landed on others (a single entry left applied to all of them): each copy
+  now filters -E anew out of what was given [see
+  `attach_formulation_Solvers()`]; the Solver of the sub-Block of a meta
+  `BlockSolverConfig` that are not in the build no longer take out entries
+  of -E and -R, which are positional on the Solver of the root alone, and
+  the warning names the `BlockSolverConfig` rather than the formulations.
+  `TwoStageStochasticBlock/batches/batch-pypsa` checks it on the thermal
+  instance (`BSPar-2S-IP-missing.txt`, with a Solver that no build has)
+
+- the meta `BlockSolverConfig` of the `LagBFunction` of `UCBlock` give the
+  `NuclearUnitBlock` its own entry, which fell on `*` since the match is on
+  the exact `classname()`: `NUBSCfg-DP.txt` (`NuclearUnitExtDPSolver`) in
+  `InnerBSCfg-DP.txt`, as `ThermalUnitBlock` has its dynamic programming,
+  and `TUBSCfg-CLP.txt` / `TUBSCfg-QCP.txt` in `InnerBSCfg.txt` /
+  `InnerBSCfg-AC.txt`, as `ThermalUnitBlock`
+
+- `MMCFBlock_test` passes only if every round of the online training of
+  its Solver passes, not only the last one
+
+- `SMS++/PolyhedralFunctionBlock/batch` exits with 1 on any failure: the
+  number of failures, which it returned, is 0 again from 256
+
+- the batteries say at their end which runs they skipped, i.e., exited with
+  77 since the build has none of their Solver [see `report_skipped` of
+  `batch_common.sh`], as the comment there said they did
+
+- `CapacitatedFacilityLocationBlock/CFLBSCfg-ldvscuts.txt` gives its
+  `GRBMILPSolver` the parameters of GUROBI (it gave those of CPLEX, which
+  stopped every run of `batch-ldvscuts`), the root node being solved with
+  its cut loop (`NodeLimit 1`); the battery stays off ctest, the gap
+  between the two bounds being larger than with CPLEX
+
+- `compare_formulations/BSCfg1.txt` and `BSCfg2.txt` attach a
+  `GRBMILPSolver` rather than a `HiGHSMILPSolver`, which cannot separate the
+  user cuts that `intCutSepPar 7` asks for, so that the batch failed on
+  every instance
+
+- `UCBlock/batches/batch-p4r` holds the solution the `LagrangianDualSolver`
+  reconstructs on `L_H_C_35` to the violation its convergence gives (`-V
+  0.5`, the largest entry of the residual being 0.157 MW on node injection
+  rows of right-hand side 0, under the `dblNZEps` test the bundle stops by),
+  where the default 0.1 made the battery fail on a correct reconstruction
+
 ## [0.7.0] - 2026-10-09
 
 ### Added
@@ -1265,7 +2065,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First test release.
 
-[Unreleased]: https://gitlab.com/smspp/tests/-/compare/0.7.0...develop
+[Unreleased]: https://gitlab.com/smspp/tests/-/compare/0.8.0...develop
+[0.8.0]: https://gitlab.com/smspp/tests/-/compare/0.7.0...0.8.0
 [0.7.0]: https://gitlab.com/smspp/tests/-/compare/0.6.0...0.7.0
 [0.6.0]: https://gitlab.com/smspp/tests/-/compare/0.5.4...0.6.0
 [0.5.4]: https://gitlab.com/smspp/tests/-/compare/0.5.3...0.5.4

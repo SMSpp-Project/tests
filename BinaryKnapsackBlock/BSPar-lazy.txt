@@ -2,11 +2,12 @@
 # - - - - - - - - - - - - - - -  BSPar-lazy.txt - - - - - - - - - - - - - - -
 #
 # Cross-check BlockSolverConfig exercising the LAZY bounding protocol of the
-# BranchAndXSolver (intBoundingProtocol = 1, which evaluates a node when it is
-# extracted from the open set rather than when it is created): the exact MILP
-# reference plus the BX in each of its serial exploration strategies, all of
-# which must reach the same optimum as with the (default) eager protocol,
-# since when a node is evaluated changes nothing of what is explored.
+# BranchAndXSolver (intBoundingProtocol = 1, which evaluates a node when it
+# is extracted from the open set rather than when it is created): the exact
+# MILP reference plus the BX in each of its serial exploration strategies,
+# all of which must reach the same optimum as with the (default) eager
+# protocol, since when a node is evaluated changes nothing of what is
+# explored.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -19,7 +20,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 BranchAndXSolver                      # 2nd: BX best-first, lazy bounding
@@ -46,7 +48,13 @@ intBoundingProtocol 1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -64,7 +72,7 @@ intBoundingProtocol 1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 3: BranchAndXSolver, best-first with dives, lazy bounding protocol
 *BX-baseCfg.txt +
@@ -79,7 +87,13 @@ intSolveMethod 3
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -97,7 +111,7 @@ intSolveMethod 3
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 4: BranchAndXSolver, serial depth-first, lazy bounding protocol
 *BX-baseCfg.txt +
@@ -113,7 +127,13 @@ intMaxThread   1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -131,7 +151,7 @@ intMaxThread   1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 5: BranchAndXSolver, breadth-first, lazy bounding protocol
 *BX-baseCfg.txt +
@@ -146,7 +166,13 @@ intSolveMethod 1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -164,9 +190,9 @@ intSolveMethod 1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END BSPar-lazy.txt - - - - - - - - - - - - - -

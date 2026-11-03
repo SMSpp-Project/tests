@@ -7,8 +7,6 @@
 # best-first and serial depth-first modes, so that the sweep verifies the
 # incremental variant reaches the same optimum as the reference.
 #
-#   Donato Meoli
-#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -20,11 +18,13 @@ BlockSolverConfig     # exact type of the Configuration object
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
-#CPXMILPSolver                        #      (uncomment the available backend)
+# (uncomment the available backend)
+#CPXMILPSolver
 #GRBMILPSolver
 #SCIPMILPSolver
 BranchAndXSolver                      # 2nd: BX best-first, incremental inner
-BranchAndXSolver                      # 3rd: BX depth-first, incremental inner
+# 3rd: BX depth-first, incremental inner
+BranchAndXSolver
 
 3  # number of ComputeConfig in this BlockSolverConfig
 
@@ -40,7 +40,13 @@ BranchAndXSolver                      # 3rd: BX depth-first, incremental inner
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 1  # number of string parameters
 
@@ -63,7 +69,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 3: BranchAndXSolver, serial depth-first, with the incremental inner
 *BX-baseCfg.txt +
@@ -78,6 +84,9 @@ intMaxThread   1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 1  # number of string parameters
 
 # now all the string parameters
@@ -99,10 +108,10 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - End BSPar-incr.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-incr.txt  - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

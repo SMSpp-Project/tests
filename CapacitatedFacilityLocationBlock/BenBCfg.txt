@@ -1,3 +1,14 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BenBCfg.txt - - - - - - - - - - - - - - - - -
+#
+# The BlockConfig of a CapacitatedFacilityLocationBlock in the Benders
+# friendly formulation, with the Configuration of its hidden BendersBFunction
+# and of the MCFBlock inside it in the extra field, for CFL_BDS_test [see
+# test_bds.cpp].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 # BlockConfig for B2 (the R3-copy CFLB): "Benders friendly" formulation
 # (wf has the BenFormBit, i.e. wf == 8).
 #
@@ -65,22 +76,45 @@ SimpleConfiguration<std::pair<int,double>>
 
 ComputeConfig
 
-1   # f_diff
-0   # int params
-0   # double params
-0   # string params
-0   # vector<int> params
-0   # vector<double> params
-0   # vector<string> params
+1  # f_diff
 
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # vector<int> params
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # vector<double> params
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # vector<string> params
+
+# now all the vector-of-string parameters
 # extra Configuration of the BendersBFunction ComputeConfig: a named map
 # (string -> Configuration *); only "BlockConfig" and "BlockSolverConfig"
 # are used here (for the inner MCF), but BendersBFunction supports more
 # keys (get_dual_*) for fine-tuning the dual queries.
 
+# pointer to the "extra" Configuration
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
-1   # map size: one entry
+1  # map size: one entry
 
 # key "BlockSolverConfig" → BlockSolverConfig for the inner MCF.
 # GRBMILPSolver directly (rather than MCFSolver<*>): MCFSolver dual values
@@ -98,17 +132,43 @@ GRBMILPSolver
 1  # number of ComputeConfig
 
 ComputeConfig
+
 1  # f_diff
 
-2  # int params
+2  # number of integer parameters
+
+# now all the integer parameters
 intLogVerb        0
 intRelaxIntVars   1     # pure LP solve (the MCF is continuous)
 
-1  # double params
+1  # number of double parameters
+
+# now all the double parameters
 dblRelAcc 1e-9
 
-0  # string params
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
 0  # vector<int> params
+
+# now all the vector-of-int parameters
+# [none]
+
 0  # vector<double> params
+
+# now all the vector-of-double parameters
+# [none]
+
 0  # vector<string> params
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
 *  # extra
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BenBCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
