@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `SVMBlock`: `FWBSCfg.txt` registers the primal-dual bundle method also
+  with a refused direction corrected and with a refused step not taken
+  (`intFWOnReject` 1 and 2), next to the default, which asks the oracle
+  again with the gradient; `batch-fw` holds the two to their bounds on the
+  box as the others
+
 - `PolyhedralFunctionBlock`: `batch-kelley` runs the battery with the
   `BundleSolver` of `NDOPar-Kelley.txt`, the proximal one and the
   cutting-plane method of Kelley with the primal and with the dual master
@@ -641,6 +647,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   twice
 
 ### Fixed
+
+- `SVMBlock`: the usage line of `batch-fw` names the `BlockSolverConfig` it
+  takes as its second argument, before the log file
 
 - on Windows, the executables that copy their DLLs next to themselves
   are linked one at a time (a job pool of Ninja), since two copies of the

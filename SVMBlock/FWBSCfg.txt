@@ -23,7 +23,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-7  # number of (the names of) Solver in this BlockSolverConfig
+9  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # 1: the monolithic reference, a QCP with
@@ -35,8 +35,10 @@ FrankWolfeSolver      # 4: the aggregate of two pieces
 FrankWolfeSolver      # 5: the master of 10 pieces
 FrankWolfeSolver      # 6: the same, out of a pool of 30
 FrankWolfeSolver      # 7: the primal-dual bundle method
+FrankWolfeSolver      # 8: the same, a refused direction corrected
+FrankWolfeSolver      # 9: the same, a refused step not taken
 
-7  # number of ComputeConfig in this BlockSolverConfig
+9  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 
@@ -211,7 +213,8 @@ strFWMPBCfg     MPBCfg-FW.txt # the Solver of the master
 *  # [none] the extra Configuration slot
 
 # 7: the primal-dual bundle method, whose master bounds the gap out of
-#    how the ball or the box curves, a refused step not being taken
+#    how the ball or the box curves, the oracle being asked again
+#    with the gradient when the step is refused
 
 *FWCfg.txt +
 
@@ -221,6 +224,86 @@ strFWMPBCfg     MPBCfg-FW.txt # the Solver of the master
 
 # now all the integer parameters
 intFWDirection  4 # eDirPrimalDual
+
+1  # number of double parameters
+
+# now all the double parameters
+dblFWAccept     0.5 # the fraction of the bound to keep
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none] the extra Configuration slot
+
+# 8: the primal-dual bundle method, a refused direction corrected
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intFWDirection  4 # eDirPrimalDual
+intFWOnReject   1 # eRejCorrect
+
+1  # number of double parameters
+
+# now all the double parameters
+dblFWAccept     0.5 # the fraction of the bound to keep
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none] the extra Configuration slot
+
+# 9: the primal-dual bundle method, a refused step not taken
+
+*FWCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intFWDirection  4 # eDirPrimalDual
+intFWOnReject   2 # eRejStay
 
 1  # number of double parameters
 
