@@ -363,7 +363,7 @@ bool validate_scenario(
  const vector< double > & scenario_demands ,
  const GeneratorConfig & config ) {
  // Apply scenario demands
- cfl->chg_customer_demands( scenario_demands.begin() );
+ cfl->chg_customer_demands( Block::MF_dbl_sp( scenario_demands ) );
 
  // Load solver configuration
  auto cfg = Configuration::deserialize( config.solver_config );
@@ -413,7 +413,7 @@ bool validate_scenario(
  delete cfg;
 
  // Restore original demands
- cfl->chg_customer_demands( original_demands.begin() );
+ cfl->chg_customer_demands( Block::MF_dbl_sp( original_demands ) );
 
  return success;
 }

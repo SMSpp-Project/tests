@@ -16,11 +16,11 @@ BlockSolverConfig     # exact type of the Configuration object
 
 6  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-MCFSolver<MCFSimplex>   # name of 1st Solver
-MCFSolver<RelaxIV>      # name of 2nd Solver
-MCFSolver<MCFCplex>     # name of 3rd Solver, if CPLEX is there
-MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>   # 4th Solver
-MCFLemonSolverCostScaling<MCFListDigraph,double,double>      # 5th Solver
+MCFSolver<MCFSimplex>           # name of 1st Solver
+MCFSolver<RelaxIV>              # name of 2nd Solver
+MCFSolver<MCFCplex>             # name of 3rd Solver, if CPLEX is there
+MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # 4th Solver
+MCFLemonSolverCostScaling<MCFListDigraph,double,double>  # 5th Solver
 HiGHSMILPSolver                 # name of 6th Solver
 #CPXMILPSolver                  # name of 5th Solver
 #GRBMILPSolver                  # name of 5th Solver
@@ -42,7 +42,7 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 #kReopt      1    # whether or not to reoptimize
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # the following two parameters may need to be manually set for
@@ -50,30 +50,30 @@ ComputeConfig # exact type of the ComputeConfig object
 #dblAbsAcc      1e-8 # primal feasibility
 #dblAAccDSol    1e-8 # dual feasibility
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 #strDMXFile     MCFC.dmx
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the :MCFSolver (RelaxIV); default parameters
@@ -88,35 +88,35 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the :MCFSolver (MCFCplex); default parameters
@@ -131,35 +131,35 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 3rd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the LEMON NetworkSimplex; default parameters
@@ -174,35 +174,35 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 4th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the LEMON CostScaling; default parameters
@@ -217,35 +217,35 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 5th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the :MILPSolver
@@ -274,37 +274,36 @@ intLogVerb      0 # log verbosity of the MILPSolver
 #Method  4  # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier, 3 =
             # barrier + crossover, 4 = network
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 #dblRelAcc      1e-7 #relative accuracy for the solver
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 #strOutputFile    mcf.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 6th ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BSPar-large.txt - - - - - - - - - - - - - -

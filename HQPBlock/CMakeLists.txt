@@ -10,6 +10,7 @@ if (NOT hasParent)
     find_package(HQPBlock)
     # Solvers
     find_package(MILPSolver)
+    find_package(BendersDecompositionSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -20,6 +21,14 @@ add_executable(HQPBlock_test test.cpp ../common_utils.cpp)
 target_include_directories(HQPBlock_test PRIVATE ..)
 target_link_libraries(HQPBlock_test PRIVATE SMS++::HQPBlock
                                             SMS++::MILPSolver)
+
+# the inner Solver of the Benders decomposition of the HQPDistBlock [see
+# HQPDistBSCfg-bds.txt], which the tester leaves out when the build does not
+# have it
+if (TARGET SMS++::BendersDecompositionSolver)
+    target_link_libraries(HQPBlock_test
+                          PRIVATE SMS++::BendersDecompositionSolver)
+endif ()
 
 smspp_install(HQPBlock_test)
 

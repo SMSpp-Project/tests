@@ -51,7 +51,7 @@ OSQPMILPSolver     # name of 5th Solver
 
 *QPCfg-C.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END LPPar_CL_C.txt  - - - - - - - - - - - - - -

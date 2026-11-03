@@ -33,8 +33,9 @@
 # Benders form the :MILPSolver is cross-checked with
 # BendersDecompositionSolver whose subproblems are solved by the
 # recursive Lagrangian dual and a feasible solution is recovered at the
-# design of its master, with a MILP master (BSPar-BDS-2S-LD.txt) and with a
-# bundle master (BSPar-BDS-2S-CVX-LD.txt), whose intervals, as that of the
+# design of its master, with a MILP master and with the one of the
+# cutting-plane method of Kelley (BSPar-BDS-2S-LD.txt) and with a bundle
+# master (BSPar-BDS-2S-CVX-LD.txt), whose intervals, as that of the
 # PrimalProximalHeur, must contain the optimum [-E].
 #
 # these sector-coupled instances are badly scaled: HiGHS aborts on the inner
@@ -145,9 +146,11 @@ for what in ../../UCBlock/data/nc4/pypsa-data/tssb-thermal/smspp_*.nc4; do
     # dual below and, recovering a feasible solution at the design of its
     # master (strRecoveryBSC of BDSCfg-LD.txt), its value above, an interval
     # that has to contain the optimum [-E], with a MILP master and with a
-    # bundle master, whose design is the best point of the bundle
+    # bundle master, whose design is the best point of the bundle; the 3rd
+    # Solver of BSPar-BDS-2S-LD.txt is the 2nd with its master solved by the
+    # cutting-plane method of Kelley
     run_test "$exe" "$what" -b -S BSPar-BDS-2S-LD.txt -B InnerBCfg.txt \
-             -R "," -E ",inf" -r "$ref"
+             -R ",," -E ",inf,inf" -r "$ref"
     run_test "$exe" "$what" -b -S BSPar-BDS-2S-CVX-LD.txt -B InnerBCfg.txt \
              -R "," -E ",inf" -r "$ref"
 done

@@ -16,8 +16,8 @@ BlockSolverConfig     # exact type of the Configuration object
 
 7  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-MCFSolver<MCFSimplex>  # 1st Solver
-MCFSolver<RelaxIV>  # 2nd Solver
+MCFSolver<MCFSimplex>                                       # 1st Solver
+MCFSolver<RelaxIV>                                          # 2nd Solver
 # the flow relaxation has fractional supplies (59291.127024 on cap102 after
 # the first changes) and transportation costs scaled by the demands, while
 # LEMON requires integer data: MCFLemonSolver compiles the network simplex
@@ -25,49 +25,45 @@ MCFSolver<RelaxIV>  # 2nd Solver
 # capacities and the supplies scaled and rounded
 MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # 3rd Solver
 MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>  # 4th Solver
-MCFLemonSolverCostScaling<MCFListDigraph,double,double>  # 5th Solver
-MCFLemonSolverCapacityScaling<MCFListDigraph,double,double>  # 6th Solver
-MCFSolver<MCFCplex>  # 11th Solver
+MCFLemonSolverCostScaling<MCFListDigraph,double,double>     # 5th Solver
+MCFLemonSolverCapacityScaling<MCFListDigraph,double,double> # 6th Solver
+MCFSolver<MCFCplex>                                         # 7th Solver
 
 7  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig: every Solver runs as it comes
 
-# - - - - - - - - - - - - -   1st ComputeConfig   - - - - - - - - - - - - - -
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (MCFSimplex)
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   2nd ComputeConfig   - - - - - - - - - - - - - -
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (RelaxIV)
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   3rd ComputeConfig   - - - - - - - - - - - - - -
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverNetworkSimplex on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   4th ComputeConfig   - - - - - - - - - - - - - -
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCycleCanceling on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   5th ComputeConfig   - - - - - - - - - - - - - -
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCostScaling on MCFListDigraph
 
 *DfltCfg.txt
 
-# - - - - - - - - - - - - -   6th ComputeConfig   - - - - - - - - - - - - - -
+# 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFLemonSolverCapacityScaling on MCFListDigraph
 
 *DfltCfg.txt
 
-
-
-
-
-# - - - - - - - - - - - - -  11th ComputeConfig   - - - - - - - - - - - - - -
+# 7th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # MCFSolver (MCFCplex)
 
 *DfltCfg.txt

@@ -348,6 +348,21 @@ static Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
       there = false;
       }
 
+  // a BundleSolver is only there if the Solver of its master are
+  if( there )
+   if( auto cc = bsc->get_SolverConfig( i ) )
+    for( const auto & pair : cc->str_pars )
+     if( pair.first == "strMPBSolverCfg" ) {
+      auto mc = Configuration::deserialize( pair.second );
+      if( auto mbsc = dynamic_cast< BlockSolverConfig * >( mc ) )
+       for( const auto & mn : mbsc->get_SolverNames() )
+	if( ! Solver::has_Solver( mn ) ) {
+	 name += " with " + mn;
+	 there = false;
+	 }
+      delete mc;
+      }
+
   if( there )
    continue;
 
@@ -1640,7 +1655,7 @@ double tree_objective_value( Block * block )
   }
 
  for( auto sb : block->get_nested_Blocks() )
-  value += tree_objective_value( sb );
+  value += sb->get_objective_weight() * tree_objective_value( sb );
 
  return( value );
 

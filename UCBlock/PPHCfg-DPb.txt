@@ -44,7 +44,7 @@ strMPBSolverCfg  MPBCfg-barrier.txt  # BlockSolverConfig of the master
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END PPHCfg-DPb.txt  - - - - - - - - - - - - - - -

@@ -23,17 +23,20 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 # the original Block
 SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
 *CFLBCfg-NF-SFsep.txt   # its BlockConfig
 *CFLBSCfg-ldvscuts.txt  # its BlockSolverConfig
 
 # the 1st R3Block
 SimpleConfiguration<std::vector<Configuration*>>
+
 3  # the Configuration that makes it, its BlockConfig, its BlockSolverConfig
+
 *R3BCfg-copy.txt        # how it is made
 *CFLBCfg-KF-LD.txt      # its BlockConfig
-*CFLBSCfg-ldvscuts-LDS.txt # its BlockSolverConfig
+*CFLBSCfg-ldvscuts-LDS.txt  # its BlockSolverConfig
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END CFLBForm-ldvscuts.txt - - - - - - - - - - - - -

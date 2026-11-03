@@ -4,6 +4,8 @@
 if (NOT hasParent)
     # Blocks
     find_package(InvestmentBlock)
+    find_package(UCBlock)
+    find_package(SDDPBlock)
     find_package(TwoStageStochasticBlock)
     find_package(MultiStageStochasticBlock)
     # Solvers
@@ -16,11 +18,15 @@ endif ()
 smspp_require_labelled_modules()
 
 # ----- Tests --------------------------------------------------------------- #
-if (TARGET SMS++::InvestmentBlock)
+# the tester names the units of the inner UCBlock and the SDDPBlock, which
+# the InvestmentBlock reaches polymorphically
+if (TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock AND
+    TARGET SMS++::SDDPBlock)
 
     add_executable(IB_test test.cpp ../common_utils.cpp)
     target_include_directories(IB_test PRIVATE ..)
-    target_link_libraries(IB_test PRIVATE SMS++::InvestmentBlock)
+    target_link_libraries(IB_test PRIVATE SMS++::InvestmentBlock
+                          SMS++::UCBlock SMS++::SDDPBlock)
 
     if (TARGET SMS++::BundleSolver)
         target_link_libraries(IB_test PRIVATE SMS++::BundleSolver)
@@ -112,6 +118,21 @@ if (TARGET SMS++::InvestmentBlock)
                          $<TARGET_FILE:sddp_solver>
                          ${Python3_EXECUTABLE}
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    endif ()
+
+    # the networks of UCBlock with the design in the units, converted by
+    # design_converter, which is built in tools/, against the networks of
+    # InvestmentBlock written with the design in an InvestmentBlock [see
+    # batches-design/batch]: both archives have to be there
+    if (UNIX AND TARGET design_converter)
+        add_test(NAME IB_test/batches-design/batch
+                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches-design/batch
+                         $<TARGET_FILE:design_converter>
+                         ${CMAKE_CURRENT_BINARY_DIR}/IB_test
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        set_tests_properties(IB_test/batches-design/batch PROPERTIES
+                             FIXTURES_REQUIRED
+                             "investment_nc4_extracted;uc_nc4_extracted")
     endif ()
 endif ()
 

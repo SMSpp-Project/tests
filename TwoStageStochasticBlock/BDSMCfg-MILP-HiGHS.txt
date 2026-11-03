@@ -56,7 +56,7 @@ dblRelAcc                   1e-9  # relative accuracy required to solution
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END BDSMCfg-MILP-HiGHS.txt  - - - - - - - - - - - -

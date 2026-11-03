@@ -24,7 +24,7 @@ MOSEKMILPSolver  # name of 1st Solver
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *MOSEKCfg.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END InnerBSCfg-mosek.txt  - - - - - - - - - - - - -

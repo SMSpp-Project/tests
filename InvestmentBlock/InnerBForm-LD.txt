@@ -18,7 +18,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *InnerBCfg.txt          # 1st formulation: linear program
 *InnerBCfg-LD.txt       # 2nd formulation: Lagrangian dual
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END InnerBForm-LD.txt - - - - - - - - - - - - - -

@@ -21,7 +21,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *NUBCfg-T-F5.txt        # 2nd formulation: F5
 *NUBCfg-T-F6.txt        # 3rd formulation: F6
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END NUBForm-graph.txt - - - - - - - - - - - - - - -

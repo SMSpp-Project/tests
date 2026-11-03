@@ -29,21 +29,21 @@ BranchAndXSolver                # name of 3rd Solver
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the :MILPSolver
-*GRBCfg.txt       # MILPCfg.txt for a :MILPSolver other than Gurobi
+*GRBCfg.txt  # MILPCfg.txt for a :MILPSolver other than Gurobi
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the SingleFlowDCRBendersSolver
-* # [none]
+*  # [none]
 
-# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the BranchAndXSolver
 *BXCfg.txt
 
-# end of 3rd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END BSPar-BX.txt - - - - - - - - - - - - - -

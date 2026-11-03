@@ -43,7 +43,7 @@ str_Mstr_BSCfg  BDSMCfg-MILP-HiGHS.txt  # the master
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - -  END BDSCfg-2S-HiGHS.txt  - - - - - - - - - - - - -

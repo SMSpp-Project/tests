@@ -45,7 +45,7 @@ intQPOASESHotStart  0  # each solve from scratch
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - -  END QPOASESCfg-cold.txt  - - - - - - - - - - - - -

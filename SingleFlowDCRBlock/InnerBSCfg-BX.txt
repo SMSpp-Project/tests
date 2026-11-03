@@ -3,7 +3,8 @@
 #
 # The BlockSolverConfig of the relaxation of the BranchAndXSolver of
 # BXCfg.txt: the SFDCRBRelaxationSolver, which gives the bounds of the
-# nodes and the branching Changes, with its default parameters.
+# nodes and the branching Changes, with warm starts for its Lagrangian
+# subproblems and the default parameters otherwise.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -25,18 +26,18 @@ ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> all non-provided parameters are not changed
 
-0  # number of integer parameters
+2  # number of integer parameters
 
 # now all the integer parameters
-# [none]
+intWarmLambda 1             # reuse multipliers and critical paths across subproblems
+intMaxCuts 0       # positive max new Benders cuts per compute(), initial cut included
+# Reused cuts/copies do not count; bisections are unchanged. Omit for unlimited.
 
 2  # number of double parameters
 
+# now all the double parameters
 dblAbsAcc 1e-6
 dblRelAcc 1e-6
-
-# now all the double parameters
-# [none]
 
 1  # number of string parameters
 
@@ -59,9 +60,9 @@ strLogFileName log/SFDCRBRelaxationSolver.log
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - -  END InnerBSCfg-BX.txt  - - - - - - - - - - - - -

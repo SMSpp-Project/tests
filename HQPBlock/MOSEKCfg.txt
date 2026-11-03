@@ -52,7 +52,7 @@ MSK_DPAR_INTPNT_QO_TOL_DFEAS    1e-10  # dual feasibility
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END MOSEKCfg.txt  - - - - - - - - - - - - - - -

@@ -29,7 +29,7 @@ NuclearUnitExtDPSolver # name of 2nd Solver
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 *MILPCfg-NUB.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BSCfg-nuc.txt - - - - - - - - - - - - - - -

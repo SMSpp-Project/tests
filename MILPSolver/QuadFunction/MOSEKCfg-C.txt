@@ -44,7 +44,7 @@ intMaxThread    2  # two threads
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END MOSEKCfg-C.txt  - - - - - - - - - - - - - -

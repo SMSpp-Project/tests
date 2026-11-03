@@ -79,15 +79,15 @@ dblRelAcc      1e-9  # relative accuracy required to solution
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# 2nd and 3rd ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - -
+# 2nd and 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *BDSCfg-2S.txt
 *BDSCfg-2S-HiGHS.txt
 
-# end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END BSPar-BDS-2S.txt - - - - - - - - - - - - -

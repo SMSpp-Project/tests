@@ -20,7 +20,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *BPar-R.txt             # 1st formulation: the relaxation
 *BPar-D.txt             # 2nd formulation: the decomposition
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END SATBForm.txt  - - - - - - - - - - - - - - -

@@ -5,15 +5,16 @@
 # a BundleSolver as the inner Solver, applied to a MultiFlowDCRBlock: the
 # mutual capacity constraints are relaxed, and each flow is a
 # SingleFlowDCRBlock solved by what DCRBSCfg-benders.txt registers to it
+#
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig         # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-17 # number of integer parameters
+17  # number of integer parameters
 
 # now all the integer parameters
 intDoEasy            0 # do easy components for (some) LagBFunction
@@ -38,7 +39,7 @@ intTrgtMng           0 # bit-wise encoding targets and accuracies management:
                        # bit 2-3: accuracy (2 = upper - lower, 3 = EpsU)
                        # bit 4: Lipschitz constant for the upper model
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 dblRelAcc         1e-5 # relative accuracy required to solution
@@ -57,30 +58,32 @@ dbltMinor         1e-6 # minimum value for t
 dbltInit          1e+1 # initial value for t
 dbltSPar2         1e-4 # parameter for the long-term t-strategy
 
-3 # number of string parameters
+3  # number of string parameters
 
 # now all the string parameters
-str_LDSlv_ISName BundleSolver # the inner Solver used by LagrangianDualSolver
-strMPBSolverCfg        MPBCfg.txt # BlockSolverConfig of the master's Solver
-str_LagBF_BSCfg  DCRBSCfg-benders.txt # the Solver of each flow
+str_LDSlv_ISName BundleSolver          # the inner Solver used by
+                                       # LagrangianDualSolver
+strMPBSolverCfg  MPBCfg.txt            # BlockSolverConfig of the master's
+                                       # Solver
+str_LagBF_BSCfg  DCRBSCfg-benders.txt  # the Solver of each flow
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -44,7 +44,7 @@ dblQPMADReg  1e-6  # the regularization of the Hessian
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END QPMADCfg-C.txt  - - - - - - - - - - - - - -

@@ -2,9 +2,10 @@
 # - - - - - - - - - - - - -  SDDPBSCfg-sddp.txt - - - - - - - - - - - - - - -
 #
 # The BlockSolverConfig of the SDDPBlock inside the InvestmentFunction: the
-# SDDPGreedySolver that simulates the scenarios [see GreedyCfg-sddp.txt]
-# and the ParallelSDDPSolver that trains the cuts before [see
-# SDDPCfg-sddp.txt].
+# SDDPSimulationSolver, which the InvestmentFunction takes as the first
+# Solver, trains the cuts with the ParallelSDDPSolver [see SDDPCfg-sddp.txt]
+# and simulates the scenarios with copies of the SDDPGreedySolver [see
+# GreedyCfg-sddp.txt].
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,14 +14,16 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+3  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-SDDPGreedySolver      # name of 1st Solver (the simulator)
-ParallelSDDPSolver    # name of 2nd Solver (the trainer)
+SDDPSimulationSolver  # name of 1st Solver (training and simulation)
+SDDPGreedySolver      # name of 2nd Solver (the simulator)
+ParallelSDDPSolver    # name of 3rd Solver (the trainer)
 
-2  # number of ComputeConfig in this BlockSolverConfig
+3  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
+*                     # the SDDPSimulationSolver has no parameter
 *GreedyCfg-sddp.txt
 *SDDPCfg-sddp.txt
 

@@ -6,7 +6,10 @@
 # the deterministic equivalent as an integer problem, which gives the
 # optimum, and the BendersDecompositionSolver whose subproblems are solved by
 # the recursive LagrangianDualSolver over their units (BDSCfg-LD.txt), which
-# is exact where the subproblems are linear programs.
+# is exact where the subproblems are linear programs, in the MILP regime and
+# in the convex one with the master solved by the BundleSolver that is the
+# cutting-plane method of Kelley on the integer design
+# (BDSMCfg-Kelley.txt).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -15,13 +18,14 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2 # number of (the names of) Solver in this BlockSolverConfig
+3  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-GRBMILPSolver         # name of 1st Solver
-BendersDecompositionSolver # name of 2nd Solver
+GRBMILPSolver               # name of 1st Solver
+BendersDecompositionSolver  # name of 2nd Solver
+BendersDecompositionSolver  # name of 3rd Solver
 
-2 # number of ComputeConfig in this BlockSolverConfig
+3  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -34,7 +38,48 @@ BendersDecompositionSolver # name of 2nd Solver
 
 *BDSCfg-LD.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# that of BDSCfg-LD.txt in the convex regime, the master solved by the
+# BundleSolver that is the cutting-plane method of Kelley
+
+*BDSCfg-LD.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+int_BDSlv_Regime  0 # 0 = convex master, 1 = MILP master
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+str_Mstr_BSCfg  BDSMCfg-Kelley.txt # BlockSolverConfig of the master
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END BSPar-BDS-2S-LD.txt - - - - - - - - - - - - -

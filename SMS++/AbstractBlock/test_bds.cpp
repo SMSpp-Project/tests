@@ -263,7 +263,7 @@ static AbstractBlock * build_structured( bool with_slack = true ,
  * those of the Block it is made of; the separation problems that replicate it
  * have to reckon with all of them, which is what this instance checks. */
 
-static AbstractBlock * build_nested( int nsub = 1 )
+static AbstractBlock * build_nested( int nsub = 1 , double sigma = 1 )
 {
  auto root = new AbstractBlock();
  auto y = make_y( true , false );
@@ -290,6 +290,8 @@ static AbstractBlock * build_nested( int nsub = 1 )
    for( auto & v : * x[ i ] )
     v.is_positive( true );
    loc->add_static_variable( * x[ i ] , "x" + t + "_" + std::to_string( i ) );
+   if( sigma != 1 )
+    loc->set_variable_weight( sigma , eNoMod );
 
    auto lf = new LinearFunction();
    for( int j = 0 ; j < N ; ++j )
@@ -310,7 +312,7 @@ static AbstractBlock * build_nested( int nsub = 1 )
   for( int j = 0 ; j < N ; ++j ) {
    auto f = new LinearFunction();
    for( int i = 0 ; i < M ; ++i )
-    f->add_variable( & ( * x[ i ] )[ j ] , 1 );
+    f->add_variable( & ( * x[ i ] )[ j ] , 1 / sigma );
    f->add_variable( & ( * sl )[ j ] , 1 );
    ( * dem )[ j ].set_function( f );
    ( * dem )[ j ].set_both( 1 );
@@ -321,7 +323,7 @@ static AbstractBlock * build_nested( int nsub = 1 )
   for( int i = 0 ; i < M ; ++i ) {
    auto f = new LinearFunction();
    for( int j = 0 ; j < N ; ++j )
-    f->add_variable( & ( * x[ i ] )[ j ] , demand[ j ] );
+    f->add_variable( & ( * x[ i ] )[ j ] , demand[ j ] / sigma );
    f->add_variable( & ( * y )[ i ] , - capacity[ i ] );
    ( * cap )[ i ].set_function( f );
    ( * cap )[ i ].set_lhs( - Inf< double >() );
@@ -644,6 +646,31 @@ int main( void )
    delete mono_k;
    }
 
+ /* ----- the weight of the Variable in the subproblems ------------------ #
+  *
+  * The four-scenario problem with the scenarios built as trees, each
+  * second-stage Variable in a sub-Block of weight 2.5 [see
+  * Block::set_variable_weight()] and its coefficients in the rows of the
+  * scenario, which are outside that sub-Block, written divided by 2.5
+  * [see build_nested()]: the optimum is that of the extensive form only if
+  * the weights are applied, by the Solver of the subproblems. */
+
+ bool ok_vw = true;
+ { auto mono_w = build_monolithic( true , 4 );
+   int st_rw;
+   const double ref_w = solve_from_config( mono_w , "BDSSCfg.txt" , st_rw );
+   auto root_w = build_nested( 4 , 2.5 );
+   int st_w;
+   const double v_w = solve_from_config( root_w , "BSPar-BDS-MILP.txt" ,
+					 st_w );
+   ok_vw = ( rel( ref_w , v_w ) <= tol );
+   std::cout << "4-scenario, second stage of weight 2.5: " << v_w
+             << "   ref = " << ref_w << ( ok_vw ? "   -> OK" : "   -> FAIL" )
+             << std::endl;
+   delete root_w;
+   delete mono_w;
+   }
+
  auto mono_ns = build_monolithic( false );
  int st_ns_ref;
  const double ref_ns = solve_from_config( mono_ns , "BDSSCfg.txt" ,
@@ -704,9 +731,13 @@ int main( void )
 
   /* And with subproblems solved by DAQP, which gives no certificate: the
    * phase one does without it, as long as its cut cuts the incumbent, and
-   * the run is not to stop on the certificate it does not need. */
+   * the run is not to stop on the certificate it does not need. Without
+   * DAQP in the build the case is skipped, and said so. */
 
-  {
+  if( ! Solver::has_Solver( "DAQPMILPSolver" ) )
+   std::cout << "4-scenario, phase one with no certificate: skipped, "
+                "DAQPMILPSolver is not in this build" << std::endl;
+  else {
    auto root_d4 = build_structured( false , 4 );
    int st_d4;
    long ct_d4 = 0;
@@ -1070,8 +1101,8 @@ int main( void )
 	       && ( rel( ref2 , ben_s2 ) <= tol );
  std::cout << "2-scenario: " << ( ok2 ? "-> OK" : "-> FAIL" ) << std::endl;
 
- const bool ok = ok1 && ok2 && ok_ns && ok_ng && ok_k && ok_u && ok_r &&
-                ok_t && ok_lc;
+ const bool ok = ok1 && ok2 && ok_ns && ok_ng && ok_k && ok_vw && ok_u &&
+                ok_r && ok_t && ok_lc;
 
  delete root_s2;
  delete root_m2;

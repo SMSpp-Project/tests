@@ -55,7 +55,7 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END LPBSCfg-K-LP.txt  - - - - - - - - - - - - - -

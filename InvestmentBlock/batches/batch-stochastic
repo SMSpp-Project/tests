@@ -16,9 +16,10 @@
 # scenario, and the reference is the objective of the equivalent flat network
 # solved by PyPsa.
 #
-# NOTE: the inner Block is solved by Gurobi, see BSCfg1.txt: HiGHS grinds for a
-# thousand seconds on these instances and then reports an error. Switching that
-# file leaves batch-pypsa identical, verified line by line.
+# NOTE: the inner Block is solved by HiGHS by the simplex method, see
+# BSCfg.txt: by its interior point method HiGHS takes nine times as long on
+# these instances. Switching that file leaves batch-pypsa identical, verified
+# line by line.
 #
 # NOTE: these runs are given an initial point, and it is not optional. Over
 # part of the design space the inner Block is infeasible, because scaling the
@@ -95,6 +96,22 @@ declare -A LD_INNER
 LD_INNER[smspp_mod_t48_s10_b2c_investment_outside.nc]=1
 LD_INNER[smspp_mod_t48_s10_b2c_o2_mssb_investment_outside.nc]=1
 
+# the network of Italy with 5 nodes of pypsa-eur-instances (24 blocks of 24
+# hours) with the first 5 of its scenarios of demand, written once with the
+# InvestmentBlock split into a component per scenario, as by default, and
+# once kept whole (ScenarioDecomposition 0): the two forms are compared with
+# each other and with the value of PyPSA, each with the formulation of
+# InnerBCfg.txt alone, those of the network taking a few minutes each; the
+# whole one, which takes three times as long as the split one, is left out
+# in CI
+REF_OBJ[smspp_stoch_tssb_it5_s5.nc]=1.662969090497e+10
+REF_OBJ[smspp_stoch_tssb_it5_s5_whole.nc]=1.662969090497e+10
+declare -A ONE_FORM
+ONE_FORM[smspp_stoch_tssb_it5_s5.nc]=1
+ONE_FORM[smspp_stoch_tssb_it5_s5_whole.nc]=1
+declare -A NOT_IN_CI
+NOT_IN_CI[smspp_stoch_tssb_it5_s5_whole.nc]=1
+
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
@@ -112,6 +129,10 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
       exit 1
     fi
 
+    if [ -n "$CI" ] && [ -n "${NOT_IN_CI[$base]}" ]; then
+      continue
+    fi
+
     point=${POINT[$base]}
     # the modular networks with the inner Block solved as a linear program
     # and by the recursive Lagrangian dual, the nested form of an ad hoc
@@ -121,7 +142,7 @@ for what in ../../InvestmentBlock/data/nc4/pypsa-data/stochastic/smspp_*.nc; do
     if [ -n "${ld_bcfg}" ] && [ -n "${LD_INNER[$base]}" ]; then
       run_test "$exe" -F InnerBForm-LD.txt -S "$spar" ${point:+-x "$point"} \
                -o "$ref" "$what"
-    elif [ "$bpar" = InnerBCfg.txt ]; then
+    elif [ "$bpar" = InnerBCfg.txt ] && [ -z "${ONE_FORM[$base]}" ]; then
       run_test "$exe" -F "$forms" -S "$spar" ${point:+-x "$point"} \
                -o "$ref" "$what"
     else

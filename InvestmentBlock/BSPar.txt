@@ -27,7 +27,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-15 # number of integer parameters
+15  # number of integer parameters
 
 # now all the integer parameters
 intDoEasy           0 # do easy components for (some) LagBFunction
@@ -53,7 +53,7 @@ inttSPar1           0
 # maximum number of function evaluations at each iteration
 intMaxNrEvls        2
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 # relative accuracy required to solution, the 1e-5 within which IB_test
@@ -79,7 +79,7 @@ dbltMinor       1e-10 # minimum value for t
 dbltInit         1e+0 # initial value for t
 dbltSPar2        1e-2 # parameter for the long-term t-strategy
 
-1 # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
 #str_LagBF_BSCfg LPBSCfg.txt # BlockSolverConfig for the LagBFunctions
@@ -88,27 +88,26 @@ strMPBSolverCfg   MPBCfg.txt
 # not needed if intDoEasy >= 1 && USE_BundleSolver > 0, this is done "by
 # hand"
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -

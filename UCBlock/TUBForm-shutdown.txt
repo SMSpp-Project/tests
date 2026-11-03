@@ -26,7 +26,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *TUBCfg-3bin-PC.txt     # 8th formulation: 3bin-PC
 *TUBCfg-T-PC.txt        # 9th formulation: T-PC
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END TUBForm-shutdown.txt  - - - - - - - - - - - - -

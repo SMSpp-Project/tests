@@ -57,37 +57,36 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 #Method     4       # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
                     # 3 = barrier + crossover, 4 = network
 
-1 # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
-dblRelAcc       1e-7 #relative accuracy for the solver
+dblRelAcc       1e-7 # relative accuracy for the solver
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 #strOutputFile  cfl1.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END CFLBSCfg-LP.txt - - - - - - - - - - - - - -

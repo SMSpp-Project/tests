@@ -37,6 +37,17 @@ DATADIR=../../SingleFlowDCRBlock/data/nc4/single
 # and that the Solution of the BranchAndXSolver is feasible
 if [ -n "$CI" ]; then socp=0; every=10; else socp=1; every=1; fi
 
+# Preserve one log pair per instance, replacing it on the next batch run.
+# Override these paths when using configurations with different log names.
+tree_log=${BAX_TREE_LOG:-log/RabaxSFCFPRS.log}
+relax_log=${BAX_RELAX_LOG:-log/SFDCRBRelaxationSolver.log}
+log_root=${BAX_LOG_ROOT:-log}
+# The source log directories must exist before the solver opens its files.
+mkdir -p "$log_root" "$(dirname "$tree_log")" "$(dirname "$relax_log")" || exit 1
+log_marker=$(mktemp "$log_root/.bx-instance-start-XXXXXX") || exit 1
+trap 'rm -f "$log_marker"' EXIT
+printf 'BranchAndXSolver logs: %s\n' "$log_root"
+
 ran=0
 k=0
 for what in "$DATADIR"/*/*.nc4; do
@@ -48,11 +59,30 @@ for what in "$DATADIR"/*/*.nc4; do
       *" ${inst%.nc4} "*) continue ;;
     esac
     ran=1
+    touch "$log_marker" || exit 1
     run_test "$exe" "$what" -B DCRCfg-socp.txt -S BSPar-BX.txt -E ,inf,inf
   else
     ran=1
+    touch "$log_marker" || exit 1
     run_test "$exe" "$what" -B DCRCfg-pc.txt -S BSPar-BX.txt -R r,, \
              -E ,inf,inf
+  fi
+  # Dataset + instance keep repeated network names unambiguous. A new run
+  # overwrites the previous files for the same instance.
+  instance_logs="$log_root/${inst%.nc4}"
+  mkdir -p "$(dirname "$instance_logs")" || exit 1
+  if [ -f "$tree_log" ] && [ "$tree_log" -nt "$log_marker" ]; then
+    cp "$tree_log" "$instance_logs.tree.log" || exit 1
+    summary=$(tail -n 1 "$tree_log")
+    case "$summary" in
+      '[BranchAndXSolver] nodes_evaluated='*) printf '%s\n' "$summary" ;;
+      *) printf '[BranchAndXSolver] nodes_evaluated=unavailable\n' ;;
+    esac
+  else
+    printf '[BranchAndXSolver] nodes_evaluated=unavailable\n'
+  fi
+  if [ -f "$relax_log" ] && [ "$relax_log" -nt "$log_marker" ]; then
+    cp "$relax_log" "$instance_logs.relax.log" || exit 1
   fi
 done
 

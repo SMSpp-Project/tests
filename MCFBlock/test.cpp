@@ -327,7 +327,7 @@ static void restore_deficits( const MCFBlock::Vec_FNumber & orig )
  // deficits are per-node and the node count never changes in this test, so
  // the saved vector always aligns; this undoes the deficit drift that is the
  // usual cause of permanent infeasibility
- MCFB->chg_dfcts( orig.begin() , Range( 0 , orig.size() ) );
+ MCFB->chg_dfcts( Block::MF_dbl_sp( orig ) , Range( 0 , orig.size() ) );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -660,7 +660,7 @@ int main( int argc , char **argv )
       lf->modify_coefficients( std::move( newcsts ) , Range( strt , stp ) );
       }
      else {  // change via call to chg_* method
-      MCFB->chg_costs( newcsts.begin() , Range( strt , stp ) );
+      MCFB->chg_costs( Block::MF_dbl_sp( newcsts ) , Range( strt , stp ) );
       LOG1( "s(r) - " );
       }
      }
@@ -674,7 +674,7 @@ int main( int argc , char **argv )
       CLOG2( ord , "s(s,a) - " , "s(s,a,u) - " );
       }
      else {  // change via call to chg_* method
-      MCFB->chg_costs( newcsts.begin() , std::move( nms ) , ord );
+      MCFB->chg_costs( Block::MF_dbl_sp( newcsts ) , std::move( nms ) , ord );
       CLOG2( ord , "s(s) - " , "s(s,u) - " );
       }
      }
@@ -721,7 +721,7 @@ int main( int argc , char **argv )
       MCFB->close_channel( chnl );
       }
      else {  // change via call to chg_* method
-      MCFB->chg_ucaps( newcaps.begin() , Range( strt , stp ) );
+      MCFB->chg_ucaps( Block::MF_dbl_sp( newcaps ) , Range( strt , stp ) );
       LOG1( "ies(r) - " );
       }
      }
@@ -742,7 +742,7 @@ int main( int argc , char **argv )
       MCFB->close_channel( chnl );
       }
      else {  // change via call to chg_* method
-      MCFB->chg_ucaps( newcaps.begin() , std::move( nms ) , ord );
+      MCFB->chg_ucaps( Block::MF_dbl_sp( newcaps ) , std::move( nms ) , ord );
       CLOG2( ord , "ies(s) - " , "iess(s,u) - " );
       }
      }

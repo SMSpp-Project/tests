@@ -714,7 +714,7 @@ static ThermalUnitBlock * read_unit( Configuration * bconf ,
  // model, hence they are set before the Variable are generated
  if( must_run ) {
   const std::vector< int > on( 1 , 1 );
-  tub->set_init_updown_time( on.begin() , Range( 0 , 1 ) );
+  tub->set_init_updown_time( Block::MF_int_sp( on ) , Range( 0 , 1 ) );
   tub->set_min_up_down_time( tub->get_time_horizon() + 1 , 1 );
   }
 
@@ -731,7 +731,7 @@ static ThermalUnitBlock * read_unit( Configuration * bconf ,
             : ( Index( - tau0 ) >= tub->get_min_down_time()
                 ? 0 : tub->get_min_down_time() - Index( - tau0 ) );
   std::vector< double > sdc( tub->get_time_horizon() - init_t , sd_cost );
-  tub->set_shutdown_costs( sdc.begin() ,
+  tub->set_shutdown_costs( Block::MF_dbl_sp( sdc ) ,
                            Range( init_t , tub->get_time_horizon() ) );
   }
 
@@ -744,9 +744,9 @@ static ThermalUnitBlock * read_unit( Configuration * bconf ,
  tub->generate_abstract_variables();
  if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
   std::vector< double > rcv( tub->get_time_horizon() , std::atof( rc ) );
-  tub->set_primary_spinning_reserve_cost( rcv.begin() ,
+  tub->set_primary_spinning_reserve_cost( Block::MF_dbl_sp( rcv ) ,
                                           Range( 0 , rcv.size() ) );
-  tub->set_secondary_spinning_reserve_cost( rcv.begin() ,
+  tub->set_secondary_spinning_reserve_cost( Block::MF_dbl_sp( rcv ) ,
                                             Range( 0 , rcv.size() ) );
   }
 
@@ -777,7 +777,7 @@ static ThermalUnitBlock * read_unit( Configuration * bconf ,
  if( qcost_env ) {
   std::vector< double > qcost( tub->get_time_horizon() ,
                                std::atof( qcost_env ) );
-  tub->set_reactive_linear_term( qcost.begin() ,
+  tub->set_reactive_linear_term( Block::MF_dbl_sp( qcost ) ,
                                  Range( 0 , tub->get_time_horizon() ) );
   }
 
@@ -870,7 +870,7 @@ static void change_fixed_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(r) - " );
-   TUBlock->set_const_term( chg.newcsts.begin() ,
+   TUBlock->set_const_term( Block::MF_dbl_sp( chg.newcsts ) ,
 			    Range( chg.strt , chg.strt + tochange ) );
    }
   }
@@ -888,7 +888,8 @@ static void change_fixed_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(s) - " );
-   TUBlock->set_const_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+   TUBlock->set_const_term( Block::MF_dbl_sp( chg.newcsts ) ,
+                            std::move( chg.nms ) ,
 			    true );
    }
   }
@@ -932,7 +933,7 @@ static void change_quadratic_costs( Change chg )
 				      std::move( nms ) );
      }
     else
-     TUBlock->set_quad_term( chg.newcsts.begin() ,
+     TUBlock->set_quad_term( Block::MF_dbl_sp( chg.newcsts ) ,
 			     Range( chg.strt , chg.strt + tochange ) );
     }
    else {
@@ -956,7 +957,7 @@ static void change_quadratic_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(r) - " );
-   TUBlock->set_quad_term( chg.newcsts.begin() ,
+   TUBlock->set_quad_term( Block::MF_dbl_sp( chg.newcsts ) ,
 			   Range( chg.strt , chg.strt + tochange ) );
    }
   }
@@ -978,7 +979,8 @@ static void change_quadratic_costs( Change chg )
 				     std::move( chg.nms ) , false );
      }
     else
-     TUBlock->set_quad_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+     TUBlock->set_quad_term( Block::MF_dbl_sp( chg.newcsts ) ,
+                             std::move( chg.nms ) ,
 			     false );
     }
    else {
@@ -996,7 +998,8 @@ static void change_quadratic_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(s) - " );
-   TUBlock->set_quad_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+   TUBlock->set_quad_term( Block::MF_dbl_sp( chg.newcsts ) ,
+                           std::move( chg.nms ) ,
 			   false );
    }
   }
@@ -1035,7 +1038,7 @@ static void change_linear_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(r) - " );
-   TUBlock->set_linear_term( chg.newcsts.begin() ,
+   TUBlock->set_linear_term( Block::MF_dbl_sp( chg.newcsts ) ,
 			     Range( chg.strt , chg.strt + tochange ) );
    }
   }
@@ -1053,7 +1056,8 @@ static void change_linear_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(s) - " );
-   TUBlock->set_linear_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+   TUBlock->set_linear_term( Block::MF_dbl_sp( chg.newcsts ) ,
+                             std::move( chg.nms ) ,
 			     false );
    }
   }

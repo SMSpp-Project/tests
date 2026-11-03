@@ -29,7 +29,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *NUBCfg-T-F4.txt        # 10th formulation: F4
 *NUBCfg-SUSD-F2-RC.txt  # 11th formulation: F2 on SUSD, caps of the runs
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END NUBForm-rules.txt - - - - - - - - - - - - - -

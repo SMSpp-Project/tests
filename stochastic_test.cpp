@@ -237,6 +237,8 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
    // the log of the last Solver on the standard output
    block->get_registered_solvers().back()->set_log( & std::cout );
   #endif
+
+  apply_solver_verbosity( block );  // -v drives Solver::intLogVerb
   }
 
  delete forms.owner;

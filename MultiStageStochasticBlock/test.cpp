@@ -22,15 +22,18 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include "stochastic_test.h"
 
 #include "MultiStageStochasticBlock.h"
 
+#include <SMSnetCDF.h>
 #include <Solution.h>
 
 /*--------------------------------------------------------------------------*/
@@ -80,6 +83,55 @@ static bool CheckSolutionRoundTrip( Block * block )
 
 /*--------------------------------------------------------------------------*/
 
+// the weights of the Objective [see Block::set_objective_weight()] of the
+// Block of the tree of block, in BFS order
+
+static std::vector< double > objective_weights( Block * block )
+{
+ std::vector< double > w;
+ std::vector< Block * > bfs = { block };
+ for( std::size_t i = 0 ; i < bfs.size() ; ++i ) {
+  w.push_back( bfs[ i ]->get_objective_weight() );
+  for( auto b : bfs[ i ]->get_nested_Blocks() )
+   bfs.push_back( b );
+  }
+ return( w );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+// Permanent regression check of the weights through serialize(): the
+// probabilities of the outer stage are the weights of the Objective of the
+// inner Block, which deserialize() multiplies by the ones read; the Block
+// written in memory and read back has to have the weights of the original,
+// not the probabilities twice.
+
+static bool CheckWeightRoundTrip( Block * block )
+{
+ bool ok = false;
+ try {
+  NcMemFile f;
+  auto g = f.addGroup( "Block" );
+  block->serialize( g );
+  std::unique_ptr< Block > back( Block::new_Block( g , nullptr ) );
+  const auto w0 = objective_weights( block );
+  const auto w1 = objective_weights( back.get() );
+  ok = ( w0.size() == w1.size() );
+  for( std::size_t i = 0 ; ok && ( i < w0.size() ) ; ++i )
+   ok = ( std::abs( w0[ i ] - w1[ i ] ) <=
+	  1e-12 * std::max( 1.0 , std::abs( w0[ i ] ) ) );
+  if( ! ok )
+   std::cerr << "Block round-trip: the weights of the Objective differ"
+	     << std::endl;
+  }
+ catch( std::exception & e ) {
+  std::cerr << "Block round-trip error: " << e.what() << std::endl;
+  }
+ return( ok );
+ }
+
+/*--------------------------------------------------------------------------*/
+
 int main( int argc , char ** argv )
 {
  StochasticTester t;
@@ -88,9 +140,11 @@ int main( int argc , char ** argv )
   return( dynamic_cast< MultiStageStochasticBlock * >( b ) != nullptr );
   };
 
- // permanent round-trip check of the MSSB Solution machinery (runs on every
- // instance, baked and shared-tree alike)
- t.check = CheckSolutionRoundTrip;
+ // permanent round-trip checks of the MSSB Solution machinery and of the
+ // weights of the Block (run on every instance, baked and shared-tree alike)
+ t.check = []( Block * b ) {
+  return( CheckSolutionRoundTrip( b ) && CheckWeightRoundTrip( b ) );
+  };
 
  return( stochastic_test( argc , argv , t ) );
  }

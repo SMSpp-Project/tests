@@ -26,23 +26,23 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1 # number of (the names of) Solver in this BlockSolverConfig
+1  # number of (the names of) Solver in this BlockSolverConfig
 
-# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of Solver: a backend that solves QPs
 #CPXMILPSolver        #   (uncomment the available one)
 #SCIPMILPSolver
 #HiGHSMILPSolver      #   NOT this one, see above
 
-1 # number of ComputeConfig in this BlockSolverConfig
+1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 
-ComputeConfig         # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 1 ==> all non-provided parameters are not changed
 
-4 # number of integer parameters
+4  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # log verbosity of the :MILPSolver
@@ -52,37 +52,36 @@ intMaxThread    1 # one thread: the master is small and re-solved
                   # comparable
 Method          1 # the dual simplex, not the barrier [see above]
 
-1 # number of double parameters
+1  # number of double parameters
 
 # now all the double parameters
 dblRelAcc       1e-10 # tighter than the accuracy the
                       # decomposition is held to
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
-
 # end of BlockSolverConfig
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

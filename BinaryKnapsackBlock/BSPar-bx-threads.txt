@@ -42,7 +42,13 @@ intMaxThread   1  # the swept entry: 1, 2, 4, 8 parallel workers
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -60,9 +66,9 @@ intMaxThread   1  # the swept entry: 1, 2, 4, 8 parallel workers
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - -  END BSPar-bx-threads.txt - - - - - - - - - - - -

@@ -44,7 +44,7 @@ intRelaxLower  0  # rows of the lower levels enforced
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END HQPCfg-free.txt - - - - - - - - - - - - - - -
