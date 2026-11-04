@@ -69,7 +69,10 @@
  * the same run is given with -P, the step is also reached by Modification:
  * the HQPBlock of the previous step is solved, changed into this one by
  * set_b(), set_d(), set_A() and set_C(), and solved again, as the Model
- * Predictive Control does.
+ * Predictive Control does. The HQPSolver run one after the other on the
+ * same Block, and each of them starts from the x that the Block had when
+ * it was attached and then from that of its own last solve, not from that
+ * left by the HQPSolver before it.
  *
  * The iterations of the inner Solvers of each HQPSolver [see
  * HQPSolver::get_elapsed_iterations()] are summed over the solves of the
@@ -154,6 +157,18 @@ static std::vector< double > solver_xtol;
 static std::map< std::size_t , long > step_iter;
 static bool stepped = false;
 
+// the x from which each HQPSolver starts its next compute(): that of the
+// Block when it is attached, then that of its own last solve, so that an
+// inner Solver starting from the current x of the Block does not start
+// from the solution of the HQPSolver before it
+static std::map< const HQPSolver * , std::vector< double > > own_x;
+
+// the Block of s as an HQPLevelBlock, nullptr if it is not one
+static HQPLevelBlock * level_block( const HQPSolver * s )
+{
+ return( dynamic_cast< HQPLevelBlock * >( s->get_Block() ) );
+ }
+
 /*--------------------------------------------------------------------------*/
 // adds the iterations of the last compute() of s to those of the steps
 
@@ -169,6 +184,9 @@ static void count_step( const HQPSolver * s )
 
 static bool run( HQPSolver * s , const std::string & what , int & st )
 {
+ const auto it = own_x.find( s );
+ if( it != own_x.end() )
+  level_block( s )->set_x_values( it->second );
  try {
   st = s->compute();
   }
@@ -177,6 +195,8 @@ static bool run( HQPSolver * s , const std::string & what , int & st )
 	    << "), skipped" << std::endl;
   return( false );
   }
+ if( it != own_x.end() )
+  level_block( s )->get_x_values( it->second );
  return( true );
  }
 
@@ -521,8 +541,13 @@ static std::vector< HQPSolver * > working( const std::vector< HQPSolver * > &
    form_count.resize( std::max( form_count.size() , form + 1 ) , 0 );
    form_count[ form ] = std::max( form_count[ form ] , sl.size() );
    }
- for( std::size_t k = 0 ; k < sl.size() ; ++k )
+ for( std::size_t k = 0 ; k < sl.size() ; ++k ) {
   position[ sl[ k ] ] = first + k;
+  if( auto hb = level_block( sl[ k ] ) )
+   hb->get_x_values( own_x[ sl[ k ] ] );
+  else
+   own_x.erase( sl[ k ] );
+  }
  for( auto s : sl )
   if( s->get_inner_Solver() )
    res.push_back( s );

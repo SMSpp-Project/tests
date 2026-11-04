@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `drop_missing_Solvers()` of `common_utils`, now public, whose `none_ok`
   leaves a configuration with no `Solver` to the caller rather than exiting
 
+- `HQPBlock`: each `HQPSolver` starts from the x that the `Block` had when
+  it was attached, and then from that of its own last solve, rather than
+  from the solution left by the `HQPSolver` run before it on the same
+  `Block`; `HQPStageSolver`, which starts from the current x, was always
+  tested from a nearly optimal point
+
 ## [0.8.0] - 2026-11-03
 
 ### Added
