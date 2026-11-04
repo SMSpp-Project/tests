@@ -171,8 +171,10 @@ what keeping a subproblem in the master costs, and what the Block is given
 back as at the end of a `compute()`. The instances that make each of them
 matter are built on purpose, i.e., with the subproblems feasible everywhere
 for the optimality cuts and infeasible at some first-stage point for the
-feasibility ones, and in the nested shape a subproblem has when it is a model
-of its own rather than a bare set of rows. One more instance has `Constraint`
+feasibility ones, in the nested shape a subproblem has when it is a model of
+its own rather than a bare set of rows, and with a minimum shipment on every
+second-stage `Variable`, a lower bound that the feasibility cut counts
+through the multipliers of the columns. One more instance has `Constraint`
 on the first-stage `Variable` alone, a ramp between consecutive ones and a
 minimum on their sum that the starting point violates: the master of the
 MILP regime reads them out of the master `Block`, and the `BundleSolver` of

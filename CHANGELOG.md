@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   empty the step is checked against its closed form (d = 0 with the global
   lower bound, otherwise the projection of - t b on the box); `batch` runs
   these cases on two shapes
+- `AbstractBlock`: the Benders tester has an instance with a minimum shipment
+  on every second-stage Variable, whose lower bound the feasibility cut
+  counts through the multipliers of the columns
 
 ### Fixed
 
@@ -23,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from the solution left by the `HQPSolver` run before it on the same
   `Block`; `HQPStageSolver`, which starts from the current x, was always
   tested from a nearly optimal point
+- the subproblems of the Benders in `AbstractBlock` and
+  `TwoStageStochasticBlock` ask the `:MILPSolver` for the multipliers of the
+  columns of a Farkas certificate without the costs
+  (`intHomogeneousDirection 1`); with the costs in them the feasibility cut
+  cut away the optimum whenever a column had a nonzero bound
 
 ## [0.8.1] - 2026-11-04
 
