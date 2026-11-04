@@ -12,9 +12,13 @@
 #   - the lower bounds on the components (lbs), the level (levels), the box
 #     on none, half or all the variables (boxes), the linear part (lins)
 #     and the fraction of vertical rows (verts)
+# and then over the master problems whose components start empty (empties,
+# triplets with M = 0), primal, dual, or dual with a global lower bound,
+# with and without lower bounds on the components, box and linear part.
 #
 # Tunable via environment variables:
 #   - shapes: list of "N:K:M" (default: "4:1:20 4:5:20 100:1:5 100:5:5")
+#   - empties: list of "N:K:M" with M = 0 (default: "4:3:0 100:5:0")
 #   - lbs, levels, boxes, lins, verts: the values of each axis (defaults:
 #     "0 1", "0 1", "0 1 2", "0 1", "0 0.3")
 #   - what:  bit-mask of changes (default: 255, all of them)
@@ -25,6 +29,7 @@
 
 SECONDS=0
 shapes=${shapes:-"4:1:20 4:5:20 100:1:5 100:5:5"}
+empties=${empties:-"4:3:0 100:5:0"}
 lbs=${lbs:-"0 1"}
 levels=${levels:-"0 1"}
 boxes=${boxes:-"0 1 2"}
@@ -41,6 +46,21 @@ cases=0
 failures=0
 skipped=0
 
+# one case: the arguments of the tester after the common ones
+run_case() {
+  local args="-e $seed -k $what -n $iter -m $nchg -q $pchg $*"
+  printf "[%s]: " "$args"
+  "$MasterProblemBlock_test" $args -S MPBSolvers.txt | tail -1
+  local retVal=${PIPESTATUS[0]}
+  cases=$(( cases + 1 ))
+  if [ $retVal -eq 77 ]; then
+    skipped=$(( skipped + 1 ))
+  elif [ $retVal -ne 0 ]; then
+    failures=$(( failures + 1 ))
+    printf "FAILED(exit=%d)\n" "$retVal"
+  fi
+}
+
 for shape in $shapes; do
   IFS=: read -r N K M <<< "$shape"
   for lb in $lbs; do
@@ -49,19 +69,8 @@ for shape in $shapes; do
         for lin in $lins; do
           for vert in $verts; do
             for (( seed = 0 ; seed < seeds ; seed++ )); do
-              args="-e $seed -k $what -n $iter -m $nchg -q $pchg -N $N"
-              args="$args -K $K -M $M -L $lb -l $lev -x $box -b $lin"
-              args="$args -V $vert"
-              printf "[%s]: " "$args"
-              "$MasterProblemBlock_test" $args -S MPBSolvers.txt | tail -1
-              retVal=${PIPESTATUS[0]}
-              cases=$(( cases + 1 ))
-              if [ $retVal -eq 77 ]; then
-                skipped=$(( skipped + 1 ))
-              elif [ $retVal -ne 0 ]; then
-                failures=$(( failures + 1 ))
-                printf "FAILED(exit=%d)\n" "$retVal"
-              fi
+              run_case -N $N -K $K -M $M -L $lb -l $lev -x $box -b $lin \
+                -V $vert
             done
           done
         done
@@ -70,6 +79,23 @@ for shape in $shapes; do
   done
 done
 
+# the components start empty: primal, dual, dual with a global lower bound
+for shape in $empties; do
+  IFS=: read -r N K M <<< "$shape"
+  for lb in 0 1; do
+    for dg in "0 0" "1 0" "1 1"; do
+      read -r D G <<< "$dg"
+      for box in 0 2; do
+        for lin in 0 1; do
+          for (( seed = 0 ; seed < seeds ; seed++ )); do
+            run_case -N $N -K $K -M $M -L $lb -l 0 -x $box -b $lin -V 0 \
+              -d $D -g $G
+          done
+        done
+      done
+    done
+  done
+done
 printf "\nTotal elapsed time: %02d:%02d:%02d\n" \
   $((SECONDS/3600)) $((SECONDS%3600/60)) $((SECONDS%60))
 printf "Completed cases: %d; failures: %d\n" "$cases" "$failures"

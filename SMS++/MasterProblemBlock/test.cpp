@@ -9,10 +9,19 @@
  * PolyhedralFunctionBlock whose rows are cuts F_k( x ) >= b + g x and, with
  * -V, vertical rows b + g x <= 0, and it can have a lower bound on each
  * component (-L), a level (-l, the doubly stabilized master), a box on the
- * variables (-x) and a linear part (-b). The cuts are those that a bundle
- * method would give: at the stability centre x_bar each diagonal cut is
- * below the value F_k( x_bar ), i.e., it has a nonnegative linearization
- * error, and each vertical row holds.
+ * variables (-x) and a linear part (-b); it is the primal master problem,
+ * or the dual one with -d, which can also have a global lower bound (-g).
+ * The cuts are those that a bundle method would give: at the stability
+ * centre x_bar each diagonal cut is below the value F_k( x_bar ), i.e., it
+ * has a nonnegative linearization error, and each vertical row holds. With
+ * -M 0 the components start with no cut, and removing cuts may make them
+ * empty again; as a bundle method does, the tester then gives the
+ * fictitious bound of MasterProblemBlock::set_fictitious_LB() to each
+ * component with no diagonal cut and no lower bound, unless there is a
+ * global one. With no cut at all, and no level or lower bound on the
+ * components, each step is also checked against its closed form: d = 0
+ * with the global lower bound (the model is that bound alone), otherwise
+ * the projection of - t b on the box (the stabilization alone).
  *
  * The file of -S is a SimpleConfiguration< std::vector< Configuration * > >
  * of BlockSolverConfig, each of which gets a MasterProblemBlock of its own
@@ -71,6 +80,8 @@ static int lbmode = 0;    ///< 1: a lower bound on each component (-L)
 static int level = 0;     ///< 1: the doubly stabilized master (-l)
 static int boxmode = 0;   ///< 0 none, 1 half the variables, 2 all (-x)
 static int linpart = 0;   ///< 1: a linear part b (-b)
+static int dualmode = 0;  ///< 1: the dual master problem (-d)
+static int glbmode = 0;   ///< 1: a global lower bound, dual only (-g)
 
 static const double vtol = 1e-6;  ///< relative tolerance on the value
 static const double dtol = 1e-5;  ///< relative tolerance on d
@@ -101,6 +112,8 @@ static std::vector< double > L , Ub;   ///< the box
 static std::vector< double > bvec;    ///< the linear part
 static double t = 1;                  ///< the proximal parameter
 static double lev = Inf< double >();  ///< the level
+static double GLB = -Inf< double >();  ///< the global lower bound
+static std::vector< bool > fict;      ///< the fictitious bounds on
 
 /*--------------------------------------------------------------------------*/
 // one MasterProblemBlock for each BlockSolverConfig
@@ -189,6 +202,12 @@ static void new_LB( void )
  if( lbmode )
   for( int k = 0 ; k < ncmp ; ++k )
    LB[ k ] = F[ k ] - 1 - 3 * Z( rg );
+ GLB = -Inf< double >();
+ if( glbmode ) {
+  GLB = - 1 - 3 * Z( rg );
+  for( double fk : F )
+   GLB += fk;
+  }
  }
 
 /*--------------------------------------------------------------------------*/
@@ -233,12 +252,25 @@ static void generate( void )
  }
 
 /*--------------------------------------------------------------------------*/
+// the global lower bound of m, in the frame of the stability centre
+
+static void set_GLB( MasterProblemBlock * m )
+{
+ if( ! glbmode )
+  return;
+ double f = 0;
+ for( double fk : F )
+  f += fk;
+ m->set_global_LB( GLB - f );
+ }
+
+/*--------------------------------------------------------------------------*/
 // the MasterProblemBlock of a BlockSolverConfig, with the data above
 
 static MasterProblemBlock * build( Configuration * bsc )
 {
  auto mpb = new MasterProblemBlock();
- mpb->configure( true , ncmp * bsize , nvar , ncmp , {} , {} ,
+ mpb->configure( ! dualmode , ncmp * bsize , nvar , ncmp , {} , {} ,
 		 level ? MasterProblemBlock::kDoublyStabilized
 		       : MasterProblemBlock::kProximal );
  mpb->generate_abstract_variables();
@@ -252,6 +284,7 @@ static MasterProblemBlock * build( Configuration * bsc )
  mpb->set_reference( x_bar , F );
  for( int k = 0 ; k < ncmp ; ++k )
   mpb->set_LB( k , LB[ k ] );
+ set_GLB( mpb );
  if( level )
   mpb->set_f_lev( lev );
  for( const auto & c : cuts )
@@ -267,6 +300,29 @@ static void on_all( F_t f )
 {
  for( auto & m : masters )
   f( m.mpb );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the fictitious bound of a bundle method on every component with no
+// diagonal cut and no lower bound, unless there is a global one [see
+// MasterProblemBlock::set_fictitious_LB()]; an active one is set again,
+// since set_reference() and set_LB() rebuild the bound of the component
+
+static void sync_fict( void )
+{
+ fict.resize( ncmp , false );
+ for( int k = 0 ; k < ncmp ; ++k ) {
+  bool diag = false;
+  for( const auto & c : cuts )
+   diag |= ( c.k == k ) && ( ! c.vert );
+  const bool want = ( ! diag ) && ( LB[ k ] == -Inf< double >() ) &&
+		    ( ! glbmode );
+  if( want || ( fict[ k ] && ( LB[ k ] == -Inf< double >() ) ) )
+   on_all( [ & ]( MasterProblemBlock * m ) {
+    m->set_fictitious_LB( k , want );
+    } );
+  fict[ k ] = want;
+  }
  }
 
 /*--------------------------------------------------------------------------*/
@@ -289,6 +345,7 @@ static void change( void )
      std::clamp( x_bar[ j ] + masters[ 0 ].d[ j ] , L[ j ] , Ub[ j ] );
   set_values();
   on_all( [ & ]( MasterProblemBlock * m ) { m->set_reference( x_bar , F ); } );
+  on_all( set_GLB );
   if( level ) {
    new_level();
    on_all( [ & ]( MasterProblemBlock * m ) { m->set_f_lev( lev ); } );
@@ -302,11 +359,12 @@ static void change( void )
    std::uniform_int_distribution< int > ii( 0 , int( cuts.size() ) - 1 );
    const int i = ii( rg );
    const Cut c = cuts[ i ];
-   // every component keeps a diagonal cut
+   // every component keeps a diagonal cut, unless the components start
+   // empty, and then they may also become empty again
    int diag = 0;
    for( const auto & o : cuts )
     diag += ( o.k == c.k ) && ( ! o.vert );
-   if( ( ! c.vert ) && ( diag <= 1 ) )
+   if( ( ! c.vert ) && ( diag <= 1 ) && ( ncut > 0 ) )
     continue;
    on_all( [ & ]( MasterProblemBlock * m ) { m->remove_cut( c.k ,
 							    c.slot ); } );
@@ -335,11 +393,12 @@ static void change( void )
   on_all( [ & ]( MasterProblemBlock * m ) { m->set_box( L , Ub ); } );
   }
 
- if( lbmode && happens( 32 ) ) {
+ if( ( lbmode || glbmode ) && happens( 32 ) ) {
   new_LB();
   on_all( [ & ]( MasterProblemBlock * m ) {
    for( int k = 0 ; k < ncmp ; ++k )
     m->set_LB( k , LB[ k ] );
+   set_GLB( m );
    } );
   }
 
@@ -357,9 +416,11 @@ static void change( void )
 
 /*--------------------------------------------------------------------------*/
 // the value of the master problem at the step d, out of the data of the
-// tester and not of the Solver: b d + sum_k max( LB_k , max_i b_i + g_i x )
-// + || d ||^2 / 2 t at x = x_bar + d, and the largest violation by x of a
-// vertical row or of the box, relative to the largest | x_j | (and 1)
+// tester and not of the Solver: max( GLB , b d + sum_k max( LB_k ,
+// max_i b_i + g_i x ) ) + || d ||^2 / 2 t at x = x_bar + d, the max
+// including F_k( x_bar ) for a fictitious bound, and the largest violation
+// by x of a vertical row or of the box, relative to the largest | x_j |
+// (and 1)
 
 static double value_of( const std::vector< double > & d , double & viol )
 {
@@ -374,7 +435,11 @@ static double value_of( const std::vector< double > & d , double & viol )
  double xn = 1;
  for( double xj : x )
   xn = std::max( xn , std::abs( xj ) );
+ // the fictitious bound v^k >= 0 is F_k( x_bar ) in the frame of the data
  std::vector< double > m( LB );
+ for( int k = 0 ; k < ncmp ; ++k )
+  if( fict[ k ] )
+   m[ k ] = std::max( m[ k ] , F[ k ] );
  for( const auto & c : cuts ) {
   const double r = c.b + dot( c.g , x );
   if( c.vert )
@@ -384,6 +449,9 @@ static double value_of( const std::vector< double > & d , double & viol )
   }
  for( double mk : m )
   v += mk;
+ // the global lower bound is on the whole model, the linear part included
+ if( glbmode )
+  v = std::max( v , GLB );
  viol /= xn;  // relative to the size of x
  return( v + dd / ( 2 * t ) );
  }
@@ -393,6 +461,7 @@ static double value_of( const std::vector< double > & d , double & viol )
 
 static bool solve( const std::string & what )
 {
+ sync_fict();
  for( auto & m : masters ) {
   if( m.na )
    continue;
@@ -453,6 +522,28 @@ static bool solve( const std::string & what )
   verdict += same ? " OK" : " KO";
   AllPassed &= same;
   }
+ // with no cuts at all and no level, the step is known in closed form:
+ // with the global lower bound the model is that bound alone and d = 0,
+ // otherwise the stabilization alone gives the projection of - t b on the
+ // box [see MasterProblemBlock::solve_master()]
+ if( cuts.empty() && ( ! level ) && ( ! lbmode ) )
+  for( const auto & m : masters ) {
+   if( m.na || ( ( m.status != Solver::kOK ) &&
+		 ( m.status != Solver::kLowPrecision ) ) )
+    continue;
+   double dd = 0;
+   for( int j = 0 ; j < nvar ; ++j ) {
+    double dj = glbmode ? 0 : - t * bvec[ j ];
+    if( boxmode )
+     dj = std::min( std::max( dj , L[ j ] - x_bar[ j ] ) ,
+		    Ub[ j ] - x_bar[ j ] );
+    dd = std::max( dd , std::abs( m.d[ j ] - dj ) );
+    }
+   if( dd > dtol * std::max( 1.0 , t ) ) {
+    verdict += " " + m.name + " d is not the closed form";
+    AllPassed = false;
+    }
+   }
  cout << " ->" << ( verdict.empty() ? " nothing to compare" : verdict )
       << endl;
  return( AllPassed );
@@ -467,6 +558,12 @@ static bool process_specific_arg( int opt )
  switch( opt ) {
   case( 'N' ):
    Str2Sthg( optarg , nvar );
+   return( true );
+  case( 'd' ):
+   Str2Sthg( optarg , dualmode );
+   return( true );
+  case( 'g' ):
+   Str2Sthg( optarg , glbmode );
    return( true );
   case( 'K' ):
    Str2Sthg( optarg , ncmp );
@@ -512,7 +609,7 @@ int main( int argc , char ** argv )
 		    "                                    32 lower bounds, "
 		    "64 level,\n"
 		    "                                    128 linear part\n" );
- short_opts += "N:K:M:V:L:l:x:b:";
+ short_opts += "N:K:M:V:L:l:x:b:d:g:";
  const std::vector< option > my_opts = {
   { "nvar" , required_argument , nullptr , 'N' } ,
   { "ncmp" , required_argument , nullptr , 'K' } ,
@@ -521,7 +618,9 @@ int main( int argc , char ** argv )
   { "lb" , required_argument , nullptr , 'L' } ,
   { "level" , required_argument , nullptr , 'l' } ,
   { "box" , required_argument , nullptr , 'x' } ,
-  { "linear" , required_argument , nullptr , 'b' }
+  { "linear" , required_argument , nullptr , 'b' } ,
+  { "dual" , required_argument , nullptr , 'd' } ,
+  { "global" , required_argument , nullptr , 'g' }
   };
  long_opts.insert( std::prev( long_opts.end() ) , my_opts.begin() ,
 		   my_opts.end() );
@@ -537,12 +636,19 @@ int main( int argc , char ** argv )
 	 "[0]\n"
 	 "  -x, --box <0|1|2>               box on no, half, all the "
 	 "variables [0]\n"
-	 "  -b, --linear <0|1>              a linear part [0]\n";
+	 "  -b, --linear <0|1>              a linear part [0]\n"
+	 "  -d, --dual <0|1>                the dual master problem [0]\n"
+	 "  -g, --global <0|1>              a global lower bound, with "
+	 "-d 1 [0]\n";
  process_args( argc , argv , process_specific_arg );
  require_solver_config();
 
- if( ( nvar < 1 ) || ( ncmp < 1 ) || ( ncut < 1 ) ) {
-  cout << "error: nvar, ncmp and ncut must be positive" << endl;
+ if( ( nvar < 1 ) || ( ncmp < 1 ) || ( ncut < 0 ) ) {
+  cout << "error: nvar and ncmp must be positive, ncut nonnegative" << endl;
+  return( 1 );
+  }
+ if( glbmode && ( ! dualmode ) ) {
+  cout << "error: the global lower bound is in the dual master only" << endl;
   return( 1 );
   }
 

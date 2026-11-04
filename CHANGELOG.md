@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `MasterProblemBlock`: the components may start empty (`-M 0`) and become
+  empty again, with the fictitious bounds of a bundle method; the dual
+  master (`-d`) and its global lower bound (`-g`); with all the components
+  empty the step is checked against its closed form (d = 0 with the global
+  lower bound, otherwise the projection of - t b on the box); `batch` runs
+  these cases on two shapes
+
 ### Fixed
 
 - `HQPBlock`: each `HQPSolver` starts from the x that the `Block` had when
