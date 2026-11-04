@@ -567,6 +567,13 @@ int main( int argc , char ** argv )
    delete c;
    return( 1 );
    }
+  // the Solver that this build has not (e.g., BDMinQuadSolver, an
+  // optional module) are taken out, and a BlockSolverConfig left with none
+  // is left out
+  auto cfg = static_cast< BlockSolverConfig * >( bsc );
+  drop_missing_Solvers( cfg , sconf_file , true );
+  if( ! cfg->num_ComputeConfig() )
+   continue;
   auto mpb = build( bsc );
   if( mpb->get_registered_solvers().empty() ) {
    delete mpb;  // no Solver of this build

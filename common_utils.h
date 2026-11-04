@@ -326,6 +326,29 @@ std::string first_Solver_of( const std::vector< std::string > & names ,
                              const std::string & what );
 
 /*--------------------------------------------------------------------------*/
+/// the Solver of a BlockSolverConfig that this build does not have, removed
+
+using Dropped = std::vector< std::pair< Block::Index , std::string > >;
+
+/** Takes out of @p bsc the Solver that this build does not have. A
+ *  configuration names every Solver that makes sense on the instances of a
+ *  battery, so that a run solves with all of them and compares; but which
+ *  Solver are there depends on the modules the build has and on the external
+ *  libraries each of them has found, and asking the factory for one that is
+ *  not there throws [see Solver::new_Solver()], which would kill the whole
+ *  run rather than that one comparison. What is left out is said on
+ *  std::cerr, name by name, with the file @p fn it comes from, so that the
+ *  log of a run tells what it has actually solved with; it is returned, last
+ *  first, with its index in the configuration. If none of the Solver is
+ *  there the run exits with 77 (nothing to do), unless @p none_ok, with
+ *  which @p bsc is left empty for the caller to skip (e.g., one
+ *  configuration of a list of them, each with its own Solver). */
+
+Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
+			      const std::string & fn ,
+			      bool none_ok = false );
+
+/*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockConfig to a Block
 /** If @p b_config is a plain BlockConfig, apply() a clone() of it to
  *  @p block, since apply() moves the Configuration it holds into the Block:
