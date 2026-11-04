@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `HQPBlock`: each `HQPSolver` starts from the x that the `Block` had when
+  it was attached, and then from that of its own last solve, rather than
+  from the solution left by the `HQPSolver` run before it on the same
+  `Block`; `HQPStageSolver`, which starts from the current x, was always
+  tested from a nearly optimal point
+
 ## [0.8.1] - 2026-11-04
 
 ### Fixed
