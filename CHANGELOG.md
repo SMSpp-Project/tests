@@ -26,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from the solution left by the `HQPSolver` run before it on the same
   `Block`; `HQPStageSolver`, which starts from the current x, was always
   tested from a nearly optimal point
-- the subproblems of the Benders in `AbstractBlock` and
+- the subproblems of the Benders in `AbstractBlock`,
+  `CapacitatedFacilityLocationBlock`, `SVMBlock` and
   `TwoStageStochasticBlock` ask the `:MILPSolver` for the multipliers of the
   columns of a Farkas certificate without the costs
   (`intHomogeneousDirection 1`); with the costs in them the feasibility cut
