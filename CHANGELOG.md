@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from the solution left by the `HQPSolver` run before it on the same
   `Block`; `HQPStageSolver`, which starts from the current x, was always
   tested from a nearly optimal point
+- `HQPBlock`: Clarabel, as the inner Solver of an `HQPSolver`, has the gap
+  of its interior point at 1e-10 (`ClarabelCfg.txt`), since at the default
+  1e-8 the values of the levels of some random hierarchies were off by up
+  to 6e-5 once each `HQPSolver` starts from its own x
 - the feasibility cuts of the Benders in `AbstractBlock`,
   `CapacitatedFacilityLocationBlock`, `SVMBlock` and
   `TwoStageStochasticBlock` no longer cut away the optimum where a column
