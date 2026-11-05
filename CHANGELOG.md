@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `HQPBlock`: qpOASES is told that H is positive definite
+  (`QPOASESCfg.txt`), which it is in every level because of the
+  regularization, so that a level that qpOASES ends as unbounded is an
+  error rather than an unbounded hierarchy; the cold qpOASES is
+  `QPOASESCfg.txt` with each solve from scratch
 - `HQPBlock`: each `HQPSolver` starts from the x that the `Block` had when
   it was attached, and then from that of its own last solve, rather than
   from the solution left by the `HQPSolver` run before it on the same

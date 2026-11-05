@@ -28,7 +28,8 @@ each inner Solver and setting,
   Clarabel (sparse, interior point), each one in a `BlockSolverConfig` of
   its own (`InnerBSCfg-<solver>.txt`, MOSEK with the tolerances and the
   presolve of `MOSEKCfg.txt`, Clarabel with the tolerances of
-  `ClarabelCfg.txt`);
+  `ClarabelCfg.txt`, qpOASES with H declared positive definite in
+  `QPOASESCfg.txt`);
 
 - the settings are three `ComputeConfig`: `HQPCfg.txt`, with the rows of the
   lower levels relaxed and their slacks fixed and the center of the

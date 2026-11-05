@@ -3,7 +3,8 @@
 #
 # The BlockSolverConfig of the inner Solver of an HQPSolver: qpOASES, the
 # dense parametric active-set method for convex QPs, which re-optimizes from
-# the working set of the previous solve.
+# the working set of the previous solve, with H declared positive definite
+# (QPOASESCfg.txt).
 # A build without it leaves the HQPSolver with no inner Solver, which the
 # tester reports and leaves out.
 #
@@ -19,10 +20,11 @@ BlockSolverConfig     # exact type of the Configuration object
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 QPOASESMILPSolver  # name of 1st Solver
 
-0  # number of ComputeConfig in this BlockSolverConfig
+1  # number of ComputeConfig in this BlockSolverConfig
 
-# now all the ComputeConfig
-# [none]
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*QPOASESCfg.txt
+
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
