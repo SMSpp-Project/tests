@@ -83,8 +83,8 @@ dbltSPar2        1e-2 # parameter for the long-term t-strategy
 #str_LagBF_BSCfg LPBSCfg.txt # BlockSolverConfig for the LagBFunctions
 # BlockSolverConfig for the MasterProblemBlock's Solver
 strMPBSolverCfg   MPBCfg.txt
-# BlockSolverConfig of the inner Block, on GUROBI and with
-# intHomogeneousDirection, which is what a feasibility cut is read off
+# BlockSolverConfig of the inner Block, on GUROBI, whose dual direction a
+# feasibility cut is read off
 strInnerBSC       BSCfg1.txt
 # not needed if intDoEasy >= 1 && USE_BundleSolver > 0, this is done "by
 # hand"

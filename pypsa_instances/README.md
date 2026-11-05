@@ -35,8 +35,7 @@ solves the InvestmentBlock form: the master of the BundleSolver 2.0 is a
 MasterProblemBlock solved by a :MILPSolver (`MPBCfg.txt`), which takes the
 feasibility cuts that the master of the default configuration of pySMSpp
 refuses, and the inner Block is solved by GUROBI (`BSCfg1.txt`), whose
-`intHomogeneousDirection 1` returns the unbounded dual direction a
-feasibility cut is read off.
+unbounded dual direction a feasibility cut is read off.
 
 ## The carrier form
 

@@ -25,7 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SVMBlock`: the three Benders of `test_bds` read the configuration of the
   subproblems from `BDSSCfg.txt`, of which `BSPar-BDS-sub.txt` was a copy
-  without `intHomogeneousDirection`
 
 ### Fixed
 
@@ -34,16 +33,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from the solution left by the `HQPSolver` run before it on the same
   `Block`; `HQPStageSolver`, which starts from the current x, was always
   tested from a nearly optimal point
-- the subproblems of the Benders in `AbstractBlock`,
+- the feasibility cuts of the Benders in `AbstractBlock`,
   `CapacitatedFacilityLocationBlock`, `SVMBlock` and
-  `TwoStageStochasticBlock` ask the `:MILPSolver` for the multipliers of the
-  columns of a Farkas certificate without the costs
+  `TwoStageStochasticBlock` no longer cut away the optimum where a column
+  of a subproblem has a nonzero bound, the `:MILPSolver` giving the
+  multipliers of the columns of a Farkas certificate without the costs; the
+  configurations no longer set `intHomogeneousDirection`, of no effect now
 - `UCBlock`: `LDCfg-DPe.txt` declares the residual zero at 1e-8 rather than
   1e-2, at which the `LagrangianDualSolver` of the nuclear, conversion and
   p4r batteries published upper bounds below the value of the Lagrangian
   Dual by up to 3%
-  (`intHomogeneousDirection 1`); with the costs in them the feasibility cut
-  cut away the optimum whenever a column had a nonzero bound
 
 ## [0.8.1] - 2026-11-04
 
