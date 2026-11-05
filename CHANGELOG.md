@@ -14,7 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   master (`-d`) and its global lower bound (`-g`); with all the components
   empty the step is checked against its closed form (d = 0 with the global
   lower bound, otherwise the projection of - t b on the box); `batch` runs
-  these cases on two shapes
+  these cases on two shapes; the global lower bound is also in the primal
+  master, and d is compared within a tolerance relative to t as well, d
+  being - t z*
 - `AbstractBlock`: the Benders tester has an instance with a minimum shipment
   on every second-stage Variable, whose lower bound the feasibility cut
   counts through the multipliers of the columns

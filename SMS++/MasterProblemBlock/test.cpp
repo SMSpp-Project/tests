@@ -9,8 +9,8 @@
  * PolyhedralFunctionBlock whose rows are cuts F_k( x ) >= b + g x and, with
  * -V, vertical rows b + g x <= 0, and it can have a lower bound on each
  * component (-L), a level (-l, the doubly stabilized master), a box on the
- * variables (-x) and a linear part (-b); it is the primal master problem,
- * or the dual one with -d, which can also have a global lower bound (-g).
+ * variables (-x) and a linear part (-b), and a global lower bound (-g); it
+ * is the primal master problem, or the dual one with -d.
  * The cuts are those that a bundle method would give: at the stability
  * centre x_bar each diagonal cut is below the value F_k( x_bar ), i.e., it
  * has a nonnegative linearization error, and each vertical row holds. With
@@ -81,7 +81,7 @@ static int level = 0;     ///< 1: the doubly stabilized master (-l)
 static int boxmode = 0;   ///< 0 none, 1 half the variables, 2 all (-x)
 static int linpart = 0;   ///< 1: a linear part b (-b)
 static int dualmode = 0;  ///< 1: the dual master problem (-d)
-static int glbmode = 0;   ///< 1: a global lower bound, dual only (-g)
+static int glbmode = 0;   ///< 1: a global lower bound (-g)
 
 static const double vtol = 1e-6;  ///< relative tolerance on the value
 static const double dtol = 1e-5;  ///< relative tolerance on d
@@ -517,7 +517,9 @@ static bool solve( const std::string & what )
     dd = std::max( dd , std::abs( m.d[ j ] - ref.d[ j ] ) );
     dn = std::max( dn , std::abs( ref.d[ j ] ) );
     }
-   same = same && ( dd <= dtol * std::max( 1.0 , dn ) );
+   // d = - t z*, and z* is as accurate as the Solver: the error on d is
+   // measured against t as well, as for the closed form below
+   same = same && ( dd <= dtol * std::max( { 1.0 , dn , t } ) );
    }
   verdict += same ? " OK" : " KO";
   AllPassed &= same;
@@ -638,8 +640,7 @@ int main( int argc , char ** argv )
 	 "variables [0]\n"
 	 "  -b, --linear <0|1>              a linear part [0]\n"
 	 "  -d, --dual <0|1>                the dual master problem [0]\n"
-	 "  -g, --global <0|1>              a global lower bound, with "
-	 "-d 1 [0]\n";
+	 "  -g, --global <0|1>              a global lower bound [0]\n";
  process_args( argc , argv , process_specific_arg );
  require_solver_config();
 
@@ -647,11 +648,6 @@ int main( int argc , char ** argv )
   cout << "error: nvar and ncmp must be positive, ncut nonnegative" << endl;
   return( 1 );
   }
- if( glbmode && ( ! dualmode ) ) {
-  cout << "error: the global lower bound is in the dual master only" << endl;
-  return( 1 );
-  }
-
  auto c = Configuration::deserialize( sconf_file );
  auto list =
    dynamic_cast< SimpleConfiguration< std::vector< Configuration * > > * >(

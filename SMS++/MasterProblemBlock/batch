@@ -13,8 +13,8 @@
 #     on none, half or all the variables (boxes), the linear part (lins)
 #     and the fraction of vertical rows (verts)
 # and then over the master problems whose components start empty (empties,
-# triplets with M = 0), primal, dual, or dual with a global lower bound,
-# with and without lower bounds on the components, box and linear part.
+# triplets with M = 0), primal or dual, with and without a global lower
+# bound, lower bounds on the components, box and linear part.
 #
 # Tunable via environment variables:
 #   - shapes: list of "N:K:M" (default: "4:1:20 4:5:20 100:1:5 100:5:5")
@@ -79,11 +79,12 @@ for shape in $shapes; do
   done
 done
 
-# the components start empty: primal, dual, dual with a global lower bound
+# the components start empty: primal and dual, with and without a global
+# lower bound
 for shape in $empties; do
   IFS=: read -r N K M <<< "$shape"
   for lb in 0 1; do
-    for dg in "0 0" "1 0" "1 1"; do
+    for dg in "0 0" "0 1" "1 0" "1 1"; do
       read -r D G <<< "$dg"
       for box in 0 2; do
         for lin in 0 1; do
