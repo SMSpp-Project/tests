@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on every second-stage Variable, whose lower bound the feasibility cut
   counts through the multipliers of the columns
 
+### Changed
+
+- `SVMBlock`: the three Benders of `test_bds` read the configuration of the
+  subproblems from `BDSSCfg.txt`, of which `BSPar-BDS-sub.txt` was a copy
+  without `intHomogeneousDirection`
+
 ### Fixed
 
 - `HQPBlock`: each `HQPSolver` starts from the x that the `Block` had when

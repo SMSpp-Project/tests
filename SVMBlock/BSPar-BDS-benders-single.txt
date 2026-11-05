@@ -46,7 +46,7 @@ int_BDSlv_CutType 1  # 0 = one cut family per chunk, 1 = one aggregated cut
 2  # number of string parameters
 
 # now all the string parameters
-str_Bsub_BSCfg  BSPar-BDS-sub.txt          # BlockSolverConfig of the
+str_Bsub_BSCfg  BDSSCfg.txt                # BlockSolverConfig of the
                                            # subproblems
 str_Mstr_BSCfg  BSPar-BDS-master-milp.txt  # BlockSolverConfig of the master
 
