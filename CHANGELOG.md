@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CapacitatedFacilityLocationBlock`, `SVMBlock` and
   `TwoStageStochasticBlock` ask the `:MILPSolver` for the multipliers of the
   columns of a Farkas certificate without the costs
+- `UCBlock`: `LDCfg-DPe.txt` declares the residual zero at 1e-8 rather than
+  1e-2, at which the `LagrangianDualSolver` of the nuclear, conversion and
+  p4r batteries published upper bounds below the value of the Lagrangian
+  Dual by up to 3%
   (`intHomogeneousDirection 1`); with the costs in them the feasibility cut
   cut away the optimum whenever a column had a nonzero bound
 

@@ -3,7 +3,7 @@
 #
 # ComputeConfig of the LagrangianDualSolver of the academic instances whose
 # sub-Blocks are solved exactly [see BSPar-DP.txt]: that of LDCfg-DP.txt,
-# with the easy components, a looser threshold on the residual, and the
+# with the easy components, a tighter threshold on the residual, and the
 # ThermalUnitBlock and BatteryUnitBlock kept out of the easy components;
 # LDRSCfg-DP.txt starts from it.
 #
@@ -22,11 +22,12 @@ intDoEasy 1 # do easy components for (some) LagBFunction
 3  # number of double parameters
 
 # now all the double parameters
-dblNZEps  1e-2 # threshold to declare 0 the || residual ||:
-               # the publication of the bound on the value of the Lagrangian
-               # Dual is subordinated to || z || being declared zero by this,
-               # so a tighter value does not make that bound better, it makes
-               # it never appear [see dblRelAcc in LDCfg-DP.txt]
+dblNZEps  1e-8 # threshold to declare 0 the || residual ||:
+               # the bound on the value of the Lagrangian Dual is published
+               # only once || z || is declared zero by this, and with 1e-2
+               # it can be below that value by a few percent; with 1e-8 it
+               # is valid, but on some instances it never appears
+               # [see dblRelAcc in LDCfg-DP.txt]
 dbltStar  1e+4 # times || residual || estimates the gap
 dbltInit  1e-3 # initial value for t
 
