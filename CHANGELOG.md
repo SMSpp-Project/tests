@@ -32,6 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `MMCFBlock`: the suite is in the build without `MCFLemonSolver`, which only
+  `batch-c` runs and which is then a test (labelled with it) only where the
+  module is, so that `MMCFBlock_ML_bench` is no longer lost with it; the ML
+  bench of `MMCFBlock` and of `UCBlock` is built wherever
+  `SMS++::BundleSolverML` is, which brings Torch along, rather than after a
+  second search of Torch that needed `Torch_ROOT` again
 - `SMS++/MasterProblemBlock` and `SMS++/PolyhedralFunctionBlock`: the
   makefiles include BDMinQuadSolver only if the module is there, as CMake
   does, rather than stopping the build without it

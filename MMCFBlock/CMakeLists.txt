@@ -247,20 +247,22 @@ if (TARGET SMS++::MMCFBlock)
     smspp_install(MMCFBlock_test)
 
     # The ML batch (batchML) drives the inner BundleSolverML, which is only
-    # registered in the Solver factory when BundleSolver is built with Torch;
-    # register it as a test only in that case.
-    find_package(Torch QUIET HINTS ${Torch_ROOT})
-    set(ML_BATCH "")
-    if (Torch_FOUND)
-        set(ML_BATCH "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchML")
+    # registered in the Solver factory when BundleSolver is built with Torch,
+    # and batch-c the network simplex of MCFLemonSolver: each is registered as
+    # a test only where its Solver is.
+    set(OPT_BATCHES "")
+    if (TARGET SMS++::BundleSolverML)
+        list(APPEND OPT_BATCHES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchML")
+    endif ()
+    if (TARGET SMS++::MCFLemonSolver)
+        list(APPEND OPT_BATCHES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-c")
     endif ()
 
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-c"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-k"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-m"
-                          ${ML_BATCH})
+                          ${OPT_BATCHES})
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
@@ -320,42 +322,49 @@ if (TARGET SMS++::MMCFBlock AND
     endif ()
 endif ()
 
-    # The benchmark of the machine-learning driven bundle on the instances of
-    # this Block: the harness is the generic one (../ml_bench.cpp), which
-    # reads whichever instance it is given, and this suite compiles into it
-    # the two text formats of the module (ML_BENCH_TEXT) and the splits of
-    # splits-mnetgen. It is built only where Torch is, BundleSolverML being
-    # built into BundleSolver only in that case, and it is no test: it trains
-    # a network and measures, hence it is run by hand.
-    find_package(Torch QUIET HINTS ${Torch_ROOT})
-    if (Torch_FOUND AND TARGET SMS++::BundleSolverML)
+# The benchmark of the machine-learning driven bundle on the instances of
+# this Block: the harness is the generic one (../ml_bench.cpp), which
+# reads whichever instance it is given, and this suite compiles into it
+# the two text formats of the module (ML_BENCH_TEXT) and the splits of
+# splits-mnetgen. It is built only where BundleSolverML is, i.e., where
+# BundleSolver has found Torch, which the library brings along, and it is
+# no test: it trains a network and measures, hence it is run by hand.
+if (TARGET SMS++::BundleSolverML)
 
-        add_executable(MMCFBlock_ML_bench ../ml_bench.cpp)
-        target_include_directories(MMCFBlock_ML_bench PRIVATE ..)
-        target_compile_definitions(MMCFBlock_ML_bench PRIVATE ML_BENCH_TEXT=1)
-        target_link_libraries(MMCFBlock_ML_bench PRIVATE
-                              SMS++::BundleSolverML
-                              SMS++::BundleSolver
-                              SMS++::LagrangianDualSolver
-                              SMS++::MMCFBlock
-                              ${TORCH_LIBRARIES})
-        target_compile_features(MMCFBlock_ML_bench PUBLIC cxx_std_20)
+    add_executable(MMCFBlock_ML_bench ../ml_bench.cpp)
+    target_include_directories(MMCFBlock_ML_bench PRIVATE ..)
+    target_compile_definitions(MMCFBlock_ML_bench PRIVATE ML_BENCH_TEXT=1)
+    target_link_libraries(MMCFBlock_ML_bench PRIVATE
+                          SMS++::BundleSolverML
+                          SMS++::BundleSolver
+                          SMS++::LagrangianDualSolver
+                          SMS++::MMCFBlock)
+    target_compile_features(MMCFBlock_ML_bench PUBLIC cxx_std_20)
 
-        # on Windows the Torch DLLs have to sit next to the executable
-        if (MSVC)
-            file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-            add_custom_command(TARGET MMCFBlock_ML_bench POST_BUILD
-                               COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                                       ${TORCH_DLLS}
-                                       $<TARGET_FILE_DIR:MMCFBlock_ML_bench>
-                               COMMENT "Copying Torch DLLs next to it")
-        endif ()
-
-        smspp_install(MMCFBlock_ML_bench)
+    # on Windows the Torch DLLs have to sit next to the executable
+    if (MSVC)
+        find_package(Torch QUIET HINTS ${Torch_ROOT})
+        file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+        add_custom_command(TARGET MMCFBlock_ML_bench POST_BUILD
+                           COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                   ${TORCH_DLLS}
+                                   $<TARGET_FILE_DIR:MMCFBlock_ML_bench>
+                           COMMENT "Copying Torch DLLs next to it")
     endif ()
+
+    smspp_install(MMCFBlock_ML_bench)
+endif ()
 
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# batch-c runs MCFLemonSolver, which the map of the directory does not declare
+# since the rest of the suite does not need it
+set(_batch MMCFBlock_test/batches/batch-c)
+if (TEST ${_batch})
+    set_tests_properties(${_batch} PROPERTIES LABELS
+        "${SMSPP_TEST_LABELS_MMCFBlock};MCFLemonSolver")
+endif ()
 
 # --------------------------------------------------------------------------- #

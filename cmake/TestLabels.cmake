@@ -48,9 +48,10 @@ set(SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock
     "MCFClassSolver;MCFLemonSolver;MILPSolver")
 # MMCFBlock hosts two testers: MMCF_test (vs the MMCFCplex reference) and
 # MMCFBlock_test (cross-check of a :MILPSolver and a LagrangianDualSolver), so
-# the label is the union of what the two exercise
+# the label is the union of what the two exercise; only batch-c asks for
+# MCFLemonSolver, which is then set on that test alone
 set(SMSPP_TEST_LABELS_MMCFBlock
-    "BundleSolver;LagrangianDualSolver;MCFLemonSolver;MMCFBlock;MILPSolver")
+    "BundleSolver;LagrangianDualSolver;MMCFBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_UCBlock
     "BundleSolver;LagrangianDualSolver;UCBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_MCFBlock
