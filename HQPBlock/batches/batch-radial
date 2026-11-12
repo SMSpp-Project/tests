@@ -35,7 +35,15 @@ data=../../HQPBlock/data/nc4
 # the steps in their order, each with the previous one if it is the step
 # before it - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-for run in radial8_s radial8_N010_s04; do
+# in CI only the control horizon 3: there the dense inner Solvers spend
+# minutes per level on the two steps of the horizon 10, which take the job
+# beyond its time, and HQPStageSolver solves them in the unit test
+runs="radial8_s radial8_N010_s04"
+if [ -n "$CI" ]; then
+  runs=radial8_s
+fi
+
+for run in $runs; do
   prev=""
   prev_step=-2
   for f in "${data}"/${run}*.nc4; do

@@ -37,9 +37,12 @@ include $(SMS++SDR)/lib/makefile-c
 MILPSSDR = ../../../MILPSolver
 include $(MILPSSDR)/makefile-s
 
-# BDMinQuadSolver, the Solver of the third entry of MPBSolvers.txt
+# BDMinQuadSolver, the Solver of the third entry of MPBSolvers.txt,
+# if the module is there: without it that row says it is not in this build
 BDMQSkSDR = ../../../BDMinQuadSolver
+ifneq ($(wildcard $(BDMQSkSDR)/makefile-s),)
 include $(BDMQSkSDR)/makefile-s
+endif
 
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 

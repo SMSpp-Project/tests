@@ -23,11 +23,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `HQPBlock`: in CI `batch-radial` runs only the steps of the control
+  horizon 3, since on the two of the horizon 10 the dense inner Solvers
+  took the nightly job beyond its time; `HQPStageSolver` solves those in
+  the unit test
 - `SVMBlock`: the three Benders of `test_bds` read the configuration of the
   subproblems from `BDSSCfg.txt`, of which `BSPar-BDS-sub.txt` was a copy
 
 ### Fixed
 
+- `SMS++/MasterProblemBlock` and `SMS++/PolyhedralFunctionBlock`: the
+  makefiles include BDMinQuadSolver only if the module is there, as CMake
+  does, rather than stopping the build without it
 - `HQPBlock`: qpOASES is told that H is positive definite
   (`QPOASESCfg.txt`), which it is in every level because of the
   regularization, so that a level that qpOASES ends as unbounded is an
