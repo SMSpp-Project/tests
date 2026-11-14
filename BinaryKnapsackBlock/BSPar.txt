@@ -25,7 +25,9 @@
 #     incremental greedy relaxation (InnerBSCfg-incr.txt): same optimum.
 #   - BranchAndXSolver in reoptimization mode (intReoptimize), which retains
 #     the tree and re-seeds from its fenced frontier at each re-solve: same
-#     optimum after every runtime Modification.
+#     optimum after every runtime Modification, also when driven by the
+#     incremental greedy relaxation, whose local reductions depend on the
+#     data of the Block and must not survive a change of it.
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments (the
 # MILP/DP/GR ones are shared with BSPar-mixed.txt, the core DP and RECORD
@@ -41,7 +43,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-14  # number of (the names of) Solver in this BlockSolverConfig
+15  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -65,9 +67,11 @@ BranchAndXSolver
 BranchAndXSolver
 # 13th: BX best-first, reoptimization on
 BranchAndXSolver
-RECORDBinaryKnapsackSolver            # 14th: RECORD, same as the 3rd
+# 14th: BX best-first, reoptimization on, incremental inner
+BranchAndXSolver
+RECORDBinaryKnapsackSolver            # 15th: RECORD, same as the 3rd
 
-14  # number of ComputeConfig in this BlockSolverConfig
+15  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -394,7 +398,46 @@ intReoptimize 1
 # pointer to the "extra" Configuration
 *  # [none]
 
-# 14th: RECORD under the same reoptimization of the 3rd
+# 14: BranchAndXSolver, best-first with the tree retained for reoptimization,
+# incremental inner relaxation
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize 1
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 15th: RECORD under the same reoptimization of the 3rd
 *CDPCfg-reopt3.txt
 
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -

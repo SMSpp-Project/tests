@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the unit test
 - `SVMBlock`: the three Benders of `test_bds` read the configuration of the
   subproblems from `BDSSCfg.txt`, of which `BSPar-BDS-sub.txt` was a copy
+- `BinaryKnapsackBlock`: `BSPar.txt` has a 14th `BranchAndXSolver` that
+  retains its tree for reoptimization and is driven by the incremental greedy
+  relaxation, the pairing whose local reductions must not survive a change of
+  the data of the Block
 
 ### Fixed
 
