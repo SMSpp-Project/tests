@@ -117,7 +117,7 @@ SimpleConfiguration<std::map<std::string,Configuration*>>
 1  # map size: one entry
 
 # key "BlockSolverConfig" → BlockSolverConfig for the inner MCF.
-# CPXMILPSolver directly (rather than MCFSolver<*>): MCFSolver dual values
+# GRBMILPSolver directly (rather than MCFSolver<*>): MCFSolver dual values
 # on closed/zero-capacity arcs are not reliable, and Benders cuts depend
 # critically on the dual being correct on those exact constraints.
 BlockSolverConfig
