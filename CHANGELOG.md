@@ -61,6 +61,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of a subproblem has a nonzero bound, the `:MILPSolver` giving the
   multipliers of the columns of a Farkas certificate without the costs; the
   configurations no longer set `intHomogeneousDirection`, of no effect now
+- `CapacitatedFacilityLocationBlock`: `batch-cuts` compares the bound of the
+  strong relaxation in the natural and in the knapsack formulation, both
+  with the strong forcing constraints separated; the Block that declared
+  them had a `:MILPSolver` that does not separate, the copy one that
+  separates but nothing to separate, so that both gave the weak bound; it
+  runs the small ORLib instances only, the separation taking hours on each
+  of the 1000-customer ones
 - `UCBlock`: `LDCfg-DPe.txt` declares the residual zero at 1e-8 rather than
   1e-2, at which the `LagrangianDualSolver` of the nuclear, conversion and
   p4r batteries published upper bounds below the value of the Lagrangian

@@ -80,7 +80,8 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
                           # default arrangement, full instance set
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-cuts"
-                          # strong-LP vs weak + dynamic strong-cut separation
+                          # natural vs knapsack formulation, both with the
+                          # strong forcing constraints separated
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ld"
                           # knapsack Lagrangian dual (LP knapsack leaf) vs
                           # natural LP: LD == LP

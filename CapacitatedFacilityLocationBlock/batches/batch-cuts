@@ -4,9 +4,9 @@
 #        < exe file > = path of the executable file, default ./CFL_test
 #        < log file > = name of the log file, default no log (stdout)
 #
-# user-cuts arrangement: B2 is a copy CapacitatedFacilityLocationBlock solved
-# by a :MILPSolver with dynamic cut separation; runs ORLib, Yang and TBED
-# instances
+# user-cuts arrangement: the natural formulation and a copy in the knapsack
+# formulation, each solved by a :MILPSolver that separates the strong forcing
+# constraints; runs ORLib, Yang and TBED instances
 
 # the common part, which reads the arguments [see cfl_battery.sh]
 source "$(dirname "$0")/cfl_battery.sh" "$@"
@@ -21,12 +21,14 @@ maxseed=2
 
 # ORLib - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-cfl_orlib
+# the small ones: on the capa, capb and capc ones, with 1000 customers, the
+# separation takes some 25 seconds per solve, hence hours per instance
+cfl_orlib "${cfl_orlib_small[@]}"
 
-# Yang and TBED: the 40 rounds take up to 2 seconds on a Yang instance and
-# some 5 on a TBED one, so CI runs the first instance of each Yang size and
-# the first TBED one with seed 0 only (some 5 seconds), and a local run
-# all of them with all the seeds (some 4 minutes)
+# Yang and TBED: the 40 rounds take up to 12 seconds on a Yang instance and
+# some 11 on a TBED one, so CI runs the first instance of each Yang size and
+# the first TBED one with seed 0 only (some 1 minute), and a local run all
+# of them with all the seeds (some 12 minutes, with the small ORLib ones)
 if [ -n "$CI" ]; then
   maxseed=0
   yang=1
