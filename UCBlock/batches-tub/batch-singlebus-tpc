@@ -5,9 +5,8 @@
 #
 # runs the single-bus single-TUB instances on the T + Perspective-Cuts
 # formulation (TUBCfg-T-PC.txt), solving each with the MILPSolver (1st /
-# reference) and the ext DP solver ThermalUnitExtDPSolver (2nd) and comparing
-# the two.
-# The solver pair comes from the default BSCfg.txt of this test directory.
+# reference) and the dynamic programming solvers that follow it, each
+# compared with the 1st; the lineup is BSCfg.txt of this test directory.
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"

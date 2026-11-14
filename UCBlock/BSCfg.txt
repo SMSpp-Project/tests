@@ -2,10 +2,14 @@
 # - - - - - - - - - - - - - - - - - BSCfg.txt - - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig that attaches, to a (single-TUB) ThermalUnitBlock, a
-# :MILPSolver as the 1st (reference) Solver and the EXT DP solver
-# (ThermalUnitExtDPSolver) as the 2nd Solver, so the batch compares the ext
-# DP against the MILP on the T+PC formulation (the DP is the 2nd / "back"
-# Solver).
+# :MILPSolver as the 1st (reference) Solver, the EXT DP solver
+# (ThermalUnitExtDPSolver) as the 2nd Solver and the DP over the on-intervals
+# (ThermalUnitDPSolver) as the 3rd, 4th and 5th, so the batch compares the
+# DPs against the MILP on the T+PC formulation. The three ThermalUnitDPSolver
+# differ in intBoundPrune: the full graph (0), the graph searched in
+# topological order skipping the nodes that the bound proves useless (1),
+# and the same in the order of the bound, i.e., A* (2), which must all give
+# the same schedule.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -14,15 +18,18 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2  # number of (the names of) Solver in this BlockSolverConfig
+5  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver                  # name of 1st Solver
 GRBMILPSolver                   # name of 1st Solver
 #SCIPMILPSolver                 # name of 1st Solver
 #HiGHSMILPSolver                # name of 1st Solver
 ThermalUnitExtDPSolver          # name of 2nd Solver
+ThermalUnitDPSolver             # name of 3rd Solver
+ThermalUnitDPSolver             # name of 4th Solver
+ThermalUnitDPSolver             # name of 5th Solver
 
-2  # number of ComputeConfig in this BlockSolverConfig
+5  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -118,7 +125,130 @@ ComputeConfig # exact type of the ComputeConfig object
 # pointer to the "extra" Configuration
 *  # [none]
 
-# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is the ComputeConfig of ThermalUnitDPSolver, the full graph
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intBoundPrune   0 # 0 full graph, 1 depth-first by bounds, 2 A*
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is the ComputeConfig of ThermalUnitDPSolver, by bounds
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intBoundPrune   1 # 0 full graph, 1 depth-first by bounds, 2 A*
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is the ComputeConfig of ThermalUnitDPSolver, by A*
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intBoundPrune   2 # 0 full graph, 1 depth-first by bounds, 2 A*
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# end of 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

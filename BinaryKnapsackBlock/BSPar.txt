@@ -6,6 +6,9 @@
 # optimum, so that a single sweep cross-checks them all (see batch):
 #
 #   - :MILPSolver                         exact MIP (the reference optimum)
+#   - DPBinaryKnapsackSolver              exact full-table DP, twice: as it
+#     is, and not expanding the states that the Dantzig bound of the items
+#     left proves useless (DPCfg-bnd.txt)
 #   - CoreDPBinaryKnapsackSolver          exact core / non-dominated-state DP
 #     re-solving with all its reoptimization (intReopt 3: the previous
 #     solution as the incumbent, and returned with no solve when the changes
@@ -41,7 +44,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-14  # number of (the names of) Solver in this BlockSolverConfig
+15  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -66,8 +69,9 @@ BranchAndXSolver
 # 13th: BX best-first, reoptimization on
 BranchAndXSolver
 RECORDBinaryKnapsackSolver            # 14th: RECORD, same as the 3rd
+DPBinaryKnapsackSolver                # 15th: the 2nd, pruned by bounds
 
-14  # number of ComputeConfig in this BlockSolverConfig
+15  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -396,6 +400,9 @@ intReoptimize 1
 
 # 14th: RECORD under the same reoptimization of the 3rd
 *CDPCfg-reopt3.txt
+
+# 15th: the full-table DP pruned by bounds
+*DPCfg-bnd.txt
 
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 

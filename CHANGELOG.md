@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `BinaryKnapsackBlock`: `BSPar.txt` and `BSPar-mixed.txt` also attach the
+  `DPBinaryKnapsackSolver` that prunes the states by bounds
+  (`DPCfg-bnd.txt`), which must give the same optimum as the full table
+- `UCBlock`: `BSCfg.txt`, the lineup of the batteries of `batches-tub`, also
+  attaches the `ThermalUnitDPSolver`, with the whole graph and searched by
+  bounds in topological order and in A* order (`intBoundPrune` 0, 1 and 2)
 - `MasterProblemBlock`: the components may start empty (`-M 0`) and become
   empty again, with the fictitious bounds of a bundle method; the dual
   master (`-d`) and its global lower bound (`-g`); with all the components

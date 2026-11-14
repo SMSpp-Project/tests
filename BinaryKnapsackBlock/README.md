@@ -19,7 +19,9 @@ all of them against a number nobody here computed.
 The cross-check lineups are the `BSPar*`, and the principle is that a run
 attaches at once every `:Solver` that has to give the same answer.
 [BSPar.txt](BSPar.txt) is the pure-binary one: a `:MILPSolver` on the exact
-MIP, the full-table `DPBinaryKnapsackSolver` and its core variant (which
+MIP, the full-table `DPBinaryKnapsackSolver`, once as it is and once not
+expanding the states that the Dantzig bound of the items left proves useless,
+and its core variant (which
 re-solves with all its reoptimization, `RECORDBinaryKnapsackSolver` doing the
 same when the build has RECORD), the
 `BranchAndXSolver` in each of its exploration modes, and the
@@ -32,7 +34,8 @@ without the full-table DP, for the instances on which the whole lineup would
 not finish. The rest are the harnesses of one path at a time, i.e., the lazy
 bounding protocol, the reoptimization, the diving and the thread scaling of
 the `BranchAndXSolver`. The `ComputeConfig` they share are the fragments
-[MILPCfg.txt](MILPCfg.txt), [DPCfg.txt](DPCfg.txt), [CDPCfg.txt](CDPCfg.txt),
+[MILPCfg.txt](MILPCfg.txt), [DPCfg.txt](DPCfg.txt),
+[DPCfg-bnd.txt](DPCfg-bnd.txt), [CDPCfg.txt](CDPCfg.txt),
 [GRCfg.txt](GRCfg.txt) and
 [BX-baseCfg.txt](BX-baseCfg.txt), each written once and pointed at by whoever
 needs it.

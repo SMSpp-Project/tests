@@ -179,8 +179,9 @@ the `test` directory of the module itself.
   `batch-conversion`, against PyPSA and against the known optima of
   multi-energy instances), as well as for
   quite a lot of the mechanics of the SMS++ core library. The same suite runs
-  `TUDPS_test`, which compares the `ThermalUnitExtDPSolver` specialised
-  Dynamic Programming `:Solver` with a `:MILPSolver` on some of the (many)
+  `TUDPS_test`, which compares the specialised Dynamic Programming `:Solver`
+  (`ThermalUnitExtDPSolver`, and `ThermalUnitDPSolver` with and without its
+  search by bounds) with a `:MILPSolver` on some of the (many)
   different formulations `ThermalUnitBlock` supports, and the formulations
   with each other, the unit being read once per `BlockConfig` of the list
   that the battery gives with `-F`; its batches are in

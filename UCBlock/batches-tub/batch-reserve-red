@@ -32,7 +32,7 @@ PER_FAMILY=5
 # per BlockConfig TUBCfg-<form>.txt that TUBForm-PC.txt lists, i.e., every
 # formulation (3bin/T/pt/DP/SU/SD/SUSD) with the perspective cuts, each copy is
 # solved by the same Solver, and the copies must agree with each other as the
-# two Solver of each copy do. On the large-horizon families (L_B_C_26 /
+# Solver of each copy do. On the large-horizon families (L_B_C_26 /
 # L_B_C_31, TimeHorizon 216) the interval-based formulations (pt/DP/SU/SD/SUSD)
 # are too expensive, so there the list is TUBForm-PC-3bin-T.txt, which keeps
 # only 3bin/T.

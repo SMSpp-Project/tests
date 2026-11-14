@@ -5,7 +5,7 @@
 # continuous variables): attaches every solver that handles continuous
 # variables and must give the SAME optimal value: the :MILPSolver (the exact
 # reference), the two exact dynamic programs (full-table
-# DPBinaryKnapsackSolver
+# DPBinaryKnapsackSolver, also pruned by bounds,
 # and core CoreDPBinaryKnapsackSolver), and the greedy relaxation in both its
 # from-scratch and incremental flavours, whose true bounds must BRACKET that
 # optimum (see SolveAll() in test.cpp). The BranchAndXSolver is NOT here: it
@@ -24,7 +24,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-5  # number of (the names of) Solver in this BlockSolverConfig
+6  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                                # 1st: the exact reference
@@ -37,8 +37,9 @@ DPBinaryKnapsackSolver                         # 2nd: exact full-table DP
 CoreDPBinaryKnapsackSolver                     # 3rd: exact core DP
 GreedyRelaxationBinaryKnapsackSolver           # 4th: relaxation, brackets
 GreedyRelaxationBinaryKnapsackSolver           # 5th: relaxation, incremental
+DPBinaryKnapsackSolver                         # 6th: the 2nd, bounded
 
-5  # number of ComputeConfig in this BlockSolverConfig
+6  # number of ComputeConfig in this BlockSolverConfig
 # now all the ComputeConfig (factored, shared with BSPar.txt) - - - - - - - -
 
 *MILPCfg.txt
@@ -46,6 +47,7 @@ GreedyRelaxationBinaryKnapsackSolver           # 5th: relaxation, incremental
 *CDPCfg.txt
 *GRCfg.txt
 *GRCfg-incr.txt  # the greedy fill kept across the Changes
+*DPCfg-bnd.txt   # the full-table DP pruned by bounds
 
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
