@@ -1,8 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar-LDS.txt - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
-# a LagrangianDualSolver using a BundleSolver as the inner Solver
+# A txt description of a BlockSolverConfig for a
+# CapacitatedFacilityLocationBlock to be solved by a LagrangianDualSolver
+# using a BundleSolver as the inner Solver
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,7 +14,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-LagrangianDualSolver    # name of 2nd Solver
+LagrangianDualSolver    # name of 1st Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -97,7 +98,8 @@ str_LagBF_BSCfg         LPBSCfg-K-DP.txt
 #                      DPBinaryKnapsackSolver
 # BlockSolverConfig for the LagBFunctions
 #str_LagBF_BSCfg        LPBSCfg-K-CX.txt
-#                      this is for the Flow relaxation, using a :MILPSolver
+#                      this is for the Knapsack relaxation, using a
+#                      :MILPSolver
 
 0  # number of vector-of-int parameters
 
