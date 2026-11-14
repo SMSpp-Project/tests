@@ -8,7 +8,11 @@
 # all of which must reach the same optimum after each runtime Modification.
 # Retention is strategy-independent: the strategy only decides the order in
 # which the re-seeded frontier is re-explored (the parallel depth-first
-# exploration, which retains nothing, is deliberately not here).
+# exploration, which retains nothing, is deliberately not here). The last
+# two re-seed best-first with intReoptimize = 2, which bounds each node of
+# the frontier again by shifting its bound instead of evaluating it, and
+# evaluates the nodes this does not fence at once (eager) or when they are
+# extracted (lazy).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -17,7 +21,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-5  # number of (the names of) Solver in this BlockSolverConfig
+7  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -31,8 +35,11 @@ BranchAndXSolver
 BranchAndXSolver                      # 4th: BX depth-first serial, reopt on
 # 5th: BX breadth-first, reoptimization on
 BranchAndXSolver
+BranchAndXSolver                      # 6th: BX best-first, shifted bounds
+# 7th: BX best-first, shifted bounds, lazy
+BranchAndXSolver
 
-5  # number of ComputeConfig in this BlockSolverConfig
+7  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -166,6 +173,83 @@ intMaxThread   1
 # now all the integer parameters
 intReoptimize  1
 intSolveMethod 1
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 6: BranchAndXSolver, best-first, the frontier bounded by shifting
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize 2
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 7: BranchAndXSolver, best-first, shifted bounds, lazy protocol
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize       2
+intBoundingProtocol 1
 
 0  # number of double parameters
 

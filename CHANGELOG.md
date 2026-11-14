@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on every second-stage Variable, whose lower bound the feasibility cut
   counts through the multipliers of the columns
 
+- `BinaryKnapsackBlock`: `BSPar-reopt.txt` also re-seeds best-first with
+  `intReoptimize` 2 (the frontier bounded by shifting), with the eager and
+  with the lazy protocol
+
 ### Changed
 
 - `HQPBlock`: in CI `batch-radial` runs only the steps of the control
@@ -29,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the unit test
 - `SVMBlock`: the three Benders of `test_bds` read the configuration of the
   subproblems from `BDSSCfg.txt`, of which `BSPar-BDS-sub.txt` was a copy
+
+- `BinaryKnapsackBlock`: `-v` sets the log of the Solver, as in the other
+  testers
 
 ### Fixed
 

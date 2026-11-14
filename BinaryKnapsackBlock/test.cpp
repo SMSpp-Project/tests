@@ -309,6 +309,7 @@ static bool run_pisinger( const std::string & csv , const std::string & sconf )
   return( false );
   }
  s_config_Block( BKB , bsc , sconf );
+ apply_solver_verbosity( BKB );  // -v drives Solver::intLogVerb
  if( BKB->get_registered_solvers().empty() ) {
   cerr << "Error: BlockSolverConfig did not register any Solver" << endl;
   return( false );
@@ -571,6 +572,7 @@ int main( int argc , char **argv )
   exit( 1 );
   }
  s_config_Block( BKB , bsc , sconf_file );
+ apply_solver_verbosity( BKB );  // -v drives Solver::intLogVerb
 
  // check Solvers - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
