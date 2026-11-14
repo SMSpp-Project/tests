@@ -123,8 +123,8 @@
 
 #include "common_utils.h"
 
-// if SMSpp_ensure_load() need not be used, BoxSolver.h need not be included
-// unless DIRECTION_TEST > 0
+// the linker keeps BoxSolver [see SMSpp_force_load_<class>], hence
+// BoxSolver.h need not be included unless DIRECTION_TEST > 0
 #if DIRECTION_TEST
  #include "BoxSolver.h"
 #endif
