@@ -150,6 +150,12 @@ bool minobj;                // whether min or max
 bool isquad;                // whether lin or quad
 
 std::mt19937 rg;            // base random generator
+double cpert = 0;           // size of the perturbation of the costs
+
+// the linear costs of each sub-Block, as the tester has set them: those
+// in the Objective are not, the LagBFunction writing its Lagrangian costs
+// there
+std::vector< std::vector< FunctionValue > > LinC;
 std::uniform_real_distribution<> dis( 0.0 , 1.0 );
 
 /*--------------------------------------------------------------------------*/
@@ -242,11 +248,14 @@ static AbstractBlock * construct_son( void )
  // construct the Objective
  auto obj = new FRealObjective();
  Function *f;
+ auto & lc = LinC.emplace_back( nvar );
  if( isquad ) {  // quadratic objective
   v_coeff_triple vt( nvar );
   auto vit = vt.begin();
   for( auto & xi : *x )
    set_quad( xi , *(vit++) );
+  for( Index i = 0 ; i < nvar ; ++i )
+   lc[ i ] = std::get< 1 >( vt[ i ] );
 
   f = new DQuadFunction( std::move( vt ) );
   }
@@ -255,6 +264,8 @@ static AbstractBlock * construct_son( void )
   auto vit = vp.begin();
   for( auto & xi : *x )
    set_lin( xi , *(vit++) );
+  for( Index i = 0 ; i < nvar ; ++i )
+   lc[ i ] = vp[ i ].second;
 
   f = new LinearFunction( std::move( vp ) );
   }
@@ -389,7 +400,10 @@ static bool SolveBoth( void )
    };
   print_instance_line(
    { t1 , t2 } ,
-   { tok( hs1st , rtrn1st , rd[ 0 ] ) , tok( hs2nd , rtrn2nd , rd[ 1 ] ) } ,
+   { tok( hs1st , rtrn1st , rd[ 0 ] ) ,
+     // the iterations of the call, which say what re-optimization is worth
+     tok( hs2nd , rtrn2nd , rd[ 1 ] ) + " #" +
+     std::to_string( Slvr2->get_elapsed_iterations() ) } ,
    std::numeric_limits< double >::quiet_NaN() , verdict );
   return( ok );
   }
@@ -427,6 +441,7 @@ static bool process_specific_arg( int opt )
   case( 'N' ): Str2Sthg( optarg , nvar );      return( true );
   case( 's' ): Str2Sthg( optarg , nson );      return( true );
   case( 'd' ): Str2Sthg( optarg , dens );      return( true );
+  case( 'P' ): Str2Sthg( optarg , cpert );     return( true );
   default:                                     return( false );
   }
  }
@@ -458,17 +473,22 @@ int main( int argc , char **argv )
   "                                    64 a linking constraint is added\n"
   "                                    or removed, 128 weights on the\n"
   "                                    Objective of the sub-Blocks\n" );
- short_opts += "N:s:d:";
+ short_opts += "N:s:d:P:";
  const std::vector< option > my_opts = {
    { "nvar" , required_argument , nullptr , 'N' } ,
    { "nson" , required_argument , nullptr , 's' } ,
-   { "dens" , required_argument , nullptr , 'd' } };
+   { "dens" , required_argument , nullptr , 'd' } ,
+   { "cpert" , required_argument , nullptr , 'P' } };
  long_opts.insert( std::prev( long_opts.end() ) ,
                    my_opts.begin() , my_opts.end() );
  help += "  -N, --nvar <n>                  number of variables [10]\n"
          "  -s, --nson <n>                  number of sub-Blocks [2]\n"
          "  -d, --dens <x>                  constraints as fraction of "
-         "nvar*nson [0.1]\n";
+         "nvar*nson [0.1]\n"
+         "  -P, --cpert <x>                 with x > 0, a cost moves by x "
+         "times a value\n"
+         "                                  in [ -1 , 1 ] rather than taking "
+         "it [0]\n";
 
  process_args( argc , argv , process_specific_arg );
 
@@ -591,6 +611,7 @@ int main( int argc , char **argv )
   exit( 1 );
   }
  s_config_Block( TestBlock , bsc , sconf_file );
+ apply_solver_verbosity( TestBlock );  // -v drives Solver::intLogVerb
 
  if( TestBlock->get_registered_solvers().empty() ) {
   cout << endl << "no Solver registered to the Block!" << endl;
@@ -666,11 +687,22 @@ int main( int argc , char **argv )
 
     auto obj = static_cast< FRealObjective * >( BoxBlock->get_objective() );
 
+    // with cpert > 0 the cost i moves by cpert times the value in [ -1 , 1 ]
+    // drawn for it, otherwise it takes that value
+    auto & lc = LinC[ rep % nson ];
+    auto perturb = [ & ]( Index k , Index i ) {
+     if( cpert > 0 )
+      NC[ k ] = lc[ i ] + cpert * NC[ k ];
+     lc[ i ] = NC[ k ];
+     };
+
     if( dis( rg ) <= 0.5 ) {  // in 50% of the cases do a ranged change
      LOG1( "(r) - " );
 
      Index strt = dis( rg ) * ( nvar - tochange );
      Index stp = strt + tochange;
+     for( Index k = 0 ; k < tochange ; ++k )
+      perturb( k , strt + k );
 
      if( isquad ) {  // quadratic objective
       auto qf = static_cast< DQuadFunction * >( obj->get_function() );
@@ -702,6 +734,8 @@ int main( int argc , char **argv )
     else {  // in the other 50% of the cases, do a sparse change
      LOG1( "(s) - " );
      Subset nms( GenerateRand( nvar , tochange , rg ) );
+     for( Index k = 0 ; k < tochange ; ++k )
+      perturb( k , nms[ k ] );
 
      if( isquad ) {  // quadratic objective
       auto qf = static_cast< DQuadFunction * >( obj->get_function() );

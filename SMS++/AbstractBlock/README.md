@@ -48,6 +48,10 @@ The usage of the executable is the following:
        #chng: number changes [10]
        %chng: probability of changing [0.5]
 
+With `-P x`, x > 0, a cost that changes moves by x times a value drawn in
+[ -1 , 1 ] rather than taking that value, so that the size of the change of
+the costs between two calls is controlled.
+
 Bit 7 gives the Objective of each sub-Block a weight in [ 0.1 , 10 ] [see
 `Block::set_objective_weight()`], and the root one that no Solver attached to
 it sees: the `:MILPSolver` applies them by itself, the `LagrangianDualSolver`
@@ -70,7 +74,16 @@ of the random generator, in either of two regimes: `LDS`, the default, where
 the Lagrangian dual is computed and cross-checked against the Linear Program,
 and `PPH`, where what is exercised is the primal proximal heuristic. All of
 them passing is a good sign that no regressions have been done for the tested
-modules.
+modules. A third regime, `SHIFT`, is the `LDS` one with
+[BSPar-Shift.txt](BSPar-Shift.txt), whose `BundleSolver` keeps the global
+lower bound through a change of the costs of a sub-Block, moved by the least
+that the `LagBFunction` can have changed over the box of the `Variable`, rather
+than dropping it (bit 3 of `intRstAlg`); in the extended output (`-v`, or
+`verbose=1`) the value of the `LagrangianDualSolver` is followed by `#` and the
+iterations of its call, which say what the re-optimization is worth. The two
+`LagrangianDualSolver` are not in the same BlockSolverConfig since they cannot
+share the sub-Block, each writing its Lagrangian costs in their
+`Objective`.
 
 
 ## The copy of the abstract representation

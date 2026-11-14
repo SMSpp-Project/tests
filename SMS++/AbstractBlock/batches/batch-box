@@ -4,9 +4,12 @@
 #        < exe file > = path of the executable file,
 #                       default ./LagrangianDualSolver_Box_test
 #        < regime >   = LDS, the Lagrangian dual cross-checked against the
-#                       Linear Program (default), or PPH, the primal proximal
-#                       heuristic; anything else is taken to be the
-#                       BlockSolverConfig file to run with, in the LDS regime
+#                       Linear Program (default), SHIFT, the same with the
+#                       BundleSolver keeping the global lower bound through
+#                       a change of the costs of a sub-Block, or PPH, the
+#                       primal proximal heuristic; anything else is taken to
+#                       be the BlockSolverConfig file to run with, in the LDS
+#                       regime
 #
 # runs the tests over a range of sizes, number of sub-blocks, densities and
 # seeds. The two regimes differ in what is registered to the father and in
@@ -20,6 +23,7 @@ exe=${1:-./LagrangianDualSolver_Box_test}
 
 case ${2:-LDS} in
   LDS) par=BSPar.txt    ; what=15 ; iter=   ;;
+  SHIFT) par=BSPar-Shift.txt ; what=15 ; iter= ;;
   PPH) par=ProxHeur.txt ; what=63 ; iter=40 ;;
   *)   par=$2           ; what=15 ; iter=   ;;
 esac

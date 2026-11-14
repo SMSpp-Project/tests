@@ -1,0 +1,83 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BSPar-Shift.txt - - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for a Block to be solved by two
+# different Solver: a :MILPSolver and a LagrangianDualSolver using a
+# BundleSolver as the inner Solver, the same as BSPar.txt save for the
+# BundleSolver keeping the global lower bound through a change of the costs
+# of a sub-Block known in an interval (bit 3 of intRstAlg) rather than
+# dropping it. It is a BlockSolverConfig of its own, rather than one more
+# LagrangianDualSolver of BSPar.txt, since two LagrangianDualSolver cannot
+# share the sub-Block: each writes its Lagrangian costs in their Objective
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+#CPXMILPSolver                  # name of 1st Solver
+GRBMILPSolver                   # name of 1st Solver
+#SCIPMILPSolver                 # name of 1st Solver
+#HiGHSMILPSolver                # name of 1st Solver
+LagrangianDualSolver            # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the :MILPSolver
+*LPCCfg.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualSolver, whose BundleSolver keeps the
+# global lower bound through a change of the costs of a sub-Block
+*LDSCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intRstAlg             10 # current point from the Variable, interval shift
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# the "extra" Configuration slot, which this block does not change
+# but has to write all the same: an override block that leaves it
+# out is read on to the end of the stream, and so swallows whatever
+# follows it in the enclosing file, i.e. the next ComputeConfig
+*  # [none]
+
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BSPar-Shift.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

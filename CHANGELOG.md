@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `LagrangianDualSolver_Box_test`: the regime `SHIFT` of `batch-box`, with
+  `BSPar-Shift.txt`, whose `BundleSolver` keeps the global lower bound
+  through a change of the costs of a sub-Block (bit 3 of `intRstAlg`); the
+  ComputeConfig of the `LagrangianDualSolver` is `LDSCfg.txt` for both; the
+  extended output gives the iterations of each call, and `-v` the log of the
+  Solver
+
 - `MasterProblemBlock`: the components may start empty (`-M 0`) and become
   empty again, with the fictitious bounds of a bundle method; the dual
   master (`-d`) and its global lower bound (`-g`); with all the components
