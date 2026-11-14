@@ -142,8 +142,8 @@ R3Block is the MCF flow relaxation (the default and `batch-mcf`) the `wchg`
 bitmask must include the +512 bit ("set eps & no negative design"), otherwise
 the natural-LP and MCF bounds diverge after a few modification rounds. Only
 the scenarios that currently pass are registered with `ctest` (see the
-`CMakeLists.txt` for the per-batch status); the `batch-ld` and `batch-ldvscuts`
-arrangements are known to be broken and are kept off.
+`CMakeLists.txt` for the per-batch status); `batch-ldvscuts` is kept off,
+since the two bounds it compares are both valid but differ in general.
 
 A makefile is also provided that builds the executable including the
 `LagrangianDualSolver` module, the `BundleSolver` module, the `MILPSolver`
