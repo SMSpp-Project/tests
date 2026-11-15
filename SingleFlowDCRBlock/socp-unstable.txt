@@ -8,11 +8,13 @@
 # difficulties it cannot recover from (status 12), declares optimal a
 # solution whose value is far from its own bound, or gives an optimum away
 # from the one of the SingleFlowDCRBendersSolver and of the P/C formulation
-# by more than the tolerance, within the one of its cones. A failure that
-# depends on the setting would come and go with the version of Gurobi and
-# with the machine, hence batch-instances leaves them out of the SOCP
-# formulation, and batch-instances-cplex solves them with CPLEX, which
-# solves all of them.
+# by more than the tolerance, within the one of its cones; one more,
+# waxman/w1_700_08_1, is solved with 1 thread and with all those of the
+# machine but not with the 4 of GRBCfg.txt. A failure that depends on the
+# setting would come and go with the version of Gurobi and with the
+# machine, hence batch-instances leaves them out of the SOCP formulation,
+# and batch-instances-cplex solves them with CPLEX, which solves all of
+# them.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -116,6 +118,7 @@ waxman/w1_400_04_6
 waxman/w1_400_08_8
 waxman/w1_600_08_0
 waxman/w1_600_08_5
+waxman/w1_700_08_1
 waxman/w1_700_08_6
 waxman/w1_800_04_0
 

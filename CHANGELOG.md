@@ -36,6 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `SingleFlowDCRBlock`: Gurobi runs on 4 threads rather than 1 in
+  `GRBCfg.txt`, with which it gave a bound above the optimum on
+  `topo/Garr201112_1` and failed on `topo/Globenet_8` in the SOCP
+  formulation, two instances that `socp-unstable.txt`, measured with more
+  threads, does not leave out; `waxman/w1_700_08_1`, which Gurobi solves
+  with 1 thread but not with 4, is added to it
 - `UCBlock`: `TUDPS_test` solved the unit only with the first and the last
   `Solver` of the `BlockSolverConfig`, leaving out those in between: it now
   solves it with every `Solver` and compares each of them with the first
