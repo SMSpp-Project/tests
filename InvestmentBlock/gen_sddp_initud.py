@@ -74,7 +74,18 @@ maximum power) and a slack unit at 1000 per MWh. Each sub-scenario has
 three random data groups of 4 values: the demand, the inflows (the first
 also into the constant of the BendersBFunction) and the linear cost of the
 second thermal unit. sddp_warm_down.nc4 has the scenarios of sddp_warm.nc4
-with the demand lowered by 20 percent.
+with the demand lowered by 20 percent, and sddp_warm_<e>.nc4 those with
+each value multiplied by 1 + e u, u uniform in [-1, 1] (seeded), for e =
+0.01, 0.05 and 0.2, on which the cuts are also moved. The constants of the
+groups (vdblScenarioLipschitz) hold by construction: a demand lower by d
+costs at least 1000 d less (the old solution plus d of deficit is
+feasible) and a higher one never costs less (any unit can produce less,
+the turbine can spill instead), an inflow lower never costs less (the new
+water can be spilled) and one higher by d costs at least 1000 d less (d
+less water is at most d less MWh, covered by the deficit, also in the
+stages after), and a cost lower by d costs at most 60 d less per instant
+(the power of the unit is in [0, 60]) and a higher one never less; hence
+the constants are (1000, 0), (0, 1000) and (60, 0).
 
 usage: gen_sddp_initud.py <output directory>
 
@@ -83,6 +94,7 @@ The instances are written by ncgen from their CDL, and the reference values
 in the form the battery reads them.
 """
 
+import random
 import subprocess
 import sys
 from pathlib import Path
@@ -259,6 +271,8 @@ def ib_file(variant, bounds=(1, 1), cost=0):
 W_STAGES = 4
 W_SCEN = 2
 W_DOWN = 0.8
+W_EPS = [0.01, 0.05, 0.2]
+W_SEED = 20261114
 
 
 def warm_data(k, s):
@@ -370,13 +384,15 @@ def warm_stage(s):
         "}"]
 
 
-def warm_file(demand=1):
+def warm_file(demand=1, eps=0):
+    rng = random.Random("%s-%s" % (W_SEED, eps))
     scen = []
     for k in range(W_SCEN):
         row = []
         for s in range(W_STAGES):
             x = warm_data(k, s)
-            row += [demand * v for v in x[0:T]] + x[T:]
+            x = [demand * v for v in x[0:T]] + x[T:]
+            row += [v * (1 + eps * rng.uniform(-1, 1)) for v in x]
         scen.append(vals(row))
     o = ["netcdf sddp_warm {", ":SMS++_file_type = 1 ;", "group: SDDPBlock {",
          "dimensions:", " NumPolyhedralFunctionsPerStage = 1 ;",
@@ -431,6 +447,9 @@ def main():
     # the hydro-thermal family, and its demand lowered
     write(out, "sddp_warm", warm_file())
     write(out, "sddp_warm_down", warm_file(W_DOWN))
+    for e in W_EPS:
+        write(out, "sddp_warm_%g" % e, warm_file(eps=e))
+    print("WARM_EPS=(%s)" % " ".join("%g" % e for e in W_EPS))
     print("INVEST_DESIGN=1.3")
     print("INVEST_FIXED=(%s)" % " ".join("%g" % x for x in FIXED))
 

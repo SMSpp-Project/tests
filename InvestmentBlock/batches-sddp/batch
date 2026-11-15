@@ -38,7 +38,11 @@
 # new data, which a solution from scratch gives, and the last one must
 # reach it, while with the cuts kept as they are (SDDPSCfg-sddp-keep.txt)
 # some lower bound must exceed it, i.e., the battery sees the bound that is
-# not valid. They take seconds, hence they all run in CI too.
+# not valid. Then the same SDDPBlock is solved again with its scenarios
+# changed by 1, 5 and 20 percent (sddp_warm_<e>.nc4), the cuts of the first
+# solution moved (SDDPSCfg-sddp-warm.txt) or removed: both must reach the
+# same lower bound, the moved cuts in no more iterations, while those kept
+# are only shown. They take seconds, hence they all run in CI too.
 
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -274,5 +278,57 @@ for v in cold keep; do
     say "  cuts ${v}: lower bounds from ${lb[0]:-none} to ${lb[-1]:-none}," \
         "optimum ${opt} -> ${verdict}"
 done
+
+# the iterations after which a lower bound first agrees with, or exceeds,
+# the first argument
+reached() {
+    local v=$1
+    shift
+    local i=0
+    for b in "$@"; do
+        i=$(( i + 1 ))
+        if agree "${b}" "${v}" || awk -v a="${b}" -v b="${v}" \
+               'BEGIN { exit( ( a >= b ) ? 0 : 1 ) }'; then
+            echo ${i}
+            return
+        fi
+    done
+    echo none
+}
+
+for e in "${WARM_EPS[@]}"; do
+    print_header "moved cuts ${e}"
+    declare -A LB=()
+    for v in keep cold warm; do
+        scfg=SDDPSCfg-sddp-${v}.txt
+        [ ${v} = cold ] && scfg=SDDPSCfg-sddp.txt
+        mkdir -p "${work}/warm_${v}_${e}"
+        run_tool "warm_${v}_${e}.log" "${sddpexe}" "${cfg[@]}" -S "${scfg}" \
+                 -d "warm_${v}_${e}" -r "sddp_warm_${e}.nc4" sddp_warm.nc4
+        LB[${v}]=$( lower_bounds "warm_${v}_${e}.log" r )
+    done
+    read -r -a cold <<< "${LB[cold]}"
+    read -r -a warm <<< "${LB[warm]}"
+    read -r -a keep <<< "${LB[keep]}"
+    final=${cold[-1]}
+    rc=$( reached "${final}" "${cold[@]}" )
+    rw=$( reached "${final}" "${warm[@]}" )
+    wrong=""
+    if ! agree "${warm[-1]}" "${final}"; then
+        wrong="the final lower bounds"
+    fi
+    if [ "${rw}" = none ] || [ "${rw}" -gt "${rc}" ]; then
+        wrong="${wrong:+${wrong} and }the iterations"
+    fi
+    verdict="${GREEN}OK${NC}"
+    if [ -n "${wrong}" ]; then
+        verdict="${RED}KO: ${wrong} differ(s)${NC}"
+        failed=1
+    fi
+    say "  lower bound ${final}: removed cuts from ${cold[0]} in ${rc}," \
+        "moved cuts from ${warm[0]} in ${rw} iterations; kept cuts from" \
+        "${keep[0]} to ${keep[-1]} -> ${verdict}"
+done
+
 
 exit ${failed}

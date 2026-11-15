@@ -1,0 +1,60 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - SDDPSCfg-sddp-warm.txt  - - - - - - - - - - - - -
+#
+# The BlockSolverConfig with which sddp_solver -r solves the SDDPBlock of
+# the hydro-thermal family of batches-sddp/batch again after a change of
+# its scenarios, moving the cuts of the previous solution by the amount
+# that keeps them valid: the trainer of SDDPSCfg-sddp.txt with
+# intCutsOnChange 1 and the constants of the three random data groups of
+# the family (demand, inflows, cost), which gen_sddp_initud.py derives.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+ParallelSDDPSolver    # name of 1st Solver (the trainer)
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+*SDDPCfg-sddp.txt +
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intCutsOnChange  1  # the cuts are moved when the scenarios change
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+1  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+vdblScenarioLipschitz  6 1000 0 0 1000 60 0  # demand, inflows, cost
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END SDDPSCfg-sddp-warm.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

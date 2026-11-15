@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InvestmentBlock`: `batches-sddp/batch` also solves the hydro-thermal
+  SDDPBlock again with its scenarios changed by 1 %, 5 % and 20 %: the cuts
+  moved (`SDDPSCfg-sddp-warm.txt`) must reach the lower bound of the cuts
+  removed (`SDDPSCfg-sddp.txt`) in no more iterations, and the cuts kept
+  (`SDDPSCfg-sddp-keep.txt`), whose bound need not be valid, are shown
+
 - `InvestmentBlock`: `batches-sddp/batch` solves the hydro-thermal SDDPBlock
   that `gen_sddp_initud.py` writes and solves it again with its demand
   lowered by 20 %, which lowers the costs: with the cuts removed
