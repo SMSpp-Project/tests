@@ -49,6 +49,8 @@
 
 #include "ChangeSolver.h"
 
+#include <algorithm>
+
 #include <random>
 
 #include <chrono>
@@ -163,12 +165,25 @@ bool CrossCheckSolvers( void )
  // of the base contract, whose two ends are valid bounds on the optimum of
  // THIS problem [see GreedyRelaxationBinaryKnapsackSolver::get_lb()], so it
  // is an ordinary inexact Solver as far as the cross-check goes and it is
- // held to the width its -E declares, like every other one
+ // held to the width its -E declares, like every other one, or to the one
+ // it is sure to have, whichever is larger: its upper bound exceeds the
+ // value of its greedy fill by at most the profit of the critical item, a
+ // width that no relative tolerance bounds when the optimum is (close to)
+ // 0, say when no item fits the capacity
+ double pmax = 0;
+ for( Index i = 0 ; i < BKB->get_NItems() ; ++i )
+  pmax = std::max( pmax , std::abs( BKB->get_Profit( i ) ) );
  SolverClassifier classify =
-  [ &feasible , &bracket ]( Solver * s , std::size_t k ) -> SolverReading {
+  [ &feasible , &bracket , pmax ]( Solver * s , std::size_t k )
+  -> SolverReading {
    feasible[ k ] = 1;
    bracket[ k ] = bool( dynamic_cast< RelaxationSolver * >( s ) );
-   return( read_bounds( s , k ) );
+   auto r = read_bounds( s , k );
+   if( bracket[ k ] && std::isfinite( r.eps ) )
+    r.eps = std::max( r.eps , pmax / std::max( 1.0 ,
+                                  std::min( std::abs( r.lb ) ,
+                                            std::abs( r.ub ) ) ) );
+   return( r );
    };
 
  const double ref = have_ref ? ref_opt

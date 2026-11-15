@@ -39,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `BinaryKnapsackBlock`: the tester holds the greedy relaxation to the
+  width of its bracket that it is sure to have, the profit of the critical
+  item, when that is larger than the one its `-E` declares, since no
+  relative tolerance bounds it when the optimum is (close to) 0, as with
+  `-d 0.01` and no item that fits the capacity
+
 - `MMCFBlock`: the suite is in the build without `MCFLemonSolver`, which only
   `batch-c` runs and which is then a test (labelled with it) only where the
   module is, so that `MMCFBlock_ML_bench` is no longer lost with it; the ML
