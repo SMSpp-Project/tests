@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InvestmentBlock`: `batches-sddp/batch` solves the hydro-thermal SDDPBlock
+  that `gen_sddp_initud.py` writes and solves it again with its demand
+  lowered by 20 %, which lowers the costs: with the cuts removed
+  (`SDDPSCfg-sddp.txt`, the default) every lower bound must be at most the
+  optimum of a solution from scratch of the new data, and with the cuts kept
+  (`SDDPSCfg-sddp-keep.txt`) some lower bound must exceed it
+
 - `HQPBlock`: `batches/batch-qcqp`, a hierarchy with quadratic and one with
   conic hard rows built by the tester (`-Q quad`, `-Q conic`), loaded into
   an `HQPBlock` for each formulation of `-F` (`HQPForms-quad.txt`,

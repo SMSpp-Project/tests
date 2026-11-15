@@ -63,6 +63,19 @@ change while the investment cost grows, hence the optimum is at s = 1.3 and
 its value is below those at 1.2 and 1.4 (printed as INVEST_DESIGN and
 INVEST_FIXED).
 
+Besides, sddp_warm.nc4 and sddp_warm_down.nc4 are the instances on which a
+re-solution after a change of the scenarios that lowers the costs is
+compared with the cuts kept and removed [see SDDPSolver, intCutsOnChange]
+and with a solution from scratch of the new data: 4 stages of 4
+instants each and two scenarios, one bus with a reservoir that can turbine
+30 per instant at 1 MW per unit of flow and spill 1000, two thermal units
+(0 to 60, 10 and about 30 per MWh, no start-up cost, ramps as wide as the
+maximum power) and a slack unit at 1000 per MWh. Each sub-scenario has
+three random data groups of 4 values: the demand, the inflows (the first
+also into the constant of the BendersBFunction) and the linear cost of the
+second thermal unit. sddp_warm_down.nc4 has the scenarios of sddp_warm.nc4
+with the demand lowered by 20 percent.
+
 usage: gen_sddp_initud.py <output directory>
 
 The instances are written by ncgen from their CDL, and the reference values
@@ -242,6 +255,157 @@ def ib_file(variant, bounds=(1, 1), cost=0):
     return "\n".join(o + sddpblock(variant) + ["}", "}", "}"]) + "\n"
 
 
+# the hydro-thermal family of sddp_warm
+W_STAGES = 4
+W_SCEN = 2
+W_DOWN = 0.8
+
+
+def warm_data(k, s):
+    """demand, inflows and cost of the second thermal unit of the
+    sub-scenario of stage s in scenario k"""
+    d = [80 + 15 * k + 25 * ((s + t) % 3) for t in range(T)]
+    a = [4 + 4 * k + 3 * ((s + 2 * t) % 4) for t in range(T)]
+    c = [28 + 4 * k + 2 * s for t in range(T)]
+    return d + a + c
+
+
+def warm_ucblock(scen):
+    d, a, c = scen[0:T], scen[T:2 * T], scen[2 * T:3 * T]
+    return [
+        "group: Block {", "dimensions:", " TimeHorizon = %d ;" % T,
+        " NumberUnits = 4 ;", "variables:",
+        " double ActivePowerDemand(TimeHorizon) ;", ':id = "0" ;',
+        ':type = "UCBlock" ;', "data:",
+        " ActivePowerDemand = %s ;" % vals(d),
+        # the reservoir, whose volume is the state: a turbine and a spill
+        "group: UnitBlock_0 {", "dimensions:", " NumberHydroUnits = 1 ;",
+        ':type = "HydroSystemUnitBlock" ;',
+        "group: HydroUnitBlock_0 {", "dimensions:",
+        " NumberReservoirs = 1 ;", " NumberArcs = 2 ;", "variables:",
+        " uint StartArc(NumberArcs) ;", " uint EndArc(NumberArcs) ;",
+        " double MinVolumetric(NumberReservoirs) ;",
+        " double MaxVolumetric(NumberReservoirs) ;",
+        " double Inflows(NumberReservoirs, TimeHorizon) ;",
+        " double MinPower(NumberArcs) ;", " double MaxPower(NumberArcs) ;",
+        " double MinFlow(NumberArcs) ;", " double MaxFlow(NumberArcs) ;",
+        " uint NumberPieces(NumberArcs) ;",
+        " double LinearTerm(NumberArcs) ;",
+        " double ConstantTerm(NumberArcs) ;",
+        " double InitialVolumetric(NumberReservoirs) ;",
+        " double InitialFlowRate(NumberArcs) ;",
+        ':type = "HydroUnitBlock" ;', "data:", " StartArc = 0, 0 ;",
+        " EndArc = 1, 1 ;", " MinVolumetric = 0 ;", " MaxVolumetric = 200 ;",
+        " Inflows = %s ;" % vals(a), " MinPower = 0, 0 ;",
+        " MaxPower = 30, 0 ;", " MinFlow = 0, 0 ;", " MaxFlow = 30, 1000 ;",
+        " NumberPieces = 1, 1 ;", " LinearTerm = 1, 0 ;",
+        " ConstantTerm = 0, 0 ;", " InitialVolumetric = 100 ;",
+        " InitialFlowRate = 0, 0 ;", "}",
+        "group: PolyhedralFunctionBlock {", "dimensions:",
+        " PolyFunction_NumVar = 1 ;", ':type = "PolyhedralFunctionBlock" ;',
+        "}", "}"] + [
+        # the two thermal units, the second with a cost per instant
+        line for u, cost in ((1, None), (2, c)) for line in [
+            "group: UnitBlock_%d {" % u, "variables:", " double MinPower ;",
+            " double MaxPower ;", " double DeltaRampUp ;",
+            " double DeltaRampDown ;", " double StartUpLimit ;",
+            " double ShutDownLimit ;", " double StartUpCost ;",
+            " double LinearTerm%s ;" % ("" if cost is None else
+                                        "(TimeHorizon)"),
+            " double ConstTerm ;", " double InitialPower ;",
+            " int InitUpDownTime ;", " uint MinUpTime ;",
+            " uint MinDownTime ;", ':type = "ThermalUnitBlock" ;', "data:",
+            " MinPower = 0 ;", " MaxPower = 60 ;", " DeltaRampUp = 60 ;",
+            " DeltaRampDown = 60 ;", " StartUpLimit = 60 ;",
+            " ShutDownLimit = 60 ;", " StartUpCost = 0 ;",
+            " LinearTerm = %s ;" % ("10" if cost is None else vals(cost)),
+            " ConstTerm = 0 ;", " InitialPower = 0 ;",
+            " InitUpDownTime = -10 ;", " MinUpTime = 1 ;",
+            " MinDownTime = 1 ;", "}"]] + [
+        # the slack unit
+        "group: UnitBlock_3 {", "variables:", " double MaxPower ;",
+        " double ActivePowerCost ;", ':type = "SlackUnitBlock" ;', "data:",
+        " MaxPower = 1000 ;", " ActivePowerCost = 1000 ;", "}", "}"]
+
+
+def warm_stage(s):
+    # the data of the scenario mapped onto the stage: the demand into the
+    # UCBlock, the inflows into the reservoir and the first one into the
+    # constant of the BendersBFunction, and the cost into the second thermal
+    # unit
+    return [
+        "group: StochasticBlock_%d {" % s, "dimensions:",
+        " NumberDataMappings = 4 ;", " SetSizeSize = 8 ;",
+        " SetElementsSize = 14 ;", "variables:",
+        " char DataType(NumberDataMappings) ;",
+        " uint SetSize(SetSizeSize) ;", " uint SetElements(SetElementsSize) ;",
+        " string FunctionName(NumberDataMappings) ;",
+        " char Caller(NumberDataMappings) ;", ':type = "StochasticBlock" ;',
+        "data:", ' DataType = "DDDD" ;', " SetSize = 0, 0, 0, 0, 1, 1, 0, 0 ;",
+        " SetElements = 0, 4, 0, 4, 4, 8, 0, 4, 4, 0, 8, 12, 0, 4 ;",
+        ' FunctionName = "UCBlock::set_active_power_demand",'
+        ' "HydroUnitBlock::set_inflow",'
+        ' "BendersBFunction::modify_constants",'
+        ' "ThermalUnitBlock::set_linear_term" ;',
+        ' Caller = "BBFB" ;',
+        "group: AbstractPath {", "dimensions:", " PathDim = 4 ;",
+        " TotalLength = 10 ;", "variables:", " uint PathStart(PathDim) ;",
+        " char PathNodeTypes(TotalLength) ;",
+        " uint PathGroupIndices(TotalLength) ;", "data:",
+        " PathStart = 0, 2, 6, 7 ;", ' PathNodeTypes = "OBOBBBOOBB" ;',
+        " PathGroupIndices = _, 0, _, 0, 0, 0, _, _, 0, 2 ;", "}",
+        "group: Block {", "dimensions:", " NumVar = 1 ;",
+        ':type = "BendersBlock" ;',
+        "group: BendersBFunction {", "dimensions:", " NumVar = 1 ;",
+        " NumRow = 1 ;", " NumNonzero = 1 ;"] + warm_ucblock(
+            warm_data(0, s)) + [
+        "group: AbstractPath {", "dimensions:", " PathDim = 1 ;",
+        " TotalLength = 3 ;", "variables:",
+        " char PathNodeTypes(TotalLength) ;",
+        " uint PathGroupIndices(TotalLength) ;",
+        " uint PathElementIndices(TotalLength) ;",
+        " uint PathStart(PathDim) ;",
+        "data:", ' PathNodeTypes = "BBC" ;', " PathGroupIndices = 0, 0, 0 ;",
+        " PathElementIndices = _, _, 0 ;", " PathStart = 0 ;", "}", "}", "}",
+        "}"]
+
+
+def warm_file(demand=1):
+    scen = []
+    for k in range(W_SCEN):
+        row = []
+        for s in range(W_STAGES):
+            x = warm_data(k, s)
+            row += [demand * v for v in x[0:T]] + x[T:]
+        scen.append(vals(row))
+    o = ["netcdf sddp_warm {", ":SMS++_file_type = 1 ;", "group: SDDPBlock {",
+         "dimensions:", " NumPolyhedralFunctionsPerStage = 1 ;",
+         " TimeHorizon = %d ;" % W_STAGES,
+         " NumberScenarios = %d ;" % W_SCEN,
+         " SubScenarioSize = %d ;" % (3 * T),
+         " ScenarioSize = %d ;" % (3 * T * W_STAGES),
+         " NumberRandomDataGroups = 3 ;",
+         " AdmissibleStateSize = %d ;" % W_STAGES, " InitialStateSize = 1 ;",
+         "variables:", " uint SizeRandomDataGroups(NumberRandomDataGroups) ;",
+         " double Scenarios(NumberScenarios, ScenarioSize) ;",
+         " uint StateSize ;", " double AdmissibleState(AdmissibleStateSize) ;",
+         " double InitialState(InitialStateSize) ;", ':type = "SDDPBlock" ;',
+         "data:", " SizeRandomDataGroups = %d, %d, %d ;" % (T, T, T),
+         " Scenarios = %s ;" % ", ".join(scen), " StateSize = 1 ;",
+         " AdmissibleState = %s ;" % vals([100] * W_STAGES),
+         " InitialState = 100 ;"]
+    for s in range(W_STAGES):
+        o += warm_stage(s)
+    return "\n".join(o + [
+        "group: AbstractPath {", "dimensions:", " PathDim = 1 ;",
+        " TotalLength = 4 ;", "variables:",
+        " char PathNodeTypes(TotalLength) ;",
+        " uint PathGroupIndices(TotalLength) ;", " uint PathStart(PathDim) ;",
+        "data:", ' PathNodeTypes = "OBBB" ;',
+        " PathGroupIndices = _, 0, 0, 1 ;", " PathStart = 0 ;", "}",
+        "}", "}"]) + "\n"
+
+
 def write(out, name, text):
     c = out / (name + ".cdl")
     c.write_text(text)
@@ -264,6 +428,9 @@ def main():
     write(out, "ib_sddp_invest", ib_file("minup1", (0.5, 2), 100))
     for x in FIXED:
         write(out, "ib_sddp_fix_%g" % x, ib_file("minup1", (x, x), 100))
+    # the hydro-thermal family, and its demand lowered
+    write(out, "sddp_warm", warm_file())
+    write(out, "sddp_warm_down", warm_file(W_DOWN))
     print("INVEST_DESIGN=1.3")
     print("INVEST_FIXED=(%s)" % " ".join("%g" % x for x in FIXED))
 

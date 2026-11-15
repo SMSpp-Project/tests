@@ -30,8 +30,15 @@
 # design free and a cost (ib_sddp_invest.nc4) is optimized: the bundle
 # reaches the optimum, whose value is below those at the fixed designs
 # around it, only if the linearization that the InvestmentFunction reads off
-# the solution of each simulation is right. They take seconds, hence they
-# all run in CI too.
+# the solution of each simulation is right. Last, sddp_solver -r solves the
+# hydro-thermal SDDPBlock of gen_sddp_initud.py (sddp_warm.nc4) and solves it
+# again with its demand lowered (sddp_warm_down.nc4), which lowers the
+# costs: with the cuts of the first solution removed (SDDPSCfg-sddp.txt,
+# the default) every lower bound must be at most the optimal value of the
+# new data, which a solution from scratch gives, and the last one must
+# reach it, while with the cuts kept as they are (SDDPSCfg-sddp-keep.txt)
+# some lower bound must exceed it, i.e., the battery sees the bound that is
+# not valid. They take seconds, hence they all run in CI too.
 
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -213,5 +220,59 @@ fi
 say "  InvestmentBlock ${inv:-none} at ${design:-none}  fixed designs" \
     "$( for x in "${INVEST_FIXED[@]}"; do printf '%s:%s ' "${x}" \
         "${FIXED_VALUE[$x]}"; done)-> ${verdict}"
+
+# the cuts after a change of the scenarios - - - - - - - - - - - - - - - - -
+
+# the backward values (lower bounds) of the iterations in a log: of the
+# first solution, or of the re-solution if the second argument is given,
+# i.e., those after the line "Solve 0"
+lower_bounds() {
+    awk -v r="$2" '/^Solve 0/ { f = 1 } ( r == "" || f ) && /ACCURACY/ {
+        if( r == "" && f ) exit; printf "%s%s", sep, $4; sep = " " }' \
+        "${work}/$1"
+}
+
+# whether no lower bound exceeds the first argument beyond EPS
+all_below() {
+    local v=$1
+    shift
+    for b in "$@"; do
+        awk -v a="${b}" -v b="${v}" -v e="${EPS}" 'BEGIN {
+            m = ( b < 0 ? -b : b ); if( m < 1 ) m = 1
+            exit( ( a - b <= e * m ) ? 0 : 1 ) }' || return 1
+    done
+}
+
+print_header "scenarios changed"
+mkdir -p "${work}/warm_ref"
+run_tool "warm_ref.log" "${sddpexe}" "${cfg[@]}" -S SDDPSCfg-sddp.txt \
+         -d warm_ref sddp_warm_down.nc4
+read -r -a ref <<< "$( lower_bounds warm_ref.log )"
+opt=${ref[-1]}
+for v in cold keep; do
+    scfg=SDDPSCfg-sddp.txt
+    [ ${v} = keep ] && scfg=SDDPSCfg-sddp-keep.txt
+    mkdir -p "${work}/warm_${v}"
+    run_tool "warm_${v}.log" "${sddpexe}" "${cfg[@]}" -S "${scfg}" \
+             -d "warm_${v}" -r sddp_warm_down.nc4 sddp_warm.nc4
+    read -r -a lb <<< "$( lower_bounds "warm_${v}.log" r )"
+    wrong=""
+    if [ ${v} = cold ]; then
+        if ! all_below "${opt}" "${lb[@]}"; then
+            wrong="a lower bound above the optimum"
+        elif ! agree "${lb[-1]}" "${opt}"; then
+            wrong="the last lower bound"
+        fi
+    elif all_below "${opt}" "${lb[@]}"; then
+        wrong="no lower bound above the optimum"
+    fi
+    verdict="${GREEN}OK${NC}"
+    if [ -n "${wrong}" ]; then
+        verdict="${RED}KO: ${wrong}${NC}"
+        failed=1
+    fi
+    say "  cuts ${v}: lower bounds from ${lb[0]:-none} to ${lb[-1]:-none}," \
+        "optimum ${opt} -> ${verdict}"
+done
 
 exit ${failed}
