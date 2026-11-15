@@ -271,7 +271,10 @@ the `test` directory of the module itself.
   independent implementation of the null-space approach, hence with all the
   others, on random and degenerate hierarchies built by the tester, on a
   step of Model Predictive Control that changes the data of the same Block,
-  and on the instances that `HQPBlock` distributes.
+  and on the instances that `HQPBlock` distributes; the proton cases of
+  TROTS, the Radiotherapy Optimisation Test Set, are solved by MOSEK and
+  Gurobi as inner Solvers, compared with each other and with the solution
+  of TROTS, by a battery run by hand.
 
 ### Posed on no Block in particular
 

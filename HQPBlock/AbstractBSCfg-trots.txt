@@ -1,0 +1,33 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - AbstractBSCfg-trots.txt - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the AbstractBlock of the weighted sum of the
+# objectives of an instance of TROTS, a Linear Program [see
+# BSPar-trots.txt]: MOSEK with the ComputeConfig of MOSEKCfg.txt and
+# Gurobi with that of GRBCfg-dual.txt, which the tester compares with each
+# other; a build without one of them leaves it out.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+MOSEKMILPSolver  # name of 1st Solver
+GRBMILPSolver    # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*MOSEKCfg.txt
+*GRBCfg-dual.txt
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END AbstractBSCfg-trots.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

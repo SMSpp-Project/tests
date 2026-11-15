@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `HQPBlock`: `batches/batch-qcqp`, a hierarchy with quadratic and one with
+  conic hard rows built by the tester (`-Q quad`, `-Q conic`), loaded into
+  an `HQPBlock` for each formulation of `-F` (`HQPForms-quad.txt`,
+  `HQPForms-conic.txt`) and compared among the `HQPSolver` of all of them,
+  the hard rows checked at each solution by `is_feasible()`: the quadratic
+  rows with a `QuadFunction` and MOSEK and Gurobi as inner Solvers
+  (`HQPBSCfg-quad.txt`), and the quadratic or conic rows as the cuts of
+  the `HQPBlock`, of Kelley or at the boundary point (`HQPBCfg.txt`,
+  `HQPBCfg-cuts.txt`), with MOSEK, DAQP and qpOASES separating them in a
+  loop (`HQPBSCfg-cuts.txt`)
+
+- `MILPSolver`: `LPPar_LC_C.txt` and `LPPar_LC_I.txt`, with which the
+  tester of the quadratic functions solves the models of the class `LC`
+  (a linear objective and convex quadratic constraints) with
+  `MOSEKMILPSolver` next to `SCIPMILPSolver`
+
+- `HQPBlock`: the hard rows of `HQPBlock`, in a hierarchy built by the
+  tester (with an `HQPBlock` only) and against the null-space reference,
+  which starts at a point feasible for them and works in the null space of
+  their equalities; the 16th `HQPSolver` of `HQPBSCfg.txt`, DAQP with a
+  single inner Solver for all the levels (`intOneInner`)
+
+- `HQPBlock`: a file with no reference (group `HQPReference`), too large
+  for the dense one, is solved by all the `HQPSolver`, which are compared
+  with each other (when one of the two has `dblSlackTol > 0`, only up to
+  the first level where their values differ, the next ones being not
+  unique) and with the point of its group `HQPPoint`, if any, which none
+  of them may exceed lexicographically, the time of each `compute()` being
+  printed
+
+- `HQPBlock`: `batches/batch-trots`, by hand, the proton cases of TROTS
+  (`Protons_04` unless `TROTS_CASES` lists others), downloaded from Zenodo
+  and converted by `tools/trots2nc4.py` of HQPBlock, solved by the
+  `HQPSolver` of `HQPBSCfg-trots.txt` with MOSEK and Gurobi as inner
+  Solvers and compared with each other and with the solution of TROTS,
+  and the weighted sum of the objectives of each case, a Linear Program,
+  solved by MOSEK and Gurobi (`AbstractBSCfg-trots.txt`); the tester solves
+  a file whose Block is not an `HQPBlock` with the Solver of the
+  `BlockSolverConfig` of its classname, compared with each other and with
+  the value at the point of the file
+
 - `MasterProblemBlock`: the components may start empty (`-M 0`) and become
   empty again, with the fictitious bounds of a bundle method; the dual
   master (`-d`) and its global lower bound (`-g`); with all the components

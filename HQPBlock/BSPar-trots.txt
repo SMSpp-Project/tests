@@ -1,0 +1,20 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-trots.txt - - - - - - - - - - - - - - -
+#
+# The meta-BlockSolverConfig of the tester of HQPBlock on the instances of
+# TROTS, the Radiotherapy Optimisation Test Set (batches/batch-trots): the
+# HQPBlock of the lexicographic problem gets the HQPSolver of
+# HQPBSCfg-trots.txt, the AbstractBlock of the weighted sum the Solver of
+# AbstractBSCfg-trots.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# a "meta"-BlockSolverConfig, i.e., a map classname --> its
+# BlockSolverConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+2  # the number of elements in the map
+HQPBlock       *HQPBSCfg-trots.txt
+AbstractBlock  *AbstractBSCfg-trots.txt
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-trots.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

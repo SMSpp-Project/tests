@@ -51,6 +51,10 @@ each inner Solver and setting,
   a hierarchy with the stage structure of `HQPBlock` and is left out of the
   others;
 
+- the 16th is DAQP in the first setting with a single inner Solver for all
+  the levels (`intOneInner 1`), each level starting from the solution of
+  the previous one rather than from the same level of the previous solve;
+
 while the `HQPDistBlock`, where each hierarchy built by the tester is split
 among 3 owners of consecutive blocks of columns, is solved once for each
 formulation of `HQPDistForms.txt`, given with `-F`, a pair of a
@@ -107,7 +111,8 @@ hierarchies are built by the tester: random ones, one with a level of
 equalities only, one of inequalities only
 and an empty one, an inequality task that cannot be satisfied at its level
 and one already satisfied (whose values are known), dependent rows, weights
-different from 1, a small Model Predictive Control of two robots over four
+different from 1, hard rows (not in the `HQPDistBlock`, which does not
+split them), a small Model Predictive Control of two robots over four
 stages with its stage structure, a step of Model Predictive Control that
 changes `b`, `d`,
 `A` (also out of the pattern of a row) and `C` of the same `HQPBlock`
@@ -117,7 +122,18 @@ an `HQPDistBlock` in each formulation, the step out of the pattern
 building its sub-Blocks anew. A file is an instance in the
 netCDF format of `HQPBlock`, which carries with the `HQPBlock` the solution
 of each level of the code that generated it, against which the values are
-also compared. The iterations
+also compared; a file without it, e.g., an instance of TROTS, too large for
+the dense reference, is solved by all the `HQPSolver`, which are compared
+with each other (when one of them has `dblSlackTol > 0`, only up to the
+first level where the values differ, the next ones being not unique) and
+with the point of its group `HQPPoint`, if any, which none of them may
+exceed lexicographically, and the time of each `compute()` is printed; a
+file whose Block is not an `HQPBlock`, e.g., the weighted sum of the
+objectives of a case of TROTS as a Linear Program, is solved by the Solver
+of the `BlockSolverConfig` of its classname, compared with each other and
+with the value at the point of its group `HQPPoint`, which none of them may
+exceed. The
+iterations
 of the inner Solvers of each `HQPSolver` in the solves of the steps reached
 by Modification (those of the run of Model Predictive Control of the
 hierarchies built by the tester, that from the file of `-P`) are printed,
@@ -137,6 +153,22 @@ The batteries are:
   the run of Model Predictive Control DAQP and qpOASES
   must take fewer iterations than the same ones solving from scratch;
 
+- `batches/batch-qcqp`, the hierarchies with quadratic and with conic
+  hard rows built by the tester with `-Q quad` and `-Q conic`, each loaded
+  into an `HQPBlock` once for each formulation of `HQPForms-quad.txt` or
+  `HQPForms-conic.txt`, given with `-F`, and compared only among the
+  `HQPSolver` of all of them, to `1e-5` on the values, the hard rows of
+  the data being checked at the solution of each one
+  (`HQPBlock::is_feasible()`, to `1e-6`): the quadratic rows with a
+  `QuadFunction` and MOSEK and Gurobi as inner Solvers
+  (`HQPBCfg.txt`, `HQPBSCfg-quad.txt`), and the quadratic rows, or the
+  conic ones, as the cuts that the `HQPBlock` separates, of Kelley
+  (`HQPBCfg.txt`, conic only) or at the boundary point
+  (`HQPBCfg-cuts.txt`), with inner Solvers that solve and separate in a
+  loop (`intRelaxIntVars 2`), MOSEK, DAQP and qpOASES, the active-set ones
+  also with a single inner Solver for all the levels
+  (`HQPBSCfg-cuts.txt`);
+
 - `batches/batch-radial`, the instances that HQPBlock distributes in
   `data/nc4` (some steps of a centralized Model Predictive Control of 8
   robots crossing in the middle of a circle, with the control horizon 3
@@ -146,4 +178,20 @@ The batteries are:
   previous one in the run is also reached by Modification of the
   `HQPBlock` of the previous step, as the Model Predictive Control does,
   and the iterations of that step are printed (not compared, since a step
-  may need no more than one iteration per level even from scratch).
+  may need no more than one iteration per level even from scratch);
+
+- `batches/batch-trots`, the proton cases of TROTS, the Radiotherapy
+  Optimisation Test Set (`Protons_04` unless `TROTS_CASES` lists others),
+  taken out of `Protons.zip`, downloaded from Zenodo the first time, and
+  converted by `tools/trots2nc4.py` of HQPBlock, with the constraints of
+  the case as hard rows, in the directory `TROTS_DIR` (default `trots`);
+  `BSPar-trots.txt` gives the `HQPBlock` the `HQPSolver` of
+  `HQPBSCfg-trots.txt`, with the slacks fixed up to `1e-3`
+  (`HQPCfg-trots.txt`) and MOSEK (`InnerBSCfg-mosek-trots.txt`) or Gurobi
+  (`InnerBSCfg-gurobi.txt`) as inner Solvers, one for each level or one for
+  all of them; the weighted sum of the objectives of the case, of which
+  the solution of TROTS is the optimum, is also converted
+  (`trots2nc4.py --weighted`) and solved by MOSEK and Gurobi
+  (`AbstractBSCfg-trots.txt`). A case takes hours and some 25 GB of
+  memory, hence the battery is run by hand and is not among the tests of
+  the suite.

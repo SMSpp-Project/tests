@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - MOSEKCfg-trots.txt  - - - - - - - - - - - - - -
+#
+# The ComputeConfig of MOSEKMILPSolver as the inner Solver of the
+# HQPSolver of HQPBSCfg-trots.txt (InnerBSCfg-mosek-trots.txt): that of
+# MOSEKCfg.txt with the default tolerances of the interior point (1e-8),
+# the tighter ones not being reached on the levels of TROTS, of millions
+# of non-zero entries.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*MOSEKCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+3  # number of double parameters
+
+# now all the double parameters
+MSK_DPAR_INTPNT_QO_TOL_REL_GAP  1e-8  # relative gap
+MSK_DPAR_INTPNT_QO_TOL_PFEAS    1e-8  # primal feasibility
+MSK_DPAR_INTPNT_QO_TOL_DFEAS    1e-8  # dual feasibility
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END MOSEKCfg-trots.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

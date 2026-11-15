@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - HQPBCfg-cuts.txt  - - - - - - - - - - - - - - -
+#
+# The BlockConfig of the HQPBlock of the formulation F1 of HQPForms-quad.txt
+# and HQPForms-conic.txt: all the nonlinear hard rows, the quadratic ones
+# too, by cuts at the boundary point, the sum-exp ones in the logarithmic
+# form [see HQPBlock::generate_dynamic_constraints()], and the hard rows
+# checked as in HQPBCfg.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static_constraints
+SimpleConfiguration<int>
+1  # bit 1: the quadratic hard rows as cuts
+
+# dynamic_constraints
+SimpleConfiguration<std::pair<double,int>>
+1e-6  # the relative tolerance of a violation
+3     # bit 1: the boundary point, bit 2: the logarithmic form
+
+# static_variables
+*  # [none]
+
+# dynamic_variables
+*  # [none]
+
+# objective
+*  # [none]
+
+# is_feasible
+SimpleConfiguration<double>
+1e-6  # largest relative violation of a hard row
+
+# is_optimal
+*  # [none]
+
+# solution
+*  # [none]
+
+# extra
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END HQPBCfg-cuts.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

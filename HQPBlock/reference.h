@@ -82,6 +82,9 @@ struct Instance {
  std::vector< Vec > b , d , we , wi;
  double eps = 0;
  HQPBlock::StageData stages;  ///< the stage structure, if any
+ Mat hA , hC;     ///< the hard rows, if any [see HQPBlock::HardRows]
+ Vec hb , hd;
+ Vec hx0;         ///< a point that satisfies them, where the reference starts
 
  [[nodiscard]] int levels( void ) const { return( int( A.size() ) ); }
  };
@@ -115,9 +118,18 @@ inline void load( HQPBlock & block , const Instance & in )
                           in.wi[ p ].data() + in.wi[ p ].size() ) );
   }
  auto st = in.stages;
+ HQPBlock::HardRows hr;
+ if( in.hb.size() ) {
+  hr.A = in.hA.sparseView();
+  hr.b.assign( in.hb.data() , in.hb.data() + in.hb.size() );
+  }
+ if( in.hd.size() ) {
+  hr.C = in.hC.sparseView();
+  hr.d.assign( in.hd.data() , in.hd.data() + in.hd.size() );
+  }
  block.load( in.n , std::move( A ) , std::move( b ) , std::move( C ) ,
 	     std::move( d ) , std::move( we ) , std::move( wi ) , in.eps , {} ,
-	     std::move( st ) );
+	     std::move( st ) , std::move( hr ) );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -225,7 +237,12 @@ inline bool active_set_qp( const Mat & H , const Vec & g , const Mat & G ,
  * comment]; if prox == false the regularization is \f$ \varepsilon \| x
  * \|^2 / 2 \f$ rather than \f$ \varepsilon \| y \|^2 / 2 \f$, i.e., its
  * center is 0 rather than the solution of the previous level. The value of
- * level p is that of its slacks at x after it. */
+ * level p is that of its slacks at x after it. The hard rows, if any, are
+ * there from the start: \f$ \bar{x}_{-1} \f$ is the point in.hx0 that
+ * satisfies them (the reference fails without it), \f$ Z_0 \f$ a basis of
+ * the null space of \f$ A_h \f$ and \f$ C_h \f$ among the rows of the
+ * higher levels with \f$ w^* = 0 \f$, while the center of level 0 is 0
+ * anyway, as for an HQPSolver. */
 
 inline RefSolution reference( const Instance & in , bool prox = true ,
                               double rho = 0 )
@@ -236,6 +253,20 @@ inline RefSolution reference( const Instance & in , bool prox = true ,
  Mat Z = Mat::Identity( n , n );
  Mat Cst( 0 , n );   // the C_q of the higher levels, weighted
  Vec dst( 0 );       // d_q + w*_q of the higher levels, weighted
+
+ if( in.hb.size() || in.hd.size() ) {
+  if( in.hx0.size() != n ) {
+   sol.ok = false;
+   return( sol );
+   }
+  xbar = in.hx0;
+  if( in.hb.size() )
+   Z = null_space( in.hA );
+  if( in.hd.size() ) {
+   Cst = in.hC;
+   dst = in.hd;
+   }
+  }
 
  for( int p = 0 ; p < in.levels() ; ++p ) {
   Mat A = in.A[ p ] , C = in.C[ p ];
@@ -256,7 +287,7 @@ inline RefSolution reference( const Instance & in , bool prox = true ,
   H.topLeftCorner( k , k ) = ( A * Z ).transpose() * ( A * Z ) +
    in.eps * Mat::Identity( k , k );
   g.head( k ) = ( A * Z ).transpose() * ( A * xbar - b );
-  if( ! prox )   // Z' Z = I, the center is 0
+  if( ( ! prox ) || ( p == 0 ) )   // Z' Z = I, the center is 0
    g.head( k ) += in.eps * Z.transpose() * xbar;
   H.bottomRightCorner( l , l ) = ( 1 + rho ) * Mat::Identity( l , l );
 
@@ -306,7 +337,8 @@ inline double rel( double a , double b , double floor = 1 )
 
 /*--------------------------------------------------------------------------*/
 /// the name of the inner Solver of an HQPSolver, with its
-/// BlockSolverConfig and the parameters of the HQPSolver
+/// BlockSolverConfig and the parameters of the HQPSolver ("one" if
+/// intOneInner)
 
 inline std::string label( HQPSolver * s )
 {
@@ -318,7 +350,8 @@ inline std::string label( HQPSolver * s )
          " prox " + std::to_string( s->get_int_par(
                                       HQPSolver::intProxCenter ) ) +
          " relax " + std::to_string( s->get_int_par(
-                                      HQPSolver::intRelaxLower ) ) );
+                                      HQPSolver::intRelaxLower ) ) +
+         ( s->get_int_par( HQPSolver::intOneInner ) ? " one" : "" ) );
  }
 
 /*--------------------------------------------------------------------------*/
