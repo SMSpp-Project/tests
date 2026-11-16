@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+#
+# usage: batch-qcqp < exe file >
+#        < exe file > = path of the executable, default HQPBlock_test
+#
+# The hierarchies with quadratic and with conic hard rows that the tester
+# builds with -Q, each loaded into an HQPBlock for each formulation of -F
+# and solved by the HQPSolver of all of them, compared among them, and the
+# hard rows checked at each solution: on the quadratic ones
+# (HQPForms-quad.txt) MOSEK and Gurobi with the rows as QuadFunction
+# against MOSEK, DAQP and qpOASES with the rows as cuts, on the conic ones
+# (HQPForms-conic.txt) the latter with the cuts of Kelley and with those at
+# the boundary point. The values of the levels are held to 1e-5 (-E), as
+# those of MOSEK in batch-generated.
+
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./HQPBlock_test
+parse_batch_args "$@"
+
+run_test "$exe" -F HQPForms-quad.txt -Q quad -E 1e-5
+run_test "$exe" -F HQPForms-conic.txt -Q conic -E 1e-5

@@ -2,17 +2,17 @@
 # - - - - - - - - - - - - -  QPOASESCfg-cold.txt  - - - - - - - - - - - - - -
 #
 # The ComputeConfig of QPOASESMILPSolver as the cold inner Solver of an
-# HQPSolver (InnerBSCfg-qpoases-cold.txt): each solve starts from scratch
-# rather than being a hot start from the previous solve of the same level,
-# so that the tester compares the iterations of qpOASES with and without
-# its hot start, on the same problems.
+# HQPSolver (InnerBSCfg-qpoases-cold.txt): that of QPOASESCfg.txt with each
+# solve from scratch rather than a hot start from the previous solve of the
+# same level, so that the tester compares the iterations of qpOASES with and
+# without its hot start, on the same problems.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig # exact type of the ComputeConfig object
+*QPOASESCfg.txt +
 
-1  # f_diff == 1 ==> all non-provided parameters are not changed
+1  # f_diff == 1 ==> only the entries listed below are changed
 
 1  # number of integer parameters
 

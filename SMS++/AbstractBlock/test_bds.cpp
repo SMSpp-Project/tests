@@ -46,6 +46,7 @@
 #include "FRowConstraint.h"
 #include "LinearFunction.h"
 #include "Objective.h"
+#include "OneVarConstraint.h"
 
 using namespace SMSpp_di_unipi_it;
 
@@ -68,6 +69,9 @@ static const double cost[ M ][ N ] = { { 2 , 3 , 4 , 5 } ,
 // while being large enough that the slack is never used at the optimum
 static const double BigM = 1e2;
 
+// the minimum shipment on every x of the instance that has one
+static const double min_ship = 0.05;
+
 using array_type = boost::multi_array< ColVariable , 2 >;
 
 /*--------------------------------------------------------------------------*/
@@ -77,11 +81,14 @@ using array_type = boost::multi_array< ColVariable , 2 >;
 // add to block the second stage of one scenario s ( the Variable x[ s ] and
 // its slack, the rows they satisfy and the Constraint that couples them to
 // the master Variable y ) and its cost terms to obj. With nsub scenarios this
-// gives a 2-stage Benders structure with nsub subproblems coupled through y
+// gives a 2-stage Benders structure with nsub subproblems coupled through y.
+// With x_min > 0 each x has that lower bound, a minimum shipment, which a
+// feasibility cut has to count through the multipliers of the columns
 
 static void add_second_stage( AbstractBlock * block ,
                               std::vector< ColVariable > * y , int s ,
-                              bool with_slack , LinearFunction * obj )
+                              bool with_slack , LinearFunction * obj ,
+                              double x_min = 0 )
 {
  const std::string t = std::to_string( s );
  boost::array< array_type::index , 2 > shape = { M , N };
@@ -89,6 +96,15 @@ static void add_second_stage( AbstractBlock * block ,
  for( auto p = x->data() ; p < x->data() + x->num_elements() ; ++p )
   p->is_positive( true );
  block->add_static_variable( * x , "x" + t );
+
+ if( x_min > 0 ) {
+  auto lb = new std::vector< LBConstraint >( M * N );
+  for( int k = 0 ; k < M * N ; ++k ) {
+   ( * lb )[ k ].set_variable( x->data() + k , eNoMod );
+   ( * lb )[ k ].set_lhs( x_min , eNoMod );
+   }
+  block->add_static_constraint( * lb , "x_min" + t );
+  }
 
  std::vector< ColVariable > * sl = nullptr;
  if( with_slack ) {
@@ -194,7 +210,8 @@ static void add_first_stage_rows( AbstractBlock * block ,
 static AbstractBlock * build_monolithic( bool with_slack = true ,
 					 int nsub = 1 ,
 					 bool integer = false ,
-					 bool first_stage = false )
+					 bool first_stage = false ,
+					 double x_min = 0 )
 {
  auto block = new AbstractBlock();
  auto y = make_y( false , integer );
@@ -206,7 +223,7 @@ static AbstractBlock * build_monolithic( bool with_slack = true ,
  for( int i = 0 ; i < M ; ++i )
   f->add_variable( & ( * y )[ i ] , fixed_cost[ i ] );
  for( int s = 0 ; s < nsub ; ++s )
-  add_second_stage( block , y , s , with_slack , f );
+  add_second_stage( block , y , s , with_slack , f , x_min );
 
  auto obj = new FRealObjective( block , f );
  obj->set_sense( Objective::eMin );
@@ -224,7 +241,8 @@ static AbstractBlock * build_monolithic( bool with_slack = true ,
 static AbstractBlock * build_structured( bool with_slack = true ,
 					 int nsub = 1 ,
 					 bool integer = false ,
-					 bool first_stage = false )
+					 bool first_stage = false ,
+					 double x_min = 0 )
 {
  auto root = new AbstractBlock();
  auto y = make_y( true , integer );
@@ -242,7 +260,7 @@ static AbstractBlock * build_structured( bool with_slack = true ,
  for( int s = 0 ; s < nsub ; ++s ) {
   auto sub = new AbstractBlock( root );
   auto sf = new LinearFunction();
-  add_second_stage( sub , y , s , with_slack , sf );
+  add_second_stage( sub , y , s , with_slack , sf , x_min );
   auto sobj = new FRealObjective( sub , sf );
   sobj->set_sense( Objective::eMin );
   sub->set_objective( sobj );
@@ -1085,6 +1103,34 @@ int main( void )
    delete mono_lc;
    }
 
+ /* The feasibility cuts again, with a minimum shipment on every x: the
+  * certificate of an infeasible subproblem counts that lower bound through
+  * the multipliers of the columns, which are - A' y, and a cut with the
+  * costs in them cuts the optimum away. */
+
+ bool ok_xm = false;
+ { auto mono_xm = build_monolithic( false , 4 , false , false , min_ship );
+   auto root_xm = build_structured( false , 4 , false , false , min_ship );
+   try {
+    int st_xm;
+    long ct_xm = 0;
+    const double ref_xm = solve_from_config( mono_xm , "BDSSCfg.txt" ,
+					     st_xm );
+    const double v_xm = solve_from_config( root_xm , "BSPar-BDS-MILP.txt" ,
+					   st_xm , nullptr , & ct_xm );
+    ok_xm = rel( ref_xm , v_xm ) <= tol;
+    std::cout << "Benders(MILP,feas-cuts,min-shipment) = " << v_xm
+              << " ( " << ct_xm << " cuts )   ref = " << ref_xm
+              << ( ok_xm ? "   -> OK" : "   -> FAIL" ) << std::endl;
+    }
+   catch( const std::exception & e ) {
+    std::cout << "Benders(MILP,feas-cuts,min-shipment) threw: " << e.what()
+              << "   -> FAIL" << std::endl;
+    }
+   delete root_xm;
+   delete mono_xm;
+   }
+
  // ----- compare ( optimality-cut cases, the supported ones ) ------------- #
  const double err = rel( ref , ben );
  const double err2 = rel( ref , ben2 );
@@ -1102,7 +1148,7 @@ int main( void )
  std::cout << "2-scenario: " << ( ok2 ? "-> OK" : "-> FAIL" ) << std::endl;
 
  const bool ok = ok1 && ok2 && ok_ns && ok_ng && ok_k && ok_vw && ok_u &&
-                ok_r && ok_t && ok_lc;
+                ok_r && ok_t && ok_lc && ok_xm;
 
  delete root_s2;
  delete root_m2;

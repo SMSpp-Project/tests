@@ -209,11 +209,10 @@ endif ()
     # The benchmark of the machine-learning driven bundle on the instances of
     # this Block: the harness is the generic one (../ml_bench.cpp), which
     # reads whichever instance it is given, here the netCDF ones of this
-    # module. It is built only where Torch is, BundleSolverML being
-    # built into BundleSolver only in that case, and it is no test: it trains
-    # a network and measures, hence it is run by hand.
-    find_package(Torch QUIET HINTS ${Torch_ROOT})
-    if (Torch_FOUND AND TARGET SMS++::BundleSolverML)
+    # module. It is built only where BundleSolverML is, i.e., where
+    # BundleSolver has found Torch, which the library brings along, and it is
+    # no test: it trains a network and measures, hence it is run by hand.
+    if (TARGET SMS++::BundleSolverML)
 
         add_executable(UCBlock_ML_bench ../ml_bench.cpp)
         target_include_directories(UCBlock_ML_bench PRIVATE ..)
@@ -221,12 +220,12 @@ endif ()
                               SMS++::BundleSolverML
                               SMS++::BundleSolver
                               SMS++::LagrangianDualSolver
-                              SMS++::UCBlock
-                              ${TORCH_LIBRARIES})
+                              SMS++::UCBlock)
         target_compile_features(UCBlock_ML_bench PUBLIC cxx_std_20)
 
         # on Windows the Torch DLLs have to sit next to the executable
         if (MSVC)
+            find_package(Torch QUIET HINTS ${Torch_ROOT})
             file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
             add_custom_command(TARGET UCBlock_ML_bench POST_BUILD
                                COMMAND ${CMAKE_COMMAND} -E copy_if_different

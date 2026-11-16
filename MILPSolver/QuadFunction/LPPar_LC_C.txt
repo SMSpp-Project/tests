@@ -1,0 +1,39 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LPPar_LC_C.txt  - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for the Block of a model of the
+# class LC (a linear objective and convex quadratic constraints) solved by
+# the tester of the quadratic functions in its continuous relaxation: next
+# to the SCIPMILPSolver of LPPar_C.txt, the MOSEKMILPSolver, the only one
+# of the QP backends that takes quadratic constraints; the tester checks
+# them against each other and against the known optimal value, a Solver
+# that this build has not being left out.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+2  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+SCIPMILPSolver     # name of 1st Solver
+MOSEKMILPSolver    # name of 2nd Solver
+
+2  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*SCIPCfg-C.txt
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*MOSEKCfg-C.txt
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END LPPar_LC_C.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

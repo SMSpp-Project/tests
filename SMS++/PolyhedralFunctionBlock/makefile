@@ -37,9 +37,12 @@ include $(SMS++SDR)/lib/makefile-c
 BNDSLVSDR = ../../../BundleSolver
 include $(BNDSLVSDR)/makefile-s
 
-# BDMinQuadSolver, the Solver of the master of the 2nd row of NDOPar.txt
+# BDMinQuadSolver, the Solver of the master of the 2nd row of NDOPar.txt,
+# if the module is there: without it that row says it is not in this build
 BDMQSkSDR = ../../../BDMinQuadSolver
+ifneq ($(wildcard $(BDMQSkSDR)/makefile-s),)
 include $(BDMQSkSDR)/makefile-s
+endif
 
 # not necessary, BundleSolver does that already
 # MILPSolver

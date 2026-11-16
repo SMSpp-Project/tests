@@ -35,6 +35,9 @@ smspp_install(HQPBlock_test)
 # the hierarchies built by the tester
 add_batch_test(HQPBlock_test batches/batch-generated)
 
+# the hierarchies with quadratic and conic hard rows built by the tester
+add_batch_test(HQPBlock_test batches/batch-qcqp)
+
 # the instances of HQPBlock, downloaded and extracted when the tests that
 # read them are run, not when they are built [see the CMakeLists.txt of the
 # module]; the lock is shared by the tests that build a target of the data

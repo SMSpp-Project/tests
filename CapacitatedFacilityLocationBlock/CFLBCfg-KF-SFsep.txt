@@ -1,11 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - CFLBCfg-NF-noSF.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - CFLBCfg-KF-SFsep.txt  - - - - - - - - - - - - - - -
 #
-# The BlockConfig of the copy of a CapacitatedFacilityLocationBlock in
-# CFLBForm-cuts.txt: the natural formulation with the demand and the capacity
-# rows alone (static_constraints = 3). The BlockConfig being differential,
-# this takes away the group of the strong forcing constraints that the copy
-# would otherwise inherit from the original Block [see CFLBCfg-NF-SFsep.txt].
+# The BlockConfig of a CapacitatedFacilityLocationBlock in the knapsack
+# formulation with the group of the strong forcing constraints x_{ij} <= y_i
+# (static_constraints = 7), separated at most 375 at a time with violation
+# 1e-4 (dynamic_constraints); the copy of CFLBForm-cuts.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -21,7 +20,7 @@ BlockConfig # exact type of the ComputeConfig object
 
 # static_constraints
 SimpleConfiguration<int>
-3  # bit 0 = demand, bit 1 = capacity, bit 2 = strong
+7  # bit 0 = demand, bit 1 = capacity, bit 2 = strong
 
 # dynamic_constraints
 SimpleConfiguration<std::pair<int,double>>
@@ -31,7 +30,7 @@ SimpleConfiguration<std::pair<int,double>>
 
 # static_variables
 SimpleConfiguration<int>
-0  # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
+1  # 0 = Natural, 1 = Knapsack, 2 = Flow (Formulation)
 
 # dynamic_variables
 *  # [none]
@@ -52,5 +51,6 @@ SimpleConfiguration<int>
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END CFLBCfg-NF-noSF.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - END CFLBCfg-KF-SFsep.txt  - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

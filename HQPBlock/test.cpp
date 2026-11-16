@@ -24,6 +24,11 @@
  *
  * - weights different from 1;
  *
+ * - hard rows [see HQPBlock::HardRows], equalities and inequalities, some
+ *   active at the point that the reference starts from, with levels that
+ *   conflict with them (not in an HQPDistBlock, which does not split
+ *   them);
+ *
  * - a change of b, d, A (also out of the pattern) and C of the same
  *   HQPBlock between two compute(), as a step of a Model Predictive Control
  *   scheme, checked against the reference and against a new HQPBlock with
@@ -36,6 +41,21 @@
  *   HQPBlock::StageData]: two robots, four stages, the dynamics, the limits
  *   and the smoothness of the inputs, a row between the robots and their
  *   goals.
+ *
+ * With -Q quad or -Q conic, a hierarchy whose hard rows are quadratic or
+ * conic [see HQPBlock::HardRows], active at the solution of each level,
+ * is built instead and solved by all the HQPSolver, which are compared
+ * with each other only (as for a file with no reference, see below), the
+ * null-space reference having no such rows. With -F, a list of
+ * formulations, it is loaded into an HQPBlock once for each formulation,
+ * which its BlockConfig gives the abstract representation of the
+ * nonlinear hard rows (with a Function or by cuts, see
+ * HQPBlock::generate_abstract_constraints()) and its BlockSolverConfig its
+ * HQPSolver, all of them compared with each other, those of each
+ * formulation following those of the previous one in the positions of -E;
+ * the hard rows of the data are then also checked at the solution of each
+ * HQPSolver [see HQPBlock::is_feasible()], with the tolerance of the
+ * BlockConfig.
  *
  * The HQPSolver with intProxCenter == 1 solve exactly the problem of the
  * reference, hence also x is compared; for the others only the values of
@@ -69,7 +89,27 @@
  * the same run is given with -P, the step is also reached by Modification:
  * the HQPBlock of the previous step is solved, changed into this one by
  * set_b(), set_d(), set_A() and set_C(), and solved again, as the Model
- * Predictive Control does.
+ * Predictive Control does. The HQPSolver run one after the other on the
+ * same Block, and each of them starts from the x that the Block had when
+ * it was attached and then from that of its own last solve, not from that
+ * left by the HQPSolver before it.
+ *
+ * A file without the group HQPReference, e.g., one too large for the dense
+ * reference, is solved by all the HQPSolver, which are compared with each
+ * other only, the values of the levels of the first one that ends with
+ * kOK being those of the others; if either of the two has dblSlackTol > 0,
+ * the levels after the first one where the values differ are not unique
+ * (each HQPSolver can trade a level for the next ones within the tolerance
+ * on the fixed slacks), and the comparison stops there, the first level
+ * having to agree. The time of each compute() is printed. If the file has
+ * the group HQPPoint (variable X), a point given by some other code (e.g.,
+ * by tools/trots2nc4.py of HQPBlock), the values of the levels of each
+ * HQPSolver must not be lexicographically larger than those at that point.
+ * A file whose Block is not an HQPBlock, e.g., the weighted sum of the
+ * objectives of a case of TROTS as a Linear Program (tools/trots2nc4.py
+ * --weighted), is solved by the Solver of the BlockSolverConfig of its
+ * classname, which are compared with each other, none of them ending above
+ * the value at the point of the file (group HQPPoint, variable Value).
  *
  * The iterations of the inner Solvers of each HQPSolver [see
  * HQPSolver::get_elapsed_iterations()] are summed over the solves of the
@@ -109,8 +149,11 @@
 /*------------------------------ INCLUDES ----------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#include <chrono>
 #include <filesystem>
+#include <functional>
 #include <map>
+#include <memory>
 #include <random>
 
 #include "common_utils.h"
@@ -122,8 +165,9 @@
 using namespace hqp_test;
 
 static std::string previous;   // the file of the previous step (-P)
+static std::string qcqp_kind;  // quad or conic: the hierarchy of -Q
 
-static int usable = 0;         // the most HQPSolver with an inner Solver
+static int usable = 0;         // the most Solver that were run
 
 // the position of each HQPSolver in the BlockSolverConfig, those of an
 // HQPDistBlock after those of the HQPBlock
@@ -154,6 +198,18 @@ static std::vector< double > solver_xtol;
 static std::map< std::size_t , long > step_iter;
 static bool stepped = false;
 
+// the x from which each HQPSolver starts its next compute(): that of the
+// Block when it is attached, then that of its own last solve, so that an
+// inner Solver starting from the current x of the Block does not start
+// from the solution of the HQPSolver before it
+static std::map< const HQPSolver * , std::vector< double > > own_x;
+
+// the Block of s as an HQPLevelBlock, nullptr if it is not one
+static HQPLevelBlock * level_block( const HQPSolver * s )
+{
+ return( dynamic_cast< HQPLevelBlock * >( s->get_Block() ) );
+ }
+
 /*--------------------------------------------------------------------------*/
 // adds the iterations of the last compute() of s to those of the steps
 
@@ -169,6 +225,9 @@ static void count_step( const HQPSolver * s )
 
 static bool run( HQPSolver * s , const std::string & what , int & st )
 {
+ const auto it = own_x.find( s );
+ if( it != own_x.end() )
+  level_block( s )->set_x_values( it->second );
  try {
   st = s->compute();
   }
@@ -177,6 +236,8 @@ static bool run( HQPSolver * s , const std::string & what , int & st )
 	    << "), skipped" << std::endl;
   return( false );
   }
+ if( it != own_x.end() )
+  level_block( s )->get_x_values( it->second );
  return( true );
  }
 
@@ -307,6 +368,28 @@ static Instance kinds_instance( void )
  add_level( in , Mat( 0 , 8 ) , Vec( 0 ) , Mat( 0 , 8 ) , Vec( 0 ) );
  add_level( in , Mat::Identity( 8 , 8 ) , random_vector( g , 8 ) ,
             Mat( 0 , 8 ) , Vec( 0 ) );
+ return( in );
+ }
+
+/*--------------------------------------------------------------------------*/
+// hard rows around a random point x0: 2 equalities and 5 inequalities, 2
+// of them active at x0, one with no entries; then random levels, whose
+// small right-hand sides make some of them conflict with the hard rows
+
+static Instance hard_instance( void )
+{
+ std::mt19937 g( 91 );
+ Instance in = random_instance( 91 );
+ in.name = "hard rows";
+ const int n = in.n;
+ in.hx0 = random_vector( g , n );
+ in.hA = random_matrix( g , 2 , n , 0.5 );
+ in.hb = in.hA * in.hx0;
+ in.hC = random_matrix( g , 5 , n , 0.5 );
+ in.hC.row( 4 ).setZero();
+ Vec margin( 5 );
+ margin << 0 , 0 , 0.2 , 0.5 , 1;
+ in.hd = in.hC * in.hx0 + margin;
  return( in );
  }
 
@@ -521,8 +604,13 @@ static std::vector< HQPSolver * > working( const std::vector< HQPSolver * > &
    form_count.resize( std::max( form_count.size() , form + 1 ) , 0 );
    form_count[ form ] = std::max( form_count[ form ] , sl.size() );
    }
- for( std::size_t k = 0 ; k < sl.size() ; ++k )
+ for( std::size_t k = 0 ; k < sl.size() ; ++k ) {
   position[ sl[ k ] ] = first + k;
+  if( auto hb = level_block( sl[ k ] ) )
+   hb->get_x_values( own_x[ sl[ k ] ] );
+  else
+   own_x.erase( sl[ k ] );
+  }
  for( auto s : sl )
   if( s->get_inner_Solver() )
    res.push_back( s );
@@ -771,7 +859,10 @@ static int generated( void )
  cases.push_back( weighted_instance() );
  cases.push_back( stage_instance() );
 
- errors += generated_in< HQPBlock >( cases );
+ // the hard rows, which an HQPDistBlock does not split
+ std::vector< Instance > central = cases;
+ central.push_back( hard_instance() );
+ errors += generated_in< HQPBlock >( central );
 
  // the HQPDistBlock once for each formulation of -F, otherwise only if
  // the config has HQPSolver for it
@@ -830,6 +921,15 @@ static Instance instance_of( const HQPBlock & block , const std::string & nm )
                                             block.get_num_eq_rows( p ) ) );
   in.wi.push_back( Eigen::Map< const Vec >( block.get_wi().data() + i ,
                                             block.get_num_ineq_rows( p ) ) );
+  }
+ const auto & hr = block.get_hard_rows();
+ if( hr.b.size() ) {
+  in.hA = Mat( hr.A );
+  in.hb = Eigen::Map< const Vec >( hr.b.data() , hr.b.size() );
+  }
+ if( hr.d.size() ) {
+  in.hC = Mat( hr.C );
+  in.hd = Eigen::Map< const Vec >( hr.d.data() , hr.d.size() );
   }
  return( in );
  }
@@ -892,6 +992,224 @@ static int check_file( const std::string & what ,
  }
 
 /*--------------------------------------------------------------------------*/
+// whether the file has the solution of each level (group HQPReference)
+
+static bool has_reference( const std::string & file )
+{
+ netCDF::NcFile f( file , netCDF::NcFile::read );
+ return( ! f.getGroup( "HQPReference" ).isNull() );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the point of the group HQPPoint of the file and the values of the levels
+// of block there, computed on its sparse rows (ok == false if none)
+
+static RefSolution file_point( const std::string & file ,
+                               const HQPBlock & block )
+{
+ RefSolution pt;
+ netCDF::NcFile f( file , netCDF::NcFile::read );
+ auto g = f.getGroup( "HQPPoint" );
+ if( g.isNull() ) {
+  pt.ok = false;
+  return( pt );
+  }
+ Vec x( block.get_num_var() );
+ g.getVar( "X" ).getVar( x.data() );
+ for( Block::Index p = 0 ; p < block.get_num_levels() ; ++p ) {
+  const auto e = block.get_eq_start( p ) , i = block.get_ineq_start( p );
+  const auto me = block.get_num_eq_rows( p );
+  const auto mi = block.get_num_ineq_rows( p );
+  const Vec v = Eigen::Map< const Vec >( block.get_we().data() + e , me )
+   .cwiseProduct( Vec( block.get_A( p ) * x ) -
+                  Eigen::Map< const Vec >( block.get_b().data() + e , me ) );
+  const Vec w = Eigen::Map< const Vec >( block.get_wi().data() + i , mi )
+   .cwiseProduct( Vec( block.get_C( p ) * x ) -
+                  Eigen::Map< const Vec >( block.get_d().data() + i , mi ) )
+   .cwiseMax( 0.0 );
+  pt.value.push_back( ( v.squaredNorm() + w.squaredNorm() ) / 2 );
+  }
+ pt.x.push_back( std::move( x ) );
+ return( pt );
+ }
+
+/*--------------------------------------------------------------------------*/
+// checks that the values of the levels of s are not lexicographically
+// larger than those at the point pt, the first level where they differ by
+// more than vtol (relative) deciding; returns the number of errors
+
+static int not_worse( const std::string & what , HQPSolver * s ,
+                      const RefSolution & pt , double vtol )
+{
+ for( std::size_t p = 0 ; p < pt.value.size() ; ++p ) {
+  const double vs = s->get_level_value( p );
+  if( rel( vs , pt.value[ p ] ) <= vtol )
+   continue;
+  const bool ok = vs < pt.value[ p ];
+  std::cout << what << " [" << label( s ) << "]: level " << p << " value "
+            << vs << ( ok ? " < " : " > " ) << pt.value[ p ]
+            << " at the point" << ( ok ? " -> OK" : " -> KO" ) << std::endl;
+  return( ok ? 0 : 1 );
+  }
+ std::cout << what << " [" << label( s ) << "]: the values at the point "
+           << "-> OK" << std::endl;
+ return( 0 );
+ }
+
+/*--------------------------------------------------------------------------*/
+// compares the levels solved by s with those of the first HQPSolver that
+// ended with kOK, whose dblSlackTol is tau0; with tau the largest of the
+// two dblSlackTol, a level after the first one where the values differ by
+// more than vtol (relative) is not unique if tau > 0, since each HQPSolver
+// fixes the slacks of the previous levels up to tau and the two can trade
+// a level for the next ones: then the comparison stops there, OK if that
+// level is not the first one; x is not compared; returns the number of
+// errors
+
+static int compare_peer( const std::string & what , HQPSolver * s ,
+                         const RefSolution & first , double tau0 ,
+                         double vtol )
+{
+ const double tau = std::max( tau0 ,
+                              s->get_dbl_par( HQPSolver::dblSlackTol ) );
+ if( tau <= 0 )
+  return( compare( what , s , first , vtol , 1e100 ) );
+ const std::size_t P = first.value.size();
+ if( s->get_num_solved_levels() != P ) {
+  std::cout << what << " [" << label( s ) << "]: "
+            << s->get_num_solved_levels() << " levels solved out of " << P
+            << " -> KO" << std::endl;
+  return( 1 );
+  }
+ std::size_t p = 0;
+ while( ( p < P ) &&
+        ( rel( s->get_level_value( p ) , first.value[ p ] ) <= vtol ) )
+  ++p;
+ const bool ok = ( p > 0 );
+ std::cout << what << " [" << label( s ) << "]: ";
+ if( p == P )
+  std::cout << "all the levels agree";
+ else
+  std::cout << "the levels agree up to " << p << ", where "
+            << s->get_level_value( p ) << " vs " << first.value[ p ]
+            << " (not unique with dblSlackTol " << tau << ")";
+ std::cout << ( ok ? " -> OK" : " -> KO" ) << std::endl;
+ if( ( p < P ) && ok )
+  for( std::size_t h = p + 1 ; h < P ; ++h )
+   std::cout << "   level " << h << ": " << s->get_level_value( h )
+             << " vs " << first.value[ h ] << std::endl;
+ return( ok ? 0 : 1 );
+ }
+
+/*--------------------------------------------------------------------------*/
+// solves with all the HQPSolver, printing the time of each compute(), and
+// compares each one with the first that ends with kOK [see compare_peer()],
+// with the point pt, if any, and by also( s ), if given, which returns the
+// number of its errors; returns the number of errors
+
+static int check_peers( const std::string & what ,
+                        const std::vector< HQPSolver * > & sl ,
+                        const RefSolution & pt ,
+                        const std::function< int( HQPSolver * ) > & also =
+                        nullptr )
+{
+ int errors = 0;
+ RefSolution first;
+ std::string yard;
+ double tau0 = 0;
+ for( auto s : sl ) {
+  int st = 0;
+  const auto t0 = std::chrono::steady_clock::now();
+  if( ! run( s , what , st ) )
+   continue;
+  const std::chrono::duration< double > dt =
+   std::chrono::steady_clock::now() - t0;
+  std::cout << what << " [" << label( s ) << "]: status " << st << ", "
+            << s->get_elapsed_iterations() << " iterations, " << dt.count()
+            << " s" << std::endl;
+  if( st != Solver::kOK ) {
+   std::cout << what << " [" << label( s ) << "]: status " << st
+             << " -> KO" << std::endl;
+   ++errors;
+   continue;
+   }
+  const double vtol = vtol_of( s , VTOL );
+  if( yard.empty() ) {
+   yard = label( s );
+   tau0 = s->get_dbl_par( HQPSolver::dblSlackTol );
+   for( Block::Index p = 0 ; p < s->get_num_solved_levels() ; ++p ) {
+    first.value.push_back( s->get_level_value( p ) );
+    const auto & x = s->get_level_x( p );
+    first.x.push_back( Eigen::Map< const Vec >( x.data() , x.size() ) );
+    std::cout << "   level " << p << ": " << first.value.back()
+              << std::endl;
+    }
+   }
+  else
+   errors += compare_peer( what + " vs " + yard , s , first , tau0 ,
+                           vtol );
+  if( pt.ok )
+   errors += not_worse( what , s , pt , vtol );
+  if( also )
+   errors += also( s );
+  }
+ if( yard.empty() ) {
+  std::cout << what << ": no HQPSolver ended with kOK -> KO" << std::endl;
+  ++errors;
+  }
+ return( errors );
+ }
+
+/*--------------------------------------------------------------------------*/
+// a file whose Block is not an HQPBlock, e.g., the weighted sum of a case
+// of TROTS (tools/trots2nc4.py --weighted of HQPBlock): the Solver of the
+// BlockSolverConfig of its classname that this build has are compared with
+// each other, and none may end above the value at the point of the file
+// (group HQPPoint, variable Value), if any; returns the number of errors
+
+static int check_other( const std::string & nm , Block * block )
+{
+ using Meta = SimpleConfiguration< std::map< std::string ,
+                                             Configuration * > >;
+ std::unique_ptr< Configuration > c( Configuration::deserialize(
+                                                         sconf_file ) );
+ auto bsc = dynamic_cast< BlockSolverConfig * >( c.get() );
+ if( auto m = dynamic_cast< Meta * >( c.get() ) ) {
+  const auto it = m->f_value.find( block->classname() );
+  bsc = ( it == m->f_value.end() ) ? nullptr :
+        dynamic_cast< BlockSolverConfig * >( it->second );
+  }
+ if( ! bsc ) {
+  std::cout << nm << ": no BlockSolverConfig of " << block->classname()
+            << " in " << sconf_file << " -> KO" << std::endl;
+  return( 1 );
+  }
+ drop_missing_Solvers( bsc , sconf_file );
+ bsc->apply( block );
+ usable = std::max( usable , int( block->get_registered_solvers().size() ) );
+
+ const double nan = std::numeric_limits< double >::quiet_NaN();
+ double v = nan;
+ bool hs = false;
+ int errors = SolveAll( block , exact_getter( ObjGetter::VarValue ) , nan ,
+                        VTOL , & v , & hs , nullptr , nullptr , bsc ) ? 0
+                                                                      : 1;
+ netCDF::NcFile f( filename , netCDF::NcFile::read );
+ auto g = f.getGroup( "HQPPoint" );
+ if( ( ! g.isNull() ) && ( ! g.getVar( "Value" ).isNull() ) ) {
+  double pv = nan;
+  g.getVar( "Value" ).getVar( & pv );
+  const bool ok = hs && ( v <= pv + VTOL * std::max( 1.0 , std::abs( pv ) ) );
+  std::cout << nm << " [" << block->classname() << "]: value " << v
+            << ( ok ? " <= " : " > " ) << pv << " at the point"
+            << ( ok ? " -> OK" : " -> KO" ) << std::endl;
+  errors += ! ok;
+  }
+ block->unregister_Solvers( true );
+ return( errors );
+ }
+
+/*--------------------------------------------------------------------------*/
 // the HQPBlock of a file, nullptr if there is none
 
 static HQPBlock * read_block( const std::string & file )
@@ -909,21 +1227,40 @@ static HQPBlock * read_block( const std::string & file )
 static int from_file( void )
 {
  const std::string nm = std::filesystem::path( filename ).stem().string();
- auto block = read_block( filename );
+ auto any = Block::deserialize( filename );
+ auto block = dynamic_cast< HQPBlock * >( any );
  if( ! block ) {
-  std::cout << nm << ": cannot read the HQPBlock -> KO" << std::endl;
-  return( 1 );
+  if( ! any ) {
+   std::cout << nm << ": cannot read the Block -> KO" << std::endl;
+   return( 1 );
+   }
+  const int errors = check_other( nm , any );
+  delete any;
+  return( errors );
   }
 
  int errors = 0;
- const Instance in = instance_of( *block , nm );
+ if( ! has_reference( filename ) ) {
+  if( ! previous.empty() )
+   std::cout << nm << ": no HQPReference, -P ignored" << std::endl;
+  errors = check_peers( nm , working( attach( *block , sconf_file ) , true ) ,
+                        file_point( filename , *block ) );
+  block->unregister_Solvers( true );
+  delete block;
+  return( errors );
+  }
+
+ Instance in = instance_of( *block , nm );
  const RefSolution fsol = file_solution( filename , in );
- const RefSolution ref = reference( in , true , in.eps );
  if( ! fsol.ok ) {
   std::cout << nm << ": no solution in the file -> KO" << std::endl;
   delete block;
   return( 1 );
   }
+ // the solution of level 0 in the file satisfies the hard rows, if any
+ if( block->has_hard_rows() && in.levels() )
+  in.hx0 = fsol.x[ 0 ];
+ const RefSolution ref = reference( in , true , in.eps );
  // the solution in the file is a reference of its own
  if( ! ref.ok )
   std::cout << nm << ": the null-space reference runs out of iterations, "
@@ -954,6 +1291,15 @@ static int from_file( void )
                      block->get_num_ineq_rows( p ) ) );
     prev->set_A( p , block->get_A( p ) );
     prev->set_C( p , block->get_C( p ) );
+    }
+   const auto & hr = block->get_hard_rows();
+   if( hr.b.size() ) {
+    prev->set_hard_b( hr.b );
+    prev->set_hard_A( hr.A );
+    }
+   if( hr.d.size() ) {
+    prev->set_hard_d( hr.d );
+    prev->set_hard_C( hr.C );
     }
    errors += check_file( nm + " after the step" , psl , fsol , ref , true );
    prev->unregister_Solvers( true );
@@ -1070,12 +1416,135 @@ static void parse_xtol( const std::string & arg )
  }
 
 /*--------------------------------------------------------------------------*/
+// with -Q quad or -Q conic: a hierarchy in 4 columns whose levels ask for
+// points outside the set of its hard rows, which are therefore active at
+// the solution of each level: x >= -10 and, with quad, the balls
+// || x - ( 1 , 1 , 0 , 0 ) ||^2 <= 4 and x_0^2 + 3 x_1^2 <= 5, with conic,
+// sum_k exp( x_k - 1 ) <= 3 and || x ||_3 <= 2.5
+
+static void load_qcqp( HQPBlock & block )
+{
+ using SM = HQPBlock::SparseMatrix;
+ const HQPBlock::Index n = 4;
+ Mat C0( 2 , n ) , A1( 2 , n ) , A2( n , n );
+ C0 << -1 , -1 , 0 , 0 ,          // level 0: x_0 + x_1 >= 6
+        0 , 0 , -1 , 0;           //          x_2 >= 3
+ A1 << 1 , -1 , 0 , 0 ,           // level 1: x_0 - x_1 = 4
+       0 , 0 , 1 , 1;             //          x_2 + x_3 = -5
+ A2.setIdentity();                // level 2: x = ( 3 , -3 , 3 , 3 )
+ std::vector< SM > A = { SM( 0 , n ) , A1.sparseView() , A2.sparseView() };
+ std::vector< SM > C = { C0.sparseView() , SM( 0 , n ) , SM( 0 , n ) };
+ std::vector< HQPBlock::Vec_double > b = { {} , { 4 , -5 } ,
+                                           { 3 , -3 , 3 , 3 } };
+ std::vector< HQPBlock::Vec_double > d = { { -6 , -3 } , {} , {} };
+
+ HQPBlock::HardRows hr;
+ Mat I( n , n );
+ I.setIdentity();
+ hr.C = SM( ( -I ).sparseView() );
+ hr.d.assign( n , 10 );
+ if( qcqp_kind == "quad" ) {
+  Mat Q1( n , n );
+  Q1.setZero();
+  Q1( 0 , 0 ) = 2;
+  Q1( 1 , 1 ) = 6;
+  hr.Q = { SM( ( 2 * I ).sparseView() ) , SM( Q1.sparseView() ) };
+  Mat Cq( 2 , n );
+  Cq << -2 , -2 , 0 , 0 ,
+         0 , 0 , 0 , 0;
+  hr.Cq = Cq.sparseView();
+  hr.eq = { 2 , 5 };
+  }
+ else {
+  hr.SE = { SM( I.sparseView() ) };
+  hr.SEb = { HQPBlock::Vec_double( n , -1 ) };
+  hr.SEc = { HQPBlock::Vec_double( n , 1 ) };
+  hr.SEl = SM( 1 , n );
+  hr.se = { 3 };
+  hr.PN = { SM( I.sparseView() ) };
+  hr.PNb = { HQPBlock::Vec_double( n , 0 ) };
+  hr.PNp = { 3 };
+  hr.PNs = { 1 };
+  hr.PNl = SM( 1 , n );
+  hr.pn = { 2.5 };
+  }
+
+ block.load( n , std::move( A ) , std::move( b ) , std::move( C ) ,
+             std::move( d ) , {} , {} , 1e-6 , {} , {} , std::move( hr ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the hierarchy of -Q, solved by all the HQPSolver, which are compared with
+// each other only, the null-space reference having no such rows: with -F,
+// in an HQPBlock for each formulation, configured by its BlockConfig and
+// solved by the HQPSolver of its BlockSolverConfig, and the hard rows of
+// the data are checked at the solution of each HQPSolver [see
+// HQPBlock::is_feasible()] with the tolerance of the BlockConfig; without
+// -F, in one HQPBlock with the HQPSolver of -S
+
+static int generated_qcqp( void )
+{
+ RefSolution none;
+ none.ok = false;
+ const std::string nm = qcqp_kind + " hard rows";
+
+ if( fconf_file.empty() ) {
+  HQPBlock block;
+  load_qcqp( block );
+  const int errors = check_peers( nm , working( attach( block ,
+                                                        sconf_file ) ,
+                                                true ) , none );
+  block.unregister_Solvers( true );
+  return( errors );
+  }
+
+ auto fv = get_formulations();
+ std::vector< std::unique_ptr< HQPBlock > > blocks;
+ std::vector< Configuration * > bscs;
+ std::vector< HQPSolver * > all;
+ std::size_t first = 0;  // the position of the first HQPSolver of k
+ for( std::size_t k = 0 ; k < fv.configs.size() ; ++k ) {
+  blocks.push_back( std::make_unique< HQPBlock >() );
+  auto & block = *blocks.back();
+  load_qcqp( block );
+  b_config_Block( & block , fv.configs[ k ] , fconf_file );
+  bscs.push_back( solver_config_of( fv , k ) );
+  const auto sl = attach( block , bscs.back() , fconf_file );
+  for( auto s : working( sl , true , first ) )
+   all.push_back( s );
+  first += sl.size();
+  }
+
+ // the hard rows at the x of the last level of s
+ const auto feasible = [ & ]( HQPSolver * s ) -> int {
+  const bool ok = static_cast< HQPBlock * >( s->get_Block() )->is_feasible();
+  std::cout << nm << " [" << label( s ) << "]: the hard rows at its "
+            << "solution" << ( ok ? " -> OK" : " -> KO" ) << std::endl;
+  return( ok ? 0 : 1 );
+  };
+ const int errors = check_peers( nm , all , none , feasible );
+
+ for( auto & b : blocks )
+  b->unregister_Solvers( true );
+ for( auto c : bscs )
+  delete c;
+ delete fv.owner;
+ return( errors );
+ }
+
+/*--------------------------------------------------------------------------*/
 // the options of this tester: -P, the file of the previous step, -I, the
-// pairs whose iterations are compared, and -X, the tolerances on x
+// pairs whose iterations are compared, -X, the tolerances on x, and -Q,
+// the hierarchies with quadratic or conic hard rows
 
 static bool process_specific_arg( int opt )
 {
  switch( opt ) {
+  case( 'Q' ):
+   qcqp_kind = optarg;
+   if( ( qcqp_kind != "quad" ) && ( qcqp_kind != "conic" ) )
+    throw( std::invalid_argument( "-Q takes quad or conic" ) );
+   return( true );
   case( 'P' ):
    previous = optarg;
    return( true );
@@ -1097,7 +1566,9 @@ int main( int argc , char ** argv )
  docopt_desc = "SMS++ HQPBlock test: the HQPSolver of the BlockSolverConfig "
                "against the\nnull-space reference, on the hierarchies built "
                "here or on the instance file.\n";
- short_opts += "P:I:X:";
+ short_opts += "P:I:X:Q:";
+ long_opts.insert( std::prev( long_opts.end() ) ,
+                   { "qcqp" , required_argument , nullptr , 'Q' } );
  long_opts.insert( std::prev( long_opts.end() ) ,
                    { "previous" , required_argument , nullptr , 'P' } );
  long_opts.insert( std::prev( long_opts.end() ) ,
@@ -1117,12 +1588,19 @@ int main( int argc , char ** argv )
          "HQPSolver, in the\n"
          "                                  order of the BlockSolverConfig, "
          "an empty one\n"
-         "                                  for the default\n";
+         "                                  for the default\n"
+         "  -Q, --qcqp <quad|conic>         the hierarchy with quadratic or "
+         "conic hard\n"
+         "                                  rows built here, the HQPSolver "
+         "compared with\n"
+         "                                  each other only\n";
  filename_optional = true;
  process_args( argc , argv , process_specific_arg );
- require_solver_config();
+ if( qcqp_kind.empty() || fconf_file.empty() )
+  require_solver_config();
 
- int errors = filename.empty() ? generated() : from_file();
+ int errors = ( ! qcqp_kind.empty() ) ? generated_qcqp()
+              : ( filename.empty() ? generated() : from_file() );
  errors += check_iterations();
 
  if( ( ! errors ) && ( ! usable ) ) {

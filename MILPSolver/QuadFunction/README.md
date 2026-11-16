@@ -23,12 +23,16 @@ is one for the class of the model, given by the folder of its file
 (`ObjC_ConsL` is the class `CL`), and `LPPar_<type>.txt` otherwise: the class
 `CL` has its own, since next to the `SCIPMILPSolver` of `LPPar_C.txt` and
 `LPPar_I.txt` it attaches the `:MILPSolver` for convex QPs, which refuse the
-quadratic constraints of `LC` and the nonconvex objective of `QL`:
+nonconvex objective of `QL` (and, `MOSEKMILPSolver` apart, the quadratic
+constraints of `LC`):
 `MOSEKMILPSolver` (with two threads, `MOSEKCfg-C.txt`, since its interior
 point fails on `QGROW7` with 4 threads or more and on `QPCSTAIR` with one),
 `ClarabelMILPSolver`, `PIQPMILPSolver` (with its sparse backend,
 `PIQPCfg-C.txt`) and `OSQPMILPSolver` on the continuous relaxation,
-`MOSEKMILPSolver` on the integer version. The dense ones, `DAQPMILPSolver`,
+`MOSEKMILPSolver` on the integer version. The class `LC` has its own as
+well, `LPPar_LC_C.txt` and `LPPar_LC_I.txt` (the latter the same as
+`LPPar_CL_I.txt`), with `MOSEKMILPSolver` next to `SCIPMILPSolver`, since
+MOSEK also takes convex quadratic constraints. The dense ones, `DAQPMILPSolver`,
 `QPOASESMILPSolver`, `ProxQPMILPSolver`, `QPMADMILPSolver`,
 `QuadProgMILPSolver` and `HPIPMMILPSolver`, load the whole
 Hessian and do not scale to the largest models of `CL` (up to 15000

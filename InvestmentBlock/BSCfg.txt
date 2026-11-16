@@ -6,9 +6,8 @@
 # solved by a :MILPSolver; the InvestmentFunction gets it from IFCfg.txt
 #
 # HiGHS by the simplex method: where the inner Block is infeasible the
-# InvestmentFunction cuts the point away with the homogeneous multipliers of
-# the dual direction (intHomogeneousDirection), and without the cut the
-# bundle stops above the optimum
+# InvestmentFunction cuts the point away with the dual direction, and
+# without the cut the bundle stops above the optimum
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -33,13 +32,12 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-4  # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb      0 # LogVerb, log verbosity of the MILPSolver
 intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints
-intHomogeneousDirection 1  # the dual direction is - A' y, a certificate
 
 # All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Preprocessing_Presolve  0   # 0 = off, 1 = on (default)

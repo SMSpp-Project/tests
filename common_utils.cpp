@@ -31,7 +31,6 @@
 #include <list>
 #include <map>
 #include <numeric>
-#include <typeinfo>
 
 #include <SMSTypedefs.h>
 
@@ -122,25 +121,6 @@ std::string error_token( int status )
  else                                      what += " (status " +
                                             std::to_string( status ) + ")";
  return( what );
- }
-
-/*--------------------------------------------------------------------------*/
-// print the exception that reached std::terminate(), then abort
-
-void smspp_terminate( void )
-{
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
-  }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
-  }
- catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
-  }
- std::abort();  // or exit( 1 )
  }
 
 /*--------------------------------------------------------------------------*/

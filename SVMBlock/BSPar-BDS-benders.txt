@@ -41,7 +41,7 @@ int_BDSlv_Regime  1  # 0 = convex master, 1 = MILP master
 2  # number of string parameters
 
 # now all the string parameters
-str_Bsub_BSCfg  BSPar-BDS-sub.txt          # BlockSolverConfig of the
+str_Bsub_BSCfg  BDSSCfg.txt                # BlockSolverConfig of the
                                            # subproblems
 str_Mstr_BSCfg  BSPar-BDS-master-milp.txt  # BlockSolverConfig of the master
 

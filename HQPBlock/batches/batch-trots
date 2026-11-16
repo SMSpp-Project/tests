@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+#
+# usage: batch-trots < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default HQPBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar-trots.txt
+#        < log file > = name of log file, default no log
+#
+# Every HQPSolver of the BlockSolverConfig on the proton cases of TROTS, the
+# Radiotherapy Optimisation Test Set (S. Breedveld, B. Heijmen, Data in
+# Brief 12:143-149, 2017), against each other and against the solution of
+# TROTS, which the instance carries (HQPPoint): the values of the levels of
+# each HQPSolver must not be lexicographically larger than those there.
+# The weighted sum of the objectives of each case, of which that solution
+# is the optimum, is also solved, as a Linear Program, by the Solver of
+# the AbstractBlock (tools/trots2nc4.py --weighted), compared with each
+# other and with the value of the solution of TROTS. The
+# cases are those of the variable TROTS_CASES (default Protons_04, the
+# smallest one), each converted by tools/trots2nc4.py of HQPBlock, the
+# constraints and x >= 0 as hard rows; the MAT file of a case is taken out
+# of Protons.zip of TROTS (2.3 GB, downloaded from Zenodo the first time),
+# and the file and the instances are kept in the directory TROTS_DIR
+# (default trots, in the test directory). The converter needs Python 3 with
+# numpy, scipy, h5py and netCDF4 (PYTHON, default python3).
+#
+# A case has some 10^3 columns and 4 10^5 hard rows, and an HQPSolver takes
+# minutes (MOSEK) to hours (Gurobi, primal simplex on one thread) and some
+# 25 GB of memory, which is why the battery is not among the tests of the
+# suite.
+
+# run from the test directory so HQPBlock_test reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./HQPBlock_test
+DEFAULT_PAR=BSPar-trots.txt
+parse_batch_args "$@"
+
+dir="${TROTS_DIR:-trots}"
+py="${PYTHON:-python3}"
+zip="${dir}/Protons.zip"
+url="https://zenodo.org/records/2708302/files/Protons.zip?download=1"
+conv=../../HQPBlock/tools/trots2nc4.py
+
+mkdir -p "${dir}" || exit 1
+
+# each case, downloaded and converted if it is not there - - - - - - - - - -
+
+for c in ${TROTS_CASES:-Protons_04}; do
+  nc4="${dir}/${c}.nc4"
+  ws="${dir}/${c}-weighted.nc4"
+  if [ ! -e "${dir}/${c}.mat" ] && { [ ! -e "${nc4}" ] || [ ! -e "${ws}" ]; }
+  then
+    if [ ! -e "${zip}" ]; then
+      curl -fL -C - -o "${zip}.part" "${url}" &&
+        mv "${zip}.part" "${zip}" ||
+        { echo "cannot download ${url}"; exit 1; }
+    fi
+    "${py}" -I -c 'import sys, zipfile
+zipfile.ZipFile(sys.argv[1]).extract(sys.argv[2], sys.argv[3])' \
+      "${zip}" "${c}.mat" "${dir}" || { echo "no ${c} in ${zip}"; exit 1; }
+  fi
+  for opt in "" --weighted; do
+    out="${nc4}"
+    [ -n "${opt}" ] && out="${ws}"
+    if [ ! -e "${out}" ]; then
+      "${py}" "${conv}" ${opt} "${dir}/${c}.mat" "${out}.part" &&
+        mv "${out}.part" "${out}" || { echo "cannot convert ${c}"; exit 1; }
+    fi
+    run_test "$exe" -S "$par" "${out}"
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

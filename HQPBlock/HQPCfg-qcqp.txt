@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - HQPCfg-qcqp.txt - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the HQPSolver of HQPBSCfg-quad.txt and
+# HQPBSCfg-cuts.txt: that of HQPCfg.txt with the slacks of the inequality
+# rows of each level fixed 1e-5 above their values at its solution
+# (dblSlackTol); with the slacks fixed at their values, the next level has
+# almost no interior when a quadratic hard row is active, and the interior
+# point stalls on it, while a level solved over the cuts may be infeasible
+# by the tolerance of the separation.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*HQPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblSlackTol  1e-5  # the slacks fixed 1e-5 above their values
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END HQPCfg-qcqp.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

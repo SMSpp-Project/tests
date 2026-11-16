@@ -18,7 +18,7 @@
 # containing the optimum
 
 # the SOCP formulation is only run where Gurobi solves it whatever its
-# numerical focus, the 101 instances where it does not being listed, with
+# numerical focus, the 102 instances where it does not being listed, with
 # the reason, in socp-unstable.txt
 socp_unstable=$(grep -v '^#' "$(dirname "$0")/../socp-unstable.txt")
 

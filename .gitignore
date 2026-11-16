@@ -25,6 +25,7 @@ MultiStageStochasticBlock/MSSB_test
 
 # Large data / generated inputs
 MMCFBlock/data/*
+HQPBlock/trots/
 
 MMCFBlock/gen/Canad.tgz
 InvestmentBlock/investment_candidates.txt
