@@ -54,19 +54,20 @@
  * MPI_Init(). Where Open MPI / UCX are installed but no usable transport is
  * available (no IB, missing UCX vfs.sock, ...), their runtime can hang on
  * startup spinning on futex / X11 sockets, so TCP-only defaults are
- * pre-seeded here, before main(), with setenv( ... , 0 ): the third
- * argument is "overwrite = false", hence whoever has exported UCX_TLS /
- * OMPI_MCA_* already, as on a cluster with a real fabric, keeps control. */
+ * pre-seeded here, before main(), for the variables that are not set yet,
+ * hence whoever has exported UCX_TLS / OMPI_MCA_* already, as on a cluster
+ * with a real fabric, keeps control. */
 
 namespace {
 
 void set_default_env( const char * name , const char * value ) {
-#ifdef _WIN32
- if( std::getenv( name ) == nullptr )
-  _putenv_s( name , value );
-#else
- setenv( name , value , 0 );
-#endif
+ if( std::getenv( name ) )
+  return;
+ // putenv(), which POSIX and the C library of Windows have under this
+ // name, keeps the string itself, which hence lives as long as the process
+ static auto & entries = * new std::list< std::string >;
+ entries.push_back( std::string( name ) + "=" + value );
+ putenv( entries.back().data() );
 }
 
 struct SmsppMpiSafeEnvInit {

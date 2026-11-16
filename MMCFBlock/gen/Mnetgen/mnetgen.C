@@ -8,29 +8,30 @@
 
 using namespace std;
 
-#if defined(_WIN32)
- // custom implementation for Windows, whose C library (of MSVC as of
- // MinGW-w64) has no drand48(): the same 48-bit generator
- static unsigned long long seed = 1;  // initial seed
+// the 48-bit linear congruential generator of drand48() and srand48() of
+// POSIX, with the same constants and the same seeding, so that the
+// instances are the same with every C library (the ones of MSVC and of
+// MinGW-w64 have no drand48())
+static unsigned long long mnetgen_seed = 1;  // initial seed
 
- // function that simulates `drand48()`
- double drand48() {
-  const unsigned long long a = 0x5DEECE66DULL;
-  const unsigned long long c = 0xBULL;
-  const unsigned long long mask = ( 1ULL << 48 ) - 1;
+// the next number of the generator, in [0.0, 1.0), as `drand48()`
+static double mnetgen_drand48() {
+ const unsigned long long a = 0x5DEECE66DULL;
+ const unsigned long long c = 0xBULL;
+ const unsigned long long mask = ( 1ULL << 48 ) - 1;
 
-  // update the seed
-  seed = ( a * seed + c ) & mask;
+ // update the seed
+ mnetgen_seed = ( a * mnetgen_seed + c ) & mask;
 
-  // returns a number in [0.0, 1.0)
-  return( static_cast< double >( seed ) / static_cast< double >( mask + 1 ) );
+ return( static_cast< double >( mnetgen_seed ) /
+	 static_cast< double >( mask + 1 ) );
  }
 
- // function that simulates `srand48()` to set the seed
- void srand48( long new_seed ) {
-  seed = ( static_cast< unsigned long long >( new_seed ) << 16 ) | 0x330E;
+// the seed of the generator, as `srand48()`
+static void mnetgen_srand48( long new_seed ) {
+ mnetgen_seed = ( static_cast< unsigned long long >( new_seed ) << 16 ) |
+		0x330E;
  }
-#endif
 
 /*-------------------------------- MNETGEN -----------------------------------
 
@@ -81,7 +82,7 @@ using namespace std;
 
             / 0  =>  use the original built-in random number generator
   W_RND  =  |
-            \ 1  =>  use the standard drand48() function of stdlib
+            \ 1  =>  use the generator of drand48() (mnetgen_drand48())
 
 	   / 0 if the standard 3-files mnetgen output format is used
   FOUR_F = |
@@ -131,7 +132,7 @@ using namespace std;
 
 #if( W_RND )
 
- #define rand_( i ) drand48()
+ #define rand_( i ) mnetgen_drand48()
 
 #else
 
@@ -213,7 +214,7 @@ int main( int argc , char **argv )
  long i;
 
  #if( W_RND )
-  srand48( iseed );
+  mnetgen_srand48( iseed );
  #else
   // THE FOLLOWING SEGMENT WARMS UP THE GENERATOR
 

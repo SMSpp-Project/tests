@@ -20,6 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - the DLLs of Torch are copied next to the benchmarks of the machine-learning
   bundle wherever Torch has any
 
+- the tests of UCBlock name their temporary directories by
+  `std::random_device` instead of `getpid()`, and the tests of UCBlock and
+  MMCFBlock no longer include `unistd.h`, so that they build with every
+  compiler; mnetgen uses its own copy of the generator of `drand48()` on
+  every system, not only on Windows, which gives the same instances as the
+  one of glibc
+
+- the defaults of the variables of Open MPI and UCX that are not set yet
+  are set by `putenv()`, which POSIX and the C library of Windows both
+  have, instead of `setenv()` and `_putenv_s()`
+
 ### Removed
 
 - `cmake/FindCPLEX.cmake`, the one of the core being used

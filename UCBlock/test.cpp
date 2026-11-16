@@ -164,8 +164,6 @@
 #include <filesystem>
 #include <random>
 
-#include <unistd.h>
-
 #include "common_utils.h"
 
 #include "PolyhedralFunctionBlock.h"
@@ -640,7 +638,8 @@ static int test( void )
  std::cout << "solving with " << solver_name << std::endl;
 
  dir = std::filesystem::temp_directory_path() /
-       ( "UCBlock_pollutant_test_" + std::to_string( getpid() ) );
+       ( "UCBlock_pollutant_test_" +
+         std::to_string( std::random_device{}() ) );
  std::filesystem::create_directories( dir );
 
  const std::vector< std::vector< double > > co2_rate = { { 1 , 0.5 , 0 , 0 } };
@@ -1324,7 +1323,8 @@ static int test( void )
   std::cout << "solving with " << solver_name << std::endl;
 
  dir = std::filesystem::temp_directory_path() /
-       ( "UCBlock_scale_test_" + std::to_string( getpid() ) );
+       ( "UCBlock_scale_test_" +
+         std::to_string( std::random_device{}() ) );
  std::filesystem::create_directories( dir );
 
  const auto thermal = write( "thermal" , false );
