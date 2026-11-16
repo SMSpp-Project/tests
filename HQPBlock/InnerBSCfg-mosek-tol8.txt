@@ -1,9 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - InnerBSCfg-mosek-trots.txt  - - - - - - - - - - - -
+# - - - - - - - - - - - - InnerBSCfg-mosek-tol8.txt - - - - - - - - - - - - -
 #
-# The BlockSolverConfig of the inner Solver of the HQPSolver of
-# HQPBSCfg-trots.txt with MOSEK: that of InnerBSCfg-mosek.txt with the
-# ComputeConfig of MOSEKCfg-trots.txt.
+# The BlockSolverConfig of the inner Solver of an HQPSolver with MOSEK at
+# the tolerances 1e-8: that of InnerBSCfg-mosek.txt with the ComputeConfig
+# of MOSEKCfg-tol8.txt, for TROTS (HQPBSCfg-trots.txt) and the quadratic
+# hard rows (HQPBSCfg-quad.txt).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -20,10 +21,10 @@ MOSEKMILPSolver  # name of 1st Solver
 1  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
-*MOSEKCfg-trots.txt
+*MOSEKCfg-tol8.txt
 
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - END InnerBSCfg-mosek-trots.txt  - - - - - - - - - - -
+# - - - - - - - - - - - END InnerBSCfg-mosek-tol8.txt - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

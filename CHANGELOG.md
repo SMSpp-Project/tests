@@ -71,6 +71,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `HQPBlock`: `MOSEKCfg-trots.txt` and `InnerBSCfg-mosek-trots.txt` are now
+  `MOSEKCfg-tol8.txt` and `InnerBSCfg-mosek-tol8.txt`, MOSEK with the
+  tolerances `1e-8` of its interior point, which also `HQPBSCfg-quad.txt`
+  and `InnerBSCfg-mosek-cuts.txt` use, since with the `1e-10` of
+  `MOSEKCfg.txt` MOSEK stalls (`MSK_RES_TRM_STALL`) on the next levels of
+  the hierarchies with quadratic or conic hard rows, which have almost no
+  interior
 - `HQPBlock`: in CI `batch-radial` runs only the steps of the control
   horizon 3, since on the two of the horizon 10 the dense inner Solvers
   took the nightly job beyond its time; `HQPStageSolver` solves those in

@@ -1,11 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - MOSEKCfg-trots.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - MOSEKCfg-tol8.txt - - - - - - - - - - - - - - -
 #
-# The ComputeConfig of MOSEKMILPSolver as the inner Solver of the
-# HQPSolver of HQPBSCfg-trots.txt (InnerBSCfg-mosek-trots.txt): that of
-# MOSEKCfg.txt with the default tolerances of the interior point (1e-8),
-# the tighter ones not being reached on the levels of TROTS, of millions
-# of non-zero entries.
+# The ComputeConfig of MOSEKMILPSolver of MOSEKCfg.txt with the default
+# tolerances of the interior point (1e-8), for the hierarchies whose next
+# levels have almost no interior, where the tighter ones of MOSEKCfg.txt
+# are not reached (MSK_RES_TRM_STALL): those of TROTS, of millions of
+# non-zero entries, and those with quadratic or conic hard rows.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -50,5 +50,5 @@ MSK_DPAR_INTPNT_QO_TOL_DFEAS    1e-8  # dual feasibility
 *  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - END MOSEKCfg-trots.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END MOSEKCfg-tol8.txt - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

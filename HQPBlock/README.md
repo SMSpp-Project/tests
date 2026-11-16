@@ -161,12 +161,14 @@ The batteries are:
   the data being checked at the solution of each one
   (`HQPBlock::is_feasible()`, to `1e-6`): the quadratic rows with a
   `QuadFunction` and MOSEK and Gurobi as inner Solvers
-  (`HQPBCfg.txt`, `HQPBSCfg-quad.txt`), and the quadratic rows, or the
+  (`HQPBCfg.txt`, `HQPBSCfg-quad.txt`), MOSEK with the tolerances `1e-8`
+  of `MOSEKCfg-tol8.txt`, which unlike those of `MOSEKCfg.txt` it reaches
+  on levels with almost no interior, and the quadratic rows, or the
   conic ones, as the cuts that the `HQPBlock` separates, of Kelley
   (`HQPBCfg.txt`, conic only) or at the boundary point
   (`HQPBCfg-cuts.txt`), with inner Solvers that solve and separate in a
-  loop (`intRelaxIntVars 2`), MOSEK, DAQP and qpOASES, the active-set ones
-  also with a single inner Solver for all the levels
+  loop (`intRelaxIntVars 2`), MOSEK (again at `1e-8`), DAQP and qpOASES,
+  the active-set ones also with a single inner Solver for all the levels
   (`HQPBSCfg-cuts.txt`);
 
 - `batches/batch-radial`, the instances that HQPBlock distributes in
@@ -187,7 +189,7 @@ The batteries are:
   the case as hard rows, in the directory `TROTS_DIR` (default `trots`);
   `BSPar-trots.txt` gives the `HQPBlock` the `HQPSolver` of
   `HQPBSCfg-trots.txt`, with the slacks fixed up to `1e-3`
-  (`HQPCfg-trots.txt`) and MOSEK (`InnerBSCfg-mosek-trots.txt`) or Gurobi
+  (`HQPCfg-trots.txt`) and MOSEK (`InnerBSCfg-mosek-tol8.txt`) or Gurobi
   (`InnerBSCfg-gurobi.txt`) as inner Solvers, one for each level or one for
   all of them; the weighted sum of the objectives of the case, of which
   the solution of TROTS is the optimum, is also converted

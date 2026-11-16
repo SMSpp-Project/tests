@@ -5,7 +5,7 @@
 # Radiotherapy Optimisation Test Set [see BSPar-trots.txt], whose levels
 # have hundreds of thousands of sparse rows, too many for the dense inner
 # Solvers: an HQPSolver in the setting of HQPCfg-trots.txt for each of the
-# sparse inner Solvers MOSEK (InnerBSCfg-mosek-trots.txt) and Gurobi
+# sparse inner Solvers MOSEK (InnerBSCfg-mosek-tol8.txt) and Gurobi
 # (InnerBSCfg-gurobi.txt), with an inner Solver for each level (the 1st and
 # the 2nd) and with a single one for all of them (intOneInner, the 3rd and
 # the 4th), all solving the same hierarchy in the same run, so that the
@@ -48,7 +48,7 @@ HQPSolver  # 4th: Gurobi, one inner Solver for all the levels
 1  # number of string parameters
 
 # now all the string parameters
-strInnerBSC  InnerBSCfg-mosek-trots.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-mosek-tol8.txt   # the inner Solver
 
 0  # number of vector-of-int parameters
 
@@ -124,7 +124,7 @@ intOneInner  1  # one inner Solver for all the levels
 1  # number of string parameters
 
 # now all the string parameters
-strInnerBSC  InnerBSCfg-mosek-trots.txt  # the inner Solver
+strInnerBSC  InnerBSCfg-mosek-tol8.txt   # the inner Solver
 
 0  # number of vector-of-int parameters
 
