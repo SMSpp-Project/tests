@@ -10,20 +10,26 @@
 # from the one of the SingleFlowDCRBendersSolver and of the P/C formulation
 # by more than the tolerance, within the one of its cones; one more,
 # waxman/w1_700_08_1, is solved with 1 thread and with all those of the
-# machine but not with the 4 of GRBCfg.txt. A failure that depends on the
-# setting would come and go with the version of Gurobi and with the
-# machine, hence batch-instances leaves them out of the SOCP formulation,
-# and batch-instances-cplex solves them with CPLEX, which solves all of
-# them.
+# machine but not with the 4 of GRBCfg.txt, and on four more,
+# garr/Garr200112_8, garr/Garr200912_1, topo/Garr201001_8 and
+# topo/Garr201112_1, the lower bound of Gurobi is above the cost of the
+# exactly feasible solution of the SingleFlowDCRBendersSolver by more than
+# the gap Gurobi declares. A
+# failure that depends on the setting would come and go with the version
+# of Gurobi and with the machine, hence batch-instances leaves them out of
+# the SOCP formulation, and batch-instances-cplex solves them with CPLEX,
+# which solves all of them.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+garr/Garr200112_8
 garr/Garr200908_1
 garr/Garr200908_5
 garr/Garr200908_6
 garr/Garr200908_8
 garr/Garr200909_5
+garr/Garr200912_1
 sndlib/abilene_1
 sndlib/di-yuan_8
 sndlib/giul39_6
@@ -65,6 +71,7 @@ topo/Garr200902_6
 topo/Garr200908_1
 topo/Garr200908_5
 topo/Garr200912_8
+topo/Garr201001_8
 topo/Garr201004_5
 topo/Garr201005_5
 topo/Garr201008_5
@@ -76,6 +83,7 @@ topo/Garr201109_8
 topo/Garr201110_6
 topo/Garr201110_8
 topo/Garr201111_8
+topo/Garr201112_1
 topo/Garr201112_8
 topo/Garr201201_8
 topo/Geant2009_6

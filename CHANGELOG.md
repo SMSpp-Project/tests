@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `SingleFlowDCRBlock`: the tester checks that the solution of a Solver that
+  does not solve a relaxation meets the deadline up to the tolerances that
+  govern it, read from the Solver (feasibility, convergence of the barrier
+  on the conic rows, integrality) and carried over the rows of the
+  formulation, or 1e-9 if it declares none, saying by how much it does not
+  and with which tolerance; and that it costs at least each lower bound
+  less the gaps that its Solver declares and the most that violations
+  within the declared tolerances can save on the cost of the solution
+- `SingleFlowDCRBlock`: `garr/Garr200112_8`, `garr/Garr200912_1`,
+  `topo/Garr201001_8` and `topo/Garr201112_1` join `socp-unstable.txt`,
+  Gurobi giving on them a lower bound above the cost of the exactly
+  feasible solution of the `SingleFlowDCRBendersSolver` by more than its
+  gap; the README and the batteries count 106 instances there
+
 ## [0.9.0] - 2026-11-16
 
 ### Added
