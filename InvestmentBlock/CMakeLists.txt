@@ -75,18 +75,10 @@ if (TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock AND
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
                ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME IB_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE}
-                             ${CMAKE_CURRENT_BINARY_DIR}/IB_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME IB_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                     "${BATCH_FILE}" "$<TARGET_FILE:IB_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        add_test(NAME IB_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                 "${BATCH_FILE}" "$<TARGET_FILE:IB_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Make each batch test require the investment_nc4_extracted fixture
         set_tests_properties(IB_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED
@@ -110,10 +102,11 @@ if (TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock AND
     # where all of them are
     find_package(Python3 COMPONENTS Interpreter)
     find_program(NCGEN ncgen)
-    if (UNIX AND TARGET investmentblock_solver AND TARGET sddp_solver AND
+    if (TARGET investmentblock_solver AND TARGET sddp_solver AND
         Python3_Interpreter_FOUND AND NCGEN)
         add_test(NAME investmentblock_solver/batches-sddp/batch
-                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches-sddp/batch
+                 COMMAND ${SMSpp_BASH}
+                         ${CMAKE_CURRENT_SOURCE_DIR}/batches-sddp/batch
                          $<TARGET_FILE:investmentblock_solver>
                          $<TARGET_FILE:sddp_solver>
                          ${Python3_EXECUTABLE}
@@ -124,11 +117,12 @@ if (TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock AND
     # design_converter, which is built in tools/, against the networks of
     # InvestmentBlock written with the design in an InvestmentBlock [see
     # batches-design/batch]: both archives have to be there
-    if (UNIX AND TARGET design_converter)
+    if (TARGET design_converter)
         add_test(NAME IB_test/batches-design/batch
-                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches-design/batch
+                 COMMAND ${SMSpp_BASH}
+                         ${CMAKE_CURRENT_SOURCE_DIR}/batches-design/batch
                          $<TARGET_FILE:design_converter>
-                         ${CMAKE_CURRENT_BINARY_DIR}/IB_test
+                         $<TARGET_FILE:IB_test>
                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         set_tests_properties(IB_test/batches-design/batch PROPERTIES
                              FIXTURES_REQUIRED

@@ -29,19 +29,11 @@ smspp_install(MasterProblemBlock_test)
 
 # batch is the battery of the CI; batch-long, the same over more seeds,
 # rounds and sizes, is run by hand
-if (UNIX)
-    add_test(NAME MasterProblemBlock_test/batch
-             COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batch
-                 ${CMAKE_CURRENT_BINARY_DIR}/MasterProblemBlock_test
-             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-elseif (WIN32)
-    add_test(NAME MasterProblemBlock_test/batch
-             # using Git for Windows that includes Git Bash
-             COMMAND "C:/Program Files/Git/bin/bash.exe"
-                     "${CMAKE_CURRENT_SOURCE_DIR}/batch"
-                     "$<TARGET_FILE:MasterProblemBlock_test>"
-             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-endif ()
+add_test(NAME MasterProblemBlock_test/batch
+         COMMAND ${SMSpp_BASH}
+                 "${CMAKE_CURRENT_SOURCE_DIR}/batch"
+                 "$<TARGET_FILE:MasterProblemBlock_test>"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).

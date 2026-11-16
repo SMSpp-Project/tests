@@ -94,18 +94,10 @@ if (TARGET SMS++::TwoStageStochasticBlock)
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
                ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME TSSB_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE}
-                             ${CMAKE_CURRENT_BINARY_DIR}/TSSB_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME TSSB_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:TSSB_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        add_test(NAME TSSB_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:TSSB_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Re-use the same `uc_nc4_extracted` fixture set up by
         # tests/UCBlock/CMakeLists.txt: it builds the
         # extract_uc_nc4 target which produces the EC nc4 files used here.
@@ -158,7 +150,7 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                             OUTPUT_QUIET ERROR_QUIET)
             if (HAS_NETCDF4 EQUAL 0)
                 add_test(NAME TSSB_BDS_test/batches/batch-bds
-                         COMMAND bash
+                         COMMAND ${SMSpp_BASH}
                                  ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-bds
                                  $<TARGET_FILE:TSSB_BDS_test>
                                  ${Python3_EXECUTABLE}
@@ -191,17 +183,16 @@ if (TARGET SMS++::TwoStageStochasticBlock AND TARGET SMS++::MMCFBlock AND
                           SMS++::MMCFBlock
                           SMS++::TwoStageStochasticBlock)
 
-    if (UNIX)
-        add_test(NAME TSSB_test/batches/batch-mmcf
-                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mmcf
-                         $<TARGET_FILE:TSSB_test>
-                         $<TARGET_FILE:mmcf_tssb_gen>
-                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        # the instances are written out of the Canad ones, which the
-        # extract_mmcf_Canad test of the MMCFBlock suite downloads
-        set_tests_properties(TSSB_test/batches/batch-mmcf
-                             PROPERTIES FIXTURES_REQUIRED mmcf_Canad_extracted)
-    endif ()
+    add_test(NAME TSSB_test/batches/batch-mmcf
+             COMMAND ${SMSpp_BASH}
+                     ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mmcf
+                     $<TARGET_FILE:TSSB_test>
+                     $<TARGET_FILE:mmcf_tssb_gen>
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    # the instances are written out of the Canad ones, which the
+    # extract_mmcf_Canad test of the MMCFBlock suite downloads
+    set_tests_properties(TSSB_test/batches/batch-mmcf
+                         PROPERTIES FIXTURES_REQUIRED mmcf_Canad_extracted)
 endif ()
 
 # What a scenario reduction costs on the investment problem: the instance is

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- the suites keep the modules they link and copy the DLLs as the modules do
+  [see `SMSppModule.cmake` of SMS++], with no test on the system or on the
+  compiler; CMake 3.24 or later is needed
+
+- the batteries and the scripts that write the data are run by the `bash`
+  that `SMSpp_BASH` finds, with the testers named by `$<TARGET_FILE>`, on
+  every system, those that ran only on Unix included
+
+- the DLLs of Torch are copied next to the benchmarks of the machine-learning
+  bundle wherever Torch has any
+
+### Removed
+
+- `cmake/FindCPLEX.cmake`, the one of the core being used
+
 ### Fixed
 
 - `SingleFlowDCRBlock`: the tester checks that the solution of a Solver that

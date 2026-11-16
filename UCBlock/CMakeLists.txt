@@ -102,17 +102,10 @@ if (TARGET SMS++::UCBlock)
         if (BATCH_DEFAULT_EXE AND TARGET UCBlock_ML_test)
             set(BATCH_EXE UCBlock_ML_test)
         endif ()
-        if (UNIX)
-            add_test(NAME UCBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} $<TARGET_FILE:${BATCH_EXE}>
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME UCBlock_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:${BATCH_EXE}>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        add_test(NAME UCBlock_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:${BATCH_EXE}>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Make each batch test require the uc_nc4_extracted fixture
         set_tests_properties(UCBlock_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
@@ -223,10 +216,13 @@ endif ()
                               SMS++::UCBlock)
         target_compile_features(UCBlock_ML_bench PUBLIC cxx_std_20)
 
-        # on Windows the Torch DLLs have to sit next to the executable
-        if (MSVC)
-            find_package(Torch QUIET HINTS ${Torch_ROOT})
-            file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+        # the DLLs of Torch, where it has any, have to sit next to the
+        # executable, and its targets do not name them: they are in lib/
+        # of the prefix whose share/cmake/Torch BundleSolverML found
+        get_filename_component(TORCH_PREFIX "${Torch_DIR}/../../.."
+                               ABSOLUTE)
+        file(GLOB TORCH_DLLS "${TORCH_PREFIX}/lib/*.dll")
+        if (TORCH_DLLS)
             add_custom_command(TARGET UCBlock_ML_bench POST_BUILD
                                COMMAND ${CMAKE_COMMAND} -E copy_if_different
                                        ${TORCH_DLLS}

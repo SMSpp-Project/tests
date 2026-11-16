@@ -12,6 +12,8 @@ if (NOT hasParent)
     find_package(MCFClassSolver)
 endif ()
 
+# the find module of the core [see SMSppModule.cmake of SMS++]
+list(APPEND CMAKE_MODULE_PATH ${SMSpp_CMAKE_DIR})
 find_package(CPLEX)
 
 # ----- Subdirectories ------------------------------------------------------ #
@@ -22,30 +24,16 @@ add_subdirectory(gen/Mnetgen)
 
 # Custom command to run gen/batch with the mnetgen exe if the .generated file
 # does not exist
-if (UNIX)
-    add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch
-                    ${CMAKE_CURRENT_BINARY_DIR}/gen/Mnetgen/mnetgen
-            COMMAND ${CMAKE_COMMAND} -E touch
-                    ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
-            COMMENT "Running mnetgen"
-            VERBATIM
-    )
-elseif (WIN32)
-    add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            # using Git for Windows that includes Git Bash
-            COMMAND "C:/Program Files/Git/bin/bash.exe"
-            "${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch" "$<TARGET_FILE:mnetgen>"
-            COMMAND ${CMAKE_COMMAND} -E touch
-                    ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
-            COMMENT "Running mnetgen"
-            VERBATIM
-    )
-endif ()
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
+        COMMAND ${SMSpp_BASH}
+        "${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch" "$<TARGET_FILE:mnetgen>"
+        COMMAND ${CMAKE_COMMAND} -E touch
+                ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
+        COMMENT "Running mnetgen"
+        VERBATIM
+)
 
 # Create custom targets to run the nc4 generation
 add_custom_target(run_mnetgen
@@ -187,18 +175,10 @@ if (TARGET SMS++::MMCFBlock AND
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
                ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME MMCF_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE}
-                             ${CMAKE_CURRENT_BINARY_DIR}/MMCF_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME MMCF_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:MMCF_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        add_test(NAME MMCF_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:MMCF_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Make each batch test require the data fixtures it reads
         set_tests_properties(MMCF_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED
@@ -267,18 +247,10 @@ if (TARGET SMS++::MMCFBlock)
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
                ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME MMCFBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE}
-                             ${CMAKE_CURRENT_BINARY_DIR}/MMCFBlock_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME MMCFBlock_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:MMCFBlock_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        add_test(NAME MMCFBlock_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:MMCFBlock_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Make each batch test require the data fixtures it reads
         if (BATCH_NAME STREQUAL "batches/batch")
             set(BATCH_FIXTURES "mmcf_Canad_extracted;mnetgen_generated")
@@ -314,12 +286,10 @@ if (TARGET SMS++::MMCFBlock AND
 
     smspp_install(MMCFND_test)
 
-    if (UNIX)
-        add_test(NAME MMCFND_test/batches/batch-nd
-                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-nd
-                         ${CMAKE_CURRENT_BINARY_DIR}/MMCFND_test
-                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    endif ()
+    add_test(NAME MMCFND_test/batches/batch-nd
+             COMMAND ${SMSpp_BASH} ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-nd
+                     $<TARGET_FILE:MMCFND_test>
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif ()
 
 # The benchmark of the machine-learning driven bundle on the instances of
@@ -341,10 +311,13 @@ if (TARGET SMS++::BundleSolverML)
                           SMS++::MMCFBlock)
     target_compile_features(MMCFBlock_ML_bench PUBLIC cxx_std_20)
 
-    # on Windows the Torch DLLs have to sit next to the executable
-    if (MSVC)
-        find_package(Torch QUIET HINTS ${Torch_ROOT})
-        file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+    # the DLLs of Torch, where it has any, have to sit next to the
+    # executable, and its targets do not name them: they are in lib/
+    # of the prefix whose share/cmake/Torch BundleSolverML found
+    get_filename_component(TORCH_PREFIX "${Torch_DIR}/../../.."
+                           ABSOLUTE)
+    file(GLOB TORCH_DLLS "${TORCH_PREFIX}/lib/*.dll")
+    if (TORCH_DLLS)
         add_custom_command(TARGET MMCFBlock_ML_bench POST_BUILD
                            COMMAND ${CMAKE_COMMAND} -E copy_if_different
                                    ${TORCH_DLLS}

@@ -23,19 +23,11 @@ endif ()
 
 smspp_install(MILPSolver_ObjectiveWeight_test)
 
-if (UNIX)
-    add_test(NAME MILPSolver_ObjectiveWeight_test/batches/batch-weight
-             COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-weight
-                     ${CMAKE_CURRENT_BINARY_DIR}/MILPSolver_ObjectiveWeight_test
-             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-elseif (WIN32)
-    add_test(NAME MILPSolver_ObjectiveWeight_test/batches/batch-weight
-             # using Git for Windows that includes Git Bash
-             COMMAND "C:/Program Files/Git/bin/bash.exe"
-             "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-weight"
-             "$<TARGET_FILE:MILPSolver_ObjectiveWeight_test>"
-             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-endif ()
+add_test(NAME MILPSolver_ObjectiveWeight_test/batches/batch-weight
+         COMMAND ${SMSpp_BASH}
+         "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-weight"
+         "$<TARGET_FILE:MILPSolver_ObjectiveWeight_test>"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).

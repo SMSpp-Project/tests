@@ -61,6 +61,7 @@ if (TARGET SMS++::SingleFlowDCRBlock)
 
     # the battery that solves the SOCP formulation with CPLEX where Gurobi is
     # not stable is only there when CPLEX is [see socp-unstable.txt]
+    list(APPEND CMAKE_MODULE_PATH ${SMSpp_CMAKE_DIR})
     find_package(CPLEX QUIET)
 
     # Add a test for each batch file
@@ -77,19 +78,11 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                 AND NOT DCR_HAS_BX)
             continue ()
         endif ()
-        if (UNIX)
-            add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE}
-                         ${CMAKE_CURRENT_BINARY_DIR}/SingleFlowDCRBlock_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}"
-                             "$<TARGET_FILE:SingleFlowDCRBlock_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}"
+                         "$<TARGET_FILE:SingleFlowDCRBlock_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         if (BATCH_NAME MATCHES "^batches/batch-instances")
             set_tests_properties(SingleFlowDCRBlock_test/${BATCH_NAME}
                                  PROPERTIES FIXTURES_REQUIRED
@@ -122,19 +115,11 @@ if (TARGET SMS++::SingleFlowDCRBlock)
         foreach (BATCH_FILE ${MULTI_BATCH_FILES})
             string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
                    ${BATCH_FILE})
-            if (UNIX)
-                add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
-                         COMMAND bash ${BATCH_FILE}
-                             ${CMAKE_CURRENT_BINARY_DIR}/MultiFlowDCRBlock_test
-                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            elseif (WIN32)
-                add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
-                         # using Git for Windows that includes Git Bash
-                         COMMAND "C:/Program Files/Git/bin/bash.exe"
-                                 "${BATCH_FILE}"
-                                 "$<TARGET_FILE:MultiFlowDCRBlock_test>"
-                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            endif ()
+            add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
+                     COMMAND ${SMSpp_BASH}
+                             "${BATCH_FILE}"
+                             "$<TARGET_FILE:MultiFlowDCRBlock_test>"
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             set_tests_properties(MultiFlowDCRBlock_test/${BATCH_NAME}
                                  PROPERTIES FIXTURES_REQUIRED
                                  dcr_nc4_extracted)
