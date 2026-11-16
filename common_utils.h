@@ -8,9 +8,8 @@
  *
  * - output and parsing: the ostream manipulators def() and fixd(), the
  *   string-to-T parser Str2Sthg(), the pretty-printer of Solver return codes
- *   PrintResults(), the std::terminate handler smspp_terminate(),
- *   load_Block_or_exit(), which reads a Block out of a text file, and
- *   GenerateRand(), which draws a random subset of indices;
+ *   PrintResults(), load_Block_or_exit(), which reads a Block out of a
+ *   text file, and GenerateRand(), which draws a random subset of indices;
  *
  * - configuration: b_config_Block() and s_config_Block() apply a BlockConfig
  *   or a BlockSolverConfig to a Block, dispatching to the nested sub-Block
@@ -90,6 +89,7 @@
 #include <BlockSolverConfig.h>
 #include <ColVariable.h>
 #include <PolyhedralFunction.h>
+#include <SMSTerminate.h>
 #include <Solution.h>
 
 /*--------------------------------------------------------------------------*/
@@ -287,13 +287,6 @@ Block::Subset GenerateRand( Block::Index m , Block::Index k ,
  *  shared by every test program. */
 
 void PrintResults( bool hs , int rtrn , double fo );
-
-/*--------------------------------------------------------------------------*/
-/// std::terminate handler that prints the active exception and aborts
-/** Install with std::set_terminate( smspp_terminate ); at the top of
- *  main(). */
-
-void smspp_terminate( void );
 
 /*--------------------------------------------------------------------------*/
 /// load a Block out of a text file, or stop with a clear message

@@ -91,6 +91,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the testers use `smspp_terminate()` of the core, with which each aborts
+  with a message when `std::terminate()` is called with no exception, e.g.,
+  by the destructor of a `std::thread` that can still be joined, where
+  rethrowing the null exception crashed
 - `SingleFlowDCRBlock`: Gurobi runs on 4 threads rather than 1 in
   `GRBCfg.txt`, with which it gave a bound above the optimum on
   `topo/Garr201112_1` and failed on `topo/Globenet_8` in the SOCP
