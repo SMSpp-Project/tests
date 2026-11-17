@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# usage: batch-man0euvre < exe file > < par file > < solver file > < log file >
+#        < exe file > = path of the executable, default ./IB_test
+#        < par file > = BlockConfig file, default InnerBCfg.txt
+#        < solver file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# the instances of the EDF case Man0euVRE as the workflow of
+# SPSUnipi/RESILIENT-instances hands them to SMS++ for its InvestmentBlock
+# runs, i.e., with the InvestmentBlock outside the TwoStageStochasticBlock
+# (cases-man0euvre, a case of 16 regions, 2 days and 3 scenarios), each
+# checked against the optimum of PyPSA + HiGHS on the same network, the
+# objective constant included
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+DEFAULT_EXE=./IB_test
+DEFAULT_PAR=InnerBCfg.txt
+DEFAULT_SLV=BSPar.txt
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+declare -A REF_OBJ
+REF_OBJ[man0euvre_d2_s3_ib.nc]=1.9157803319e+10
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+for what in ../../UCBlock/data/nc4/pypsa-data/man0euvre/man0euvre_*_ib.nc; do
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+    run_test "$exe" -B "$par" -S "$slv" -o "$ref" "$what"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

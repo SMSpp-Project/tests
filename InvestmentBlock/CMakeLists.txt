@@ -83,6 +83,12 @@ if (TARGET SMS++::InvestmentBlock AND TARGET SMS++::UCBlock AND
         set_tests_properties(IB_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED
                              investment_nc4_extracted)
+        # batch-man0euvre reads its instances from the data of UCBlock
+        if (BATCH_NAME MATCHES "batch-man0euvre")
+            set_tests_properties(IB_test/${BATCH_NAME}
+                                 PROPERTIES FIXTURES_REQUIRED
+                                 "investment_nc4_extracted;uc_nc4_extracted")
+        endif ()
 
         # batch-stochastic and batch-pypsa run the modular instances a second
         # time with the inner Block solved by the LagrangianDualSolver, which

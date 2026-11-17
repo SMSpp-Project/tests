@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# usage: batch-man0euvre < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default ./TSSB_test
+#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S-CVX.txt
+#        < log file > = name of log file, default no log
+#
+# the instances of the EDF case Man0euVRE as the workflow of
+# SPSUnipi/RESILIENT-instances hands them to SMS++ for its Benders runs
+# (cases-man0euvre, a case of 16 regions, 2 days and 3 scenarios), each
+# checked against the optimum of PyPSA + HiGHS on the same network, the
+# objective constant included
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+DEFAULT_EXE=./TSSB_test
+DEFAULT_PAR=BSPar-BDS-2S-CVX.txt
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+# each entry: [ file name ] = PyPsa objective value
+declare -A REF_OBJ
+REF_OBJ[man0euvre_d2_s3_bds.nc]=1.9157803319e+10
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+for what in ../../UCBlock/data/nc4/pypsa-data/man0euvre/man0euvre_*_bds.nc; do
+    # skip if pattern did not match any file
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+    run_test "$exe" "$what" -b -S "$par" -B InnerBCfg.txt -r "$ref"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

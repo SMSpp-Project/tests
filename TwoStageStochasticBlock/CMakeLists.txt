@@ -88,8 +88,9 @@ if (TARGET SMS++::TwoStageStochasticBlock)
     smspp_install(TSSB_test)
 
     # Add a test for each batch file
-    file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ec"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-pypsa")
+    set(BATCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/batches)
+    file(GLOB BATCH_FILES "${BATCH_DIR}/batch-ec" "${BATCH_DIR}/batch-pypsa"
+                          "${BATCH_DIR}/batch-man0euvre")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
         string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
@@ -113,6 +114,13 @@ if (TARGET SMS++::TwoStageStochasticBlock)
             NOT TARGET SMS++::BendersDecompositionSolver)
             set_tests_properties(TSSB_test/${BATCH_NAME}
                                  PROPERTIES ENVIRONMENT "TSSB_BDS_PAR=")
+        endif ()
+
+        # batch-man0euvre solves only the Benders form
+        if (BATCH_NAME MATCHES "batch-man0euvre" AND
+            NOT TARGET SMS++::BendersDecompositionSolver)
+            set_tests_properties(TSSB_test/${BATCH_NAME}
+                                 PROPERTIES DISABLED TRUE)
         endif ()
     endforeach ()
 

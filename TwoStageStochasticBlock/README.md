@@ -84,6 +84,13 @@ cross-checked, and on the Benders form of it, where the same
 therefore still solving the extensive form, is cross-checked against
 `BendersDecompositionSolver`.
 
+`batches/batch-man0euvre` runs the instance of the EDF case Man0euVRE
+that the workflow of SPSUnipi/RESILIENT-instances (`cases-man0euvre`)
+hands to SMS++ for its Benders runs, 16 regions, 2 days and 3
+scenarios, against the optimum of PyPSA + HiGHS on the same network;
+its counterpart with the `InvestmentBlock` outside the
+`TwoStageStochasticBlock` is `batch-man0euvre` of `InvestmentBlock`.
+
 `batches/batch-pypsa-invest` runs the second of the two on the same
 PyPSA networks written with the capital costs scaled by the same
 factor the horizon is cut by. Without that scaling the capital cost

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `batch-man0euvre` of `TwoStageStochasticBlock` and of `InvestmentBlock`:
+  the instances of the EDF case Man0euVRE as the workflow of
+  SPSUnipi/RESILIENT-instances hands them to SMS++, for the Benders
+  decomposition and with the `InvestmentBlock` outside, against the optimum
+  of PyPSA + HiGHS, run by CTest
+
 ### Changed
 
 - the suites keep the modules they link and copy the DLLs as the modules do
