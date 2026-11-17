@@ -15,6 +15,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   decomposition and with the `InvestmentBlock` outside, against the optimum
   of PyPSA + HiGHS, run by CTest
 
+- the cases d12_s21, d12_s52 and d12_s105 of Man0euVRE in both
+  `batch-man0euvre`, with the configurations of the runs of
+  SPSUnipi/RESILIENT-instances among the compared ones: the
+  `BendersDecompositionSolver` with GUROBI and with HiGHS on 32 threads
+  (`BSPar-BDS-2S-par.txt`) and the `ParallelBundleSolver` of the
+  `InvestmentBlock` with the inner Block solved by GUROBI
+  (`InnerBForm-par.txt`); d12_s21 runs with the others, the two largest
+  cases in a test of their own labelled `berlin`, which reads the archive
+  `man0euvre` of `UCBlock` and which the CI leaves out
+
+- `-k` of `TSSB_test`, the Benders form of
+  `TwoStageStochasticBlock::get_Benders_form()`, which `batch-man0euvre`
+  solves
+
 ### Changed
 
 - the suites keep the modules they link and copy the DLLs as the modules do

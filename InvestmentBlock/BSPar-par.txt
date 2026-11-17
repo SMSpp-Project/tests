@@ -1,0 +1,73 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-par.txt - - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of BSPar.txt with a ParallelBundleSolver, whose
+# components, one per scenario of the inner Block, are evaluated by 32
+# threads, and with the stopping test, the t-strategy and the master of the
+# runs of SPSUnipi/RESILIENT-instances [see batch-man0euvre]; the inner
+# Block is solved by GUROBI [see InnerBCfg-GRB.txt and InnerBForm-par.txt].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+ParallelBundleSolver    # name of Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+# 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*BundleCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+4  # number of integer parameters
+
+# now all the integer parameters
+intMaxThread       32 # the components evaluated at once, up to this
+intWZNorm          10 # the 2-norm, dblNZEps being relative to that of the
+                      # first full subgradient
+inttSPar1           3 # long-term t-strategy
+intRstAlg           2 # parameter to handle the reset of the algorithm
+
+2  # number of double parameters
+
+# now all the double parameters
+dblNZEps         1e-8 # threshold to declare 0 the || residual ||, relative
+dbltInit         1e-5 # initial value for t
+
+1  # number of string parameters
+
+# now all the string parameters
+strMPBSolverCfg  MPBCfg-barrier.txt  # BlockSolverConfig of the master
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-par.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -9,7 +9,9 @@
  * the instance [see benders_form()] rather than to the Block read: the two
  * describe the same problem, but a Solver that keeps the here-and-now
  * Variable in a master of its own needs them in a single copy in the root,
- * which the extensive form on file does not have.
+ * which the extensive form on file does not have. With -k the form is the
+ * one TwoStageStochasticBlock::get_Benders_form() assembles out of the
+ * leaves, which is what smspp_tssb_solver -k solves.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n
@@ -26,6 +28,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include <iostream>
+#include <map>
 
 #include "stochastic_test.h"
 
@@ -55,20 +58,29 @@ AbstractBlock * benders_form( TwoStageStochasticBlock * tssb );
 int main( int argc , char ** argv )
 {
  static bool BenForm = false;  // the Solver attached to the Benders form
+ static bool TSSBForm = false; // the form being that of the Block [-k]
+
+ // the TwoStageStochasticBlock of each form of -k, which the form is given
+ // back to before it is deleted
+ static std::map< Block * , TwoStageStochasticBlock * > owner;
 
  StochasticTester t;
  t.classname = "TwoStageStochasticBlock";
  t.is_one = []( Block * b ) {
   return( dynamic_cast< TwoStageStochasticBlock * >( b ) != nullptr );
   };
- t.short_opts = "b";
- t.long_opts = { { "benders" , no_argument , nullptr , 'b' } };
+ t.short_opts = "bk";
+ t.long_opts = { { "benders" , no_argument , nullptr , 'b' } ,
+                 { "benders-form" , no_argument , nullptr , 'k' } };
  t.help = "  -b, --benders                   solve the Benders form of the "
-          "instance [off]\n";
+          "instance [off]\n"
+          "  -k, --benders-form              the same, with the form of "
+          "get_Benders_form() [off]\n";
  t.handle = []( int opt ) {
-  if( opt != 'b' )
+  if( ( opt != 'b' ) && ( opt != 'k' ) )
    return( false );
   BenForm = true;
+  TSSBForm = ( opt == 'k' );
   return( true );
   };
 
@@ -85,12 +97,30 @@ int main( int argc , char ** argv )
   b->generate_abstract_constraints();
   b->generate_objective();
 
-  auto root = benders_form( static_cast< TwoStageStochasticBlock * >( b ) );
+  auto tssb = static_cast< TwoStageStochasticBlock * >( b );
+  Block * root = TSSBForm ? tssb->get_Benders_form() : benders_form( tssb );
   if( ! root )
    std::cout << std::endl
              << "Error: the Block declares no here-and-now Variable, hence "
                 "there is no Benders form of it" << std::endl;
+  else
+   if( TSSBForm )
+    owner[ root ] = tssb;
   return( root );
+  };
+
+ // the form of -k holds the leaves of the TwoStageStochasticBlock, which
+ // have to go back to it before either is deleted
+ t.release = []( Block * b ) {
+  auto it = owner.find( b );
+  if( it == owner.end() ) {
+   delete b;
+   return;
+   }
+  b->unregister_Solvers( true );
+  it->second->give_back_Benders_form( static_cast< AbstractBlock * >( b ) );
+  delete it->second;
+  owner.erase( it );
   };
 
  return( stochastic_test( argc , argv , t ) );

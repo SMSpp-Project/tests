@@ -54,8 +54,9 @@ namespace SMSpp_di_unipi_it {
 /// what a tester of a stochastic Block says of it
 /** The class of the Block it reads, for the messages, how to tell that the
  * Block read is one, and what it adds to the common part: options of its
- * own, a Block that the Solver are attached to in place of the one read,
- * and a check of each copy after the Solver have run. */
+ * own, a Block that the Solver are attached to in place of the one read
+ * (and how it is disposed of), and a check of each copy after the Solver
+ * have run. */
 
 struct StochasticTester {
  std::string classname;                   ///< e.g. TwoStageStochasticBlock
@@ -69,6 +70,9 @@ struct StochasticTester {
  ///< the Block read
  std::function< bool( Block * ) > check = nullptr;
  ///< a check of each copy after the Solver have run, if any
+ std::function< void( Block * ) > release = nullptr;
+ ///< deletes a Block that transform() has given, if deleting it is not
+ ///< enough; not given, the Block is deleted
  };
 
 /// the main of a tester of a stochastic Block, returning its exit code

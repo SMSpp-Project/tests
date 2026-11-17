@@ -75,16 +75,20 @@ if (TARGET SMS++::UCBlock)
              COMMAND UCBlock_test --scale
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    # the instances of UCBlock, downloaded and extracted when the tests that
-    # read them are run, not when they are built [see the CMakeLists.txt of the
-    # module]; the lock is shared by the tests that build a target of the data
-    # of the module, which under ctest -j would write the same files at once
-    add_test(NAME extract_uc_nc4
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                     --target extract_uc_nc4)
-    set_tests_properties(extract_uc_nc4 PROPERTIES
-                         FIXTURES_SETUP uc_nc4_extracted
-                         RESOURCE_LOCK uc_data)
+    # the instances of UCBlock, one archive each, downloaded and extracted
+    # when the tests that read them are run, not when they are built [see the
+    # CMakeLists.txt of the module]; the lock is shared by the tests that build
+    # a target of the data of the module, which under ctest -j would write the
+    # same files at once. The archive man0euvre is read only by the tests
+    # labelled berlin [see tests/TwoStageStochasticBlock], and so is its test
+    foreach (fmt nc4 man0euvre)
+        add_test(NAME extract_uc_${fmt}
+                 COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                         --target extract_uc_${fmt})
+        set_tests_properties(extract_uc_${fmt} PROPERTIES
+                             FIXTURES_SETUP uc_${fmt}_extracted
+                             RESOURCE_LOCK uc_data)
+    endforeach ()
 
     # Register every batch: each one covers a family of instances (academic,
     # plan4res, energy community, PyPSA, AC OPF) and cross-checks all the
@@ -247,6 +251,13 @@ if (TEST ${_batch})
                 ScenarioReductionSolver StochasticBlock
                 TwoStageStochasticBlock)
     set_tests_properties(${_batch} PROPERTIES LABELS "${_labels}")
+endif ()
+
+# The archive of the largest cases of Man0euVRE is extracted only for the tests
+# labelled berlin, which neither the CI nor the nightly run, and so it has
+# their label alone [see tests/TwoStageStochasticBlock]
+if (TEST extract_uc_man0euvre)
+    set_tests_properties(extract_uc_man0euvre PROPERTIES LABELS berlin)
 endif ()
 
 # --------------------------------------------------------------------------- #

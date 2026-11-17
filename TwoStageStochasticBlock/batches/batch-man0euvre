@@ -2,28 +2,37 @@
 #
 # usage: batch-man0euvre < exe file > < par file > < log file >
 #        < exe file > = path of the executable, default ./TSSB_test
-#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S-CVX.txt
+#        < par file > = BlockSolverConfig file, default BSPar-BDS-2S-par.txt
 #        < log file > = name of log file, default no log
 #
 # the instances of the EDF case Man0euVRE as the workflow of
 # SPSUnipi/RESILIENT-instances hands them to SMS++ for its Benders runs
-# (cases-man0euvre, a case of 16 regions, 2 days and 3 scenarios), each
+# (cases-man0euvre, 16 regions, 2 days and 3 scenarios, and 12 days and
+# 21, 52 and 105 scenarios, the last three being the ones presented in
+# Berlin), on the Benders form TwoStageStochasticBlock assembles, each
 # checked against the optimum of PyPSA + HiGHS on the same network, the
-# objective constant included
+# objective constant included; the two largest ones are in the archive
+# man0euvre of UCBlock, whose directory MAN0EUVRE_DIR gives [see
+# CMakeLists.txt]
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
 DEFAULT_EXE=./TSSB_test
-DEFAULT_PAR=BSPar-BDS-2S-CVX.txt
+DEFAULT_PAR=BSPar-BDS-2S-par.txt
 parse_batch_args "$@"
 
 # reference objective values dictionary - - - - - - - - - - - - - - - - - - -
 # each entry: [ file name ] = PyPsa objective value
 declare -A REF_OBJ
 REF_OBJ[man0euvre_d2_s3_bds.nc]=1.9157803319e+10
+REF_OBJ[man0euvre_d12_s21_bds.nc]=5.1751526045307e+10
+REF_OBJ[man0euvre_d12_s52_bds.nc]=4.5017820099946e+10
+REF_OBJ[man0euvre_d12_s105_bds.nc]=4.5387194852802e+10
 
 # run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
-for what in ../../UCBlock/data/nc4/pypsa-data/man0euvre/man0euvre_*_bds.nc; do
+dir="${MAN0EUVRE_DIR:-../../UCBlock/data/nc4/pypsa-data/man0euvre}"
+n=0
+for what in "${dir}"/man0euvre_*_bds.nc; do
     # skip if pattern did not match any file
     if [ ! -f "$what" ]; then
       continue
@@ -34,7 +43,14 @@ for what in ../../UCBlock/data/nc4/pypsa-data/man0euvre/man0euvre_*_bds.nc; do
       echo "No reference objective defined for file: $base"
       exit 1
     fi
-    run_test "$exe" "$what" -b -S "$par" -B InnerBCfg.txt -r "$ref"
+    run_test "$exe" "$what" -k -S "$par" -B InnerBCfg.txt -r "$ref"
+    n=$(( n + 1 ))
 done
+
+# a directory with no instance is an archive that is not there
+if [ "$n" -eq 0 ]; then
+  echo "No instance in $dir"
+  exit 1
+fi
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

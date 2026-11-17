@@ -179,10 +179,16 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
  std::vector< Block * > blocks;
  std::vector< Configuration * > bscs;
  std::vector< std::vector< bool > > relax;
+ auto release = [ & ]( Block * b ) {
+  if( t.release )
+   t.release( b );
+  else
+   delete b;
+  };
  auto give_up = [ & ]( void ) {
   for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
    delete bscs[ k ];
-   delete blocks[ k ];
+   release( blocks[ k ] );
    }
   delete forms.owner;
   exit( 1 );
@@ -288,7 +294,7 @@ int SMSpp_di_unipi_it::stochastic_test( int argc , char ** argv ,
  for( std::size_t k = 0 ; k < blocks.size() ; ++k ) {
   blocks[ k ]->unregister_Solvers( true );
   delete bscs[ k ];
-  delete blocks[ k ];
+  release( blocks[ k ] );
   }
 
  return( AllPassed ? 0 : 1 );

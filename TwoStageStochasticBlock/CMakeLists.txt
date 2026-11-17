@@ -116,11 +116,22 @@ if (TARGET SMS++::TwoStageStochasticBlock)
                                  PROPERTIES ENVIRONMENT "TSSB_BDS_PAR=")
         endif ()
 
-        # batch-man0euvre solves only the Benders form
-        if (BATCH_NAME MATCHES "batch-man0euvre" AND
-            NOT TARGET SMS++::BendersDecompositionSolver)
-            set_tests_properties(TSSB_test/${BATCH_NAME}
-                                 PROPERTIES DISABLED TRUE)
+        # batch-man0euvre solves only the Benders form; its two largest
+        # cases, in an archive of their own [see the CMakeLists.txt of
+        # UCBlock], are a test apart, labelled berlin alone [see below]
+        if (BATCH_NAME MATCHES "batch-man0euvre")
+            add_test(NAME TSSB_test/${BATCH_NAME}/berlin
+                     COMMAND ${SMSpp_BASH}
+                             "${BATCH_FILE}" "$<TARGET_FILE:TSSB_test>"
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+            set_tests_properties(TSSB_test/${BATCH_NAME}/berlin PROPERTIES
+                    FIXTURES_REQUIRED uc_man0euvre_extracted
+                    ENVIRONMENT "MAN0EUVRE_DIR=../../UCBlock/data/man0euvre")
+            if (NOT TARGET SMS++::BendersDecompositionSolver)
+                set_tests_properties(TSSB_test/${BATCH_NAME}
+                                     TSSB_test/${BATCH_NAME}/berlin
+                                     PROPERTIES DISABLED TRUE)
+            endif ()
         endif ()
     endforeach ()
 
@@ -233,5 +244,12 @@ endif ()
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# The cases of Man0euVRE presented in Berlin are run on demand (ctest -L
+# berlin), neither by the CI nor by the nightly, which leave the label out
+if (TEST TSSB_test/batches/batch-man0euvre/berlin)
+    set_tests_properties(TSSB_test/batches/batch-man0euvre/berlin
+                         PROPERTIES LABELS berlin)
+endif ()
 
 # --------------------------------------------------------------------------- #

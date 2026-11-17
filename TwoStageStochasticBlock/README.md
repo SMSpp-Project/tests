@@ -84,12 +84,21 @@ cross-checked, and on the Benders form of it, where the same
 therefore still solving the extensive form, is cross-checked against
 `BendersDecompositionSolver`.
 
-`batches/batch-man0euvre` runs the instance of the EDF case Man0euVRE
+`batches/batch-man0euvre` runs the instances of the EDF case Man0euVRE
 that the workflow of SPSUnipi/RESILIENT-instances (`cases-man0euvre`)
 hands to SMS++ for its Benders runs, 16 regions, 2 days and 3
-scenarios, against the optimum of PyPSA + HiGHS on the same network;
-its counterpart with the `InvestmentBlock` outside the
-`TwoStageStochasticBlock` is `batch-man0euvre` of `InvestmentBlock`.
+scenarios, and 12 days and 21, 52 and 105 scenarios (the cases
+presented in Berlin), against the optimum of PyPSA + HiGHS on the same
+network. The form is the one `TwoStageStochasticBlock::get_Benders_form()`
+assembles (`-k`), and `BSPar-BDS-2S-par.txt` holds, beside the
+`Solver` of `BSPar-BDS-2S-CVX.txt`, the two Benders decompositions of
+those runs. The cases with 52 and 105 scenarios are in an archive of
+their own of `UCBlock`, and run in a test of their own with the label
+`berlin` (`ctest -L berlin`), which neither the CI nor the nightly
+runs. The counterpart with the `InvestmentBlock` outside the
+`TwoStageStochasticBlock` is `batch-man0euvre` of `InvestmentBlock`,
+which compares the bundle of that suite with the
+`ParallelBundleSolver` of those runs [see `InnerBForm-par.txt` there].
 
 `batches/batch-pypsa-invest` runs the second of the two on the same
 PyPSA networks written with the capital costs scaled by the same
@@ -186,7 +195,12 @@ inner-Block module needed by the instances in `batches/` (currently
   Benders `Solver` keeps the design integer in its master, so the
   `:MILPSolver` solves the integer problem as well, and the
   subproblems of a round are evaluated by 4 threads
-  (`intMaxThread`).
+  (`intMaxThread`). The first `Solver` of all of them is that of
+  `MILPCfg-2S.txt`, and the Benders one of `BSPar-BDS-2S-CVX.txt` that
+  of `BDSCfg-2S-CVX.txt`. `BSPar-BDS-2S-par.txt` puts the two of
+  `BSPar-BDS-2S.txt` beside them, the subproblems of a round being
+  evaluated by 32 threads and the one with HiGHS stopping at a relative
+  gap of 1e-5.
 - `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
   bundle over the `InvestmentBlock`; `IBOCfg.txt` is the `OBlockConfig`
   of that Block, which reformulates its bounds and gives the
