@@ -20,8 +20,9 @@
  * which is what is checked; the iterations and the times are reported.
  *
  * The same structure, assembled around an instance that is on file rather
- * than built out of the data, is what benders_form() gives and what the
- * tester of the suite cross-checks the Solver on.
+ * than built out of the data, is what
+ * TwoStageStochasticBlock::get_Benders_form() gives and what the tester of
+ * the suite cross-checks the Solver on.
  *
  * \author Antonio Frangioni \n
  *         Dipartimento di Informatica \n

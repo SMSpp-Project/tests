@@ -25,11 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cases in a test of their own labelled `berlin`, which reads the archive
   `man0euvre` of `UCBlock` and which the CI leaves out
 
-- `-k` of `TSSB_test`, the Benders form of
-  `TwoStageStochasticBlock::get_Benders_form()`, which `batch-man0euvre`
-  solves
+- `batch-pypsa-invest` and `batch-pypsa-modular` of
+  `TwoStageStochasticBlock` are run by CTest, the first where
+  `BendersDecompositionSolver` is in the build, the second where the
+  Lagrangian duals and `MultiStageStochasticBlock` are too
 
 ### Changed
+
+- `-b` of `TSSB_test` solves the Benders form of
+  `TwoStageStochasticBlock::get_Benders_form()`, and the copy of it that the
+  tester kept in `benders_form.cpp` is gone
 
 - the suites keep the modules they link and copy the DLLs as the modules do
   [see `SMSppModule.cmake` of SMS++], with no test on the system or on the
@@ -58,6 +63,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `cmake/FindCPLEX.cmake`, the one of the core being used
 
 ### Fixed
+
+- the Lagrangian dual of the Benders subproblems under a MILP master
+  (`BDSSCfg-LDrec.txt`) is the recursive one of `LDrecCfg.txt`, rather than
+  that of `LDCfg.txt`, which on the larger thermal instances ran out of
+  iterations and stopped the `BendersDecompositionSolver` below the bound;
+  under a convex master the subproblems keep that of `LDCfg.txt`
+  (`BDSSCfg-LDrec-CVX.txt`), whose cuts take it to the optimum, and the
+  master of the cutting-plane method of Kelley moves to
+  `BSPar-BDS-2S-CVX-LD.txt`, as the Solver of a `BlockSolverConfig` run on
+  the same Benders form share the `LagrangianDualSolver` of its subproblems
 
 - `SingleFlowDCRBlock`: the tester checks that the solution of a Solver that
   does not solve a relaxation meets the deadline up to the tolerances that

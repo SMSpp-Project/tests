@@ -48,14 +48,14 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::TwoStageStochasticBlock)
 
-    add_executable(TSSB_test test.cpp benders_form.cpp ../stochastic_test.cpp
+    add_executable(TSSB_test test.cpp ../stochastic_test.cpp
                              ../common_utils.cpp)
     target_include_directories(TSSB_test PRIVATE ..)
     target_link_libraries(TSSB_test PRIVATE SMS++::TwoStageStochasticBlock)
 
-    # the Benders form of an instance is assembled by the tester itself [see
-    # benders_form()], but the Solver that asks for it comes out of the
-    # factory, hence has to be linked where it is built
+    # the Solver that asks for the Benders form of an instance [see
+    # TwoStageStochasticBlock::get_Benders_form()] comes out of the factory,
+    # hence has to be linked where it is built
     if (TARGET SMS++::BendersDecompositionSolver)
         target_link_libraries(TSSB_test PRIVATE
                 SMS++::BendersDecompositionSolver)
@@ -66,8 +66,8 @@ if (TARGET SMS++::TwoStageStochasticBlock)
     endif ()
 
     # a MultiStageStochasticBlock is a TwoStageStochasticBlock, whose leaves
-    # benders_form() takes as the subproblems, hence the tester solves it too
-    # when the factory knows it
+    # get_Benders_form() takes as the subproblems, hence the tester solves it
+    # too when the factory knows it
     if (TARGET SMS++::MultiStageStochasticBlock)
         target_link_libraries(TSSB_test PRIVATE
                 SMS++::MultiStageStochasticBlock)
@@ -90,6 +90,8 @@ if (TARGET SMS++::TwoStageStochasticBlock)
     # Add a test for each batch file
     set(BATCH_DIR ${CMAKE_CURRENT_SOURCE_DIR}/batches)
     file(GLOB BATCH_FILES "${BATCH_DIR}/batch-ec" "${BATCH_DIR}/batch-pypsa"
+                          "${BATCH_DIR}/batch-pypsa-invest"
+                          "${BATCH_DIR}/batch-pypsa-modular"
                           "${BATCH_DIR}/batch-man0euvre")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
@@ -110,10 +112,27 @@ if (TARGET SMS++::TwoStageStochasticBlock)
         # batch-pypsa runs each instance twice, the second time on the Benders
         # form, whose BlockSolverConfig names a Solver that may not be in the
         # build: there the second run is emptied out
-        if (BATCH_NAME MATCHES "batch-pypsa" AND
+        if (BATCH_NAME MATCHES "batch-pypsa$" AND
             NOT TARGET SMS++::BendersDecompositionSolver)
             set_tests_properties(TSSB_test/${BATCH_NAME}
                                  PROPERTIES ENVIRONMENT "TSSB_BDS_PAR=")
+        endif ()
+
+        # batch-pypsa-invest solves only the Benders form, and
+        # batch-pypsa-modular also the Lagrangian duals and a
+        # MultiStageStochasticBlock
+        if (BATCH_NAME MATCHES "batch-pypsa-invest" AND
+            NOT TARGET SMS++::BendersDecompositionSolver)
+            set_tests_properties(TSSB_test/${BATCH_NAME}
+                                 PROPERTIES DISABLED TRUE)
+        endif ()
+        if (BATCH_NAME MATCHES "batch-pypsa-modular" AND
+            NOT (TARGET SMS++::BendersDecompositionSolver AND
+                 TARGET SMS++::LagrangianDualSolver AND
+                 TARGET SMS++::BundleSolver AND
+                 TARGET SMS++::MultiStageStochasticBlock))
+            set_tests_properties(TSSB_test/${BATCH_NAME}
+                                 PROPERTIES DISABLED TRUE)
         endif ()
 
         # batch-man0euvre solves only the Benders form; its two largest

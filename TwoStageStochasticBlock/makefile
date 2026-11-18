@@ -66,7 +66,7 @@ MOBJ =  $(CMMNUOBJ) $(STCHTOBJ) $(BNDSLVOBJ) $(LgDSLVOBJ) $(TSSBkOBJ) \
 # libraries
 MLIB =  $(SMS++LIB) $(BNDSLVLIB) $(LgDSLVLIB) $(UCBckLIB) $(StcBlkLIB)
 
-$(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o $(DIR)/benders_form.o
+$(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $+ $(MLIB) $(SW)
 
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
@@ -84,11 +84,6 @@ MH =    $(SMS++H) $(BNDSLVH) $(LgDSLVH) $(UCBckH) $(StcBlkH) $(TSSBkH) \
 
 $(DIR)/test.o: $(DIR)/test.cpp $(MH)
 	$(CC) -c $(DIR)/test.cpp -o $@ $(MINC) $(SW)
-
-# the Benders form the tester assembles, which no file format carries
-
-$(DIR)/benders_form.o: $(DIR)/benders_form.cpp $(MH)
-	$(CC) -c $(DIR)/benders_form.cpp -o $@ $(MINC) $(SW)
 
 # what a scenario reduction costs on the investment problem- - - - - - - - - -
 # the reduction is asked of ScenarioReductionSolver, which only this tester

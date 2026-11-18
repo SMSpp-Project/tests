@@ -23,10 +23,12 @@ int_BDSlv_Regime  0 # 0 = convex master, 1 = MILP master
 # now all the double parameters
 # [none]
 
-1  # number of string parameters
+2  # number of string parameters
 
 # now all the string parameters
 str_Mstr_BSCfg  BDSMCfg-INV.txt # BlockSolverConfig of the master
+str_Bsub_BSCfg  BDSSCfg-LDrec-CVX.txt # BlockSolverConfig of the
+                                      # subproblems
 
 0  # number of vector-of-int parameters
 

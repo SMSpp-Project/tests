@@ -90,7 +90,7 @@ hands to SMS++ for its Benders runs, 16 regions, 2 days and 3
 scenarios, and 12 days and 21, 52 and 105 scenarios (the cases
 presented in Berlin), against the optimum of PyPSA + HiGHS on the same
 network. The form is the one `TwoStageStochasticBlock::get_Benders_form()`
-assembles (`-k`), and `BSPar-BDS-2S-par.txt` holds, beside the
+assembles (`-b`), and `BSPar-BDS-2S-par.txt` holds, beside the
 `Solver` of `BSPar-BDS-2S-CVX.txt`, the two Benders decompositions of
 those runs. The cases with 52 and 105 scenarios are in an archive of
 their own of `UCBlock`, and run in a test of their own with the label
@@ -107,10 +107,9 @@ of an extendable asset pays for a whole year while the operation it
 saves is that of the snapshots that are kept, so the expansion is
 bought far less than it would be and the first stage decides little;
 with it the design is built, which is what gives the master of a
-decomposition something to decide. It is not registered with CTest:
-the Benders `Solver` takes minutes on those instances, its master
-being a cutting plane with no stabilization on a design that is
-continuous.
+decomposition something to decide. The Benders `Solver` runs there
+in its convex regime (`BSPar-BDS-2S-CVX.txt`), with a bundle driving
+the master, which a design that is continuous asks for.
 
 `batches/batch-ec` given a `BlockSolverConfig` that names a
 `BendersDecompositionSolver`, e.g., `BSPar-BDS-2S-IP.txt`, runs the
@@ -255,9 +254,12 @@ inner-Block module needed by the instances in `batches/` (currently
   recovered at the design of the master (`strRecoveryBSC`, each subproblem a
   MILP of `BSCfg1-IP.txt`), which `BSPar-BDS-2S-LD.txt` puts beside the
   `:MILPSolver` on the Benders form; `BDSCfg-CVX-LD.txt` is the latter in
-  the convex regime (the master of `BDSMCfg-INV.txt`, and the feasible
+  the convex regime (the master of `BDSMCfg-INV.txt`, the subproblems
+  solved by the dual of `BDSSCfg-LDrec-CVX.txt`, and the feasible
   solution recovered at the best point of the bundle), which
-  `BSPar-BDS-2S-CVX-LD.txt` puts beside it in the same way.
+  `BSPar-BDS-2S-CVX-LD.txt` puts beside it in the same way, together with
+  the same with the master of the cutting-plane method of Kelley
+  (`BDSMCfg-Kelley.txt`).
 - `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
   whose components are the units of the scenario (`InnerBSCfg.txt`).
   `LPBSCfg-LD-noeasy.txt` is the same with `intDoEasy=0`, which the

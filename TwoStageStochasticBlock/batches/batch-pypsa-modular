@@ -23,9 +23,10 @@
 # three more runs put every other decomposition beside the :MILPSolver: on
 # the Benders form, BDS whose subproblems are solved by the recursive
 # Lagrangian dual over their units, with a MILP master (BSPar-BDS-2S-LD.txt)
-# and with a bundle master (BSPar-BDS-2S-CVX-LD.txt), and on the extensive
-# form the recursive Lagrangian dual itself (BSPar-2S-LDrec-IP.txt), declared
-# a relaxation [-R] although it is exact there; on the integer design they
+# and with a bundle master and the one of the cutting-plane method of Kelley
+# (BSPar-BDS-2S-CVX-LD.txt), and on the extensive form the recursive
+# Lagrangian dual itself (BSPar-2S-LDrec-IP.txt), declared a relaxation [-R]
+# although it is exact there; on the integer design they
 # are also exact, or a valid bound, but take minutes, hence they are left out
 #
 # the instances are written by gen_modular_tssb.py and emit_modular_tssb.py

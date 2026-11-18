@@ -43,7 +43,7 @@ for what in "${dir}"/man0euvre_*_bds.nc; do
       echo "No reference objective defined for file: $base"
       exit 1
     fi
-    run_test "$exe" "$what" -k -S "$par" -B InnerBCfg.txt -r "$ref"
+    run_test "$exe" "$what" -b -S "$par" -B InnerBCfg.txt -r "$ref"
     n=$(( n + 1 ))
 done
 

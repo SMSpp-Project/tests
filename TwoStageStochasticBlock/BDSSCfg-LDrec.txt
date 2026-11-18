@@ -6,7 +6,9 @@
 # duals of the coupling rows, hence the cut is a Lagrangian one, exact at the
 # master solution when the subproblem has the integrality property once the
 # complicating Variable are fixed. It gives no Farkas certificate, hence the
-# subproblem must always be feasible (int_BDSlv_FeasCut 0)
+# subproblem must always be feasible (int_BDSlv_FeasCut 0). It is the
+# recursive dual of LDrecCfg.txt, whose targets and step keep the number of
+# iterations of each evaluation low, to a tighter accuracy
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -26,26 +28,24 @@ LagrangianDualSolver # 1st Solver: the subproblem
 
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-*LDCfg.txt +
+*LDrecCfg.txt +
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-3  # number of integer parameters
+0  # number of integer parameters
 
 # now all the integer parameters
-int_LDSlv_iBCopy 0 # 1 if sub-Block must be R3B-copied
-intLogVerb       0 # log verbosity of main Bundle algorithm
-intRecursive     1 # decompose the descendants too
+# [none]
 
 1  # number of double parameters
 
 # now all the double parameters
 dblRelAcc 1e-8 # relative accuracy required to solution
 
-1  # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
-str_LagBF_BSCfg InnerBSCfg.txt # BlockSolverConfig of the LagBF
+# [none]
 
 0  # number of vector-of-int parameters
 
