@@ -11,7 +11,7 @@
 # the common part, which reads the arguments [see cfl_battery.sh]
 source "$(dirname "$0")/cfl_battery.sh" "$@"
 
-# the original Block and its R3Block, each with its configuration
+# the original Block, whose BlockSolverConfig solves an R3Block of it
 forms=CFLBForm.txt
 
 # wchg = 831 = all data changes + abstract representation (+256) + the +512

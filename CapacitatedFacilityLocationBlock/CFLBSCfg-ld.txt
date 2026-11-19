@@ -1,10 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - CFLBSCfg-ld.txt - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a
-# CapacitatedFacilityLocationBlock to be solved by a :MILPSolver (either to
-# integer optimality or the continuous relaxation) with the use of the strong
-# forcing constraints
+# The BlockSolverConfig of the original Block of CFLBForm-ld.txt, a
+# CapacitatedFacilityLocationBlock solved by a :MILPSolver (either to integer
+# optimality or the continuous relaxation) with the use of the strong forcing
+# constraints, and through its copy by the R3BSolver of R3BSCfg-ld.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,14 +13,15 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1  # number of (the names of) Solver in this BlockSolverConfig
+2  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver   # name of Solver
 GRBMILPSolver    # name of Solver
+R3BSolver        # name of Solver
 #SCIPMILPSolver  # name of Solver
 #HiGHSMILPSolver # name of Solver
 
-1  # number of ComputeConfig in this BlockSolverConfig
+2  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -71,6 +72,12 @@ strLogFileName  logMILP.txt
 *  # [none]
 
 # end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of its copy solved by a LagrangianDualSolver
+
+*R3BSCfg-ld.txt
+
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

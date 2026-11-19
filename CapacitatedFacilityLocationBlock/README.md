@@ -11,29 +11,29 @@ mechanics of the "core" SMS++ library.
 
 This executable, given the filename and (optionally) filetype of one
 Capacitated Facility Location (CFL) instance in one of the several supported
-file formats, reads the instance in a `CapacitatedFacilityLocationBlock`. It
-then creates one or more other `Block` via the R3Block mechanism; each can be
-either another `CapacitatedFacilityLocationBlock` or a `MCFBlock`
-representing the continuous relaxation of CFL (as a Min-Cost Flow problem).
-What they are is the list of formulations given with `-F`, a
-`SimpleConfiguration< std::vector< Configuration * > >`: its first element is
-the pair `BlockConfig` + `BlockSolverConfig` of the original `Block`, each of
-the others the vector of three `Configuration` of an R3Block, the one it is
-made with [see `get_R3_Block()`], its `BlockConfig` and its
-`BlockSolverConfig`. Also, an `UpdateSolver` is manually registered to the
-original `CapacitatedFacilityLocationBlock` for each R3Block, so that any
-change on it is automatically map\_forward-ed to the other `Block` (but not
-vice-versa).
+file formats, reads the instance in a `CapacitatedFacilityLocationBlock` and
+configures it with the formulation given with `-F`, a
+`SimpleConfiguration< std::vector< Configuration * > >` whose only element is
+the pair `BlockConfig` + `BlockSolverConfig` of the original `Block`. Some of
+the `Solver` of the `BlockSolverConfig` are `R3BSolver`, each of which solves
+the `Block` through an R3Block of it, either another
+`CapacitatedFacilityLocationBlock` or a `MCFBlock` representing the
+continuous relaxation of CFL (as a Min-Cost Flow problem): the extra
+`Configuration` of its `ComputeConfig` (the `R3BSCfg-*.txt`) is the vector of
+three `Configuration` of the R3Block, the one it is made with [see
+`get_R3_Block()`], its `BlockConfig` and the `BlockSolverConfig` of its
+`Solver`, and any change of the original `Block` is map\_forward-ed to the
+R3Block (but not vice-versa).
 
 According to the value of the `-s` parameter, the Slope Scaling iterations,
 this is all: the `Solver` are supposed to be exact (but it may well be that
 they are all exactly solving the continuous relaxation), and the lower
-bounds of all of them, those of the original `Block` and those of every
-R3Block, are compared with each other.
+bounds of all of them, those that solve the original `Block` and those that
+solve an R3Block of it, are compared with each other.
 
-Otherwise, the first `Solver` attached to each R3Block is supposed to be solving
-some kind of continuous relaxation and a certain number of rounds of a
-simple slope scaling heuristic are ran on that `Block`: the continuous
+Otherwise, each `R3BSolver` is supposed to be solving some kind of continuous
+relaxation and a certain number of rounds of a simple slope scaling heuristic
+are ran on its R3Block: the continuous
 solution is map\_back-ed to the original `CapacitatedFacilityLocationBlock`,
 it is used to temporarily change the facility costs according to the standard
 slope scaling idea, and then it is rounded up to obtain a feasible solution
@@ -75,10 +75,12 @@ arrangement is one list of formulations, all in this directory: `CFLBForm.txt`
 the LEMON solvers first), `CFLBForm-cuts.txt` (LP + user cuts),
 `CFLBForm-ld.txt` and `CFLBForm-ldvscuts.txt` (Lagrangian dual of the knapsack
 relaxation) and `CFLBForm-ben.txt` (the Benders formulation), which name the
-`CFLBCfg-*.txt` and `MCFBCfg.txt` `BlockConfig`, the `CFLBSCfg-*.txt` and
-`MCFBSCfg*.txt` `BlockSolverConfig` and the `R3BCfg-copy.txt` and
-`R3BCfg-MCF.txt` R3Block `Configuration`. All the batch scripts live in
-[batches](batches); each one runs from this directory and gives its list.
+`CFLBCfg-*.txt` `BlockConfig` and the `CFLBSCfg-*.txt` `BlockSolverConfig`;
+these name the `R3BSCfg-*.txt` `ComputeConfig` of the `R3BSolver`, which name
+the `R3BCfg-copy.txt` and `R3BCfg-MCF.txt` R3Block `Configuration` and the
+`BlockConfig` and `BlockSolverConfig` of the R3Block. All the batch scripts
+live in [batches](batches); each one runs from this directory and gives its
+list.
 
 All this is possibly repeated a number of times in a loop where data of the
 CFLproblem (fixed and transportation costs, demands, capacities, facilities

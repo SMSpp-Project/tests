@@ -288,6 +288,60 @@ std::vector< NamedSolver > named_solvers;
 }  // end( anonymous namespace )
 
 /*--------------------------------------------------------------------------*/
+/* Whether the Solver that a Solver configured by @p cc needs are all in this
+ * build: the inner Solver of a LagrangianDualSolver, those of the master of
+ * a BundleSolver and those of the R3Block of an R3BSolver, recursively, the
+ * name of those missing being appended to @p name. */
+
+static bool needs_there( const ComputeConfig * cc , std::string & name )
+{
+ if( ! cc )
+  return( true );
+
+ bool there = true;
+
+ // a BlockSolverConfig is there if its Solver and those they need are
+ const auto bsc_there = [ & ]( const BlockSolverConfig * bsc ) {
+  for( Block::Index i = 0 ; i < bsc->num_ComputeConfig() ; ++i ) {
+   const auto & n = bsc->get_SolverName( i );
+   if( ! Solver::has_Solver( n ) ) {
+    name += " with " + n;
+    there = false;
+    }
+   else
+    if( ! needs_there( bsc->get_SolverConfig( i ) , name ) )
+     there = false;
+   }
+  };
+
+ for( const auto & pair : cc->str_pars ) {
+  // a LagrangianDualSolver needs its inner Solver
+  if( ( pair.first == "str_LDSlv_ISName" ) &&
+      ( ! Solver::has_Solver( pair.second ) ) ) {
+   name += " with " + pair.second;
+   there = false;
+   }
+
+  // a BundleSolver needs the Solver of its master
+  if( pair.first == "strMPBSolverCfg" ) {
+   auto mc = Configuration::deserialize( pair.second );
+   if( auto mbsc = dynamic_cast< BlockSolverConfig * >( mc ) )
+    bsc_there( mbsc );
+   delete mc;
+   }
+  }
+
+ // an R3BSolver needs the Solver of its R3Block
+ if( auto r3 = dynamic_cast< const SimpleConfiguration< std::vector<
+	             Configuration * > > * >( cc->f_extra_Configuration ) )
+  if( r3->f_value.size() > 2 )
+   if( auto ibsc = dynamic_cast< BlockSolverConfig * >( r3->f_value[ 2 ] ) )
+    bsc_there( ibsc );
+
+ return( there );
+ }
+
+/*--------------------------------------------------------------------------*/
 
 Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
 			      const std::string & fn ,
@@ -309,30 +363,8 @@ Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
   auto name = bsc->get_SolverName( i );
   bool there = Solver::has_Solver( name );
 
-  // a LagrangianDualSolver is only there if its inner Solver is
   if( there )
-   if( auto cc = bsc->get_SolverConfig( i ) )
-    for( const auto & pair : cc->str_pars )
-     if( ( pair.first == "str_LDSlv_ISName" ) &&
-	 ( ! Solver::has_Solver( pair.second ) ) ) {
-      name += " with " + pair.second;
-      there = false;
-      }
-
-  // a BundleSolver is only there if the Solver of its master are
-  if( there )
-   if( auto cc = bsc->get_SolverConfig( i ) )
-    for( const auto & pair : cc->str_pars )
-     if( pair.first == "strMPBSolverCfg" ) {
-      auto mc = Configuration::deserialize( pair.second );
-      if( auto mbsc = dynamic_cast< BlockSolverConfig * >( mc ) )
-       for( const auto & mn : mbsc->get_SolverNames() )
-	if( ! Solver::has_Solver( mn ) ) {
-	 name += " with " + mn;
-	 there = false;
-	 }
-      delete mc;
-      }
+   there = needs_there( bsc->get_SolverConfig( i ) , name );
 
   if( there )
    continue;

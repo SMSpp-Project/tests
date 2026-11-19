@@ -1,0 +1,62 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - R3BSCfg-MCF-MCFCplex.txt  - - - - - - - - - - - - -
+#
+# The ComputeConfig of R3BSCfg-MCF.txt, with the flow relaxation solved by
+# MCFSolver with MCFCplex.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*R3BSCfg-MCF.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration: how the R3Block is made, its
+# BlockConfig and the BlockSolverConfig of its Solver
+SimpleConfiguration<std::vector<Configuration*>>
+
+3  # how the R3Block is made, its BlockConfig, its BlockSolverConfig
+
+*R3BCfg-MCF.txt         # how it is made
+*MCFBCfg.txt            # its BlockConfig
+# its BlockSolverConfig: MCFSolver with MCFCplex, as it comes
+BlockSolverConfig  # exact type of the Configuration object
+1                  # the BlockSolverConfig is a "differential" one
+1                  # number of (the names of) Solver
+MCFSolver<MCFCplex>
+1                  # number of ComputeConfig
+*DfltCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - END R3BSCfg-MCF-MCFCplex.txt  - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

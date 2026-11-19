@@ -12,10 +12,11 @@ BlockSolverConfig
 
 1  # differential
 
-1  # number of Solver names
+2  # number of Solver names
 GRBMILPSolver
+R3BSolver
 
-1  # number of ComputeConfig
+2  # number of ComputeConfig
 
 ComputeConfig
 
@@ -54,6 +55,9 @@ dblRelAcc 1e-7
 
 # pointer to the "extra" Configuration
 *  # extra
+
+# 2nd ComputeConfig: the R3BSolver of its copy in the Benders formulation
+*R3BSCfg-ben.txt
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END CFLBSCfg-ben.txt  - - - - - - - - - - - - - -

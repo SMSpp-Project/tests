@@ -1,9 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - CFLBSCfg-LP.txt - - - - - - - - - - - - - - -
 #
-# The BlockSolverConfig of a CapacitatedFacilityLocationBlock whose
-# continuous relaxation is solved by a :MILPSolver; the original Block of
-# CFLBForm.txt.
+# The BlockSolverConfig of the original Block of CFLBForm.txt, a
+# CapacitatedFacilityLocationBlock whose continuous relaxation is solved by a
+# :MILPSolver and, through its flow relaxation, by an R3BSolver for each
+# Solver of the MCFBlock, all of them compared with each other.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -12,14 +13,21 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1  # number of (the names of) Solver in this BlockSolverConfig
+8  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver   # name of Solver
 #GRBMILPSolver   # name of Solver
 #SCIPMILPSolver  # name of Solver
 HiGHSMILPSolver  # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
 
-1  # number of ComputeConfig in this BlockSolverConfig
+8  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -86,6 +94,42 @@ dblRelAcc       1e-7 # relative accuracy for the solver
 *  # [none]
 
 # end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of MCFSolver with MCFSimplex on the flow relaxation
+
+*R3BSCfg-MCF.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of MCFSolver with RelaxIV on the flow relaxation
+
+*R3BSCfg-MCF-RelaxIV.txt
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of the network simplex of LEMON on the flow relaxation
+
+*R3BSCfg-MCF-NetworkSimplex.txt
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of the cycle canceling of LEMON on the flow relaxation
+
+*R3BSCfg-MCF-CycleCanceling.txt
+
+# 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of the cost scaling of LEMON on the flow relaxation
+
+*R3BSCfg-MCF-CostScaling.txt
+
+# 7th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of the capacity scaling of LEMON on the flow relaxation
+
+*R3BSCfg-MCF-CapacityScaling.txt
+
+# 8th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of MCFSolver with MCFCplex on the flow relaxation
+
+*R3BSCfg-MCF-MCFCplex.txt
+
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -58,6 +58,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   are set by `putenv()`, which POSIX and the C library of Windows both
   have, instead of `setenv()` and `_putenv_s()`
 
+- `CFL_test` solves the R3Block through the `R3BSolver` of the
+  BlockSolverConfig of the original Block, one per Solver of the R3Block
+  [see `R3BSCfg-*.txt`], each compared with the other Solver in the same
+  run, instead of making the R3Block and an `UpdateSolver` in the code; the
+  formulation of `-F` is the original Block only, the `MCFBSCfg*.txt` are
+  in the `R3BSCfg-MCF*.txt`, and the ComputeConfig of the :MILPSolver of
+  `batch-cuts` is `MILPCfg-cuts.txt`
+
+- a Solver of a BlockSolverConfig is left out of a battery also when a
+  Solver that it needs is not in the build, looked for recursively in the
+  inner Solver of a LagrangianDualSolver, in the master of a BundleSolver
+  and in the R3Block of an R3BSolver
+
 ### Removed
 
 - `cmake/FindCPLEX.cmake`, the one of the core being used
