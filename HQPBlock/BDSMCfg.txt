@@ -8,7 +8,8 @@
 # numerical troubles on the masters of the lower levels, and the cuts held
 # to 1e-9: the values of the levels can be of the order of 1e-6, and with
 # the default 1e-6 a cut violated by less is taken as satisfied, which
-# gives back the same point at each round.
+# gives back the same point at each round. The same master serves the
+# BundleSolver of the Lagrangian dual in LDCfg.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
