@@ -11,6 +11,8 @@ if (NOT hasParent)
     # Solvers
     find_package(MILPSolver)
     find_package(BendersDecompositionSolver)
+    find_package(LagrangianDualSolver)
+    find_package(BundleSolver)
 endif ()
 
 # Skip the suite if some module its labels declare is not in the build
@@ -28,6 +30,15 @@ target_link_libraries(HQPBlock_test PRIVATE SMS++::HQPBlock
 if (TARGET SMS++::BendersDecompositionSolver)
     target_link_libraries(HQPBlock_test
                           PRIVATE SMS++::BendersDecompositionSolver)
+endif ()
+
+# the inner Solver of the Lagrangian dual of the HQPDistBlock [see
+# InnerBSCfg-lds.txt] and the Solver of the dual, which the tester leaves out
+# when the build does not have them
+if (TARGET SMS++::LagrangianDualSolver AND TARGET SMS++::BundleSolver)
+    target_link_libraries(HQPBlock_test
+                          PRIVATE SMS++::LagrangianDualSolver
+                                  SMS++::BundleSolver)
 endif ()
 
 smspp_install(HQPBlock_test)

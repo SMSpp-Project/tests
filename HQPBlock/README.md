@@ -62,9 +62,14 @@ formulation of `HQPDistForms.txt`, given with `-F`, a pair of a
 
 - F0, the structure `kConsensus` (`HQPDistBCfg-cons.txt`), with copies in
   the sub-Blocks and consensus rows in the root, and the `HQPSolver` of
-  `HQPDistBSCfg.txt`, each one solving the whole tree, i.e., the
-  centralized hierarchy written that way: DAQP in the three settings and
-  qpOASES in the first one;
+  `HQPDistBSCfg.txt`: DAQP in the three settings and qpOASES in the first
+  one, each solving the whole tree, i.e., the centralized hierarchy written
+  that way, and in the first setting the Lagrangian dual of the consensus
+  rows (`InnerBSCfg-lds.txt`), a `LagrangianDualSolver` (`LDCfg.txt`) whose
+  sub-Blocks are solved by DAQP with the rows held to `1e-10`
+  (`InnerBSCfg-daqp-tol10.txt`, `DAQPCfg-tol10.txt`) and whose dual by a
+  `BundleSolver` with the master of the Benders decomposition below
+  (`BDSMCfg.txt`), left out by a build without them;
 
 - F1, the structure `kBenders` (`HQPDistBCfg-bds.txt`), with the coupling
   rows in the root, a copy in the root of each column of an equality
@@ -145,6 +150,9 @@ The batteries are:
   interior-point inner Solvers are held to `1e-5` on the values rather than
   `1e-6`, since an inequality task satisfied exactly at its level leaves
   them a slack of the order of the square root of their accuracy, the
+  Lagrangian dual to `5e-5` on the values, since it solves the dual of each
+  level to `1e-9` relative and the gap leaves the slacks of the level
+  larger than at the optimum, which makes the next levels easier, the
   Benders decomposition to `1e-5` on the values and `1e-2` on `x` rather
   than `1e-3`, since it stops when no cut is violated by more than `1e-9`
   relative and with the regularization `1e-3` such a gap leaves `x` free by

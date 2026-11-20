@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the Lagrangian dual of the consensus rows of the `HQPDistBlock` in
+  `batch-generated` of `HQPBlock`, as the 5th `HQPSolver` of
+  `HQPDistBSCfg.txt`: a `LagrangianDualSolver` with a `BundleSolver` to
+  `1e-9` relative and DAQP with the rows held to `1e-10` on each sub-Block,
+  held to `5e-5` on the values of the levels
+
 - the bit 256 of `-k` of `MILPSolver_ObjectiveWeight_test`, which issues
   the changes of the coefficients of a round in a channel of each root, and
   the two settings of `batch-weight` that use it (`-k 463` and `-k 491`)
