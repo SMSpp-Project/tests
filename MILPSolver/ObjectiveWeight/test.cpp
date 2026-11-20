@@ -119,6 +119,11 @@ std::vector< BlockData > tdata;   // the tree, the root first
 // the Block of the two trees, in the order of tdata
 std::vector< AbstractBlock * > wgt , twin;
 
+// how the changes of the coefficients are issued, in each tree: with 256 in
+// a channel of its root, which hands them to the Solver attached to it as
+// one GroupModification [see main()]
+ModParam par_w = eModBlck , par_t = eModBlck;
+
 /*--------------------------------------------------------------------------*/
 /*------------------------------ FUNCTIONS ---------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -363,12 +368,12 @@ static void change( int b )
    double v = lin_c();
    say( "linear" , i , v );
    if( d.kind == 0 ) {
-    lf_of( W )->modify_coefficient( i , v );
-    lf_of( T )->modify_coefficient( i , s * v );
+    lf_of( W )->modify_coefficient( i , v , par_w );
+    lf_of( T )->modify_coefficient( i , s * v , par_t );
     }
    else {
-    dq_of( W )->modify_linear_coefficient( i , v );
-    dq_of( T )->modify_linear_coefficient( i , s * v );
+    dq_of( W )->modify_linear_coefficient( i , v , par_w );
+    dq_of( T )->modify_linear_coefficient( i , s * v , par_t );
     }
    }
   }
@@ -393,8 +398,8 @@ static void change( int b )
    Index i = Index( dis( rg ) * nav ) % nav;
    double l = lin_c() , q = quad_c();
    say( "term" , i , l , q );
-   dq_of( W )->modify_term( i , l , q );
-   dq_of( T )->modify_term( i , s * l , s * q );
+   dq_of( W )->modify_term( i , l , q , par_w );
+   dq_of( T )->modify_term( i , s * l , s * q , par_t );
    }
   }
 
@@ -446,10 +451,10 @@ static void change( int b )
    double v = lin_c();
    say( "row coefficient" , h , v , r );
    rd.coeff[ h ] = v;
-   row_of( W , r )->modify_coefficient( h , v );
+   row_of( W , r )->modify_coefficient( h , v , par_w );
    row_of( T , r )->modify_coefficient( h , v *
                                         factor( rd.var[ h ].first , b ,
-                                                true ) );
+                                                true ) , par_t );
    }
   }
 
@@ -558,7 +563,9 @@ int main( int argc , char ** argv )
                     "                                    64 coefficients "
                     "of the rows,\n"
                     "                                    128 weights with "
-                    "the Solver attached\n" );
+                    "the Solver attached,\n"
+                    "                                    256 the "
+                    "coefficients in a channel\n" );
  short_opts += "N:s:";
  const std::vector< option > my_opts = {
    { "nvar" , required_argument , nullptr , 'N' } ,
@@ -622,8 +629,23 @@ int main( int argc , char ** argv )
  for( Index rep = 0 ; rep < round_opts.n_repeat ; ++rep ) {
   if( verbosity_level > 0 )
    cout << "round " << rep << endl;
+  // with 256 the changes of the coefficients of a round go to the Solver
+  // of the roots as one GroupModification, those of the weights not, as a
+  // change of the weight is never part of one
+  Observer::ChnlName cw = 0 , ct = 0;
+  if( wchg & 256 ) {
+   cw = wgt[ 0 ]->open_channel();
+   ct = twin[ 0 ]->open_channel();
+   par_w = Observer::make_par( eModBlck , cw );
+   par_t = Observer::make_par( eModBlck , ct );
+   }
   for( int b = 0 ; b < int( tdata.size() ) ; ++b )
    change( b );
+  if( wchg & 256 ) {
+   wgt[ 0 ]->close_channel( cw );
+   twin[ 0 ]->close_channel( ct );
+   par_w = par_t = eModBlck;
+   }
   AllPassed &= check( wgt[ 0 ] , twin[ 0 ] , 1 , "root" );
   AllPassed &= check( wgt[ mid ] , twin[ mid ] , tdata[ mid ].weight ,
                       "middle" );

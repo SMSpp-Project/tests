@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the bit 256 of `-k` of `MILPSolver_ObjectiveWeight_test`, which issues
+  the changes of the coefficients of a round in a channel of each root, and
+  the two settings of `batch-weight` that use it (`-k 463` and `-k 491`)
+
 - `batch-man0euvre` of `TwoStageStochasticBlock` and of `InvestmentBlock`:
   the instances of the EDF case Man0euVRE as the workflow of
   SPSUnipi/RESILIENT-instances hands them to SMS++, for the Benders

@@ -35,18 +35,21 @@ quadratic coefficients of a `DQuadFunction`, 8 a `ColVariable` taken out of
 an `Objective` or put back into it, 64 the coefficients of the rows, 128 the
 weights of a Block (that of the Variable, and that of the `Objective` of a
 leaf) while the `Solver` are attached, which they have to handle [see
-`Solver::handles_weight_change()`]; with 16 the first leaf has a convex
+`Solver::handles_weight_change()`], 256 the changes of the coefficients of
+a round issued in a channel of each root, so that the `Solver` attached to
+it take them as one `GroupModification`; with 16 the first leaf has a convex
 `QuadFunction`, with 32 all the `Objective` are linear. With `-v` the changes
 are printed. A change of the weights is also checked to be refused, with
 nothing changed, while a `Solver` that cannot handle it is attached to an
 ancestor.
 
 [batches/batch-weight](batches/batch-weight) runs it on 27 trees of
-different sizes and seeds in each of three settings: the `Objective` partly
-quadratic with every change (`-k 207`) and with the `QuadFunction` too
-(`-k 223`), with the `Solver` of `BSPar.txt` (`GRBMILPSolver`,
-`CPXMILPSolver`, `SCIPMILPSolver`, `MOSEKMILPSolver`, `DAQPMILPSolver`), and
-all linear (`-k 235`) with those of `BSPar-LP.txt`, which adds
-`HiGHSMILPSolver`: the active set QP solver of HiGHS (up to 1.15.1 at least)
+different sizes and seeds in each of five settings: the `Objective` partly
+quadratic with every change (`-k 207`), in a channel too (`-k 463`), and
+with the `QuadFunction` (`-k 223`), with the `Solver` of `BSPar.txt`
+(`GRBMILPSolver`, `CPXMILPSolver`, `SCIPMILPSolver`, `MOSEKMILPSolver`,
+`DAQPMILPSolver`), and all linear (`-k 235`), in a channel too
+(`-k 491`), with those of `BSPar-LP.txt`, which adds `HiGHSMILPSolver`:
+the active set QP solver of HiGHS (up to 1.15.1 at least)
 calls unbounded some of these convex QPs, whose variables are all bounded.
 A `Solver` that the build has not is left out.
