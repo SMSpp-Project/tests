@@ -7,8 +7,11 @@
 # within the time of a CI job, and with the outer approximation of the
 # conic relaxations: with the nonlinear ones and few threads, MOSEK 11 and
 # 12 declare optimal a worse solution of QPLib_10056, which the dual form
-# of the interior point avoids in MOSEK 11 but not in MOSEK 12;
-# LPPar_CL_I.txt includes it.
+# of the interior point avoids in MOSEK 11 but not in MOSEK 12; the
+# threads are four, since with one per core the memory of the branch and
+# bound grows with them, up to 119 GB of address space and 45 GB resident
+# on QPLib_10005 with 384, and the outcome does not depend on the cores of
+# the machine; LPPar_CL_I.txt includes it.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -18,10 +21,11 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-2  # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
 intLogVerb                             0  # log verbosity of the MILPSolver
+intMaxThread                           4  # four threads
 MSK_IPAR_MIO_CONIC_OUTER_APPROXIMATION 1  # outer approximation of cones
 
 1  # number of double parameters

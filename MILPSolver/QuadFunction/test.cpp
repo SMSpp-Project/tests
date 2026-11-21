@@ -94,8 +94,9 @@ static bool search_opt( std::string file_name , double* opt_value , char type )
   file >> word;
   bool opt_found = false;
 
-  // Now we should be reading lp files name until we reach the END word
-  while( word != "END" ) {
+  // Now we should be reading lp files name until we reach the END word, or
+  // the end of the file if it has none or cannot be opened
+  while( file && ( word != "END" ) ) {
     if( word == file_name ) {
       // We found the right file
 

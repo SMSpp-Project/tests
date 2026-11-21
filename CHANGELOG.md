@@ -87,6 +87,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the `MOSEKMILPSolver` of the integer batteries of
+  `MILPSolver_QuadFunction_test` (`MOSEKCfg-I.txt`) uses four threads,
+  since with one per core its branch and bound ran out of memory on
+  QPLib_10005 and QPLib_3980 on a machine with many cores
+
+- `MILPSolver_QuadFunction_test` stops reading `available_instances.txt`
+  at the end of the file, where it looped forever when the file was not in
+  the current directory or had no `END`
+
 - the Lagrangian dual of the Benders subproblems under a MILP master
   (`BDSSCfg-LDrec.txt`) is the recursive one of `LDrecCfg.txt`, rather than
   that of `LDCfg.txt`, which on the larger thermal instances ran out of
