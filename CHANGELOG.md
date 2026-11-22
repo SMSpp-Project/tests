@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the suite `GeneralizedAssignmentBlock`, which cross-checks on the
+  OR-Library instances of types A, B, C and D a `:MILPSolver` on the whole
+  tree and the Lagrangian dual of the assignment constraints, solved by a
+  `BundleSolver` and by a `SubGradSolver`, with free multipliers
+
 - the Benders decomposition of the `HQPDistBlock` in the convex regime in
   `batch-generated` of `HQPBlock`, as the 4th `HQPSolver` of
   `HQPDistBSCfg-bds.txt`: a `BundleSolver` with the trust region as the

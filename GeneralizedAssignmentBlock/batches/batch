@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file > < par file > < log file >
+#        < exe file > = path of the executable, default
+#                       GeneralizedAssignmentBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# Cross-check on the instances that GeneralizedAssignmentBlock distributes in
+# data/txt: the :MILPSolver on the whole tree and the Lagrangian dual of the
+# integer problem, solved by a BundleSolver and by a SubGradSolver, both
+# declared a relaxation with -R, which have to bound the optimum of the
+# former from below.
+
+# run from the test directory so the tester reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./GeneralizedAssignmentBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+
+data=../../GeneralizedAssignmentBlock/data/txt
+
+# the instances: the OR-Library ones of types A, B, C and D, with 5, 10 and
+# 20 agents and 100 and 200 jobs - - - - - - - - - - - - - - - - - - - - -
+
+for t in a b c d; do
+  for m in 05 10 20; do
+    for n in 100 200; do
+      run_test "$exe" -S "$par" -R ,r,r "${data}/${t}${m}${n}.txt" < /dev/null
+    done
+  done
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

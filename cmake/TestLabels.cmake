@@ -75,6 +75,8 @@ set(SMSPP_TEST_LABELS_SatellitesBlock
     "BundleSolver;LagrangianDualSolver;SatellitesBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_MultiKnapsackAssignBlock
     "BundleSolver;LagrangianDualSolver;MultiKnapsackAssignBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_GeneralizedAssignmentBlock
+    "BundleSolver;LagrangianDualSolver;GeneralizedAssignmentBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_HQPBlock                  "HQPBlock;MILPSolver")
 
 # Attach the labels of the current directory (keyed by its name) to every test
