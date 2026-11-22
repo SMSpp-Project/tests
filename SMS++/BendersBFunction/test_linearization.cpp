@@ -246,7 +246,8 @@ AbstractBlock * build_LP( const std::vector< double > & l ,
  // M1 y + b1 <= Ex <= M2 y + b2
 
  auto num_lower_xy_constraints =
-  std::count_if( b1.begin() , b1.end() , [](double d) { return( d > -inf ); } );
+  std::count_if( b1.begin() , b1.end() ,
+                 [](double d) { return( d > -inf ); } );
 
  if( num_lower_xy_constraints > 0 ) {
   auto lower_xy_constraints =
@@ -528,7 +529,8 @@ AbstractBlock * build_Benders_decomposition(
 /*--------------------------------------------------------------------------*/
 
 void test_linearization( Block * benders_block ,
-                         const std::vector< std::vector< double > > & y_values ,
+                         const std::vector< std::vector< double > > &
+                          y_values ,
                          const std::vector< double > & solution_values ,
                          const std::vector< int > & status ,
                          const double optimal_value ) {
@@ -544,7 +546,8 @@ void test_linearization( Block * benders_block ,
  std::vector< double > optimal_solution( num_y );
  std::vector< ColVariable * > y( num_y );
  for( Index i = 0 ; i < y.size() ; ++i ) {
-  y[ i ] = dynamic_cast< ColVariable * >( benders_function->get_active_var( i ) );
+  y[ i ] = dynamic_cast< ColVariable * >(
+                                     benders_function->get_active_var( i ) );
   if( ! CHECK( y[ i ] ) ) return;
   optimal_solution[ i ] = y[ i ]->get_value();
  }
@@ -553,7 +556,8 @@ void test_linearization( Block * benders_block ,
 
  for( Index i = 0 ; i < y_values.size() ; ++i ) {
 
-  std::vector< double > g( num_y , std::numeric_limits< double >::quiet_NaN() );
+  std::vector< double > g( num_y ,
+                           std::numeric_limits< double >::quiet_NaN() );
   for( Index j = 0 ; j < num_y ; ++j )
    y[ j ]->set_value( y_values[ i ][ j ] );
   CHECK( benders_function->compute() == status[ i ] );
@@ -600,7 +604,8 @@ Solver * build_inner_block_solver() {
    auto c = Configuration::deserialize( "LPPar_innerBlock.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar_innerBlock.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar_innerBlock.txt does not contain a "
+                 "BlockSolverConfig" << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -656,7 +661,8 @@ void test( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -675,8 +681,8 @@ void test( bool invert ) {
 
  auto inner_block_solver = build_inner_block_solver();
  auto benders_block = build_Benders_decomposition
-  ( inner_block_solver , invert , l , u , d , E , M1, M2 , b1 , b2, F , f1 , f2 ,
-    l_x, u_x );
+  ( inner_block_solver , invert , l , u , d , E , M1, M2 , b1 , b2, F , f1 ,
+    f2 , l_x, u_x );
 
  // Solve
 
@@ -757,7 +763,8 @@ void test2( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -850,7 +857,8 @@ void test3( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -943,7 +951,8 @@ void test4( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -1033,7 +1042,8 @@ void test5( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -1115,7 +1125,8 @@ void test6( bool invert ) {
  std::vector< double > b1 = { 3 };
  std::vector< double > b2 = b1;
 
- matrix F = { { 0 , 1, -1 , 0 , -1 } , { 1 , 0 , 0 , -1 , 1 } , { 0 , 0 , 0 , 1 , 0 } };
+ matrix F = { { 0 , 1, -1 , 0 , -1 } , { 1 , 0 , 0 , -1 , 1 } ,
+              { 0 , 0 , 0 , 1 , 0 } };
  std::vector< double > f1 = { -inf , 5 , -inf };
  std::vector< double > f2 = { 10 , inf , 1 };
 
@@ -1128,7 +1139,8 @@ void test6( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -1219,7 +1231,8 @@ void test7( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -1306,7 +1319,8 @@ void test8( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -1352,7 +1366,8 @@ void test8( bool invert ) {
 
  if( ! CHECK( benders_function ) ) return;
 
- auto y = dynamic_cast< ColVariable * >( benders_function->get_active_var( 0 ) );
+ auto y = dynamic_cast< ColVariable * >(
+                                     benders_function->get_active_var( 0 ) );
  y->set_value( 1 );
 
  std::vector< std::vector< double > > y_values = { { 1 } };
@@ -1403,7 +1418,8 @@ void test9( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -1449,7 +1465,8 @@ void test9( bool invert ) {
 
  if( ! CHECK( benders_function ) ) return;
 
- auto y = dynamic_cast< ColVariable * >( benders_function->get_active_var( 0 ) );
+ auto y = dynamic_cast< ColVariable * >(
+                                     benders_function->get_active_var( 0 ) );
  y->set_value( 1 );
 
  std::vector< std::vector< double > > y_values = { { 1 } };
@@ -1501,7 +1518,8 @@ void test10( bool invert ) {
    auto c = Configuration::deserialize( "LPPar.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar.txt does not contain a BlockSolverConfig"
+              << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -1547,7 +1565,8 @@ void test10( bool invert ) {
 
  if( ! CHECK( benders_function ) ) return;
 
- auto y = dynamic_cast< ColVariable * >( benders_function->get_active_var( 0 ) );
+ auto y = dynamic_cast< ColVariable * >(
+                                     benders_function->get_active_var( 0 ) );
  y->set_value( 1 );
 
  std::vector< std::vector< double > > y_values = { { 1 } };
@@ -1603,7 +1622,8 @@ void test11( bool invert ) {
 
  if( ! CHECK( benders_function ) ) return;
 
- auto y = dynamic_cast< ColVariable * >( benders_function->get_active_var( 0 ) );
+ auto y = dynamic_cast< ColVariable * >(
+                                     benders_function->get_active_var( 0 ) );
  y->set_value( 1 );
 
  std::vector< std::vector< double > > y_values = { { 1 } };
@@ -1711,7 +1731,7 @@ void test_pool_after_removal( void )
 
  for( Index i = 0 ; i < benders_function->get_num_active_var() ; ++i )
   dynamic_cast< ColVariable * >
-                       ( benders_function->get_active_var( i ) )->set_value( 0 );
+                     ( benders_function->get_active_var( i ) )->set_value( 0 );
 
  CHECK( benders_function->compute() == Solver::kOK );
  CHECK( benders_function->has_linearization() );

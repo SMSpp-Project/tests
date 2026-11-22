@@ -20,7 +20,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *TUBCfg-3bin-PC.txt     # 1st formulation: 3bin-PC
 *TUBCfg-T-PC.txt        # 2nd formulation: T-PC
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END TUBForm-PC-3bin-T.txt - - - - - - - - - - - - -

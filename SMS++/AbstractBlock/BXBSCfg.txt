@@ -39,7 +39,7 @@ intPDSol 1 # whether solutions are computed and written inside compute()
 #       of the variables have been changed by the last computation of the
 #       LagBFunction without picking any linearization
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BXBSCfg.txt - - - - - - - - - - - - - - -

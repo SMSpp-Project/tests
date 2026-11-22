@@ -84,6 +84,22 @@ cross-checked, and on the Benders form of it, where the same
 therefore still solving the extensive form, is cross-checked against
 `BendersDecompositionSolver`.
 
+`batches/batch-man0euvre` runs the instances of the EDF case Man0euVRE
+that the workflow of SPSUnipi/RESILIENT-instances (`cases-man0euvre`)
+hands to SMS++ for its Benders runs, 16 regions, 2 days and 3
+scenarios, and 12 days and 21, 52 and 105 scenarios (the cases
+presented in Berlin), against the optimum of PyPSA + HiGHS on the same
+network. The form is the one `TwoStageStochasticBlock::get_Benders_form()`
+assembles (`-b`), and `BSPar-BDS-2S-par.txt` holds, beside the
+`Solver` of `BSPar-BDS-2S-CVX.txt`, the two Benders decompositions of
+those runs. The cases with 52 and 105 scenarios are in an archive of
+their own of `UCBlock`, and run in a test of their own with the label
+`berlin` (`ctest -L berlin`), which neither the CI nor the nightly
+runs. The counterpart with the `InvestmentBlock` outside the
+`TwoStageStochasticBlock` is `batch-man0euvre` of `InvestmentBlock`,
+which compares the bundle of that suite with the
+`ParallelBundleSolver` of those runs [see `InnerBForm-par.txt` there].
+
 `batches/batch-pypsa-invest` runs the second of the two on the same
 PyPSA networks written with the capital costs scaled by the same
 factor the horizon is cut by. Without that scaling the capital cost
@@ -91,10 +107,9 @@ of an extendable asset pays for a whole year while the operation it
 saves is that of the snapshots that are kept, so the expansion is
 bought far less than it would be and the first stage decides little;
 with it the design is built, which is what gives the master of a
-decomposition something to decide. It is not registered with CTest:
-the Benders `Solver` takes minutes on those instances, its master
-being a cutting plane with no stabilization on a design that is
-continuous.
+decomposition something to decide. The Benders `Solver` runs there
+in its convex regime (`BSPar-BDS-2S-CVX.txt`), with a bundle driving
+the master, which a design that is continuous asks for.
 
 `batches/batch-ec` given a `BlockSolverConfig` that names a
 `BendersDecompositionSolver`, e.g., `BSPar-BDS-2S-IP.txt`, runs the
@@ -122,8 +137,8 @@ subproblems. The `investment_outside` form of the same two, i.e., the
 ad hoc Benders decomposition of an `InvestmentBlock` over the whole
 stochastic Block, is run by `InvestmentBlock/batches/batch-stochastic`
 against the same reference. The instances are written by
-`gen_modular_tssb.py` and `emit_modular_tssb.py`, in the
-`scripts/smspp_instances/references` of pypsa-eur-instances.
+`gen_modular_tssb.py` and `emit_modular_tssb.py`, in
+`pypsa_instances/references`.
 
 `TSSB_scenred_test` is the generic tester of the scenario reduction: it
 reads a `TwoStageStochasticBlock` out of a netCDF file, with its scenario
@@ -179,7 +194,12 @@ inner-Block module needed by the instances in `batches/` (currently
   Benders `Solver` keeps the design integer in its master, so the
   `:MILPSolver` solves the integer problem as well, and the
   subproblems of a round are evaluated by 4 threads
-  (`intMaxThread`).
+  (`intMaxThread`). The first `Solver` of all of them is that of
+  `MILPCfg-2S.txt`, and the Benders one of `BSPar-BDS-2S-CVX.txt` that
+  of `BDSCfg-2S-CVX.txt`. `BSPar-BDS-2S-par.txt` puts the two of
+  `BSPar-BDS-2S.txt` beside them, the subproblems of a round being
+  evaluated by 32 threads and the one with HiGHS stopping at a relative
+  gap of 1e-5.
 - `BSPar-Inv.txt` — `BlockSolverConfig` of the ad hoc form, i.e., a
   bundle over the `InvestmentBlock`; `IBOCfg.txt` is the `OBlockConfig`
   of that Block, which reformulates its bounds and gives the
@@ -234,9 +254,12 @@ inner-Block module needed by the instances in `batches/` (currently
   recovered at the design of the master (`strRecoveryBSC`, each subproblem a
   MILP of `BSCfg1-IP.txt`), which `BSPar-BDS-2S-LD.txt` puts beside the
   `:MILPSolver` on the Benders form; `BDSCfg-CVX-LD.txt` is the latter in
-  the convex regime (the master of `BDSMCfg-INV.txt`, and the feasible
+  the convex regime (the master of `BDSMCfg-INV.txt`, the subproblems
+  solved by the dual of `BDSSCfg-LDrec-CVX.txt`, and the feasible
   solution recovered at the best point of the bundle), which
-  `BSPar-BDS-2S-CVX-LD.txt` puts beside it in the same way.
+  `BSPar-BDS-2S-CVX-LD.txt` puts beside it in the same way, together with
+  the same with the master of the cutting-plane method of Kelley
+  (`BDSMCfg-Kelley.txt`).
 - `LPBSCfg-LD.txt` — the inner `LagrangianDualSolver` of that chain,
   whose components are the units of the scenario (`InnerBSCfg.txt`).
   `LPBSCfg-LD-noeasy.txt` is the same with `intDoEasy=0`, which the

@@ -24,44 +24,45 @@ LagrangianDualSolver            # name of 2nd Solver
 
 # now all the ComputeConfig
 # 1st ComputeConfig: the :MILPSolver - - - - - - - - - - - - - - - - - - - -
-*GRBCfg.txt       # MILPCfg.txt for a :MILPSolver other than Gurobi
+*GRBCfg.txt  # MILPCfg.txt for a :MILPSolver other than Gurobi
 
-# 2nd ComputeConfig: the LagrangianDualSolver- - - - - - - - - - - - - - - -
+# 2nd ComputeConfig: the LagrangianDualSolver - - - - - - - - - - - - - - - -
 *LDCfg.txt +
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-0 # number of integer parameters
+0  # number of integer parameters
 
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-1 # number of string parameters
+1  # number of string parameters
 
+# now all the string parameters
 str_LagBF_BSCfg     DCRBSCfg-reuse.txt # the Solver of each flow
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END BSPar-multi-reuse.txt - - - - - - - - - - - - -

@@ -50,7 +50,7 @@ IntegralityBarrierSolver  # 6th: Frank-Wolfe on a barrier
 *LDCfg.txt
 *IBCfg.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END BSPar-LD.txt - - - - - - - - - - - - - -

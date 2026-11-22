@@ -12,7 +12,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# the base ComputeConfig, plus the overrides below  - - - - - - - - - - - - -
+# the base ComputeConfig, plus the overrides below - - - - - - - - - - - - -
 *SMOCfg.txt +
 
 1  # f_diff == 1 ==> only the entries below are changed
@@ -27,26 +27,28 @@ intSMOShrink  0  # the active set is not shrunk
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
+# now all the vector-of-string parameters
+# [none]
 # the "extra" Configuration slot is left out on purpose: an override block
 # that ends here keeps the one of the base
 

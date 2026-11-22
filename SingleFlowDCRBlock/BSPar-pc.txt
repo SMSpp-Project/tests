@@ -30,13 +30,13 @@ SingleFlowDCRBendersSolver      # name of 2nd Solver
 # ComputeConfig of the :MILPSolver
 *MILPCfg.txt
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the SingleFlowDCRBendersSolver
-* # [none]
+*  # [none]
 
-# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END BSPar-pc.txt - - - - - - - - - - - - - -

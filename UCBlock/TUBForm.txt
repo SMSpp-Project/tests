@@ -26,7 +26,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *TUBCfg-SD.txt          # 6th formulation: SD
 *TUBCfg-SUSD.txt        # 7th formulation: SUSD
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END TUBForm.txt - - - - - - - - - - - - - - - -

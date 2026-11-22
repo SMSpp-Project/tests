@@ -24,7 +24,13 @@ intReopt 3   # warm start + no-solve checks
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -42,7 +48,7 @@ intReopt 3   # warm start + no-solve checks
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of ComputeConfig
 

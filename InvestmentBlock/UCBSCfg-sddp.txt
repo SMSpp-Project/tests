@@ -1,0 +1,28 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - UCBSCfg-sddp.txt  - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the UCBlock of every stage, in the training as in
+# the simulations: a HiGHSMILPSolver that solves its continuous relaxation
+# [see MILPCfg-sddp.txt], which gives the dual values that the backward pass
+# and the linearization of the InvestmentFunction need, and which on these
+# instances has the same optimum as the UCBlock [see gen_sddp_initud.py].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+HiGHSMILPSolver   # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig
+*MILPCfg-sddp.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END UCBSCfg-sddp.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

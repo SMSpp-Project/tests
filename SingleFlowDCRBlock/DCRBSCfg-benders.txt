@@ -21,7 +21,7 @@ SingleFlowDCRBendersSolver      # name of Solver
 
 # now all the ComputeConfig
 # ComputeConfig of the SingleFlowDCRBendersSolver
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END DCRBSCfg-benders.txt  - - - - - - - - - - - - -

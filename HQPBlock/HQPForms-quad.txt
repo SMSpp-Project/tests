@@ -1,0 +1,40 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - HQPForms-quad.txt - - - - - - - - - - - - - - -
+#
+# The formulations of the HQPBlock of the hierarchy with quadratic hard rows
+# that batch-qcqp builds with -Q quad, each with its BlockConfig and its
+# BlockSolverConfig, whose HQPSolver follow those of the previous one in
+# the positions of -E:
+#
+#   - F0, the quadratic hard rows with a QuadFunction each (HQPBCfg.txt),
+#     with the HQPSolver of HQPBSCfg-quad.txt, whose inner Solvers take
+#     quadratic rows;
+#   - F1, the quadratic hard rows by cuts (HQPBCfg-cuts.txt), with those of
+#     HQPBSCfg-cuts.txt, whose inner Solvers separate them.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# F0: the quadratic hard rows with a QuadFunction
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
+*HQPBCfg.txt        # its BlockConfig
+*HQPBSCfg-quad.txt  # its BlockSolverConfig
+
+# F1: all the nonlinear hard rows by cuts at the boundary point
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
+*HQPBCfg-cuts.txt   # its BlockConfig
+*HQPBSCfg-cuts.txt  # its BlockSolverConfig
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END HQPForms-quad.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

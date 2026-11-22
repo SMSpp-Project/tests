@@ -25,28 +25,28 @@ dblLSVMTol 1e-9  # as for SMOSolver, the default 1e-3 leaves a gap of the
                  # stay so: the two Solver are timed against each other, and
                  # a comparison at different tolerances is no comparison
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END LSVMCfg.txt - - - - - - - - - - - - - - -

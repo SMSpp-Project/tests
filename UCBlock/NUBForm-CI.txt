@@ -17,7 +17,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *TUBCfg-T-PC.txt        # 1st formulation: T-PC
 *NUBCfg-T-PC-RM.txt     # 2nd formulation: T-PC, both
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END NUBForm-CI.txt  - - - - - - - - - - - - - - -

@@ -24,7 +24,7 @@ LagrangianDualRelaxationSolver  # 1st: the Lagrangian Dual of the nodes
 # 1: the LagrangianDualRelaxationSolver
 *LDRSCfg.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - -  END InnerBSCfg-BX-LD.txt - - - - - - - - - - - - -

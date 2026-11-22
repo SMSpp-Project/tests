@@ -36,7 +36,8 @@ for sdc in 100 50000; do
         # TUBForm-shutdown.txt lists, the unit being read once per formulation
         # and the copies compared with each other [see batch]
         run_test "$TUDPS_test" "$what" -S "$par" -e "$seed" -k "$wchg" \
-                 -F TUBForm-shutdown.txt -n "$rounds" -m "$nchg" -q "$pchg" -d "$sdc"
+                 -F TUBForm-shutdown.txt -n "$rounds" -m "$nchg" -q "$pchg" \
+                 -d "$sdc"
 
       done
     done

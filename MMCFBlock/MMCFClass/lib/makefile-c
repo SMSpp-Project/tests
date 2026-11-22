@@ -43,12 +43,15 @@ include $(libMMCFSDR)/lib/makefile
 # macros to be exported - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # external -I directives for the core libMMCF
-libMMCFINC := $(libMMCFINC) $(OPTUxINC) $(libCPLEXINC)
-
-# external libraries for the core libMMCF
-libMMCFLIB := $(libMMCFLIB) $(libCPLEXLIB)
+libMMCFINC := $(libMMCFINC) $(OPTUxINC)
 
 # external headers for libMMCF
 libMMCFH := $(libMMCFH) $(libNDOH) $(OPTUxH)
+
+# CPLEX, if MMCFCplex is there
+ifneq ($(MMXOBJ),)
+    libMMCFINC := $(libMMCFINC) $(libCPLEXINC)
+    libMMCFLIB := $(libMMCFLIB) $(libCPLEXLIB)
+endif
 
 ########################### End of makefile-c ################################

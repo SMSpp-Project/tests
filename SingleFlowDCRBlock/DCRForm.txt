@@ -21,21 +21,29 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 # now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 # 1st formulation: the SOCP formulation, both Solver exact
 SimpleConfiguration<std::vector<Configuration*>>
+
 3  # its BlockConfig, its BlockSolverConfig, its -R
+
 *DCRCfg-socp.txt        # its BlockConfig
 *BSPar.txt              # its BlockSolverConfig
+
 SimpleConfiguration<std::vector<int>>
-2  0 0                  # no Solver solves a relaxation
+
+2 0 0  # no Solver solves a relaxation
 
 # 2nd formulation: the P/C formulation, the :MILPSolver a relaxation
 SimpleConfiguration<std::vector<Configuration*>>
+
 3  # its BlockConfig, its BlockSolverConfig, its -R
+
 *DCRCfg-pc.txt          # its BlockConfig
 *BSPar-pc.txt           # its BlockSolverConfig
-SimpleConfiguration<std::vector<int>>
-2  1 0                  # the :MILPSolver solves a relaxation
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+SimpleConfiguration<std::vector<int>>
+
+2 1 0  # the :MILPSolver solves a relaxation
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END DCRForm.txt - - - - - - - - - - - - - - - -

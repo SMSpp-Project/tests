@@ -138,7 +138,9 @@ the oracle, on copies of `FatherBSPar-lemon.txt` and of `MCFBSCfg.txt` or
 `MCFBSCfg-lemon.txt` with the name of the `Solver` changed that the script
 [fw_lmo_solvers](batches/fw_lmo_solvers) writes and removes at the end; the
 other two batteries use the reduced lineup, a single run on their instances
-taking the best part of an hour.
+taking the best part of an hour, with the oracle of MCFClass
+(`FatherBSPar-fast.txt`) and with that of LEMON
+(`FatherBSPar-fast-lemon.txt`).
 
 ## Authors
 

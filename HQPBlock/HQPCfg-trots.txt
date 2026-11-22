@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - HQPCfg-trots.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the HQPSolver of HQPBSCfg-trots.txt: that of
+# HQPCfg.txt with the slacks of the inequality rows of each level fixed
+# 1e-3 above their values at its solution (dblSlackTol), as the
+# relaxation of the objectives already met of the lexicographic method of
+# TROTS; with less, the interior point of the next levels stalls on a
+# feasible set with almost no interior.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*HQPCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblSlackTol  1e-3  # the slacks fixed 1e-3 above their values
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END HQPCfg-trots.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

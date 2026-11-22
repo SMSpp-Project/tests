@@ -1753,7 +1753,7 @@ int main( int argc , char **argv )
      // remove them from the LP
      auto xLPd = LPBlock->get_dynamic_variable< ColVariable >( "xd" );
      auto cnst_it =
-             LPBlock->get_dynamic_constraint< FRowConstraint >( "cuts" )->begin();
+       LPBlock->get_dynamic_constraint< FRowConstraint >( "cuts" )->begin();
      if( tochange == 1 ) {
       for( Index i = 0 ; i < m ; ++i ) {
        auto fi = static_cast< p_LF >( (cnst_it++)->get_function() );

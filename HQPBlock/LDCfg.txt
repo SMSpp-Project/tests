@@ -1,0 +1,72 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - LDCfg.txt - - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the LagrangianDualSolver of InnerBSCfg-lds.txt, which
+# solves each level of an HQPDistBlock with the structure kConsensus by
+# relaxing its consensus rows, each sub-Block by the DAQP of
+# InnerBSCfg-daqp-tol10.txt and the Lagrangian dual by a BundleSolver whose
+# master is the Gurobi of BDSMCfg.txt. The dual is solved to 1e-9 relative:
+# the gap of each level leaves its slacks larger than at the optimum, which
+# makes the next levels easier, and with the default 1e-7 the values of the
+# levels end off by up to 2e-4, while below 1e-9 the bundle method stops
+# as with an inexact oracle on the levels whose value is of the order of 1.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+10  # number of integer parameters
+
+# now all the integer parameters
+int_LDSlv_iBCopy      0  # the sub-Blocks are not copied
+int_LDSlv_NNMult      0  # consensus rows are equalities: free multipliers
+intDoEasy             0  # each sub-Block solved by its own DAQP
+intMaxIter        20000  # max iterations of the bundle method on a level
+intBPar1             20  # steps at multiplier 0 before an item leaves
+intBPar2            400  # max size of the bundle of each component
+intBPar7             11  # how the global pools are dealt with
+intMnNSC              1  # min number of consecutive null steps
+inttSPar1            12  # the t-strategy
+intMaxThread          1  # one thread
+
+6  # number of double parameters
+
+# now all the double parameters
+dblRelAcc          1e-9  # relative accuracy of the dual
+dblNZEps           1e-8  # the norm of z* taken as zero
+dbltStar           1e+3  # t of the stopping test
+dbltMaior          1e+6  # max t
+dbltMinor          1e-4  # min t
+dbltInit           1e-2  # initial t
+
+3  # number of string parameters
+
+# now all the string parameters
+str_LDSlv_ISName  BundleSolver               # the Solver of the dual
+strMPBSolverCfg   BDSMCfg.txt                # the Solver of its master
+str_LagBF_BSCfg   InnerBSCfg-daqp-tol10.txt  # that of the sub-Blocks
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - END LDCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

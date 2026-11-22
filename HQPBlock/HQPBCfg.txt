@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - HQPBCfg.txt - - - - - - - - - - - - - - - -
+#
+# The BlockConfig of the HQPBlock of the formulation F0 of HQPForms-quad.txt
+# and HQPForms-conic.txt: the quadratic hard rows with a QuadFunction each,
+# the conic ones by the cuts of Kelley at the default tolerance [see
+# HQPBlock::generate_dynamic_constraints()], and the hard rows checked at
+# the solution of each HQPSolver to 1e-6 [see HQPBlock::is_feasible()].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+BlockConfig # exact type of the Configuration object
+
+1  # the BlockConfig is a "differential" one
+
+2  # version of the BlockConfig format
+
+# the Configuration for the structure, i.e., the tree of sub-Block
+*  # [none]
+
+# static_constraints
+*  # [none]
+
+# dynamic_constraints
+*  # [none]
+
+# static_variables
+*  # [none]
+
+# dynamic_variables
+*  # [none]
+
+# objective
+*  # [none]
+
+# is_feasible
+SimpleConfiguration<double>
+1e-6  # largest relative violation of a hard row
+
+# is_optimal
+*  # [none]
+
+# solution
+*  # [none]
+
+# extra
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END HQPBCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

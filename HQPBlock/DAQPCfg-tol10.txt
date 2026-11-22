@@ -1,0 +1,52 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - DAQPCfg-tol10.txt - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of DAQPMILPSolver as the Solver of the sub-Blocks of the
+# Lagrangian dual of LDCfg.txt (InnerBSCfg-daqp-tol10.txt): the rows held to
+# 1e-10 rather than to the default 1e-6 of DAQP, whose error on the value of
+# the Lagrangian function the bundle method sees as an inexact oracle when
+# it is asked for a relative accuracy of 1e-9.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblFAccSol  1e-10  # primal feasibility of the rows
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END DAQPCfg-tol10.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

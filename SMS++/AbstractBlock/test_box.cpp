@@ -83,6 +83,8 @@
 
 #include "AbstractBlock.h"
 
+#include <cmath>
+
 #include "common_utils.h"
 
 #include "FRealObjective.h"
@@ -266,6 +268,13 @@ static AbstractBlock * construct_son( void )
  //!! check the AbstractBlock
  BoxBlock->is_correct();
 
+ // with wchg & 128 the Objective of the sub-Block has a weight in [ 0.1 , 10 ]
+ // [see Block::set_objective_weight()], which the :MILPSolver applies and the
+ // LagrangianDualSolver through its LagBFunction, while the BoxSolver of the
+ // sub-Block does not see it
+ if( wchg & 128 )
+  BoxBlock->set_objective_weight( std::pow( 10.0 , 2 * dis( rg ) - 1 ) );
+
  return( BoxBlock );
  }
 
@@ -447,7 +456,8 @@ int main( int argc , char **argv )
   "                                    32 Lagrangian heuristic "
   "(one-sided bound),\n"
   "                                    64 a linking constraint is added\n"
-  "                                    or removed\n" );
+  "                                    or removed, 128 weights on the\n"
+  "                                    Objective of the sub-Blocks\n" );
  short_opts += "N:s:d:";
  const std::vector< option > my_opts = {
    { "nvar" , required_argument , nullptr , 'N' } ,
@@ -503,6 +513,10 @@ int main( int argc , char **argv )
   // the construction has finished
 
   TestBlock = new AbstractBlock();
+
+  // the weight of the root, which no Solver attached to it sees
+  if( wchg & 128 )
+   TestBlock->set_objective_weight( 1 + dis( rg ) );
 
   // create the sub-Block and add them
   for( Index k = 0 ; k++ < nson ; )

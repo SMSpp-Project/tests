@@ -13,16 +13,16 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-2 # number of (the names of) Solver in this BlockSolverConfig
+2  # number of (the names of) Solver in this BlockSolverConfig
 
-# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - -
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver       # the monolithic reference
 #CPXMILPSolver        #   (uncomment the available backend)
 #GRBMILPSolver
 #SCIPMILPSolver
 FrankWolfeSolver      # the decomposition, Away-step
 
-2 # number of ComputeConfig in this BlockSolverConfig
+2  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 
@@ -35,7 +35,7 @@ FrankWolfeSolver      # the decomposition, Away-step
 
 1  # f_diff == 1 ==> only the entries below are changed
 
-3 # number of integer parameters
+3  # number of integer parameters
 
 # now all the integer parameters
 intAlgorithm    1 # Away-step, whose active set is what
@@ -44,27 +44,27 @@ intMaxAtoms     0 # unbounded active set
 intHandleMod    1 # eModFine: keep it and re-check that
                   # its atoms are still feasible
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
@@ -73,7 +73,7 @@ intHandleMod    1 # eModFine: keep it and re-check that
 # but has to write all the same: an override block that leaves it
 # out is read on to the end of the stream, and so swallows whatever
 # follows it in the enclosing file, i.e. the next ComputeConfig
-* # [none]
+*  # [none]
 
 # end of BlockSolverConfig
 

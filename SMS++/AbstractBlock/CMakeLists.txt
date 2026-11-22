@@ -113,18 +113,21 @@ smspp_label_tests()
 # each of the four asks for modules the others do not, and the directory
 # declares only what they all need, so the rest is set here
 if (TEST LagrangianDualSolver_Box_test/batches/batch-box)
-    set_tests_properties(LagrangianDualSolver_Box_test/batches/batch-box PROPERTIES
-                         LABELS "${SMSPP_TEST_LABELS_AbstractBlock};BundleSolver;LagrangianDualSolver")
+    set_tests_properties(LagrangianDualSolver_Box_test/batches/batch-box
+        PROPERTIES LABELS
+        "${SMSPP_TEST_LABELS_AbstractBlock};BundleSolver;LagrangianDualSolver")
 endif ()
 
 if (TEST AbstractBlock_mirror_test/batches/batch-mirror)
-    set_tests_properties(AbstractBlock_mirror_test/batches/batch-mirror PROPERTIES
-                         LABELS "${SMSPP_TEST_LABELS_AbstractBlock};BinaryKnapsackBlock")
+    set_tests_properties(AbstractBlock_mirror_test/batches/batch-mirror
+        PROPERTIES LABELS
+        "${SMSPP_TEST_LABELS_AbstractBlock};BinaryKnapsackBlock")
 endif ()
 
 if (TEST AbstractBlock_BDS_test)
+    set(_bds_labels "${SMSPP_TEST_LABELS_AbstractBlock};BundleSolver")
     set_tests_properties(AbstractBlock_BDS_test PROPERTIES
-                         LABELS "${SMSPP_TEST_LABELS_AbstractBlock};BundleSolver;BendersDecompositionSolver")
+        LABELS "${_bds_labels};BendersDecompositionSolver")
 endif ()
 
 # --------------------------------------------------------------------------- #

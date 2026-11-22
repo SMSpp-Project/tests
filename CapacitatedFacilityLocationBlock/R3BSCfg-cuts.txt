@@ -1,0 +1,67 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - R3BSCfg-cuts.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the R3BSolver of CFLBForm-cuts.txt, which solves a
+# CapacitatedFacilityLocationBlock through its copy [see R3BCfg-copy.txt] in
+# the formulation of CFLBCfg-KF-SFsep.txt, whose continuous relaxation is
+# solved by a :MILPSolver with the separation of the strong forcing
+# constraints [see MILPCfg-cuts.txt]; the copy is a Reformulation, hence both
+# bounds pass (intR3BKind at its default).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration: how the R3Block is made, its
+# BlockConfig and the BlockSolverConfig of its Solver
+SimpleConfiguration<std::vector<Configuration*>>
+
+3  # how the R3Block is made, its BlockConfig, its BlockSolverConfig
+
+*R3BCfg-copy.txt        # how it is made
+*CFLBCfg-KF-SFsep.txt   # its BlockConfig
+# its BlockSolverConfig: the :MILPSolver of MILPCfg-cuts.txt
+BlockSolverConfig  # exact type of the Configuration object
+1                  # the BlockSolverConfig is a "differential" one
+1                  # number of (the names of) Solver
+GRBMILPSolver
+1                  # number of ComputeConfig
+*MILPCfg-cuts.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END R3BSCfg-cuts.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

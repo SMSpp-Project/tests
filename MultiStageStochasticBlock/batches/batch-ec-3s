@@ -9,8 +9,8 @@
 # runs all the THREE-stage energy community instances and checks that the
 # objective value of their extensive form matches the EnergyCommunity.jl
 # @stochastic reference one. A three-stage MultiStageStochasticBlock aggregates
-# one inner TwoStageStochasticBlock per long-period (scen_s) scenario; the inner
-# Block additionally ties the day-ahead aggregated declared-dispatch bid
+# one inner TwoStageStochasticBlock per long-period (scen_s) scenario; the
+# inner Block additionally ties the day-ahead aggregated declared-dispatch bid
 # (ECNetworkBlock's p_agg_dec) across the short-period (scen_eps) scenarios,
 # while the dispatch and the imbalance vary per short-period one. This is
 # exactly EnergyCommunity.jl@stochastic's three-stage model (a two-stage

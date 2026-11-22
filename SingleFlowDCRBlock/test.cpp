@@ -201,17 +201,197 @@ static double cost_of( SingleFlowDCRBlock * block , DCRSolution * sol )
  }
 
 /*--------------------------------------------------------------------------*/
+/// the value of the native parameter of @p slvr with that name, 0 if none
+/** The name is the one of CPLEX for a CPXMILPSolver and of Gurobi for a
+ * GRBMILPSolver; a Solver of another class has none of these. */
+
+static double native_par( Solver * slvr , const std::string & cpx ,
+                          const std::string & grb )
+{
+ const std::string cls = slvr->classname();
+ const std::string & name = ( cls.find( "CPX" ) != std::string::npos ) ?
+                            cpx : ( cls.find( "GRB" ) != std::string::npos ) ?
+                            grb : std::string();
+ if( name.empty() )
+  return( 0 );
+ const auto idx = slvr->dbl_par_str2idx( name );
+ if( idx == Inf< Solver::idx_type >() )
+  return( 0 );
+ return( slvr->get_dbl_par( idx ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// the tolerance up to which the solution of @p slvr has to meet the deadline
+/** Relative to max( 1 , deadline ), as SingleFlowDCRBlock::delay_feasible()
+ * reads it. A Solver that declares no feasibility tolerance (dblFAccSol 0,
+ * e.g., one that builds its rates to meet the deadline) is held to 1e-9.
+ * Otherwise the tolerances that govern its solution are read from it and
+ * carried over the rows of the formulation where the delay is: the
+ * deadline row (the sum of the fixed delays x[ i ] l[ i ], of the theta[ i ]
+ * and of theta_min, at most D), the cone rows theta[ i ] r[ i ] >=
+ * MTU x[ i ]^2 and theta_min r_min >= burst.
+ *
+ * - The feasibility tolerance tau_f (dblFAccSol) is an absolute violation of
+ *   each row: tau_f on the deadline row, and, on a cone row, a delay
+ *   MTU x[ i ]^2 / r[ i ] above theta[ i ] by tau_f / r[ i ] (burst / r_min
+ *   above theta_min by tau_f / r_min).
+ *
+ * - The convergence tolerance tau_q of the barrier on the conic rows is a
+ *   relative one: tau_q max( 1 , D ) on the deadline row, and on a cone row
+ *   a violation tau_q max( 1 , MTU ) (tau_q max( 1 , burst ) for theta_min),
+ *   hence a delay above theta[ i ] by that over r[ i ] (r_min).
+ *
+ * - The integrality tolerance tau_i lets x[ i ] be 1 - tau_i on an arc of
+ *   the path, where the delay of the path is that at x[ i ] = 1: it grows
+ *   by at most tau_i ( MTU / U[ i ] + l[ i ] + 2 MTU / r[ i ] ) on the arc.
+ *
+ * The bound is the sum of these, on the arcs the solution uses. */
+
+static double deadline_tolerance( SingleFlowDCRBlock * block , Solver * slvr ,
+                                  SingleFlowDCRBlock::c_Vec_double & X ,
+                                  SingleFlowDCRBlock::c_Vec_double & R )
+{
+ c_double tau_f = slvr->get_dbl_par( Solver::dblFAccSol );
+ if( ! ( tau_f > 0 ) )
+  return( 1e-9 );
+ c_double tau_q = native_par( slvr , "CPXPARAM_Barrier_QCPConvergeTol" ,
+                              "BarQCPConvTol" );
+ c_double tau_i = native_par( slvr , "CPXPARAM_MIP_Tolerances_Integrality" ,
+                              "IntFeasTol" );
+
+ c_double D = std::max( 1.0 , block->get_FlowDeadline() );
+ c_double MTU = block->get_MTU();
+ auto & LD = block->get_LinkDelays();
+ auto & ND = block->get_NodeDelays();
+
+ double inv = 0 , fix = 0 , rmin = Inf< double >();
+ for( Index i = 0 ; i < block->get_NArcs() ; ++i )
+  if( ( ! block->is_deleted( i ) ) && ( X[ i ] > 0.5 ) && ( R[ i ] > 0 ) ) {
+   inv += 1 / R[ i ];
+   rmin = std::min( rmin , R[ i ] );
+   c_double Ui = block->get_U( i );
+   fix += ( Ui < Inf< double >() ? MTU / Ui : 0 ) +
+          ( LD.empty() ? 0 : LD[ i ] ) +
+          ( ND.empty() ? 0 : ND[ block->get_SN( i ) - 1 ] ) + 2 * MTU / R[ i ];
+   }
+ c_double burst = block->get_FlowBurst();
+ c_double imin = ( ( burst > 0 ) && ( rmin < Inf< double >() ) ) ?
+                 1 / rmin : 0;
+
+ c_double excess = tau_f * ( 1 + inv + imin ) +
+                   tau_q * ( D + std::max( 1.0 , MTU ) * inv +
+                             std::max( 1.0 , burst ) * imin ) +
+                   tau_i * fix;
+
+ return( std::max( 1e-9 , excess / D ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// the tolerance of the lower bound of @p slvr, absolute
+/** A Solver that declares no feasibility tolerance (dblFAccSol 0) gives a
+ * tight bound, up to 1e-9 relative; one that does is accurate up to the
+ * relative and absolute gaps it declares (dblRelAcc, dblAbsAcc). */
+
+static double lb_tolerance( Solver * slvr , double lb )
+{
+ c_double scale = std::max( 1.0 , std::abs( lb ) );
+ if( ! ( slvr->get_dbl_par( Solver::dblFAccSol ) > 0 ) )
+  return( 1e-9 * scale );
+ return( std::max( { 1e-9 * scale ,
+                     slvr->get_dbl_par( Solver::dblRelAcc ) * scale ,
+                     slvr->get_dbl_par( Solver::dblAbsAcc ) } ) );
+ }
+
+/*--------------------------------------------------------------------------*/
+/// how much below the optimum the cost of the solution of @p slvr can be
+/** A Solver that declares no feasibility tolerance hands out a solution of
+ * the problem, whose cost is not below the optimum: 1e-9 relative. One that
+ * declares a tolerance may leave its rows violated within all its
+ * tolerances (feasibility, convergence of the barrier on the conic rows,
+ * integrality), and its solution ( X , R ) can be cheaper than the optimum.
+ * What these let it gain is read on the solution, rather than bounded row
+ * by row: on its path P (x[ i ] = 1 on the arcs with X[ i ] > 1 / 2, as
+ * x[ i ] = 1 - tau_i or a violated cone row shrink the delay that the rows
+ * see but not the one of the path), R' is R clipped to the bounds
+ * [ rho , U_i ] of the rates, of cost c( R ) + Delta, and e is the excess of
+ * its delay over the deadline D. R' is a solution of the problem with
+ * deadline D + e, so c( R' ) >= v_P( D + e ), the cheapest rates on P
+ * within that deadline, and v_P( D + e ) >= v_P( D ) - Lambda e >=
+ * opt - Lambda e, where Lambda bounds the multiplier of the deadline row of
+ * min sum_P c_i r_i: in its KKT conditions an arc not at its capacity has
+ * c_i >= lambda MTU / r_i^2 (more with the burst term on the arc of the
+ * minimum rate), hence lambda <= c_i U_i^2 / MTU, and Lambda = max_P
+ * c_i U_i^2 / MTU (+INF, i.e., no bound, if an arc of P has no capacity).
+ * Hence c( R ) >= opt - Lambda e - Delta, and the margin is
+ * Lambda e + Delta (Delta < 0 when R reserves more than U_i). */
+
+static double cost_margin( SingleFlowDCRBlock * block , Solver * slvr ,
+                           SingleFlowDCRBlock::c_Vec_double & X ,
+                           SingleFlowDCRBlock::c_Vec_double & R ,
+                           double cost )
+{
+ c_double tau_f = slvr->get_dbl_par( Solver::dblFAccSol );
+ if( ! ( tau_f > 0 ) )
+  return( 1e-9 * std::max( 1.0 , std::abs( cost ) ) );
+
+ // the path, with x[ i ] = 1 on its arcs
+ SingleFlowDCRBlock::Vec_double P( X.size() );
+ for( Index i = 0 ; i < P.size() ; ++i )
+  P[ i ] = X[ i ] > 0.5 ? 1 : 0;
+
+ // R clipped to [ rho , U_i ] on P, and the change Delta of its cost
+ SingleFlowDCRBlock::Vec_double Rc( R );
+ double Delta = 0;
+ for( Index i = 0 ; i < P.size() ; ++i )
+  if( ( ! block->is_deleted( i ) ) && ( P[ i ] > 0 ) ) {
+   Rc[ i ] = std::min( block->get_U( i ) ,
+                       std::max( block->get_rho() , R[ i ] ) );
+   Delta += block->get_C( i ) * ( Rc[ i ] - R[ i ] );
+   }
+
+ // e, as the smallest relative tolerance that accepts the delay of P
+ double e = 0;
+ if( ! block->delay_feasible( 0 , P , Rc ) ) {
+  double lo = 1e-16 , hi = 1;
+  if( ! block->delay_feasible( hi , P , Rc ) )  // the delay is not even
+   return( Inf< double >() );                  // close: no bound
+  for( int it = 0 ; it < 100 ; ++it ) {
+   c_double mid = std::sqrt( lo * hi );
+   ( block->delay_feasible( mid , P , Rc ) ? hi : lo ) = mid;
+   }
+  e = hi * std::max( 1.0 , block->get_FlowDeadline() );
+  }
+
+ c_double MTU = block->get_MTU();
+ double Lambda = 0;
+ for( Index i = 0 ; i < block->get_NArcs() ; ++i )
+  if( ( ! block->is_deleted( i ) ) && ( X[ i ] > 0.5 ) ) {
+   c_double Ui = block->get_U( i );
+   c_double ci = block->get_C( i );
+   if( e > 0 )
+    Lambda = ( Ui < Inf< double >() ) ?
+             std::max( Lambda , ci * Ui * Ui / MTU ) : Inf< double >();
+   }
+
+ return( ( e > 0 ? Lambda * e : 0 ) + Delta );
+ }
+
+/*--------------------------------------------------------------------------*/
 /// checks the Solution that each Solver produces
 /** For every Solver that has one, asks for the Solution and checks that
  * SingleFlowDCRBlock::is_sol_feasible() accepts it, with the tolerance the
- * BlockConfig declares, and that the cost it gives is the value the Solver
- * declares. The Variable of the Block are scrambled first: a Solver that
- * fills its Solution by writing there and reading it back rather than out
- * of its own data structures produces garbage, and this is what catches
- * it. @p relax says which of the Solver solve a relaxation, as the
- * formulation of @p block declares it [see attach_formulation_Solvers()],
- * and @p form is the name of the formulation, to be written before that of
- * the Solver when there is more than one. */
+ * BlockConfig declares, that the cost it gives is the value the Solver
+ * declares and, for a Solver that does not solve a relaxation, that it
+ * meets the deadline up to its tolerance [see deadline_tolerance()] and
+ * costs at least each lower bound less its tolerance [see lb_tolerance()]
+ * and the margin of the solution [see cost_margin()]. The Variable of the
+ * Block are scrambled first: a Solver that fills its Solution by writing
+ * there and reading it back rather than out of its own data structures
+ * produces garbage, and this is what catches it. @p relax
+ * says which of the Solver solve a relaxation, as the formulation of
+ * @p block declares it [see attach_formulation_Solvers()], and @p form is
+ * the name of the formulation, to be written before that of the Solver when
+ * there is more than one. */
 
 static bool check_solutions( SingleFlowDCRBlock * block , double tol ,
                              const std::vector< bool > & relax_of ,
@@ -219,6 +399,20 @@ static bool check_solutions( SingleFlowDCRBlock * block , double tol ,
 {
  bool ok = true;
  std::size_t k = 0;
+
+ // the lower bounds, each less its tolerance, which the cost of a solution
+ // of the problem cannot be below: the largest of them, and its Solver
+ double best_lb = - Inf< double >();
+ std::size_t best_k = 0 , h = 0;
+ for( auto slvr : block->get_registered_solvers() ) {
+  c_double lb = slvr->get_lb();
+  if( ( lb > - Inf< double >() ) && ( lb < Inf< double >() ) &&
+      ( lb - lb_tolerance( slvr , lb ) > best_lb ) ) {
+   best_lb = lb - lb_tolerance( slvr , lb );
+   best_k = h;
+   }
+  ++h;
+  }
 
  for( auto slvr : block->get_registered_solvers() ) {
   const std::string me = ( form.empty() ? "" : form + " " ) + "S" +
@@ -283,6 +477,38 @@ static bool check_solutions( SingleFlowDCRBlock * block , double tol ,
    }
 
   c_double cost = cost_of( block , dsol );
+
+  // a solution of the problem meets the deadline, up to a tolerance much
+  // tighter than that of the Block, and then costs at least the optimum
+  if( ! relax ) {
+   auto & X = dsol->get_x();
+   auto & R = dsol->get_r();
+   c_double dtol = deadline_tolerance( block , slvr , X , R );
+   if( ! block->delay_feasible( dtol , X , R ) ) {
+    // by how much, as the smallest relative tolerance that would accept it
+    double lo = dtol , hi = 1;
+    for( int it = 0 ; it < 60 ; ++it ) {
+     c_double mid = std::sqrt( lo * hi );
+     ( block->delay_feasible( mid , X , R ) ? hi : lo ) = mid;
+     }
+    std::cout << me << ": " << RED( delay above the deadline ) << " by "
+              << hi << " (relative), with a tolerance of " << dtol
+              << std::endl;
+    ok = false;
+    }
+   // the Solver of the solution may also leave its rows violated, and
+   // then its cost below the optimum [see cost_margin()]
+   c_double margin = cost_margin( block , slvr , X , R , cost );
+   if( cost < best_lb - margin ) {
+    std::cout << me << ": " << RED( Solution cost ) << " = "
+              << fmt_obj( cost ) << " below the lower bound of S" << best_k
+              << " less its tolerance, " << fmt_obj( best_lb ) << ", by "
+              << fmt_obj( best_lb - cost ) << ", more than the margin of"
+              << " the solution, " << fmt_obj( margin ) << std::endl;
+    ok = false;
+    }
+   }
+
   c_double declared = slvr->get_var_value();
   if( std::abs( cost - declared ) >
       tol * std::max( double( 1 ) , std::abs( declared ) ) ) {

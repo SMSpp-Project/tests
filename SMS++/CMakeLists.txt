@@ -15,5 +15,6 @@ add_subdirectory(BendersBFunction)
 
 add_subdirectory(PolyhedralFunction)
 add_subdirectory(PolyhedralFunctionBlock)
+add_subdirectory(MasterProblemBlock)
 
 # --------------------------------------------------------------------------- #

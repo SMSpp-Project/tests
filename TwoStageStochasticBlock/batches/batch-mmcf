@@ -17,10 +17,11 @@
 # each, since duals that do not copy their components cannot share the
 # Block of the scenarios; on its Benders form (-b) the MILP against
 # BendersDecompositionSolver, with the scenarios as LPs (BSPar-MMCF-BDS.txt)
-# or solved by the recursive Lagrangian dual (BSPar-MMCF-BDSLD.txt), one run
-# each, since a BendersDecompositionSolver reformulates its Block; both give
-# the optimum. The instances have complete recourse (mmcf_tssb_gen -r),
-# which the latter needs, the Lagrangian dual giving no Farkas certificate.
+# or solved by the recursive Lagrangian dual (BSPar-MMCF-BDSLD.txt), each in
+# the MILP regime and in the convex one, whose master is solved by the
+# cutting-plane method of Kelley; all give the optimum. The instances have
+# complete recourse (mmcf_tssb_gen -r), which the latter needs, the
+# Lagrangian dual giving no Farkas certificate.
 # The instances are written by mmcf_tssb_gen out of the Canad instances of
 # tests/MMCFBlock.
 

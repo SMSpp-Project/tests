@@ -12,8 +12,9 @@
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-3 # number of integer parameters
+3  # number of integer parameters
 
+# now all the integer parameters
 int_LDSlv_iBCopy  0 # 1 if sub-Block must be R3B-copied
 intLogVerb        0 # log verbosity of main Bundle algorithm
 intTrgtMng       31 # bit-wise targets and accuracies management:
@@ -24,8 +25,9 @@ intTrgtMng       31 # bit-wise targets and accuracies management:
                     # bit 2-3: accuracy (2 = upper - lower, 3 = EpsU)
                     # bit 4: Lipschitz constant in the upper model
 
-6 # number of double parameters
+6  # number of double parameters
 
+# now all the double parameters
 dblMinNrEvls        -1 # every component is evaluated at each iteration:
                        # a component here is an entire inner
                        # LagrangianDualSolver, so an iteration made on one
@@ -40,27 +42,28 @@ dblmxIncr            2 # max increase of t
 dbltMaior         1e+9 # maximum value for t
 dbltInit          1e-3 # initial value for t
 
-1 # number of string parameters
+1  # number of string parameters
 
+# now all the string parameters
 str_LagBF_BSCfg  LPBSCfg-LD.txt # BlockSolverConfig for the LagBFunctions
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END LDLDCfg.txt - - - - - - - - - - - - - - -

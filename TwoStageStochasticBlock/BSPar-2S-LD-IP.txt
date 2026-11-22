@@ -22,7 +22,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-4 # number of (the names of) Solver in this BlockSolverConfig
+4  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver
@@ -30,7 +30,7 @@ PrimalProximalHeur    # name of 2nd Solver
 LagrangianDualSolver  # name of 3rd Solver
 LagrangianDualRelaxationSolver  # name of 4th Solver
 
-4 # number of ComputeConfig in this BlockSolverConfig
+4  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -50,7 +50,7 @@ LagrangianDualRelaxationSolver  # name of 4th Solver
 *LDrecCfg.txt
 *PPHCfg.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END BSPar-2S-LD-IP.txt  - - - - - - - - - - - - - -

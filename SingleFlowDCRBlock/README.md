@@ -66,13 +66,15 @@ which runs both formulations in the same way on the instances of the
 module, i.e., on 10 flows of each
 of 307 real and random networks (see `data/README.md` in
 `SingleFlowDCRBlock`, whose build downloads them), except the SOCP one on
-the 101 instances where Gurobi does not solve it with each of three
-numerical focus settings (0, 2 and 3), listed with the reason in
-`socp-unstable.txt`, and on the one where it takes longer than ten minutes;
-and `batch-instances-cplex`, which solves the SOCP formulation of those 101
-with CPLEX (`BSPar-cpx.txt`), and which the build adds only when CPLEX is
-available; and `batch-instances-bx`, which compares the `Solver` of
-`BSPar.txt` with a `BranchAndXSolver` whose nodes are solved by the
+the 106 instances where Gurobi does not solve it with each of three
+numerical focus settings (0, 2 and 3) or with its 4 threads, or gives a
+bound above the optimum, listed
+with the reason in `socp-unstable.txt`, and on the one where it takes
+longer than ten minutes; and `batch-instances-cplex`, which solves the
+SOCP formulation of those 106 with CPLEX (`BSPar-cpx.txt`), and which
+the build adds only when CPLEX is available; and `batch-instances-bx`,
+which compares the `Solver` of `BSPar.txt` with a `BranchAndXSolver`
+whose nodes are solved by the
 `SFDCRBRelaxationSolver` (`BSPar-BX.txt`, `BXCfg.txt` and
 `InnerBSCfg-BX.txt`) on the SOCP formulation of the same instances, and
 which the build adds only when it has the `BranchAndXSolver` and the

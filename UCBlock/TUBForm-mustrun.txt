@@ -22,7 +22,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *TUBCfg-DP.txt          # 4th formulation: DP
 *TUBCfg-T-PC.txt        # 5th formulation: T-PC
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END TUBForm-mustrun.txt - - - - - - - - - - - - - -

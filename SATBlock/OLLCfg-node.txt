@@ -44,7 +44,7 @@ intMaxIter 20  # calls of the SAT solver of OLL in a node
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END OLLCfg-node.txt  - - - - - - - - - - - - -

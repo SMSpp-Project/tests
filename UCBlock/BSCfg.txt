@@ -1,11 +1,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - BSCfg.txt - - - - - - - - - - - - - - - -
 #
-# BlockSolverConfig that attaches, to a (single-TUB) ThermalUnitBlock,
-# a :MILPSolver as the 1st (reference) Solver and the EXT DP solver
+# BlockSolverConfig that attaches, to a (single-TUB) ThermalUnitBlock, a
+# :MILPSolver as the 1st (reference) Solver and the EXT DP solver
 # (ThermalUnitExtDPSolver) as the 2nd Solver, so the batch compares the ext
-# DP
-# against the MILP on the T+PC formulation (the DP is the 2nd / "back"
+# DP against the MILP on the T+PC formulation (the DP is the 2nd / "back"
 # Solver).
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -41,7 +40,7 @@ intLogVerb      0 # log verbosity of the MILPSolver
 intRelaxIntVars 0 # nonzero if the continuous relaxation is solved
 intCutSepPar    7 # separate user cuts + lazy constraints (needed by P/C)
 
-2 # number of double parameters
+2  # number of double parameters
 
 # now all the double parameters
 # the P/C lazy cuts have coefficients ~ pbar^2, so an incumbent violating
@@ -55,28 +54,28 @@ IntFeasTol      1e-8 # integer feasibility tolerance of GUROBI
 ## All specific HiGHS parameter
 #primal_feasibility_tolerance 1e-9
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 #strOutputFile  1tub.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this is the ComputeConfig of ThermalUnitExtDPSolver
@@ -91,37 +90,36 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - END BSCfg.txt - - - - - - - - - - - - - - -

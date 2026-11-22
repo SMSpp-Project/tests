@@ -51,7 +51,7 @@ str_LDSlv_ISCfg ISCfg-LDRS.txt  # ComputeConfig of the inner Solver
 vstrBranchGroups 1 u_thermal  # branch on the commitment only
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END LDRSCfg-DP.txt  - - - - - - - - - - - - - -

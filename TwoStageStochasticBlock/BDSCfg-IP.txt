@@ -52,9 +52,9 @@ str_Mstr_BSCfg  BDSMCfg-MILP.txt  # BlockSolverConfig of the master
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 2nd ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BDSCfg-IP.txt - - - - - - - - - - - - - - -

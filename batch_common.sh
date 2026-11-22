@@ -25,6 +25,14 @@
 # of (par, slv); they should set DEFAULT_PAR2 and ignore $slv at run-time.
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# environment
+#
+# OpenBLAS starts one thread per core as soon as it is loaded, and no tester
+# uses them: it runs on one, unless the caller says otherwise
+
+export OPENBLAS_NUM_THREADS="${OPENBLAS_NUM_THREADS:-1}"
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # colors
 
 if [ -t 1 ]; then

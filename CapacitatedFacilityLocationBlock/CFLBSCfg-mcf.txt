@@ -1,8 +1,11 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - CFLBSCfg-mcf.txt  - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a
-# CapacitatedFacilityLocationBlock to be solved by a :MILPSolver
+# The BlockSolverConfig of the original Block of CFLBForm-mcf.txt, a
+# CapacitatedFacilityLocationBlock whose continuous relaxation is solved by a
+# :MILPSolver and, through its flow relaxation, by an R3BSolver for each
+# Solver of the MCFBlock, the LEMON ones first, all of them compared with
+# each other.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -11,14 +14,21 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-1  # number of (the names of) Solver in this BlockSolverConfig
+8  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver   # name of Solver
 GRBMILPSolver    # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
+R3BSolver        # name of Solver
 #SCIPMILPSolver  # name of Solver
 #HiGHSMILPSolver # name of Solver
 
-1  # number of ComputeConfig in this BlockSolverConfig
+8  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -32,10 +42,11 @@ ComputeConfig # exact type of the ComputeConfig object
 3  # number of integer parameters
 
 # now all the integer parameters
-intLogVerb      0 # log verbosity of the MILPSolver
-intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
+intLogVerb      0                                # log verbosity of the
+                                                 # MILPSolver
+intRelaxIntVars 1                                # nonzero if the continuous
+                                                 # relaxation is solved
 #intCutSepPar   0 # separate user cuts at the root node & sub-nodes
-
 ## All specific CPLEX parameter (uncomment based on Solver)
 #CPXPARAM_Threads                       1       # avoid parallel
 #CPXPARAM_MIP_Display                    3       # more verbose log
@@ -49,44 +60,80 @@ intRelaxIntVars 1 # nonzero if the continuous relaxation is solved
                                                  # sifting, 6 = concurrent
 
 ## All specific GUROBI parameter (uncomment based on Solver)
-Threads     1       # avoid parallel
+Threads         1                                # avoid parallel
 #NodeLimit  0       # only do root node
 #CutPasses  1000000 # enable standard cuts
 #Heuristics 0       # disable heuristic
 #Method     4       # -1 = auto (default), 0 = primal, 1 = dual, 2 = barrier,
-                    # 3 = barrier + crossover, 4 = network
+                                                 # 3 = barrier + crossover, 4
+                                                 # = network
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 #dblMaxTime     60 # max time: 1 minute
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 #strOutputFile  cfl1.lp
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of the network simplex of LEMON on the flow relaxation
+
+*R3BSCfg-MCF-NetworkSimplex.txt
+
+# 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of the cycle canceling of LEMON on the flow relaxation
+
+*R3BSCfg-MCF-CycleCanceling.txt
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of the cost scaling of LEMON on the flow relaxation
+
+*R3BSCfg-MCF-CostScaling.txt
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of the capacity scaling of LEMON on the flow relaxation
+
+*R3BSCfg-MCF-CapacityScaling.txt
+
+# 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of MCFSolver with MCFSimplex on the flow relaxation
+
+*R3BSCfg-MCF.txt
+
+# 7th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of MCFSolver with RelaxIV on the flow relaxation
+
+*R3BSCfg-MCF-RelaxIV.txt
+
+# 8th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the R3BSolver of MCFSolver with MCFCplex on the flow relaxation
+
+*R3BSCfg-MCF-MCFCplex.txt
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END CFLBSCfg-mcf.txt  - - - - - - - - - - - - - -

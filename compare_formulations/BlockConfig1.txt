@@ -8,7 +8,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-BlockConfig     # exact type of the Configuration object
+BlockConfig # exact type of the Configuration object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
@@ -19,31 +19,31 @@ BlockConfig     # exact type of the Configuration object
 *  # [none]
 
 # static constraints Configuration
-* #none
+*  # none
 
 # dynamic constraints Configuration
-* #none
+*  # none
 
 # static variables Configuration
 *SimpleConfig1.txt  # take it from the given file
 
 # dynamic variables Configuration
-* #none
+*  # none
 
 # objective Configuration
-* #none
+*  # none
 
 # is_feasible Configuration
-* #none
+*  # none
 
 # is_optimal Configuration
-* #none
+*  # none
 
 # solution Configuration
-* #none
+*  # none
 
 # extra Configuration
-* #none
+*  # none
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END BlockConfig1.txt - - - - - - - - - - - - -

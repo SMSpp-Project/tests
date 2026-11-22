@@ -10,7 +10,7 @@
 # exact type of the Configuration object
 BlockConfig
 
-1   # the BlockConfig is differential
+1  # the BlockConfig is differential
 
 2  # version of the BlockConfig format
 

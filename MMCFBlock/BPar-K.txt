@@ -15,36 +15,36 @@ BlockConfig # exact type of the ComputeConfig object
 # the Configuration for the structure, i.e., the tree of sub-Block: one
 # BinaryKnapsackBlock per arc, the flow constraints staying in the father
 SimpleConfiguration<int>
-1    # 0 = one MCFBlock per commodity, 1 = one BinaryKnapsackBlock per arc
+1  # 0 = one MCFBlock per commodity, 1 = one BinaryKnapsackBlock per arc
 
 # static_constraints
 SimpleConfiguration<int>
-0             # use [1] or not [0] the strong forcing constraints
+0  # use [1] or not [0] the strong forcing constraints
 
 # dynamic_constraints
-*    # [none]
+*  # [none]
 
 # static_variables: nothing to say, the structure above is what decides the
 # formulation and generate_abstract_variables() takes it from there
-*    # [none]
+*  # [none]
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
-*    # [none]
+*  # [none]
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END BPar-K.txt - - - - - - - - - - - - - - -

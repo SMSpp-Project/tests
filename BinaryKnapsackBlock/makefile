@@ -47,7 +47,7 @@ include $(BAXSLVSDR)/makefile-s
 MOBJ =  $(BKBkOBJ) $(MILPSOBJ) $(BAXSLVOBJ) $(CMMNUOBJ)
 
 # libraries
-MLIB =  $(BKBkLIB) $(MILPSLIB) $(BAXSLVLIB) $(libCPLEXLIB)
+MLIB =  $(BKBkLIB) $(MILPSLIB) $(BAXSLVLIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $(DIR)/test.o $(MOBJ) $(MLIB) $(SW)
@@ -58,7 +58,7 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 MINC =  $(BKBkINC) $(MILPSINC) $(BAXSLVINC) $(CMMNUINC)
 
 # includes
-MH =    $(BKBkH) $(BAXSLVH) $(CMMNUH)
+MH =    $(BKBkH) $(MILPSH) $(BAXSLVH) $(CMMNUH)
 
 # compile command
 

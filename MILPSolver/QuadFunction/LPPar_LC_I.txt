@@ -1,0 +1,17 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LPPar_LC_I.txt  - - - - - - - - - - - - - - -
+#
+# A txt description of a BlockSolverConfig for the Block of a model of the
+# class LC (a linear objective and convex quadratic constraints) solved by
+# the tester of the quadratic functions in its integer version: the same
+# Solver as for the class CL, the SCIPMILPSolver of LPPar_I.txt and the
+# MOSEKMILPSolver, which takes convex quadratic constraints as well.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LPPar_CL_I.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END LPPar_LC_I.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

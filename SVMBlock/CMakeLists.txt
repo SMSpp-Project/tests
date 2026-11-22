@@ -91,14 +91,13 @@ if (TARGET SMS++::SVMBlock)
 
         smspp_install(SVM_FW_test)
 
-        if (UNIX)
-            add_test(NAME SVM_FW_test/batch-fw
-                     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-fw
-                             ${CMAKE_CURRENT_BINARY_DIR}/SVM_FW_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            set_tests_properties(SVM_FW_test/batch-fw PROPERTIES
-                                 FIXTURES_REQUIRED svm_libsvm_extracted)
-        endif ()
+        add_test(NAME SVM_FW_test/batch-fw
+                 COMMAND ${SMSpp_BASH}
+                         ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-fw
+                         $<TARGET_FILE:SVM_FW_test>
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        set_tests_properties(SVM_FW_test/batch-fw PROPERTIES
+                             FIXTURES_REQUIRED svm_libsvm_extracted)
     endif ()
 
     # Add a test for each batch file. batch-libsvm and batch-liblinear need
@@ -127,22 +126,17 @@ if (TARGET SMS++::SVMBlock)
     endif ()
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME SVM_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/SVM_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            # the batch that runs on the LIBSVM data sets needs them there
-            if (BATCH_NAME MATCHES "batch-real")
-                set_tests_properties(SVM_test/${BATCH_NAME}
-                                     PROPERTIES FIXTURES_REQUIRED svm_libsvm_extracted)
-            endif ()
-        elseif (WIN32)
-            add_test(NAME SVM_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:SVM_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
+        add_test(NAME SVM_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:SVM_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        # the batch that runs on the LIBSVM data sets needs them there
+        if (BATCH_NAME MATCHES "batch-real")
+            set_tests_properties(SVM_test/${BATCH_NAME}
+                                 PROPERTIES FIXTURES_REQUIRED
+                                 svm_libsvm_extracted)
         endif ()
     endforeach ()
 endif ()
@@ -155,7 +149,7 @@ smspp_label_tests()
 # suite declares, and the suite is not skipped when that module is out of the
 # build, so it is labelled with it here rather than in the map of the
 # directory.
-if (TARGET SMS++::SVMBlock AND TARGET SMS++::FrankWolfeSolver AND UNIX)
+if (TARGET SMS++::SVMBlock AND TARGET SMS++::FrankWolfeSolver)
     set_tests_properties(SVM_FW_test/batch-fw PROPERTIES LABELS
                          "${SMSPP_TEST_LABELS_SVMBlock};FrankWolfeSolver")
 endif ()

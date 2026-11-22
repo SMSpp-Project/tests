@@ -3,8 +3,7 @@
 #
 # Cross-check BlockSolverConfig for a PURE-BINARY BinaryKnapsackBlock: it
 # attaches EVERY solver / formulation that must give the SAME integer
-# optimum,
-# so that a single sweep cross-checks them all (see batch):
+# optimum, so that a single sweep cross-checks them all (see batch):
 #
 #   - :MILPSolver                         exact MIP (the reference optimum)
 #   - CoreDPBinaryKnapsackSolver          exact core / non-dominated-state DP
@@ -26,7 +25,9 @@
 #     incremental greedy relaxation (InnerBSCfg-incr.txt): same optimum.
 #   - BranchAndXSolver in reoptimization mode (intReoptimize), which retains
 #     the tree and re-seeds from its fenced frontier at each re-solve: same
-#     optimum after every runtime Modification.
+#     optimum after every runtime Modification, also when driven by the
+#     incremental greedy relaxation, whose local reductions depend on the
+#     data of the Block and must not survive a change of it.
 #   - BranchAndXSolver with the tree explored by the branch-and-bound of
 #     PBeFS (intTreeExplorer), by the scheme that strPBeFSScheme names:
 #     best-first sequential, best-first on 4 workers sharing one queue,
@@ -48,7 +49,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-20  # number of (the names of) Solver in this BlockSolverConfig
+21  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -72,20 +73,22 @@ BranchAndXSolver
 BranchAndXSolver
 # 13th: BX best-first, reoptimization on
 BranchAndXSolver
-RECORDBinaryKnapsackSolver            # 14th: RECORD, same as the 3rd
-BranchAndXSolver                      # 15th: BX best-first, PBeFS
-# 16th: BX best-first, PBeFS, 4 workers, one queue
+# 14th: BX best-first, reoptimization on, incremental inner
 BranchAndXSolver
-# 17th: BX depth-first, PBeFS, 4 workers, a queue each
+RECORDBinaryKnapsackSolver            # 15th: RECORD, same as the 3rd
+BranchAndXSolver                      # 16th: BX best-first, PBeFS
+# 17th: BX best-first, PBeFS, 4 workers, one queue
 BranchAndXSolver
-# 18th: BX best-first, PBeFS, 4 workers, synchronous rounds
+# 18th: BX depth-first, PBeFS, 4 workers, a queue each
 BranchAndXSolver
-# 19th: BX best-first, PBeFS, 4 workers, SelfSplit
+# 19th: BX best-first, PBeFS, 4 workers, synchronous rounds
 BranchAndXSolver
-# 20th: BX best-first, PBeFS, 4 workers, work stealing
+# 20th: BX best-first, PBeFS, 4 workers, SelfSplit
+BranchAndXSolver
+# 21st: BX best-first, PBeFS, 4 workers, work stealing
 BranchAndXSolver
 
-20  # number of ComputeConfig in this BlockSolverConfig
+21  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -113,7 +116,13 @@ intMaxThread   1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -131,7 +140,7 @@ intMaxThread   1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 7: BranchAndXSolver, breadth-first
 *BX-baseCfg.txt +
@@ -145,7 +154,13 @@ intSolveMethod 1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -163,7 +178,7 @@ intSolveMethod 1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 8: BranchAndXSolver, depth-first parallel (4 workers)
 *BX-baseCfg.txt +
@@ -178,7 +193,13 @@ intMaxThread   4
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -196,7 +217,7 @@ intMaxThread   4
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 9: BranchAndXSolver, per-node parallel solvers (two inner relaxations)
 *BX-baseCfg.txt +
@@ -209,6 +230,9 @@ intMaxThread   4
 intThreadForDifferentSolvers 2
 
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 1  # number of string parameters
 
@@ -231,7 +255,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-2R.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 10-12: the same BranchAndXSolver modes, but driven by the incremental
 # greedy relaxation (InnerBSCfg-incr.txt) instead of the from-scratch one,
@@ -244,7 +268,13 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-2R.txt
 
 0  # number of integer parameters
 
+# now all the integer parameters
+# [none]
+
 0  # number of double parameters
+
+# now all the double parameters
+# [none]
 
 1  # number of string parameters
 
@@ -267,7 +297,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 11: BranchAndXSolver, serial depth-first, incremental inner relaxation
 *BX-baseCfg.txt +
@@ -282,6 +312,9 @@ intMaxThread   1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 1  # number of string parameters
 
 # now all the string parameters
@@ -303,7 +336,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 12: BranchAndXSolver, depth-first parallel (4 workers), incremental inner
 *BX-baseCfg.txt +
@@ -318,6 +351,9 @@ intMaxThread   4
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 1  # number of string parameters
 
 # now all the string parameters
@@ -339,7 +375,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # 13: BranchAndXSolver, best-first with the tree retained for reoptimization
 *BX-baseCfg.txt +
@@ -353,7 +389,13 @@ intReoptimize 1
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -371,12 +413,51 @@ intReoptimize 1
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# 14th: RECORD under the same reoptimization of the 3rd
+# 14: BranchAndXSolver, best-first with the tree retained for reoptimization,
+# incremental inner relaxation
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intReoptimize 1
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 15th: RECORD under the same reoptimization of the 3rd
 *CDPCfg-reopt3.txt
 
-# 15: BranchAndXSolver, best-first, the tree explored by PBeFS
+# 16: BranchAndXSolver, best-first, the tree explored by PBeFS
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -411,7 +492,7 @@ strPBeFSScheme sequential
 # pointer to the "extra" Configuration
 * # [none]
 
-# 16: BranchAndXSolver, best-first, PBeFS on 4 workers, one queue
+# 17: BranchAndXSolver, best-first, PBeFS on 4 workers, one queue
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -447,7 +528,7 @@ strPBeFSScheme shared
 # pointer to the "extra" Configuration
 * # [none]
 
-# 17: BranchAndXSolver, depth-first, PBeFS on 4 workers, a queue each
+# 18: BranchAndXSolver, depth-first, PBeFS on 4 workers, a queue each
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -484,7 +565,7 @@ strPBeFSScheme distributed
 # pointer to the "extra" Configuration
 * # [none]
 
-# 18: BranchAndXSolver, best-first, PBeFS on 4 workers by synchronous rounds
+# 19: BranchAndXSolver, best-first, PBeFS on 4 workers by synchronous rounds
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -520,7 +601,7 @@ strPBeFSScheme deterministic
 # pointer to the "extra" Configuration
 * # [none]
 
-# 19: BranchAndXSolver, best-first, PBeFS on 4 workers by the SelfSplit
+# 20: BranchAndXSolver, best-first, PBeFS on 4 workers by the SelfSplit
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -556,7 +637,7 @@ strPBeFSScheme selfsplit
 # pointer to the "extra" Configuration
 * # [none]
 
-# 20: BranchAndXSolver, best-first, PBeFS on 4 workers by work stealing
+# 21: BranchAndXSolver, best-first, PBeFS on 4 workers by work stealing
 *BX-baseCfg.txt +
 
 1  # f_diff == 1
@@ -592,7 +673,7 @@ strPBeFSScheme stealing
 # pointer to the "extra" Configuration
 * # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - -

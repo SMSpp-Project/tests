@@ -29,7 +29,8 @@ rng = np.random.default_rng( seed )
 # a daily profile the scenarios perturb, so that they are neither equal nor
 # unrelated: an instance whose scenarios say the same thing is no test of a
 # decomposition by scenario
-base = 6000 + 3000 * np.sin( np.linspace( 0 , 2 * np.pi , T , endpoint=False ) )
+base = 6000 + 3000 * np.sin( np.linspace( 0 , 2 * np.pi , T ,
+                                          endpoint=False ) )
 demand = np.maximum( 500 , base + rng.normal( 0 , 1200 , ( S , T ) ) )
 
 peak = float( demand.max() )
@@ -43,8 +44,10 @@ b.id = "0"
 b.createDimension( "NumAssets" , 1 )
 b.createVariable( "Cost" , "f8" , ( "NumAssets" , ) )[ : ] = [ 55.0 ]
 b.createVariable( "LowerBound" , "f8" , ( "NumAssets" , ) )[ : ] = [ 1200.0 ]
-b.createVariable( "UpperBound" , "f8" , ( "NumAssets" , ) )[ : ] = [ 100 * peak ]
-b.createVariable( "InstalledQuantity" , "f8" , ( "NumAssets" , ) )[ : ] = [ 0.0 ]
+b.createVariable( "UpperBound" , "f8" ,
+                  ( "NumAssets" , ) )[ : ] = [ 100 * peak ]
+b.createVariable( "InstalledQuantity" , "f8" ,
+                  ( "NumAssets" , ) )[ : ] = [ 0.0 ]
 b.createVariable( "Assets" , "u8" , ( "NumAssets" , ) )[ : ] = [ 0 ]
 b.createVariable( "AssetType" , "i8" , ( "NumAssets" , ) )[ : ] = [ 0 ]
 
@@ -105,7 +108,8 @@ g = u.createGroup( "UnitBlock_0" )
 g.type = "IntermittentUnitBlock"
 g.setncattr( "name" , "diesel" )
 g.createVariable( "MaxPower" , "f8" , ( "TimeHorizon" , ) )[ : ] = np.ones( T )
-g.createVariable( "MinPower" , "f8" , ( "TimeHorizon" , ) )[ : ] = np.zeros( T )
+g.createVariable( "MinPower" , "f8" ,
+                  ( "TimeHorizon" , ) )[ : ] = np.zeros( T )
 g.createVariable( "ActivePowerCost" , "f8" ,
                   ( "TimeHorizon" , ) )[ : ] = np.full( T , 3.0 )
 g.createVariable( "MinGeneration" , "f8" )[ : ] = -np.inf

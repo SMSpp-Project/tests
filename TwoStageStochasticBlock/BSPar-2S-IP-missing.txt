@@ -19,14 +19,14 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3 # number of (the names of) Solver in this BlockSolverConfig
+3  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 NoSuchSolver          # name of 1st Solver
 PrimalProximalHeur    # name of 2nd Solver
 GRBMILPSolver         # name of 3rd Solver
 
-3 # number of ComputeConfig in this BlockSolverConfig
+3  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -44,7 +44,7 @@ GRBMILPSolver         # name of 3rd Solver
 
 *MILPCfg-IP.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - END BSPar-2S-IP-missing.txt - - - - - - - - - - - - -

@@ -5,25 +5,25 @@
  * Main for testing CapacitatedFacilityLocationBlock
  *
  * A CapacitatedFacilityLocationBlock instance is loaded from a text file,
- * then one or more R3Block of it (possibly, but not necessarily, copies) are
- * created. Which they are is the list of -F [see read_formulations()]:
- * its first element is the pair BlockConfig + BlockSolverConfig of the
- * original Block, each of the others the vector of the Configuration that
- * makes an R3Block, its BlockConfig and its BlockSolverConfig. An
- * UpdateSolver forwards the changes of the original Block to each R3Block.
+ * and the pair BlockConfig + BlockSolverConfig of -F [see
+ * read_formulations()] is applied to it. Some of the Solver of the
+ * BlockSolverConfig may be R3BSolver, each of which solves the Block through
+ * an R3Block of it (possibly, but not necessarily, a copy), made, configured
+ * and kept up to date with the changes of the original Block from its own
+ * ComputeConfig.
  *
  * The Solver of the BlockSolverConfig are registered to the Block and
  * computed().
  *
  * According to the value of one parameter, this is all: the Solver are
- * supposed to be exact and the lower bounds of all of them, of the original
- * Block and of every R3Block, are compared.
+ * supposed to be exact and the lower bounds of all of them, those that
+ * solve the original Block and those that solve an R3Block, are compared.
  *
- * Otherwise, the first Solver attached to each R3Block is supposed to be
- * solving some kind of continuous relaxation and a certain number of rounds of a
- * simple slope scaling heuristic are ran on that Block, then the results
- * (both lower and upper bound) are compared with the optimal value of the
- * other Solver (not expecting they be equal).
+ * Otherwise, each R3BSolver is supposed to be solving some kind of
+ * continuous relaxation and a certain number of rounds of a simple slope
+ * scaling heuristic are ran on its R3Block, then the results (both lower and
+ * upper bound) are compared with the optimal value of the first other Solver
+ * (not expecting they be equal).
  *
  * This is possibly repeated a number of times in a loop where data of the
  * problem (fixed and transportation costs, demands, capacities) are modified
@@ -132,7 +132,7 @@
 
 #include "CDASolver.h"
 
-#include "UpdateSolver.h"
+#include "R3BSolver.h"
 
 #include "CapacitatedFacilityLocationBlock.h"
 
@@ -170,21 +170,9 @@ static constexpr FunctionValue INF = Inf< FunctionValue >();
 /*--------------------------------------------------------------------------*/
 
 CapacitatedFacilityLocationBlock * B1;  // the original Block
-Block * B2;                             // the R3Block being solved
-
-// the R3Block of the original Block, one per formulation after the first in
-// the list of -F, each with the Configuration it is made with, the
-// BlockSolverConfig of its Solver and the UpdateSolver that forwards it the
-// changes of the original Block
-std::vector< Block * > R3B;
-std::vector< Configuration * > R3BC;
-std::vector< BlockSolverConfig * > R3BSC;
-std::vector< UpdateSolver * > R3US;
 
 Index m;  // number of facilities
 Index n;  // number of customers
-
-Configuration * r3bc;  // the Configuration of the R3Block being solved
 
 Index niter = 0;  // how many iterations of Slope Scaling have to be done
 
@@ -356,16 +344,40 @@ static inline bool has_solution( int rtrn )
 
 /*--------------------------------------------------------------------------*/
 
-// runs the Slope Scaling on the R3Block B2, made with r3bc, whose first
-// Solver is solved and whose lower bound is the first one that is valid;
-// Slvr1 is the Solver of the original Block, which returned rtrn1st
+// the R3BSolver among the Solver of the original Block, in their order
 
-static bool SlopeScaling( Solver * Slvr1 , int rtrn1st )
+static std::vector< R3BSolver * > R3B_Solvers( void )
 {
- auto Slvr2 = B2->get_registered_solvers().front();
+ std::vector< R3BSolver * > S;
+ for( auto slv : B1->get_registered_solvers() )
+  if( auto r3s = dynamic_cast< R3BSolver * >( slv ) )
+   S.push_back( r3s );
+ return( S );
+ }
+
+/*--------------------------------------------------------------------------*/
+// with DETACH_2ND, the inner Solver of Slvr2 is detached from its R3Block
+// and re-attached to it
+
+#if DETACH_2ND
+static void detach_2nd( R3BSolver * Slvr2 )
+{
+ auto B2 = Slvr2->get_R3B();
+ B2->unregister_Solver( Slvr2->get_inner_Solver() );
+ B2->register_Solver( Slvr2->get_inner_Solver() );  // push it to the back
+ }
+#endif
+
+/*--------------------------------------------------------------------------*/
+
+// runs the Slope Scaling with the R3BSolver Slvr2, whose lower bound is the
+// first one that is valid; Slvr1 is the Solver of the original Block, which
+// returned rtrn1st
+
+static bool SlopeScaling( Solver * Slvr1 , int rtrn1st , R3BSolver * Slvr2 )
+{
  #if DETACH_2ND
-  B2->unregister_Solver( Slvr2 );
-  B2->register_Solver( Slvr2 );  // push it to the back
+  detach_2nd( Slvr2 );
  #endif
 
  #if( LOG_LEVEL >= 1 )
@@ -407,9 +419,7 @@ static bool SlopeScaling( Solver * Slvr1 , int rtrn1st )
    break;
    }
 
-  Slvr2->get_var_solution();           // get the full solution in B2
-
-  B1->map_back_solution( B2 , r3bc );  // map it all back in B1
+  Slvr2->get_var_solution();  // map the solution of the R3Block in B1
 
   CapacitatedFacilityLocationBlock::CntSolution y( m );  // read y
   B1->get_facility_solution( y.begin() );
@@ -449,7 +459,7 @@ static bool SlopeScaling( Solver * Slvr1 , int rtrn1st )
   // iteration this is permanent, and therefore use the standard eNoBlck
   if( h ) {
    auto iM = h < niter - 1 ? eNoMod : eNoBlck;
-   B1->chg_facility_costs( F.begin() , Block::INFRange , iM , iM );
+   B1->chg_facility_costs( Block::MF_dbl_sp( F ) , Block::INFRange , iM , iM );
    }
 
   // now compute the value of the new feasible solution
@@ -479,13 +489,12 @@ static bool SlopeScaling( Solver * Slvr1 , int rtrn1st )
   if( ++h >= niter )  // all attempts expended
    break;             // done
 
-  // change the facility costs in B1: thanks to the UpdateSolver (whose
-  // Modification are *not* inhibited) this is immediately forwarded to B2
-  B1->chg_facility_costs( NF.begin() );
+  // change the facility costs in B1: R3BSolver (whose Modification are
+  // *not* inhibited) immediately forwards this to its R3Block
+  B1->chg_facility_costs( Block::MF_dbl_sp( NF ) );
 
   #if DETACH_2ND
-   B2->unregister_Solver( Slvr2 );
-   B2->register_Solver( Slvr2 );  // push it to the back
+   detach_2nd( Slvr2 );
   #endif
   rtrn2nd = Slvr2->compute( false );  // solve again and iterate
  
@@ -506,60 +515,53 @@ static bool SlopeScaling( Solver * Slvr1 , int rtrn1st )
 
 /*--------------------------------------------------------------------------*/
 
-// the Solver of the original Block, i.e., all those registered to it but the
-// UpdateSolver that forward its changes to the R3Block
-
-static std::vector< Solver * > original_Solvers( void )
-{
- std::vector< Solver * > S;
- for( auto slv : B1->get_registered_solvers() )
-  if( ! dynamic_cast< UpdateSolver * >( slv ) )
-   S.push_back( slv );
- return( S );
- }
-
-/*--------------------------------------------------------------------------*/
-
-// solves the original Block and each of its R3Block with all their Solver:
-// with no Slope Scaling, the lower bounds that all of them give are bounds
-// on the same optimum and are compared with each other, otherwise the Slope
-// Scaling is run on each R3Block in turn
+// solves the original Block with all its Solver, those that solve an
+// R3Block of it among them: with no Slope Scaling, the lower bounds that all
+// of them give are bounds on the same optimum and are compared with each
+// other, otherwise the Slope Scaling is run with each R3BSolver in turn
 
 static bool SolveBoth( void )
 {
  try {
-  // the Solver, in the order of the comparison: those of the original Block,
-  // then those of each R3Block
-  std::vector< Solver * > S = original_Solvers();
-  const std::size_t n1 = S.size();
   #if DETACH_1ST
-   B1->unregister_Solver( S.front() );
-   B1->register_Solver( S.front() , true );  // push it to the front
+   {
+    auto s1 = B1->get_registered_solvers().front();
+    B1->unregister_Solver( s1 );
+    B1->register_Solver( s1 , true );  // push it to the front
+    }
   #endif
 
+  // the Solver, in the order of the comparison
+  const auto & RS = B1->get_registered_solvers();
+  std::vector< Solver * > S( RS.begin() , RS.end() );
+
   if( niter ) {  // the Slope Scaling- - - - - - - - - - - - - - - - - - - -
+   // those that do not solve an R3Block are computed, the first giving the
+   // status that the Slope Scaling is compared with
+   std::vector< Solver * > S1;
+   for( auto slv : S )
+    if( ! dynamic_cast< R3BSolver * >( slv ) )
+     S1.push_back( slv );
+   if( S1.empty() ) {
+    cerr << "Error: the Slope Scaling needs a Solver of the original Block "
+	 << "that is not an R3BSolver" << endl;
+    exit( 1 );
+    }
+
    int rtrn1st = Solver::kError;
-   for( std::size_t k = 0 ; k < n1 ; ++k ) {
-    const int r = S[ k ]->compute( false );
+   for( std::size_t k = 0 ; k < S1.size() ; ++k ) {
+    const int r = S1[ k ]->compute( false );
     if( ! k )
      rtrn1st = r;
     }
 
    bool OK = true;
-   for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
-    B2 = R3B[ j ];
-    r3bc = R3BC[ j ];
-    OK &= SlopeScaling( S.front() , rtrn1st );
-    }
+   for( auto r3s : R3B_Solvers() )
+    OK &= SlopeScaling( S1.front() , rtrn1st , r3s );
    return( OK );
    }
 
   // solve once and compare lower bounds- - - - - - - - - - - - - - - - - - -
-
-  for( auto b : R3B ) {
-   const auto & r = b->get_registered_solvers();
-   S.insert( S.end() , r.begin() , r.end() );
-   }
 
   // each bound is an exact lower bound that must agree with the others
   // (cmp_tol); the verdict and the uniform per-instance line are those of
@@ -653,10 +655,9 @@ int main( int argc , char **argv )
          "  -T, --cmptol <x>                relative tolerance of the\n"
          "                                  comparison of the bounds [1e-5]\n"
          "\n"
-         "The formulations (-F) are the original Block, a pair of its\n"
-         "BlockConfig and BlockSolverConfig, then each R3Block of it, a\n"
-         "vector of the Configuration it is made with, its BlockConfig and\n"
-         "its BlockSolverConfig.\n";
+         "The formulation (-F) is the original Block, a pair of its\n"
+         "BlockConfig and BlockSolverConfig; an R3Block of it is solved by\n"
+         "an R3BSolver of the BlockSolverConfig.\n";
 
  process_args( argc , argv , process_specific_arg );
 
@@ -667,34 +668,17 @@ int main( int argc , char **argv )
 
  rg.seed( seed );  // seed the pseudo-random number generator
 
- // the formulations: the original Block, then its R3Block - - - - - - - - -
+ // the formulation: the original Block - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // the list is kept until the end, as each R3BlockConfiguration is needed by
- // the UpdateSolver and to map the solutions back
 
  auto vl = read_formulations( fconf_file );
  auto & V = vl->f_value;
  auto b1p = dynamic_cast< SimpleConfiguration< std::pair< Configuration * ,
                                        Configuration * > > * >( V.front() );
- if( ( V.size() < 2 ) || ( ! b1p ) || ( ! b1p->f_value.second ) ) {
-  cerr << "Error: " << fconf_file << " must list the original Block, a pair "
-       << "BlockConfig + BlockSolverConfig, and at least one R3Block"
-       << endl;
+ if( ( V.size() != 1 ) || ( ! b1p ) || ( ! b1p->f_value.second ) ) {
+  cerr << "Error: " << fconf_file << " must list the original Block only, a "
+       << "pair BlockConfig + BlockSolverConfig" << endl;
   exit( 1 );
-  }
-
- std::vector< SimpleConfiguration< std::vector< Configuration * > > * > r3v;
- for( std::size_t j = 1 ; j < V.size() ; ++j ) {
-  auto r = dynamic_cast< SimpleConfiguration< std::vector< Configuration * >
-                                              > * >( V[ j ] );
-  if( ( ! r ) || ( r->f_value.size() != 3 ) || ( ! r->f_value[ 1 ] ) ||
-      ( ! r->f_value[ 2 ] ) ) {
-   cerr << "Error: formulation " << j << " of " << fconf_file << " is not the "
-        << "vector of the Configuration of an R3Block, its BlockConfig and "
-        << "its BlockSolverConfig" << endl;
-   exit( 1 );
-   }
-  r3v.push_back( r );
   }
 
  // read the Block- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -718,12 +702,6 @@ int main( int argc , char **argv )
  m = B1->get_NFacilities();  // record number of facilities
  n = B1->get_NCustomers();   // record number of customers
 
- // make the R3Block, each with its Configuration
- for( auto r : r3v ) {
-  R3BC.push_back( r->f_value[ 0 ] );
-  R3B.push_back( B1->get_R3_Block( r->f_value[ 0 ] ) );
-  }
-
  b_config_Block( B1 , b1p->f_value.first , fconf_file );
 
  // ensure that B1 already has all its sub-Block ready when the Solver
@@ -733,18 +711,11 @@ int main( int argc , char **argv )
  // probably a Block::set_configuration() would be better
  B1->generate_abstract_variables();
 
- for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
-  b_config_Block( R3B[ j ] , r3v[ j ]->f_value[ 1 ] , fconf_file );
-
-  // see above fow why this is needed
-  R3B[ j ]->generate_abstract_variables();
-  }
-
- // attach the Solver to the Blocks - - - - - - - - - - - - - - - - - - - - -
+ // attach the Solver to the Block- - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // do this by applying a clone() of the BlockSolverConfig of each formulation;
- // note that the BlockSolverConfig are clear()-ed and kept to do the cleanup
- // at the end
+ // do this by applying a clone() of the BlockSolverConfig; note that it is
+ // clear()-ed and kept to do the cleanup at the end; each R3BSolver makes
+ // its R3Block when it is attached
 
  auto as_bsc = []( Configuration * c ) {
   auto bsc = dynamic_cast< BlockSolverConfig * >( c->clone() );
@@ -766,24 +737,7 @@ int main( int argc , char **argv )
   exit( 1 );
   }
 
- for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
-  // separately register an UpdateSolver that forwards to the R3Block
-  R3US.push_back( new UpdateSolver( R3B[ j ] , R3BC[ j ] ) );
-  B1->register_Solver( R3US.back() );
-
-  R3BSC.push_back( as_bsc( r3v[ j ]->f_value[ 2 ] ) );
-
-  // the Solver this build does not have are left out, with a warning
-  s_config_Block( R3B[ j ] , R3BSC.back() , fconf_file );
-
-  if( R3B[ j ]->get_registered_solvers().empty() ) {
-   cout << endl << "no Solver registered to R3Block " << j << "!" << endl;
-   exit( 1 );
-   }
-  }
-
- B2 = R3B.front();
- r3bc = R3BC.front();
+ const auto R3S = R3B_Solvers();
 
  // compute and set numerical tolerances in the Solver of the R3Block - - - -
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -811,8 +765,8 @@ int main( int argc , char **argv )
   static constexpr double BA = 1e-12;  // base accuracy
 
   // every Solver of every R3Block, all of them being compared
-  for( auto b : R3B )
-   for( auto B2S : b->get_registered_solvers() ) {
+  for( auto r3s : R3S )
+   for( auto B2S : r3s->get_R3B()->get_registered_solvers() ) {
     B2S->set_par( Solver::dblAbsAcc ,
 		  BA * std::max( d_abs , double( 1 ) ) );
     B2S->set_par( CDASolver::dblAAccDSol ,
@@ -826,7 +780,8 @@ int main( int argc , char **argv )
  #if( LOG_LEVEL >= 2 )
   #if( LOG_ON_COUT )
    ( ( B1->get_registered_solvers() ).front() )->set_log( &cout );
-   ( ( B2->get_registered_solvers() ).front() )->set_log( &cout );
+   if( ! R3S.empty() )
+    R3S.front()->get_inner_Solver()->set_log( &cout );
   #else
    ofstream LOGFile1( "log1.txt" , ofstream::out );
    if( ! LOGFile1.is_open() )
@@ -840,11 +795,12 @@ int main( int argc , char **argv )
    ofstream LOGFile2( "log2.txt" , ofstream::out );
    if( ! LOGFile2.is_open() )
     cerr << "Warning: cannot open log file log2.txt" << endl;
-   else {
-    LOGFile2.setf( ios::scientific, ios::floatfield );
-    LOGFile2 << setprecision( 10 );
-    ( ( B2->get_registered_solvers() ).front() )->set_log( & LOGFile2 );
-    }
+   else
+    if( ! R3S.empty() ) {
+     LOGFile2.setf( ios::scientific, ios::floatfield );
+     LOGFile2 << setprecision( 10 );
+     R3S.front()->get_inner_Solver()->set_log( & LOGFile2 );
+     }
   #endif
  #endif
 
@@ -893,9 +849,9 @@ int main( int argc , char **argv )
    std::ofstream f( "CFL1.txt" );
    B1->print( f , 'C' );
    f.close();
-   for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
+   for( std::size_t j = 0 ; j < R3S.size() ; ++j ) {
     f.open( "CFL" + std::to_string( j + 2 ) + ".txt" );
-    R3B[ j ]->print( f , 'C' );
+    R3S[ j ]->get_R3B()->print( f , 'C' );
     f.close();
     }
    break;
@@ -937,7 +893,7 @@ int main( int argc , char **argv )
        LF( B1->get_objective() )->modify_coefficients( std::move( NC ) , rng );
        }
       else  // change via call to chg_* method
-       B1->chg_facility_costs( NC.begin() , rng );
+       B1->chg_facility_costs( Block::MF_dbl_sp( NC ) , rng );
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
@@ -955,7 +911,8 @@ int main( int argc , char **argv )
 					      std::move( sbst ) , ord );
        }
       else  // change via call to chg_* method
-       B1->chg_facility_costs( NC.begin() , std::move( sbst ) , ord );
+       B1->chg_facility_costs( Block::MF_dbl_sp( NC ) , std::move( sbst ) ,
+                               ord );
 
       LOG1( ")" );
       }
@@ -996,7 +953,7 @@ int main( int argc , char **argv )
        LF( B1->get_objective() )->modify_coefficients( std::move( NC ) , rng );
        }
       else  // change via call to chg_* method
-       B1->chg_transportation_costs( NC.begin() , rng );
+       B1->chg_transportation_costs( Block::MF_dbl_sp( NC ) , rng );
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
@@ -1016,7 +973,8 @@ int main( int argc , char **argv )
 						       ord );
        }
       else  // change via call to chg_* method
-       B1->chg_transportation_costs( NC.begin() , std::move( sbst ) , ord );
+       B1->chg_transportation_costs( Block::MF_dbl_sp( NC ) ,
+                                     std::move( sbst ) , ord );
 
       LOG1( ")" );
       }
@@ -1063,7 +1021,7 @@ int main( int argc , char **argv )
 	LF( & (*cap)[ i ] )->modify_coefficient( n , - *(NCit++) , iM );
        }
       else         // change via call to chg_* method
-       B1->chg_facility_capacities( NC.begin() , rng );
+       B1->chg_facility_capacities( Block::MF_dbl_sp( NC ) , rng );
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
@@ -1080,7 +1038,8 @@ int main( int argc , char **argv )
 	LF( & (*cap)[ i ] )->modify_coefficient( n , - *(NCit++) , iM );
        }
       else       // change via call to chg_* method
-       B1->chg_facility_capacities( NC.begin() , std::move( sbst ) , ord );
+       B1->chg_facility_capacities( Block::MF_dbl_sp( NC ) ,
+                                    std::move( sbst ) , ord );
 
       LOG1( ")" );
       }
@@ -1111,7 +1070,7 @@ int main( int argc , char **argv )
       rng.first = dis( rg ) * ( n - tochange );
       rng.second = rng.first  + tochange;
       auto NC = rndscale( B1->get_Demands().data() , rng );
-      B1->chg_customer_demands( NC.begin() , rng );
+      B1->chg_customer_demands( Block::MF_dbl_sp( NC ) , rng );
       }
      else {                    // in the others do a sparse change
       bool ord = ( dis( rg ) < 0.5 );
@@ -1121,7 +1080,8 @@ int main( int argc , char **argv )
       if( ! ord )
        LOG1( ",u" );
 
-      B1->chg_customer_demands( NC.begin() , std::move( sbst ) , ord );
+      B1->chg_customer_demands( Block::MF_dbl_sp( NC ) , std::move( sbst ) ,
+                                ord );
       LOG1( ")" );
       }
 
@@ -1369,26 +1329,13 @@ int main( int argc , char **argv )
  
  // destroy the Blocks- - - - - - - - - - - - - - - - - - - - - - - - - - - -
  // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- // for B1 the UpdateSolver were manually registered, so they have to be
- // manually un-registered
- for( auto us : R3US ) {
-  B1->unregister_Solver( us );
-  delete( us );
-  }
-
- // apply() the clear()-ed BlockSolverConfig to cleanup Solver, then delete
- // them and the Block
- for( std::size_t j = 0 ; j < R3B.size() ; ++j ) {
-  R3BSC[ j ]->apply( R3B[ j ] );
-  delete( R3BSC[ j ] );
-  delete( R3B[ j ] );
-  }
-
+ // apply() the clear()-ed BlockSolverConfig to cleanup the Solver, each
+ // R3BSolver deleting its R3Block, then delete it and the Block
  bsc1->apply( B1 );
  delete( bsc1 );
  delete( B1 );
 
- // and the formulations, the Configuration of the R3Block among them
+ // and the formulation
  delete( vl );
 
  // terminate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

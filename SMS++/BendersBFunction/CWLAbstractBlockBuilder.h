@@ -86,24 +86,28 @@ CWLInstance read_cwl_instance( std::filesystem::path file_path ) {
  stream >> num_locations >> num_customers;
 
  if( stream.fail() || stream.bad() )
-  throw( std::runtime_error( "Error while reading file " + file_path.string() ) );
+  throw( std::runtime_error( "Error while reading file " +
+                             file_path.string() ) );
 
  instance.set( num_locations , num_customers );
 
  for( int i = 0 ; i < num_locations ; ++i ) {
   stream >> instance.capacity[ i ] >> instance.fixed_cost[ i ];
   if( stream.fail() || stream.bad() )
-   throw( std::runtime_error( "Error while reading file " + file_path.string() ) );
+   throw( std::runtime_error( "Error while reading file " +
+                              file_path.string() ) );
  }
 
  for( int j = 0 ; j < num_customers ; ++j ) {
   stream >> instance.demand[ j ];
   if( stream.fail() || stream.bad() )
-   throw( std::runtime_error( "Error while reading file " + file_path.string() ) );
+   throw( std::runtime_error( "Error while reading file " +
+                              file_path.string() ) );
   for( int i = 0 ; i < num_locations ; ++i ) {
    stream >> instance.cost[ i ][ j ];
    if( stream.fail() || stream.bad() )
-    throw( std::runtime_error( "Error while reading file " + file_path.string() ) );
+    throw( std::runtime_error( "Error while reading file " +
+                               file_path.string() ) );
   }
  }
 
@@ -252,7 +256,8 @@ BendersBFunction * build_decomposition_by_customer
    auto c = Configuration::deserialize( "LPPar_AbstractBlock.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar_AbstractBlock.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar_AbstractBlock.txt does not contain a "
+                 "BlockSolverConfig" << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -361,7 +366,8 @@ BendersBFunction * build_decomposition_by_location
    auto c = Configuration::deserialize( "LPPar_AbstractBlock.txt" );
    lpbsc = dynamic_cast< BlockSolverConfig * >( c );
    if( ! lpbsc ) {
-    std::cerr << "Error: LPPar_AbstractBlock.txt does not contain a BlockSolverConfig" << std::endl;
+    std::cerr << "Error: LPPar_AbstractBlock.txt does not contain a "
+                 "BlockSolverConfig" << std::endl;
     delete( c );
     exit( 1 );
     }
@@ -525,8 +531,9 @@ BendersBFunction * build_Benders_function
   return( build_decomposition_by_location( instance , std::move( y ) ) );
  }
  else {
-  throw( std::invalid_argument( "build_Benders_function: invalid decomposition "
-                                "type: " + std::to_string( decomposition_type) ) );
+  throw( std::invalid_argument( "build_Benders_function: invalid "
+                                "decomposition type: " +
+                                std::to_string( decomposition_type) ) );
  }
 }
 

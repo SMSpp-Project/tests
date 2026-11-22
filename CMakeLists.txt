@@ -13,7 +13,7 @@
 #                         Dipartimento di Informatica                         #
 #                             Universita' di Pisa                             #
 # --------------------------------------------------------------------------- #
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.24)
 cmake_policy(VERSION 3.15)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/DeriveVersion.cmake)
 smspp_derive_version(SMSPP_MODULE_VERSION)
@@ -38,17 +38,7 @@ include(TestLabels)
 # Utility function to standardize installation and runtime dependency handling
 # for SMS++ tests.
 function(smspp_install target_name)
-    if (WIN32 AND BUILD_SHARED_LIBS AND NOT DEFINED ENV{CONDA_BUILD})
-        # On Windows with shared libraries enabled copies all runtime DLL
-        # dependencies next to the executable in the build directory
-        # (POST_BUILD), using CMake's TARGET_RUNTIME_DLLS generator expression
-        add_custom_command(TARGET ${target_name} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                $<TARGET_RUNTIME_DLLS:${target_name}>
-                $<TARGET_FILE_DIR:${target_name}>
-                COMMAND_EXPAND_LISTS
-                COMMENT "Copying runtime DLLs next to ${target_name}.exe")
-    endif ()
+    smspp_copy_runtime(${target_name})
 
     #[[install(TARGETS ${target_name}
             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})]]
@@ -75,19 +65,11 @@ function(add_batch_test exe batch)
             list(APPEND _others "")
         endif ()
     endforeach ()
-    if (UNIX)
-        add_test(NAME ${exe}/${batch}
-                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/${batch}
-                         ${CMAKE_CURRENT_BINARY_DIR}/${exe} ${_others}
-                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    elseif (WIN32)
-        add_test(NAME ${exe}/${batch}
-                 # using Git for Windows that includes Git Bash
-                 COMMAND "C:/Program Files/Git/bin/bash.exe"
-                         "${CMAKE_CURRENT_SOURCE_DIR}/${batch}"
-                         "$<TARGET_FILE:${exe}>" ${_others}
-                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    endif ()
+    add_test(NAME ${exe}/${batch}
+             COMMAND ${SMSpp_BASH}
+                     "${CMAKE_CURRENT_SOURCE_DIR}/${batch}"
+                     "$<TARGET_FILE:${exe}>" ${_others}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
 # ----- Settings ------------------------------------------------------------ #
@@ -95,22 +77,6 @@ endfunction()
 # using the ctest executable.
 # See: https://cmake.org/cmake/help/latest/manual/ctest.1.html
 include(CTest)
-
-# The classes of the modules register themselves in the factories from
-# static objects, which nothing here names: a shared library is kept by
-# what its module asks of the linker [see the CMakeLists.txt of the
-# module], while an archive has to be taken whole.
-if (NOT BUILD_SHARED_LIBS)
-    if (MSVC)
-        add_link_options("/WHOLEARCHIVE" "/FORCE:MULTIPLE")
-    else () # Unix
-        if (APPLE)
-            add_link_options("-Wl,-all_load")
-        else ()
-            add_link_options("-Wl,--whole-archive,--allow-multiple-definition")
-        endif ()
-    endif ()
-endif ()
 
 # ----- Tests --------------------------------------------------------------- #
 # One directory per module the tests are posed on, named after it, since a
@@ -145,9 +111,23 @@ add_subdirectory(SingleFlowDCRBlock)
 add_subdirectory(SATBlock)
 add_subdirectory(SatellitesBlock)
 add_subdirectory(MultiKnapsackAssignBlock)
+add_subdirectory(HQPBlock)
+
+# the program that imports the C++20 module of every SMS++ module in the
+# build, which are there when SMSpp_BUILD_MODULE is ON [see SMS++]
+if (SMSpp_BUILD_MODULE)
+    add_subdirectory(import_modules)
+endif ()
 
 # the one tester that is posed on no Block in particular: it reads whichever
 # two the configurations name and compares the two formulations
 add_subdirectory(compare_formulations)
+
+# The classes of the modules register themselves in the factories from
+# static objects, which nothing here names: a shared library is kept by
+# what its module asks of the linker, while an archive has to be taken
+# whole [see SMSppModule.cmake of SMS++], for all the suites above, where
+# the modules have been found.
+smspp_keep_modules()
 
 # --------------------------------------------------------------------------- #

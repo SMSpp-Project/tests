@@ -36,8 +36,11 @@ parse_batch_args "$@"
 
 DATADIR=../../UCBlock/data/nc4/UC_Data/HT-Ramp
 
-if [ -n "$CI" ]; then sizes="20_10 100_50 200_100";                     seeds="1"
-else                  sizes="20_10 50_20 75_35 100_50 150_75 200_100";  seeds="1 2"; fi
+if [ -n "$CI" ]; then
+  sizes="20_10 100_50 200_100";                    seeds="1"
+else
+  sizes="20_10 50_20 75_35 100_50 150_75 200_100"; seeds="1 2"
+fi
 
 for size in $sizes; do
   for seed in $seeds; do

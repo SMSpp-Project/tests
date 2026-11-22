@@ -15,7 +15,7 @@
 # BlockSolverConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
-1 # the number of elements in the map
+1  # the number of elements in the map
 
 AbstractBlock  *FatherBSCfg-milp.txt
 

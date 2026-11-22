@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # usage: batch-mixed < exe file > < par file > < solver > < log file >
-#        < exe file > = path of the executable, default BinaryKnapsackBlock_test
+#        < exe file > = path of the executable,
+#        default BinaryKnapsackBlock_test
 #        < par file > = BlockSolverConfig file, default BSPar-mixed.txt
 #        < solver > = unused
 #        < log file > = name of log file, default no log
@@ -13,7 +14,8 @@
 # relaxation must bracket it. The BranchAndXSolver is excluded: it branches on
 # binary variables (see batch for the pure-binary cross-check).
 
-# run from the test directory so BinaryKnapsackBlock_test reads its config files
+# run from the test directory so BinaryKnapsackBlock_test reads its config
+# files
 here="$(cd "$(dirname "$0")" && pwd)"
 cd "$here/.." || exit 1
 

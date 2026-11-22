@@ -1,0 +1,30 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - InnerBSCfg-mosek-tol8.txt - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the inner Solver of an HQPSolver with MOSEK at
+# the tolerances 1e-8: that of InnerBSCfg-mosek.txt with the ComputeConfig
+# of MOSEKCfg-tol8.txt, for TROTS (HQPBSCfg-trots.txt) and the quadratic
+# hard rows (HQPBSCfg-quad.txt).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+MOSEKMILPSolver  # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*MOSEKCfg-tol8.txt
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - END InnerBSCfg-mosek-tol8.txt - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

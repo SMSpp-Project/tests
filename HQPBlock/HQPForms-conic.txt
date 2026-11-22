@@ -1,0 +1,39 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - HQPForms-conic.txt  - - - - - - - - - - - - - -
+#
+# The formulations of the HQPBlock of the hierarchy with conic hard rows
+# that batch-qcqp builds with -Q conic, as in HQPForms-quad.txt, the conic
+# rows being cuts in both:
+#
+#   - F0, the cuts of Kelley at the default tolerance (HQPBCfg.txt);
+#   - F1, the cuts at the boundary point, the sum-exp ones in the
+#     logarithmic form (HQPBCfg-cuts.txt),
+#
+# both with the HQPSolver of HQPBSCfg-cuts.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# F0: the cuts of Kelley
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
+*HQPBCfg.txt        # its BlockConfig
+*HQPBSCfg-cuts.txt  # its BlockSolverConfig
+
+# F1: all the nonlinear hard rows by cuts at the boundary point
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
+*HQPBCfg-cuts.txt   # its BlockConfig
+*HQPBSCfg-cuts.txt  # its BlockSolverConfig
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END HQPForms-conic.txt  - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

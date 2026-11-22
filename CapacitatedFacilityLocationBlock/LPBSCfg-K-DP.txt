@@ -53,7 +53,7 @@ ComputeConfig # exact type of the ComputeConfig object
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END LPBSCfg-K-DP.txt  - - - - - - - - - - - - - -

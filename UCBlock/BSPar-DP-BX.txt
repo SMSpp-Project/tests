@@ -18,7 +18,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-6 # number of (the names of) Solver in this BlockSolverConfig
+6  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
@@ -31,7 +31,7 @@ BranchAndXSolver      # name of 4th Solver
 BranchAndXSolver      # name of 5th Solver
 BranchAndXSolver      # name of 6th Solver
 
-6 # number of ComputeConfig in this BlockSolverConfig
+6  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -61,9 +61,10 @@ BranchAndXSolver      # name of 6th Solver
 
 # 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ComputeConfig of the BranchAndXSolver exploring the tree best-estimate
+
 *BXLDCfg-DP-est.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BSPar-DP-BX.txt - - - - - - - - - - - - - -

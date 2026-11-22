@@ -12,7 +12,7 @@
 # a "meta"-BlockSolverConfig, i.e., a map classname --> its BlockSolverConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
-3 # the number of elements in the map
+3  # the number of elements in the map
 
 ThermalUnitBlock    *TUBSCfg-DP.txt
 BinaryKnapsackBlock *BKBSCfg-DP.txt

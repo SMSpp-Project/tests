@@ -58,10 +58,10 @@ Method            1  # dual simplex: asked for reproducibility of the duals,
                      # any optimal ones giving a valid optimality cut
 Presolve          0  # off, or an infeasible subproblem leaves no Farkas
                      # certificate and no feasibility cut can be generated
-intThrowReducedCostException  0  # a Variable whose bounds are those of its
-                     # type, as a relaxed binary of a leaf, has no
-                     # OneVarConstraint to take its reduced cost, which the
-                     # cut, read off the coupling rows, does not need
+intThrowReducedCostException 0  # a Variable whose bounds are those of its
+                    # type, as a relaxed binary of a leaf, has no
+                    # OneVarConstraint to take its reduced cost, which the
+                    # cut, read off the coupling rows, does not need
 
 1  # number of double parameters
 
@@ -89,7 +89,7 @@ dblRelAcc      1e-9  # relative accuracy required to solution
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BDSSCfg.txt - - - - - - - - - - - - - - -

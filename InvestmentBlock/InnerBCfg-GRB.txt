@@ -1,0 +1,27 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBCfg-GRB.txt - - - - - - - - - - - - - - -
+#
+# The "meta"-BlockConfig of InnerBCfg.txt with the inner Block of every
+# InvestmentFunction solved by GUROBI [see IBOCfg-GRB.txt], for the
+# ParallelBundleSolver of BSPar-par.txt [see InnerBForm-par.txt]. It is
+# InnerBCfg.txt but for the lines of the InvestmentBlock and of its
+# components.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+6  # the number of elements in the map
+
+InvestmentBlock         *IBOCfg-GRB.txt
+AbstractBlock           *IBOCfg-GRB.txt
+ThermalUnitBlock        *TUBCfg.txt
+DCNetworkBlock          *DCNBCfg.txt
+ACNetworkBlock          *ACBCfg.txt
+PolyhedralFunctionBlock *PFBCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBCfg-GRB.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

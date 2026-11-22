@@ -21,32 +21,32 @@ BlockConfig # exact type of the Configuration object
 
 # static_constraints
 SimpleConfiguration<int>
-2    # the formulation: 1 = P/C, 2 = SOCP
+2  # the formulation: 1 = P/C, 2 = SOCP
 
 # dynamic_constraints
-*    # [none]
+*  # [none]
 
 # static_variables
-*    # [none]
+*  # [none]
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
 SimpleConfiguration<double>
-1e-4    # relative tolerance of the feasibility checks
+1e-4  # relative tolerance of the feasibility checks
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END DCRCfg-socp.txt - - - - - - - - - - - - - -

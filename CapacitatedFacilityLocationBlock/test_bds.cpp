@@ -116,7 +116,8 @@ static void add_transport( AbstractBlock * block , CFLB * B ,
 
  for( int i = 0 ; i < m ; ++i )
   for( int j = 0 ; j < n ; ++j )
-   obj->add_variable( & ( * x )[ i ][ j ] , B->get_Transportation_Cost( i , j ) );
+   obj->add_variable( & ( * x )[ i ][ j ] ,
+                      B->get_Transportation_Cost( i , j ) );
  for( int j = 0 ; j < n ; ++j )
   obj->add_variable( & ( * sl )[ j ] , M );
  }
@@ -196,7 +197,8 @@ static double solve( AbstractBlock * block , const std::string & cfg ,
 {
  auto c = Configuration::deserialize( cfg );
  auto bsc = dynamic_cast< BlockSolverConfig * >( c );
- if( ! bsc ) { std::cerr << cfg << " not a BlockSolverConfig\n"; std::exit( 1 ); }
+ if( ! bsc ) { std::cerr << cfg << " not a BlockSolverConfig\n";
+               std::exit( 1 ); }
  /* Whatever goes wrong, from the configuration being refused onwards, the
   * Block is given back what the Solver had taken from it before the error
   * travels on, so that the caller can go on using the Block. */
@@ -244,7 +246,8 @@ static double solve( AbstractBlock * block , const std::string & cfg ,
  * set_Block(), and so does one that does not carry the required parameters.
  * In either case the regime is skipped rather than failed. */
 
-static double solve_by_bundle( AbstractBlock * block , const std::string & cfg ,
+static double solve_by_bundle( AbstractBlock * block ,
+			       const std::string & cfg ,
 			       double & seconds , int * status , double * ub ,
 			       bool & ran , double dflt )
 {
@@ -262,9 +265,9 @@ static double solve_by_bundle( AbstractBlock * block , const std::string & cfg ,
 
 /*--------------------------------------------------------------------------*/
 
-// solve the instance with CapacitatedFacilityLocationBlock's own ad-hoc Benders
-// decomposition ( BenForm: a hidden BendersBFunction over an inner MCFBlock,
-// hand-driven master and cut separation )
+// solve the instance with CapacitatedFacilityLocationBlock's own ad-hoc
+// Benders decomposition ( BenForm: a hidden BendersBFunction over an inner
+// MCFBlock, hand-driven master and cut separation )
 
 static double solve_benform( CFLB * B , double & seconds )
 {

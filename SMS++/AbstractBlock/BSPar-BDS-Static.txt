@@ -40,9 +40,9 @@ int_BDSlv_Regime  1  # 0 = convex master, 1 = MILP master
 int_BDSlv_Unified 1  # 0 = feasibility and optimality cuts, separately,
                      # 1 = one cut for both, normalized on the slacks,
                      # 2 = the same, normalized on the cut itself
-int_BDSlv_PhaseOneWeights 2 # 0 = every slack costs one, 1 = the slacks of a
-                     # row cost the inverse of the norm of it, 2 = one slack
-                     # for all, weighted by the sums of the rows
+int_BDSlv_PhaseOneWeights 2  # 0 = every slack costs one, 1 = the slacks of a
+                      # row cost the inverse of the norm of it, 2 = one slack
+                      # for all, weighted by the sums of the rows
 
 0  # number of double parameters
 
@@ -71,11 +71,10 @@ str_Mstr_BSCfg  BDSMCfg-MILP.txt  # BlockSolverConfig of the master
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - -  END BSPar-BDS-Static.txt - - - - - - - - - - - - -

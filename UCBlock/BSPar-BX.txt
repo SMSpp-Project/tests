@@ -28,7 +28,7 @@ GRBMILPSolver     # 2nd: the MIP, stopped on time
 # 2: the MIP
 *MILPCfg-MIP.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END BSPar-BX.txt - - - - - - - - - - - - - - -

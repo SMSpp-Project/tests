@@ -11,11 +11,14 @@
 #           $(OPTUxH)    = the OPT****.h files to include                    #
 #           $(OPTUxINC)  = the -I$( OPT****.h directory )                    #
 #           $(libMMCFSDR) = the basic directory for the library              #
+#           $(CPLEX_PRESENT) = non-empty if CPLEX is installed, MMCFCplex    #
+#                             being compiled only in that case [see          #
+#                             extlib/makefile-libCPLEX]                      #
 #                                                                            #
-#   Output: $(libMMCFOBJ) = the libMMCF library (that must be built)	     #
+#   Output: $(libMMCFOBJ) = the libMMCF library (that must be built)         #
 #           $(libMMCFLIB) = the external libraries + -L< libdirs >           #
 #           $(libMMCFH)   = all the .h files to include                      #
-#           $(libMMCFINC) = all the -I$(include directories)	     	     #
+#           $(libMMCFINC) = all the -I$(include directories)                 #
 #                                                                            #
 #                              Antonio Frangioni                             #
 #                         Dipartimento di Informatica                        #
@@ -36,9 +39,11 @@
 MMFDIR = $(libMMCFSDR)/MMCFClas
 include $(MMFDIR)/makefile
 
-# MCFCplex
+# MMCFCplex, compiled only if CPLEX is installed
 MMXDIR =  $(libMMCFSDR)/MMCFCplex
-include $(MMXDIR)/makefile
+ifneq ($(CPLEX_PRESENT),)
+    include $(MMXDIR)/makefile
+endif
 
 # Graph
 MMGDIR = $(libMMCFSDR)/Graph

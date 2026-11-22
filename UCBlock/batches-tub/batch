@@ -29,9 +29,9 @@ par=BSCfg.txt
 # per BlockConfig TUBCfg-<form>.txt that TUBForm-PC.txt lists, i.e., every
 # formulation (3bin/T/pt/DP/SU/SD/SUSD) with the perspective cuts, each copy is
 # solved by the same Solver, and the copies must agree with each other as the
-# two Solver of each copy do. The interval-based formulations (pt/DP/SU/SD/SUSD)
-# are too expensive on large-horizon instances, so there the list is
-# TUBForm-PC-3bin-T.txt, which keeps only 3bin/T.
+# two Solver of each copy do. The interval-based formulations
+# (pt/DP/SU/SD/SUSD) are too expensive on large-horizon instances, so there the
+# list is TUBForm-PC-3bin-T.txt, which keeps only 3bin/T.
 for i in 24 96; do
   # only the cheap formulations on large instances
   forms=TUBForm-PC.txt

@@ -75,23 +75,31 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
     # via ctest and when launched by hand. Only the scenarios that currently
     # pass are registered.
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-s"
-                          # default arrangement (natural-LP vs MCF flow), small instances
+                          # default arrangement (natural-LP vs MCF flow), small
+                          # instances
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
                           # default arrangement, full instance set
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-cuts"
-                          # strong-LP vs weak + dynamic strong-cut separation
+                          # natural vs knapsack formulation, both with the
+                          # strong forcing constraints separated
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ld"
-                          # knapsack Lagrangian dual (LP knapsack leaf) vs natural LP: LD == LP
+                          # knapsack Lagrangian dual (LP knapsack leaf) vs
+                          # natural LP: LD == LP
                           #"${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ldvscuts"
-                          # disabled (not a bug): it compares the integer-knapsack Lagrangian dual
-                          # (demand relaxed, decomposed per facility) against the cut-strengthened LP
-                          # bound (demand exact, with cross-facility cuts). These are two distinct
-                          # valid lower bounds: the cuts can exceed the per-facility dual, so their
-                          # difference is neither zero nor sign-definite in general (verified ~7e-4
-                          # on some instances, identical with the DP and the :MILPSolver integer
-                          # leaves and immune to bundle tuning), so the strict 1e-5 equality is
-                          # ill-posed. The batch file documents the per-instance gaps and offers a
-                          # commented run_test variant with an ad-hoc 2e-3 tolerance that makes it pass.
+                          # disabled (not a bug): it compares the
+                          # integer-knapsack Lagrangian dual (demand relaxed,
+                          # decomposed per facility) against the
+                          # cut-strengthened LP bound (demand exact, with
+                          # cross-facility cuts). These are two distinct valid
+                          # lower bounds: the cuts can exceed the per-facility
+                          # dual, so their difference is neither zero nor
+                          # sign-definite in general (verified ~7e-4 on some
+                          # instances, identical with the DP and the
+                          # :MILPSolver integer leaves and immune to bundle
+                          # tuning), so the strict 1e-5 equality is ill-posed.
+                          # The batch file documents the per-instance gaps and
+                          # offers a commented run_test variant with an ad-hoc
+                          # 2e-3 tolerance that makes it pass.
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-ben"
                           # Benders-formulation LP test
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-mcf")
@@ -99,18 +107,12 @@ if (TARGET SMS++::CapacitatedFacilityLocationBlock)
 
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME CFL_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/CFL_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME CFL_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:CFL_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
+        add_test(NAME CFL_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:CFL_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Make each batch test require both fixtures: the batteries read the
         # instances of data/txt as well as the netCDF ones
         set_tests_properties(CFL_test/${BATCH_NAME}
@@ -190,7 +192,8 @@ smspp_label_tests()
 set(_batch CFLScenarioGenerator/batches-scenred/batch)
 if (TEST ${_batch})
     set(_labels ${SMSPP_TEST_LABELS_CapacitatedFacilityLocationBlock}
-                ScenarioReductionSolver StochasticBlock TwoStageStochasticBlock)
+                ScenarioReductionSolver StochasticBlock
+                TwoStageStochasticBlock)
     set_tests_properties(${_batch} PROPERTIES LABELS "${_labels}")
 endif ()
 

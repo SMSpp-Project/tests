@@ -1,8 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar-LDS.txt - - - - - - - - - - - - - - -
 #
-# A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
-# a LagrangianDualSolver using a BundleSolver as the inner Solver
+# A txt description of a BlockSolverConfig for a
+# CapacitatedFacilityLocationBlock to be solved by a LagrangianDualSolver
+# using a BundleSolver as the inner Solver
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,7 +14,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-LagrangianDualSolver    # name of 2nd Solver
+LagrangianDualSolver    # name of 1st Solver
 
 1  # number of ComputeConfig in this BlockSolverConfig
 
@@ -27,7 +28,7 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-16 # number of integer parameters
+16  # number of integer parameters
 
 # now all the integer parameters
 intDoEasy            0 # do not do easy components even for LagBFunction
@@ -55,7 +56,7 @@ intMaxNrEvls         2
 # if all the components need be computed at the optimum
 intFrcLstSS          0
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 dblRelAcc         1e-5 # relative accuracy required to solution
@@ -79,7 +80,7 @@ dbltMinor         1e-6 # minimum value for t
 dbltInit          1e+1 # initial value for t
 dbltSPar2         1e-4 # parameter for the long-term t-strategy
 
-3 # number of string parameters
+3  # number of string parameters
 
 # now all the string parameters
 # the inner Solver used by LagrangianDualSolver
@@ -97,29 +98,29 @@ str_LagBF_BSCfg         LPBSCfg-K-DP.txt
 #                      DPBinaryKnapsackSolver
 # BlockSolverConfig for the LagBFunctions
 #str_LagBF_BSCfg        LPBSCfg-K-CX.txt
-#                      this is for the Flow relaxation, using a :MILPSolver
+#                      this is for the Knapsack relaxation, using a
+#                      :MILPSolver
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar-LDS.txt - - - - - - - - - - - - - -

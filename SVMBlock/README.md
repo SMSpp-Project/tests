@@ -87,8 +87,11 @@ it is read as a `SVMBlock` in netCDF format and no data set is generated.
 Note that the training problem itself only exists for the linear kernel, the
 only one whose feature map is the identity, and that `LagrangianDualSolver`
 only applies to the consensus structure, whence the four `BlockSolverConfig`:
-[BSPar.txt](BSPar.txt), a `:MILPSolver` and `SMOSolver`,
-[BSPar-LSVM.txt](BSPar-LSVM.txt), the same two plus `LIBSVMSolver`,
+[BSPar.txt](BSPar.txt), `SMOSolver` and a `:MILPSolver` for each kind of
+algorithm for a convex quadratic program (`GRBMILPSolver` as the reference,
+the active-set `QPOASESMILPSolver`, the interior-point `MOSEKMILPSolver` and
+the first-order `OSQPMILPSolver`), [BSPar-LSVM.txt](BSPar-LSVM.txt), a
+`:MILPSolver`, `SMOSolver` and `LIBSVMSolver`,
 [BSPar-LD.txt](BSPar-LD.txt), which adds `LagrangianDualSolver` handing each
 chunk to a `:MILPSolver`, and [BSPar-LD-SMO.txt](BSPar-LD-SMO.txt), the same
 one with each chunk handed to a `SMOSolver` instead.
@@ -177,7 +180,7 @@ The usage of the executable is
 
 where `-S` is the `BlockSolverConfig` of the father,
 [FWBSCfg.txt](FWBSCfg.txt), which registers a `:MILPSolver` as the reference
-and `FrankWolfeSolver` in five variants of its direction, and `-L` that of
+and `FrankWolfeSolver` in eight variants of its direction, and `-L` that of
 each sub-`Block`, [BallBSCfg.txt](BallBSCfg.txt) or
 [BoxBSCfg.txt](BoxBSCfg.txt). `FrankWolfeSolver` is read by its
 [ `get_lb()` , `get_ub()` ], the reference by its value: a run that stops at

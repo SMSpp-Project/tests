@@ -37,6 +37,13 @@ include $(SMS++SDR)/lib/makefile-c
 BNDSLVSDR = ../../../BundleSolver
 include $(BNDSLVSDR)/makefile-s
 
+# BDMinQuadSolver, the Solver of the master of the 2nd row of NDOPar.txt,
+# if the module is there: without it that row says it is not in this build
+BDMQSkSDR = ../../../BDMinQuadSolver
+ifneq ($(wildcard $(BDMQSkSDR)/makefile-s),)
+include $(BDMQSkSDR)/makefile-s
+endif
+
 # not necessary, BundleSolver does that already
 # MILPSolver
 #MILPSSDR = ../../../MILPSolver
@@ -45,10 +52,10 @@ include $(BNDSLVSDR)/makefile-s
 # main module (linking phase) - - - - - - - - - - - - - - - - - - - - - - - -
 
 # object files
-MOBJ =  $(BNDSLVOBJ) $(SMS++OBJ) $(CMMNUOBJ)
+MOBJ =  $(BDMQSkOBJ) $(BNDSLVOBJ) $(SMS++OBJ) $(CMMNUOBJ)
 
 # libraries
-MLIB =  $(BNDSLVLIB) $(SMS++LIB)
+MLIB =  $(BDMQSkLIB) $(BNDSLVLIB) $(SMS++LIB)
 
 $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 	$(CC) -o $(DIR)/$(NAME) $^ $(MLIB) $(SW)
@@ -56,10 +63,10 @@ $(DIR)/$(NAME): $(MOBJ) $(DIR)/test.o
 # dependencies: every .o from its .cpp + every recursively included .h- - - -
 
 # include directives
-MINC =  $(SMS++INC) $(BNDSLVINC) $(CMMNUINC)
+MINC =  $(SMS++INC) $(BNDSLVINC) $(BDMQSkINC) $(CMMNUINC)
 
 # includes
-MH =    $(SMS++H) $(BNDSLVH) $(CMMNUH)
+MH =    $(SMS++H) $(BNDSLVH) $(BDMQSkH) $(CMMNUH)
 
 # compile command
 

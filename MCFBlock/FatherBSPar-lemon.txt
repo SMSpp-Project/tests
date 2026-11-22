@@ -13,7 +13,7 @@
 # BlockSolverConfig
 SimpleConfiguration<std::map<std::string,Configuration*>>
 
-2 # the number of elements in the map
+2  # the number of elements in the map
 
 AbstractBlock  *FatherBSCfg.txt
 MCFBlock       *MCFBSCfg-lemon.txt

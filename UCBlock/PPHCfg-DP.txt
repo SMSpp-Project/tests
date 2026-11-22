@@ -48,7 +48,7 @@ str_LagBF_BSCfg  InnerBSCfg-DP.txt  # BlockSolverConfig for the
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END PPHCfg-DP.txt - - - - - - - - - - - - - -

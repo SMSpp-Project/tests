@@ -159,12 +159,14 @@ std::vector< ColVariable > * xLP;  // pointer to (static) x LP variables
 std::list< BoxConstraint > * LPbnd;   // BoxConstraint for LPBlock
 
 int rtrnfirstLP; // status returned by first optimization
-bool hsfirstLP; // wheter or not the first optimization produced an optimal solution
+// wheter or not the first optimization produced an optimal solution
+bool hsfirstLP;
 double fofirstLP; // optimal solution of first optimization
 double tfirstLP = 0; // wall-clock time of the first optimization
 
 int rtrnsecondLP; // status returned by second optimization
-bool hssecondLP; // wheter or not the second optimization produced an optimal solution
+// wheter or not the second optimization produced an optimal solution
+bool hssecondLP;
 double fosecondLP; // optimal solution of second optimization
 
 
@@ -339,14 +341,16 @@ static bool SolveFirst( void )
   rtrnfirstLP = slvrLP->compute( false );
   auto end = std::chrono::system_clock::now();
   tfirstLP = std::chrono::duration< double >( end - start ).count();
-  hsfirstLP = ( ( rtrnfirstLP >= Solver::kOK ) && ( rtrnfirstLP < Solver::kError ) )
+  hsfirstLP = ( ( rtrnfirstLP >= Solver::kOK ) &&
+                ( rtrnfirstLP < Solver::kError ) )
               || ( rtrnfirstLP == Solver::kLowPrecision );
   fofirstLP = hsfirstLP ? ( convex ? slvrLP->get_ub() : slvrLP->get_lb() )
                      : ( convex ? INF : -INF );
 
   if( hsfirstLP ) {
    LOG1( "OK(f) - " );
-   LOG1( "First optimization produced an optimal solution : " << fofirstLP << endl );
+   LOG1( "First optimization produced an optimal solution : " << fofirstLP
+         << endl );
    return( true );
    }
 
@@ -385,7 +389,8 @@ static bool SolveSecond( void )
   rtrnsecondLP = slvrLP->compute( false );
   auto end = std::chrono::system_clock::now();
   double tsecondLP = std::chrono::duration< double >( end - start ).count();
-  hssecondLP = ( ( rtrnsecondLP >= Solver::kOK ) && ( rtrnsecondLP < Solver::kError ) )
+  hssecondLP = ( ( rtrnsecondLP >= Solver::kOK ) &&
+                 ( rtrnsecondLP < Solver::kError ) )
               || ( rtrnsecondLP == Solver::kLowPrecision );
 
   /* NOTE:
@@ -408,7 +413,8 @@ static bool SolveSecond( void )
   #endif
 
   if( hssecondLP )
-   LOG1( "Second optimization produced an optimal solution : " << fosecondLP << endl );
+   LOG1( "Second optimization produced an optimal solution : " << fosecondLP
+         << endl );
   else if( rtrnsecondLP == Solver::kInfeasible )
     LOG1( "Second optimization produced an unfeasible model" << endl );
   else if( rtrnsecondLP == Solver::kUnbounded )
@@ -426,7 +432,7 @@ static bool SolveSecond( void )
   bool ok;
   std::string verdict;
   if( hsfirstLP && hssecondLP && ( abs( fofirstLP - fosecondLP ) <= 2e-7 *
-                 max( double( 1 ) , abs( max( fofirstLP , fosecondLP ) ) ) ) ) {
+                max( double( 1 ) , abs( max( fofirstLP , fosecondLP ) ) ) ) ) {
    ok = true; verdict = "OK(f)";
    }
   else if( ( rtrnfirstLP == Solver::kInfeasible ) &&
@@ -681,7 +687,8 @@ int main( int argc , char **argv )
   #endif
 
   #if TEST_FILE_TYPE == 3
-    secondLPBlock = dynamic_cast< AbstractBlock * >( Block::deserialize( output_name_net ));
+    secondLPBlock = dynamic_cast< AbstractBlock * >(
+                                  Block::deserialize( output_name_net ));
   #endif
  }
 
@@ -920,14 +927,14 @@ int main( int argc , char **argv )
     ( ( LPBlock->get_registered_solvers() ).front() )->set_par(
                                 MILPSolver::strOutputFile , rep_name );
 
-    // finally, re-solve the problems with the first solver - - - - - - - - - - -
+    // finally, re-solve the problems with the first solver - - - - - - - - - -
     // ... every SKIP_BEAT + 1 rounds
     SolveFirst();
 
     // Write the .nc4 file. Here, the structure of the file is very simple:
     // it is a SMS++_file_type composed by a single problem with a Block inside
-    // corresponding to an AbstractBlock. Within this Group, we use the Variable 
-    // "Model" to store the .lp representation of the model.
+    // corresponding to an AbstractBlock. Within this Group, we use the
+    // Variable "Model" to store the .lp representation of the model.
     #if TEST_FILE_TYPE == 3
     {
     netCDF::NcFile f( rep_name_net , netCDF::NcFile::replace );
@@ -950,7 +957,7 @@ int main( int argc , char **argv )
     }
     #endif
 
-    // construct the second LP by simply reading the previous written model - - -
+    // construct the second LP by simply reading the previous written model - -
     {
     secondLPBlock = new AbstractBlock();
 
@@ -967,12 +974,13 @@ int main( int argc , char **argv )
     #endif
 
     #if TEST_FILE_TYPE == 3
-      secondLPBlock = dynamic_cast< AbstractBlock * >( Block::deserialize( rep_name_net ));
+      secondLPBlock = dynamic_cast< AbstractBlock * >(
+                                    Block::deserialize( rep_name_net ));
     #endif
     }
 
-    // attach the Solver to the Block- - - - - - - - - - - - - - - - - - - - - -
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // attach the Solver to the Block- - - - - - - - - - - - - - - - - - - - -
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // for both Block do this by reading an appropriate BlockSolverConfig from
     // file and apply() it to the Block; note that the BlockSolverConfig are
     // clear()-ed and kept to do the cleanup at the end
@@ -985,8 +993,8 @@ int main( int argc , char **argv )
                                 MILPSolver::strOutputFile , "SecondLPBlock-" + 
                                 std::to_string( rep ) + ".lp" );
 
-    // second solver call - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // second solver call - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     bool AllPassed = SolveSecond();
 
     ++rep;

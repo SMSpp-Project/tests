@@ -43,7 +43,7 @@ intPIQPBackend  1  # the sparse backend of PIQP
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END PIQPCfg-C.txt  - - - - - - - - - - - - - -

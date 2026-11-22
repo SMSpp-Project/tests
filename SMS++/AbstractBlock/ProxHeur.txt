@@ -17,7 +17,7 @@ BlockSolverConfig     # exact type of the Configuration object
 #CPXMILPSolver                  # name of 1st Solver
 #GRBMILPSolver                  # name of 1st Solver
 #SCIPMILPSolver             # name of 1st Solver
-HiGHSMILPSolver                 # name of 1st Solver
+HiGHSMILPSolver             # name of 1st Solver
 PrimalProximalHeur          # name of 2nd Solver
 
 2  # number of ComputeConfig in this BlockSolverConfig
@@ -36,19 +36,17 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-19 # number of integer parameters
+19  # number of integer parameters
 
 # now all the integer parameters
 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
-intMPStbl              0
+intMPStbl             0
 # first those of LagrangianDualSolver proper
 int_LDSlv_iBCopy      0 # 1 if sub-Block must be R3B-copied
 int_LDSlv_NNMult      1 # 1 if Lagrangian multipliers must be >= 0
-
 # then those of BundleSolver as its inner Solver
 intDoEasy             0 # do not do easy components even for LagBFunction
 intLogVerb            0 # LogVerb, log verbosity of main Bundle algorithm
-
 # which norm to use in the norm-based stopping condition
 intWZNorm             2
 # discard items when they have been useless for <this> iterations
@@ -68,13 +66,10 @@ intMnNSC              1
 # long-term t-strategy (0 = none, 4 = soft, 8 = hard, 12 = balancing)
 inttSPar1            12
 intMaxThread          0 # threads the primal recovery spawns: none
-
 # maximum number of function evaluations at each iteration
 intMaxNrEvls          2
-
 # if all the components need be computed at the optimum
 intFrcLstSS           0
-
 # bit-wise encoding targets and accuracies management:
 intTrgtMng            0
                         # bit 0: if lower/upper target is set to each
@@ -86,7 +81,7 @@ intTrgtMng            0
                         # bit 4: if Lipschitz constant is used to compute the
                         # upper model
 
-17 # number of double parameters
+17  # number of double parameters
 
 # now all the double parameters
 dblRelAcc          1e-7 # relative accuracy required of the solution the
@@ -112,10 +107,9 @@ dbltMinor          1e-4 # minimum value for t
 dbltInit           1e-2 # initial value for t
 dbltSPar2         0.001 # parameter for the long-term t-strategy
 dbltSPar3             0 # parameter for small heuristic t adjustments
-
 dbl_penaltyFactor  1e+5
 
-5 # number of string parameters
+5  # number of string parameters
 
 # now all the string parameters
 # first those of LagrangianDualSolver proper
@@ -129,29 +123,27 @@ strMPBSolverCfg         MPBCfg.txt
 str_LagBF_BSCfg        QPBSCfg.txt # the BlockSolverConfig for inner Block
 
 # then those of BundleSolver as its inner Solver
-# [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 2nd ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END ProxHeur.txt - - - - - - - - - - - - - -

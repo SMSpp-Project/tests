@@ -23,7 +23,8 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                           PRIVATE SMS++::SingleFlowDCRBlock)
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(SingleFlowDCRBlock_test PRIVATE SMS++::MILPSolver)
+        target_link_libraries(SingleFlowDCRBlock_test PRIVATE
+                              SMS++::MILPSolver)
     endif ()
 
     # the BranchAndXSolver of batch-instances-bx, whose nodes are solved by
@@ -60,13 +61,15 @@ if (TARGET SMS++::SingleFlowDCRBlock)
 
     # the battery that solves the SOCP formulation with CPLEX where Gurobi is
     # not stable is only there when CPLEX is [see socp-unstable.txt]
+    list(APPEND CMAKE_MODULE_PATH ${SMSpp_CMAKE_DIR})
     find_package(CPLEX QUIET)
 
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         if (BATCH_NAME STREQUAL "batches/batch-instances-cplex"
                 AND NOT (CPLEX_FOUND AND TARGET SMS++::MILPSolver))
             continue ()
@@ -75,22 +78,15 @@ if (TARGET SMS++::SingleFlowDCRBlock)
                 AND NOT DCR_HAS_BX)
             continue ()
         endif ()
-        if (UNIX)
-            add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE}
-                             ${CMAKE_CURRENT_BINARY_DIR}/SingleFlowDCRBlock_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}"
-                             "$<TARGET_FILE:SingleFlowDCRBlock_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        add_test(NAME SingleFlowDCRBlock_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}"
+                         "$<TARGET_FILE:SingleFlowDCRBlock_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         if (BATCH_NAME MATCHES "^batches/batch-instances")
             set_tests_properties(SingleFlowDCRBlock_test/${BATCH_NAME}
-                                 PROPERTIES FIXTURES_REQUIRED dcr_nc4_extracted)
+                                 PROPERTIES FIXTURES_REQUIRED
+                                 dcr_nc4_extracted)
         endif ()
     endforeach ()
 
@@ -119,21 +115,14 @@ if (TARGET SMS++::SingleFlowDCRBlock)
         foreach (BATCH_FILE ${MULTI_BATCH_FILES})
             string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
                    ${BATCH_FILE})
-            if (UNIX)
-                add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
-                         COMMAND bash ${BATCH_FILE}
-                                 ${CMAKE_CURRENT_BINARY_DIR}/MultiFlowDCRBlock_test
-                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            elseif (WIN32)
-                add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
-                         # using Git for Windows that includes Git Bash
-                         COMMAND "C:/Program Files/Git/bin/bash.exe"
-                                 "${BATCH_FILE}"
-                                 "$<TARGET_FILE:MultiFlowDCRBlock_test>"
-                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-            endif ()
+            add_test(NAME MultiFlowDCRBlock_test/${BATCH_NAME}
+                     COMMAND ${SMSpp_BASH}
+                             "${BATCH_FILE}"
+                             "$<TARGET_FILE:MultiFlowDCRBlock_test>"
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
             set_tests_properties(MultiFlowDCRBlock_test/${BATCH_NAME}
-                                 PROPERTIES FIXTURES_REQUIRED dcr_nc4_extracted)
+                                 PROPERTIES FIXTURES_REQUIRED
+                                 dcr_nc4_extracted)
         endforeach ()
     endif ()
 endif ()

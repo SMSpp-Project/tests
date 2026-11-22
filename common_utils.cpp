@@ -31,7 +31,6 @@
 #include <list>
 #include <map>
 #include <numeric>
-#include <typeinfo>
 
 #include <SMSTypedefs.h>
 
@@ -55,19 +54,20 @@
  * MPI_Init(). Where Open MPI / UCX are installed but no usable transport is
  * available (no IB, missing UCX vfs.sock, ...), their runtime can hang on
  * startup spinning on futex / X11 sockets, so TCP-only defaults are
- * pre-seeded here, before main(), with setenv( ... , 0 ): the third
- * argument is "overwrite = false", hence whoever has exported UCX_TLS /
- * OMPI_MCA_* already, as on a cluster with a real fabric, keeps control. */
+ * pre-seeded here, before main(), for the variables that are not set yet,
+ * hence whoever has exported UCX_TLS / OMPI_MCA_* already, as on a cluster
+ * with a real fabric, keeps control. */
 
 namespace {
 
 void set_default_env( const char * name , const char * value ) {
-#ifdef _WIN32
- if( std::getenv( name ) == nullptr )
-  _putenv_s( name , value );
-#else
- setenv( name , value , 0 );
-#endif
+ if( std::getenv( name ) )
+  return;
+ // putenv(), which POSIX and the C library of Windows have under this
+ // name, keeps the string itself, which hence lives as long as the process
+ static auto & entries = * new std::list< std::string >;
+ entries.push_back( std::string( name ) + "=" + value );
+ putenv( entries.back().data() );
 }
 
 struct SmsppMpiSafeEnvInit {
@@ -122,25 +122,6 @@ std::string error_token( int status )
  else                                      what += " (status " +
                                             std::to_string( status ) + ")";
  return( what );
- }
-
-/*--------------------------------------------------------------------------*/
-// print the exception that reached std::terminate(), then abort
-
-void smspp_terminate( void )
-{
- std::cerr << "Uncaught exception in executing SMS++:\n";
- try {
-  std::rethrow_exception( std::current_exception() );
-  }
- catch( const std::exception & e ) {
-  std::cerr << "\tException type: " << typeid( e ).name() << "\n";
-  std::cerr << "\tException message: " << e.what() << "\n";
-  }
- catch( ... ) {
-  std::cerr << "\tUnknown exception" << std::endl;
-  }
- std::abort();  // or exit( 1 )
  }
 
 /*--------------------------------------------------------------------------*/
@@ -307,20 +288,64 @@ std::vector< NamedSolver > named_solvers;
 }  // end( anonymous namespace )
 
 /*--------------------------------------------------------------------------*/
-/* Takes out of a BlockSolverConfig the Solver that this build does not have.
- * A configuration names every Solver that makes sense on the instances of a
- * battery, so that a run solves with all of them and compares; but which
- * Solver are there depends on the modules the build has and on the external
- * libraries each of them has found, and asking the factory for one that is
- * not there throws [see Solver::new_Solver()], which would kill the whole
- * run rather than that one comparison. What is left out is said, name by
- * name, so that the log of a run tells what it has actually solved with; it
- * is returned, last first, with its index in the configuration. */
+/* Whether the Solver that a Solver configured by @p cc needs are all in this
+ * build: the inner Solver of a LagrangianDualSolver, those of the master of
+ * a BundleSolver and those of the R3Block of an R3BSolver, recursively, the
+ * name of those missing being appended to @p name. */
 
-using Dropped = std::vector< std::pair< Block::Index , std::string > >;
+static bool needs_there( const ComputeConfig * cc , std::string & name )
+{
+ if( ! cc )
+  return( true );
 
-static Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
-				     const std::string & fn )
+ bool there = true;
+
+ // a BlockSolverConfig is there if its Solver and those they need are
+ const auto bsc_there = [ & ]( const BlockSolverConfig * bsc ) {
+  for( Block::Index i = 0 ; i < bsc->num_ComputeConfig() ; ++i ) {
+   const auto & n = bsc->get_SolverName( i );
+   if( ! Solver::has_Solver( n ) ) {
+    name += " with " + n;
+    there = false;
+    }
+   else
+    if( ! needs_there( bsc->get_SolverConfig( i ) , name ) )
+     there = false;
+   }
+  };
+
+ for( const auto & pair : cc->str_pars ) {
+  // a LagrangianDualSolver needs its inner Solver
+  if( ( pair.first == "str_LDSlv_ISName" ) &&
+      ( ! Solver::has_Solver( pair.second ) ) ) {
+   name += " with " + pair.second;
+   there = false;
+   }
+
+  // a BundleSolver needs the Solver of its master
+  if( pair.first == "strMPBSolverCfg" ) {
+   auto mc = Configuration::deserialize( pair.second );
+   if( auto mbsc = dynamic_cast< BlockSolverConfig * >( mc ) )
+    bsc_there( mbsc );
+   delete mc;
+   }
+  }
+
+ // an R3BSolver needs the Solver of its R3Block
+ if( auto r3 = dynamic_cast< const SimpleConfiguration< std::vector<
+	             Configuration * > > * >( cc->f_extra_Configuration ) )
+  if( r3->f_value.size() > 2 )
+   if( auto ibsc = dynamic_cast< BlockSolverConfig * >( r3->f_value[ 2 ] ) )
+    bsc_there( ibsc );
+
+ return( there );
+ }
+
+/*--------------------------------------------------------------------------*/
+
+Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
+			      const std::string & fn ,
+			      bool none_ok )
 {
  Dropped dropped;
  if( ! bsc )
@@ -338,15 +363,8 @@ static Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
   auto name = bsc->get_SolverName( i );
   bool there = Solver::has_Solver( name );
 
-  // a LagrangianDualSolver is only there if its inner Solver is
   if( there )
-   if( auto cc = bsc->get_SolverConfig( i ) )
-    for( const auto & pair : cc->str_pars )
-     if( ( pair.first == "str_LDSlv_ISName" ) &&
-	 ( ! Solver::has_Solver( pair.second ) ) ) {
-      name += " with " + pair.second;
-      there = false;
-      }
+   there = needs_there( bsc->get_SolverConfig( i ) , name );
 
   if( there )
    continue;
@@ -367,6 +385,8 @@ static Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
    * the one of a test that has nothing to do rather than of one that failed,
    * which is what the batteries and ctest read it as
    * [see SKIP_RETURN_CODE and run_test of batch_common.sh]. */
+  if( none_ok )
+   return( dropped );
   std::cerr << ANSI_YELLOW << "[SKIPPED] none of the " << asked
 	    << " Solver that " << fn << " names is in this build"
 	    << ANSI_RESET << std::endl;
@@ -627,7 +647,8 @@ void collect_vars( Block * b , const std::vector< std::string > & groups ,
 
  auto obj = dynamic_cast< FRealObjective * >( b->get_objective() );
  if( ! obj )
-  throw( std::invalid_argument( "collect_vars: child has no FRealObjective" ) );
+  throw( std::invalid_argument(
+                            "collect_vars: child has no FRealObjective" ) );
  auto f = obj->get_function();
  const Block::Index n = f->get_num_active_var();
  for( Block::Index i = 0 ; i < n ; ++i )
@@ -693,7 +714,8 @@ Function * make_father_objective( std::vector< ColVariable * > & vars ,
  using Coefficient = DQuadFunction::Coefficient;
  const Index nv = Index( vars.size() );
 
- if( obj_type == 0 ) {  // DQuadFunction: sum_i ( a_i x_i^2 + b_i x_i ), a_i > 0
+ // DQuadFunction: sum_i ( a_i x_i^2 + b_i x_i ), a_i > 0
+ if( obj_type == 0 ) {
   DQuadFunction::v_coeff_triple tr( nv );
   for( Index i = 0 ; i < nv ; ++i )
    tr[ i ] = std::make_tuple( vars[ i ] , Coefficient( scale * rnd( rg ) ) ,
@@ -701,8 +723,9 @@ Function * make_father_objective( std::vector< ColVariable * > & vars ,
   return( new DQuadFunction( std::move( tr ) ) );
   }
 
- if( obj_type == 1 ) {  // QuadFunction: off-diagonal terms (i+1,i), kept PSD by
-                        // Gershgorin diagonal dominance ( 2 a_i >= sum |q| )
+ // QuadFunction: off-diagonal terms (i+1,i), kept PSD by Gershgorin diagonal
+ // dominance ( 2 a_i >= sum |q| )
+ if( obj_type == 1 ) {
   QuadFunction::v_off_diag_term nd;
   std::vector< double > rowabs( nv , 0.0 );
   for( Index i = 0 ; i + 1 < nv ; ++i ) {
@@ -872,7 +895,8 @@ namespace {
    if( ( n_total >= 4 ) && ( 2 * ( n_inf + n_unb ) > n_total ) )
     std::cerr << ANSI_YELLOW << "[WARNING] " << ( n_inf + n_unb )
               << " of " << n_total << " multi-Solver comparisons were "
-                 "unanimously " << ( n_unb > n_inf ? "unbounded" : "infeasible" )
+                 "unanimously "
+              << ( n_unb > n_inf ? "unbounded" : "infeasible" )
               << ": this run passed mostly via solver agreement on the "
                  "absence of a solution, not by comparing solutions."
               << ANSI_RESET << "\n";
@@ -1150,8 +1174,18 @@ bool SolveAll( Block * block ,
    // the same starting point for every Solver, if one is given
    if( start )
     start->write( block );
+   // a Solver that throws has failed on this instance, and is reported as
+   // such in the line of the others rather than ending them all
+   bool thrown = false;
    auto t_start = std::chrono::system_clock::now();
-   status[ k ] = S[ k ]->compute( false );
+   try {
+    status[ k ] = S[ k ]->compute( false );
+    }
+   catch( std::exception & e ) {
+    std::cerr << S[ k ]->classname() << ": " << e.what() << std::endl;
+    status[ k ] = Solver::kError;
+    thrown = true;
+    }
    auto t_end = std::chrono::system_clock::now();
    times[ k ] = std::chrono::duration< double >( t_end - t_start ).count();
    iters[ k ] = S[ k ]->get_elapsed_iterations();
@@ -1179,6 +1213,7 @@ bool SolveAll( Block * block ,
     }
    else if( status[ k ] == Solver::kInfeasible )  tok[ k ] = "Unfeas";
    else if( status[ k ] == Solver::kUnbounded )   tok[ k ] = "Unbounded";
+   else if( thrown )                              tok[ k ] = "Error! (throw)";
    else                                           tok[ k ] = error_token(
 							      status[ k ] );
    }
@@ -1625,7 +1660,7 @@ double tree_objective_value( Block * block )
   }
 
  for( auto sb : block->get_nested_Blocks() )
-  value += tree_objective_value( sb );
+  value += sb->get_objective_weight() * tree_objective_value( sb );
 
  return( value );
 
@@ -2071,10 +2106,11 @@ bool process_standard_arg( int opt )
    break;
    }
   case 'c': conf_prefix = normalize_prefix( std::string( optarg ) );
-            // also hand the -c prefix to Configuration, so filenames referenced
-            // from inside a Configuration file (the "*filename" includes and the
-            // strInnerBSC / str_LagBF_BSCfg meta-config chains) are resolved
-            // against it, exactly as Block::set_filename_prefix() does for -p
+            // also hand the -c prefix to Configuration, so filenames
+            // referenced from inside a Configuration file (the "*filename"
+            // includes and the strInnerBSC / str_LagBF_BSCfg meta-config
+            // chains) are resolved against it, exactly as
+            // Block::set_filename_prefix() does for -p
             Configuration::set_filename_prefix( std::string( conf_prefix ) );
             break;
   case 'E': parse_eps_list( std::string( optarg ) ); break;

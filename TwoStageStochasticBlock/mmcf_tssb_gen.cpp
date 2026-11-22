@@ -279,7 +279,8 @@ int main( int argc , char ** argv )
   dss.serialize( dg );
   }
 
- std::cout << output << ": " << mmcf.get_NNodes() << " nodes, " << mmcf.get_NArcs()
+ std::cout << output << ": " << mmcf.get_NNodes() << " nodes, "
+           << mmcf.get_NArcs()
            << " arcs, " << nk << " commodities, " << N << " scenarios"
            << std::endl;
  return( 0 );

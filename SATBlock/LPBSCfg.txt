@@ -8,7 +8,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-BlockSolverConfig  # exact type of the Configuration object
+BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
@@ -22,7 +22,7 @@ CaDiCaLSATSolver  # OLL with CaDiCaL
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *OLLCfg.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END LPBSCfg.txt - - - - - - - - - - - - - - -

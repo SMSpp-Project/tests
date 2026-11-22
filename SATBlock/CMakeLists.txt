@@ -66,21 +66,12 @@ if (TARGET SMS++::SATBlock)
         string(REPLACE ":" ";" BATCH "${BATCH}")
         list(GET BATCH 0 BATCH_NAME)
         list(GET BATCH 1 BATCH_PAR)
-        if (UNIX)
-            add_test(NAME SATBlock_test/batches/${BATCH_NAME}
-                     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}
-                             ${CMAKE_CURRENT_BINARY_DIR}/SATBlock_test
-                             ${BATCH_PAR} "" ${_satgen}
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME SATBlock_test/batches/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}"
-                             "$<TARGET_FILE:SATBlock_test>"
-                             ${BATCH_PAR} "" ${_satgen}
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        add_test(NAME SATBlock_test/batches/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                     "${CMAKE_CURRENT_SOURCE_DIR}/batches/${BATCH_NAME}"
+                     "$<TARGET_FILE:SATBlock_test>"
+                     ${BATCH_PAR} "" ${_satgen}
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endforeach ()
     set_tests_properties(SATBlock_test/batches/batch-mse
                          PROPERTIES FIXTURES_REQUIRED sat_wcnf_extracted)

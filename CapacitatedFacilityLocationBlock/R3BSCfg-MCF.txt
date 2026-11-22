@@ -1,0 +1,71 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - R3BSCfg-MCF.txt - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of an R3BSolver that solves a
+# CapacitatedFacilityLocationBlock through its flow relaxation [see
+# R3BCfg-MCF.txt], an MCFBlock whose optimal value is that of the continuous
+# relaxation, solved by MCFSolver with MCFSimplex; the R3BSCfg-MCF-*.txt are
+# this one with another Solver of the MCFBlock. The flow relaxation has
+# fractional supplies (59291.127024 on cap102 after the first changes) and
+# transportation costs scaled by the demands, while LEMON requires integer
+# data: MCFLemonSolver compiles the network simplex with tolerances and gives
+# the other three algorithms the costs, the capacities and the supplies
+# scaled and rounded.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 0 ==> all non-provided parameters are set to the default value
+   # f_diff == 1 ==> all non-provided parameters are not changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intR3BKind 1  # the R3Block is a Relaxation: only its lower bound passes
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration: how the R3Block is made, its
+# BlockConfig and the BlockSolverConfig of its Solver
+SimpleConfiguration<std::vector<Configuration*>>
+
+3  # how the R3Block is made, its BlockConfig, its BlockSolverConfig
+
+*R3BCfg-MCF.txt         # how it is made
+*MCFBCfg.txt            # its BlockConfig
+# its BlockSolverConfig: MCFSolver with MCFSimplex, as it comes
+BlockSolverConfig  # exact type of the Configuration object
+1                  # the BlockSolverConfig is a "differential" one
+1                  # number of (the names of) Solver
+MCFSolver<MCFSimplex>
+1                  # number of ComputeConfig
+*DfltCfg.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END R3BSCfg-MCF.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

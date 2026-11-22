@@ -12,12 +12,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig       # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-22 # number of integer parameters
+22  # number of integer parameters
 
 # now all the integer parameters
 intMaxIter   100000 # MaxIter, max number of iterations for each call
@@ -41,7 +41,6 @@ intTrgtMng        0 # bit-wise encoding targets and accuracies management:
                     # bit 1: upper/lower target to convex/concave cmp.
                     # bit 2-3: accuracy (2 = upper - lower, 3 = EpsU)
                     # bit 4: Lipschitz constant for the upper model
-
 ## Master Problem related parameters
 
 intMPPrimal       0 # wheter the MP should be considered in its primal form
@@ -50,7 +49,7 @@ intMPHScaling     2 # PFB scaling: 0 none, 1 local, 2 global, 3 both
 intMPStbl         0 # 0 prox, 1 level, 2 doubly, 4 trust region
 intDoEasy         1 # Wheter easy components should be treated exactly
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 dblRelAcc     5e-8 # relative accuracy required to solution
@@ -69,28 +68,28 @@ dbltMinor     1e-4 # minimum value for t
 dbltInit         1 # initial value for t
 dbltSPar2    0.001 # parameter for the long-term t-strategy
 
-1 # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
 strMPBSolverCfg   MPBCfg.txt # BlockSolverConfig of the master's Solver
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - -  END BSCfg.txt  - - - - - - - - - - - - - -

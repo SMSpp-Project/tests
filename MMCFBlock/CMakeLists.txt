@@ -12,6 +12,8 @@ if (NOT hasParent)
     find_package(MCFClassSolver)
 endif ()
 
+# the find module of the core [see SMSppModule.cmake of SMS++]
+list(APPEND CMAKE_MODULE_PATH ${SMSpp_CMAKE_DIR})
 find_package(CPLEX)
 
 # ----- Subdirectories ------------------------------------------------------ #
@@ -20,28 +22,18 @@ add_subdirectory(gen/Mnetgen)
 
 # ----- Custom commands and targets ----------------------------------------- #
 
-# Custom command to run gen/batch with the mnetgen exe if the .generated file does not exist
-if (UNIX)
-    add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch ${CMAKE_CURRENT_BINARY_DIR}/gen/Mnetgen/mnetgen
-            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
-            COMMENT "Running mnetgen"
-            VERBATIM
-    )
-elseif (WIN32)
-    add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            # using Git for Windows that includes Git Bash
-            COMMAND "C:/Program Files/Git/bin/bash.exe"
-            "${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch" "$<TARGET_FILE:mnetgen>"
-            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
-            COMMENT "Running mnetgen"
-            VERBATIM
-    )
-endif ()
+# Custom command to run gen/batch with the mnetgen exe if the .generated file
+# does not exist
+add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
+        COMMAND ${SMSpp_BASH}
+        "${CMAKE_CURRENT_SOURCE_DIR}/gen/genbatch" "$<TARGET_FILE:mnetgen>"
+        COMMAND ${CMAKE_COMMAND} -E touch
+                ${CMAKE_CURRENT_SOURCE_DIR}/data/Mnetgen/.generated
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/gen
+        COMMENT "Running mnetgen"
+        VERBATIM
+)
 
 # Create custom targets to run the nc4 generation
 add_custom_target(run_mnetgen
@@ -133,7 +125,8 @@ smspp_require_labelled_modules()
 # Create a test fixture to generate files by running run_mnetgen.
 # This test will build and run the run_mnetgen target
 add_test(NAME run_mnetgen
-         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target run_mnetgen)
+         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                 --target run_mnetgen)
 # Mark run_mnetgen as a fixture that sets up "mnetgen_generated"
 set_tests_properties(run_mnetgen
                      PROPERTIES FIXTURES_SETUP mnetgen_generated)
@@ -180,18 +173,12 @@ if (TARGET SMS++::MMCFBlock AND
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches-ref/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME MMCF_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/MMCF_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME MMCF_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:MMCF_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
+        add_test(NAME MMCF_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:MMCF_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Make each batch test require the data fixtures it reads
         set_tests_properties(MMCF_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED
@@ -210,7 +197,8 @@ if (TARGET SMS++::MMCFBlock)
     target_link_libraries(MMCFBlock_test PRIVATE SMS++::MMCFBlock)
 
     if (TARGET SMS++::LagrangianDualSolver)
-        target_link_libraries(MMCFBlock_test PRIVATE SMS++::LagrangianDualSolver)
+        target_link_libraries(MMCFBlock_test PRIVATE
+                              SMS++::LagrangianDualSolver)
     endif ()
 
     if (TARGET SMS++::BundleSolver)
@@ -239,34 +227,30 @@ if (TARGET SMS++::MMCFBlock)
     smspp_install(MMCFBlock_test)
 
     # The ML batch (batchML) drives the inner BundleSolverML, which is only
-    # registered in the Solver factory when BundleSolver is built with Torch;
-    # register it as a test only in that case.
-    find_package(Torch QUIET HINTS ${Torch_ROOT})
-    set(ML_BATCH "")
-    if (Torch_FOUND)
-        set(ML_BATCH "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchML")
+    # registered in the Solver factory when BundleSolver is built with Torch,
+    # and batch-c the network simplex of MCFLemonSolver: each is registered as
+    # a test only where its Solver is.
+    set(OPT_BATCHES "")
+    if (TARGET SMS++::BundleSolverML)
+        list(APPEND OPT_BATCHES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batchML")
+    endif ()
+    if (TARGET SMS++::MCFLemonSolver)
+        list(APPEND OPT_BATCHES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-c")
     endif ()
 
     # Add a test for each batch file
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-c"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-k"
                           "${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-m"
-                          ${ML_BATCH})
+                          ${OPT_BATCHES})
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME MMCFBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/MMCFBlock_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME MMCFBlock_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:MMCFBlock_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        endif ()
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
+        add_test(NAME MMCFBlock_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:MMCFBlock_test>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Make each batch test require the data fixtures it reads
         if (BATCH_NAME STREQUAL "batches/batch")
             set(BATCH_FIXTURES "mmcf_Canad_extracted;mnetgen_generated")
@@ -302,50 +286,58 @@ if (TARGET SMS++::MMCFBlock AND
 
     smspp_install(MMCFND_test)
 
-    if (UNIX)
-        add_test(NAME MMCFND_test/batches/batch-nd
-                 COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-nd
-                         ${CMAKE_CURRENT_BINARY_DIR}/MMCFND_test
-                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-    endif ()
+    add_test(NAME MMCFND_test/batches/batch-nd
+             COMMAND ${SMSpp_BASH} ${CMAKE_CURRENT_SOURCE_DIR}/batches/batch-nd
+                     $<TARGET_FILE:MMCFND_test>
+             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif ()
 
-    # The benchmark of the machine-learning driven bundle on the instances of
-    # this Block: the harness is the generic one (../ml_bench.cpp), which
-    # reads whichever instance it is given, and this suite compiles into it
-    # the two text formats of the module (ML_BENCH_TEXT) and the splits of
-    # splits-mnetgen. It is built only where Torch is, BundleSolverML being
-    # built into BundleSolver only in that case, and it is no test: it trains
-    # a network and measures, hence it is run by hand.
-    find_package(Torch QUIET HINTS ${Torch_ROOT})
-    if (Torch_FOUND AND TARGET SMS++::BundleSolverML)
+# The benchmark of the machine-learning driven bundle on the instances of
+# this Block: the harness is the generic one (../ml_bench.cpp), which
+# reads whichever instance it is given, and this suite compiles into it
+# the two text formats of the module (ML_BENCH_TEXT) and the splits of
+# splits-mnetgen. It is built only where BundleSolverML is, i.e., where
+# BundleSolver has found Torch, which the library brings along, and it is
+# no test: it trains a network and measures, hence it is run by hand.
+if (TARGET SMS++::BundleSolverML)
 
-        add_executable(MMCFBlock_ML_bench ../ml_bench.cpp)
-        target_include_directories(MMCFBlock_ML_bench PRIVATE ..)
-        target_compile_definitions(MMCFBlock_ML_bench PRIVATE ML_BENCH_TEXT=1)
-        target_link_libraries(MMCFBlock_ML_bench PRIVATE
-                              SMS++::BundleSolverML
-                              SMS++::BundleSolver
-                              SMS++::LagrangianDualSolver
-                              SMS++::MMCFBlock
-                              ${TORCH_LIBRARIES})
-        target_compile_features(MMCFBlock_ML_bench PUBLIC cxx_std_20)
+    add_executable(MMCFBlock_ML_bench ../ml_bench.cpp)
+    target_include_directories(MMCFBlock_ML_bench PRIVATE ..)
+    target_compile_definitions(MMCFBlock_ML_bench PRIVATE ML_BENCH_TEXT=1)
+    target_link_libraries(MMCFBlock_ML_bench PRIVATE
+                          SMS++::BundleSolverML
+                          SMS++::BundleSolver
+                          SMS++::LagrangianDualSolver
+                          SMS++::MMCFBlock)
+    target_compile_features(MMCFBlock_ML_bench PUBLIC cxx_std_20)
 
-        # on Windows the Torch DLLs have to sit next to the executable
-        if (MSVC)
-            file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-            add_custom_command(TARGET MMCFBlock_ML_bench POST_BUILD
-                               COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                                       ${TORCH_DLLS}
-                                       $<TARGET_FILE_DIR:MMCFBlock_ML_bench>
-                               COMMENT "Copying Torch DLLs next to it")
-        endif ()
-
-        smspp_install(MMCFBlock_ML_bench)
+    # the DLLs of Torch, where it has any, have to sit next to the
+    # executable, and its targets do not name them: they are in lib/
+    # of the prefix whose share/cmake/Torch BundleSolverML found
+    get_filename_component(TORCH_PREFIX "${Torch_DIR}/../../.."
+                           ABSOLUTE)
+    file(GLOB TORCH_DLLS "${TORCH_PREFIX}/lib/*.dll")
+    if (TORCH_DLLS)
+        add_custom_command(TARGET MMCFBlock_ML_bench POST_BUILD
+                           COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                                   ${TORCH_DLLS}
+                                   $<TARGET_FILE_DIR:MMCFBlock_ML_bench>
+                           COMMENT "Copying Torch DLLs next to it")
     endif ()
+
+    smspp_install(MMCFBlock_ML_bench)
+endif ()
 
 # Tag this directory's tests with their per-module CI labels
 # (the label map lives in cmake/TestLabels.cmake).
 smspp_label_tests()
+
+# batch-c runs MCFLemonSolver, which the map of the directory does not declare
+# since the rest of the suite does not need it
+set(_batch MMCFBlock_test/batches/batch-c)
+if (TEST ${_batch})
+    set_tests_properties(${_batch} PROPERTIES LABELS
+        "${SMSPP_TEST_LABELS_MMCFBlock};MCFLemonSolver")
+endif ()
 
 # --------------------------------------------------------------------------- #

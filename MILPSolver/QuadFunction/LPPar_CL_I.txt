@@ -32,7 +32,7 @@ MOSEKMILPSolver    # name of 2nd Solver
 
 *MOSEKCfg-I.txt
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END LPPar_CL_I.txt  - - - - - - - - - - - - - -

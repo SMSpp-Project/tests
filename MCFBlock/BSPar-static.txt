@@ -20,18 +20,25 @@ BlockSolverConfig     # exact type of the Configuration object
 
 12  # number of (the names of) Solver in this BlockSolverConfig
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
-MCFSolver<MCFSimplex>  # name of 1st Solver
-MCFSolver<RelaxIV>  # name of 2nd Solver
+MCFSolver<MCFSimplex>                                     # name of 1st
+                                                          # Solver
+MCFSolver<RelaxIV>                                        # name of 2nd
+                                                          # Solver
 MCFLemonSolverNetworkSimplex<MCFListDigraph,double,double>  # 3rd Solver
 MCFLemonSolverCycleCanceling<MCFListDigraph,double,double>  # 4th Solver
-MCFLemonSolverCostScaling<MCFListDigraph,double,double>  # name of 5th Solver
+MCFLemonSolverCostScaling<MCFListDigraph,double,double>   # name of 5th
+                                                          # Solver
 MCFLemonSolverCapacityScaling<MCFListDigraph,double,double>  # 6th Solver
 MCFLemonSolverNetworkSimplex<SmartDigraph,double,double>  # 7th Solver
 MCFLemonSolverCycleCanceling<SmartDigraph,double,double>  # 8th Solver
-MCFLemonSolverCostScaling<SmartDigraph,double,double>  # name of 9th Solver
-MCFLemonSolverCapacityScaling<SmartDigraph,double,double>  # 10th Solver
-HiGHSMILPSolver  # name of 11th Solver
-MCFSolver<MCFCplex>  # name of 12th Solver, if CPLEX is there
+MCFLemonSolverCostScaling<SmartDigraph,double,double>     # name of 9th
+                                                          # Solver
+MCFLemonSolverCapacityScaling<SmartDigraph,double,double> # 10th Solver
+HiGHSMILPSolver                                           # name of 11th
+                                                          # Solver
+MCFSolver<MCFCplex>                                       # name of 12th
+                                                          # Solver, if CPLEX
+                                                          # is there
 
 12  # number of ComputeConfig in this BlockSolverConfig
 
@@ -49,33 +56,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -92,33 +99,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 2nd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -135,33 +142,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -178,33 +185,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -221,33 +228,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -264,33 +271,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 6th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -307,33 +314,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 7th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -350,33 +357,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 8th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -393,33 +400,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 9th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -436,33 +443,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 10th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -479,33 +486,33 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 intLogVerb  0
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 11th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -522,36 +529,36 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 # [none]
 
-0 # number of double parameters
+0  # number of double parameters
 
 # now all the double parameters
 # [none]
 
-0 # number of string parameters
+0  # number of string parameters
 
 # now all the string parameters
 # [none]
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end of 12th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END BSPar-static.txt - - - - - - - - - - - - -

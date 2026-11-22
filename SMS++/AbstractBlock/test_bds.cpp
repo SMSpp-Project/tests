@@ -46,6 +46,7 @@
 #include "FRowConstraint.h"
 #include "LinearFunction.h"
 #include "Objective.h"
+#include "OneVarConstraint.h"
 
 using namespace SMSpp_di_unipi_it;
 
@@ -68,6 +69,9 @@ static const double cost[ M ][ N ] = { { 2 , 3 , 4 , 5 } ,
 // while being large enough that the slack is never used at the optimum
 static const double BigM = 1e2;
 
+// the minimum shipment on every x of the instance that has one
+static const double min_ship = 0.05;
+
 using array_type = boost::multi_array< ColVariable , 2 >;
 
 /*--------------------------------------------------------------------------*/
@@ -77,11 +81,14 @@ using array_type = boost::multi_array< ColVariable , 2 >;
 // add to block the second stage of one scenario s ( the Variable x[ s ] and
 // its slack, the rows they satisfy and the Constraint that couples them to
 // the master Variable y ) and its cost terms to obj. With nsub scenarios this
-// gives a 2-stage Benders structure with nsub subproblems coupled through y
+// gives a 2-stage Benders structure with nsub subproblems coupled through y.
+// With x_min > 0 each x has that lower bound, a minimum shipment, which a
+// feasibility cut has to count through the multipliers of the columns
 
 static void add_second_stage( AbstractBlock * block ,
                               std::vector< ColVariable > * y , int s ,
-                              bool with_slack , LinearFunction * obj )
+                              bool with_slack , LinearFunction * obj ,
+                              double x_min = 0 )
 {
  const std::string t = std::to_string( s );
  boost::array< array_type::index , 2 > shape = { M , N };
@@ -89,6 +96,15 @@ static void add_second_stage( AbstractBlock * block ,
  for( auto p = x->data() ; p < x->data() + x->num_elements() ; ++p )
   p->is_positive( true );
  block->add_static_variable( * x , "x" + t );
+
+ if( x_min > 0 ) {
+  auto lb = new std::vector< LBConstraint >( M * N );
+  for( int k = 0 ; k < M * N ; ++k ) {
+   ( * lb )[ k ].set_variable( x->data() + k , eNoMod );
+   ( * lb )[ k ].set_lhs( x_min , eNoMod );
+   }
+  block->add_static_constraint( * lb , "x_min" + t );
+  }
 
  std::vector< ColVariable > * sl = nullptr;
  if( with_slack ) {
@@ -145,7 +161,8 @@ static std::vector< ColVariable > * make_y( bool set_start ,
    y_i.is_integer( true );
   if( set_start )
    y_i.set_value( 0.3 );  // start where the capacity Constraint bind non-
-                          // degenerately, so the first Benders cut is informative
+                          // degenerately, so the first Benders cut is
+                          // informative
   }
  return( y );
  }
@@ -187,11 +204,14 @@ static void add_first_stage_rows( AbstractBlock * block ,
 
 // the monolithic LP: y and all scenarios' x in a single Block (the reference
 // model). With with_slack == false the demand can only be served through x, so
-// the problem becomes infeasible for small y (used to exercise feasibility cuts)
+// the problem becomes infeasible for small y (used to exercise feasibility
+// cuts)
 
-static AbstractBlock * build_monolithic( bool with_slack = true , int nsub = 1 ,
+static AbstractBlock * build_monolithic( bool with_slack = true ,
+					 int nsub = 1 ,
 					 bool integer = false ,
-					 bool first_stage = false )
+					 bool first_stage = false ,
+					 double x_min = 0 )
 {
  auto block = new AbstractBlock();
  auto y = make_y( false , integer );
@@ -203,7 +223,7 @@ static AbstractBlock * build_monolithic( bool with_slack = true , int nsub = 1 ,
  for( int i = 0 ; i < M ; ++i )
   f->add_variable( & ( * y )[ i ] , fixed_cost[ i ] );
  for( int s = 0 ; s < nsub ; ++s )
-  add_second_stage( block , y , s , with_slack , f );
+  add_second_stage( block , y , s , with_slack , f , x_min );
 
  auto obj = new FRealObjective( block , f );
  obj->set_sense( Objective::eMin );
@@ -218,9 +238,11 @@ static AbstractBlock * build_monolithic( bool with_slack = true , int nsub = 1 ,
 // whose capacity Constraint couple y (the structure BendersDecompositionSolver
 // expects, with nsub subproblems)
 
-static AbstractBlock * build_structured( bool with_slack = true , int nsub = 1 ,
+static AbstractBlock * build_structured( bool with_slack = true ,
+					 int nsub = 1 ,
 					 bool integer = false ,
-					 bool first_stage = false )
+					 bool first_stage = false ,
+					 double x_min = 0 )
 {
  auto root = new AbstractBlock();
  auto y = make_y( true , integer );
@@ -238,7 +260,7 @@ static AbstractBlock * build_structured( bool with_slack = true , int nsub = 1 ,
  for( int s = 0 ; s < nsub ; ++s ) {
   auto sub = new AbstractBlock( root );
   auto sf = new LinearFunction();
-  add_second_stage( sub , y , s , with_slack , sf );
+  add_second_stage( sub , y , s , with_slack , sf , x_min );
   auto sobj = new FRealObjective( sub , sf );
   sobj->set_sense( Objective::eMin );
   sub->set_objective( sobj );
@@ -259,7 +281,7 @@ static AbstractBlock * build_structured( bool with_slack = true , int nsub = 1 ,
  * those of the Block it is made of; the separation problems that replicate it
  * have to reckon with all of them, which is what this instance checks. */
 
-static AbstractBlock * build_nested( int nsub = 1 )
+static AbstractBlock * build_nested( int nsub = 1 , double sigma = 1 )
 {
  auto root = new AbstractBlock();
  auto y = make_y( true , false );
@@ -286,6 +308,8 @@ static AbstractBlock * build_nested( int nsub = 1 )
    for( auto & v : * x[ i ] )
     v.is_positive( true );
    loc->add_static_variable( * x[ i ] , "x" + t + "_" + std::to_string( i ) );
+   if( sigma != 1 )
+    loc->set_variable_weight( sigma , eNoMod );
 
    auto lf = new LinearFunction();
    for( int j = 0 ; j < N ; ++j )
@@ -306,7 +330,7 @@ static AbstractBlock * build_nested( int nsub = 1 )
   for( int j = 0 ; j < N ; ++j ) {
    auto f = new LinearFunction();
    for( int i = 0 ; i < M ; ++i )
-    f->add_variable( & ( * x[ i ] )[ j ] , 1 );
+    f->add_variable( & ( * x[ i ] )[ j ] , 1 / sigma );
    f->add_variable( & ( * sl )[ j ] , 1 );
    ( * dem )[ j ].set_function( f );
    ( * dem )[ j ].set_both( 1 );
@@ -317,7 +341,7 @@ static AbstractBlock * build_nested( int nsub = 1 )
   for( int i = 0 ; i < M ; ++i ) {
    auto f = new LinearFunction();
    for( int j = 0 ; j < N ; ++j )
-    f->add_variable( & ( * x[ i ] )[ j ] , demand[ j ] );
+    f->add_variable( & ( * x[ i ] )[ j ] , demand[ j ] / sigma );
    f->add_variable( & ( * y )[ i ] , - capacity[ i ] );
    ( * cap )[ i ].set_function( f );
    ( * cap )[ i ].set_lhs( - Inf< double >() );
@@ -325,8 +349,8 @@ static AbstractBlock * build_nested( int nsub = 1 )
    }
   sub->add_static_constraint( * cap , "capacity" + t );
 
-  // the scenario itself only pays the slacks, the cost of the second stage being in
-  // the Block it is made of
+  // the scenario itself only pays the slacks, the cost of the second stage
+  // being in the Block it is made of
   auto sf = new LinearFunction();
   for( int j = 0 ; j < N ; ++j )
    sf->add_variable( & ( * sl )[ j ] , BigM );
@@ -448,7 +472,8 @@ static AbstractBlock * build_sparse( unsigned seed , bool scaled ,
 // lower bound; no Solver parameter is ever set in code, everything comes from
 // the configuration file
 
-static double solve_from_config( AbstractBlock * block , const std::string & fn ,
+static double solve_from_config( AbstractBlock * block ,
+				 const std::string & fn ,
 				 int & status , long * iters = nullptr ,
 				 long * cuts = nullptr )
 {
@@ -639,6 +664,31 @@ int main( void )
    delete mono_k;
    }
 
+ /* ----- the weight of the Variable in the subproblems ------------------ #
+  *
+  * The four-scenario problem with the scenarios built as trees, each
+  * second-stage Variable in a sub-Block of weight 2.5 [see
+  * Block::set_variable_weight()] and its coefficients in the rows of the
+  * scenario, which are outside that sub-Block, written divided by 2.5
+  * [see build_nested()]: the optimum is that of the extensive form only if
+  * the weights are applied, by the Solver of the subproblems. */
+
+ bool ok_vw = true;
+ { auto mono_w = build_monolithic( true , 4 );
+   int st_rw;
+   const double ref_w = solve_from_config( mono_w , "BDSSCfg.txt" , st_rw );
+   auto root_w = build_nested( 4 , 2.5 );
+   int st_w;
+   const double v_w = solve_from_config( root_w , "BSPar-BDS-MILP.txt" ,
+					 st_w );
+   ok_vw = ( rel( ref_w , v_w ) <= tol );
+   std::cout << "4-scenario, second stage of weight 2.5: " << v_w
+             << "   ref = " << ref_w << ( ok_vw ? "   -> OK" : "   -> FAIL" )
+             << std::endl;
+   delete root_w;
+   delete mono_w;
+   }
+
  auto mono_ns = build_monolithic( false );
  int st_ns_ref;
  const double ref_ns = solve_from_config( mono_ns , "BDSSCfg.txt" ,
@@ -696,6 +746,36 @@ int main( void )
 					 st_14 , & it_14 , & ct_14 );
   ok_ns = ok_ns && ( rel( ref4 , v_f4 ) <= tol ) &&
                    ( rel( ref4 , v_14 ) <= tol );
+
+  /* And with subproblems solved by DAQP, which gives no certificate: the
+   * phase one does without it, as long as its cut cuts the incumbent, and
+   * the run is not to stop on the certificate it does not need. Without
+   * DAQP in the build the case is skipped, and said so. */
+
+  if( ! Solver::has_Solver( "DAQPMILPSolver" ) )
+   std::cout << "4-scenario, phase one with no certificate: skipped, "
+                "DAQPMILPSolver is not in this build" << std::endl;
+  else {
+   auto root_d4 = build_structured( false , 4 );
+   int st_d4;
+   long ct_d4 = 0;
+   bool ok_d4 = false;
+   double v_d4 = 0;
+   try {
+    v_d4 = solve_from_config( root_d4 , "BSPar-BDS-Phase1-DAQP.txt" ,
+                              st_d4 , nullptr , & ct_d4 );
+    ok_d4 = ( rel( ref4 , v_d4 ) <= tol );
+    }
+   catch( const std::exception & e ) {
+    std::cout << "4-scenario, phase one with no certificate: " << e.what()
+              << std::endl;
+    }
+   std::cout << "4-scenario, phase one with no certificate: " << v_d4
+             << " ( " << ct_d4 << " cuts )   ref = " << ref4
+             << ( ok_d4 ? "   -> OK" : "   -> FAIL" ) << std::endl;
+   ok_ns = ok_ns && ok_d4;
+   delete root_d4;
+   }
 
   /* The same with the subproblems evaluated by threads, where some of them
    * are infeasible and their certificates are read inside the threads: the
@@ -775,7 +855,8 @@ int main( void )
             << " ( " << it_u4 << " rounds , " << ct_u4 << " cuts )"
             << "   deepest = " << v_d4 << " ( " << it_d4 << " rounds , "
             << ct_d4 << " cuts )   static = " << v_s4 << " ( " << it_s4
-            << " rounds , " << ct_s4 << " cuts )   static and Sherali-Lunday = "
+            << " rounds , " << ct_s4
+            << " cuts )   static and Sherali-Lunday = "
             << v_l4 << " ( " << it_l4 << " rounds , " << ct_l4 << " cuts )"
             << std::endl;
   delete root_f4;
@@ -1022,6 +1103,34 @@ int main( void )
    delete mono_lc;
    }
 
+ /* The feasibility cuts again, with a minimum shipment on every x: the
+  * certificate of an infeasible subproblem counts that lower bound through
+  * the multipliers of the columns, which are - A' y, and a cut with the
+  * costs in them cuts the optimum away. */
+
+ bool ok_xm = false;
+ { auto mono_xm = build_monolithic( false , 4 , false , false , min_ship );
+   auto root_xm = build_structured( false , 4 , false , false , min_ship );
+   try {
+    int st_xm;
+    long ct_xm = 0;
+    const double ref_xm = solve_from_config( mono_xm , "BDSSCfg.txt" ,
+					     st_xm );
+    const double v_xm = solve_from_config( root_xm , "BSPar-BDS-MILP.txt" ,
+					   st_xm , nullptr , & ct_xm );
+    ok_xm = rel( ref_xm , v_xm ) <= tol;
+    std::cout << "Benders(MILP,feas-cuts,min-shipment) = " << v_xm
+              << " ( " << ct_xm << " cuts )   ref = " << ref_xm
+              << ( ok_xm ? "   -> OK" : "   -> FAIL" ) << std::endl;
+    }
+   catch( const std::exception & e ) {
+    std::cout << "Benders(MILP,feas-cuts,min-shipment) threw: " << e.what()
+              << "   -> FAIL" << std::endl;
+    }
+   delete root_xm;
+   delete mono_xm;
+   }
+
  // ----- compare ( optimality-cut cases, the supported ones ) ------------- #
  const double err = rel( ref , ben );
  const double err2 = rel( ref , ben2 );
@@ -1038,8 +1147,8 @@ int main( void )
 	       && ( rel( ref2 , ben_s2 ) <= tol );
  std::cout << "2-scenario: " << ( ok2 ? "-> OK" : "-> FAIL" ) << std::endl;
 
- const bool ok = ok1 && ok2 && ok_ns && ok_ng && ok_k && ok_u && ok_r &&
-                ok_t && ok_lc;
+ const bool ok = ok1 && ok2 && ok_ns && ok_ng && ok_k && ok_vw && ok_u &&
+                ok_r && ok_t && ok_lc && ok_xm;
 
  delete root_s2;
  delete root_m2;

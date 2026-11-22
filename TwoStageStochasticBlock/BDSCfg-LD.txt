@@ -14,11 +14,17 @@
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-0 # number of integer parameters
+0  # number of integer parameters
 
-0 # number of double parameters
+# now all the integer parameters
+# [none]
 
-2 # number of string parameters
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+2  # number of string parameters
 
 # now all the string parameters
 str_Bsub_BSCfg  BDSSCfg-LDrec.txt # BlockSolverConfig of the subproblems
@@ -26,14 +32,23 @@ strRecoveryBSC  BSCfg1-IP.txt     # the recovery of a feasible solution:
                                   # each subproblem solved as a MILP at the
                                   # design of the master
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
-0 # number of vector-of-double parameters
+# now all the vector-of-int parameters
+# [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END BDSCfg-LD.txt - - - - - - - - - - - - - - -

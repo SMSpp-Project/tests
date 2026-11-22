@@ -4,17 +4,17 @@
 /** @file
  * Main for testing ThermalUnitDPSolver.
  *
- * A ThermalUnitBlock instance is loaded from netCDF file, two different
- * Solver are registered to the ThermalUnitBlock, the second of which is
- * assumed to be a ThermalUnitDPSolver, the ThermalUnitBlock is solved by
- * the Solver and the results are compared. The ThermalUnitBlock is then
- * repeatedly randomly modified and re-solved several times, the results are
- * compared.
+ * A ThermalUnitBlock instance is loaded from netCDF file, two or more
+ * Solver are registered to the ThermalUnitBlock, the first of which is the
+ * reference and the others typically dynamic programming ones, the
+ * ThermalUnitBlock is solved by each Solver and the results of the others are
+ * compared with those of the first. The ThermalUnitBlock is then repeatedly
+ * randomly modified and re-solved several times, the results are compared.
  *
  * Given a list of BlockConfig (-F) rather than one (-B), the instance is read
  * once per element of the list, each copy is given its own BlockConfig, i.e.,
  * typically its own formulation, and the same BlockSolverConfig, each random
- * change is made to all the copies, and besides the two Solver of each copy
+ * change is made to all the copies, and besides the Solver of each copy
  * the copies are compared with each other: they are the same unit, hence
  * whatever their formulation they must have the same optimum.
  *
@@ -58,8 +58,8 @@
 
 #define DETACH_1ST 0
 
-// if nonzero, the 2nd Solver attached to the UCBlock is detached and
-// re-attached to it at all iterations
+// if nonzero, each Solver attached to the UCBlock but the 1st is detached
+// and re-attached to it at all iterations
 
 #define DETACH_2ND 0
 
@@ -405,12 +405,12 @@ static std::string token( bool hs , int rtrn , double fo )
 
 /*--------------------------------------------------------------------------*/
 
-// solves the unit TUBlock with both its Solver and compares them; @p names
-// are what the two are called in the report, the default numbering if empty,
-// and @p rd receives what the 1st one gave
+// solves the unit TUBlock with all its Solver and compares each of them with
+// the 1st; @p names are what they are called in the report, the default
+// numbering if empty, and @p rd receives what the 1st one gave
 
-static bool SolveBoth( const std::vector< std::string > & names ,
-		       Reading & rd )
+static bool SolveAll( const std::vector< std::string > & names ,
+		      Reading & rd )
 {
  #if( CHECK_SOLUTIONS & 4 )
   std::vector< double > p1( time_horizon );
@@ -480,116 +480,134 @@ static bool SolveBoth( const std::vector< std::string > & names ,
      return( false );
   #endif
 
-  // solve with the 2nd Solver- - - - - - - - - - - - - - - - - - - - - - - -
-  Solver * Slvr2 = TUBlock->get_registered_solvers().back();
-  #if DETACH_2ND
-   TUBlock->unregister_Solver( Slvr2 );
-   TUBlock->register_Solver( Slvr2 );  // push it to the back
-  #endif
-  auto start2 = std::chrono::system_clock::now();
-  int rtrn2nd = Slvr2->compute( false );
-  auto end2 = std::chrono::system_clock::now();
-  double t2 = std::chrono::duration< double >( end2 - start2 ).count();
+  // solve with each other Solver and compare it with the 1st- - - - - - - -
+  // (the list is copied, as DETACH_2ND moves the Solver within it)
+  const auto & reg = TUBlock->get_registered_solvers();
+  const std::vector< Solver * > others( std::next( reg.begin() ) , reg.end() );
+  std::vector< double > times = { t1 };
+  std::vector< std::string > tokens = { token( hs1st , rtrn1st , fo1st ) };
+  bool all_ok = true;
+  std::string all_verdict;
 
-  bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
-                   && ( rtrn2nd != Solver::kUnbounded )
-                   && ( rtrn2nd != Solver::kInfeasible ) )
-                 || ( rtrn2nd == Solver::kLowPrecision ) );
-  double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
-  #if( ( LOG_LEVEL > 1 ) || ( CHECK_SOLUTIONS > 0 ) )
-   if( hs2nd ) {
-    if( ! Slvr2->has_var_solution() ) {
-     std::cerr << "Error: Solver2 has not found any solution" << std::endl;
-     exit( 1 );
-     }
-    Slvr2->get_var_solution();
-    #if( LOG_LEVEL > 1 )
-     PrintSolution();
-    #endif
-    #if( CHECK_SOLUTIONS & 2 )
-     if( ! TUBlock->is_feasible() ) {
-      std::cerr << "Error: Solver2 solution is not feasible" << std::endl;
-      //exit( 1 );
+  for( std::size_t s = 0 ; s < others.size() ; ++s ) {
+   Solver * Slvr2 = others[ s ];
+   const std::string sname = "Solver" + std::to_string( s + 2 );
+   #if DETACH_2ND
+    TUBlock->unregister_Solver( Slvr2 );
+    TUBlock->register_Solver( Slvr2 );  // push it to the back
+   #endif
+   auto start2 = std::chrono::system_clock::now();
+   int rtrn2nd = Slvr2->compute( false );
+   auto end2 = std::chrono::system_clock::now();
+   double t2 = std::chrono::duration< double >( end2 - start2 ).count();
+
+   bool hs2nd = ( ( ( rtrn2nd >= Solver::kOK ) && ( rtrn2nd < Solver::kError )
+		    && ( rtrn2nd != Solver::kUnbounded )
+		    && ( rtrn2nd != Solver::kInfeasible ) )
+		  || ( rtrn2nd == Solver::kLowPrecision ) );
+   double fo2nd = hs2nd ? Slvr2->get_var_value() : -INF;
+   #if( ( LOG_LEVEL > 1 ) || ( CHECK_SOLUTIONS > 0 ) )
+    if( hs2nd ) {
+     if( ! Slvr2->has_var_solution() ) {
+      std::cerr << "Error: " << sname << " has not found any solution"
+		<< std::endl;
+      exit( 1 );
       }
-    #endif
-    obj->compute();
-    auto solval = obj->get_value();
-    if( abs( fo2nd - solval ) > 1e-8 * std::max( abs( fo2nd ) ,
-                                                 double( 1 ) ) ) {
-     std::cerr.setf( std::ios::scientific , std::ios::floatfield );
-     std::cerr << std::setprecision( 9 );
-     std::cerr << "Error: Solver2 reports value " << fo2nd
-	  << " but solution value is " << solval << std::endl;
-     exit( 1 );
-     }
-    #if( CHECK_SOLUTIONS & 4 )
-     GetP( p2 );
-     GetU( u2 );
-    #endif
-    }
-  #endif
-
-  #if CHECK_GET_SOLUTION
-   if( hs2nd && Slvr2->has_var_solution() )
-    if( ! CheckGetSolution( Slvr2 , "Solver2" ) )
-     return( false );
-  #endif
-
-  // this being a MIQP, the "abstract" Solver will have a limited
-  // precision. in particular, variable lower bound constraints like
-  // p >= l u can be slightly violated (with p ending up a bit lower
-  // than l) due to either u being, say, 0.999999 or the constraint
-  // being violated up to the accuracy tolerated by the solver,
-  // yielding things like 127.999999 vs 128.000000 and thereby a final
-  // var_value() slightly lower than that of the ThermalUnitDPSolver.
-  // which is why the relatively loose tolerance of 2e-6 here
-  //!!  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-6 *
-  //!!  emergency version with 1e-4 to find big errors
-  // bespoke verdict (kept intact, including the CHECK_SOLUTIONS dispatch
-  // comparison), restructured to a single exit that prints the unified line
-  bool ok = false;
-  std::string verdict = "KO";
-  bool decided = false;
-  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 1e-4 *
-			  std::max( double( 1 ) , std::max( abs( fo1st ) ,
-						  abs( fo2nd ) ) ) ) ) {
-   ok = true; verdict = "OK(f)"; decided = true;
-
-   #if( CHECK_SOLUTIONS & 4 )
-    for( Index i = 0 ; i < time_horizon ; ++i ) {
-     if( std::abs( p1[ i ] - p2[ i ] ) > 1e-6 * std::max( std::abs( p1[ i ] ) ,
-						double( 1 ) ) ) {
-      std::cerr << "p1[ " << i << " ] = " << p1[ i ] << " != p2[ " << i
-	   << " ] = " << p2[ i ] << std::endl;
-      return( false );
+     Slvr2->get_var_solution();
+     #if( LOG_LEVEL > 1 )
+      PrintSolution();
+     #endif
+     #if( CHECK_SOLUTIONS & 2 )
+      if( ! TUBlock->is_feasible() ) {
+       std::cerr << "Error: " << sname << " solution is not feasible"
+		 << std::endl;
+       //exit( 1 );
+       }
+     #endif
+     obj->compute();
+     auto solval = obj->get_value();
+     if( abs( fo2nd - solval ) > 1e-8 * std::max( abs( fo2nd ) ,
+						  double( 1 ) ) ) {
+      std::cerr.setf( std::ios::scientific , std::ios::floatfield );
+      std::cerr << std::setprecision( 9 );
+      std::cerr << "Error: " << sname << " reports value " << fo2nd
+		<< " but solution value is " << solval << std::endl;
+      exit( 1 );
       }
-
-     if( u1[ i ] != u2[ i ] ) {
-      std::cerr << "u1[ " << i << " ] = " << u1[ i ] << " != u2[ " << i
-	   << " ] = " << u2[ i ] << std::endl;
-      return( false );
-      }
+     #if( CHECK_SOLUTIONS & 4 )
+      GetP( p2 );
+      GetU( u2 );
+     #endif
      }
    #endif
 
-   }
+   #if CHECK_GET_SOLUTION
+    if( hs2nd && Slvr2->has_var_solution() )
+     if( ! CheckGetSolution( Slvr2 , sname.c_str() ) )
+      return( false );
+   #endif
 
-  if( ( ! decided ) && ( rtrn1st == Solver::kInfeasible ) &&
-      ( rtrn2nd == Solver::kInfeasible ) ) {
-   ok = true; verdict = "OK(e)"; decided = true;
-   }
+   // this being a MIQP, the "abstract" Solver will have a limited
+   // precision. in particular, variable lower bound constraints like
+   // p >= l u can be slightly violated (with p ending up a bit lower
+   // than l) due to either u being, say, 0.999999 or the constraint
+   // being violated up to the accuracy tolerated by the solver,
+   // yielding things like 127.999999 vs 128.000000 and thereby a final
+   // var_value() slightly lower than that of the ThermalUnitDPSolver.
+   // which is why the relatively loose tolerance of 2e-6 here
+   //!!  if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 2e-6 *
+   //!!  emergency version with 1e-4 to find big errors
+   // bespoke verdict (kept intact, including the CHECK_SOLUTIONS dispatch
+   // comparison), restructured to a single exit that prints the unified line
+   bool ok = false;
+   std::string verdict = "KO";
+   bool decided = false;
+   if( hs1st && hs2nd && ( abs( fo1st - fo2nd ) <= 1e-4 *
+			   std::max( double( 1 ) , std::max( abs( fo1st ) ,
+						   abs( fo2nd ) ) ) ) ) {
+    ok = true; verdict = "OK(f)"; decided = true;
 
-  if( ( ! decided ) && ( rtrn1st == Solver::kUnbounded ) &&
-      ( rtrn2nd == Solver::kUnbounded ) ) {
-   ok = true; verdict = "OK(u)"; decided = true;
-   }
+    #if( CHECK_SOLUTIONS & 4 )
+     for( Index i = 0 ; i < time_horizon ; ++i ) {
+      if( std::abs( p1[ i ] - p2[ i ] ) > 1e-6 *
+	  std::max( std::abs( p1[ i ] ) , double( 1 ) ) ) {
+       std::cerr << "p1[ " << i << " ] = " << p1[ i ] << " != p2[ " << i
+		 << " ] = " << p2[ i ] << std::endl;
+       return( false );
+       }
+
+      if( u1[ i ] != u2[ i ] ) {
+       std::cerr << "u1[ " << i << " ] = " << u1[ i ] << " != u2[ " << i
+		 << " ] = " << u2[ i ] << std::endl;
+       return( false );
+       }
+      }
+    #endif
+
+    }
+
+   if( ( ! decided ) && ( rtrn1st == Solver::kInfeasible ) &&
+       ( rtrn2nd == Solver::kInfeasible ) ) {
+    ok = true; verdict = "OK(e)"; decided = true;
+    }
+
+   if( ( ! decided ) && ( rtrn1st == Solver::kUnbounded ) &&
+       ( rtrn2nd == Solver::kUnbounded ) ) {
+    ok = true; verdict = "OK(u)"; decided = true;
+    }
+
+   times.push_back( t2 );
+   tokens.push_back( token( hs2nd , rtrn2nd , fo2nd ) );
+   if( ! ok )
+    all_ok = false;
+   if( all_verdict.empty() || ( ! ok ) )
+    all_verdict = verdict;
+   }  // end( for( s ) )
 
   print_instance_line(
-   { t1 , t2 } ,
-   { token( hs1st , rtrn1st , fo1st ) , token( hs2nd , rtrn2nd , fo2nd ) } ,
-   std::numeric_limits< double >::quiet_NaN() , verdict ,
-   std::numeric_limits< double >::quiet_NaN() , false , names );
-  return( ok );
+    times , tokens , std::numeric_limits< double >::quiet_NaN() , all_verdict ,
+    std::numeric_limits< double >::quiet_NaN() , false , names );
+  return( all_ok );
   }
  catch( std::exception &e ) {
   std::cerr << e.what() << std::endl;
@@ -714,7 +732,7 @@ static ThermalUnitBlock * read_unit( Configuration * bconf ,
  // model, hence they are set before the Variable are generated
  if( must_run ) {
   const std::vector< int > on( 1 , 1 );
-  tub->set_init_updown_time( on.begin() , Range( 0 , 1 ) );
+  tub->set_init_updown_time( Block::MF_int_sp( on ) , Range( 0 , 1 ) );
   tub->set_min_up_down_time( tub->get_time_horizon() + 1 , 1 );
   }
 
@@ -731,7 +749,7 @@ static ThermalUnitBlock * read_unit( Configuration * bconf ,
             : ( Index( - tau0 ) >= tub->get_min_down_time()
                 ? 0 : tub->get_min_down_time() - Index( - tau0 ) );
   std::vector< double > sdc( tub->get_time_horizon() - init_t , sd_cost );
-  tub->set_shutdown_costs( sdc.begin() ,
+  tub->set_shutdown_costs( Block::MF_dbl_sp( sdc ) ,
                            Range( init_t , tub->get_time_horizon() ) );
   }
 
@@ -744,9 +762,9 @@ static ThermalUnitBlock * read_unit( Configuration * bconf ,
  tub->generate_abstract_variables();
  if( const char * rc = std::getenv( "TUDPS_RESCOST" ) ) {
   std::vector< double > rcv( tub->get_time_horizon() , std::atof( rc ) );
-  tub->set_primary_spinning_reserve_cost( rcv.begin() ,
+  tub->set_primary_spinning_reserve_cost( Block::MF_dbl_sp( rcv ) ,
                                           Range( 0 , rcv.size() ) );
-  tub->set_secondary_spinning_reserve_cost( rcv.begin() ,
+  tub->set_secondary_spinning_reserve_cost( Block::MF_dbl_sp( rcv ) ,
                                             Range( 0 , rcv.size() ) );
   }
 
@@ -777,7 +795,7 @@ static ThermalUnitBlock * read_unit( Configuration * bconf ,
  if( qcost_env ) {
   std::vector< double > qcost( tub->get_time_horizon() ,
                                std::atof( qcost_env ) );
-  tub->set_reactive_linear_term( qcost.begin() ,
+  tub->set_reactive_linear_term( Block::MF_dbl_sp( qcost ) ,
                                  Range( 0 , tub->get_time_horizon() ) );
   }
 
@@ -870,7 +888,7 @@ static void change_fixed_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(r) - " );
-   TUBlock->set_const_term( chg.newcsts.begin() ,
+   TUBlock->set_const_term( Block::MF_dbl_sp( chg.newcsts ) ,
 			    Range( chg.strt , chg.strt + tochange ) );
    }
   }
@@ -888,7 +906,8 @@ static void change_fixed_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(s) - " );
-   TUBlock->set_const_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+   TUBlock->set_const_term( Block::MF_dbl_sp( chg.newcsts ) ,
+                            std::move( chg.nms ) ,
 			    true );
    }
   }
@@ -932,7 +951,7 @@ static void change_quadratic_costs( Change chg )
 				      std::move( nms ) );
      }
     else
-     TUBlock->set_quad_term( chg.newcsts.begin() ,
+     TUBlock->set_quad_term( Block::MF_dbl_sp( chg.newcsts ) ,
 			     Range( chg.strt , chg.strt + tochange ) );
     }
    else {
@@ -956,7 +975,7 @@ static void change_quadratic_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(r) - " );
-   TUBlock->set_quad_term( chg.newcsts.begin() ,
+   TUBlock->set_quad_term( Block::MF_dbl_sp( chg.newcsts ) ,
 			   Range( chg.strt , chg.strt + tochange ) );
    }
   }
@@ -978,7 +997,8 @@ static void change_quadratic_costs( Change chg )
 				     std::move( chg.nms ) , false );
      }
     else
-     TUBlock->set_quad_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+     TUBlock->set_quad_term( Block::MF_dbl_sp( chg.newcsts ) ,
+                             std::move( chg.nms ) ,
 			     false );
     }
    else {
@@ -996,7 +1016,8 @@ static void change_quadratic_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(s) - " );
-   TUBlock->set_quad_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+   TUBlock->set_quad_term( Block::MF_dbl_sp( chg.newcsts ) ,
+                           std::move( chg.nms ) ,
 			   false );
    }
   }
@@ -1035,7 +1056,7 @@ static void change_linear_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(r) - " );
-   TUBlock->set_linear_term( chg.newcsts.begin() ,
+   TUBlock->set_linear_term( Block::MF_dbl_sp( chg.newcsts ) ,
 			     Range( chg.strt , chg.strt + tochange ) );
    }
   }
@@ -1053,7 +1074,8 @@ static void change_linear_costs( Change chg )
    }
   else {  // change via call to set_* method
    LOG1( "(s) - " );
-   TUBlock->set_linear_term( chg.newcsts.begin() , std::move( chg.nms ) ,
+   TUBlock->set_linear_term( Block::MF_dbl_sp( chg.newcsts ) ,
+                             std::move( chg.nms ) ,
 			     false );
    }
   }
@@ -1063,8 +1085,8 @@ static void change_linear_costs( Change chg )
 
 // compares what the 1st Solver gave on each copy of the unit, i.e., the
 // formulations with each other: they are the same unit, hence they must have
-// the same optimum, up to the tolerance with which the two Solver of each
-// copy are compared [see SolveBoth()], or be all infeasible or all unbounded
+// the same optimum, up to the tolerance with which the Solver of each copy
+// are compared [see SolveAll()], or be all infeasible or all unbounded
 
 static bool CrossCheck( const std::vector< Reading > & rd )
 {
@@ -1118,7 +1140,7 @@ static bool CrossCheck( const std::vector< Reading > & rd )
 
 /*--------------------------------------------------------------------------*/
 
-// solves every copy of the unit with its two Solver, then compares the
+// solves every copy of the unit with all its Solver, then compares the
 // copies with each other
 
 static bool SolveCopies( void )
@@ -1127,11 +1149,13 @@ static bool SolveCopies( void )
  std::vector< Reading > rd( formulations.size() );
  for( std::size_t k = 0 ; k < formulations.size() ; ++k ) {
   use_formulation( formulations[ k ] );
-  // with one copy the report stays the one of the two Solver
+  // with one copy the report stays the one of the Solver
   std::vector< std::string > names;
   if( formulations.size() > 1 )
-   names = { formulations[ k ].name + " S0" , formulations[ k ].name + " S1" };
-  if( ! SolveBoth( names , rd[ k ] ) )
+   for( std::size_t s = 0 ;
+	s < formulations[ k ].tub->get_registered_solvers().size() ; ++s )
+    names.push_back( formulations[ k ].name + " S" + std::to_string( s ) );
+  if( ! SolveAll( names , rd[ k ] ) )
    ok = false;
   }
 
@@ -1264,7 +1288,7 @@ int main( int argc , char **argv )
  // - up to n_change linear terms are changed
  // - up to n_change quadratic terms are changed
  //
- // then the two Solver are called to re-solve each copy of the unit. Each
+ // then the Solver are called to re-solve each copy of the unit. Each
  // change is drawn once and made to every copy, so that the pseudo-random
  // sequence, and therefore what each copy is asked, is that of a run with
  // that copy alone

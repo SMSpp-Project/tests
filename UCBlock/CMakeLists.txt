@@ -18,37 +18,46 @@ smspp_require_labelled_modules()
 # ----- Tests --------------------------------------------------------------- #
 if (TARGET SMS++::UCBlock)
 
-    add_executable(UCBlock_test test.cpp ../common_utils.cpp)
-    target_include_directories(UCBlock_test PRIVATE ..)
-    target_link_libraries(UCBlock_test PRIVATE SMS++::UCBlock)
+    # the tester, compiled once and linked twice [see UCBlock_ML_test below]
+    add_library(UCBlock_test_objs OBJECT test.cpp ../common_utils.cpp)
+    target_include_directories(UCBlock_test_objs PRIVATE ..)
+    target_link_libraries(UCBlock_test_objs PUBLIC SMS++::UCBlock)
 
     if (TARGET SMS++::LagrangianDualSolver)
-        target_link_libraries(UCBlock_test PRIVATE SMS++::LagrangianDualSolver)
+        target_link_libraries(UCBlock_test_objs PUBLIC
+                              SMS++::LagrangianDualSolver)
     endif ()
 
     if (TARGET SMS++::BundleSolver)
-        target_link_libraries(UCBlock_test PRIVATE SMS++::BundleSolver)
+        target_link_libraries(UCBlock_test_objs PUBLIC SMS++::BundleSolver)
     endif ()
 
     if (TARGET SMS++::MILPSolver)
-        target_link_libraries(UCBlock_test PRIVATE SMS++::MILPSolver)
+        target_link_libraries(UCBlock_test_objs PUBLIC SMS++::MILPSolver)
     endif ()
 
     # the Branch-and-X of BSPar-BX.txt and BSPar-DP-BX.txt, whose relaxation
     # is the LagrangianDualRelaxationSolver
     if (TARGET SMS++::BranchAndXSolver)
-        target_link_libraries(UCBlock_test PRIVATE SMS++::BranchAndXSolver)
+        target_link_libraries(UCBlock_test_objs PUBLIC
+                              SMS++::BranchAndXSolver)
     endif ()
+
+    add_executable(UCBlock_test)
+    target_link_libraries(UCBlock_test PRIVATE UCBlock_test_objs)
+    smspp_install(UCBlock_test)
 
     # the 5th Solver of BSPar-DP-BX.txt asks for the
     # LagrangianDualRelaxationSolverML by name, and the class is in the
-    # library of its own that only a build with Torch has
+    # library of its own that only a build with Torch has; loading Torch
+    # costs more than many of the instances, so only this tester has it, and
+    # a battery runs it if its DEFAULT_EXE names it
     if (TARGET SMS++::LagrangianDualSolverML)
-        target_link_libraries(UCBlock_test PRIVATE
+        add_executable(UCBlock_ML_test)
+        target_link_libraries(UCBlock_ML_test PRIVATE UCBlock_test_objs
                               SMS++::LagrangianDualSolverML)
+        smspp_install(UCBlock_ML_test)
     endif ()
-
-    smspp_install(UCBlock_test)
 
     # the pollutant budget constraints, on instances the tester writes itself;
     # it is run here for the ComputeConfig of the LagrangianDualSolver it
@@ -66,16 +75,20 @@ if (TARGET SMS++::UCBlock)
              COMMAND UCBlock_test --scale
              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    # the instances of UCBlock, downloaded and extracted when the tests that
-    # read them are run, not when they are built [see the CMakeLists.txt of the
-    # module]; the lock is shared by the tests that build a target of the data
-    # of the module, which under ctest -j would write the same files at once
-    add_test(NAME extract_uc_nc4
-             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                     --target extract_uc_nc4)
-    set_tests_properties(extract_uc_nc4 PROPERTIES
-                         FIXTURES_SETUP uc_nc4_extracted
-                         RESOURCE_LOCK uc_data)
+    # the instances of UCBlock, one archive each, downloaded and extracted
+    # when the tests that read them are run, not when they are built [see the
+    # CMakeLists.txt of the module]; the lock is shared by the tests that build
+    # a target of the data of the module, which under ctest -j would write the
+    # same files at once. The archive man0euvre is read only by the tests
+    # labelled berlin [see tests/TwoStageStochasticBlock], and so is its test
+    foreach (fmt nc4 man0euvre)
+        add_test(NAME extract_uc_${fmt}
+                 COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
+                         --target extract_uc_${fmt})
+        set_tests_properties(extract_uc_${fmt} PROPERTIES
+                             FIXTURES_SETUP uc_${fmt}_extracted
+                             RESOURCE_LOCK uc_data)
+    endforeach ()
 
     # Register every batch: each one covers a family of instances (academic,
     # plan4res, energy community, PyPSA, AC OPF) and cross-checks all the
@@ -84,18 +97,19 @@ if (TARGET SMS++::UCBlock)
     file(GLOB BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches/*")
     foreach (BATCH_FILE ${BATCH_FILES})
         # Remove the source directory prefix to get the batch name
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
-        if (UNIX)
-            add_test(NAME UCBlock_test/${BATCH_NAME}
-                     COMMAND bash ${BATCH_FILE} ${CMAKE_CURRENT_BINARY_DIR}/UCBlock_test
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        elseif (WIN32)
-            add_test(NAME UCBlock_test/${BATCH_NAME}
-                     # using Git for Windows that includes Git Bash
-                     COMMAND "C:/Program Files/Git/bin/bash.exe"
-                             "${BATCH_FILE}" "$<TARGET_FILE:UCBlock_test>"
-                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
+        # the tester the battery names, if this build has it
+        set(BATCH_EXE UCBlock_test)
+        file(STRINGS ${BATCH_FILE} BATCH_DEFAULT_EXE
+             REGEX "^DEFAULT_EXE=./UCBlock_ML_test")
+        if (BATCH_DEFAULT_EXE AND TARGET UCBlock_ML_test)
+            set(BATCH_EXE UCBlock_ML_test)
         endif ()
+        add_test(NAME UCBlock_test/${BATCH_NAME}
+                 COMMAND ${SMSpp_BASH}
+                         "${BATCH_FILE}" "$<TARGET_FILE:${BATCH_EXE}>"
+                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         # Make each batch test require the uc_nc4_extracted fixture
         set_tests_properties(UCBlock_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
@@ -147,7 +161,8 @@ if (TARGET SMS++::UCBlock)
     # which is why each of them is given both.
     file(GLOB TUB_BATCH_FILES "${CMAKE_CURRENT_SOURCE_DIR}/batches-tub/*")
     foreach (BATCH_FILE ${TUB_BATCH_FILES})
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME ${BATCH_FILE})
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/" "" BATCH_NAME
+               ${BATCH_FILE})
         add_batch_test(TUDPS_test ${BATCH_NAME} UCBlock_FW_test)
         set_tests_properties(TUDPS_test/${BATCH_NAME}
                              PROPERTIES FIXTURES_REQUIRED uc_nc4_extracted)
@@ -191,11 +206,10 @@ endif ()
     # The benchmark of the machine-learning driven bundle on the instances of
     # this Block: the harness is the generic one (../ml_bench.cpp), which
     # reads whichever instance it is given, here the netCDF ones of this
-    # module. It is built only where Torch is, BundleSolverML being
-    # built into BundleSolver only in that case, and it is no test: it trains
-    # a network and measures, hence it is run by hand.
-    find_package(Torch QUIET HINTS ${Torch_ROOT})
-    if (Torch_FOUND AND TARGET SMS++::BundleSolverML)
+    # module. It is built only where BundleSolverML is, i.e., where
+    # BundleSolver has found Torch, which the library brings along, and it is
+    # no test: it trains a network and measures, hence it is run by hand.
+    if (TARGET SMS++::BundleSolverML)
 
         add_executable(UCBlock_ML_bench ../ml_bench.cpp)
         target_include_directories(UCBlock_ML_bench PRIVATE ..)
@@ -203,13 +217,16 @@ endif ()
                               SMS++::BundleSolverML
                               SMS++::BundleSolver
                               SMS++::LagrangianDualSolver
-                              SMS++::UCBlock
-                              ${TORCH_LIBRARIES})
+                              SMS++::UCBlock)
         target_compile_features(UCBlock_ML_bench PUBLIC cxx_std_20)
 
-        # on Windows the Torch DLLs have to sit next to the executable
-        if (MSVC)
-            file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+        # the DLLs of Torch, where it has any, have to sit next to the
+        # executable, and its targets do not name them: they are in lib/
+        # of the prefix whose share/cmake/Torch BundleSolverML found
+        get_filename_component(TORCH_PREFIX "${Torch_DIR}/../../.."
+                               ABSOLUTE)
+        file(GLOB TORCH_DLLS "${TORCH_PREFIX}/lib/*.dll")
+        if (TORCH_DLLS)
             add_custom_command(TARGET UCBlock_ML_bench POST_BUILD
                                COMMAND ${CMAKE_COMMAND} -E copy_if_different
                                        ${TORCH_DLLS}
@@ -231,8 +248,16 @@ smspp_label_tests()
 set(_batch UCScenarioGenerator/batches-scenred/batch)
 if (TEST ${_batch})
     set(_labels ${SMSPP_TEST_LABELS_UCBlock}
-                ScenarioReductionSolver StochasticBlock TwoStageStochasticBlock)
+                ScenarioReductionSolver StochasticBlock
+                TwoStageStochasticBlock)
     set_tests_properties(${_batch} PROPERTIES LABELS "${_labels}")
+endif ()
+
+# The archive of the largest cases of Man0euVRE is extracted only for the tests
+# labelled berlin, which neither the CI nor the nightly run, and so it has
+# their label alone [see tests/TwoStageStochasticBlock]
+if (TEST extract_uc_man0euvre)
+    set_tests_properties(extract_uc_man0euvre PROPERTIES LABELS berlin)
 endif ()
 
 # --------------------------------------------------------------------------- #

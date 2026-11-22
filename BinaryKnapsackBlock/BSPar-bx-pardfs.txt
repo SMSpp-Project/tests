@@ -2,16 +2,13 @@
 # - - - - - - - - - - - - - - BSPar-bx-pardfs.txt - - - - - - - - - - - - - -
 #
 # Single-exact-solver BlockSolverConfig: the greedy relaxation (which
-# brackets
-# the optimum) plus the BranchAndXSolver exploring the tree depth-first
-# across
-# 4 threads (intSolveMethod = DFS, intMaxThread = 4), the parallel
-# relaxation-
-# agnostic B&B. It is the "BX-parDFS" entry of the hard-instance lineups
-# (batch-jooken and batch-pisinger-large). The inner relaxation (the greedy
-# leaf) is set by the shared BX-baseCfg.txt; only the exploration mode and
-# the
-# thread count are overridden here via the '*BX-baseCfg.txt +' cascade.
+# brackets the optimum) plus the BranchAndXSolver exploring the tree
+# depth-first across 4 threads (intSolveMethod = DFS, intMaxThread = 4), the
+# parallel relaxation- agnostic B&B. It is the "BX-parDFS" entry of the
+# hard-instance lineups (batch-jooken and batch-pisinger-large). The inner
+# relaxation (the greedy leaf) is set by the shared BX-baseCfg.txt; only the
+# exploration mode and the thread count are overridden here via the
+# '*BX-baseCfg.txt +' cascade.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -49,7 +46,13 @@ intMaxThread   4  # 4 parallel workers (triggers the parallel tree
 
 0  # number of double parameters
 
+# now all the double parameters
+# [none]
+
 0  # number of string parameters
+
+# now all the string parameters
+# [none]
 
 0  # number of vector-of-int parameters
 
@@ -67,9 +70,9 @@ intMaxThread   4  # 4 parallel workers (triggers the parallel tree
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END BSPar-bx-pardfs.txt - - - - - - - - - - - - -

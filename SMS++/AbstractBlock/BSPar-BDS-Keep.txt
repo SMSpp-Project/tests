@@ -49,8 +49,8 @@ str_Mstr_BSCfg  BDSMCfg-MILP.txt  # BlockSolverConfig of the master
 2  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
-vintMasterBlock  1  0     # the sub-Block the master keeps: the first one
-vintMasterVars   3  0 1 2 # the complicating Variable, one by one
+vintMasterBlock  1 0      # the sub-Block the master keeps: the first one
+vintMasterVars   3 0 1 2  # the complicating Variable, one by one
 
 0  # number of vector-of-double parameters
 
@@ -63,11 +63,10 @@ vintMasterVars   3  0 1 2 # the complicating Variable, one by one
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig  - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - -  END BSPar-BDS-Keep.txt - - - - - - - - - - - - -

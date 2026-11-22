@@ -56,7 +56,7 @@ intMPPrimal  1  # the master problem is in its primal form
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # end 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

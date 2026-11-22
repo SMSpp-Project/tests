@@ -10,7 +10,7 @@
 
 RBlockConfig     # exact type of the Configuration object
 
-# first the (empty) configuration for the "root" Block- - - - - - - - - - - -
+# first the (empty) configuration for the "root" Block - - - - - - - - - - -
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
@@ -21,31 +21,31 @@ RBlockConfig     # exact type of the Configuration object
 *  # [none]
 
 # static constraints Configuration
-* #none
+*  # none
 
 # dynamic constraints Configuration
-* #none
+*  # none
 
 # static variables Configuration
-* #none
+*  # none
 
 # dynamic variables Configuration
-* #none
+*  # none
 
 # objective Configuration
-* #none
+*  # none
 
 # is_feasible Configuration
-* #none
+*  # none
 
 # is_optimal Configuration
-* #none
+*  # none
 
 # solution Configuration
-* #none
+*  # none
 
 # extra Configuration
-* #none
+*  # none
 
 # now the BlockConfig for the sub-Block - - - - - - - - - - - - - - - - - - -
 

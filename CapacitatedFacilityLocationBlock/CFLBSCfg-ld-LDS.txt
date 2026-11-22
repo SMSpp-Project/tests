@@ -29,11 +29,11 @@ ComputeConfig # exact type of the ComputeConfig object
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-17 # number of integer parameters
+17  # number of integer parameters
 
 # now all the integer parameters
 # stabilization: 0 = proximal, 1 = level, 2 = doubly stabilized
-intMPStbl              0
+intMPStbl            0
 intDoEasy            0 # do not do easy components even for LagBFunction
 intMaxIter       10000 # MaxIter, max number of iterations for each call
 intMaxThread        10 # MaxThread, max number of new tasks to spawn
@@ -59,7 +59,7 @@ intMaxNrEvls         2
 # if all the components need be computed at the optimum
 intFrcLstSS          0
 
-15 # number of double parameters
+15  # number of double parameters
 
 # now all the double parameters
 dblRelAcc         1e-8 # relative accuracy required to solution
@@ -85,7 +85,7 @@ dbltMinor         1e-6 # minimum value for t
 dbltInit          1e+3 # initial value for t
 dbltSPar2         1e-2 # parameter for the long-term t-strategy
 
-4 # number of string parameters
+4  # number of string parameters
 
 # now all the string parameters
 # the inner Solver used by LagrangianDualSolver
@@ -96,31 +96,31 @@ str_LDSlv_ISName          BundleSolver
 strMPBSolverCfg             MPBCfg.txt
 # BlockSolverConfig for the LagBFunctions
 str_LagBF_BSCfg       LPBSCfg-K-DP.txt
-                                       # this is for the Knapsack relaxation,
-                                       # using DPBinaryKnapsackSolver
+                                        # this is for the Knapsack
+                                        # relaxation, using
+                                        # DPBinaryKnapsackSolver
 strLogFileName               logLD.txt
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of 1st ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# end of BlockSolverConfig- - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - END CFLBSCfg-ld-LDS.txt - - - - - - - - - - - - -

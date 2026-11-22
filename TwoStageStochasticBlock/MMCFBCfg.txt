@@ -17,35 +17,35 @@ BlockConfig # exact type of the Configuration object
 
 # the structure: the knapsacks of the arcs
 SimpleConfiguration<int>
-1    # 0 = one MCFBlock per commodity, 1 = one BinaryKnapsackBlock per arc
+1  # 0 = one MCFBlock per commodity, 1 = one BinaryKnapsackBlock per arc
 
 # static_constraints
 SimpleConfiguration<int>
-0    # the strong constraints x^k_ij <= y_ij: no
+0  # the strong constraints x^k_ij <= y_ij: no
 
 # dynamic_constraints
-*    # [none]
+*  # [none]
 
 # static_variables: the structure decides the formulation
-*    # [none]
+*  # [none]
 
 # dynamic_variables
-*    # [none]
+*  # [none]
 
 # objective
-*    # [none]
+*  # [none]
 
 # is_feasible
-*    # [none]
+*  # [none]
 
 # is_optimal
-*    # [none]
+*  # [none]
 
 # solution
-*    # [none]
+*  # [none]
 
 # extra
-*    # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -  END MMCFBCfg.txt - - - - - - - - - - - - - - -

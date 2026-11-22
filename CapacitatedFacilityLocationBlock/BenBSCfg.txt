@@ -25,9 +25,12 @@ GRBMILPSolver
 1  # number of ComputeConfig
 
 ComputeConfig
+
 1  # f_diff
 
-4  # int params
+4  # number of integer parameters
+
+# now all the integer parameters
 intLogVerb        0
 intRelaxIntVars   2      # LP with user-cut separation loop in MILPSolver
 intCutSepPar      1      # only bit 0 matters (the loop runs unconditionally
@@ -37,14 +40,32 @@ intCutSepPar      1      # only bit 0 matters (the loop runs unconditionally
 intMaxCutPasses   10000  # raise the cut pass cap (default 1000) so capa1
                          # has a chance to converge (Benders tailing off)
 
-1  # double params
+1  # number of double parameters
+
+# now all the double parameters
 dblRelAcc 1e-7
 
-0  # string params
-0  # vint
-0  # vdbl
-0  # vstr
+0  # number of string parameters
 
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
 *  # extra
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

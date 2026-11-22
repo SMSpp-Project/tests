@@ -16,7 +16,7 @@ SimpleConfiguration<std::vector<Configuration*>>  # exact type
 *InnerBCfg-PTDF.txt     # 1st formulation: PTDF
 *InnerBCfg.txt          # 2nd formulation: KIRCHHOFF
 
-# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - END InnerBForm-DCN-CI.txt - - - - - - - - - - - - -

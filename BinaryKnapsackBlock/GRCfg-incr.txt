@@ -44,7 +44,7 @@ intIncremental 1  # the greedy fill kept across the Changes
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - END GRCfg-incr.txt  - - - - - - - - - - - - - -

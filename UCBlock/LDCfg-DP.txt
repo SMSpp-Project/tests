@@ -7,17 +7,16 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig         # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-19 # number of integer parameters
+19  # number of integer parameters
 
 # now all the integer parameters
 int_LDSlv_iBCopy       0 # 1 if sub-Block must be R3B-copied
 intPushCostToOwner     0 # the value of intPushCostToOwner for the LagBF
-
 # then those of BundleSolver as its inner Solver
 intDoEasy              0 # do easy components for (some) LagBFunction
 intMaxIter         10000 # max number of iterations for each call
@@ -67,7 +66,7 @@ intTrgtMng             0
                          # bit 4: if Lipschitz constant is used to compute
                          # the upper model
 
-17 # number of double parameters
+17  # number of double parameters
 
 # now all the double parameters
 dblMaxTime           300 # time limit of each call: on the harder instances
@@ -103,7 +102,7 @@ dbltInit            1e+1 # initial value for t
 dbltSPar2           1e-2 # parameter for the long-term t-strategy
 dbltSPar3              0 # parameter for small heuristic t adjustments
 
-3 # number of string parameters
+3  # number of string parameters
 
 # now all the string parameters
 # the inner Solver used by LagrangianDualSolver
@@ -111,29 +110,29 @@ dbltSPar3              0 # parameter for small heuristic t adjustments
 # the inner Solver used by LagrangianDualSolver
 str_LDSlv_ISName           BundleSolver
 # BlockSolverConfig for the MasterProblemBlock's Solver
-strMPBSolverCfg                 MPBCfg.txt
+strMPBSolverCfg            MPBCfg.txt
 # BlockSolverConfig for the LagBFunctions
-str_LagBF_BSCfg             InnerBSCfg-DP.txt
+str_LagBF_BSCfg            InnerBSCfg-DP.txt
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-0 # number of vector-of-string parameters
+0  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 # [none]
 
 # pointer to the "extra" Configuration
-* # [none]
+*  # [none]
 
-# end of ComputeConfig- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end of ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - -  END LDCfg-DP.txt - - - - - - - - - - - - - -

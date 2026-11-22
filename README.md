@@ -86,12 +86,24 @@ the `test` directory of the module itself.
   core library, plus `PolyhedralFunctionBlock_prune_test`, the unit test of
   the LP-based pruning of the rows.
 
+- [`MasterProblemBlock`](SMS++/MasterProblemBlock), a tester of the
+  `Solver` of a `MasterProblemBlock` (such as `GRBMILPSolver`,
+  `DAQPMILPSolver` and `BDMinQuadSolver`) against each other, on synthetic
+  master problems of a bundle method changed as the method changes them.
+
 ### The Solver
 
 - [`QuadFunction`](MILPSolver/QuadFunction), a tester which provides very
   comprehensive tests for any `CDASolver` able to handle Quadratic Programs
   (such as `MILPSolver` and its derived classes `CPXMILPSolver` ,
   `SCIPMILPSolver` , `GRBMILPSolver` and `HiGHSMILPSolver`).
+
+- [`ObjectiveWeight`](MILPSolver/ObjectiveWeight), the weight of the
+  `Objective` of a Block in the `:MILPSolver`: a random tree of
+  `AbstractBlock` with a weight on each `Objective` is checked against its
+  twin, which has the coefficients already multiplied by the weights, with
+  the `Solver` attached to the root and to a Block of the middle level, at
+  first and after rounds of random changes of the `Objective`.
 
 - [`BundleSolver/ML`](BundleSolver/ML), the benchmark of the machine-learning
   driven `BundleSolver` against the plain one, over a split of the instances
@@ -189,7 +201,21 @@ the `test` directory of the module itself.
   configured `:Solver`; `batch-stochastic` and `batch-pypsa` also solve the
   inner Block of the modular instances by the recursive
   `LagrangianDualSolver` (`InnerBCfg-LD.txt`), i.e., an ad hoc Benders
-  decomposition with a Lagrangian dual inside.
+  decomposition with a Lagrangian dual inside. The same suite holds the
+  battery `batches-sddp/batch`, which runs no tester of its own but the tools
+  `investmentblock_solver` and `sddp_solver`: at a fixed design it compares
+  the value of an `InvestmentFunction` over an `SDDPBlock`, i.e., the mean of
+  the simulations after the training, with the simulations of the same
+  `SDDPBlock` by `sddp_solver`, stage by stage, on the toy instances that
+  `gen_sddp_initud.py` writes, where a thermal unit with a minimum up time
+  is started up at the end of a stage, or one with a minimum down time is
+  shut down there; where the `InvestmentFunction` cannot pass the state, a
+  known defect, its value is printed and not held to the reference. The
+  battery `batches-design/batch` converts by the tool `design_converter` each
+  network of the `UCBlock` archive written with the design in its units and
+  lines into an `InvestmentBlock`, and holds its value to the PyPSA objective
+  of the same network written by pypsa2smspp as an `InvestmentBlock`
+  (`batches/ref-pypsa`, which `batch-pypsa` reads too).
 
 - [`TwoStageStochasticBlock`](TwoStageStochasticBlock), a tester that loads a
   `TwoStageStochasticBlock` from a netCDF file, attaches one or two `:Solver`
@@ -237,12 +263,37 @@ the `test` directory of the module itself.
   two formulations of the problem and the `SingleFlowDCRBendersSolver`,
   cross-checking what they answer and the `Solution` each of them produces.
 
+- [`HQPBlock`](HQPBlock), a tester of the `HQPBlock` of hierarchical
+  (lexicographic) Quadratic Programs and of the `HQPSolver` that solves its
+  levels one after the other with an inner `:MILPSolver`: one `HQPSolver`
+  for each inner Solver (DAQP, qpOASES, MOSEK, Clarabel) and setting, all in
+  the same `BlockSolverConfig`, is compared level by level with an
+  independent implementation of the null-space approach, hence with all the
+  others, on random and degenerate hierarchies built by the tester, on a
+  step of Model Predictive Control that changes the data of the same Block,
+  and on the instances that `HQPBlock` distributes; the proton cases of
+  TROTS, the Radiotherapy Optimisation Test Set, are solved by MOSEK and
+  Gurobi as inner Solvers, compared with each other and with the solution
+  of TROTS, by a battery run by hand.
+
 ### Posed on no Block in particular
 
 - [`compare_formulations`](compare_formulations),  very simple tester for
   testing different formulations of some problem obtained by
   `BlockConfig`-uring in two different ways two copies of the same `:Block`
   and solving them with two copies of the same `:Solver`.
+
+- [`import_modules`](import_modules), built when `SMSpp_BUILD_MODULE` is
+  `ON`: a program that imports the C++20 module of each SMS++ module in the
+  build (`import smspp.ucblock;` and so on), names their main classes and
+  gets a `Block` or a `Solver` of each one from the factory, so that a name
+  that a module does not export stops the build and a factory registration
+  lost through the import stops the run.
+
+- [`pypsa_instances`](pypsa_instances), not a test: the Python scripts that
+  write the instances of the batches converted from PyPSA networks by
+  pypsa2smspp (those of `UCBlock`, `InvestmentBlock` and of the stochastic
+  `Block`), and print their reference values.
 
 The tests run as traditional command line executables. Most of the tests
 can also run as a

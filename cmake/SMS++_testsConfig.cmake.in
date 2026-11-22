@@ -20,8 +20,10 @@ include(CMakeFindDependencyMacro)
 set(CPLEX_ROOT @CPLEX_ROOT@)
 
 # ----- Requirements -------------------------------------------------------- #
-# This is needed to find the custom modules we provide
-list(APPEND CMAKE_MODULE_PATH ${@modName@_CMAKE_DIR})
+# the find module of CPLEX is the one of the core [see SMSppModule.cmake of
+# SMS++]
+find_dependency(SMS++)
+list(APPEND CMAKE_MODULE_PATH ${SMSpp_CMAKE_DIR})
 
 find_dependency(CPLEX)
 

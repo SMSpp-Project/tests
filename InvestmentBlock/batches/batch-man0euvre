@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# usage: batch-man0euvre < exe file > < par file > < solver file > < log file >
+#        < exe file > = path of the executable, default ./IB_test
+#        < par file > = list of formulations, default InnerBForm-par.txt
+#        < solver file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#
+# the instances of the EDF case Man0euVRE as the workflow of
+# SPSUnipi/RESILIENT-instances hands them to SMS++ for its InvestmentBlock
+# runs, i.e., with the InvestmentBlock outside the TwoStageStochasticBlock
+# (cases-man0euvre, 16 regions, 2 days and 3 scenarios, and 12 days and
+# 21, 52 and 105 scenarios, the last three being the ones presented in
+# Berlin), each solved in every formulation of the list and checked against
+# the optimum of PyPSA + HiGHS on the same network, the objective constant
+# included; the two largest ones are in the archive man0euvre of UCBlock,
+# whose directory MAN0EUVRE_DIR gives [see CMakeLists.txt]
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$(dirname "$0")/../../batch_common.sh"
+DEFAULT_EXE=./IB_test
+DEFAULT_PAR=InnerBForm-par.txt
+DEFAULT_SLV=BSPar.txt
+parse_batch_args "$@"
+
+# reference objective values dictionary - - - - - - - - - - - - - - - - - - -
+declare -A REF_OBJ
+REF_OBJ[man0euvre_d2_s3_ib.nc]=1.9157803319e+10
+REF_OBJ[man0euvre_d12_s21_ib.nc]=5.1751526045307e+10
+REF_OBJ[man0euvre_d12_s52_ib.nc]=4.5017820099946e+10
+REF_OBJ[man0euvre_d12_s105_ib.nc]=4.5387194852802e+10
+
+# run all the instances - - - - - - - - - - - - - - - - - - - - - - - - - - -
+dir="${MAN0EUVRE_DIR:-../../UCBlock/data/nc4/pypsa-data/man0euvre}"
+n=0
+for what in "${dir}"/man0euvre_*_ib.nc; do
+    if [ ! -f "$what" ]; then
+      continue
+    fi
+    base=$(basename "$what")
+    ref=${REF_OBJ[$base]}
+    if [ -z "$ref" ]; then
+      echo "No reference objective defined for file: $base"
+      exit 1
+    fi
+    run_test "$exe" -F "$par" -S "$slv" -o "$ref" "$what"
+    n=$(( n + 1 ))
+done
+
+# a directory with no instance is an archive that is not there
+if [ "$n" -eq 0 ]; then
+  echo "No instance in $dir"
+  exit 1
+fi
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

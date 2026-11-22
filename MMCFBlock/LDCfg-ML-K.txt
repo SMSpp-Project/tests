@@ -13,8 +13,9 @@
 
 1  # f_diff == 1 ==> only the entries listed below are changed
 
-9 # number of integer parameters
+9  # number of integer parameters
 
+# now all the integer parameters
 int_InnerS_WVarSCfg 0 # use first Configuration in the "cache"
 int_LDSlv_iBCopy    0 # 1 if sub-Block must be R3B-copied
 intPushCostToOwner  0 # the value of intPushCostToOwner for the LagBF
@@ -25,27 +26,29 @@ intMLTrainOnline    0 # train the network online at the end of each compute()
 intMLSeed           0 # seed Torch and re-init the net, for reproducibility
 intNTrainRounds     1 # times the instance is re-solved for online training
 
-2 # number of double parameters
+2  # number of double parameters
 
+# now all the double parameters
 dblmnIncr    1.000001 # ML: ~1 so the network, not the rule, sets the new t
 dblmnDecr           1 # ML: ~1 so the network, not the rule, sets the new t
 
-2 # number of string parameters
+2  # number of string parameters
 
+# now all the string parameters
 str_LDSlv_ISName  BundleSolverML   # inner Solver: the ML-based BundleSolver
 str_LagBF_BSCfg   LPBSCfg-K-DP.txt # same relaxation as the non-ML BSPar.txt
 
-0 # number of vector-of-int parameters
+0  # number of vector-of-int parameters
 
 # now all the vector-of-int parameters
 # [none]
 
-0 # number of vector-of-double parameters
+0  # number of vector-of-double parameters
 
 # now all the vector-of-double parameters
 # [none]
 
-1 # number of vector-of-string parameters
+1  # number of vector-of-string parameters
 
 # now all the vector-of-string parameters
 vstr_LDSl_Cfg

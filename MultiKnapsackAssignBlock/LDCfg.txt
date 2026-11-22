@@ -10,12 +10,12 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-ComputeConfig         # exact type of the ComputeConfig object
+ComputeConfig # exact type of the ComputeConfig object
 
 1  # f_diff == 0 ==> all non-provided parameters are set to the default value
    # f_diff == 1 ==> all non-provided parameters are not changed
 
-20 # number of integer parameters
+20  # number of integer parameters
 
 # now all the integer parameters
 # first those of LagrangianDualSolver proper
@@ -55,7 +55,7 @@ intTrgtMng             2 # bit-wise encoding targets and accuracies
                          # management: bit 1 = upper/lower target set to
                          # each convex/concave component
 
-16 # number of double parameters
+16  # number of double parameters
 
 # now all the double parameters
 dblRelAcc           1e-7 # relative accuracy required to solution

@@ -8,9 +8,8 @@
  *
  * - output and parsing: the ostream manipulators def() and fixd(), the
  *   string-to-T parser Str2Sthg(), the pretty-printer of Solver return codes
- *   PrintResults(), the std::terminate handler smspp_terminate(),
- *   load_Block_or_exit(), which reads a Block out of a text file, and
- *   GenerateRand(), which draws a random subset of indices;
+ *   PrintResults(), load_Block_or_exit(), which reads a Block out of a
+ *   text file, and GenerateRand(), which draws a random subset of indices;
  *
  * - configuration: b_config_Block() and s_config_Block() apply a BlockConfig
  *   or a BlockSolverConfig to a Block, dispatching to the nested sub-Block
@@ -90,6 +89,7 @@
 #include <BlockSolverConfig.h>
 #include <ColVariable.h>
 #include <PolyhedralFunction.h>
+#include <SMSTerminate.h>
 #include <Solution.h>
 
 /*--------------------------------------------------------------------------*/
@@ -106,7 +106,8 @@ using namespace SMSpp_di_unipi_it;
  *        ignore them entirely. */
 /// @{
 
-extern std::string docopt_desc;     ///< test description; set by the test before calling docopt()
+/// test description; set by the test before calling docopt()
+extern std::string docopt_desc;
 
 extern std::string exe;             ///< name of the executable file
 extern std::string filename;        ///< input filename (last positional argv)
@@ -114,12 +115,15 @@ extern std::string bconf_file;      ///< BlockConfig filename (-B)
 extern std::string sconf_file;      ///< BlockSolverConfig filename (-S)
 extern std::string fconf_file;      ///< list of BlockConfig formulations (-F)
 extern std::string block_prefix;    ///< prefix for all Block filenames (-p)
-extern std::string conf_prefix;     ///< prefix for all Configuration filenames (-c)
+/// prefix for all Configuration filenames (-c)
+extern std::string conf_prefix;
 
 extern bool sol_verbose;            ///< if the Solver should be verbose
-extern bool dryrun;                 ///< if compute() need not really be called (-D)
+/// if compute() need not really be called (-D)
+extern bool dryrun;
 
-extern int verbosity_level;         ///< verbosity level (0 = silent, >0 = verbose output, -v)
+/// verbosity level (0 = silent, >0 = verbose output, -v)
+extern int verbosity_level;
 
 /// reference objective for the ref-vs-Solver comparison; defaults to NaN
 /** Tests set this directly (positional argv or test-specific option); the
@@ -272,21 +276,17 @@ Block::Subset GenerateRand( Block::Index m , Block::Index k ,
                             std::mt19937 & rg , bool ord = true );
 
 /*--------------------------------------------------------------------------*/
-/// pretty-print a Solver result (objective value or kInfeasible/kUnbounded/error)
-/** @param hs   has-solution flag (the caller has decoded the Solver return code)
+/// pretty-print a Solver result (objective value or
+/// kInfeasible/kUnbounded/error)
+/** @param hs   has-solution flag (the caller has decoded the Solver return
+ *              code)
  *  @param rtrn the raw Solver return code (used only when @p hs is false)
  *  @param fo   the objective value (used only when @p hs is true)
  *
- *  Uses the def manipulator for the numeric output so the same format is shared
- *  by every test program. */
+ *  Uses the def manipulator for the numeric output so the same format is
+ *  shared by every test program. */
 
 void PrintResults( bool hs , int rtrn , double fo );
-
-/*--------------------------------------------------------------------------*/
-/// std::terminate handler that prints the active exception and aborts
-/** Install with std::set_terminate( smspp_terminate ); at the top of main(). */
-
-void smspp_terminate( void );
 
 /*--------------------------------------------------------------------------*/
 /// load a Block out of a text file, or stop with a clear message
@@ -317,6 +317,29 @@ void load_Block_or_exit( Block * block , const std::string & fn ,
 
 std::string first_Solver_of( const std::vector< std::string > & names ,
                              const std::string & what );
+
+/*--------------------------------------------------------------------------*/
+/// the Solver of a BlockSolverConfig that this build does not have, removed
+
+using Dropped = std::vector< std::pair< Block::Index , std::string > >;
+
+/** Takes out of @p bsc the Solver that this build does not have. A
+ *  configuration names every Solver that makes sense on the instances of a
+ *  battery, so that a run solves with all of them and compares; but which
+ *  Solver are there depends on the modules the build has and on the external
+ *  libraries each of them has found, and asking the factory for one that is
+ *  not there throws [see Solver::new_Solver()], which would kill the whole
+ *  run rather than that one comparison. What is left out is said on
+ *  std::cerr, name by name, with the file @p fn it comes from, so that the
+ *  log of a run tells what it has actually solved with; it is returned, last
+ *  first, with its index in the configuration. If none of the Solver is
+ *  there the run exits with 77 (nothing to do), unless @p none_ok, with
+ *  which @p bsc is left empty for the caller to skip (e.g., one
+ *  configuration of a list of them, each with its own Solver). */
+
+Dropped drop_missing_Solvers( BlockSolverConfig * bsc ,
+			      const std::string & fn ,
+			      bool none_ok = false );
 
 /*--------------------------------------------------------------------------*/
 /// apply a (meta-)BlockConfig to a Block
@@ -639,7 +662,8 @@ void print_instance_line( const std::vector< double > & times ,
 std::string reading_token( const SolverReading & r );
 
 /*--------------------------------------------------------------------------*/
-/// cross-check per-Solver readings against each other and an optional reference
+/// cross-check per-Solver readings against each other and an optional
+/// reference
 /** Pure verdict logic shared by SolveAll() and by tests that run their own
  *  solve loop (so the cross-check is implemented once). For each Solver k:
  *  @p has_solution[k] says whether it found a solution, @p status[k] is its
@@ -930,7 +954,9 @@ bool SolveBoth( Block * block ,
 /*--------------------------------------------------------------------------*/
 /// value of the Objective of @p block and of all its inner Block
 /** Recomputes every Objective of the tree on the current value of the
- *  Variable and sums them, i.e., what the tree is worth right now. */
+ *  Variable and sums them, each multiplied by the product of the weights
+ *  [see Block::set_objective_weight()] along the path from @p block, whose
+ *  own weight is excluded, i.e., what the tree is worth right now. */
 
 double tree_objective_value( Block * block );
 
@@ -969,7 +995,8 @@ bool check_var_solutions( Block * block , double tol = 1e-6 );
 double own_rows_violation( Block * block );
 
 /*--------------------------------------------------------------------------*/
-/// check the solution a relaxation Solver reconstructs against the relaxed rows
+/// check the solution a relaxation Solver reconstructs against the relaxed
+/// rows
 /** For every Solver of @p block that is_relaxation() says solves a relaxation
  *  and that has a primal solution, writes it in the Variable and checks it
  *  against the rows @p block itself holds, i.e. the ones the relaxation has
