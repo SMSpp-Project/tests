@@ -5,6 +5,8 @@
 #include <fstream>
 #include <string.h>
 #include <iostream>
+#include <exception>
+#include <typeinfo>
 
 using namespace std;
 

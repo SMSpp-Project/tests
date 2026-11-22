@@ -94,6 +94,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `mnetgen` includes `<exception>` and `<typeinfo>`, which libc++ does not
+  bring in through the other headers.
+
 - the `MOSEKMILPSolver` of the integer batteries of
   `MILPSolver_QuadFunction_test` (`MOSEKCfg-I.txt`) uses four threads,
   since with one per core its branch and bound ran out of memory on
