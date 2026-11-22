@@ -81,7 +81,9 @@ formulation of `HQPDistForms.txt`, given with `-F`, a pair of a
   `BendersDecompositionSolver` (`BDSCfg.txt`) whose subproblems are solved
   by DAQP and whose master by Gurobi (`BDSMCfg.txt`), left out by a build
   without it, as it is and with the `Objective` of each level at value
-  about 1 (`intLevelScale`).
+  about 1 (`intLevelScale`), and in the convex regime, whose master is a
+  `BundleSolver` with the trust region (`InnerBSCfg-bds-box.txt`,
+  `BDSMCfg-box.txt`), with the same scale.
 
 The `HQPSolver` of each formulation follow those of the `HQPBlock`, and
 those of the previous formulation, in the positions of `-E`, `-X` and
@@ -157,7 +159,11 @@ The batteries are:
   than `1e-3`, since it stops when no cut is violated by more than `1e-9`
   relative and with the regularization `1e-3` such a gap leaves `x` free by
   about `1e-3` (with the scale of the levels, which makes the gap relative
-  to the level, to `1e-5` on the values and the default on `x`), and in
+  to the level, to `1e-5` on the values and the default on `x`), that in
+  the convex regime to `3e-4` on the values and `3e-3` on `x`, since its
+  bundle closes each level to `1e-7` relative and a level almost flat
+  between the slacks and the regularization leaves the next one an error
+  larger by orders of magnitude, and in
   the run of Model Predictive Control DAQP and qpOASES
   must take fewer iterations than the same ones solving from scratch;
 

@@ -1,0 +1,72 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BDSMCfg-box.txt - - - - - - - - - - - - - - - -
+#
+# The BlockSolverConfig of the master of the BendersDecompositionSolver of
+# InnerBSCfg-bds-box.txt, in the convex regime: a BundleSolver with the
+# trust region, i.e., the BoxStep method, whose primal master carries the
+# quadratic 0-th component of the slacks of the coupling rows as it is and
+# is solved by the Gurobi of BDSMCfg.txt. The relative accuracy 1e-7 is that
+# of BDSCfg.txt.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+BundleSolver  # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+5  # number of integer parameters
+
+# now all the integer parameters
+intMaxIter    20000  # max iterations of the bundle method on a level
+intBPar2        400  # max size of the bundle of each component
+intMPPrimal       1  # the primal master, which carries the 0-th component
+intMPStbl         4  # the trust region: the BoxStep method
+intMaxThread      1  # one thread
+
+1  # number of double parameters
+
+# now all the double parameters
+dblRelAcc  1e-7  # relative accuracy of the master
+
+1  # number of string parameters
+
+# now all the string parameters
+strMPBSolverCfg  BDSMCfg.txt  # the Solver of its master
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BDSMCfg-box.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

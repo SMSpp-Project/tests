@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the Benders decomposition of the `HQPDistBlock` in the convex regime in
+  `batch-generated` of `HQPBlock`, as the 4th `HQPSolver` of
+  `HQPDistBSCfg-bds.txt`: a `BundleSolver` with the trust region as the
+  master, the phase one of DAQP to `1e-10` and the `Objective` of each level
+  at value about 1, held to `3e-4` on the values of the levels and to
+  `3e-3` on `x`
+
 - the Lagrangian dual of the consensus rows of the `HQPDistBlock` in
   `batch-generated` of `HQPBlock`, as the 5th `HQPSolver` of
   `HQPDistBSCfg.txt`: a `LagrangianDualSolver` with a `BundleSolver` to

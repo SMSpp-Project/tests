@@ -41,6 +41,16 @@
 # (the 24th, intLevelScale), whose gap is then relative to the level, is
 # held to 1e-5 on the values and to the default 1e-3 on x, which it misses
 # by an order of magnitude but on the dependent rows (3e-4).
+#
+# The Benders decomposition in the convex regime (the 25th, the 4th of
+# HQPDistBSCfg-bds.txt), whose master is a BundleSolver with the trust
+# region and the Objective of each level at value about 1, is held to 3e-4
+# on the values of the levels and to 3e-3 on x: the bundle closes each
+# level to 1e-7 relative, the noise of the QP Solvers of the subproblems
+# stopping it below about 1e-8, and a level whose Objective is almost flat
+# between the slacks and the regularization leaves its slacks free by about
+# 1e-6 within that gap, which the next level, built on them, turns into up
+# to 2e-4 on its value (e.g., the last level of the kinds of levels).
 
 # run from the test directory so HQPBlock_test reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -54,7 +64,7 @@ DEFAULT_PAR=BSPar.txt
 parse_batch_args "$@"
 
 run_test "$exe" -S "$par" -F HQPDistForms.txt \
-  -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5,,,,,,,,,5e-5,,1e-5,1e-5 \
-  -X ,,,,,,,,,,,,,,,,,,,,,,1e-2 -I 1:13,4:14
+  -E ,,,,,,1e-5,1e-5,1e-5,1e-5,1e-5,1e-5,,,,,,,,,5e-5,,1e-5,1e-5,3e-4 \
+  -X ,,,,,,,,,,,,,,,,,,,,,,1e-2,,3e-3 -I 1:13,4:14
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
