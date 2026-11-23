@@ -1,0 +1,2079 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BSPar-par.txt - - - - - - - - - - - - - - - -
+#
+# BlockSolverConfig of the scaling campaign of the BranchAndXSolver: the
+# greedy relaxation (which brackets the optimum), then the BranchAndXSolver
+# on BX-parCfg.txt with its own tree, with the sequential branch-and-bound
+# of PBeFS, and with each parallel scheme of PBeFS (strPBeFSScheme) on 1,
+# 2, 4, 8 and 16 workers (intMaxThread), one Solver each, so that one run
+# of an instance gives the times of all of them. It is run by hand, no
+# batch refers to it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+53  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+GreedyRelaxationBinaryKnapsackSolver  # 1st: relaxation, brackets the optimum
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+BranchAndXSolver
+
+53  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 1: the greedy relaxation (brackets the optimum), shared fragment
+*GRCfg.txt
+
+# 2: the BranchAndXSolver with its own tree
+*BX-parCfg.txt
+
+# 3: the scheme sequential of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme sequential
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 4: the scheme shared of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme shared
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 5: the scheme shared of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme shared
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 6: the scheme shared of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme shared
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 7: the scheme shared of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme shared
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 8: the scheme shared of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme shared
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 9: the scheme distributed of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme distributed
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 10: the scheme distributed of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme distributed
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 11: the scheme distributed of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme distributed
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 12: the scheme distributed of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme distributed
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 13: the scheme distributed of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme distributed
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 14: the scheme deterministic of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme deterministic
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 15: the scheme deterministic of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme deterministic
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 16: the scheme deterministic of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme deterministic
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 17: the scheme deterministic of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme deterministic
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 18: the scheme deterministic of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme deterministic
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 19: the scheme selfsplit of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme selfsplit
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 20: the scheme selfsplit of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme selfsplit
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 21: the scheme selfsplit of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme selfsplit
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 22: the scheme selfsplit of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme selfsplit
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 23: the scheme selfsplit of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme selfsplit
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 24: the scheme stealing of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 25: the scheme stealing of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 26: the scheme stealing of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 27: the scheme stealing of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 28: the scheme stealing of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 29: the scheme multiqueue of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme multiqueue
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 30: the scheme multiqueue of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme multiqueue
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 31: the scheme multiqueue of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme multiqueue
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 32: the scheme multiqueue of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme multiqueue
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 33: the scheme multiqueue of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme multiqueue
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 34: the scheme depthbounded of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme depthbounded
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 35: the scheme depthbounded of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme depthbounded
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 36: the scheme depthbounded of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme depthbounded
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 37: the scheme depthbounded of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme depthbounded
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 38: the scheme depthbounded of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme depthbounded
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 39: the scheme budget of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme budget
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 40: the scheme budget of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme budget
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 41: the scheme budget of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme budget
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 42: the scheme budget of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme budget
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 43: the scheme budget of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme budget
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 44: the scheme stackstealing of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stackstealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 45: the scheme stackstealing of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stackstealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 46: the scheme stackstealing of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stackstealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 47: the scheme stackstealing of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stackstealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 48: the scheme stackstealing of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stackstealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 49: the scheme ordered of PBeFS on 1 worker
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    1   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme ordered
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 50: the scheme ordered of PBeFS on 2 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    2   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme ordered
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 51: the scheme ordered of PBeFS on 4 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    4   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme ordered
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 52: the scheme ordered of PBeFS on 8 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    8   # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme ordered
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 53: the scheme ordered of PBeFS on 16 workers
+*BX-parCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1   # the branch-and-bound of PBeFS
+intMaxThread    16  # workers
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme ordered
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BSPar-par.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

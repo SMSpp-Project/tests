@@ -1,0 +1,52 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - BX-parCfg.txt - - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the BranchAndXSolver of the scaling campaign
+# (BSPar-par.txt): BX-baseCfg.txt, the greedy leaf, with a time limit, so
+# that a scheme that does not scale still ends within it.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*BX-baseCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblMaxTime 60  # seconds
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# end of ComputeConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END BX-parCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

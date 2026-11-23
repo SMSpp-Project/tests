@@ -31,7 +31,11 @@ left out. [BSPar-fast.txt](BSPar-fast.txt) keeps one `:Solver` per family,
 without the full-table DP, for the instances on which the whole lineup would
 not finish. The rest are the harnesses of one path at a time, i.e., the lazy
 bounding protocol, the reoptimization, the diving and the thread scaling of
-the `BranchAndXSolver`. The `ComputeConfig` they share are the fragments
+the `BranchAndXSolver`; among them, [BSPar-par.txt](BSPar-par.txt) attaches
+the `BranchAndXSolver` with its own tree and with each scheme of PBeFS on 1,
+2, 4, 8 and 16 workers, on [BX-parCfg.txt](BX-parCfg.txt) (the base fragment
+with a time limit), so that one run of an instance gives the scaling of all
+the schemes. The `ComputeConfig` they share are the fragments
 [MILPCfg.txt](MILPCfg.txt), [DPCfg.txt](DPCfg.txt), [CDPCfg.txt](CDPCfg.txt),
 [GRCfg.txt](GRCfg.txt) and
 [BX-baseCfg.txt](BX-baseCfg.txt), each written once and pointed at by whoever
