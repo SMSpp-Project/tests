@@ -32,8 +32,10 @@
 #     PBeFS (intTreeExplorer), by the scheme that strPBeFSScheme names:
 #     best-first sequential, best-first on 4 workers sharing one queue,
 #     depth-first on 4 workers with a queue each, best-first on 4 workers by
-#     synchronous rounds, by the SelfSplit of a sampling of the tree and by
-#     work stealing.
+#     synchronous rounds, by the SelfSplit of a sampling of the tree, by
+#     work stealing and by a MultiQueue, and on 4 workers by the depth-first
+#     skeletons (spawning above a depth, after a budget, stealing from the
+#     stacks, ordered by discrepancy).
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments (the
 # MILP/DP/GR ones are shared with BSPar-mixed.txt, the core DP and RECORD
@@ -49,7 +51,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-21  # number of (the names of) Solver in this BlockSolverConfig
+26  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -87,8 +89,18 @@ BranchAndXSolver
 BranchAndXSolver
 # 21st: BX best-first, PBeFS, 4 workers, work stealing
 BranchAndXSolver
+# 22nd: BX best-first, PBeFS, 4 workers, MultiQueue
+BranchAndXSolver
+# 23rd: BX, PBeFS, 4 workers, depth-bounded skeleton
+BranchAndXSolver
+# 24th: BX, PBeFS, 4 workers, budget skeleton
+BranchAndXSolver
+# 25th: BX, PBeFS, 4 workers, stack-stealing skeleton
+BranchAndXSolver
+# 26th: BX, PBeFS, 4 workers, skeleton ordered by discrepancy
+BranchAndXSolver
 
-21  # number of ComputeConfig in this BlockSolverConfig
+26  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -654,6 +666,186 @@ intMaxThread    4
 
 # now all the string parameters
 strPBeFSScheme stealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 22: BranchAndXSolver, best-first, PBeFS on 4 workers by a MultiQueue
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    4
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme multiqueue
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 23: BranchAndXSolver, PBeFS on 4 workers, spawning above a depth
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    4
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme depthbounded
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 24: BranchAndXSolver, PBeFS on 4 workers, spawning after a budget
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    4
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme budget
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 25: BranchAndXSolver, PBeFS on 4 workers, stealing from the stacks
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    4
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme stackstealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 26: BranchAndXSolver, PBeFS on 4 workers, ordered by discrepancy
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    4
+
+0  # number of double parameters
+
+1  # number of string parameters
+
+# now all the string parameters
+strPBeFSScheme ordered
 
 0  # number of vector-of-int parameters
 
