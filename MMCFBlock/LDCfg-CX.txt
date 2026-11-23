@@ -1,0 +1,56 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LDCfg-CX.txt  - - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of the LagrangianDualSolver of BSPar.txt: that of
+# LDCfg.txt with the sub-Block of the commodities solved by a :MILPSolver
+# and the variable solution read from the first Configuration of the
+# "cache". LDCfg-DP.txt takes it with the knapsack subproblems.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+3  # number of integer parameters
+
+# now all the integer parameters
+int_InnerS_WVarSCfg 0 # use first Configuration in the "cache"
+int_LDSlv_iBCopy    0 # 1 if sub-Block must be R3B-copied
+intPushCostToOwner  0 # the value of intPushCostToOwner for the LagBF
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+str_LagBF_BSCfg     LPBSCfg-K-CX.txt # the sub-Block solved by a :MILPSolver
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+1  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+vstr_LDSl_Cfg
+1 # number of elements
+# now all the elements
+GetInnerVarSolConfig.txt
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END LDCfg-CX.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

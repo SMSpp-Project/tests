@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the `LagrangianDualSolver` with `intRowScaling` 1 in `batch` and
+  `batch-k` of `MMCFBlock`, as the 3rd `Solver` of `BSPar.txt` (the mutual
+  capacities relaxed) and the 1st of `BSPar-K.txt` (the flow conservation
+  relaxed), cross-checked with the one without scaling; the parts of their
+  `ComputeConfig` that the two share are in `LDCfg-CX.txt` and
+  `LDCfg-DP.txt`
+
 - the Benders decomposition of the `HQPDistBlock` in the convex regime in
   `batch-generated` of `HQPBlock`, as the 4th `HQPSolver` of
   `HQPDistBSCfg-bds.txt`: a `BundleSolver` with the trust region as the
