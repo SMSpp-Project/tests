@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the batches of the UCBlock suite solve the instances also with the
+  balance rows of the networks in the `UCBlock` [see
+  `UCBlock/InnerBCfg-balance.txt` and `UCBlock/UCBCfg-balance.txt`]:
+  `batch-pypsa`, `batch-conversion` and `batch-ec` as the 4th formulation of
+  `InnerBForm-DCN.txt` (the 3rd of `InnerBForm-DCN-CI.txt`), `batch-ac` as
+  the 2nd of `InnerBForm-AC.txt`, each copy compared with the others
+
 - the Benders decomposition of the `HQPDistBlock` in the convex regime in
   `batch-generated` of `HQPBlock`, as the 4th `HQPSolver` of
   `HQPDistBSCfg-bds.txt`: a `BundleSolver` with the trust region as the

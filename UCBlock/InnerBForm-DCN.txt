@@ -3,7 +3,8 @@
 #
 # The formulations of the "meta"-BlockConfig of a UCBlock that batch-pypsa
 # compares: the formulations of the DCNetworkBlock, i.e., PTDF, CYCLE and the
-# KIRCHHOFF one of InnerBCfg.txt, all the rest being that of InnerBCfg.txt.
+# KIRCHHOFF one of InnerBCfg.txt, also with its balance rows in the UCBlock
+# [see InnerBCfg-balance.txt], all the rest being that of InnerBCfg.txt.
 # The instance is read once per formulation, each copy is solved by the same
 # BlockSolverConfig and the Solver of all the copies are compared with each
 # other, being the same problem [see -F of UCBlock_test].
@@ -13,12 +14,13 @@
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-3  # number of formulations
+4  # number of formulations
 
 # now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 *InnerBCfg-PTDF.txt     # 1st formulation: PTDF
 *InnerBCfg-CYCLE.txt    # 2nd formulation: CYCLE
 *InnerBCfg.txt          # 3rd formulation: KIRCHHOFF
+*InnerBCfg-balance.txt  # 4th formulation: KIRCHHOFF, balance in UCBlock
 
 # end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 

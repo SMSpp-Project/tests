@@ -3,18 +3,20 @@
 #
 # The formulations of InnerBForm-DCN.txt that the batteries of this suite
 # compare in CI, where their time is short: the PTDF and the KIRCHHOFF
-# formulations of the DCNetworkBlock.
+# formulations of the DCNetworkBlock, the latter also with its balance rows
+# in the UCBlock.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-2  # number of formulations
+3  # number of formulations
 
 # now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 *InnerBCfg-PTDF.txt     # 1st formulation: PTDF
 *InnerBCfg.txt          # 2nd formulation: KIRCHHOFF
+*InnerBCfg-balance.txt  # 3rd formulation: KIRCHHOFF, balance in UCBlock
 
 # end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 

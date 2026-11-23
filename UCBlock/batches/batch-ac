@@ -73,7 +73,10 @@ for what in ${DATADIR}/*.nc4; do
       *_24h_*) continue ;;
     esac
 
-    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" -B InnerBCfg.txt
+    # with the balance rows in the ACNetworkBlock and in the UCBlock, the
+    # two copies compared [see InnerBForm-AC.txt]
+    run_test "$exe" "$what" -S "$par" -R "$REL" -E "$EPS" \
+             -F InnerBForm-AC.txt
 
 done
 

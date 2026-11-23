@@ -1,0 +1,24 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - InnerBCfg-balance.txt - - - - - - - - - - - - - -
+#
+# The "meta"-BlockConfig of InnerBCfg.txt with the balance rows of the
+# networks in the UCBlock [see UCBCfg-balance.txt], for the batches that
+# solve every instance with each formulation of the network.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# a "meta"-BlockConfig , i.e., a map classname --> its BlockConfig
+SimpleConfiguration<std::map<std::string,Configuration*>>
+
+5  # the number of elements in the map
+
+ThermalUnitBlock        *TUBCfg.txt
+DCNetworkBlock          *DCNBCfg.txt
+ACNetworkBlock          *ACBCfg.txt
+PolyhedralFunctionBlock *PFBCfg.txt
+UCBlock                 *UCBCfg-balance.txt
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBCfg-balance.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

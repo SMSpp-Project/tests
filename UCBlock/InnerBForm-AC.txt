@@ -1,0 +1,26 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBForm-AC.txt - - - - - - - - - - - - - - -
+#
+# The formulations of the "meta"-BlockConfig of a UCBlock that batch-ac
+# compares: that of InnerBCfg.txt, and the same with the balance rows of the
+# ACNetworkBlock in the UCBlock [see InnerBCfg-balance.txt]. The instance is
+# read once per formulation, each copy is solved by the same
+# BlockSolverConfig and the Solver of all the copies are compared with each
+# other, being the same problem [see -F of UCBlock_test].
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+SimpleConfiguration<std::vector<Configuration*>>  # exact type
+
+2  # number of formulations
+
+# now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
+*InnerBCfg.txt          # 1st formulation: balance in the network
+*InnerBCfg-balance.txt  # 2nd formulation: balance in UCBlock
+
+# end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END InnerBForm-AC.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
