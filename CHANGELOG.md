@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - the cutoff probing of `BranchAndXSolver` (`intCutOffProbing`): in the
   suite `GeneralizedAssignmentBlock`, with targets 1 apart from the bound of
-  the root, as the 7th Solver of `BSPar.txt`, and in `BSPar.txt` of
+  the root and the fixing by Lagrangian reduced cost against them, as the
+  7th Solver of `BSPar.txt`, and in `BSPar.txt` of
   `BinaryKnapsackBlock`, with the first target `1e-3` times the bound away
   from it, the step doubling and the incremental greedy relaxation, as its
   16th Solver

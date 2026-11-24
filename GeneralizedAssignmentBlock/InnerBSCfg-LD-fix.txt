@@ -1,0 +1,64 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - InnerBSCfg-LD-fix.txt - - - - - - - - - - - - -
+#
+# BlockSolverConfig of the nodes of the BranchAndXSolver by the cutoff
+# probing of BSPar.txt: the LagrangianDualRelaxationSolver of LDRSCfg.txt,
+# fixing by Lagrangian reduced cost against the incumbent, i.e., the target
+# of the probing.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+LagrangianDualRelaxationSolver  # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+# ComputeConfig of the LagrangianDualRelaxationSolver
+*LDRSCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intLagFixing           1         # fix by Lagrangian reduced cost
+
+1  # number of double parameters
+
+# now all the double parameters
+dblLagFixingTol        0.999999  # integer costs, as dblAbsAcc of BXCfg.txt
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - END InnerBSCfg-LD-fix.txt - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

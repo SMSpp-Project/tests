@@ -48,7 +48,9 @@ they answer is cross-checked:
 
 - the same `BranchAndXSolver` by the cutoff probing (`intCutOffProbing`),
   i.e., as a sequence of explorations against targets 1 apart from the
-  bound of the root, until one finds a solution.
+  bound of the root, until one finds a solution, the
+  `LagrangianDualRelaxationSolver` fixing by Lagrangian reduced cost against
+  the target (`InnerBSCfg-LD-fix.txt`).
 
 The usage of the executable is the following:
 

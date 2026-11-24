@@ -20,7 +20,9 @@
 #   - BranchAndXSolver       the Lagrangian dual of the nodes, the same
 #                            heuristic at each of them (BXCfg.txt)
 #   - BranchAndXSolver       the same, by the cutoff probing with targets
-#                            1 apart from the bound of the root
+#                            1 apart from the bound of the root, fixing by
+#                            Lagrangian reduced cost against them
+#                            (InnerBSCfg-LD-fix.txt)
 #
 # The problem being an integer one, the Lagrangian dual is a relaxation of it
 # and the battery declares it so (-R ,r,r).
@@ -72,10 +74,10 @@ intCutOffProbing  1       # targets 1 apart [see CutOffProbing]
 # now all the double parameters
 # [none]
 
-0  # number of string parameters
+1  # number of string parameters
 
 # now all the string parameters
-# [none]
+strNameOfBlockSolverConfigurationFile InnerBSCfg-LD-fix.txt
 
 0  # number of vector-of-int parameters
 
