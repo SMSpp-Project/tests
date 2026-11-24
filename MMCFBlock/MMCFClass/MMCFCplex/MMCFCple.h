@@ -5,13 +5,13 @@
  * Multicommodity Min Cost Flow (MMCF) Problems solver, based on calls calls
  * to the Cplex Callable Libraries for solution of generic LPs.
  *
- * \author Antonio Frangioni \n
- *         Dipartimento di Informatica \n
- *         Universita' di Pisa \n
- *
  * \author Paola Cappanera \n
  *         Dipartimento di Sistemi e Informatica \n
  *         Universita' di Firenze \n
+ *
+ * \author Antonio Frangioni \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
  *
  * Copyright(C) 1996 - 2012 Antonio Frangioni
  */

@@ -12,15 +12,15 @@
  * and read model. The first Block is then repeatedly randomly modified, 
  * and each time the same procedure is applied.
  *
- * \author Antonio Frangioni \n
- *         Dipartimento di Informatica \n
- *         Universita' di Pisa \n
- * 
  * \author Enrico Calandrini \n
  *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
+ * 
+ * \author Antonio Frangioni \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
  *
- * \copyright &copy; by Antonio Frangioni, Enrico Calandrini
+ * \copyright &copy; by Enrico Calandrini, Antonio Frangioni
  */
 /*--------------------------------------------------------------------------*/
 /*-------------------------------- MACROS ----------------------------------*/

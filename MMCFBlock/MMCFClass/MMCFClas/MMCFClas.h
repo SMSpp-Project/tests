@@ -13,13 +13,13 @@
  * class, although an independent Graph class [see Graph.h] has also been
  * developed for the purpose.
  *
- * \author Antonio Frangioni \n
- *         Dipartimento di Informatica \n
- *         Universita' di Pisa \n
- *
  * \author Paola Cappanera \n
  *         Dipartimento di Sistemi e Informatica \n
  *         Universita' di Firenze \n
+ *
+ * \author Antonio Frangioni \n
+ *         Dipartimento di Informatica \n
+ *         Universita' di Pisa \n
  *
  * \copyright &copy; by Antonio Frangioni
  */

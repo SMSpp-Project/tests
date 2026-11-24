@@ -401,15 +401,15 @@ conduct, and the process for submitting merge requests to us.
 
 ### Current Lead Authors
 
-- **Antonio Frangioni**  
-  Dipartimento di Informatica  
-  Università di Pisa
-
 - **Enrico Calandrini**  
   Dipartimento di Informatica  
   Universita' di Pisa
 
 - **Rafael Durbano Lobato**  
+  Dipartimento di Informatica  
+  Università di Pisa
+
+- **Antonio Frangioni**  
   Dipartimento di Informatica  
   Università di Pisa
 

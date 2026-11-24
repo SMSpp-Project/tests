@@ -22,12 +22,12 @@
  * the i-th customer followed by L lines, the j-th one containing the unit
  * cost of serving customer j by the warehouse at location i.
  *
- * \author Rafael Durbano Lobato \n
- *         Dipartimento di Informatica \n
- *         Universita' di Pisa \n
- * 
  * \author Enrico Calandrini \n
  *         Dipartimento di Matematica \n
+ *         Universita' di Pisa \n
+ * 
+ * \author Rafael Durbano Lobato \n
+ *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
  *
  * \copyright &copy; by Rafael Durbano Lobato

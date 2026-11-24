@@ -5,12 +5,12 @@
  * Reads an instance of the Capacitated Warehouse Location problem and
  * produces an AbstractBlock associated with that instance.
  *
- * \author Rafael Durbano Lobato \n
- *         Dipartimento di Informatica \n
- *         Universita' di Pisa \n
- * 
  * \author Enrico Calandrini \n
  *         Dipartimento di Matematica \n
+ *         Universita' di Pisa \n
+ * 
+ * \author Rafael Durbano Lobato \n
+ *         Dipartimento di Informatica \n
  *         Universita' di Pisa \n
  *
  * \copyright &copy; by Rafael Durbano Lobato
