@@ -37,7 +37,11 @@
 #     skeletons (spawning above a depth, after a budget, stealing from the
 #     stacks, ordered by discrepancy), and on 4 workers sharing one queue
 #     after a race of 4 strategies, the racers but the first driven by the
-#     incremental greedy relaxation (vstrWorkerBlockSolverConfigurationFile).
+#     incremental greedy relaxation (vstrWorkerBlockSolverConfigurationFile),
+#     and on 16 workers by the shared, distributed, stealing, MultiQueue,
+#     depth-bounded, budget and stack-stealing schemes, all driven by the
+#     incremental greedy relaxation, whose state a node carries to the
+#     worker that takes it.
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments (the
 # MILP/DP/GR ones are shared with BSPar-mixed.txt, the core DP and RECORD
@@ -53,7 +57,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-27  # number of (the names of) Solver in this BlockSolverConfig
+34  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -103,8 +107,22 @@ BranchAndXSolver
 BranchAndXSolver
 # 27th: BX, PBeFS, 4 workers, one queue, after a race
 BranchAndXSolver
+# 28th: BX, PBeFS, 16 workers, one queue, incremental inner
+BranchAndXSolver
+# 29th: BX, PBeFS, 16 workers, a queue each, incremental inner
+BranchAndXSolver
+# 30th: BX, PBeFS, 16 workers, work stealing, incremental inner
+BranchAndXSolver
+# 31st: BX, PBeFS, 16 workers, MultiQueue, incremental inner
+BranchAndXSolver
+# 32nd: BX, PBeFS, 16 workers, depth-bounded skeleton, incremental inner
+BranchAndXSolver
+# 33rd: BX, PBeFS, 16 workers, budget skeleton, incremental inner
+BranchAndXSolver
+# 34th: BX, PBeFS, 16 workers, stack-stealing skeleton, incremental inner
+BranchAndXSolver
 
-27  # number of ComputeConfig in this BlockSolverConfig
+34  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -904,6 +922,279 @@ vintPBeFSRace 4 2 0 3 4  # BestFS, DFS, BestFSDive, BestEstimate
 # now all the vector-of-string parameters
 vstrWorkerBlockSolverConfigurationFile 3 InnerBSCfg-incr.txt
  InnerBSCfg-incr.txt InnerBSCfg-incr.txt  # the workers 2-4
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 28: BranchAndXSolver, PBeFS on 16 workers, one queue, driven
+# by the incremental greedy relaxation, whose state a node carries to any
+# worker
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    16
+
+0  # number of double parameters
+
+2  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+strPBeFSScheme shared
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 29: BranchAndXSolver, PBeFS on 16 workers, a queue each, driven
+# by the incremental greedy relaxation, whose state a node carries to any
+# worker
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    16
+
+0  # number of double parameters
+
+2  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+strPBeFSScheme distributed
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 30: BranchAndXSolver, PBeFS on 16 workers, work stealing, driven
+# by the incremental greedy relaxation, whose state a node carries to any
+# worker
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    16
+
+0  # number of double parameters
+
+2  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+strPBeFSScheme stealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 31: BranchAndXSolver, PBeFS on 16 workers, MultiQueue, driven
+# by the incremental greedy relaxation, whose state a node carries to any
+# worker
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    16
+
+0  # number of double parameters
+
+2  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+strPBeFSScheme multiqueue
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 32: BranchAndXSolver, PBeFS on 16 workers, depth-bounded skeleton, driven
+# by the incremental greedy relaxation, whose state a node carries to any
+# worker
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    16
+
+0  # number of double parameters
+
+2  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+strPBeFSScheme depthbounded
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 33: BranchAndXSolver, PBeFS on 16 workers, budget skeleton, driven
+# by the incremental greedy relaxation, whose state a node carries to any
+# worker
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    16
+
+0  # number of double parameters
+
+2  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+strPBeFSScheme budget
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+* # [none]
+
+# 34: BranchAndXSolver, PBeFS on 16 workers, stack-stealing skeleton, driven
+# by the incremental greedy relaxation, whose state a node carries to any
+# worker
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intTreeExplorer 1
+intMaxThread    16
+
+0  # number of double parameters
+
+2  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+strPBeFSScheme stackstealing
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
 
 # pointer to the "extra" Configuration
 * # [none]
