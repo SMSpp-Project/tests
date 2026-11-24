@@ -4,14 +4,9 @@
 #                                                                            #
 #   makefile of test (for the QuadFunction of a :MILPSolver)                 #
 #                                                                            #
-#                              Antonio Frangioni                             #
-#                          Dipartimento di Informatica                       #
-#                              Universita' di Pisa                           #
-#                                                                            #
-#                              Enrico Calandrini                             #
-#                          Dipartimento di Informatica                       #
-#                              Universita' di Pisa                           #
-#                                                                            #
+#                             Antonio Frangioni                              #
+#                         Dipartimento di Informatica                        #
+#                             Universita' di Pisa                            #
 ##############################################################################
 
 # module name
