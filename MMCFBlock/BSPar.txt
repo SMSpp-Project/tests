@@ -2,9 +2,9 @@
 # - - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a MMCFBlock to be solved by
-# three different Solver: a :MILPSolver and two LagrangianDualSolver using a
-# BundleSolver as the inner Solver, the second with the relaxed constraints
-# scaled [see intRowScaling]
+# five different Solver: a :MILPSolver and four LagrangianDualSolver using
+# a BundleSolver as the inner Solver, the last three with the relaxed
+# constraints scaled in three ways [see intRowScaling]
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13,7 +13,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3  # number of (the names of) Solver in this BlockSolverConfig
+5  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 #CPXMILPSolver        # name of 1st Solver
@@ -22,8 +22,10 @@ BlockSolverConfig     # exact type of the Configuration object
 HiGHSMILPSolver       # name of 1st Solver
 LagrangianDualSolver  # name of 2nd Solver
 LagrangianDualSolver  # name of 3rd Solver
+LagrangianDualSolver  # name of 4th Solver
+LagrangianDualSolver  # name of 5th Solver
 
-3  # number of ComputeConfig in this BlockSolverConfig
+5  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig
 # 1st ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -38,7 +40,8 @@ LagrangianDualSolver  # name of 3rd Solver
 *LDCfg-CX.txt
 
 # 3rd ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# the same LagrangianDualSolver with the relaxed constraints scaled
+# the same LagrangianDualSolver with the relaxed constraints scaled by
+# their structure
 
 *LDCfg-CX.txt +
 
@@ -48,6 +51,88 @@ LagrangianDualSolver  # name of 3rd Solver
 
 # now all the integer parameters
 intRowScaling 1 # the relaxed constraints scaled by their structure
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 4th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the same LagrangianDualSolver with the relaxed constraints scaled by
+# the curvature of the dual function
+
+*LDCfg-CX.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intRowScaling 2 # sqrt( t_i / R_i )
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 5th ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# the same LagrangianDualSolver with the relaxed constraints scaled by
+# the range of the subgradient
+
+*LDCfg-CX.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intRowScaling 3 # 1 / R_i
 
 0  # number of double parameters
 

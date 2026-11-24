@@ -182,6 +182,14 @@ static void PrintSol( CDASolver * slvr , bool first ,
   timeFile << objFunc <<"\n";
   timeFile.close();
   }
+
+ if( wprnt & 8 ) {
+  ofstream iterFile( "./iters/" + name + "-Iter.txt" );
+  iterFile << slvr->get_elapsed_iterations() << " "
+	   << slvr->get_elapsed_calls() << " " << time << " "
+	   << std::setprecision( 12 ) << objFunc << "\n";
+  iterFile.close();
+  }
  }
 
 /*--------------------------------------------------------------------------*/
@@ -317,7 +325,9 @@ int main( int argc , char **argv )
          "  -w, --wprnt <bits>              what to print to file, bit-wise "
          "[0]:\n"
          "                                    1 duals, 2 primal, "
-         "4 time & objective value\n"
+         "4 time & objective value,\n"
+         "                                    8 iterations, calls, "
+         "time & objective value\n"
          "  -e, --epochs <n>                times the instance is re-solved "
          "(training rounds);\n"
          "                                  overrides the inner Solver's "
