@@ -7,8 +7,10 @@
 # and 5 commodities (data-nd), in the monolithic formulation (BPar-ND.txt,
 # BSPar-ND.txt) against the Benders one (BPar-ND-Ben.txt,
 # BSPar-ND-Ben.txt), whose cuts come from a LagrangianDualSolver of the
-# MMCFBlock (LDBSCfg-ND.txt), the two formulations of NDForm.txt, and the cuts
-# at random y against the cost of the flow there
+# MMCFBlock (LDBSCfg-ND.txt), and the Lagrangian bound of the arc one
+# (BPar-ND-Arc.txt, BSPar-ND-Arc.txt) against the continuous relaxation of
+# the monolithic one, the three formulations of NDForm.txt, and the cuts at
+# random y against the cost of the flow there
 
 # shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
 source "$(dirname "$0")/../../batch_common.sh"
