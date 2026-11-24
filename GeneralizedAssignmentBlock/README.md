@@ -44,7 +44,11 @@ they answer is cross-checked:
   same recovery at every node (`intHeurFreq` 1) and the branching by fixing
   the jobs of each agent in its `BinaryKnapsackBlock`, within 10 seconds
   (`BXCfg.txt`, `InnerBSCfg-LD.txt`, `LDRSCfg.txt`); a build without
-  `BranchAndXSolver` leaves it out of the cross-check.
+  `BranchAndXSolver` leaves it out of the cross-check;
+
+- the same `BranchAndXSolver` by the cutoff probing (`intCutOffProbing`),
+  i.e., as a sequence of explorations against targets 1 apart from the
+  bound of the root, until one finds a solution.
 
 The usage of the executable is the following:
 

@@ -28,6 +28,9 @@
 #     optimum after every runtime Modification, also when driven by the
 #     incremental greedy relaxation, whose local reductions depend on the
 #     data of the Block and must not survive a change of it.
+#   - BranchAndXSolver by the cutoff probing (intCutOffProbing), driven by
+#     the incremental greedy relaxation, whose fixings read the targets as
+#     the incumbent: same optimum.
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments (the
 # MILP/DP/GR ones are shared with BSPar-mixed.txt, the core DP and RECORD
@@ -43,7 +46,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-15  # number of (the names of) Solver in this BlockSolverConfig
+16  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -70,8 +73,10 @@ BranchAndXSolver
 # 14th: BX best-first, reoptimization on, incremental inner
 BranchAndXSolver
 RECORDBinaryKnapsackSolver            # 15th: RECORD, same as the 3rd
+# 16th: BX best-first, cutoff probing, incremental inner
+BranchAndXSolver
 
-15  # number of ComputeConfig in this BlockSolverConfig
+16  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -439,6 +444,47 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
 
 # 15th: RECORD under the same reoptimization of the 3rd
 *CDPCfg-reopt3.txt
+
+# 16: BranchAndXSolver, best-first by the cutoff probing, the first target
+# 1e-3 times the bound of the root away from it and the step doubling,
+# incremental inner relaxation
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intCutOffProbing       2     # gap relative to the bound [see CutOffProbing]
+
+2  # number of double parameters
+
+# now all the double parameters
+dblCutOffProbingGap    1e-3  # the first step of the target
+dblCutOffProbingFactor 2     # the step doubles at each refuted target
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
 
 # end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -22,7 +22,8 @@ attaches at once every `:Solver` that has to give the same answer.
 MIP, the full-table `DPBinaryKnapsackSolver` and its core variant (which
 re-solves with all its reoptimization, `RECORDBinaryKnapsackSolver` doing the
 same when the build has RECORD), the
-`BranchAndXSolver` in each of its exploration modes, and the
+`BranchAndXSolver` in each of its exploration modes and by the cutoff
+probing, and the
 `GreedyRelaxationBinaryKnapsackSolver`. The last one solves a relaxation, so
 it is held to bracketing the optimum rather than to equality.
 [BSPar-mixed.txt](BSPar-mixed.txt) is the same for the instances that carry

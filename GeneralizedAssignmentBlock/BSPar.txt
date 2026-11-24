@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
-# BlockSolverConfig for a GeneralizedAssignmentBlock, registering the six
+# BlockSolverConfig for a GeneralizedAssignmentBlock, registering the seven
 # Solver to be cross-checked:
 #
 #   - :MILPSolver            the abstract representation of the whole tree
@@ -19,6 +19,8 @@
 #                            recovery (PPHCfg.txt)
 #   - BranchAndXSolver       the Lagrangian dual of the nodes, the same
 #                            heuristic at each of them (BXCfg.txt)
+#   - BranchAndXSolver       the same, by the cutoff probing with targets
+#                            1 apart from the bound of the root
 #
 # The problem being an integer one, the Lagrangian dual is a relaxation of it
 # and the battery declares it so (-R ,r,r).
@@ -30,7 +32,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-6  # number of (the names of) Solver in this BlockSolverConfig
+7  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver
@@ -42,8 +44,9 @@ LagrangianDualSolver  # name of 3rd Solver
 RepairGeneralizedAssignmentSolver  # name of 4th Solver
 PrimalProximalHeur    # name of 5th Solver
 BranchAndXSolver      # name of 6th Solver
+BranchAndXSolver      # name of 7th Solver
 
-6  # number of ComputeConfig in this BlockSolverConfig
+7  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *MILPCfg.txt          # ComputeConfig of the :MILPSolver
@@ -54,6 +57,43 @@ BranchAndXSolver      # name of 6th Solver
                       # RepairGeneralizedAssignmentSolver
 *PPHCfg.txt           # ComputeConfig of the PrimalProximalHeur
 *BXCfg.txt            # ComputeConfig of the BranchAndXSolver
+# ComputeConfig of the BranchAndXSolver by the cutoff probing
+*BXCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intCutOffProbing  1       # targets 1 apart [see CutOffProbing]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -

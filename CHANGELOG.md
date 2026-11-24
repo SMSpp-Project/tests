@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the cutoff probing of `BranchAndXSolver` (`intCutOffProbing`): in the
+  suite `GeneralizedAssignmentBlock`, with targets 1 apart from the bound of
+  the root, as the 7th Solver of `BSPar.txt`, and in `BSPar.txt` of
+  `BinaryKnapsackBlock`, with the first target `1e-3` times the bound away
+  from it, the step doubling and the incremental greedy relaxation, as its
+  16th Solver
+
 - the `BranchAndXSolver` of `BSPar-DP-BX.txt` of `UCBlock` whose
   `LagrangianDualRelaxationSolver` branches on the candidate with the
   largest product of the penalties of fixing it to 0 and to 1 at the
