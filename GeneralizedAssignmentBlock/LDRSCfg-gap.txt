@@ -1,0 +1,50 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  LDRSCfg-gap.txt  - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the LagrangianDualRelaxationSolver of LDRSCfg.txt with
+# the heuristic at the root and at the nodes whose bound exceeds the best
+# bound by at most 1% of the incumbent only (intHeurFreq 0, dblHeurGap).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDRSCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intHeurFreq            0  # by the count, at the root only
+
+1  # number of double parameters
+
+# now all the double parameters
+dblHeurGap          0.01  # and close to the best bound
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END LDRSCfg-gap.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

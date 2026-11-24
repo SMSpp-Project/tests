@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `BranchAndXSolver` whose `LagrangianDualRelaxationSolver` runs that
   heuristic at every node, as the 4th to 6th Solver of `BSPar.txt`
 
+- the `BranchAndXSolver` of `BXCfg.txt` of `GeneralizedAssignmentBlock`
+  with an option of its `LagrangianDualRelaxationSolver` each,
+  `intKeepBundle`, `intHeurDepth`, `dblHeurGap`, `intCutOffReread` and
+  `intRecoveryCutOff`, as the 7th to 11th Solver of `BSPar.txt`
+
 - the Benders decomposition of the `HQPDistBlock` in the convex regime in
   `batch-generated` of `HQPBlock`, as the 4th `HQPSolver` of
   `HQPDistBSCfg-bds.txt`: a `BundleSolver` with the trust region as the

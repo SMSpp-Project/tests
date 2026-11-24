@@ -44,7 +44,17 @@ they answer is cross-checked:
   same recovery at every node (`intHeurFreq` 1) and the branching by fixing
   the jobs of each agent in its `BinaryKnapsackBlock`, within 10 seconds
   (`BXCfg.txt`, `InnerBSCfg-LD.txt`, `LDRSCfg.txt`); a build without
-  `BranchAndXSolver` leaves it out of the cross-check.
+  `BranchAndXSolver` leaves it out of the cross-check;
+
+- the same `BranchAndXSolver` with each of the options of the
+  `LagrangianDualRelaxationSolver` meant to make its nodes cheaper: the
+  bundle kept from one node to the next (`intKeepBundle`),
+  the heuristic at the root and then only down to depth 2 (`intHeurDepth`)
+  or close to the best bound (`dblHeurGap`), the incumbent read again
+  during the dual of a node (`intCutOffReread`) and the incumbent as the
+  cutoff of the restricted problems of the recovery (`intRecoveryCutOff`)
+  (`BXCfg-<v>.txt`, `InnerBSCfg-LD-<v>.txt`, `LDRSCfg-<v>.txt`, for `<v>`
+  `keep`, `depth`, `gap`, `reread` and `reccut`).
 
 The usage of the executable is the following:
 
