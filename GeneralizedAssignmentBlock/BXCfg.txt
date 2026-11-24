@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - BXCfg.txt - - - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the BranchAndXSolver whose nodes are solved by the
+# LagrangianDualRelaxationSolver of InnerBSCfg-LD.txt: best-first, one
+# thread, and a time limit, after which it gives the bounds of the nodes
+# left open.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod    2       # best-first [see SolveMethod]
+intMaxThread      1       # one thread
+
+2  # number of double parameters
+
+# now all the double parameters
+dblMaxTime       10       # seconds: a check, not a solve
+dblAbsAcc        0.999999 # integer costs: ceil( bound ) >= incumbent fences
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-LD.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - END BXCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,0 +1,54 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - PPHCfg.txt  - - - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the PrimalProximalHeur on the Lagrangian dual of
+# LDCfg.txt, whose primal recovery is the RepairGeneralizedAssignmentSolver
+# of RepairBSCfg.txt: a few proximal iterations within a time limit, the
+# feasible assignments of the recovery giving its upper bound.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intMaxIter            10  # iterations of the heuristic itself
+intMaxThread           0  # threads the primal recovery spawns: none
+
+2  # number of double parameters
+
+# now all the double parameters
+dbl_penaltyFactor      1  # weight of the proximal term
+dblMaxTime            10  # seconds for the whole heuristic
+
+2  # number of string parameters
+
+# now all the string parameters
+str_LDSlv_ISCfg   ISCfg-LD.txt     # ComputeConfig of the inner Solver
+strRecoveryBSC    RepairBSCfg.txt  # BlockSolverConfig of the recovery
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END PPHCfg.txt  - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

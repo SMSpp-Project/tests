@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - LDRSCfg.txt - - - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the LagrangianDualRelaxationSolver that solves the nodes
+# of the BranchAndXSolver of BXCfg.txt: the PrimalProximalHeur of
+# PPHCfg.txt, whose heuristic, with the RepairGeneralizedAssignmentSolver
+# as its primal recovery, runs at every node, branching by fixing the jobs
+# of each agent in its BinaryKnapsackBlock.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*PPHCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+2  # number of integer parameters
+
+# now all the integer parameters
+intApplyStrategy       1  # branch by fixing in the sub-Blocks
+intHeurFreq            1  # the heuristic at every node
+
+1  # number of double parameters
+
+# now all the double parameters
+dblNZEps            1e-4  # integral Lagrangian solution => feasible
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+1  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+vstrBranchGroups 1 x_knapsack  # the jobs of each agent
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - END LDRSCfg.txt - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

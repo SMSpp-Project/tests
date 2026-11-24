@@ -10,7 +10,9 @@
 # data/txt: the :MILPSolver on the whole tree and the Lagrangian dual of the
 # integer problem, solved by a BundleSolver and by a SubGradSolver, both
 # declared a relaxation with -R, which have to bound the optimum of the
-# former from below.
+# former from below, and the heuristics on it: the repair heuristic alone,
+# the PrimalProximalHeur with the repair heuristic as its primal recovery
+# and the BranchAndXSolver on the Lagrangian dual of its nodes.
 
 # run from the test directory so the tester reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"

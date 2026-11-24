@@ -29,6 +29,23 @@ they answer is cross-checked:
   same bound; a build without `SubGradSolver` leaves it out of the
   cross-check.
 
+- the `RepairGeneralizedAssignmentSolver`, a heuristic that turns the point
+  the `Variable` hold into a feasible assignment by a greedy construction
+  and a local search with shift and swap moves (`RepairCfg.txt`), whose
+  upper bound has to stay above the lower bounds of the others;
+
+- a `PrimalProximalHeur` on the same Lagrangian dual, a few proximal
+  iterations within 10 seconds, whose primal recovery is the
+  `RepairGeneralizedAssignmentSolver` of `RepairBSCfg.txt` in place of a
+  restricted MIP (`PPHCfg.txt`);
+
+- a `BranchAndXSolver` whose nodes are solved by a
+  `LagrangianDualRelaxationSolver`, the `PrimalProximalHeur` above with the
+  same recovery at every node (`intHeurFreq` 1) and the branching by fixing
+  the jobs of each agent in its `BinaryKnapsackBlock`, within 10 seconds
+  (`BXCfg.txt`, `InnerBSCfg-LD.txt`, `LDRSCfg.txt`); a build without
+  `BranchAndXSolver` leaves it out of the cross-check.
+
 The usage of the executable is the following:
 
        ./GeneralizedAssignmentBlock_test [options] <file>
