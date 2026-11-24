@@ -3,18 +3,19 @@
 #
 # The formulations of a MMCFNetworkDesignBlock that batch-nd compares: the
 # monolithic formulation of BPar-ND.txt, solved by the Solver of
-# BSPar-ND.txt, and the Benders one of BPar-ND-Ben.txt, solved by those of
-# BSPar-ND-Ben.txt, each a pair of its BlockConfig and its BlockSolverConfig.
-# The instance is read once per formulation, and besides their optimal values
-# the Benders cuts are checked against the cost of the flow at random designs
-# [see MMCFND_test].
+# BSPar-ND.txt, the Benders one of BPar-ND-Ben.txt, solved by those of
+# BSPar-ND-Ben.txt, and the arc one of BPar-ND-Arc.txt, whose Lagrangian
+# bound BSPar-ND-Arc.txt computes, each a pair of its BlockConfig and its
+# BlockSolverConfig. The instance is read once per formulation, and besides
+# their values the Benders cuts are checked against the cost of the flow at
+# random designs [see MMCFND_test].
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 SimpleConfiguration<std::vector<Configuration*>>  # exact type
 
-2  # number of formulations
+3  # number of formulations
 
 # now all the formulations - - - - - - - - - - - - - - - - - - - - - - - - -
 # 1st formulation: the monolithic formulation
@@ -28,6 +29,12 @@ SimpleConfiguration<std::pair<Configuration*,Configuration*>>
 
 *BPar-ND-Ben.txt        # its BlockConfig
 *BSPar-ND-Ben.txt       # its BlockSolverConfig
+
+# 3rd formulation: the arc formulation
+SimpleConfiguration<std::pair<Configuration*,Configuration*>>
+
+*BPar-ND-Arc.txt        # its BlockConfig
+*BSPar-ND-Arc.txt       # its BlockSolverConfig
 
 # end of the formulations - - - - - - - - - - - - - - - - - - - - - - - - - -
 

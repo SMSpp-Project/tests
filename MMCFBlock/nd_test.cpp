@@ -11,14 +11,21 @@
  * y, the value of the Benders cut at y is compared with the cost of the flow
  * at y, i.e., the value of the monolithic formulation with the y fixed
  * minus the fixed costs: the cut must never be above it, and it should be
- * close to it.
+ * close to it. If there is a third formulation, the arc one, the value of
+ * its Solver, typically a LagrangianDualSolver relaxing the flow
+ * conservation constraints with one knapsack per arc, is checked to be a
+ * lower bound on the optimal value and, if the monolithic formulation has a
+ * second Solver solving its continuous relaxation, to be equal to the
+ * value of the latter, which is what the Lagrangian bound is when the
+ * individual capacities do not exceed the demands, as in the Canad
+ * instances.
  *
  * Usage:
  *
  *   MMCFND_test -F formulations [-t frmt] [-r samples] [-e seed] [-g gap]
  *               < instance >
  *
- * formulations is the list of the two formulations [see
+ * formulations is the list of the two or three formulations [see
  * read_formulations()], each a pair of its BlockConfig and its
  * BlockSolverConfig, in any order, frmt is the format of MMCFBlock::load()
  * ('s' for the Canad instances, the default), gap the relative tolerance of
@@ -45,6 +52,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <random>
 
 /*--------------------------------------------------------------------------*/
@@ -110,6 +118,10 @@ char frmt = 's';
 int samples = 5 , seed = 0;
 double gap = 1e-5;
 
+/// the relative tolerance of the comparison of the Lagrangian bound with the
+/// continuous relaxation, the former being as accurate as the BundleSolver
+constexpr double BndGap = 1e-4;
+
 bool process_specific_arg( int opt )
 {
  switch( opt ) {
@@ -144,33 +156,38 @@ int main( int argc , char ** argv )
          "  -e, --seed <n>                  seed of the y [0]\n"
          "  -g, --gap <x>                   relative tolerance [1e-5]\n"
          "\n"
-         "The formulations (-F) are the two formulations, each a pair of its\n"
-         "BlockConfig and its BlockSolverConfig.\n";
+         "The formulations (-F) are the monolithic and the Benders ones, and\n"
+         "possibly the arc one, each a pair of its BlockConfig and its\n"
+         "BlockSolverConfig.\n";
  process_args( argc , argv , process_specific_arg );
  const std::string inst( filename );
 
  auto forms = get_formulations();
- if( forms.configs.size() != 2 ) {
-  std::cerr << argv[ 0 ] << ": the formulations are the two formulations"
-            << std::endl;
+ const Index nf = forms.configs.size();
+ if( ( nf < 2 ) || ( nf > 3 ) ) {
+  std::cerr << argv[ 0 ] << ": the formulations are the monolithic and the "
+            << "Benders ones, and possibly the arc one" << std::endl;
   return( 1 );
   }
 
  std::cout << std::setprecision( 10 );
  bool ok = true;
 
- // the two formulations, the monolithic one and the Benders one - - - - - -
- auto f0 = build( inst , frmt , forms.configs[ 0 ] ,
-                  solver_config_of( forms , 0 ) );
- auto f1 = build( inst , frmt , forms.configs[ 1 ] ,
-                  solver_config_of( forms , 1 ) );
+ // the formulations: the monolithic one, the Benders one, the arc one - - -
+ MMCFNetworkDesignBlock * mono = nullptr;
+ MMCFNetworkDesignBlock * bend = nullptr;
+ MMCFNetworkDesignBlock * arc = nullptr;
+ for( Index i = 0 ; i < nf ; ++i ) {
+  auto fi = build( inst , frmt , forms.configs[ i ] ,
+                   solver_config_of( forms , i ) );
+  switch( fi->get_formulation() ) {
+   case( MMCFNetworkDesignBlock::kMonolithic ): mono = fi; break;
+   case( MMCFNetworkDesignBlock::kBenders ):    bend = fi; break;
+   default:                                     arc = fi;
+   }
+  }
  delete forms.owner;
- const bool first_mono =
-  f0->get_formulation() == MMCFNetworkDesignBlock::kMonolithic;
- auto mono = first_mono ? f0 : f1;
- auto bend = first_mono ? f1 : f0;
- if( ( mono->get_formulation() != MMCFNetworkDesignBlock::kMonolithic ) ||
-     ( bend->get_formulation() != MMCFNetworkDesignBlock::kBenders ) ) {
+ if( ( ! mono ) || ( ! bend ) || ( ( nf == 3 ) && ( ! arc ) ) ) {
   std::cerr << "the BlockConfig give the wrong formulations" << std::endl;
   return( 1 );
   }
@@ -188,6 +205,28 @@ int main( int argc , char ** argv )
  ok &= same;
  std::cout << inst << " | Benders = " << v2 << " (" << st2 << ") -> "
            << ( same ? "OK" : "KO" ) << std::endl;
+
+ // the Lagrangian bound of the arc formulation - - - - - - - - - - - - - -
+ if( arc ) {
+  auto sarc = arc->get_registered_solvers().front();
+  const int st3 = sarc->compute();
+  const double v3 = sarc->get_var_value();
+  bool good = ( ( st3 == Solver::kOK ) || ( st3 == Solver::kLowPrecision ) )
+              && ( v3 <= v1 + gap * std::max( 1.0 , std::abs( v1 ) ) );
+  std::cout << inst << " | arc = " << v3 << " (" << st3 << ")";
+
+  // the continuous relaxation, the 2nd Solver of the monolithic formulation
+  const auto & sl = mono->get_registered_solvers();
+  if( sl.size() > 1 ) {
+   auto slp = *std::next( sl.begin() );
+   const int st4 = slp->compute();
+   const double v4 = slp->get_var_value();
+   good &= ( st4 == Solver::kOK ) && close( v3 , v4 , BndGap );
+   std::cout << " LP = " << v4 << " (" << st4 << ")";
+   }
+  ok &= good;
+  std::cout << " -> " << ( good ? "OK" : "KO" ) << std::endl;
+  }
 
  // the cuts at random y- - - - - - - - - - - - - - - - - - - - - - - - - -
  const Index m = mono->get_MMCFBlock()->get_NArcs();
@@ -238,6 +277,8 @@ int main( int argc , char ** argv )
 
  cleanup( mono );
  cleanup( bend );
+ if( arc )
+  cleanup( arc );
 
  std::cout << ( ok ? "OK" : "KO" ) << std::endl;
  return( ok ? 0 : 1 );

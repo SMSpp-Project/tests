@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   multipliers of the node (`intBranchStrategy` 4), as its 6th Solver, the
   inner `BundleSolver` ending on a serious step
 
+- the arc formulation of `MMCFNetworkDesignBlock` in `batch-nd` of
+  `MMCFBlock`, as the 3rd formulation of `NDForm.txt`: a
+  `LagrangianDualSolver` with `intRecursive` that relaxes the flow
+  conservation constraints and solves one knapsack per arc by
+  `CoreDPBinaryKnapsackSolver`, whose bound is held to `1e-4` relative to the
+  continuous relaxation of the monolithic formulation, the 2nd Solver of
+  `BSPar-ND.txt`
+
 - the suite `GeneralizedAssignmentBlock`, which cross-checks on the
   OR-Library instances of types A, B, C and D a `:MILPSolver` on the whole
   tree and the Lagrangian dual of the assignment constraints, solved by a
