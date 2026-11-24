@@ -12,7 +12,8 @@
 # declared a relaxation with -R, which have to bound the optimum of the
 # former from below, and the heuristics on it: the repair heuristic alone,
 # the PrimalProximalHeur with the repair heuristic as its primal recovery
-# and the BranchAndXSolver on the Lagrangian dual of its nodes.
+# and the BranchAndXSolver on the Lagrangian dual of its nodes, also with
+# each of the options meant to make its nodes cheaper.
 
 # run from the test directory so the tester reads its config files
 here="$(cd "$(dirname "$0")" && pwd)"

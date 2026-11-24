@@ -50,7 +50,17 @@ they answer is cross-checked:
   i.e., as a sequence of explorations against targets 1 apart from the
   bound of the root, until one finds a solution, the
   `LagrangianDualRelaxationSolver` fixing by Lagrangian reduced cost against
-  the target (`InnerBSCfg-LD-fix.txt`).
+  the target (`InnerBSCfg-LD-fix.txt`);
+
+- the same `BranchAndXSolver` with each of the options of the
+  `LagrangianDualRelaxationSolver` meant to make its nodes cheaper: the
+  bundle kept from one node to the next (`intKeepBundle`),
+  the heuristic at the root and then only down to depth 2 (`intHeurDepth`)
+  or close to the best bound (`dblHeurGap`), the incumbent read again
+  during the dual of a node (`intCutOffReread`) and the incumbent as the
+  cutoff of the restricted problems of the recovery (`intRecoveryCutOff`)
+  (`BXCfg-<v>.txt`, `InnerBSCfg-LD-<v>.txt`, `LDRSCfg-<v>.txt`, for `<v>`
+  `keep`, `depth`, `gap`, `reread` and `reccut`).
 
 The usage of the executable is the following:
 

@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
-# BlockSolverConfig for a GeneralizedAssignmentBlock, registering the seven
+# BlockSolverConfig for a GeneralizedAssignmentBlock, registering the twelve
 # Solver to be cross-checked:
 #
 #   - :MILPSolver            the abstract representation of the whole tree
@@ -23,6 +23,14 @@
 #                            1 apart from the bound of the root, fixing by
 #                            Lagrangian reduced cost against them
 #                            (InnerBSCfg-LD-fix.txt)
+#   - BranchAndXSolver       the same, with the bundle kept from one node to
+#                            the next (BXCfg-keep.txt), with the heuristic
+#                            at the root and down to depth 2 only
+#                            (BXCfg-depth.txt), at the root and close to
+#                            the best bound only (BXCfg-gap.txt), with the
+#                            incumbent read again during the dual of a node
+#                            (BXCfg-reread.txt) and with the incumbent as
+#                            the cutoff of the recovery (BXCfg-reccut.txt)
 #
 # The problem being an integer one, the Lagrangian dual is a relaxation of it
 # and the battery declares it so (-R ,r,r).
@@ -34,7 +42,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-7  # number of (the names of) Solver in this BlockSolverConfig
+12  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver
@@ -47,8 +55,13 @@ RepairGeneralizedAssignmentSolver  # name of 4th Solver
 PrimalProximalHeur    # name of 5th Solver
 BranchAndXSolver      # name of 6th Solver
 BranchAndXSolver      # name of 7th Solver
+BranchAndXSolver      # name of 8th Solver
+BranchAndXSolver      # name of 9th Solver
+BranchAndXSolver      # name of 10th Solver
+BranchAndXSolver      # name of 11th Solver
+BranchAndXSolver      # name of 12th Solver
 
-7  # number of ComputeConfig in this BlockSolverConfig
+12  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *MILPCfg.txt          # ComputeConfig of the :MILPSolver
@@ -96,6 +109,11 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-LD-fix.txt
 
 # pointer to the "extra" Configuration
 *  # [none]
+*BXCfg-keep.txt       # the same, the bundle kept between nodes
+*BXCfg-depth.txt      # the same, the heuristic down to depth 2
+*BXCfg-gap.txt        # the same, the heuristic close to the best bound
+*BXCfg-reread.txt     # the same, the incumbent read during a node
+*BXCfg-reccut.txt     # the same, the incumbent as cutoff of the recovery
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -
