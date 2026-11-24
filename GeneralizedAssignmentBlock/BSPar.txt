@@ -1,7 +1,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
-# BlockSolverConfig for a GeneralizedAssignmentBlock, registering the three
+# BlockSolverConfig for a GeneralizedAssignmentBlock, registering the six
 # Solver to be cross-checked:
 #
 #   - :MILPSolver            the abstract representation of the whole tree
@@ -11,6 +11,14 @@
 #                            BundleSolver (LDCfg.txt)
 #   - LagrangianDualSolver   the same Lagrangian dual, solved by a
 #                            SubGradSolver (LDCfg-SG.txt)
+#   - RepairGeneralizedAssignmentSolver
+#                            the repair heuristic, guided by the point the
+#                            Variables hold (RepairCfg.txt)
+#   - PrimalProximalHeur     the proximal heuristic on the same Lagrangian
+#                            dual, the repair heuristic as its primal
+#                            recovery (PPHCfg.txt)
+#   - BranchAndXSolver       the Lagrangian dual of the nodes, the same
+#                            heuristic at each of them (BXCfg.txt)
 #
 # The problem being an integer one, the Lagrangian dual is a relaxation of it
 # and the battery declares it so (-R ,r,r).
@@ -22,7 +30,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-3  # number of (the names of) Solver in this BlockSolverConfig
+6  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver
@@ -31,14 +39,21 @@ GRBMILPSolver         # name of 1st Solver
 #HiGHSMILPSolver
 LagrangianDualSolver  # name of 2nd Solver
 LagrangianDualSolver  # name of 3rd Solver
+RepairGeneralizedAssignmentSolver  # name of 4th Solver
+PrimalProximalHeur    # name of 5th Solver
+BranchAndXSolver      # name of 6th Solver
 
-3  # number of ComputeConfig in this BlockSolverConfig
+6  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *MILPCfg.txt          # ComputeConfig of the :MILPSolver
 *LDCfg.txt            # ComputeConfig of the LagrangianDualSolver
 *LDCfg-SG.txt         # ComputeConfig of the LagrangianDualSolver with a
                       # SubGradSolver inside
+*RepairCfg.txt        # ComputeConfig of the
+                      # RepairGeneralizedAssignmentSolver
+*PPHCfg.txt           # ComputeConfig of the PrimalProximalHeur
+*BXCfg.txt            # ComputeConfig of the BranchAndXSolver
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -

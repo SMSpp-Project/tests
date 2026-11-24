@@ -1,0 +1,30 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - RepairBSCfg.txt - - - - - - - - - - - - - - - -
+#
+# BlockSolverConfig of the primal recovery of the PrimalProximalHeur of
+# PPHCfg.txt and of the LagrangianDualRelaxationSolver of LDRSCfg.txt
+# [see strRecoveryBSC]: the RepairGeneralizedAssignmentSolver, which turns
+# their rounded Lagrangian point into a feasible assignment by a greedy
+# construction and a local search, in place of a restricted MIP.
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one
+
+1  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+RepairGeneralizedAssignmentSolver  # name of 1st Solver
+
+1  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*RepairCfg.txt        # ComputeConfig of the
+                      # RepairGeneralizedAssignmentSolver
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END RepairBSCfg.txt - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

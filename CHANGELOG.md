@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tree and the Lagrangian dual of the assignment constraints, solved by a
   `BundleSolver` and by a `SubGradSolver`, with free multipliers
 
+- the heuristics of the suite `GeneralizedAssignmentBlock`: the
+  `RepairGeneralizedAssignmentSolver` alone, a `PrimalProximalHeur` whose
+  primal recovery is the `RepairGeneralizedAssignmentSolver` and a
+  `BranchAndXSolver` whose `LagrangianDualRelaxationSolver` runs that
+  heuristic at every node, as the 4th to 6th Solver of `BSPar.txt`
+
 - the Benders decomposition of the `HQPDistBlock` in the convex regime in
   `batch-generated` of `HQPBlock`, as the 4th `HQPSolver` of
   `HQPDistBSCfg-bds.txt`: a `BundleSolver` with the trust region as the
