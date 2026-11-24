@@ -99,6 +99,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `CFL_test` prints the time of the `compute()` of each `Solver`, which it
+  gave as 0
+
 - `mnetgen` includes `<exception>` and `<typeinfo>`, which libc++ does not
   bring in through the other headers.
 

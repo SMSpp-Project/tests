@@ -571,8 +571,12 @@ static bool SolveBoth( void )
   std::vector< bool > hs( M );
   std::vector< int > status( M );
   std::vector< std::string > tok( M );
+  std::vector< double > times( M , 0.0 );
   for( std::size_t k = 0 ; k < M ; ++k ) {
+   const auto t0 = std::chrono::steady_clock::now();
    status[ k ] = S[ k ]->compute( false );
+   times[ k ] = std::chrono::duration< double >(
+                         std::chrono::steady_clock::now() - t0 ).count();
    hs[ k ] = has_solution( status[ k ] );
    if( hs[ k ] ) {
     rd[ k ] = SolverReading::exact( S[ k ]->get_lb() , eps_of( k , S[ k ] ) );
@@ -588,7 +592,7 @@ static bool SolveBoth( void )
   bool ok = cross_check( rd , hs , status ,
                          std::numeric_limits< double >::quiet_NaN() ,
                          cmp_tol , verdict , diff );
-  print_instance_line( std::vector< double >( M , 0.0 ) , tok ,
+  print_instance_line( times , tok ,
                        std::numeric_limits< double >::quiet_NaN() ,
                        verdict );
   return( ok );
