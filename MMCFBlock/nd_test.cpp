@@ -210,7 +210,10 @@ int main( int argc , char ** argv )
  if( arc ) {
   auto sarc = arc->get_registered_solvers().front();
   const int st3 = sarc->compute();
-  const double v3 = sarc->get_var_value();
+  // the bound is get_lb(): get_var_value() is get_ub() on a minimization,
+  // the upper bound of the Lagrangian dual, which is + INF unless the
+  // inner Solver certifies one
+  const double v3 = sarc->get_lb();
   bool good = ( ( st3 == Solver::kOK ) || ( st3 == Solver::kLowPrecision ) )
               && ( v3 <= v1 + gap * std::max( 1.0 , std::abs( v1 ) ) );
   std::cout << inst << " | arc = " << v3 << " (" << st3 << ")";

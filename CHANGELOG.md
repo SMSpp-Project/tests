@@ -107,6 +107,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `MMCFND_test` reads the bound of the arc formulation by `get_lb()` of
+  the `LagrangianDualSolver`, since `get_var_value()` is `get_ub()` on a
+  minimization, which is `+ INF` when the `BundleSolver` stops with no
+  certified upper bound on the dual, as it does on p45 and p49 of Canad
+  and on p38 with its first 10 commodities, which `batch-nd` runs
+
 - `CFL_test` prints the time of the `compute()` of each `Solver`, which it
   gave as 0
 
