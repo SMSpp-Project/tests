@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the branching options of `BranchAndXSolver` and of its relaxations: in the
+  suite `GeneralizedAssignmentBlock`, the reliability branching of the
+  `LagrangianDualRelaxationSolver` (`intReliability`) on strong branching
+  and on the fixing penalties, the bounds of the children from the
+  penalties (`intBranchBound`) and the dives of best-first within a quarter
+  of the gap (`dblPlungeQuot`), as the 13th to 16th Solver of `BSPar.txt`,
+  and in `BSPar.txt` of `BinaryKnapsackBlock` the bounds of the children
+  that the incremental greedy relaxation gives (`intBranchBound`), with the
+  lazy protocol and with the dives by quotient, as its 17th and 18th Solver
+
 - the cutoff probing of `BranchAndXSolver` (`intCutOffProbing`): in the
   suite `GeneralizedAssignmentBlock`, with targets 1 apart from the bound of
   the root and the fixing by Lagrangian reduced cost against them, as the

@@ -1,0 +1,55 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  LDRSCfg-relpen.txt - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the LagrangianDualRelaxationSolver of LDRSCfg.txt with the
+# reliability branching of the penalties: a variable with at least 4
+# observations of its pseudocosts in both directions is scored by them, and
+# the others by their fixing penalties, which the bit 0 of intFrcLstSS of the
+# inner Solver makes available (intBranchStrategy ePenalties,
+# intReliability).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*LDRSCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+3  # number of integer parameters
+
+# now all the integer parameters
+intBranchStrategy      4  # the fixing penalties
+intReliability         4  # by the pseudocosts after 4
+intFrcLstSS            1  # the penalties at the optimum
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - -  END LDRSCfg-relpen.txt - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

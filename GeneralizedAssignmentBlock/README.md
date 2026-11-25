@@ -60,7 +60,17 @@ they answer is cross-checked:
   during the dual of a node (`intCutOffReread`) and the incumbent as the
   cutoff of the restricted problems of the recovery (`intRecoveryCutOff`)
   (`BXCfg-<v>.txt`, `InnerBSCfg-LD-<v>.txt`, `LDRSCfg-<v>.txt`, for `<v>`
-  `keep`, `depth`, `gap`, `reread` and `reccut`).
+  `keep`, `depth`, `gap`, `reread` and `reccut`);
+
+- the same `BranchAndXSolver` with the branching options of the
+  `LagrangianDualRelaxationSolver`: the reliability branching
+  (`intReliability`) of strong branching and of the fixing penalties, and
+  the bounds of the children from the penalties given to the
+  `BranchAndXSolver` (`intBranchBound`), both with the penalties made
+  available by the bit 0 of `intFrcLstSS` of the inner `Solver` (`<v>`
+  `reliab`, `relpen` and `bound`), and by best-first with dives that go on
+  only to a child within a quarter of the gap from the best bound to the
+  incumbent (`dblPlungeQuot`, `BXCfg-plunge.txt`).
 
 The usage of the executable is the following:
 

@@ -31,6 +31,11 @@
 #   - BranchAndXSolver by the cutoff probing (intCutOffProbing), driven by
 #     the incremental greedy relaxation, whose fixings read the targets as
 #     the incumbent: same optimum.
+#   - BranchAndXSolver driven by the incremental greedy relaxation that
+#     gives the bounds of the children (InnerBSCfg-bound.txt), by which the
+#     children that cannot improve the incumbent are pruned before their
+#     evaluation, with the lazy protocol and by best-first with dives that
+#     go on only within a quarter of the gap (dblPlungeQuot): same optimum.
 #
 # The per-solver ComputeConfig are factored into the *Cfg.txt fragments (the
 # MILP/DP/GR ones are shared with BSPar-mixed.txt, the core DP and RECORD
@@ -46,7 +51,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one: values are being set
 
-16  # number of (the names of) Solver in this BlockSolverConfig
+18  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 HiGHSMILPSolver                       # 1st: the exact reference optimum
@@ -75,8 +80,12 @@ BranchAndXSolver
 RECORDBinaryKnapsackSolver            # 15th: RECORD, same as the 3rd
 # 16th: BX best-first, cutoff probing, incremental inner
 BranchAndXSolver
+# 17th: BX best-first, lazy, incremental inner giving the child bounds
+BranchAndXSolver
+# 18th: BX best-first with dives by quotient, the same inner
+BranchAndXSolver
 
-16  # number of ComputeConfig in this BlockSolverConfig
+18  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -467,6 +476,84 @@ dblCutOffProbingFactor 2     # the step doubles at each refuted target
 
 # now all the string parameters
 strNameOfBlockSolverConfigurationFile InnerBSCfg-incr.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 17: BranchAndXSolver, best-first with the lazy protocol, the incremental
+# inner relaxation giving the bounds of the children
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intBoundingProtocol 1     # lazy [see BoundingProtocol]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-bound.txt
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# 18: BranchAndXSolver, best-first with dives that go on only to a child
+# within a quarter of the gap, the same inner relaxation
+*BX-baseCfg.txt +
+
+1  # f_diff == 1
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod      3     # best-first with dives [see SolveMethod]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblPlungeQuot       0.25  # the dive within a quarter of the gap
+
+1  # number of string parameters
+
+# now all the string parameters
+strNameOfBlockSolverConfigurationFile InnerBSCfg-bound.txt
 
 0  # number of vector-of-int parameters
 

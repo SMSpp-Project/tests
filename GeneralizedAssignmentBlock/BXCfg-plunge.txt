@@ -1,0 +1,51 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - BXCfg-plunge.txt  - - - - - - - - - - - - - - -
+#
+# ComputeConfig of the BranchAndXSolver of BXCfg.txt by best-first with
+# dives, a dive going on only to a child whose bound is within a quarter of
+# the gap from the best bound to the incumbent (intSolveMethod BestFSDive,
+# dblPlungeQuot).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+*BXCfg.txt +
+
+1  # f_diff == 1 ==> only the entries below are changed
+
+1  # number of integer parameters
+
+# now all the integer parameters
+intSolveMethod    3       # best-first with dives [see SolveMethod]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblPlungeQuot     0.25    # the dive within a quarter of the gap
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+0  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+# [none]
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - END BXCfg-plunge.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
