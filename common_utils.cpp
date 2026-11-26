@@ -553,7 +553,7 @@ std::string fmt_obj( double v )
 /*--------------------------------------------------------------------------*/
 // the tolerance Solver k is held to
 
-double eps_of( std::size_t k , Solver * s , double dflt )
+double eps_of( std::size_t k , Solver * s , double dflt , double scale )
 {
  // a single value of -E is the tolerance of every Solver, a list is
  // positional and its empty fields declare nothing
@@ -566,8 +566,30 @@ double eps_of( std::size_t k , Solver * s , double dflt )
  if( ! std::isnan( e ) )
   return( e );
 
- // else the accuracy the Solver was asked for in its ComputeConfig
- return( s ? s->get_dbl_par( Solver::dblRelAcc ) : dflt );
+ // else the accuracy the Solver was asked for in its ComputeConfig, the
+ // absolute one made relative to the values it is about, as the comparisons
+ // of cross_check() are
+ if( ! s )
+  return( dflt );
+ e = s->get_dbl_par( Solver::dblRelAcc );
+ const double abs_acc = s->get_dbl_par( Solver::dblAbsAcc );
+ if( std::isfinite( abs_acc ) && ( ! std::isnan( scale ) ) )
+  e = std::max( e , abs_acc / std::max( 1.0 , scale ) );
+ return( e );
+ }
+
+/*--------------------------------------------------------------------------*/
+// the size of the values of a reading, as cross_check() takes it: the
+// largest absolute value of its finite bounds, at least 1
+
+static double scale_of( double lb , double ub )
+{
+ double s = 1;
+ if( std::isfinite( lb ) )
+  s = std::max( s , std::abs( lb ) );
+ if( std::isfinite( ub ) )
+  s = std::max( s , std::abs( ub ) );
+ return( s );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -597,9 +619,11 @@ bool is_relaxation( std::size_t k )
 
 SolverReading read_bounds( Solver * s , std::size_t k )
 {
- return( SolverReading{ get_obj_value( s , ObjGetter::LowerBound ) ,
-                        get_obj_value( s , ObjGetter::UpperBound ) ,
-                        eps_of( k , s ) } );
+ const double lb = get_obj_value( s , ObjGetter::LowerBound );
+ const double ub = get_obj_value( s , ObjGetter::UpperBound );
+ return( SolverReading{ lb , ub , eps_of( k , s , std::numeric_limits<
+                                          double >::quiet_NaN() ,
+                                          scale_of( lb , ub ) ) } );
  }
 
 /*--------------------------------------------------------------------------*/
@@ -1454,6 +1478,7 @@ int load_solve_test( int argc , char ** argv , const std::string & desc ,
    clean();
    return( 77 );
    }
+  apply_solver_verbosity( block );  // -v drives Solver::intLogVerb
   }
 
  const bool ok = SolveFormulations( blocks , forms.names , read_bounds ,

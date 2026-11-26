@@ -191,15 +191,20 @@ int last_status( std::size_t k );
 
 /// the optimality tolerance of Solver @p k
 /** What -E declares for @p k if it declares anything, else the accuracy
- *  Solver @p s was asked for, i.e. its dblRelAcc, which is the number that
- *  counts for a Solver that delivers what it is asked. @p dflt is returned
- *  when there is neither: pass no Solver and infinity for a reading that
- *  claims nothing unless -E says otherwise, such as the one-sided bound of
- *  a heuristic, whose dblRelAcc drives its stopping condition and says
- *  nothing about the quality of the solution it returns. */
+ *  Solver @p s was asked for, which is the number that counts for a Solver
+ *  that delivers what it is asked: its dblRelAcc, or its dblAbsAcc over
+ *  @p scale if that is larger and finite, the gap a Solver may leave being
+ *  the larger of the two [see Solver::dblAbsAcc]; @p scale is the size of
+ *  the values the tolerance is about, e.g. those of the bounds of @p s, and
+ *  without it dblAbsAcc is not looked at. @p dflt is returned when there is
+ *  neither: pass no Solver and infinity for a reading that claims nothing
+ *  unless -E says otherwise, such as the one-sided bound of a heuristic,
+ *  whose dblRelAcc drives its stopping condition and says nothing about the
+ *  quality of the solution it returns. */
 
 double eps_of( std::size_t k , Solver * s = nullptr ,
-               double dflt = std::numeric_limits< double >::quiet_NaN() );
+               double dflt = std::numeric_limits< double >::quiet_NaN() ,
+               double scale = std::numeric_limits< double >::quiet_NaN() );
 
 /*--------------------------------------------------------------------------*/
 /// default short command-line options string used by process_standard_arg()
