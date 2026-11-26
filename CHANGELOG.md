@@ -99,6 +99,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the cross-check holds a Solver that returns `kOK` to the larger of its
+  `dblRelAcc` and of its `dblAbsAcc` relative to its bounds, as the gap it
+  may leave is: a Solver that closes integer costs with `dblAbsAcc` just
+  below 1, which ends with the bound less than 1 below the incumbent,
+  failed the cross-check
+
 - `CFL_test` prints the time of the `compute()` of each `Solver`, which it
   gave as 0
 
