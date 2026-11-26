@@ -71,4 +71,5 @@ plus the options that every SMS++ tester understands (`--help` lists them
 all). The instances are the OR-Library ones of types A, B, C and D, in
 `data/txt` of GeneralizedAssignmentBlock.
 
-The battery `batches/batch` runs the tester on each of the 24 instances.
+The battery `batches/batch` runs the tester on each of the 24 instances,
+on the 12 with 100 jobs when `CI` is set.

@@ -29,11 +29,15 @@ parse_batch_args "$@"
 data=../../GeneralizedAssignmentBlock/data/txt
 
 # the instances: the OR-Library ones of types A, B, C and D, with 5, 10 and
-# 20 agents and 100 and 200 jobs - - - - - - - - - - - - - - - - - - - - -
+# 20 agents and 100 and 200 jobs; the whole battery takes more than an hour,
+# most of it on the instances with 200 jobs, so CI runs those with 100 only
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+if [ -n "$CI" ]; then jobs="100"; else jobs="100 200"; fi
 
 for t in a b c d; do
   for m in 05 10 20; do
-    for n in 100 200; do
+    for n in $jobs; do
       run_test "$exe" -S "$par" -R ,r,r "${data}/${t}${m}${n}.txt" < /dev/null
     done
   done
