@@ -88,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - the `BranchAndXSolver` of `batch` of `GeneralizedAssignmentBlock` stops
-  at 50 nodes (`intMaxNodes`) rather than at 10 seconds, the time limit
+  at 10 nodes (`intMaxNodes`) rather than at 10 seconds, the time limit
   being only a safety, so that the cross-check does not depend on the
   speed of the machine
 

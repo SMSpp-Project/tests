@@ -42,7 +42,7 @@ they answer is cross-checked:
 - a `BranchAndXSolver` whose nodes are solved by a
   `LagrangianDualRelaxationSolver`, the `PrimalProximalHeur` above with the
   same recovery at every node (`intHeurFreq` 1) and the branching by fixing
-  the jobs of each agent in its `BinaryKnapsackBlock`, within 50 nodes
+  the jobs of each agent in its `BinaryKnapsackBlock`, within 10 nodes
   (`BXCfg.txt`, `InnerBSCfg-LD.txt`, `LDRSCfg.txt`); a build without
   `BranchAndXSolver` leaves it out of the cross-check;
 

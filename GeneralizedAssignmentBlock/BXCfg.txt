@@ -18,7 +18,7 @@ ComputeConfig # exact type of the ComputeConfig object
 # now all the integer parameters
 intSolveMethod    2       # best-first [see SolveMethod]
 intMaxThread      1       # one thread
-intMaxNodes      50       # a check, not a solve
+intMaxNodes      10       # a check, not a solve
 
 2  # number of double parameters
 
