@@ -140,21 +140,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `MMCFND_test` reads the bound of the arc formulation by `get_lb()` of
+  the `LagrangianDualSolver`, since `get_var_value()` is `get_ub()` on a
+  minimization, which is `+ INF` when the `BundleSolver` stops with no
+  certified upper bound on the dual, as it does on p45 and p49 of Canad
+  and on p38 with its first 10 commodities, which `batch-nd` runs
+
 - the tests run by `load_solve_test()` (e.g., those of
   `GeneralizedAssignmentBlock`) make their Solver log at the verbosity of
   `-v`, as the other tests do, which they did not
 
 - the cross-check holds a Solver that returns `kOK` to the larger of its
   `dblRelAcc` and of its `dblAbsAcc` relative to its bounds, as the gap it
-  may leave is: a `BranchAndXSolver` with `dblAbsAcc` `0.999999` on integer
-  costs, which ends with the bound less than 1 below the incumbent, failed
-  the cross-check of `batch` of `GeneralizedAssignmentBlock`
-
-- `MMCFND_test` reads the bound of the arc formulation by `get_lb()` of
-  the `LagrangianDualSolver`, since `get_var_value()` is `get_ub()` on a
-  minimization, which is `+ INF` when the `BundleSolver` stops with no
-  certified upper bound on the dual, as it does on p45 and p49 of Canad
-  and on p38 with its first 10 commodities, which `batch-nd` runs
+  may leave is: a Solver that closes integer costs with `dblAbsAcc` just
+  below 1, which ends with the bound less than 1 below the incumbent,
+  failed the cross-check
 
 - `CFL_test` prints the time of the `compute()` of each `Solver`, which it
   gave as 0
