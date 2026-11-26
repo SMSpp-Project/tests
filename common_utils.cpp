@@ -1478,6 +1478,7 @@ int load_solve_test( int argc , char ** argv , const std::string & desc ,
    clean();
    return( 77 );
    }
+  apply_solver_verbosity( block );  // -v drives Solver::intLogVerb
   }
 
  const bool ok = SolveFormulations( blocks , forms.names , read_bounds ,

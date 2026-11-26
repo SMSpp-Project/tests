@@ -99,6 +99,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the tests run by `load_solve_test()` (e.g., those of
+  `GeneralizedAssignmentBlock`) make their Solver log at the verbosity of
+  `-v`, as the other tests do, which they did not
+
 - the cross-check holds a Solver that returns `kOK` to the larger of its
   `dblRelAcc` and of its `dblAbsAcc` relative to its bounds, as the gap it
   may leave is: a Solver that closes integer costs with `dblAbsAcc` just
