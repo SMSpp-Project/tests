@@ -132,6 +132,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- the cross-check holds a Solver that returns `kOK` to the larger of its
+  `dblRelAcc` and of its `dblAbsAcc` relative to its bounds, as the gap it
+  may leave is: a `BranchAndXSolver` with `dblAbsAcc` `0.999999` on integer
+  costs, which ends with the bound less than 1 below the incumbent, failed
+  the cross-check of `batch` of `GeneralizedAssignmentBlock`
+
 - `MMCFND_test` reads the bound of the arc formulation by `get_lb()` of
   the `LagrangianDualSolver`, since `get_var_value()` is `get_ub()` on a
   minimization, which is `+ INF` when the `BundleSolver` stops with no
