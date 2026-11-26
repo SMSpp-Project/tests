@@ -70,7 +70,10 @@ they answer is cross-checked:
   available by the bit 0 of `intFrcLstSS` of the inner `Solver` (`<v>`
   `reliab`, `relpen` and `bound`), and by best-first with dives that go on
   only to a child within a quarter of the gap from the best bound to the
-  incumbent (`dblPlungeQuot`, `BXCfg-plunge.txt`).
+  incumbent (`dblPlungeQuot`, `BXCfg-plunge.txt`); the bounds of the
+  children are also checked with the Lagrangian dual of the nodes stopped
+  after 30 iterations (`stop`), where they must not be taken from a point
+  other than the multipliers returned.
 
 The usage of the executable is the following:
 

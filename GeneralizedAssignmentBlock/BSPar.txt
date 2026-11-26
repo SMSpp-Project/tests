@@ -1,8 +1,8 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
-# BlockSolverConfig for a GeneralizedAssignmentBlock, registering the sixteen
-# Solver to be cross-checked:
+# BlockSolverConfig for a GeneralizedAssignmentBlock, registering the
+# seventeen Solver to be cross-checked:
 #
 #   - :MILPSolver            the abstract representation of the whole tree
 #                            (MILPCfg.txt)
@@ -37,6 +37,9 @@
 #                            bounds of the children from the penalties
 #                            (BXCfg-bound.txt), and by best-first with dives
 #                            within a quarter of the gap (BXCfg-plunge.txt)
+#   - BranchAndXSolver       the same, with the bounds of the children and
+#                            the Lagrangian dual of the nodes stopped after
+#                            30 iterations (BXCfg-stop.txt)
 #
 # The problem being an integer one, the Lagrangian dual is a relaxation of it
 # and the battery declares it so (-R ,r,r).
@@ -48,7 +51,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-16  # number of (the names of) Solver in this BlockSolverConfig
+17  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver
@@ -70,8 +73,9 @@ BranchAndXSolver      # name of 13th Solver
 BranchAndXSolver      # name of 14th Solver
 BranchAndXSolver      # name of 15th Solver
 BranchAndXSolver      # name of 16th Solver
+BranchAndXSolver      # name of 17th Solver
 
-16  # number of ComputeConfig in this BlockSolverConfig
+17  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *MILPCfg.txt          # ComputeConfig of the :MILPSolver
@@ -128,6 +132,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-LD-fix.txt
 *BXCfg-relpen.txt     # the same, reliability on the penalties
 *BXCfg-bound.txt      # the same, the bounds of the children
 *BXCfg-plunge.txt     # the same, best-first with dives by quotient
+*BXCfg-stop.txt       # the same, bounds of the children, dual stopped
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -
