@@ -1,8 +1,9 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - InnerBSCfg-LD-reliter.txt - - - - - - - - - - - - -
 #
-# BlockSolverConfig of the nodes of the BranchAndXSolver of BXCfg-reliter.txt:
-# the LagrangianDualRelaxationSolver of LDRSCfg-reliter.txt.
+# BlockSolverConfig of the nodes of the BranchAndXSolver of
+# BXCfg-reliter.txt: the LagrangianDualRelaxationSolver of
+# LDRSCfg-reliter.txt.
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
