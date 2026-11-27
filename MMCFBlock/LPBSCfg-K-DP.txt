@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - -  LPBSCfg-K-DP.txt - - - - - - - - - - - - - -
 #
 # A txt description of a BlockSolverConfig for a BinaryKnapsackBlock solved
-# by a CoreCoreDPBinaryKnapsackSolver
+# by a CoreDPBinaryKnapsackSolver
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

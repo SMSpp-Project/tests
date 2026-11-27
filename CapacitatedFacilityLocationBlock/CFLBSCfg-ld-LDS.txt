@@ -98,7 +98,7 @@ strMPBSolverCfg             MPBCfg.txt
 str_LagBF_BSCfg       LPBSCfg-K-DP.txt
                                         # this is for the Knapsack
                                         # relaxation, using
-                                        # DPBinaryKnapsackSolver
+                                        # CoreDPBinaryKnapsackSolver
 strLogFileName               logLD.txt
 
 0  # number of vector-of-int parameters
