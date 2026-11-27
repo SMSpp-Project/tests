@@ -113,6 +113,7 @@ add_subdirectory(SatellitesBlock)
 add_subdirectory(MultiKnapsackAssignBlock)
 add_subdirectory(GeneralizedAssignmentBlock)
 add_subdirectory(HQPBlock)
+add_subdirectory(CSPBlock)
 
 # the program that imports the C++20 module of every SMS++ module in the
 # build, which are there when SMSpp_BUILD_MODULE is ON [see SMS++]

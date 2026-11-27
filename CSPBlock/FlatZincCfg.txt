@@ -1,0 +1,53 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - -  FlatZincCfg.txt  - - - - - - - - - - - - - - -
+#
+# The ComputeConfig of a FlatZincCSPSolver that solves a CSPBlock with the
+# CP-SAT of OR-Tools through MiniZinc, within 30 seconds; vstrFlatZincArgs
+# selects another backend by its MiniZinc identifier (e.g.,
+# org.gecode.gecode for Gecode, org.chuffed.chuffed for Chuffed).
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ComputeConfig # exact type of the ComputeConfig object
+
+1  # f_diff == 1 ==> all non-provided parameters are not changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+1  # number of double parameters
+
+# now all the double parameters
+dblMaxTime 30  # seconds
+
+1  # number of string parameters
+
+# now all the string parameters
+strFlatZincSolver minizinc  # the executable of the backend, on the PATH
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+1  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+vstrFlatZincArgs 2 --solver com.google.ortools.sat  # CP-SAT
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# end of ComputeConfig
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - -  END FlatZincCfg.txt  - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

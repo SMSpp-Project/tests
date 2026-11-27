@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# usage: batch < exe file > < par file > < log file > < family >
+#        < exe file > = path of the executable, default CSPBlock_test
+#        < par file > = BlockSolverConfig file, default BSPar.txt
+#        < log file > = name of log file, default no log
+#        < family >   = rcpsp, colouring, golomb or qcp, default all of them
+#
+# Cross-check on the instances that CSPBlock distributes in data/fzn: the
+# RCPSP of PSPLIB j30, graphs of the DIMACS colouring benchmark, Golomb
+# rulers and quasigroup completion problems, each with its optimum (0 for
+# the satisfiable ones). Every Solver of BSPar.txt is checked against the
+# others and against that optimum; one stopped by its time limit is held to
+# the bound of the solution it has found, if any.
+
+# run from the test directory so the tester reads its config files
+here="$(cd "$(dirname "$0")" && pwd)"
+cd "$here/.." || exit 1
+
+# shared CLI/run helpers - - - - - - - - - - - - - - - - - - - - - - - - - -
+source "$here/../../batch_common.sh"
+
+DEFAULT_EXE=./CSPBlock_test
+DEFAULT_PAR=BSPar.txt
+parse_batch_args "$@"
+families="${4:-rcpsp colouring golomb qcp}"
+
+data=../../CSPBlock/data/fzn
+
+# the instances, with their optimum - - - - - - - - - - - - - - - - - - - - -
+
+for family in ${families}; do
+  while read -r name z; do
+    case "${name}" in ''|'#'*) continue ;; esac
+    run_test "$exe" -S "$par" -r "$z" "${data}/${family}/${name}" \
+      < /dev/null
+  done < "${data}/${family}/optima.txt"
+done
+
+# the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

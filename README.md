@@ -276,6 +276,14 @@ the `test` directory of the module itself.
   Gurobi as inner Solvers, compared with each other and with the solution
   of TROTS, by a battery run by hand.
 
+- [`CSPBlock`](CSPBlock), a tester of the `Block` of the constraint
+  satisfaction and optimization problems of constraint programming, loaded
+  from FlatZinc: every `Solver` of the `BlockSolverConfig`, the
+  `FlatZincCSPSolver` running CP-SAT, Gecode and Chuffed through MiniZinc,
+  is cross-checked against the others and against the known optima of the
+  instances that `CSPBlock` distributes (RCPSP of PSPLIB, graph colouring,
+  Golomb rulers and quasigroup completion).
+
 ### Posed on no Block in particular
 
 - [`compare_formulations`](compare_formulations),  very simple tester for

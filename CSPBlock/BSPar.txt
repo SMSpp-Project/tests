@@ -1,0 +1,111 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - -  BSPar.txt  - - - - - - - - - - - - - - - -
+#
+# BlockSolverConfig for a CSPBlock, registering the Solver to be
+# cross-checked, each within the time limit of FlatZincCfg.txt:
+#
+#   - FlatZincCSPSolver  the FlatZinc of the CSPBlock solved by CP-SAT
+#                        through MiniZinc (FlatZincCfg.txt)
+#
+#   - FlatZincCSPSolver  the same, solved by Gecode
+#
+#   - FlatZincCSPSolver  the same, solved by Chuffed
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+BlockSolverConfig     # exact type of the Configuration object
+
+1  # the BlockSolverConfig is a "differential" one: values are being set
+
+3  # number of (the names of) Solver in this BlockSolverConfig
+
+# now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
+FlatZincCSPSolver  # 1st: CP-SAT through MiniZinc
+FlatZincCSPSolver  # 2nd: Gecode through MiniZinc
+FlatZincCSPSolver  # 3rd: Chuffed through MiniZinc
+
+3  # number of ComputeConfig in this BlockSolverConfig
+
+# now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+*FlatZincCfg.txt
+
+*FlatZincCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+1  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+vstrFlatZincArgs 2 --solver org.gecode.gecode  # Gecode
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+*FlatZincCfg.txt +
+
+1  # f_diff == 1 ==> only the entries listed below are changed
+
+0  # number of integer parameters
+
+# now all the integer parameters
+# [none]
+
+0  # number of double parameters
+
+# now all the double parameters
+# [none]
+
+0  # number of string parameters
+
+# now all the string parameters
+# [none]
+
+0  # number of vector-of-int parameters
+
+# now all the vector-of-int parameters
+# [none]
+
+0  # number of vector-of-double parameters
+
+# now all the vector-of-double parameters
+# [none]
+
+1  # number of vector-of-string parameters
+
+# now all the vector-of-string parameters
+vstrFlatZincArgs 2 --solver org.chuffed.chuffed  # Chuffed
+
+# pointer to the "extra" Configuration
+*  # [none]
+
+# end of BlockSolverConfig - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - -  END BSPar.txt  - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

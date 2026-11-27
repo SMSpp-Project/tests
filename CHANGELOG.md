@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- the suite `CSPBlock`, which cross-checks the `FlatZincCSPSolver` running
+  CP-SAT, Gecode and Chuffed through MiniZinc on the RCPSP of PSPLIB j30,
+  graphs of the DIMACS colouring benchmark, Golomb rulers and quasigroup
+  completion problems, against their known optima
+
 - the suite `GeneralizedAssignmentBlock`, which cross-checks on the
   OR-Library instances of types A, B, C and D a `:MILPSolver` on the whole
   tree and the Lagrangian dual of the assignment constraints, solved by a

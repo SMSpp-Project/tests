@@ -78,6 +78,7 @@ set(SMSPP_TEST_LABELS_MultiKnapsackAssignBlock
 set(SMSPP_TEST_LABELS_GeneralizedAssignmentBlock
     "BundleSolver;LagrangianDualSolver;GeneralizedAssignmentBlock;MILPSolver")
 set(SMSPP_TEST_LABELS_HQPBlock                  "HQPBlock;MILPSolver")
+set(SMSPP_TEST_LABELS_CSPBlock                  "CSPBlock")
 
 # Attach the labels of the current directory (keyed by its name) to every test
 # it registered, dynamic batch-file test names included, and tell ctest that
