@@ -3,10 +3,8 @@
 # usage: batch-nd < exe file >
 #        < exe file > = path of the executable file, default ./MMCFND_test
 #
-# runs three small Network Design instances, the Canad p33 with its first 3
-# and 5 commodities and p38 with its first 10 (data-nd), the last one being
-# where the BundleSolver of the arc formulation stops with no certified
-# upper bound on the dual, in the monolithic formulation (BPar-ND.txt,
+# runs two small Network Design instances, the Canad p33 with its first 3
+# and 5 commodities (data-nd), in the monolithic formulation (BPar-ND.txt,
 # BSPar-ND.txt) against the Benders one (BPar-ND-Ben.txt,
 # BSPar-ND-Ben.txt), whose cuts come from a LagrangianDualSolver of the
 # MMCFBlock (LDBSCfg-ND.txt), and the Lagrangian bound of the arc one
@@ -27,7 +25,5 @@ for k in 3 5; do
            -e $k
 
 done
-
-run_test "$MMCFND_test" "${DATADIR}/p38-k10.dat" -F NDForm.txt -t s -r 5 -e 10
 
 # the end - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

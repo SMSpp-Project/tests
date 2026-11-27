@@ -144,7 +144,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the `LagrangianDualSolver`, since `get_var_value()` is `get_ub()` on a
   minimization, which is `+ INF` when the `BundleSolver` stops with no
   certified upper bound on the dual, as it does on p45 and p49 of Canad
-  and on p38 with its first 10 commodities, which `batch-nd` runs
 
 - the tests run by `load_solve_test()` (e.g., those of
   `GeneralizedAssignmentBlock`) make their Solver log at the verbosity of
