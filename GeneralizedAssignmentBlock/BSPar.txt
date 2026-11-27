@@ -2,7 +2,7 @@
 # - - - - - - - - - - - - - - - - BSPar.txt - - - - - - - - - - - - - - - - -
 #
 # BlockSolverConfig for a GeneralizedAssignmentBlock, registering the
-# seventeen Solver to be cross-checked:
+# eighteen Solver to be cross-checked:
 #
 #   - :MILPSolver            the abstract representation of the whole tree
 #                            (MILPCfg.txt)
@@ -40,6 +40,9 @@
 #   - BranchAndXSolver       the same, with the bounds of the children and
 #                            the Lagrangian dual of the nodes stopped after
 #                            30 iterations (BXCfg-stop.txt)
+#   - BranchAndXSolver       the same, with the reliability branching of
+#                            strong branching whose trials have 20
+#                            iterations each (BXCfg-reliter.txt)
 #
 # The problem being an integer one, the Lagrangian dual is a relaxation of it
 # and the battery declares it so (-R ,r,r).
@@ -51,7 +54,7 @@ BlockSolverConfig     # exact type of the Configuration object
 
 1  # the BlockSolverConfig is a "differential" one
 
-17  # number of (the names of) Solver in this BlockSolverConfig
+18  # number of (the names of) Solver in this BlockSolverConfig
 
 # now all the names of the Solver - - - - - - - - - - - - - - - - - - - - - -
 GRBMILPSolver         # name of 1st Solver
@@ -74,8 +77,9 @@ BranchAndXSolver      # name of 14th Solver
 BranchAndXSolver      # name of 15th Solver
 BranchAndXSolver      # name of 16th Solver
 BranchAndXSolver      # name of 17th Solver
+BranchAndXSolver      # name of 18th Solver
 
-17  # number of ComputeConfig in this BlockSolverConfig
+18  # number of ComputeConfig in this BlockSolverConfig
 
 # now all the ComputeConfig - - - - - - - - - - - - - - - - - - - - - - - - -
 *MILPCfg.txt          # ComputeConfig of the :MILPSolver
@@ -133,6 +137,7 @@ strNameOfBlockSolverConfigurationFile InnerBSCfg-LD-fix.txt
 *BXCfg-bound.txt      # the same, the bounds of the children
 *BXCfg-plunge.txt     # the same, best-first with dives by quotient
 *BXCfg-stop.txt       # the same, bounds of the children, dual stopped
+*BXCfg-reliter.txt    # the same, reliability with short trials
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - END BSPar.txt - - - - - - - - - - - - - - - -

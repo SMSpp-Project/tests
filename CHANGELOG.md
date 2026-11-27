@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and on the fixing penalties, the bounds of the children from the
   penalties (`intBranchBound`), also with the dual of the nodes stopped
   after 30 iterations, and the dives of best-first within a quarter of the
-  gap (`dblPlungeQuot`), as the 13th to 17th Solver of `BSPar.txt`,
+  gap (`dblPlungeQuot`), and the reliability branching with trials of 20
+  iterations (`intStrongIter`), as the 13th to 18th Solver of `BSPar.txt`,
   and in `BSPar.txt` of `BinaryKnapsackBlock` the bounds of the children
   that the incremental greedy relaxation gives (`intBranchBound`), with the
   lazy protocol and with the dives by quotient, as its 17th and 18th Solver

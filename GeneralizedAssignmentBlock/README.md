@@ -73,7 +73,9 @@ they answer is cross-checked:
   incumbent (`dblPlungeQuot`, `BXCfg-plunge.txt`); the bounds of the
   children are also checked with the Lagrangian dual of the nodes stopped
   after 30 iterations (`stop`), where they must not be taken from a point
-  other than the multipliers returned.
+  other than the multipliers returned, and the reliability branching of
+  strong branching whose trials have 20 iterations each (`intStrongIter`,
+  `reliter`).
 
 The usage of the executable is the following:
 
